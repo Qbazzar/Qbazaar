@@ -1,16 +1,32 @@
 {
-  "name": "qbazaar-web-tmp",
+  "name": "qbazaar-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-query": "^5.100.11",
+    "@tanstack/react-query-devtools": "^5.100.11",
+    "axios": "^1.16.1",
+    "embla-carousel-react": "^8.6.0",
+    "laravel-echo": "^2.3.4",
+    "lucide-react": "^1.16.0",
     "next": "16.2.6",
+    "next-intl": "^4.12.0",
+    "next-themes": "^0.4.6",
+    "nuqs": "^2.8.9",
+    "pusher-js": "^8.5.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.76.0",
+    "sharp": "^0.34.5",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
