@@ -1,0 +1,46 @@
+name: Contract
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: OpenAPI lint + Prism smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Validate OpenAPI v1
+        run: npm run validate
+
+      - name: Boot Prism mock + smoke /health
+        run: |
+          npm run mock &
+          MOCK_PID=$!
+          # Wait for Prism to come up
+          for i in {1..15}; do
+            curl -sf http://localhost:4010/api/v1/health > /dev/null && break
+            sleep 1
+          done
+          # Final fetch — fail the job if not 200
+          curl -sf -o /tmp/health.json http://localhost:4010/api/v1/health
+          cat /tmp/health.json
+          kill $MOCK_PID

@@ -1,0 +1,28 @@
+includes:
+  - vendor/larastan/larastan/extension.neon
+
+parameters:
+  level: 8
+
+  paths:
+    - app
+    - bootstrap/app.php
+    - database/factories
+    - database/seeders
+    - routes
+    - tests
+
+  excludePaths:
+    # Laravel scaffold configs — env() returns bool|string and the scaffold doesn't cast.
+    # We control app behaviour through config/qbazaar.php which IS analysed via app/.
+    - config/*
+    # Filament uses runtime-generated schemas; analysis adds noise pre-stable.
+    - app/Filament/**/*
+    # Pest's Pest.php uses dynamic $this binding magic that PHPStan can't track.
+    - tests/Pest.php
+    - bootstrap/cache/*
+    - storage/*
+    - vendor/*
+    - .scribe/*
+
+  treatPhpDocTypesAsCertain: false

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 200" fill="none">
+  
+  <g>
+    <path d="M30 50 L100 8 L100 100 Z" fill="#EE8765"></path>
+    <path d="M100 8 L100 100 L170 8 Z" fill="#FFFFFF"></path>
+    <path d="M170 8 L170 100 L240 8 Z" fill="#EE8765"></path>
+    <path d="M240 8 L240 100 L310 8 Z" fill="#FFFFFF"></path>
+    <path d="M310 8 L310 100 L380 8 Z" fill="#EE8765"></path>
+    <path d="M380 8 L380 100 L430 50 Z" fill="#FFFFFF"></path>
+  </g>
+  
+  <g transform="translate(0,100)">
+    <path d="M30 0 L100 0 L80 35 Q65 50 50 35 Z" fill="#B85A45"></path>
+    <path d="M100 0 L170 0 L150 35 Q135 50 120 35 Z" fill="#E8E2D8"></path>
+    <path d="M170 0 L240 0 L220 35 Q205 50 190 35 Z" fill="#B85A45"></path>
+    <path d="M240 0 L310 0 L290 35 Q275 50 260 35 Z" fill="#E8E2D8"></path>
+    <path d="M310 0 L380 0 L360 35 Q345 50 330 35 Z" fill="#B85A45"></path>
+  </g>
+</svg>

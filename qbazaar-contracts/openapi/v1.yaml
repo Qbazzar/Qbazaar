@@ -1,0 +1,274 @@
+openapi: 3.1.0
+info:
+  title: QBazaar API
+  version: 1.0.0
+  description: |
+    REST API for QBazaar — Qatar's friendly classifieds marketplace.
+
+    All endpoints are versioned under `/api/v1/`. Authentication uses
+    Sanctum Personal Access Tokens with a custom refresh-token layer.
+
+    See [error-codes.md](../error-codes.md) for the full error catalog,
+    and [events/messages.yaml](../events/messages.yaml) for WebSocket events.
+  contact:
+    name: Ahmed Jaber
+    email: ahmedjaberdev@gmail.com
+  license:
+    name: Proprietary
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local dev (Laravel)
+  - url: http://localhost:4010/api/v1
+    description: Local mock (Prism)
+  - url: https://api.qbazaar.qa/v1
+    description: Production
+tags:
+  - name: Health
+    description: Health check & version endpoints
+  - name: Auth
+    description: Registration, login, OTP, password reset
+  - name: Account
+    description: Authenticated user's own profile, sessions, privacy
+  - name: Users
+    description: Public profiles & user-targeted actions (block, view ads)
+  - name: Categories
+    description: Marketplace category tree, dynamic filters and fields
+  - name: Locations
+    description: Qatar regions and districts
+  - name: Uploads
+    description: Image uploads with multi-size conversions
+  - name: Ads
+    description: Ad CRUD, drafts, publishing, moderation lifecycle
+  - name: Search
+    description: Meilisearch-powered keyword + filter search
+  - name: Favorites
+    description: Save / unsave ads
+  - name: Conversations
+    description: Chat threads between buyer and seller
+  - name: Messages
+    description: Messages within a conversation
+  - name: Offers
+    description: Price offers attached to ads / conversations
+  - name: Reports
+    description: User reports on ads, users, conversations
+  - name: Notifications
+    description: In-app, email, and push notifications
+  - name: CMS
+    description: Static pages, help articles, support tickets
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Returns 200 if the API is reachable. Used by uptime monitors and Sprint 0 verification.
+      operationId: health
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  value:
+                    success: true
+                    data:
+                      status: ok
+                      version: 1.0.0
+                      timestamp: '2026-05-20T10:00:00.000Z'
+
+components:
+  schemas:
+    # ─── Envelopes ──────────────────────────────────────────────────
+    SuccessEnvelope:
+      type: object
+      required: [success, data]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          description: Payload — shape varies per endpoint
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    ErrorEnvelope:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          $ref: '#/components/schemas/Error'
+
+    Error:
+      type: object
+      required: [code, message_key, message]
+      properties:
+        code:
+          type: string
+          description: Stable error code from error-codes.md
+          example: AUTH_001
+        message_key:
+          type: string
+          description: i18n key the client should look up
+          example: errors.auth.invalid_credentials
+        message:
+          type: string
+          description: Human-readable fallback in the requested locale
+          example: Invalid credentials
+        details:
+          oneOf:
+            - type: 'null'
+            - type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+          description: Field-level validation errors keyed by field name
+        request_id:
+          type: string
+          description: Correlation id for log lookups
+          example: req_abc123
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 156
+        has_more:
+          type: boolean
+          example: true
+        next_cursor:
+          type: [string, 'null']
+          description: For cursor-based endpoints; null on the last page
+          example: null
+
+    # ─── Primitives ────────────────────────────────────────────────
+    ULID:
+      type: string
+      pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+      example: 01HM3XQVZP5KJWQR2K8N0DJSAW
+
+    Money:
+      type: object
+      required: [amount, currency, formatted]
+      properties:
+        amount:
+          type: number
+          format: float
+          example: 5000
+        currency:
+          type: string
+          example: QAR
+        formatted:
+          type: string
+          example: '5,000 ر.ق'
+
+    TranslatedString:
+      type: object
+      properties:
+        ar:
+          type: string
+        en:
+          type: string
+
+    # ─── Domain placeholders (filled per-sprint) ──────────────────
+    HealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [status, version, timestamp]
+              properties:
+                status:
+                  type: string
+                  enum: [ok]
+                version:
+                  type: string
+                  example: 1.0.0
+                timestamp:
+                  type: string
+                  format: date-time
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            unauthorized:
+              value:
+                success: false
+                error:
+                  code: AUTH_010
+                  message_key: errors.auth.token_invalid
+                  message: Token is invalid or expired
+                  details: null
+                  request_id: req_abc123
+
+    Forbidden:
+      description: Authenticated but not authorized for this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+    NotFound:
+      description: Resource does not exist or is hidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+    ValidationError:
+      description: Request body failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            validation_failed:
+              value:
+                success: false
+                error:
+                  code: VALIDATION_FAILED
+                  message_key: errors.validation_failed
+                  message: The given data was invalid
+                  details:
+                    email: ['The email has already been taken']
+                    phone: ['The phone format is invalid']
+                  request_id: req_abc123
+
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum token
+      description: |
+        Issued by `POST /auth/login`. Include as `Authorization: Bearer <access_token>`.
+        Expires after 15 minutes — refresh via `POST /auth/refresh`.
+
+security:
+  - bearerAuth: []

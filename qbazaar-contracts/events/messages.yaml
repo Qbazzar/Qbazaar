@@ -1,0 +1,154 @@
+# QBazaar — WebSocket Events Spec
+#
+# Broadcast adapter: Laravel Reverb (Pusher-compatible).
+# Clients: Laravel Echo + pusher-js (Next.js) and pusher_channels_flutter (Flutter, future).
+#
+# Channel naming:
+#   - Private channels require auth via POST /broadcasting/auth (Sanctum bearer)
+#   - Format: <type>.<id> — e.g. `conversation.01HM...`, `user.01HM...`
+#
+# Event names use dot notation: `<domain>.<action>` — e.g. `message.sent`.
+#
+# This file is the spec. Backend tests assert the payload shape matches.
+# Frontend tests use these definitions to type Echo event handlers.
+
+version: 1
+channels:
+  user:
+    pattern: 'user.{userId}'
+    visibility: private
+    description: Per-user notifications stream. Subscribed once on app boot.
+    events:
+      - notification.created
+      - ad.approved
+      - ad.rejected
+      - offer.received
+      - saved_search.match
+
+  conversation:
+    pattern: 'conversation.{conversationId}'
+    visibility: private
+    description: Per-conversation chat. Subscribed when the user opens a chat.
+    events:
+      - message.sent
+      - message.read
+      - user.typing
+      - offer.updated
+
+events:
+  # ── Messaging (Sprint 8) ────────────────────────────────────────
+  message.sent:
+    channel: conversation.{conversationId}
+    description: A new message was posted to the conversation.
+    payload:
+      type: object
+      required: [message]
+      properties:
+        message:
+          $ref: 'https://qbazaar.qa/spec#/Message'   # populated when Message schema lands in v1.yaml
+
+  message.read:
+    channel: conversation.{conversationId}
+    description: Counterparty marked the conversation as read.
+    payload:
+      type: object
+      required: [conversation_id, user_id, read_at]
+      properties:
+        conversation_id:
+          type: string
+        user_id:
+          type: string
+        read_at:
+          type: string
+          format: date-time
+
+  user.typing:
+    channel: conversation.{conversationId}
+    description: A participant is currently typing (debounced 3s).
+    payload:
+      type: object
+      required: [user_id]
+      properties:
+        user_id:
+          type: string
+
+  # ── Offers (Sprint 9) ───────────────────────────────────────────
+  offer.updated:
+    channel: conversation.{conversationId}
+    description: An offer in this conversation changed state (accept / reject / counter).
+    payload:
+      type: object
+      required: [offer]
+      properties:
+        offer:
+          $ref: 'https://qbazaar.qa/spec#/Offer'
+
+  # ── Notifications (Sprint 10) ───────────────────────────────────
+  notification.created:
+    channel: user.{userId}
+    description: A new in-app notification was created for the user.
+    payload:
+      type: object
+      required: [notification]
+      properties:
+        notification:
+          $ref: 'https://qbazaar.qa/spec#/Notification'
+
+  # ── Ad lifecycle (Sprint 5+10 cross) ───────────────────────────
+  ad.approved:
+    channel: user.{userId}
+    description: An ad owned by the user passed moderation and went live.
+    payload:
+      type: object
+      required: [ad_id]
+      properties:
+        ad_id:
+          type: string
+
+  ad.rejected:
+    channel: user.{userId}
+    description: An ad owned by the user was rejected. `reason` carries human text.
+    payload:
+      type: object
+      required: [ad_id, reason]
+      properties:
+        ad_id:
+          type: string
+        reason:
+          type: string
+
+  offer.received:
+    channel: user.{userId}
+    description: Someone made an offer on one of the user's ads.
+    payload:
+      type: object
+      required: [offer_id, ad_id]
+      properties:
+        offer_id:
+          type: string
+        ad_id:
+          type: string
+
+  saved_search.match:
+    channel: user.{userId}
+    description: A saved search has new matching ads since last check.
+    payload:
+      type: object
+      required: [saved_search_id, new_ads_count]
+      properties:
+        saved_search_id:
+          type: string
+        new_ads_count:
+          type: integer
+
+reconnection:
+  strategy: exponential-backoff
+  initial_delay_ms: 1000
+  max_delay_ms: 30000
+  on_reconnect: |
+    After reconnecting, the client MUST fetch any missed events via REST:
+      - GET /conversations/{id}/messages?after={last_seen_at}
+      - GET /notifications?after={last_seen_at}
+    The WebSocket alone does NOT guarantee delivery.
+
+# vim: set ft=yaml ts=2 sw=2 et:
