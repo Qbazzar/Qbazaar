@@ -16,11 +16,11 @@ info:
   license:
     name: Proprietary
 servers:
-  - url: http://localhost:8000/api/v1
+  - url: http://localhost:8000
     description: Local dev (Laravel)
-  - url: http://localhost:4010/api/v1
+  - url: http://localhost:4010
     description: Local mock (Prism)
-  - url: https://api.qbazaar.qa/v1
+  - url: https://api.qbazaar.qa
     description: Production
 tags:
   - name: Health
@@ -57,12 +57,13 @@ tags:
     description: Static pages, help articles, support tickets
 
 paths:
-  /health:
+  /api/v1/health:
     get:
       tags: [Health]
       summary: Health check
       description: Returns 200 if the API is reachable. Used by uptime monitors and Sprint 0 verification.
       operationId: health
+      security: []
       responses:
         '200':
           description: API is healthy
