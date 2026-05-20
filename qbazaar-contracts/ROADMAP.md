@@ -12,10 +12,11 @@
 | البند | القيمة |
 |-------|---------|
 | **Active Milestone** | Milestone 1 — Backend Foundation |
-| **Active Sprint** | Sprint 0 — Infrastructure & Foundation |
-| **Active Day** | Day 6 — Next.js + Design System (Days 1–5 ✅) |
+| **Active Sprint** | Sprint 0 ✅ → **Sprint 1 (Auth)** يبدأ بعد retro |
+| **Active Day** | Sprint 0 closed (Days 1–7 ✅) |
+| **Repo** | https://github.com/ahmaddev27/Qbazaar — single monorepo, baseline pushed `71216d3` |
 | **Blockers** | لا يوجد |
-| **Next Decision Needed** | تسجيل Sentry account (Sprint 0 — Day 5) |
+| **Manual user steps pending** | GitHub Project + 13 Milestones + Labels; sign-ups for Twilio + Sentry + FCM project |
 
 ## ✅ Progress Log
 
@@ -112,6 +113,79 @@
 - `qbazaar-contracts`:
   - `d803a39` docs(readme): live progress + repo diagram
   - `4732efe` ci: OpenAPI lint + Prism smoke workflow [BE-0.28b]
+
+### Day 6 — Next.js + Bazzar design system (2026-05-20) ✅
+- Next.js 16.2 (Turbopack) scaffolded into `qbazaar-web/`
+- 18 npm dependencies added (TanStack Query, Zustand, axios, next-intl, RHF + Zod, Echo, Pusher, nuqs, Lucide, Sharp, next-themes, Embla)
+- shadcn/ui initialised with `--rtl --defaults` (Next + base-nova preset) + 14 primitives
+- Brand assets (logo + 6 SVGs) copied to `public/brand/`
+- Fonts via `next/font/google`: DM Sans, Instrument Serif (with italic), Cairo, Geist Mono
+- `app/globals.css` rewritten with Bazzar palette (Coral / Terracotta / Cream / Ink / Sage) for both light and dark modes, mapped onto shadcn semantic tokens
+- ThemeProvider (next-themes, class strategy) wired in `app/layout.tsx`
+- `i18n/ar.json` + `i18n/en.json` seeded with brand strings
+- `lib/api/client.ts` axios instance pointing at `NEXT_PUBLIC_API_URL`
+- Home placeholder uses Instrument Serif italic + Bazzar tokens — `npm run build` ✅
+
+**Commits:**
+- `469eb41` chore(web): install Day 6 npm dependencies [FE-0.3]
+- `88159e4` feat(web): wire Bazzar design system + shadcn + placeholder home [FE-0.4 … FE-0.14]
+
+**Deferred to Sprint 1:**
+- `FE-0.10` next-intl middleware (will land with `/ar`-`/en` Auth pages)
+- `FE-0.13` standalone Logo + theme-toggle components
+
+### Day 7 — Mock + Workflow bootstrap (2026-05-20) ✅
+- **Major mid-flight change:** user asked to consolidate the 3 sibling repos into a single monorepo. Done via fresh-start git init at `c:\laragon\www\QB\` with baseline commit `71216d3`. Old per-task hashes referenced above no longer resolve but stay as historical breadcrumbs.
+- Monorepo pushed to **https://github.com/ahmaddev27/Qbazaar** on branch `main`
+- `qbazaar-contracts/` npm dependencies installed (Prism + Redocly, 383 packages)
+- OpenAPI spec adjusted: paths now carry the `/api/v1/` prefix directly; servers become bare hosts (so Prism and Laravel respond on identical URLs)
+- `/api/v1/health` endpoint set to `security: []` so the Prism mock answers without an auth token
+- Prism mock smoke-tested: `curl http://localhost:4010/api/v1/health` → `200 OK` with the success envelope
+
+**Commits:**
+- `71216d3` chore: consolidate Sprint 0 work into a single monorepo (baseline)
+- `42c75be` chore(api): pin sentry/sentry-laravel to ^4.25
+- `b507170` feat(contract): wire Prism mock + fix `/api/v1/health` path [CT-0.4, CT-0.5]
+
+**Deferred to Sprint 1:**
+- `CT-0.6` Auth endpoints in openapi/v1.yaml (contract-first kickoff)
+- `INT-0.2`/`INT-0.3` GitHub Project + Milestones + Issues — manual user steps once GH access is wired
+
+---
+
+## 🎬 Sprint 0 Retrospective (2026-05-20)
+
+### ✅ What went well
+- **Contract-first scaffolding** — every endpoint we plan in Sprint 1 already has a typed envelope and an error code reserved.
+- **Multi-agent parallel via Prism** works: backend agent and frontend agent can move independently with the mock as the shared truth.
+- **Auto-fix tooling green** — Pint and PHPStan-level-8 both clean on first run after Laravel scaffolding.
+- **One-file source of truth** for status (`ROADMAP.md`) reduced confusion once we deleted the Day-1 snapshots.
+- **Monorepo consolidation** mid-sprint was fast (fresh-start commit). Worth the small history loss given the user is solo.
+
+### 🟡 What slowed us down
+- **Laravel 13 not released yet** — fell back to Laravel 12. Same surface area, but PLAN.md references 13 in places.
+- **Horizon requires pcntl/posix** which Windows PHP doesn't ship. Workaround: `--ignore-platform-req` for install + `php artisan queue:work` in dev.
+- **phpredis extension missing** in Laragon's PHP 8.4 build — switched to Predis (pure PHP). No noticeable cost at our scale.
+- **Pest CLI output suppressed** under this shell when run from the agent runner — tests are valid Pest 3 syntax but verification was via PHPStan + manual artisan invocation rather than a clean `pest --colors=always` pass.
+- **shadcn `form` component** wanted interactive template input under `--yes` — deferred to Sprint 1 alongside React Hook Form wiring.
+
+### 🔴 Blockers / manual user steps that remain
+- GitHub Project board + 13 Milestones + Labels (web UI, takes 10 min).
+- Account sign-ups: Twilio (Sprint 1), Sentry (Sprint 0 idle until DSN), Cloudflare R2 (Sprint 4), FCM (Sprint 10).
+- Domain `qbazaar.qa` registration before launch.
+
+### 🧭 Decisions taken mid-sprint (added to Decisions Log)
+- **MySQL 8 over PostgreSQL 16** — chosen Day 0; reaffirmed.
+- **Predis over phpredis** — Day 3 due to Laragon PHP build.
+- **Filament v4 over v5** — Day 2 due to v5 not yet released, v4 already matches Livewire 4.
+- **Monorepo over polyrepo** — Day 7, user request mid-flight. Fresh-start commit history accepted as the cost.
+- **`/api/v1/health` path written explicitly in spec** — Day 7, simplifies Prism + Laravel both responding at the same URL.
+
+### 🎯 Sprint 1 kickoff plan
+1. Open `qbazaar-contracts/openapi/v1.yaml`, add Auth endpoints (register, login, refresh, logout, send-otp, verify-otp, resend-otp, forgot-password, reset-password, verify-email).
+2. Restart Prism mock — frontend agent starts building Login/Register/OTP pages against it.
+3. Backend agent implements the same endpoints with Pest tests + Scribe annotations.
+4. Integration day: flip `NEXT_PUBLIC_API_URL` from `:4010` → `:8000` and verify.
 
 ---
 

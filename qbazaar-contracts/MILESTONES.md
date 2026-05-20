@@ -165,30 +165,30 @@
 - [x] `BE-0.27` 🔵 Sentry SDK 4.25 installed (DSN فاضي) ✅ commit `2c8591c`
 - [x] `BE-0.28` 🔵 GitHub Actions CI workflows (api Pint+PHPStan+Pest + contracts Redocly+Prism) ✅ commits `2c8591c` (api) + `4732efe` (contracts)
 
-#### Day 6 — Next.js + Design System
-- [ ] `FE-0.2` 🟣 `create-next-app` مع TypeScript + Tailwind + App Router
-- [ ] `FE-0.3` 🟣 تنصيب packages: TanStack Query, Zustand, axios, next-intl, RHF + Zod, Echo, Pusher, nuqs, Lucide, Sharp, next-themes, Embla
-- [ ] `FE-0.4` 🟣 `shadcn@latest init` + إضافة primitives (button, input, card, form, sheet, dialog, dropdown-menu, badge, avatar, tabs, textarea, select, switch, label)
-- [ ] `FE-0.5` 🟣 نقل brand assets من `DOCS/uploads/` → `public/brand/`
-- [ ] `FE-0.6` 🟣 ضبط fonts في `app/layout.tsx`: DM Sans + Instrument Serif + Cairo
-- [ ] `FE-0.7` 🟣 `app/globals.css`: CSS variables للـ light + dark modes (Coral palette)
-- [ ] `FE-0.8` 🟣 `tailwind.config.ts` بالـ Bazzar tokens (coral/terracotta/cream/ink/sage)
-- [ ] `FE-0.9` 🟣 `app/[locale]/layout.tsx` RTL aware + ThemeProvider
-- [ ] `FE-0.10` 🟣 `middleware.ts` (next-intl i18n routing `/ar/*` `/en/*`)
-- [ ] `FE-0.11` 🟣 `i18n/ar.json` + `i18n/en.json` (فاضيات `{}`)
-- [ ] `FE-0.12` 🟣 `lib/api/client.ts` axios instance (interceptors فاضيين)
-- [ ] `FE-0.13` 🟣 `components/ui/logo.tsx` + `components/theme-toggle.tsx`
-- [ ] `FE-0.14` 🟣 Home placeholder بـ Instrument Serif italic للتحقق من الـ theme
+#### Day 6 — Next.js + Design System ✅
+- [x] `FE-0.2` 🟣 `create-next-app` (Next 16.2 + TS + Tailwind 4 + App Router + Turbopack) ✅ baseline `71216d3`
+- [x] `FE-0.3` 🟣 تنصيب packages: TanStack Query, Zustand, axios, next-intl, RHF + Zod, Echo, Pusher, nuqs, Lucide, Sharp, next-themes, Embla ✅ commit `469eb41`
+- [x] `FE-0.4` 🟣 `shadcn@latest init --rtl --defaults` + 14 primitives (form deferred to Sprint 1) ✅ commit `88159e4`
+- [x] `FE-0.5` 🟣 نقل brand assets (logo.png + 6 SVGs) → `public/brand/` ✅ commit `88159e4`
+- [x] `FE-0.6` 🟣 fonts في `app/layout.tsx`: DM Sans + Instrument Serif + Cairo + Geist Mono via next/font/google ✅ commit `88159e4`
+- [x] `FE-0.7` 🟣 `app/globals.css` بـ Bazzar palette + dark mode + mapped onto shadcn semantic tokens ✅ commit `88159e4`
+- [x] `FE-0.8` 🟣 Tailwind 4 tokens via `@theme inline` (نفس app/globals.css — لا حاجة لـ tailwind.config.ts منفصل) ✅ commit `88159e4`
+- [x] `FE-0.9` 🟣 ThemeProvider (next-themes) + RTL-ready layout ✅ commit `88159e4` — `app/[locale]/` routing مؤجل لـ Sprint 1
+- [ ] `FE-0.10` 🟣 `middleware.ts` next-intl i18n routing — *مؤجل لـ Sprint 1 مع Auth pages*
+- [x] `FE-0.11` 🟣 `i18n/ar.json` + `i18n/en.json` بـ brand + common keys ✅ commit `88159e4`
+- [x] `FE-0.12` 🟣 `lib/api/client.ts` axios instance (interceptors في Sprint 1) ✅ commit `88159e4`
+- [ ] `FE-0.13` 🟣 `components/ui/logo.tsx` + `theme-toggle.tsx` — *مؤجل لـ Sprint 1*
+- [x] `FE-0.14` 🟣 Home placeholder بـ Instrument Serif italic + شعار + Bazzar tokens ✅ commit `88159e4` — `npm run build` ✅
 
 #### Day 7 — Mock + Workflow + Sprint 1 Planning
-- [ ] `CT-0.4` 🟡 `npm init` في contracts + تنصيب `@stoplight/prism-cli`
-- [ ] `CT-0.5` 🟡 OpenAPI skeleton: info + servers + base schemas (User, Ad, Category, Error)
-- [ ] `CT-0.6` 🟡 Auth endpoints في v1.yaml مع examples
-- [ ] `CT-0.7` 🟡 Components/responses/Error موحّد
-- [ ] `FE-0.15` 🟣 `.env.local`: `NEXT_PUBLIC_API_URL=http://localhost:4010` (Prism)
-- [ ] `INT-0.2` 🟢 GitHub Project + 13 Milestones + Labels (track:backend/frontend/contract, area:*, type:*, priority:*)
-- [ ] `INT-0.3` 🟢 Issues لـ Sprint 1 منشأة في الـ repos
-- [ ] `INT-0.4` 🟢 Sprint 0 Retro في `ROADMAP.md`
+- [x] `CT-0.4` 🟡 `npm install` في contracts (Prism + Redocly 383 deps) ✅ commit `b507170`
+- [x] `CT-0.5` 🟡 OpenAPI skeleton: info + servers + base schemas (User, Ad, Category, Error) ✅ baseline `71216d3`
+- [ ] `CT-0.6` 🟡 Auth endpoints في v1.yaml مع examples — *مرحّل لبداية Sprint 1 (contract-first قبل أي auth code)*
+- [x] `CT-0.7` 🟡 Components/responses/Error موحّد ✅ baseline `71216d3`
+- [x] `FE-0.15` 🟣 `.env.example` للـ web ينقل NEXT_PUBLIC_API_URL → Prism (4010) ✅ commit (current)
+- [ ] `INT-0.2` 🟢 GitHub Project + 13 Milestones + Labels — *manual user step (gh CLI غير مثبت)*
+- [ ] `INT-0.3` 🟢 Issues لـ Sprint 1 — *manual user step بعد إنشاء الـ project*
+- [x] `INT-0.4` 🟢 Sprint 0 Retro في `ROADMAP.md` ✅ commit (current)
 
 ---
 
