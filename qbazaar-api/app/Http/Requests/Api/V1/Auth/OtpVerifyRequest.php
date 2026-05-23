@@ -9,6 +9,9 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * Validates POST /api/v1/auth/verify-otp. Mirrors the OpenAPI
  * `OtpVerifyRequest` schema (6-digit numeric).
+ *
+ * @bodyParam phone string required Qatari phone in `+974XXXXXXXX` shape. Example: +97455123456
+ * @bodyParam code string required 6-digit numeric OTP. Example: 482915
  */
 class OtpVerifyRequest extends FormRequest
 {

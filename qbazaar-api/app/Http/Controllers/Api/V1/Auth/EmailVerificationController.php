@@ -24,9 +24,26 @@ use Symfony\Component\HttpFoundation\Response;
  *    Idempotent: already-verified users still get 200, NOT 410. We treat 410
  *    only for genuinely-invalid signatures (caught by the signed middleware
  *    itself before this method runs).
+ *
+ * @group Auth
  */
 class EmailVerificationController extends Controller
 {
+    /**
+     * (Re)send the email-verification link
+     *
+     * @authenticated
+     *
+     * @response 202 scenario="Sent" {
+     *   "success": true,
+     *   "data": { "message_key": "messages.auth.email_verification_sent" }
+     * }
+     *
+     * @response 202 scenario="Already verified" {
+     *   "success": true,
+     *   "data": { "message_key": "messages.auth.email_already_verified" }
+     * }
+     */
     public function send(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -47,6 +64,33 @@ class EmailVerificationController extends Controller
         );
     }
 
+    /**
+     * Verify email via signed URL
+     *
+     * Hit via the link in the verification email. Backed by Laravel's `signed`
+     * middleware — tampered/expired URLs respond 403 before this method runs.
+     *
+     * @urlParam id string required ULID of the user. Example: 01HF5KX9Y6XR7Z9R3E0HK2X6FC
+     * @urlParam hash string required `sha1(user.email)` — defence-in-depth on top of the signature. Example: 04b9f5...
+     *
+     * @unauthenticated
+     *
+     * @response 200 scenario="Verified" {
+     *   "success": true,
+     *   "data": {
+     *     "email_verified": true,
+     *     "message_key": "messages.auth.email_verified"
+     *   }
+     * }
+     *
+     * @response 200 scenario="Already verified" {
+     *   "success": true,
+     *   "data": {
+     *     "email_verified": true,
+     *     "message_key": "messages.auth.email_already_verified"
+     *   }
+     * }
+     */
     public function verify(Request $request, string $id, string $hash): JsonResponse
     {
         /** @var User|null $user */

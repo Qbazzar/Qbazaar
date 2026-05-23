@@ -10,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
  * Validates POST /api/v1/auth/forgot-password — anti-enumeration: even an
  * unknown email returns 202, so we only enforce the shape here, not
  * existence.
+ *
+ * @bodyParam email string required Email address to send the reset link to. Example: user@example.qa
  */
 class ForgotPasswordRequest extends FormRequest
 {

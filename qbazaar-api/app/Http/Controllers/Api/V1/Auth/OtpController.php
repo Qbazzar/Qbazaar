@@ -17,13 +17,37 @@ use Symfony\Component\HttpFoundation\Response;
  * lifting lives in App\Actions\Auth\SendOtpAction / VerifyOtpAction so the
  * cooldown + max-per-hour rules can be unit-tested without bringing HTTP
  * into the picture.
+ *
+ * @group Auth
  */
 class OtpController extends Controller
 {
     /**
-     * POST /api/v1/auth/send-otp
+     * Send an OTP to a phone
      *
-     * Returns 202 + { sent_to, expires_in, can_resend_in }.
+     * Issues a fresh 6-digit code and dispatches it via SMS (and email, when
+     * a matching user exists). Returns 202.
+     *
+     * @unauthenticated
+     *
+     * @response 202 scenario="Success" {
+     *   "success": true,
+     *   "data": {
+     *     "sent_to": "+97455123456",
+     *     "expires_in": 300,
+     *     "can_resend_in": 60
+     *   }
+     * }
+     *
+     * @response 429 scenario="Cooldown / hourly cap" {
+     *   "success": false,
+     *   "error": {
+     *     "code": "AUTH_006",
+     *     "message_key": "errors.auth.rate.limited",
+     *     "message": "Too many auth requests. Please try again later.",
+     *     "details": null
+     *   }
+     * }
      */
     public function send(OtpSendRequest $request, SendOtpAction $action): JsonResponse
     {
@@ -40,12 +64,38 @@ class OtpController extends Controller
     }
 
     /**
-     * POST /api/v1/auth/verify-otp
+     * Verify an OTP
      *
-     * Returns 200 + { phone_verified: true } on success. Errors are thrown
-     * by VerifyOtpAction → OtpService and shaped by the global handler:
+     * Returns 200 + { phone_verified: true } on success. Errors:
      *  - 410 AUTH_004 when the active OTP has expired
      *  - 422 AUTH_005 when the code is wrong or attempts exhausted
+     *
+     * @unauthenticated
+     *
+     * @response 200 scenario="Success" {
+     *   "success": true,
+     *   "data": { "phone_verified": true }
+     * }
+     *
+     * @response 410 scenario="OTP expired" {
+     *   "success": false,
+     *   "error": {
+     *     "code": "AUTH_004",
+     *     "message_key": "errors.auth.otp.expired",
+     *     "message": "OTP has expired.",
+     *     "details": null
+     *   }
+     * }
+     *
+     * @response 422 scenario="Wrong code" {
+     *   "success": false,
+     *   "error": {
+     *     "code": "AUTH_005",
+     *     "message_key": "errors.auth.otp.invalid",
+     *     "message": "Invalid OTP code.",
+     *     "details": null
+     *   }
+     * }
      */
     public function verify(OtpVerifyRequest $request, VerifyOtpAction $action): JsonResponse
     {
@@ -60,11 +110,22 @@ class OtpController extends Controller
     }
 
     /**
-     * POST /api/v1/auth/resend-otp
+     * Resend the active OTP
      *
      * Same response shape as send-otp — the cooldown / hourly-cap throttles
      * are enforced inside SendOtpAction so both endpoints stay aligned and
      * cannot be played against each other.
+     *
+     * @unauthenticated
+     *
+     * @response 202 scenario="Success" {
+     *   "success": true,
+     *   "data": {
+     *     "sent_to": "+97455123456",
+     *     "expires_in": 300,
+     *     "can_resend_in": 60
+     *   }
+     * }
      */
     public function resend(OtpSendRequest $request, SendOtpAction $action): JsonResponse
     {

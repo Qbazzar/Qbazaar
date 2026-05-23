@@ -9,6 +9,15 @@ use App\Enums\Language;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * @bodyParam full_name string required Full name of the user. Example: Ahmed Al-Ali
+ * @bodyParam email string required Email address. Must be unique. Example: ahmed@example.qa
+ * @bodyParam phone string required Qatari phone in `+974XXXXXXXX` shape. Must be unique. Example: +97455123456
+ * @bodyParam password string required Strong password: uppercase + lowercase + digit + symbol, min 8 chars. Example: Str0ng!Pass
+ * @bodyParam account_type string required Either `private` or `business`. Example: private
+ * @bodyParam language string optional UI language (`ar` or `en`). Defaults to `ar`. Example: ar
+ * @bodyParam accepted_terms boolean required Must be `true`. Example: true
+ */
 class RegisterRequest extends FormRequest
 {
     public function authorize(): bool

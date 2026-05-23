@@ -10,6 +10,11 @@ use Illuminate\Foundation\Http\FormRequest;
  * Validates POST /api/v1/auth/reset-password. The password rule mirrors
  * RegisterRequest so we keep the "uppercase + lowercase + digit + symbol"
  * policy in one place — both endpoints accept the same kind of password.
+ *
+ * @bodyParam email string required The email address the reset link was sent to. Example: user@example.qa
+ * @bodyParam token string required The reset token from the email. Example: a1b2c3d4...
+ * @bodyParam password string required New password (must include uppercase, lowercase, digit, symbol). Example: New!Pass5678
+ * @bodyParam password_confirmation string required Must equal `password`. Example: New!Pass5678
  */
 class ResetPasswordRequest extends FormRequest
 {

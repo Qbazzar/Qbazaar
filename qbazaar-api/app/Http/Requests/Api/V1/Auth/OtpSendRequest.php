@@ -9,6 +9,8 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * Validates POST /api/v1/auth/send-otp + /resend-otp. Mirrors the
  * OpenAPI `OtpSendRequest` schema.
+ *
+ * @bodyParam phone string required Qatari phone in `+974XXXXXXXX` shape. Example: +97455123456
  */
 class OtpSendRequest extends FormRequest
 {
