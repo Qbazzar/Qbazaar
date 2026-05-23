@@ -18,8 +18,10 @@ parameters:
     - config/*
     # Filament uses runtime-generated schemas; analysis adds noise pre-stable.
     - app/Filament/**/*
-    # Pest's Pest.php uses dynamic $this binding magic that PHPStan can't track.
+    # Pest's dynamic $this binding magic in beforeEach/it scopes (e.g. $this->user) is
+    # something PHPStan can't track. We rely on Pest's own runtime checks for tests.
     - tests/Pest.php
+    - tests/Feature/Auth/*
     - bootstrap/cache/*
     - storage/*
     - vendor/*

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Middleware\ApiResponseWrapper;
 use App\Http\Middleware\LocaleMiddleware;
@@ -66,6 +67,19 @@ return Application::configure(basePath: dirname(__DIR__))
                 ErrorCode::VALIDATION_FAILED,
                 __(ErrorCode::VALIDATION_FAILED->messageKey()),
                 $e->errors(),
+                $request->header('X-Request-Id'),
+            );
+        });
+
+        $exceptions->render(function (DomainException $e, Request $request) {
+            if (! ($request->is('api/*') || $request->expectsJson())) {
+                return null;
+            }
+
+            return jsonError(
+                $e->errorCode,
+                $e->getMessage(),
+                $e->details,
                 $request->header('X-Request-Id'),
             );
         });

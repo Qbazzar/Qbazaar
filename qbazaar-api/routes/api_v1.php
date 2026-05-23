@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\Auth\LoginController;
+use App\Http\Controllers\Api\V1\Auth\LogoutController;
+use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
+use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -57,3 +61,22 @@ Route::get('/openapi.yaml', function (): Response {
 // ────────────────────────────────────────────────────────────────────────────
 // Sprint endpoints land here, one Route group per domain.
 // ────────────────────────────────────────────────────────────────────────────
+
+// ── Sprint 1 — Auth (Wave 1: register / login / logout / refresh) ───────────
+Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
+    Route::post('/register', RegisterController::class)
+        ->middleware('throttle:auth')
+        ->name('register');
+
+    Route::post('/login', LoginController::class)
+        ->middleware('throttle:auth')
+        ->name('login');
+
+    Route::post('/logout', LogoutController::class)
+        ->middleware('auth:sanctum')
+        ->name('logout');
+
+    Route::post('/refresh', RefreshTokenController::class)
+        ->middleware('throttle:auth')
+        ->name('refresh');
+});
