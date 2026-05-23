@@ -37,9 +37,9 @@ export default function HomePlaceholder() {
       </div>
 
       <div className="text-ink-500 mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs">
-        <span>Sprint 0 · Day 6</span>
+        <span>Sprint 1 · Auth (Waves 1 + 2)</span>
         <span>·</span>
-        <span>github.com/ahmaddev27/Qbazaar</span>
+        <span>github.com/Qbazzar/Qbazaar</span>
       </div>
     </main>
   );

@@ -14,7 +14,7 @@
 | **Active Milestone** | Milestone 1 — Backend Foundation |
 | **Active Sprint** | Sprint 0 ✅ → **Sprint 1 (Auth)** يبدأ بعد retro |
 | **Active Day** | Sprint 0 closed (Days 1–7 ✅) |
-| **Repo** | https://github.com/ahmaddev27/Qbazaar — single monorepo, baseline pushed `71216d3` |
+| **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
 | **Blockers** | لا يوجد |
 | **Manual user steps pending** | GitHub Project + 13 Milestones + Labels; sign-ups for Twilio + Sentry + FCM project |
 
@@ -136,7 +136,7 @@
 
 ### Day 7 — Mock + Workflow bootstrap (2026-05-20) ✅
 - **Major mid-flight change:** user asked to consolidate the 3 sibling repos into a single monorepo. Done via fresh-start git init at `c:\laragon\www\QB\` with baseline commit `71216d3`. Old per-task hashes referenced above no longer resolve but stay as historical breadcrumbs.
-- Monorepo pushed to **https://github.com/ahmaddev27/Qbazaar** on branch `main`
+- Monorepo originally pushed to **https://github.com/ahmaddev27/Qbazaar**, later transferred to **https://github.com/Qbazzar/Qbazaar** on branch `main`
 - `qbazaar-contracts/` npm dependencies installed (Prism + Redocly, 383 packages)
 - OpenAPI spec adjusted: paths now carry the `/api/v1/` prefix directly; servers become bare hosts (so Prism and Laravel respond on identical URLs)
 - `/api/v1/health` endpoint set to `security: []` so the Prism mock answers without an auth token
