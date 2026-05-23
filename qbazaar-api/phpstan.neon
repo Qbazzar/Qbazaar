@@ -22,6 +22,8 @@ parameters:
     # something PHPStan can't track. We rely on Pest's own runtime checks for tests.
     - tests/Pest.php
     - tests/Feature/Auth/*
+    - tests/Feature/Account/*
+    - tests/Feature/Users/*
     - bootstrap/cache/*
     - storage/*
     - vendor/*

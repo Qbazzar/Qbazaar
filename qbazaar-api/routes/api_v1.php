@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
+use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
+use App\Http\Controllers\Api\V1\Account\PasswordController;
+use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
+use App\Http\Controllers\Api\V1\Account\ProfileController;
+use App\Http\Controllers\Api\V1\Account\SessionsController;
+use App\Http\Controllers\Api\V1\Account\VerificationStatusController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
@@ -9,6 +16,9 @@ use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
+use App\Http\Controllers\Api\V1\Users\BlockController;
+use App\Http\Controllers\Api\V1\Users\PublicProfileController;
+use App\Http\Controllers\Api\V1\Users\UserAdsController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -123,3 +133,47 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->middleware('signed')
         ->name('verify-email');
 });
+
+// ── Sprint 2 — Account & Users ──────────────────────────────────────────────
+//   /account/* — the signed-in user managing their own data
+//   /users/{user}/* — interactions with other users (public profile, block)
+Route::prefix('account')
+    ->name('api.v1.account.')
+    ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
+    ->group(function (): void {
+        Route::get('/summary', AccountSummaryController::class)->name('summary');
+
+        Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+        Route::put('/password', PasswordController::class)->name('password.update');
+
+        Route::get('/sessions', [SessionsController::class, 'index'])->name('sessions.index');
+        Route::delete('/sessions/{id}', [SessionsController::class, 'destroy'])->name('sessions.destroy');
+
+        Route::get('/verification-status', VerificationStatusController::class)->name('verification-status');
+
+        Route::get('/privacy-settings', [PrivacySettingsController::class, 'show'])->name('privacy.show');
+        Route::put('/privacy-settings', [PrivacySettingsController::class, 'update'])->name('privacy.update');
+
+        Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
+    });
+
+Route::prefix('users')
+    ->name('api.v1.users.')
+    ->group(function (): void {
+        // Public — no auth needed
+        Route::get('/{user}/public-profile', PublicProfileController::class)
+            ->middleware('throttle:api')
+            ->name('public-profile');
+
+        Route::get('/{user}/ads', UserAdsController::class)
+            ->middleware('throttle:api')
+            ->name('ads');
+
+        // Authenticated — block / unblock
+        Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
+            Route::post('/{user}/block', [BlockController::class, 'store'])->name('block.store');
+            Route::delete('/{user}/block', [BlockController::class, 'destroy'])->name('block.destroy');
+        });
+    });

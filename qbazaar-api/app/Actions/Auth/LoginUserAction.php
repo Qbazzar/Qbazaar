@@ -65,7 +65,7 @@ class LoginUserAction
 
         $user->forceFill(['last_login_at' => Carbon::now()])->save();
 
-        $tokens = $this->refreshTokens->issue($user, $deviceFingerprint);
+        $tokens = $this->refreshTokens->issue($user, $deviceFingerprint, $ip, $deviceLabel);
 
         if ($isNewDevice) {
             $user->notify(new SecurityAlertNotification(

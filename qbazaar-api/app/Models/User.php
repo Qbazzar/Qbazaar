@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Data\Account\PrivacySettings;
 use App\Enums\AccountType;
 use App\Enums\Language;
 use App\Enums\UserStatus;
+use App\Models\Pivot\UserBlock;
 use App\Notifications\EmailVerificationNotification;
 use App\Notifications\PasswordResetNotification;
 use Database\Factories\UserFactory;
@@ -14,6 +16,7 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -32,6 +35,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property bool $phone_verified
  * @property Language $language
  * @property string|null $avatar_url
+ * @property PrivacySettings|null $privacy_settings
  * @property Carbon|null $last_login_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -56,6 +60,7 @@ class User extends Authenticatable implements CanResetPasswordContract, MustVeri
         'phone_verified',
         'language',
         'avatar_url',
+        'privacy_settings',
         'last_login_at',
     ];
 
@@ -80,7 +85,53 @@ class User extends Authenticatable implements CanResetPasswordContract, MustVeri
             'account_type' => AccountType::class,
             'status' => UserStatus::class,
             'language' => Language::class,
+            'privacy_settings' => PrivacySettings::class,
         ];
+    }
+
+    /**
+     * Resolve the privacy settings DTO, returning sensible defaults when the
+     * column is null (legacy rows). Centralising the fallback here keeps every
+     * caller free of repeated null-coalescing.
+     */
+    public function privacySettings(): PrivacySettings
+    {
+        return $this->privacy_settings ?? PrivacySettings::defaults();
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     *  Blocked users — many-to-many via `user_blocks` pivot.
+     * ──────────────────────────────────────────────────────────────────*/
+
+    /** @return BelongsToMany<User, $this, UserBlock, 'pivot'> */
+    public function blockedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_blocks',
+            'blocker_id',
+            'blocked_id',
+        )
+            ->withPivot('created_at')
+            ->using(UserBlock::class);
+    }
+
+    /** @return BelongsToMany<User, $this, UserBlock, 'pivot'> */
+    public function blockedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_blocks',
+            'blocked_id',
+            'blocker_id',
+        )
+            ->withPivot('created_at')
+            ->using(UserBlock::class);
+    }
+
+    public function hasBlocked(User $other): bool
+    {
+        return $this->blockedUsers()->where('blocked_id', $other->id)->exists();
     }
 
     /* ──────────────────────────────────────────────────────────────────

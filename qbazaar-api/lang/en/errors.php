@@ -63,5 +63,23 @@ return [
         'not' => [
             'found' => 'User not found.',
         ],
+        'block' => [
+            'admin' => [
+                'forbidden' => 'You cannot block an administrator.',
+            ],
+            'self' => [
+                'forbidden' => 'You cannot block yourself.',
+            ],
+        ],
+        'password' => [
+            'current' => [
+                'required' => 'The current password is incorrect.',
+            ],
+        ],
+        'deactivation' => [
+            'password' => [
+                'required' => 'Please provide your password to deactivate the account.',
+            ],
+        ],
     ],
 ];

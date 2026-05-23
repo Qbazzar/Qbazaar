@@ -29,17 +29,31 @@ class RefreshTokenService
     /**
      * Issue a brand-new access+refresh token pair for the given user.
      * Used by register and login. Does NOT rotate anything; just mints.
+     *
+     * The optional $ip / $deviceLabel parameters get persisted onto the
+     * matching personal_access_tokens row so the GET /account/sessions
+     * endpoint can render a useful "this is your Chrome / 1.2.3.4" line
+     * per session.
      */
-    public function issue(User $user, ?string $deviceFingerprint = null): TokenPair
+    public function issue(User $user, ?string $deviceFingerprint = null, ?string $ip = null, ?string $deviceLabel = null): TokenPair
     {
         $accessTtlMinutes = (int) config('qbazaar.auth.access_token_ttl_minutes', 15);
         $refreshTtlDays = (int) config('qbazaar.auth.refresh_token_ttl_days', 30);
 
-        $accessToken = $user->createToken(
+        $newAccessToken = $user->createToken(
             name: 'api',
             abilities: ['*'],
             expiresAt: Carbon::now()->addMinutes($accessTtlMinutes),
-        )->plainTextToken;
+        );
+
+        if ($ip !== null || $deviceLabel !== null) {
+            $newAccessToken->accessToken->forceFill(array_filter([
+                'ip_address' => $ip,
+                'device_label' => $deviceLabel,
+            ], fn ($v) => $v !== null))->save();
+        }
+
+        $accessToken = $newAccessToken->plainTextToken;
 
         // HasUlids::newUniqueId() returns lowercase ULIDs — match that convention
         // so any subsequent lookup-by-id (in findCandidate) stays consistent.
@@ -84,7 +98,7 @@ class RefreshTokenService
      *
      * @return array{user: User, tokens: TokenPair}
      */
-    public function rotate(string $presentedRaw, ?string $deviceFingerprint = null): array
+    public function rotate(string $presentedRaw, ?string $deviceFingerprint = null, ?string $ip = null, ?string $deviceLabel = null): array
     {
         $candidate = $this->findCandidate($presentedRaw);
 
@@ -119,7 +133,7 @@ class RefreshTokenService
                 $this->fail(ErrorCode::AUTH_TOKEN_EXPIRED);
             }
 
-            return DB::transaction(function () use ($candidate, $deviceFingerprint): array {
+            return DB::transaction(function () use ($candidate, $deviceFingerprint, $ip, $deviceLabel): array {
                 /** @var RefreshToken $fresh */
                 $fresh = RefreshToken::query()->lockForUpdate()->findOrFail($candidate->id);
 
@@ -137,7 +151,7 @@ class RefreshTokenService
 
                 return [
                     'user' => $user,
-                    'tokens' => $this->issue($user, $deviceFingerprint),
+                    'tokens' => $this->issue($user, $deviceFingerprint, $ip, $deviceLabel),
                 ];
             });
         } finally {

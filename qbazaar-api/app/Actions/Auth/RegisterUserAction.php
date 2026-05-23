@@ -41,10 +41,10 @@ class RegisterUserAction
      * }  $data
      * @return array{user: User, tokens: TokenPair}
      */
-    public function execute(array $data, ?string $deviceFingerprint = null): array
+    public function execute(array $data, ?string $deviceFingerprint = null, ?string $ip = null, ?string $deviceLabel = null): array
     {
         /** @var array{user: User, tokens: TokenPair} $result */
-        $result = DB::transaction(function () use ($data, $deviceFingerprint) {
+        $result = DB::transaction(function () use ($data, $deviceFingerprint, $ip, $deviceLabel) {
             $user = User::query()->create([
                 'full_name' => $data['full_name'],
                 'email' => strtolower($data['email']),
@@ -57,7 +57,7 @@ class RegisterUserAction
                 'language' => $data['language'] ?? Language::ARABIC->value,
             ]);
 
-            $tokens = $this->refreshTokens->issue($user, $deviceFingerprint);
+            $tokens = $this->refreshTokens->issue($user, $deviceFingerprint, $ip, $deviceLabel);
 
             return ['user' => $user, 'tokens' => $tokens];
         });

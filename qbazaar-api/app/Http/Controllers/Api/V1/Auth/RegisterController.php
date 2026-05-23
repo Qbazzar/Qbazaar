@@ -68,7 +68,12 @@ class RegisterController extends Controller
         /** @var array{full_name:string,email:string,phone:string,password:string,account_type:string,language?:string} $validated */
         $validated = $request->validated();
 
-        $result = $action->execute($validated, $fingerprints->fingerprintFromRequest($request));
+        $result = $action->execute(
+            $validated,
+            $fingerprints->fingerprintFromRequest($request),
+            (string) $request->ip(),
+            $fingerprints->labelFromRequest($request),
+        );
 
         return response()->json(
             (new AuthResponseResource($result['user'], $result['tokens']))->toArray(),

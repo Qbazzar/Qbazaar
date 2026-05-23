@@ -56,6 +56,8 @@ class RefreshTokenController extends Controller
         $result = $service->rotate(
             presentedRaw: (string) $request->validated('refresh_token'),
             deviceFingerprint: $fingerprints->fingerprintFromRequest($request),
+            ip: (string) $request->ip(),
+            deviceLabel: $fingerprints->labelFromRequest($request),
         );
 
         return response()->json(
