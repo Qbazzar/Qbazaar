@@ -697,24 +697,40 @@ npm install -D @types/node
    - افتح PR ضد `develop` لما تخلص
    - اربط الـ PR بالـ Issue (`Closes #N`)
 
-3. **نهاية كل sprint:**
-   - Demo داخلي (لنفسك): اختبر الـ endpoints عبر Postman/Scribe
+3. **بعد كل endpoint يخلص (مفروضة دائماً):**
+   1. **Scribe annotations** على الـ Controller + Form Request (`@group`, `@bodyParam`, `@response`, `@queryParam`, `@urlParam`). شغّل `php artisan scribe:generate` — `/docs` و `/swagger` لازم يعرضوا الـ endpoint الجديد بشكل صحيح.
+   2. **حدّث `openapi/v1.yaml`** في `qbazaar-contracts/` إذا الـ endpoint عُرّف هنا أولاً (contract-first). الـ Scribe-generated openapi هو snapshot من الـ code — `qbazaar-contracts/openapi/v1.yaml` هو الـ canonical authored spec.
+   3. **حدّث `qbazaar-contracts/postman/qbazaar.postman_collection.json`** بإضافة request جديد تحت الـ folder المناسب (`Auth`, `Users`, `Ads` ...). اسم الـ request بصيغة `METHOD /path`. أضف `tests` script لو الـ response بيحمل شي نلتقطه في env (مثلاً tokens).
+   4. **حدّث `qbazaar-contracts/postman/qbazaar.local.postman_environment.json`** فقط لو الـ endpoint بيحتاج env variable جديد.
+   5. **اختبر يدوياً** بـ Postman (import المجلدين الـ JSON من `qbazaar-contracts/postman/`، اختر الـ env، أرسل الطلب).
+   6. **Commit:** الخطوات 2-4 ضمن نفس الـ task commit (`feat(domain): ... [TASK-ID]`)، أو في follow-up `docs(postman): sync collection [TASK-ID]` لو الـ endpoint كان commit مسبق.
+
+4. **نهاية كل sprint:**
+   - Demo داخلي (لنفسك): اختبر الـ endpoints عبر Postman/Scribe/Swagger
    - اكتب Retro في ROADMAP.md
    - أغلق الـ milestone على GitHub
    - مرّر develop → main لما يكون كل شي مستقر
 
-4. **Definition of Done لكل Sprint** (من قسم 8 في وثيقة الـ Backend):
-   - Routes معرّفة
-   - Form Requests + validation
-   - API Resources
-   - Policies (إذا حساس)
+5. **Definition of Done لكل endpoint** (مفعّلة لكل task):
+   - Route معرّف في `routes/api_v1.php`
+   - Form Request مع validation rules كاملة
+   - API Resource للـ response
+   - Policy (إذا حساس)
    - Activity log (إذا حساس)
-   - Localization keys (ar + en)
-   - Pest tests > 70% coverage
-   - Scribe annotations
-   - PHPStan لازم يمر
-   - Pint لازم يمر
-   - Migrations + rollback يعملوا
+   - Localization keys (ar + en) لـ كل message_key مذكور
+   - Pest Feature test (happy path + edge cases)
+   - **Scribe annotations مكتملة + `php artisan scribe:generate` يمر**
+   - **Postman collection + env محدّثين (راجع الخطوة 3 فوق)**
+   - PHPStan level 8 يمر
+   - Pint يمر
+   - Migration + rollback يعملوا
+
+6. **API Documentation surfaces (3 ports of entry):**
+   - **`/docs`** — Scribe auto-derived من PHPDoc. Read-only, shows ground-truth implementation.
+   - **`/swagger`** — Swagger UI loading `qbazaar-contracts/openapi/v1.yaml`. Source of truth for contract-first work.
+   - **`qbazaar-contracts/postman/`** — Postman collection + env. The on-the-go testing bench.
+
+   كل واحد بيتحدّث في خطوة محددة من البروتوكول فوق. ممنوع نشحن endpoint لـ main بدون ما الثلاثة يكونوا up-to-date.
 
 ---
 
