@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Cairo, DM_Sans, Geist_Mono, Instrument_Serif } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
+import { Toaster } from '@/components/ui/sonner';
+import { Providers } from './providers';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -38,15 +40,18 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Wave 1 ships a single Arabic locale + RTL — the `[locale]` segment lands in Wave 2.
   return (
     <html
-      lang="en"
+      lang="ar"
+      dir="rtl"
       suppressHydrationWarning
       className={`${dmSans.variable} ${instrumentSerif.variable} ${cairo.variable} ${geistMono.variable}`}
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          {children}
+          <Providers>{children}</Providers>
+          <Toaster richColors closeButton position="top-center" />
         </ThemeProvider>
       </body>
     </html>

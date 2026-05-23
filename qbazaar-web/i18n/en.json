@@ -10,6 +10,106 @@
     "cancel": "Cancel",
     "save": "Save",
     "delete": "Delete",
-    "edit": "Edit"
+    "edit": "Edit",
+    "submit": "Submit",
+    "or": "or"
+  },
+  "auth": {
+    "hero": {
+      "eyebrow": "Qatar marketplace",
+      "title_line1": "Your neighbourhood",
+      "title_line2": "market awaits.",
+      "subtitle": "Join 42,000 Qatari neighbours buying, selling, and finding their next favourite thing.",
+      "bullet_free": "Free to post — always",
+      "bullet_verified": "Verified sellers, real reviews",
+      "bullet_local": "Built for Qatar, in your time zone"
+    },
+    "tabs": {
+      "login": "Sign in",
+      "register": "Create account"
+    },
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your QBazaar account.",
+      "identifier_label": "Email or phone",
+      "identifier_placeholder": "you@example.com or +97455123456",
+      "password_label": "Password",
+      "password_placeholder": "••••••••",
+      "remember_me": "Keep me signed in",
+      "forgot": "Forgot password?",
+      "submit": "Sign in",
+      "submitting": "Signing you in…",
+      "no_account": "Don't have an account?",
+      "go_to_register": "Create one",
+      "success": "Signed in"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "It takes less than a minute.",
+      "full_name_label": "Full name",
+      "full_name_placeholder": "Sara Al-Mansoori",
+      "email_label": "Email",
+      "email_placeholder": "you@example.com",
+      "phone_label": "Phone number",
+      "phone_placeholder": "5512 4488",
+      "password_label": "Password",
+      "password_placeholder": "••••••••",
+      "password_hint": "At least 8 characters with uppercase, lowercase, number and symbol.",
+      "account_type_label": "Account type",
+      "account_type_private": "Private",
+      "account_type_business": "Business",
+      "terms_prefix": "By creating an account you agree to the",
+      "terms_link": "Terms of Service",
+      "terms_and": "and",
+      "privacy_link": "Privacy Policy",
+      "submit": "Create account",
+      "submitting": "Creating your account…",
+      "have_account": "Already have an account?",
+      "go_to_login": "Sign in",
+      "success": "Account created. Phone verification lands in the next wave."
+    },
+    "password_strength": {
+      "label": "Password strength",
+      "empty": "—",
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong",
+      "rules": {
+        "length": "At least 8 characters",
+        "uppercase": "Uppercase letter (A-Z)",
+        "lowercase": "Lowercase letter (a-z)",
+        "number": "Number (0-9)",
+        "symbol": "Symbol (!@#…)"
+      }
+    },
+    "phone": {
+      "country_prefix": "🇶🇦 +974"
+    },
+    "errors": {
+      "full_name_min": "Name is too short (min 3 characters)",
+      "full_name_max": "Name is too long (max 80 characters)",
+      "email_invalid": "Enter a valid email address",
+      "phone_invalid": "Enter a valid Qatar number (+974 then 8 digits)",
+      "password_required": "Password is required",
+      "password_min": "Password must be at least 8 characters",
+      "password_uppercase": "Must include an uppercase letter",
+      "password_lowercase": "Must include a lowercase letter",
+      "password_number": "Must include a number",
+      "password_symbol": "Must include a symbol",
+      "identifier_required": "Enter your email or phone number",
+      "identifier_invalid": "Enter a valid email, or a Qatari phone in the form +974XXXXXXXX",
+      "terms_required": "You must accept the terms to continue",
+      "AUTH_001": "Invalid credentials",
+      "AUTH_002": "Your account is suspended — please contact support",
+      "AUTH_007": "This email is already registered",
+      "AUTH_008": "This phone number is already registered",
+      "AUTH_009": "Your session expired, please sign in again",
+      "AUTH_010": "Invalid session",
+      "VALIDATION_FAILED": "Please review the highlighted fields",
+      "RATE_LIMIT_EXCEEDED": "Too many attempts, try again later",
+      "network": "Could not reach the server",
+      "unknown": "An unexpected error occurred"
+    }
   }
 }

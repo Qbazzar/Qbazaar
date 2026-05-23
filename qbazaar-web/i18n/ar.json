@@ -10,6 +10,106 @@
     "cancel": "إلغاء",
     "save": "حفظ",
     "delete": "حذف",
-    "edit": "تعديل"
+    "edit": "تعديل",
+    "submit": "إرسال",
+    "or": "أو"
+  },
+  "auth": {
+    "hero": {
+      "eyebrow": "سوق قطر",
+      "title_line1": "حيّك القريب",
+      "title_line2": "في انتظارك.",
+      "subtitle": "انضم لـ 42,000 جار قطري يبيعون ويشترون ويلاقون أغراضهم المفضلة.",
+      "bullet_free": "النشر مجاني — للأبد",
+      "bullet_verified": "بائعون موثقون وتقييمات حقيقية",
+      "bullet_local": "صُمم لقطر، بتوقيتك"
+    },
+    "tabs": {
+      "login": "تسجيل الدخول",
+      "register": "إنشاء حساب"
+    },
+    "login": {
+      "title": "أهلاً بعودتك",
+      "subtitle": "سجّل دخولك إلى حساب QBazaar.",
+      "identifier_label": "البريد الإلكتروني أو رقم الهاتف",
+      "identifier_placeholder": "you@example.com أو +97455123456",
+      "password_label": "كلمة المرور",
+      "password_placeholder": "••••••••",
+      "remember_me": "ابقني مسجلاً",
+      "forgot": "نسيت كلمة المرور؟",
+      "submit": "تسجيل الدخول",
+      "submitting": "جاري تسجيل الدخول…",
+      "no_account": "ليس لديك حساب؟",
+      "go_to_register": "أنشئ حساباً",
+      "success": "تم تسجيل الدخول بنجاح"
+    },
+    "register": {
+      "title": "أنشئ حسابك",
+      "subtitle": "لن يستغرق الأمر دقيقة.",
+      "full_name_label": "الاسم الكامل",
+      "full_name_placeholder": "سارة المنصوري",
+      "email_label": "البريد الإلكتروني",
+      "email_placeholder": "you@example.com",
+      "phone_label": "رقم الهاتف",
+      "phone_placeholder": "5512 4488",
+      "password_label": "كلمة المرور",
+      "password_placeholder": "••••••••",
+      "password_hint": "8 أحرف على الأقل مع حرف كبير وصغير ورقم ورمز.",
+      "account_type_label": "نوع الحساب",
+      "account_type_private": "حساب شخصي",
+      "account_type_business": "حساب تجاري",
+      "terms_prefix": "بإنشاء الحساب فأنت توافق على",
+      "terms_link": "الشروط والأحكام",
+      "terms_and": "و",
+      "privacy_link": "سياسة الخصوصية",
+      "submit": "إنشاء الحساب",
+      "submitting": "جاري إنشاء الحساب…",
+      "have_account": "لديك حساب بالفعل؟",
+      "go_to_login": "سجّل دخولك",
+      "success": "تم إنشاء حسابك. سيتم التحقق من الهاتف في المرحلة القادمة."
+    },
+    "password_strength": {
+      "label": "قوة كلمة المرور",
+      "empty": "—",
+      "weak": "ضعيفة",
+      "fair": "متوسطة",
+      "good": "جيدة",
+      "strong": "قوية",
+      "rules": {
+        "length": "٨ أحرف على الأقل",
+        "uppercase": "حرف كبير (A-Z)",
+        "lowercase": "حرف صغير (a-z)",
+        "number": "رقم (0-9)",
+        "symbol": "رمز (!@#…)"
+      }
+    },
+    "phone": {
+      "country_prefix": "🇶🇦 +974"
+    },
+    "errors": {
+      "full_name_min": "الاسم قصير جداً (3 أحرف على الأقل)",
+      "full_name_max": "الاسم طويل جداً (80 حرف كحد أقصى)",
+      "email_invalid": "صيغة البريد الإلكتروني غير صحيحة",
+      "phone_invalid": "أدخل رقم قطري صحيح (+974 ثم 8 أرقام)",
+      "password_required": "كلمة المرور مطلوبة",
+      "password_min": "كلمة المرور قصيرة (8 أحرف كحد أدنى)",
+      "password_uppercase": "يجب أن تحتوي على حرف كبير",
+      "password_lowercase": "يجب أن تحتوي على حرف صغير",
+      "password_number": "يجب أن تحتوي على رقم",
+      "password_symbol": "يجب أن تحتوي على رمز",
+      "identifier_required": "أدخل بريدك الإلكتروني أو رقم هاتفك",
+      "identifier_invalid": "أدخل بريداً إلكترونياً صحيحاً أو رقم قطري بصيغة +974XXXXXXXX",
+      "terms_required": "يجب الموافقة على الشروط للمتابعة",
+      "AUTH_001": "بيانات الدخول غير صحيحة",
+      "AUTH_002": "حسابك معلّق، تواصل مع الدعم",
+      "AUTH_007": "البريد الإلكتروني مسجّل مسبقاً",
+      "AUTH_008": "رقم الهاتف مسجّل مسبقاً",
+      "AUTH_009": "انتهت صلاحية الجلسة، سجّل الدخول مرة أخرى",
+      "AUTH_010": "الجلسة غير صالحة",
+      "VALIDATION_FAILED": "تحقق من الحقول المُدخلة",
+      "RATE_LIMIT_EXCEEDED": "محاولات كثيرة جداً، حاول لاحقاً",
+      "network": "تعذّر الاتصال بالخادم",
+      "unknown": "حدث خطأ غير متوقع"
+    }
   }
 }
