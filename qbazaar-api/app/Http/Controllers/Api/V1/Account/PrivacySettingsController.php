@@ -27,6 +27,8 @@ class PrivacySettingsController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $this->authorize('view', $user);
+
         return response()->json(
             (new PrivacySettingsResource($user->privacySettings()))->toArray($request),
         );
@@ -41,6 +43,8 @@ class PrivacySettingsController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('update', $user);
 
         /** @var array{show_phone: bool, show_email: bool, allow_chat: bool, indexed_by_search: bool} $payload */
         $payload = $request->validated();

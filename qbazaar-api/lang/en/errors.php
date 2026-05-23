@@ -59,6 +59,8 @@ return [
 
     'not_found' => 'The requested resource was not found.',
 
+    'forbidden' => 'You are not authorised to perform this action.',
+
     'user' => [
         'not' => [
             'found' => 'User not found.',

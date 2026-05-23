@@ -27,6 +27,8 @@ class ProfileController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $this->authorize('view', $user);
+
         return response()->json(
             (new AccountProfileResource($user))->toArray($request),
         );
@@ -41,6 +43,8 @@ class ProfileController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('update', $user);
 
         /** @var array{full_name: string, language: string} $payload */
         $payload = $request->validated();

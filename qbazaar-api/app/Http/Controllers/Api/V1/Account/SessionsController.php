@@ -35,6 +35,8 @@ class SessionsController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $this->authorize('view', $user);
+
         /** @var PersonalAccessToken|null $current */
         $current = $user->currentAccessToken() instanceof PersonalAccessToken
             ? $user->currentAccessToken()
@@ -76,6 +78,8 @@ class SessionsController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+
+        $this->authorize('update', $user);
 
         /** @var PersonalAccessToken|null $token */
         $token = $user->tokens()->whereKey($id)->first();

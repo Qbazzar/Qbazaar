@@ -41,6 +41,8 @@ class AccountSummaryController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $this->authorize('view', $user);
+
         return response()->json(
             (new AccountSummaryResource($action->execute($user)))->toArray($request),
         );

@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsurePhoneVerified;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\TrackClient;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Application;
@@ -88,6 +89,27 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e->details,
                 $request->header('X-Request-Id'),
             );
+        });
+
+        $exceptions->render(function (AuthorizationException $e, Request $request) {
+            if (! ($request->is('api/*') || $request->expectsJson())) {
+                return null;
+            }
+
+            // Policies / gates failing return our generic 403 envelope.
+            // Domain rules with specific ErrorCodes (USER_002, USER_003, …)
+            // should still throw DomainException so they keep their stable
+            // codes; this branch is the catch-all "you don't own this".
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'FORBIDDEN',
+                    'message_key' => 'errors.forbidden',
+                    'message' => $e->getMessage() !== '' ? $e->getMessage() : __('errors.forbidden'),
+                    'details' => null,
+                    'request_id' => $request->header('X-Request-Id'),
+                ],
+            ], 403);
         });
 
         $exceptions->render(function (AuthenticationException $e, Request $request) {

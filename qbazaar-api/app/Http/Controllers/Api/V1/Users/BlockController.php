@@ -34,6 +34,11 @@ class BlockController extends Controller
         /** @var User $blocker */
         $blocker = $request->user();
 
+        // BlockPolicy::block catches self-block and admin-target before we
+        // touch the action; the action still throws stable ErrorCodes on top
+        // of that so HTTP clients keep getting USER_002 / USER_003.
+        $this->authorize('block-user', $user);
+
         $action->execute($blocker, $user);
 
         return response()->json([
@@ -53,6 +58,8 @@ class BlockController extends Controller
     {
         /** @var User $blocker */
         $blocker = $request->user();
+
+        $this->authorize('unblock-user', $user);
 
         $action->execute($blocker, $user);
 

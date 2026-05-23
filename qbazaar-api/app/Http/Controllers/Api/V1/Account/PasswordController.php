@@ -32,6 +32,8 @@ class PasswordController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $this->authorize('update', $user);
+
         /** @var PersonalAccessToken|null $current */
         $current = $user->currentAccessToken() instanceof PersonalAccessToken
             ? $user->currentAccessToken()

@@ -26,6 +26,8 @@ class VerificationStatusController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $this->authorize('view', $user);
+
         return response()->json(
             (new VerificationStatusResource($user))->toArray($request),
         );

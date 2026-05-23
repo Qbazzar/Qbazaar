@@ -28,6 +28,8 @@ class BlockedUsersController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $this->authorize('view', $user);
+
         $paginator = $user->blockedUsers()
             ->orderByPivot('created_at', 'desc')
             ->paginate(20);
