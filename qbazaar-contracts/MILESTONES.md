@@ -256,28 +256,28 @@
 
 | ID | Task | Path / Component |
 |----|------|------------------|
-| FE-1.1 | Login page | `app/[locale]/(auth)/login/page.tsx` |
-| FE-1.2 | Register page | `app/[locale]/(auth)/register/page.tsx` |
-| FE-1.3 | OTP verification page | `app/[locale]/(auth)/verify-otp/page.tsx` |
-| FE-1.4 | Forgot password page | `app/[locale]/(auth)/forgot-password/page.tsx` |
-| FE-1.5 | Reset password page | `app/[locale]/(auth)/reset-password/page.tsx` |
-| FE-1.6 | Email verification page | `app/[locale]/verify-email/page.tsx` |
-| FE-1.7 | Auth layout (split with hero image) | `app/[locale]/(auth)/layout.tsx` — مرجع `auth.jsx` mockup |
-| FE-1.8 | LoginForm component | `components/auth/LoginForm.tsx` |
-| FE-1.9 | RegisterForm component | `components/auth/RegisterForm.tsx` |
-| FE-1.10 | OtpInput (4 boxes auto-advance) | `components/auth/OtpInput.tsx` |
-| FE-1.11 | PasswordStrengthIndicator | `components/auth/PasswordStrengthIndicator.tsx` |
-| FE-1.12 | PhoneInput (Qatar prefix +974) | `components/auth/PhoneInput.tsx` |
-| FE-1.13 | Auth Zustand store | `store/auth.ts` — user, accessToken (memory), isLoading |
-| FE-1.14 | API: auth functions | `lib/api/auth.ts` |
-| FE-1.15 | axios interceptors | `lib/api/interceptors.ts` — Bearer header + 401 refresh mutex |
-| FE-1.16 | Refresh token cookie route | `app/api/auth/refresh/route.ts` (proxy للـ Backend) |
-| FE-1.17 | `useAuth()` hook | `hooks/useAuth.ts` |
-| FE-1.18 | `useRequireAuth()` hook | `hooks/useRequireAuth.ts` — redirect to /login |
-| FE-1.19 | Protected route HOC | `components/auth/RequireAuth.tsx` |
-| FE-1.20 | Zod schemas matching backend validation | `lib/validation/auth.ts` |
-| FE-1.21 | i18n keys للـ auth | `i18n/ar.json` + `en.json` |
-| FE-1.22 | Toast notifications للـ success/error | استخدم shadcn `sonner` |
+| FE-1.1 | Login page | `app/(auth)/login/page.tsx` ✅ Wave 1 (locale segment deferred to Wave 2) |
+| FE-1.2 | Register page | `app/(auth)/register/page.tsx` ✅ Wave 1 |
+| FE-1.3 | OTP verification page | `app/[locale]/(auth)/verify-otp/page.tsx` — *deferred to Wave 2* |
+| FE-1.4 | Forgot password page | `app/[locale]/(auth)/forgot-password/page.tsx` — *deferred to Wave 2* |
+| FE-1.5 | Reset password page | `app/[locale]/(auth)/reset-password/page.tsx` — *deferred to Wave 2* |
+| FE-1.6 | Email verification page | `app/[locale]/verify-email/page.tsx` — *deferred to Wave 2* |
+| FE-1.7 | Auth layout (split with hero image) | `app/(auth)/layout.tsx` — مرجع `auth.jsx` mockup ✅ Wave 1 |
+| FE-1.8 | LoginForm component | `components/auth/LoginForm.tsx` ✅ Wave 1 |
+| FE-1.9 | RegisterForm component | `components/auth/RegisterForm.tsx` ✅ Wave 1 |
+| FE-1.10 | OtpInput (4 boxes auto-advance) | `components/auth/OtpInput.tsx` — *deferred to Wave 2* |
+| FE-1.11 | PasswordStrengthIndicator | `components/auth/PasswordStrengthIndicator.tsx` ✅ Wave 1 |
+| FE-1.12 | PhoneInput (Qatar prefix +974) | `components/auth/PhoneInput.tsx` ✅ Wave 1 |
+| FE-1.13 | Auth Zustand store | `store/auth.ts` — user, accessToken (memory), isLoading ✅ Wave 1 |
+| FE-1.14 | API: auth functions | `lib/api/auth.ts` ✅ Wave 1 (register/login/logout/refresh) |
+| FE-1.15 | axios interceptors | `lib/api/interceptors.ts` — Bearer header + 401 refresh mutex ✅ Wave 1 |
+| FE-1.16 | Refresh token cookie route | `app/api/auth/refresh/route.ts` + `app/api/auth/session/route.ts` (HTTP-only cookie) ✅ Wave 1 |
+| FE-1.17 | `useAuth()` hook | `hooks/useAuth.ts` ✅ Wave 1 (full hydration via `/me` deferred to Wave 2) |
+| FE-1.18 | `useRequireAuth()` hook | `hooks/useRequireAuth.ts` — redirect to /login — *deferred to Wave 2* |
+| FE-1.19 | Protected route HOC | `components/auth/RequireAuth.tsx` — *deferred to Wave 2* |
+| FE-1.20 | Zod schemas matching backend validation | `lib/validation/auth.ts` ✅ Wave 1 |
+| FE-1.21 | i18n keys للـ auth | `i18n/ar.json` + `en.json` ✅ Wave 1 |
+| FE-1.22 | Toast notifications للـ success/error | shadcn `sonner` mounted في `app/layout.tsx` ✅ Wave 1 |
 
 ### 🟡 Contract Tasks (`qbazaar-contracts`)
 
