@@ -53,6 +53,12 @@ return [
         'max_attempts' => 3,
         'resend_cooldown_seconds' => 60,
         'max_per_hour' => 5,
+
+        // Dev override: when set, OtpService::issue() short-circuits the random
+        // generator and emits this exact code (still goes through Twilio/log/email
+        // channels so the full flow is exercised). Leave null in production —
+        // a non-null value here is a security risk.
+        'fixed_code' => env('OTP_FIXED_CODE'),
     ],
 
     /*

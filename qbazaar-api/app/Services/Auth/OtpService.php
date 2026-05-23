@@ -42,7 +42,15 @@ class OtpService
         $ttlMinutes = (int) config('qbazaar.otp.ttl_minutes', 5);
         $cooldownSeconds = (int) config('qbazaar.otp.resend_cooldown_seconds', 60);
 
-        $raw = $this->generateNumeric($length);
+        // Dev override (OTP_FIXED_CODE in .env) — when set, every issued OTP is
+        // this exact value. The rest of the flow (hash at rest, attempts,
+        // expiry, Twilio/log/email delivery) runs unchanged so devs can exercise
+        // the real pipeline without needing a phone in hand. Must be null in
+        // production.
+        $fixedCode = config('qbazaar.otp.fixed_code');
+        $raw = is_string($fixedCode) && $fixedCode !== ''
+            ? str_pad($fixedCode, $length, '0', STR_PAD_LEFT)
+            : $this->generateNumeric($length);
 
         DB::transaction(function () use ($phone, $raw, $ttlMinutes): void {
             // Burn the previously-active OTP — invariant: at most one active row per phone.
