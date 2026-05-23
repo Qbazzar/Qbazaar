@@ -443,6 +443,317 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  # ──────────────────────────────────────────────────────────────────────────
+  # Account (Sprint 2 — Wave 1)
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/account/summary:
+    get:
+      tags: [Account]
+      summary: At-a-glance counters for the dashboard
+      operationId: accountSummary
+      responses:
+        '200':
+          description: Counters returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountSummaryEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/account/profile:
+    get:
+      tags: [Account]
+      summary: Get the signed-in user's full profile + privacy settings
+      operationId: accountProfileShow
+      responses:
+        '200':
+          description: Profile returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [Account]
+      summary: Update the editable subset of the profile (full_name + language)
+      operationId: accountProfileUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+            examples:
+              valid:
+                value:
+                  full_name: Ahmed Al-Ali
+                  language: ar
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/account/password:
+    put:
+      tags: [Account]
+      summary: Change the signed-in user's password
+      operationId: accountPasswordUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordRequest'
+            examples:
+              valid:
+                value:
+                  current_password: 'OldStr0ng!Pass'
+                  password: 'NewStr0ng!Pass#1'
+                  password_confirmation: 'NewStr0ng!Pass#1'
+      responses:
+        '204':
+          description: Password updated, other sessions revoked
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation failed or current password incorrect (USER_004)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/sessions:
+    get:
+      tags: [Account]
+      summary: List the user's active sessions
+      operationId: accountSessionsIndex
+      responses:
+        '200':
+          description: Sessions returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/account/sessions/{id}:
+    delete:
+      tags: [Account]
+      summary: Revoke a single session by id
+      operationId: accountSessionsDestroy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Session revoked
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Session not found or not owned by the caller (USER_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/verification-status:
+    get:
+      tags: [Account]
+      summary: Email / phone / business / KYC verification snapshot
+      operationId: accountVerificationStatus
+      responses:
+        '200':
+          description: Verification status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationStatusEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/account/privacy-settings:
+    get:
+      tags: [Account]
+      summary: Get the user's privacy preferences
+      operationId: accountPrivacyShow
+      responses:
+        '200':
+          description: Privacy settings returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacySettingsEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [Account]
+      summary: Replace the user's privacy preferences
+      operationId: accountPrivacyUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacySettings'
+            examples:
+              valid:
+                value:
+                  show_phone: true
+                  show_email: false
+                  allow_chat: true
+                  indexed_by_search: true
+      responses:
+        '200':
+          description: Privacy settings updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacySettingsEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/account/blocked-users:
+    get:
+      tags: [Account]
+      summary: Paginated list of users the caller has blocked
+      operationId: accountBlockedUsers
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Blocked users returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockedUsersEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Users (Sprint 2 — Wave 1)
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/users/{user}/block:
+    post:
+      tags: [Users]
+      summary: Block a user
+      operationId: usersBlock
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '200':
+          description: User blocked (idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockResultEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Cannot block an administrator (USER_002)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Cannot block yourself (USER_003)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [Users]
+      summary: Unblock a user (idempotent)
+      operationId: usersUnblock
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '204':
+          description: Unblocked (or nothing to unblock)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/users/{user}/public-profile:
+    get:
+      tags: [Users]
+      summary: Public read-only profile of any active user
+      operationId: usersPublicProfile
+      security: []
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '200':
+          description: Public profile returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfileEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/users/{user}/ads:
+    get:
+      tags: [Users]
+      summary: Public list of a user's active ads (stub until Sprint 5)
+      operationId: usersAds
+      security: []
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Paginated ads (empty stub)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   schemas:
     # ─── Envelopes ──────────────────────────────────────────────────
@@ -751,6 +1062,255 @@ components:
                   type: integer
                   description: Seconds the client must wait before calling resend-otp
                   example: 60
+
+    # ── Account & Users (Sprint 2 Wave 1) ───────────────────────────
+    AccountSummary:
+      type: object
+      required: [my_ads, drafts, conversations, unread_notifications, favorites]
+      properties:
+        my_ads:
+          type: integer
+          example: 0
+        drafts:
+          type: integer
+          example: 0
+        conversations:
+          type: integer
+          example: 0
+        unread_notifications:
+          type: integer
+          example: 0
+        favorites:
+          type: integer
+          example: 0
+
+    AccountSummaryEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AccountSummary'
+
+    PrivacySettings:
+      type: object
+      required: [show_phone, show_email, allow_chat, indexed_by_search]
+      properties:
+        show_phone:
+          type: boolean
+          default: true
+        show_email:
+          type: boolean
+          default: false
+        allow_chat:
+          type: boolean
+          default: true
+        indexed_by_search:
+          type: boolean
+          default: true
+
+    PrivacySettingsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/PrivacySettings'
+
+    AccountProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          required: [privacy_settings]
+          properties:
+            privacy_settings:
+              $ref: '#/components/schemas/PrivacySettings'
+
+    AccountProfileEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AccountProfile'
+
+    UpdateProfileRequest:
+      type: object
+      required: [full_name, language]
+      properties:
+        full_name:
+          type: string
+          minLength: 3
+          maxLength: 80
+        language:
+          type: string
+          enum: [ar, en]
+
+    UpdatePasswordRequest:
+      type: object
+      required: [current_password, password, password_confirmation]
+      properties:
+        current_password:
+          type: string
+        password:
+          type: string
+          minLength: 8
+          description: Must contain uppercase, lowercase, number and symbol
+        password_confirmation:
+          type: string
+          minLength: 8
+
+    Session:
+      type: object
+      required: [id, name, is_current]
+      properties:
+        id:
+          type: string
+          example: '17'
+        name:
+          type: string
+          example: api
+        last_used_at:
+          type: [string, 'null']
+          format: date-time
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        expires_at:
+          type: [string, 'null']
+          format: date-time
+        device_label:
+          type: [string, 'null']
+          example: web / Chrome
+        ip_address:
+          type: [string, 'null']
+          example: 1.2.3.4
+        is_current:
+          type: boolean
+
+    SessionsListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Session'
+
+    VerificationStatus:
+      type: object
+      required: [email_verified, phone_verified, business_verified, kyc_status]
+      properties:
+        email_verified:
+          type: boolean
+        phone_verified:
+          type: boolean
+        business_verified:
+          type: boolean
+          description: Placeholder until Phase 2 business-verification ships
+        kyc_status:
+          type: string
+          enum: [none, pending, approved, rejected]
+          description: Placeholder until Phase 2 KYC ships
+
+    VerificationStatusEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/VerificationStatus'
+
+    BlockedUser:
+      type: object
+      required: [id, full_name, blocked_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/ULID'
+        full_name:
+          type: string
+        avatar_url:
+          type: [string, 'null']
+          format: uri
+        blocked_at:
+          type: string
+          format: date-time
+
+    BlockedUsersEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/BlockedUser'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    BlockResultEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [blocked, user_id]
+              properties:
+                blocked:
+                  type: boolean
+                  example: true
+                user_id:
+                  $ref: '#/components/schemas/ULID'
+
+    PublicProfile:
+      type: object
+      required: [id, full_name, account_type, joined_at, verification_badges, ads_count]
+      properties:
+        id:
+          $ref: '#/components/schemas/ULID'
+        full_name:
+          type: string
+        avatar_url:
+          type: [string, 'null']
+          format: uri
+        account_type:
+          type: string
+          enum: [private, business]
+        business_name:
+          type: [string, 'null']
+        joined_at:
+          type: string
+          format: date-time
+        phone:
+          type: string
+          description: Only present when the target user has `show_phone=true`
+        email:
+          type: string
+          format: email
+          description: Only present when the target user has `show_email=true`
+        verification_badges:
+          type: object
+          required: [email_verified, phone_verified, business_verified]
+          properties:
+            email_verified:
+              type: boolean
+            phone_verified:
+              type: boolean
+            business_verified:
+              type: boolean
+        ads_count:
+          type: integer
+          example: 0
+
+    PublicProfileEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/PublicProfile'
 
   responses:
     Unauthorized:

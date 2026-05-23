@@ -291,6 +291,216 @@
           }
         }
       ]
+    },
+    {
+      "name": "Account",
+      "item": [
+        {
+          "name": "GET /account/summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('returns counters', () => { const j = pm.response.json(); pm.expect(j.success).to.eql(true); pm.expect(j.data.my_ads).to.be.a('number'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/summary",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "summary"]
+            }
+          }
+        },
+        {
+          "name": "GET /account/profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/profile",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "profile"]
+            }
+          }
+        },
+        {
+          "name": "PUT /account/profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"{{test_full_name}}\",\n  \"language\": \"ar\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/profile",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "profile"]
+            }
+          }
+        },
+        {
+          "name": "PUT /account/password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{test_password}}\",\n  \"password\": \"{{test_password_new}}\",\n  \"password_confirmation\": \"{{test_password_new}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/password",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "password"]
+            }
+          }
+        },
+        {
+          "name": "GET /account/sessions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/sessions",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "sessions"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /account/sessions/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/sessions/{{session_id}}",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "sessions", "{{session_id}}"]
+            }
+          }
+        },
+        {
+          "name": "GET /account/verification-status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/verification-status",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "verification-status"]
+            }
+          }
+        },
+        {
+          "name": "GET /account/privacy-settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/privacy-settings",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "privacy-settings"]
+            }
+          }
+        },
+        {
+          "name": "PUT /account/privacy-settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"show_phone\": true,\n  \"show_email\": false,\n  \"allow_chat\": true,\n  \"indexed_by_search\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/privacy-settings",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "privacy-settings"]
+            }
+          }
+        },
+        {
+          "name": "GET /account/blocked-users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/blocked-users",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "blocked-users"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "POST /users/:user/block",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/users/{{target_user_id}}/block",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["users", "{{target_user_id}}", "block"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /users/:user/block",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/users/{{target_user_id}}/block",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["users", "{{target_user_id}}", "block"]
+            }
+          }
+        },
+        {
+          "name": "GET /users/:user/public-profile",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/users/{{target_user_id}}/public-profile",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["users", "{{target_user_id}}", "public-profile"]
+            }
+          }
+        },
+        {
+          "name": "GET /users/:user/ads",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/users/{{target_user_id}}/ads",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["users", "{{target_user_id}}", "ads"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
