@@ -414,37 +414,37 @@
 
 | ID | Task | Endpoint |
 |----|------|----------|
-| BE-3.1 | CategoryController::tree | `GET /categories/tree` (cached 1hr) |
-| BE-3.2 | CategoryController::main | `GET /categories/main` |
-| BE-3.3 | CategoryController::stats | `GET /categories/{slug}/stats` |
-| BE-3.4 | CategoryController::filters | `GET /categories/{slug}/filters` |
-| BE-3.5 | CategoryController::fields | `GET /categories/{slug}/fields` |
-| BE-3.6 | LocationController::qatar | `GET /locations/qatar` (cached 24hr) |
-| BE-3.7 | Category model (translatable, HasUlids, custom_fields JSON, custom_filters JSON) | — |
-| BE-3.8 | Location model (translatable, hierarchical parent_id) | — |
-| BE-3.9 | Migration: `categories` (id, parent_id, slug, name JSON, description JSON, icon, order, is_active, custom_fields, custom_filters) | — |
-| BE-3.10 | Migration: `locations` (id, parent_id, slug, name JSON, type, lat, lng) | — |
-| BE-3.11 | CategorySeeder (~50 categories: cars, real-estate, electronics, jobs, services, pets, etc.) | — |
-| BE-3.12 | LocationSeeder: all Qatar regions (Doha, Lusail, Al Wakra, Al Khor, Al Rayyan, Umm Salal, etc. with districts) | — |
-| BE-3.13 | Cache invalidation hooks (في Filament Resource بعدين) | — |
-| BE-3.14 | CategoryResource (API resource) + LocationResource | — |
-| BE-3.15 | Pest tests + Scribe annotations | — |
+| BE-3.1 | CategoryController::tree | `GET /categories/tree` (cached 1hr) ✅ commit `4e2a9b3` |
+| BE-3.2 | CategoryController::main | `GET /categories/main` ✅ commit `4e2a9b3` |
+| BE-3.3 | CategoryController::stats | `GET /categories/{slug}/stats` (5m cache, stub) ✅ commit `4e2a9b3` |
+| BE-3.4 | CategoryController::filters | `GET /categories/{slug}/filters` ✅ commit `4e2a9b3` |
+| BE-3.5 | CategoryController::fields | `GET /categories/{slug}/fields` ✅ commit `4e2a9b3` |
+| BE-3.6 | LocationController::qatar | `GET /locations/qatar` (cached 24hr) ✅ commit `4e2a9b3` |
+| BE-3.7 | Category model (HasUlids, JSON casts, parent/children) | ✅ commit `4e2a9b3` |
+| BE-3.8 | Location model (HasUlids, LocationType enum, parent/children) | ✅ commit `4e2a9b3` |
+| BE-3.9 | Migration: `categories` | ✅ commit `4e2a9b3` |
+| BE-3.10 | Migration: `locations` | ✅ commit `4e2a9b3` |
+| BE-3.11 | CategorySeeder (63 categories; cars/apartments/mobiles fully fielded) | ✅ commit `4e2a9b3` |
+| BE-3.12 | LocationSeeder (9 cities + 36 districts, bilingual) | ✅ commit `4e2a9b3` |
+| BE-3.13 | Cache invalidation hooks (Filament-driven in Sprint 11) | — *deferred to Sprint 11* |
+| BE-3.14 | CategoryResource + CategoryNodeResource + LocationResource (+ Filter/Field) | ✅ commit `4e2a9b3` |
+| BE-3.15 | Pest tests (tree, filters, qatar) + OpenAPI examples | ✅ commit `4e2a9b3` |
 
 ### 🟣 Frontend Tasks (`qbazaar-web`)
 
 | ID | Task | Path / Component |
 |----|------|------------------|
-| FE-3.1 | Categories index page | `app/[locale]/categories/page.tsx` |
-| FE-3.2 | Category page (placeholder until Sprint 5) | `app/[locale]/c/[slug]/page.tsx` |
-| FE-3.3 | CategoryTree component | `components/categories/CategoryTree.tsx` |
-| FE-3.4 | CategoryGrid (home tiles) | `components/categories/CategoryGrid.tsx` |
-| FE-3.5 | CategoryFilters dynamic | `components/categories/CategoryFilters.tsx` |
-| FE-3.6 | CategoryBreadcrumb | `components/categories/CategoryBreadcrumb.tsx` |
-| FE-3.7 | LocationPicker (cascading dropdown) | `components/locations/LocationPicker.tsx` |
-| FE-3.8 | Categories Zustand store (cached client-side) | `store/categories.ts` |
-| FE-3.9 | Locations store | `store/locations.ts` |
-| FE-3.10 | API: categories.ts, locations.ts | `lib/api/categories.ts`, `lib/api/locations.ts` |
-| FE-3.11 | TanStack Query setup with staleTime 1hr للـ static data | — |
+| FE-3.1 | Categories index page | `app/categories/page.tsx` ✅ commit `a37b426` |
+| FE-3.2 | Category page (placeholder until Sprint 5) | `app/c/[slug]/page.tsx` ✅ commit `a37b426` |
+| FE-3.3 | CategoryTree component | `components/categories/CategoryTree.tsx` ✅ commit `a37b426` |
+| FE-3.4 | CategoryGrid (home tiles) | `components/categories/CategoryGrid.tsx` ✅ commit `a37b426` |
+| FE-3.5 | CategoryFilters dynamic | `components/categories/CategoryFilters.tsx` ✅ commit `a37b426` |
+| FE-3.6 | CategoryBreadcrumb | `components/categories/CategoryBreadcrumb.tsx` ✅ commit `a37b426` |
+| FE-3.7 | LocationPicker (cascading dropdown) | `components/locations/LocationPicker.tsx` ✅ commit `a37b426` |
+| FE-3.8 | Categories Zustand store | `store/categories.ts` ✅ commit `a37b426` |
+| FE-3.9 | Locations Zustand store | `store/locations.ts` ✅ commit `a37b426` |
+| FE-3.10 | API + TanStack hooks for categories + locations | `lib/api/*` + `lib/queries/*` ✅ commit `a37b426` |
+| FE-3.11 | TanStack Query staleTime windows (1h tree/main/filters, 5m stats, 24h qatar) | ✅ commit `a37b426` |
 
 ### 🟡 Contract Tasks (`qbazaar-contracts`)
 

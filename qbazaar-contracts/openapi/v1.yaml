@@ -854,6 +854,191 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
   # ──────────────────────────────────────────────────────────────────────────
+  # Reference data — Categories & Locations (Sprint 3). All endpoints are
+  # public (no auth) and cached server-side.
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/categories/tree:
+    get:
+      tags: [Reference]
+      summary: Full active category tree (top-level + children)
+      operationId: categoriesTree
+      security: []
+      responses:
+        '200':
+          description: Nested taxonomy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryTreeEnvelope'
+              examples:
+                tree:
+                  value:
+                    success: true
+                    data:
+                      - id: 01HM3XQVZP5KJWQR2K8N0DJSAW
+                        parent_id: null
+                        slug: vehicles
+                        name: { ar: مركبات, en: Vehicles }
+                        description: null
+                        icon: Car
+                        order: 0
+                        is_active: true
+                        custom_fields: null
+                        custom_filters: null
+                        ads_count: 0
+                        created_at: '2026-05-23T12:00:00+00:00'
+                        updated_at: '2026-05-23T12:00:00+00:00'
+                        children:
+                          - id: 01HM3XQVZP5KJWQR2K8N0DJSAX
+                            parent_id: 01HM3XQVZP5KJWQR2K8N0DJSAW
+                            slug: cars
+                            name: { ar: سيارات, en: Cars }
+                            description: null
+                            icon: null
+                            order: 0
+                            is_active: true
+                            custom_fields: []
+                            custom_filters: []
+                            ads_count: 0
+                            created_at: '2026-05-23T12:00:00+00:00'
+                            updated_at: '2026-05-23T12:00:00+00:00'
+                            children: []
+
+  /api/v1/categories/main:
+    get:
+      tags: [Reference]
+      summary: Top-level categories only (no children)
+      operationId: categoriesMain
+      security: []
+      responses:
+        '200':
+          description: Flat list of root categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListEnvelope'
+
+  /api/v1/categories/{slug}/stats:
+    get:
+      tags: [Reference]
+      summary: Ad counters for a category (stub — Sprint 5 will populate)
+      operationId: categoriesStats
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ad counts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryStatsEnvelope'
+              examples:
+                stats:
+                  value:
+                    success: true
+                    data:
+                      ads_count: 0
+                      sub_ads_count: 0
+        '404':
+          description: Category not found (CAT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/categories/{slug}/filters:
+    get:
+      tags: [Reference]
+      summary: Filter definitions for a category's search controls
+      operationId: categoriesFilters
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Array of filter definitions (empty when none defined)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryFilterListEnvelope'
+        '404':
+          description: Category not found (CAT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/categories/{slug}/fields:
+    get:
+      tags: [Reference]
+      summary: Custom field definitions used when posting an ad in this category
+      operationId: categoriesFields
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Array of field definitions (empty when none defined)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryFieldListEnvelope'
+        '404':
+          description: Category not found (CAT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/locations/qatar:
+    get:
+      tags: [Reference]
+      summary: Qatar location tree (cities + districts)
+      operationId: locationsQatar
+      security: []
+      responses:
+        '200':
+          description: Nested location tree
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationTreeEnvelope'
+              examples:
+                qatar:
+                  value:
+                    success: true
+                    data:
+                      - id: 01HM3XQVZP5KJWQR2K8N0DJSAY
+                        parent_id: null
+                        slug: doha
+                        name: { ar: الدوحة, en: Doha }
+                        type: city
+                        lat: null
+                        lng: null
+                        children:
+                          - id: 01HM3XQVZP5KJWQR2K8N0DJSAZ
+                            parent_id: 01HM3XQVZP5KJWQR2K8N0DJSAY
+                            slug: west-bay
+                            name: { ar: الخليج الغربي, en: West Bay }
+                            type: district
+                            lat: null
+                            lng: null
+                            children: []
+
+  # ──────────────────────────────────────────────────────────────────────────
   # Users (Sprint 2 — Wave 1)
   # ──────────────────────────────────────────────────────────────────────────
   /api/v1/users/{user}/block:
@@ -1603,6 +1788,215 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/PublicProfile'
+
+    # ── Reference data (Sprint 3) ────────────────────────────────────
+    LocalizedString:
+      type: object
+      required: [ar, en]
+      properties:
+        ar:
+          type: string
+          example: سيارات
+        en:
+          type: string
+          example: Cars
+
+    Category:
+      type: object
+      required:
+        [id, parent_id, slug, name, icon, order, is_active, ads_count, created_at, updated_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/ULID'
+        parent_id:
+          oneOf:
+            - $ref: '#/components/schemas/ULID'
+            - type: 'null'
+        slug:
+          type: string
+          example: cars
+        name:
+          $ref: '#/components/schemas/LocalizedString'
+        description:
+          oneOf:
+            - $ref: '#/components/schemas/LocalizedString'
+            - type: 'null'
+        icon:
+          type: [string, 'null']
+          example: Car
+        order:
+          type: integer
+          example: 0
+        is_active:
+          type: boolean
+        custom_fields:
+          oneOf:
+            - type: array
+              items:
+                $ref: '#/components/schemas/CategoryField'
+            - type: 'null'
+        custom_filters:
+          oneOf:
+            - type: array
+              items:
+                $ref: '#/components/schemas/CategoryFilter'
+            - type: 'null'
+        ads_count:
+          type: integer
+          example: 0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CategoryNode:
+      allOf:
+        - $ref: '#/components/schemas/Category'
+        - type: object
+          required: [children]
+          properties:
+            children:
+              type: array
+              items:
+                $ref: '#/components/schemas/CategoryNode'
+
+    CategoryFilter:
+      type: object
+      required: [key, label, type]
+      properties:
+        key:
+          type: string
+          example: make
+        label:
+          $ref: '#/components/schemas/LocalizedString'
+        type:
+          type: string
+          enum: [select, range, boolean]
+        options:
+          oneOf:
+            - type: array
+              items: { type: string }
+            - type: 'null'
+
+    CategoryField:
+      type: object
+      required: [key, label, type, required]
+      properties:
+        key:
+          type: string
+          example: year
+        label:
+          $ref: '#/components/schemas/LocalizedString'
+        type:
+          type: string
+          enum: [text, number, select, boolean, date]
+        required:
+          type: boolean
+        options:
+          oneOf:
+            - type: array
+              items: { type: string }
+            - type: 'null'
+
+    Location:
+      type: object
+      required: [id, parent_id, slug, name, type, children]
+      properties:
+        id:
+          $ref: '#/components/schemas/ULID'
+        parent_id:
+          oneOf:
+            - $ref: '#/components/schemas/ULID'
+            - type: 'null'
+        slug:
+          type: string
+          example: west-bay
+        name:
+          $ref: '#/components/schemas/LocalizedString'
+        type:
+          type: string
+          enum: [city, district, area]
+        lat:
+          type: [number, 'null']
+          format: float
+        lng:
+          type: [number, 'null']
+          format: float
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+
+    CategoryStats:
+      type: object
+      required: [ads_count, sub_ads_count]
+      properties:
+        ads_count:
+          type: integer
+          example: 0
+        sub_ads_count:
+          type: integer
+          example: 0
+
+    CategoryTreeEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CategoryNode'
+
+    CategoryListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Category'
+
+    CategoryStatsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/CategoryStats'
+
+    CategoryFilterListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CategoryFilter'
+
+    CategoryFieldListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CategoryField'
+
+    LocationTreeEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Location'
 
   responses:
     Unauthorized:

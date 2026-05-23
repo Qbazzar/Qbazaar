@@ -11,9 +11,9 @@
 
 | البند | القيمة |
 |-------|---------|
-| **Active Milestone** | Milestone 1 — Backend Foundation |
-| **Active Sprint** | Sprint 0 ✅ → Sprint 1 ✅ → Sprint 2 ✅ (Wave 1 + Wave 2) → **Sprint 3 (Categories + Locations)** next |
-| **Active Day** | Sprint 2 closed — Wave 2 backend (`c9c22f8` + `4f164f8`) + frontend (`81a1042` + `497f1b0`) |
+| **Active Milestone** | Milestone 1 ✅ closed → **Milestone 2 — Marketplace Core** next |
+| **Active Sprint** | Sprint 0 ✅ → Sprint 1 ✅ → Sprint 2 ✅ → Sprint 3 ✅ → **Sprint 4 (Uploads) + Sprint 5 (Ads)** next |
+| **Active Day** | Sprint 3 closed — backend (`4e2a9b3`) + frontend (`a37b426`); 63 categories + 45 locations seeded |
 | **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
 | **Blockers** | لا يوجد |
 | **Manual user steps pending** | GitHub Project + 13 Milestones + Labels; sign-ups for Twilio + Sentry + FCM project |
@@ -193,8 +193,8 @@
 
 | # | Milestone | الحجم المُقدَّر | الحالة |
 |---|-----------|------------------|--------|
-| 1 | Backend Foundation | 2 أسبوع | 🟡 جاري |
-| 2 | Marketplace Core | 3 أسابيع | ⚪ منتظر |
+| 1 | Backend Foundation | 2 أسبوع | ✅ مكتمل |
+| 2 | Marketplace Core | 3 أسابيع | 🟡 جاري |
 | 3 | Engagement | 3 أسابيع | ⚪ منتظر |
 | 4 | Trust & Admin | 2 أسبوع | ⚪ منتظر |
 | 5 | Content & Polish | 1 أسبوع | ⚪ منتظر |
@@ -244,12 +244,12 @@
 
 ---
 
-### Sprint 3 — Categories & Locations (2 أيام)
+### Sprint 3 — Categories & Locations (2 أيام) ✅
 
-- [ ] **Backend:** Category tree (cached), filters, custom fields per category. Qatar locations seeder
-- [ ] **Frontend:** Category browser, Location picker
-- [ ] **Contract:** Categories + Locations endpoints
-- [ ] **Data:** Seeders لـ ~50 category + كل مناطق قطر
+- [x] **Backend:** Category tree (cached 1h), main, stats/filters/fields per slug, Qatar locations (24h cache) — `4e2a9b3`
+- [x] **Frontend:** `/categories` index + `/c/[slug]` detail with breadcrumbs, filters preview, LocationPicker — `a37b426`
+- [x] **Contract:** 6 endpoints + 6 schemas (Category, CategoryNode recursive, CategoryFilter/Field, Location recursive, LocalizedString) in openapi/v1.yaml + postman
+- [x] **Data:** 63 categories (cars/apartments/mobiles fully fielded) + 9 cities + 36 districts seeded
 
 ---
 

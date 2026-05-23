@@ -627,6 +627,90 @@
           }
         }
       ]
+    },
+    {
+      "name": "Reference",
+      "description": "Public, cached read endpoints for categories + locations. No auth required.",
+      "item": [
+        {
+          "name": "GET /categories/tree",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/categories/tree",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["categories", "tree"]
+            }
+          }
+        },
+        {
+          "name": "GET /categories/main",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/categories/main",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["categories", "main"]
+            }
+          }
+        },
+        {
+          "name": "GET /categories/:slug/stats",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/categories/cars/stats",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["categories", "cars", "stats"]
+            }
+          }
+        },
+        {
+          "name": "GET /categories/:slug/filters",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/categories/cars/filters",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["categories", "cars", "filters"]
+            }
+          }
+        },
+        {
+          "name": "GET /categories/:slug/fields",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/categories/cars/fields",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["categories", "cars", "fields"]
+            }
+          }
+        },
+        {
+          "name": "GET /locations/qatar",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/locations/qatar",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["locations", "qatar"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
