@@ -247,7 +247,7 @@ export default {
     │ - Form Requests  │   ←--------→ │ - يبني UI        │
     │ - Controllers    │              │ - TanStack Query │
     │ - Pest tests     │              │ - Mock data من   │
-    │ - Scribe         │              │   OpenAPI        │
+    │ - Swagger UI     │              │   OpenAPI        │
     └────────┬─────────┘              └────────┬─────────┘
              │                                 │
              └────────────┬────────────────────┘
@@ -283,7 +283,7 @@ export default {
 | 13 | Integration polish | Integration polish | — |
 | 14 | Staging + Production deploy | Vercel/Forge deploy | — |
 
-> **القاعدة الذهبية:** OpenAPI spec يُكتب **قبل** أي كود في الـ sprint. الـ Frontend Agent يبدأ على Mock فوراً، والـ Backend Agent يلحقه. الـ integration يصير لما الـ backend endpoint يمر Pest tests + Scribe documented.
+> **القاعدة الذهبية:** OpenAPI spec يُكتب **قبل** أي كود في الـ sprint. الـ Frontend Agent يبدأ على Mock فوراً، والـ Backend Agent يلحقه. الـ integration يصير لما الـ backend endpoint يمر Pest tests + Swagger spec محدّث.
 
 ### Agent Spawning Pattern
 
@@ -368,7 +368,8 @@ composer require spatie/laravel-data
 composer require meilisearch/meilisearch-php
 composer require intervention/image
 composer require filament/filament:"^5.0"
-composer require knuckleswtf/scribe
+# Scribe was removed May 2026 — Swagger UI (loading openapi/v1.yaml) is the
+# single API docs surface now.
 
 # Notifications channels (نسجل الحسابات لاحقاً)
 composer require twilio/sdk
@@ -388,7 +389,7 @@ php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServicePr
 php artisan vendor:publish --provider="Spatie\Activitylog\ActivitylogServiceProvider" --tag="activitylog-migrations"
 php artisan vendor:publish --provider="Laravel\Telescope\TelescopeServiceProvider"
 php artisan filament:install --panels
-php artisan scribe:install
+# Swagger UI is just a Blade view loading openapi/v1.yaml — no separate install needed
 ```
 
 ### Day 3 — Local Services (Windows / Laragon)
@@ -472,7 +473,7 @@ php artisan scribe:install
    ```
    `tests/Pest.php` + sample test يمر.
 
-4. **Scribe:** `php artisan scribe:generate` — `/api/docs` متاح.
+4. **Swagger UI:** Blade view at `/swagger` و `/docs` تقرأ `qbazaar-contracts/openapi/v1.yaml`. Single source of API docs.
 
 5. **GitHub Actions CI** في `.github/workflows/ci.yml`:
    - Lint (Pint)
@@ -625,7 +626,7 @@ npm install -D @types/node
    - `blocked`, `needs-integration`
 
 8. **أنشئ Issues لـ Sprint 1** في `qbazaar-api` و `qbazaar-web`:
-   - **Backend track:** Register, Login, Logout, Refresh, OTP send/verify/resend, Forgot/Reset password, UserObserver, Pest tests, Scribe annotations
+   - **Backend track:** Register, Login, Logout, Refresh, OTP send/verify/resend, Forgot/Reset password, UserObserver, Pest tests, OpenAPI/Swagger sync
    - **Frontend track:** Login page, Register page, OTP page (4 inputs), Forgot password flow, Auth store (Zustand), axios interceptors، protected routes
    - **Contract track:** Auth schemas في openapi/v1.yaml كاملة
 
@@ -698,15 +699,15 @@ npm install -D @types/node
    - اربط الـ PR بالـ Issue (`Closes #N`)
 
 3. **بعد كل endpoint يخلص (مفروضة دائماً):**
-   1. **Scribe annotations** على الـ Controller + Form Request (`@group`, `@bodyParam`, `@response`, `@queryParam`, `@urlParam`). شغّل `php artisan scribe:generate` — `/docs` و `/swagger` لازم يعرضوا الـ endpoint الجديد بشكل صحيح.
-   2. **حدّث `openapi/v1.yaml`** في `qbazaar-contracts/` إذا الـ endpoint عُرّف هنا أولاً (contract-first). الـ Scribe-generated openapi هو snapshot من الـ code — `qbazaar-contracts/openapi/v1.yaml` هو الـ canonical authored spec.
+   1. **حدّث `qbazaar-contracts/openapi/v1.yaml`** بالـ path الجديد + request/response schemas + examples. هذا هو الـ single source of truth للـ API contract.
+   2. **افتح `/swagger` (أو `/docs`)** على Laravel وتأكد إن Swagger UI بيعرض الـ endpoint الجديد بشكل صحيح (Laravel route reads the contracts spec via `/api/v1/openapi.yaml`).
    3. **حدّث `qbazaar-contracts/postman/qbazaar.postman_collection.json`** بإضافة request جديد تحت الـ folder المناسب (`Auth`, `Users`, `Ads` ...). اسم الـ request بصيغة `METHOD /path`. أضف `tests` script لو الـ response بيحمل شي نلتقطه في env (مثلاً tokens).
    4. **حدّث `qbazaar-contracts/postman/qbazaar.local.postman_environment.json`** فقط لو الـ endpoint بيحتاج env variable جديد.
    5. **اختبر يدوياً** بـ Postman (import المجلدين الـ JSON من `qbazaar-contracts/postman/`، اختر الـ env، أرسل الطلب).
-   6. **Commit:** الخطوات 2-4 ضمن نفس الـ task commit (`feat(domain): ... [TASK-ID]`)، أو في follow-up `docs(postman): sync collection [TASK-ID]` لو الـ endpoint كان commit مسبق.
+   6. **Commit:** الخطوات 1-4 ضمن نفس الـ task commit (`feat(domain): ... [TASK-ID]`)، أو في follow-up `docs(postman): sync collection [TASK-ID]` لو الـ endpoint كان commit مسبق.
 
 4. **نهاية كل sprint:**
-   - Demo داخلي (لنفسك): اختبر الـ endpoints عبر Postman/Scribe/Swagger
+   - Demo داخلي (لنفسك): اختبر الـ endpoints عبر Postman + Swagger
    - اكتب Retro في ROADMAP.md
    - أغلق الـ milestone على GitHub
    - مرّر develop → main لما يكون كل شي مستقر
@@ -719,18 +720,17 @@ npm install -D @types/node
    - Activity log (إذا حساس)
    - Localization keys (ar + en) لـ كل message_key مذكور
    - Pest Feature test (happy path + edge cases)
-   - **Scribe annotations مكتملة + `php artisan scribe:generate` يمر**
+   - **`qbazaar-contracts/openapi/v1.yaml` يعكس الـ endpoint الجديد و Swagger UI بيعرضه بشكل صحيح**
    - **Postman collection + env محدّثين (راجع الخطوة 3 فوق)**
    - PHPStan level 8 يمر
    - Pint يمر
    - Migration + rollback يعملوا
 
-6. **API Documentation surfaces (3 ports of entry):**
-   - **`/docs`** — Scribe auto-derived من PHPDoc. Read-only, shows ground-truth implementation.
-   - **`/swagger`** — Swagger UI loading `qbazaar-contracts/openapi/v1.yaml`. Source of truth for contract-first work.
-   - **`qbazaar-contracts/postman/`** — Postman collection + env. The on-the-go testing bench.
+6. **API Documentation — surface واحدة فقط:**
+   - **`/swagger` و `/docs`** — Swagger UI يحمّل `qbazaar-contracts/openapi/v1.yaml`. Single source of truth.
+   - **`qbazaar-contracts/postman/`** — Postman collection + env للـ hands-on testing.
 
-   كل واحد بيتحدّث في خطوة محددة من البروتوكول فوق. ممنوع نشحن endpoint لـ main بدون ما الثلاثة يكونوا up-to-date.
+   *Scribe تم حذفه (May 2026) — كانت auto-derived docs لكن قاعدة الاعتماد على spec واحد محسوم أبسط.*
 
 ---
 

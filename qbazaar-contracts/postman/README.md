@@ -20,24 +20,15 @@ For OTP / password-reset / email-verify flows the env has dedicated slots (`otp_
 
 ## How it stays in sync
 
-Per [PLAN.md → Execution Protocol → After every endpoint](../PLAN.md):
+Per [PLAN.md → Workflow Rules → After every endpoint](../PLAN.md):
 
-1. New endpoint lands in `openapi/v1.yaml`.
-2. Backend agent implements + adds Scribe annotations.
-3. Backend agent runs `php artisan scribe:generate` — Scribe writes `qbazaar-api/storage/app/private/scribe/{collection.json, openapi.yaml}`.
-4. **A new request is added to `qbazaar.postman_collection.json`** (this file) with a stable `name` (`Domain › METHOD /path`) and a `tests` script if the response carries something we want to capture into env vars.
-5. **A new env slot is added** to `qbazaar.local.postman_environment.json` only if the new endpoint needs a variable that wasn't already there.
+1. New endpoint lands in `openapi/v1.yaml` (contract-first).
+2. Backend implements + Swagger UI at `/swagger` (or `/docs`) auto-reflects it (the Blade view loads the contracts spec).
+3. **A new request is added to `qbazaar.postman_collection.json`** (this file) with a stable `name` (`Domain › METHOD /path`) and a `tests` script if the response carries something we want to capture into env vars.
+4. **A new env slot is added** to `qbazaar.local.postman_environment.json` only if the new endpoint needs a variable that wasn't already there.
 
 The point is: **after pulling main, re-importing both JSON files always reflects the live API** — same env vars, same auto-capture scripts.
 
-## Scribe's auto-generated alternative
+## Single API docs surface
 
-If you ever want a brute-force "everything Scribe knows" collection (no curated test scripts), run:
-
-```bash
-cd qbazaar-api
-php artisan scribe:generate
-# Now import: storage/app/private/scribe/collection.json
-```
-
-That collection covers every documented endpoint but doesn't capture tokens. Use it as a fallback or for QA; our hand-curated `qbazaar.postman_collection.json` is the one that lives in this folder.
+We removed Scribe (May 2026). The only API docs surface is **Swagger UI** loading `qbazaar-contracts/openapi/v1.yaml`, mounted on Laravel at `/swagger` and `/docs`. Anything the spec misses, nothing else covers.
