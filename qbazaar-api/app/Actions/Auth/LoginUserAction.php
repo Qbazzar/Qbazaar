@@ -58,6 +58,18 @@ class LoginUserAction
             throw new DomainException(ErrorCode::AUTH_ACCOUNT_SUSPENDED);
         }
 
+        // Self-reactivation path — a user who deactivated their account, or
+        // asked us to delete it but hasn't been wiped yet, gets put back to
+        // ACTIVE on successful sign-in. The queued DeleteAccountJob re-checks
+        // the status before doing anything destructive, so we don't need to
+        // cancel the job explicitly.
+        if (in_array($user->status, [UserStatus::DEACTIVATED, UserStatus::PENDING_DELETION], true)) {
+            $user->forceFill([
+                'status' => UserStatus::ACTIVE,
+                'deletion_requested_at' => null,
+            ])->save();
+        }
+
         $isFirstLogin = $user->last_login_at === null;
         $isNewDevice = $deviceFingerprint !== null
             && ! $isFirstLogin

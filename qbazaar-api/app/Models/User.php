@@ -22,6 +22,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * @property string $id
@@ -37,14 +41,15 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $avatar_url
  * @property PrivacySettings|null $privacy_settings
  * @property Carbon|null $last_login_at
+ * @property Carbon|null $deletion_requested_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
  */
-class User extends Authenticatable implements CanResetPasswordContract, MustVerifyEmailContract
+class User extends Authenticatable implements CanResetPasswordContract, HasMedia, MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasUlids, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasUlids, InteractsWithMedia, Notifiable, SoftDeletes;
 
     /**
      * @var list<string>
@@ -62,6 +67,7 @@ class User extends Authenticatable implements CanResetPasswordContract, MustVeri
         'avatar_url',
         'privacy_settings',
         'last_login_at',
+        'deletion_requested_at',
     ];
 
     /**
@@ -82,6 +88,7 @@ class User extends Authenticatable implements CanResetPasswordContract, MustVeri
             'email_verified' => 'boolean',
             'phone_verified' => 'boolean',
             'last_login_at' => 'datetime',
+            'deletion_requested_at' => 'datetime',
             'account_type' => AccountType::class,
             'status' => UserStatus::class,
             'language' => Language::class,
@@ -171,5 +178,58 @@ class User extends Authenticatable implements CanResetPasswordContract, MustVeri
     public function getEmailForVerification(): string
     {
         return $this->email;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     *  Media library — avatar collection.
+     *
+     *  Why `singleFile()`? Avatars are a 1:1 — uploading a new one should
+     *  replace the previous file, not stack alongside it.
+     *  Why two conversions? Lists/cards need a tiny square thumb; profile
+     *  headers need a larger square. Both keep the original aspect-square
+     *  to avoid awkward crops on circular masks.
+     * ──────────────────────────────────────────────────────────────────*/
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('avatar')->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->nonQueued()
+            ->performOnCollections('avatar')
+            ->fit(Fit::Crop, 200, 200);
+
+        $this->addMediaConversion('medium')
+            ->nonQueued()
+            ->performOnCollections('avatar')
+            ->fit(Fit::Crop, 480, 480);
+    }
+
+    /**
+     * Convenience accessors for the avatar URLs. Each returns null when no
+     * avatar exists; we don't want the empty-string Spatie default leaking
+     * into JSON payloads — null is more honest for the frontend.
+     */
+    public function avatarOriginalUrl(): ?string
+    {
+        $media = $this->getFirstMedia('avatar');
+
+        return $media?->getUrl() ?: null;
+    }
+
+    public function avatarThumbUrl(): ?string
+    {
+        $media = $this->getFirstMedia('avatar');
+
+        return $media?->getUrl('thumb') ?: null;
+    }
+
+    public function avatarMediumUrl(): ?string
+    {
+        $media = $this->getFirstMedia('avatar');
+
+        return $media?->getUrl('medium') ?: null;
     }
 }

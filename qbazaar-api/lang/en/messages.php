@@ -22,4 +22,16 @@ return [
         'email_already_verified' => 'Your email address is already verified.',
         'email_verified' => 'Your email address has been verified.',
     ],
+
+    'data_export' => [
+        'queued' => 'Your data export has been queued. You will receive an email with a download link shortly.',
+        'mail' => [
+            'subject' => 'Your QBazaar data export is ready',
+            'greeting' => 'Hello,',
+            'line_intro' => 'Your personal data export is ready for download.',
+            'action' => 'Download my data',
+            'line_expires' => 'This link will expire in :hours hours for your security.',
+            'line_ignore' => 'If you did not request this export, please contact our support team immediately.',
+        ],
+    ],
 ];

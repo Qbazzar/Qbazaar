@@ -46,6 +46,22 @@ class UserObserver
 
     public function updated(User $user): void
     {
+        if ($user->wasChanged('deletion_requested_at') && $user->deletion_requested_at !== null) {
+            // Capture the dedicated "user asked us to wipe their account"
+            // event in addition to the status_changed row, so support staff
+            // can answer "when did they request deletion?" with a single
+            // indexable event name. The optional `reason` is logged
+            // separately by RequestAccountDeletionAction.
+            activity('user')
+                ->performedOn($user)
+                ->causedBy($user)
+                ->event('account_deletion_requested')
+                ->withProperties([
+                    'requested_at' => $user->deletion_requested_at->toIso8601String(),
+                ])
+                ->log('User requested account deletion');
+        }
+
         if ($user->wasChanged('status')) {
             $this->logFieldChange($user, 'status_changed', 'status', 'Status changed');
         }

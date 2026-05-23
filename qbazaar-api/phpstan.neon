@@ -24,6 +24,7 @@ parameters:
     - tests/Feature/Auth/*
     - tests/Feature/Account/*
     - tests/Feature/Users/*
+    - tests/Feature/Uploads/*
     - bootstrap/cache/*
     - storage/*
     - vendor/*

@@ -31,7 +31,11 @@ class UserResource extends JsonResource
             'email_verified' => (bool) $this->email_verified,
             'phone_verified' => (bool) $this->phone_verified,
             'language' => $this->language->value,
-            'avatar_url' => $this->avatar_url,
+            // Prefer the MediaLibrary-derived URL (BE-2.12); fall back to the
+            // legacy `avatar_url` string so older rows / imports keep working.
+            'avatar_url' => $this->avatarOriginalUrl() ?? $this->avatar_url,
+            'avatar_thumb_url' => $this->avatarThumbUrl(),
+            'avatar_medium_url' => $this->avatarMediumUrl(),
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

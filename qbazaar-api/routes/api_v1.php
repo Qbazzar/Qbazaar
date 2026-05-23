@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
+use App\Http\Controllers\Api\V1\Account\DataExportController;
+use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
+use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
 use App\Http\Controllers\Api\V1\Account\PasswordController;
 use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
 use App\Http\Controllers\Api\V1\Account\ProfileController;
@@ -16,6 +19,7 @@ use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
+use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
@@ -157,6 +161,30 @@ Route::prefix('account')
         Route::put('/privacy-settings', [PrivacySettingsController::class, 'update'])->name('privacy.update');
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
+
+        // Account lifecycle (Wave 2) — deactivate / schedule-deletion / data-export.
+        Route::post('/deactivate', DeactivateAccountController::class)->name('deactivate');
+        Route::delete('/delete-request', DeleteAccountController::class)->name('delete-request');
+        Route::post('/data-export-request', [DataExportController::class, 'request'])
+            ->name('data-export-request');
+    });
+
+// Signed download URL for a previously-generated data export.
+// Kept outside the `account` group so `signed` is the only auth check we
+// need on a one-shot link emailed to the user. We still require an
+// authenticated user via `auth:sanctum` on top of the signature so a
+// leaked URL alone is not enough.
+Route::middleware(['signed', 'auth:sanctum', 'active.user'])
+    ->get('/account/data-export/{id}', [DataExportController::class, 'download'])
+    ->name('api.v1.account.data-export.download');
+
+// Uploads (Sprint 2 Wave 2 ships avatar; Sprint 4 will add the ad-image
+// pipeline alongside).
+Route::prefix('uploads')
+    ->name('api.v1.uploads.')
+    ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
+    ->group(function (): void {
+        Route::post('/avatar', AvatarUploadController::class)->name('avatar');
     });
 
 Route::prefix('users')
