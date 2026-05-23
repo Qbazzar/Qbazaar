@@ -652,6 +652,208 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 
   # ──────────────────────────────────────────────────────────────────────────
+  # Account lifecycle (Sprint 2 — Wave 2)
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/account/data-export-request:
+    post:
+      tags: [Account]
+      summary: Request a GDPR-style export of the caller's personal data
+      description: |
+        Throttled to 1 export per user per 24h via Redis lock. Dispatches
+        `ExportUserDataJob` to the `low` queue; the user receives an email
+        with a signed download link (TTL 48h) when the export finishes.
+      operationId: accountDataExportRequest
+      responses:
+        '202':
+          description: Export queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExportRequestEnvelope'
+              examples:
+                queued:
+                  value:
+                    success: true
+                    data:
+                      requested_at: '2026-05-23T10:00:00+03:00'
+                      eta_minutes: 5
+                      status: queued
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          description: Already requested an export in the last 24h
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/data-export/{id}:
+    get:
+      tags: [Account]
+      summary: Download a previously-generated data export
+      description: |
+        Requires a signed URL (TTL 48h) plus a Sanctum bearer for the owner.
+        The export id must start with the caller's user-id prefix.
+      operationId: accountDataExportDownload
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: expires
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: signature
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: JSON file streamed
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/account/deactivate:
+    post:
+      tags: [Account]
+      summary: Soft-disable the caller's account
+      description: |
+        Verifies the current password, flips the user's status to
+        `deactivated`, and burns every refresh token + Sanctum PAT. The user
+        can self-reactivate by signing back in within 30 days.
+      operationId: accountDeactivate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeactivateAccountRequest'
+            examples:
+              valid:
+                value:
+                  password: 'Str0ng!Pass'
+                  reason: 'Taking a break'
+      responses:
+        '204':
+          description: Account deactivated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Wrong password (USER_005) or validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/delete-request:
+    delete:
+      tags: [Account]
+      summary: Schedule the caller's account for permanent deletion
+      description: |
+        Verifies the password, sets status `pending_deletion`, records
+        `deletion_requested_at`, burns all sessions, and queues
+        `DeleteAccountJob` for 30 days later. Signing back in within the
+        grace window implicitly cancels the request — the queued job
+        re-checks the status before doing anything destructive.
+      operationId: accountDeleteRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+            examples:
+              valid:
+                value:
+                  password: 'Str0ng!Pass'
+                  reason: 'Found another platform'
+      responses:
+        '202':
+          description: Deletion scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAccountResponseEnvelope'
+              examples:
+                scheduled:
+                  value:
+                    success: true
+                    data:
+                      deletion_scheduled_at: '2026-06-22T10:00:00+03:00'
+                      status: pending_deletion
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Wrong password (USER_005) or validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Uploads (Sprint 2 — Wave 2 ships avatar; Sprint 4 adds ad images)
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/uploads/avatar:
+    post:
+      tags: [Uploads]
+      summary: Upload / replace the caller's avatar
+      description: |
+        Multipart upload. MIME must be jpeg / png / webp, max 5 MB. The file
+        is stored via Spatie MediaLibrary in the `avatar` collection with
+        `thumb` (200×200) and `medium` (480×480) conversions. Replaces any
+        existing avatar.
+      operationId: uploadsAvatar
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [avatar]
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar stored, conversions ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvatarUploadEnvelope'
+              examples:
+                uploaded:
+                  value:
+                    success: true
+                    data:
+                      avatar_url: 'https://cdn.qbazaar.qa/u/01/avatar.jpg'
+                      avatar_thumb_url: 'https://cdn.qbazaar.qa/u/01/conversions/avatar-thumb.jpg'
+                      avatar_medium_url: 'https://cdn.qbazaar.qa/u/01/conversions/avatar-medium.jpg'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '413':
+          description: File exceeds 5 MB limit (UPLOAD_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  # ──────────────────────────────────────────────────────────────────────────
   # Users (Sprint 2 — Wave 1)
   # ──────────────────────────────────────────────────────────────────────────
   /api/v1/users/{user}/block:
@@ -911,6 +1113,14 @@ components:
         avatar_url:
           type: [string, 'null']
           format: uri
+        avatar_thumb_url:
+          type: [string, 'null']
+          format: uri
+          description: 200×200 conversion served by MediaLibrary
+        avatar_medium_url:
+          type: [string, 'null']
+          format: uri
+          description: 480×480 conversion served by MediaLibrary
         created_at:
           type: string
           format: date-time
@@ -1263,6 +1473,88 @@ components:
                   example: true
                 user_id:
                   $ref: '#/components/schemas/ULID'
+
+    DeactivateAccountRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          description: Current account password (defence-in-depth).
+        reason:
+          type: [string, 'null']
+          maxLength: 500
+          description: Optional free-text reason surfaced in the activity log.
+
+    DeleteAccountRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+        reason:
+          type: [string, 'null']
+          maxLength: 500
+
+    DeleteAccountResponseEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [deletion_scheduled_at, status]
+              properties:
+                deletion_scheduled_at:
+                  type: string
+                  format: date-time
+                status:
+                  type: string
+                  enum: [pending_deletion]
+
+    DataExportRequest:
+      type: object
+      required: [requested_at, eta_minutes, status]
+      properties:
+        requested_at:
+          type: string
+          format: date-time
+        eta_minutes:
+          type: integer
+          example: 5
+        status:
+          type: string
+          enum: [queued]
+
+    DataExportRequestEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DataExportRequest'
+
+    AvatarUploadResponse:
+      type: object
+      required: [avatar_url, avatar_thumb_url, avatar_medium_url]
+      properties:
+        avatar_url:
+          type: [string, 'null']
+          format: uri
+        avatar_thumb_url:
+          type: [string, 'null']
+          format: uri
+        avatar_medium_url:
+          type: [string, 'null']
+          format: uri
+
+    AvatarUploadEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AvatarUploadResponse'
 
     PublicProfile:
       type: object

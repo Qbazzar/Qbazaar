@@ -333,18 +333,18 @@
 | BE-2.4 | SessionsController::index + destroy | `GET, DELETE /account/sessions[/{id}]` ✅ commit `ceccd95` |
 | BE-2.5 | VerificationController::status | `GET /account/verification-status` ✅ commit `ceccd95` |
 | BE-2.6 | PrivacyController::show + update | `GET, PUT /account/privacy-settings` ✅ commit `ceccd95` |
-| BE-2.7 | PrivacyController::exportRequest | `POST /account/data-export-request` — *Wave 2* |
-| BE-2.8 | AccountController::deactivate | `POST /account/deactivate` — *Wave 2* |
-| BE-2.9 | AccountController::deleteRequest | `DELETE /account/delete-request` — *Wave 2* |
+| BE-2.7 | DataExportController::request + download | `POST /account/data-export-request` + signed download ✅ commit `4f164f8` |
+| BE-2.8 | DeactivateAccountController | `POST /account/deactivate` ✅ commit `4f164f8` |
+| BE-2.9 | DeleteAccountController | `DELETE /account/delete-request` ✅ commit `4f164f8` |
 | BE-2.10 | BlockedUsersController::index | `GET /account/blocked-users` ✅ commit `ceccd95` |
 | BE-2.11 | BlockController::block + unblock | `POST, DELETE /users/{user}/block` ✅ commit `8d80865` |
-| BE-2.12 | AvatarUploadController | `POST /uploads/avatar` — *Wave 2 (after Spatie MediaLibrary wiring)* |
+| BE-2.12 | AvatarUploadController + Spatie MediaLibrary on User | `POST /uploads/avatar` ✅ commit `4f164f8` |
 | BE-2.13 | PublicProfileController | `GET /users/{user}/public-profile` ✅ commit `8d80865` |
 | BE-2.14 | UserAdsController | `GET /users/{user}/ads` (empty-pagination stub) ✅ commit `8d80865` |
-| BE-2.15 | AccountPolicy + BlockPolicy | — *deferred (route-level checks + USER_002/3 errors cover Wave 1 needs)* |
-| BE-2.16 | ExportUserDataJob | — *Wave 2* |
-| BE-2.17 | DeleteAccountJob | — *Wave 2* |
-| BE-2.18 | DeactivateAccountAction | — *Wave 2* |
+| BE-2.15 | AccountPolicy + BlockPolicy | ✅ commit `c9c22f8` |
+| BE-2.16 | ExportUserDataJob + DataExportReadyNotification | ✅ commit `4f164f8` |
+| BE-2.17 | DeleteAccountJob | ✅ commit `4f164f8` |
+| BE-2.18 | DeactivateAccountAction + RequestAccountDeletionAction | ✅ commit `4f164f8` |
 | BE-2.19 | Migrations: `user_blocks` + `privacy_settings` + (data_export_requests Wave 2) | ✅ commit `cee604c` (2 migrations + PAT device columns) |
 | BE-2.20 | UserObserver updates: log email/phone changes, deactivation | — *already covered by Sprint 1's UserObserver (`bd28549`); deactivation row lands Wave 2* |
 | BE-2.21 | UserResource: respects privacy settings (hide phone if disabled) | ✅ commit `8d80865` (in PublicUserResource) |
@@ -361,13 +361,13 @@
 | FE-2.4 | Sessions page | `app/account/sessions/page.tsx` ✅ commit `14f71b7` |
 | FE-2.5 | Privacy settings page | `app/account/privacy/page.tsx` ✅ commit `14f71b7` |
 | FE-2.6 | Blocked users page | `app/account/blocked-users/page.tsx` ✅ commit `14f71b7` |
-| FE-2.7 | Data & Account page (export + delete) | — *Wave 2* |
+| FE-2.7 | Data & Account page (export + delete) | `app/account/data/page.tsx` ✅ commit `497f1b0` |
 | FE-2.8 | Verification page | `app/account/verification/page.tsx` ✅ commit `14f71b7` |
 | FE-2.9 | Public profile page | `app/u/[id]/page.tsx` ✅ commit `14f71b7` |
 | FE-2.10 | User ads tab on public profile | embedded in `app/u/[id]/page.tsx` (Tabs component, empty-state until Sprint 5) ✅ commit `14f71b7` |
 | FE-2.11 | Account sidebar nav | `components/account/AccountSidebar.tsx` ✅ commit `14f71b7` |
 | FE-2.12 | ProfileForm | `components/account/ProfileForm.tsx` ✅ commit `14f71b7` |
-| FE-2.13 | AvatarUploader (with crop) | — *Wave 2 (depends on BE-2.12 avatar endpoint)* |
+| FE-2.13 | AvatarUploader (with crop) | `components/account/AvatarUploader.tsx` ✅ commit `497f1b0` |
 | FE-2.14 | PasswordChangeForm | `components/account/PasswordChangeForm.tsx` ✅ commit `14f71b7` |
 | FE-2.15 | SessionsList | `components/account/SessionsList.tsx` ✅ commit `14f71b7` |
 | FE-2.16 | PrivacySettings (inline on the page) | inline on `app/account/privacy/page.tsx` ✅ commit `14f71b7` |
@@ -376,7 +376,7 @@
 | FE-2.19 | PublicProfileHeader (inline) | inline on `app/u/[id]/page.tsx` ✅ commit `14f71b7` |
 | FE-2.20 | Account + Users API clients | `lib/api/account.ts`, `lib/api/users.ts` ✅ commit `2186010` |
 | FE-2.21 | useAuth store (Sprint 1) is sufficient for now | Sprint 1's `store/auth.ts` covers Wave 1 needs |
-| FE-2.22 | Image cropper integration | — *Wave 2 (with FE-2.13 avatar upload)* |
+| FE-2.22 | Image cropper integration | `react-easy-crop` in `package.json` ✅ commit `81a1042` |
 
 ### 🟡 Contract Tasks (`qbazaar-contracts`)
 

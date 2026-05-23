@@ -444,6 +444,132 @@
               "path": ["account", "blocked-users"]
             }
           }
+        },
+        {
+          "name": "POST /account/data-export-request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "pm.test('status queued', () => { const j = pm.response.json(); pm.expect(j.data.status).to.eql('queued'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/data-export-request",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "data-export-request"]
+            }
+          }
+        },
+        {
+          "name": "POST /account/deactivate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{test_password}}\",\n  \"reason\": \"Taking a break\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/deactivate",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "deactivate"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /account/delete-request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "pm.test('schedules deletion', () => { const j = pm.response.json(); pm.expect(j.data.status).to.eql('pending_deletion'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{test_password}}\",\n  \"reason\": \"Found another platform\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/delete-request",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "delete-request"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "item": [
+        {
+          "name": "POST /uploads/avatar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('returns avatar urls', () => { const j = pm.response.json(); pm.expect(j.data).to.have.property('avatar_medium_url'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": [],
+                  "description": "JPEG / PNG / WEBP, max 5 MB"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/uploads/avatar",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["uploads", "avatar"]
+            }
+          }
         }
       ]
     },

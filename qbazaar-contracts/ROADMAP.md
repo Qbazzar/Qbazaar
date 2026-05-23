@@ -12,8 +12,8 @@
 | البند | القيمة |
 |-------|---------|
 | **Active Milestone** | Milestone 1 — Backend Foundation |
-| **Active Sprint** | Sprint 0 ✅ → **Sprint 1 (Auth)** يبدأ بعد retro |
-| **Active Day** | Sprint 0 closed (Days 1–7 ✅) |
+| **Active Sprint** | Sprint 0 ✅ → Sprint 1 ✅ → Sprint 2 ✅ (Wave 1 + Wave 2) → **Sprint 3 (Categories + Locations)** next |
+| **Active Day** | Sprint 2 closed — Wave 2 backend (`c9c22f8` + `4f164f8`) + frontend (`81a1042` + `497f1b0`) |
 | **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
 | **Blockers** | لا يوجد |
 | **Manual user steps pending** | GitHub Project + 13 Milestones + Labels; sign-ups for Twilio + Sentry + FCM project |
@@ -234,11 +234,13 @@
 
 ---
 
-### Sprint 2 — Users (3 أيام)
+### Sprint 2 — Users (3 أيام) ✅ Wave 1 + Wave 2
 
-- [ ] **Backend:** Profile CRUD, Public profile, Sessions, Privacy settings, Block/Unblock, Avatar upload, Account deactivation
-- [ ] **Frontend:** Account dashboard, Profile edit, Settings page, Privacy controls, Blocked users list
-- [ ] **Contract:** User endpoints
+- [x] **Backend Wave 1:** Profile CRUD, Public profile, Sessions, Privacy settings, Block/Unblock — `ceccd95` + `8d80865`
+- [x] **Backend Wave 2:** Data export, Deactivate, Delete-request, Avatar upload, Policies, Jobs — `c9c22f8` + `4f164f8`
+- [x] **Frontend Wave 1:** Account dashboard, Profile edit, Sessions, Privacy, Blocked users, Public profile — `14f71b7` + `2186010`
+- [x] **Frontend Wave 2:** Data page (export/deactivate/delete) + AvatarUploader with crop — `81a1042` + `497f1b0`
+- [x] **Contract:** User endpoints + Wave 2 lifecycle/avatar paths in `openapi/v1.yaml` + postman
 
 ---
 
