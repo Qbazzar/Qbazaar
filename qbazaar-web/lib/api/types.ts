@@ -84,6 +84,44 @@ export type AuthResponseData = {
 
 export type AuthResponseEnvelope = SuccessEnvelope<AuthResponseData>;
 
+// ── OTP / password-reset / email-verification (Wave 2) ─────────────────────
+export interface OtpSendRequest {
+  phone: string;
+}
+
+export interface OtpVerifyRequest {
+  phone: string;
+  code: string;
+}
+
+export interface OtpSendResponseData {
+  sent_to: string;
+  expires_in: number;
+  can_resend_in: number;
+}
+
+export type OtpSendResponseEnvelope = SuccessEnvelope<OtpSendResponseData>;
+
+export interface OtpVerifyResponseData {
+  phone_verified: true;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  token: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export interface VerifyEmailQuery {
+  signature?: string;
+  expires?: string;
+}
+
 // Stable list of error codes the UI switches on (see error-codes.md).
 export const AuthErrorCode = {
   InvalidCredentials: 'AUTH_001',

@@ -61,6 +61,49 @@ export const refreshSchema = z.object({
 
 export type RefreshInput = z.infer<typeof refreshSchema>;
 
+// ── OTP ────────────────────────────────────────────────────────────────────
+// Contract: OtpVerifyRequest → code matches `^[0-9]{6}$`.
+export const otpCodeRegex = /^[0-9]{6}$/;
+
+export const verifyOtpSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .regex(qatarPhoneRegex, 'auth.errors.phone_invalid'),
+  code: z
+    .string()
+    .trim()
+    .regex(otpCodeRegex, 'auth.errors.otp_invalid_format'),
+});
+
+export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
+
+// ── Forgot password ────────────────────────────────────────────────────────
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email('auth.errors.email_invalid'),
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+// ── Reset password ─────────────────────────────────────────────────────────
+// Contract requires email, token, password, password_confirmation and the
+// password must satisfy the same rules as registration.
+export const resetPasswordSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email('auth.errors.email_invalid'),
+    token: z.string().min(1, 'auth.errors.reset_token_required'),
+    password: passwordRules,
+    password_confirmation: z
+      .string()
+      .min(1, 'auth.errors.password_confirmation_required'),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    path: ['password_confirmation'],
+    message: 'auth.errors.password_mismatch',
+  });
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
 /**
  * Lightweight password-strength scorer used by `PasswordStrengthIndicator`.
  *

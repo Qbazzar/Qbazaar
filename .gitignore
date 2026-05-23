@@ -15,5 +15,8 @@ Thumbs.db
 .env
 .env.local
 
+# Meilisearch local data store (created when an agent or test runs meilisearch from this folder)
+data.ms/
+
 # Reference docs that are kept around but not committed deeper than this snapshot
 # DOCS/ stays included — it's the architecture + mockup reference for the whole team

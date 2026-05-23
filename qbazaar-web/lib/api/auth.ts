@@ -18,10 +18,18 @@ import { api } from './client';
 import type {
   AuthResponseEnvelope,
   ErrorEnvelope,
+  ForgotPasswordRequest,
   LoginRequest,
+  OtpSendRequest,
+  OtpSendResponseData,
+  OtpSendResponseEnvelope,
+  OtpVerifyRequest,
+  OtpVerifyResponseData,
   RegisterRequest,
+  ResetPasswordRequest,
   SuccessEnvelope,
   Token,
+  VerifyEmailQuery,
 } from './types';
 
 export type LoginPayload = LoginRequest;
@@ -173,5 +181,127 @@ export async function refresh(): Promise<{ token: Token; user?: never } | null> 
     return { token: data.data.token };
   } catch {
     return null;
+  }
+}
+
+// ── OTP ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Request a fresh 6-digit OTP for the given Qatar phone.
+ * The backend returns the cooldown window so the UI can disable resend.
+ */
+export async function sendOtp(
+  payload: OtpSendRequest,
+): Promise<OtpSendResponseData> {
+  try {
+    const { data } = await api.post<OtpSendResponseEnvelope>(
+      '/api/v1/auth/send-otp',
+      payload,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/**
+ * Verify a 6-digit OTP. On success the phone is marked verified server-side.
+ * Throws `ApiClientError` with `AUTH_004` (expired) or `AUTH_005` (invalid) on
+ * the unhappy paths.
+ */
+export async function verifyOtp(
+  payload: OtpVerifyRequest,
+): Promise<OtpVerifyResponseData> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<OtpVerifyResponseData>>(
+      '/api/v1/auth/verify-otp',
+      payload,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/**
+ * Same shape as `sendOtp` but hits the dedicated resend endpoint so the
+ * backend can apply a stricter rate limit.
+ */
+export async function resendOtp(
+  payload: OtpSendRequest,
+): Promise<OtpSendResponseData> {
+  try {
+    const { data } = await api.post<OtpSendResponseEnvelope>(
+      '/api/v1/auth/resend-otp',
+      payload,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+// ── Password reset ──────────────────────────────────────────────────────────
+
+/**
+ * Trigger the password-reset email. The contract guarantees a generic 202
+ * regardless of whether the email exists (anti-enumeration).
+ */
+export async function forgotPassword(
+  payload: ForgotPasswordRequest,
+): Promise<void> {
+  try {
+    await api.post('/api/v1/auth/forgot-password', payload);
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/**
+ * Consume the reset token (delivered in the email link) and set a new
+ * password. Validation errors arrive as 422 with per-field details.
+ */
+export async function resetPassword(
+  payload: ResetPasswordRequest,
+): Promise<void> {
+  try {
+    await api.post('/api/v1/auth/reset-password', payload);
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+// ── Email verification ──────────────────────────────────────────────────────
+
+/**
+ * Re-send the email-verification link to the currently authenticated user.
+ * Requires the Bearer header, which the axios interceptor adds automatically.
+ */
+export async function sendEmailVerification(): Promise<void> {
+  try {
+    await api.post('/api/v1/auth/send-email-verification');
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/**
+ * Confirm an email address via the signed link from the verification mail.
+ *
+ * The Laravel "signed URL" pattern carries the cryptographic `signature` and
+ * `expires` outside the path, so we forward them as query params and let the
+ * backend re-validate the signature.
+ */
+export async function verifyEmail(
+  id: string,
+  hash: string,
+  query: VerifyEmailQuery = {},
+): Promise<void> {
+  try {
+    await api.get(`/api/v1/auth/verify-email/${id}/${hash}`, {
+      params: query,
+    });
+  } catch (err) {
+    throw toApiClientError(err);
   }
 }
