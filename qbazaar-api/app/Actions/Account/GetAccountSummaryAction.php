@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Account;
 
+use App\Models\Favorite;
 use App\Models\User;
 
 /**
@@ -33,7 +34,7 @@ class GetAccountSummaryAction
             'drafts' => 0,             // TODO Sprint 5: $user->ads()->where('status', 'draft')->count()
             'conversations' => 0,      // TODO Sprint 8: count conversations the user participates in
             'unread_notifications' => 0, // TODO Sprint 10: count unread DatabaseNotifications
-            'favorites' => 0,          // TODO Sprint 7: count favorite ads
+            'favorites' => Favorite::query()->where('user_id', $user->id)->count(),
         ];
     }
 }

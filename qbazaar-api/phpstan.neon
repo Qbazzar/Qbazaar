@@ -29,6 +29,8 @@ parameters:
     - tests/Feature/Locations/*
     - tests/Feature/Ads/*
     - tests/Feature/Search/*
+    - tests/Feature/Favorites/*
+    - tests/Feature/Recents/*
     - tests/Concerns/*
     - bootstrap/cache/*
     - storage/*

@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
+use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
+use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
 use App\Http\Controllers\Api\V1\Search\SavedSearchController;
@@ -306,6 +308,32 @@ Route::prefix('account/saved-searches')
         Route::post('/', [SavedSearchController::class, 'store'])->name('store');
         Route::delete('/{id}', [SavedSearchController::class, 'destroy'])->name('destroy');
     });
+
+// ── Sprint 7 — Favorites & Recently Viewed ──────────────────────────────────
+//   Authenticated:
+//     POST   /ads/{id}/favorite           — toggle favourite (returns state + count)
+//     GET    /account/favorites           — paginated list of caller's favourites
+//     GET    /account/recently-viewed     — paginated history (auth-only)
+//     DELETE /account/recently-viewed     — clear caller's history
+//   Public-ish:
+//     POST   /ads/{id}/view               — track a view (auth user OR X-Session-Id)
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
+    Route::post('/ads/{id}/favorite', [FavoriteController::class, 'toggle'])
+        ->name('api.v1.ads.favorite.toggle');
+
+    Route::get('/account/favorites', [FavoriteController::class, 'index'])
+        ->name('api.v1.account.favorites.index');
+
+    Route::get('/account/recently-viewed', [RecentViewController::class, 'index'])
+        ->name('api.v1.account.recently-viewed.index');
+
+    Route::delete('/account/recently-viewed', [RecentViewController::class, 'destroy'])
+        ->name('api.v1.account.recently-viewed.destroy');
+});
+
+Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
+    ->middleware(['throttle:api'])
+    ->name('api.v1.ads.view');
 
 Route::prefix('users')
     ->name('api.v1.users.')
