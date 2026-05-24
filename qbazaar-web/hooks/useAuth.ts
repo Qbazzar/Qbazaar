@@ -11,6 +11,7 @@
 import { useCallback } from 'react';
 import { useAuthStore } from '@/store/auth';
 import { logout as apiLogout } from '@/lib/api/auth';
+import { disconnectEcho } from '@/lib/echo/client';
 
 export function useAuth() {
   const user = useAuthStore((s) => s.user);
@@ -22,6 +23,9 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     await apiLogout();
+    // Tear down the WebSocket so a future sign-in instantiates a fresh
+    // Echo client with the next user's auth context.
+    disconnectEcho();
     clearAuth();
   }, [clearAuth]);
 

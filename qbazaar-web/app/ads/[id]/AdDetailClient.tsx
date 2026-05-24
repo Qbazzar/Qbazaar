@@ -28,6 +28,7 @@ import { AdStatusPill } from '@/components/ads/AdStatusPill';
 import { CustomFieldsList } from '@/components/ads/CustomFieldsList';
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { PriceTag } from '@/components/ads/PriceTag';
+import { StartConversationButton } from '@/components/messaging/StartConversationButton';
 import { useAdQuery } from '@/lib/queries/ads';
 import { useTrackAdViewMutation } from '@/lib/queries/recently-viewed';
 import { localized, getLocale } from '@/lib/i18n/locale';
@@ -255,10 +256,12 @@ function AdDetail({
               ) : null}
 
               <div className="flex flex-col gap-2">
+                <StartConversationButton ad={{ id: ad.id, user_id: ad.user_id }} />
                 <Button
                   type="button"
                   size="lg"
-                  className="bg-coral hover:bg-coral/90 rounded-full text-white"
+                  variant="outline"
+                  className="rounded-full"
                   onClick={onRevealPhone}
                 >
                   <Phone className="size-4" />

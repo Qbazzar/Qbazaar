@@ -24,9 +24,11 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchBar } from '@/components/search/SearchBar';
+import { MessagesBadge } from '@/components/messaging/MessagesBadge';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserChannel } from '@/lib/echo/useUserChannel';
 
 interface NavLink {
   href: string;
@@ -41,8 +43,13 @@ const NAV_LINKS: NavLink[] = [
 
 export function SiteHeader() {
   const pathname = usePathname() ?? '/';
-  const { isAuthenticated, isHydrated } = useAuth();
+  const { isAuthenticated, isHydrated, user } = useAuth();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
+  // Global user-channel subscription keeps the badge + inbox previews live
+  // for the whole authenticated app — one subscription, one set of cache
+  // invalidations.
+  useUserChannel(isAuthenticated ? user?.id : null);
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -110,6 +117,9 @@ export function SiteHeader() {
               {t('home.hero.cta_post', 'انشر إعلانك')}
             </Link>
           </Button>
+
+          {/* Messages badge — auto-hides when signed out or count is 0 */}
+          <MessagesBadge />
 
           {/* Account */}
           {isHydrated && isAuthenticated ? (

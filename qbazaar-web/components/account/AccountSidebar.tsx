@@ -21,6 +21,7 @@ import {
   HeartIcon,
   HomeIcon,
   LogOutIcon,
+  MessageSquareIcon,
   ShieldCheckIcon,
   KeyIcon,
   MonitorSmartphoneIcon,
@@ -62,6 +63,11 @@ const NAV_ITEMS: NavItem[] = [
     href: '/account/data',
     labelKey: 'account.nav.data',
     icon: DatabaseIcon,
+  },
+  {
+    href: '/account/messages',
+    labelKey: 'account.nav.messages',
+    icon: MessageSquareIcon,
   },
   {
     href: '/account/favorites',

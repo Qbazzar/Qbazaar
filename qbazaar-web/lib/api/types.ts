@@ -633,3 +633,71 @@ export interface RecentlyViewedAdSummary extends AdSummary {
 
 export type FavoritesErrorCode = 'FAVORITE_AD_NOT_FOUND' | 'FAVORITE_FORBIDDEN';
 export type RecentlyViewedErrorCode = 'RECENTLY_VIEWED_AD_NOT_FOUND';
+
+// ── Messaging (Sprint 8) ───────────────────────────────────────────────────
+// 1:1 buyer↔seller conversations scoped to a single ad. Real-time delivery is
+// powered by Reverb (over the Pusher protocol); the shapes below mirror the
+// `BE-8.x` contract additions and stay decoupled from the broadcaster.
+
+export type MessageType = 'text' | 'offer' | 'system';
+
+/**
+ * Lean row used by the conversations index. The ad slice is kept small —
+ * everything an inbox row needs (image, title, price headline) — so the list
+ * stays light even with hundreds of conversations.
+ */
+export interface ConversationListItem {
+  id: string;
+  ad: {
+    id: string;
+    title: string;
+    primary_image: Media | null;
+    price: number | null;
+    price_type: PriceType;
+    currency: 'QAR';
+  };
+  other_participant: {
+    id: string;
+    full_name: string;
+    avatar_thumb_url: string | null;
+  };
+  last_message_preview: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+}
+
+/**
+ * Full conversation envelope returned by show/start endpoints. Extends the
+ * list item with the buyer/seller ids so the client can decide which side of
+ * the chat to render.
+ */
+export interface Conversation extends ConversationListItem {
+  buyer_id: string;
+  seller_id: string;
+  created_at: string;
+}
+
+export interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  type: MessageType;
+  read_at: string | null;
+  created_at: string;
+  sender: {
+    id: string;
+    full_name: string;
+    avatar_thumb_url: string | null;
+  };
+}
+
+export interface UnreadCountResponse {
+  total: number;
+}
+
+export type MessagingErrorCode =
+  | 'CONVERSATION_NOT_FOUND'
+  | 'CONVERSATION_BLOCKED'
+  | 'CONVERSATION_OWN_AD'
+  | 'MESSAGE_NOT_FOUND';

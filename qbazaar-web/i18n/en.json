@@ -200,6 +200,7 @@
       "favorites": "Saved ads",
       "recently_viewed": "Recently viewed",
       "saved_searches": "Saved searches",
+      "messages": "Messages",
       "sign_out": "Sign out",
       "sign_out_confirm": "Signed out"
     },
@@ -714,6 +715,33 @@
       "body": "All recently-viewed ads will be removed. This action cannot be undone.",
       "confirm": "Clear",
       "cancel": "Cancel"
+    }
+  },
+  "messaging": {
+    "title": "My inbox",
+    "empty": {
+      "list": "Start a conversation by reaching out to a seller",
+      "view": "Pick a conversation to see its messages.",
+      "preview": "No messages yet"
+    },
+    "back": "Back",
+    "start_chat": "Message seller",
+    "own_ad_badge": "This is your ad",
+    "send": "Send",
+    "placeholder": "Type a message…",
+    "read_indicator": "Read",
+    "unread_count": "{count} unread",
+    "load_older": "Show older messages",
+    "day": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "errors": {
+      "conversation_not_found": "We couldn't find that conversation",
+      "conversation_blocked": "Messaging is blocked between you two",
+      "conversation_own_ad": "You can't message yourself about your own ad",
+      "message_not_found": "Message not found",
+      "send_failed": "Couldn't send the message, please retry"
     }
   }
 }
