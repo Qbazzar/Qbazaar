@@ -137,6 +137,21 @@ return [
         ],
     ],
 
+    'search' => [
+        'index' => [
+            'unavailable' => 'Search is temporarily unavailable. Please try again shortly.',
+        ],
+        'invalid' => [
+            'params' => 'Some of your search filters are invalid.',
+        ],
+        'saved' => [
+            'limit' => 'You have reached the maximum of 10 saved searches.',
+            'not' => [
+                'found' => 'Saved search not found.',
+            ],
+        ],
+    ],
+
     'user' => [
         'not' => [
             'found' => 'User not found.',

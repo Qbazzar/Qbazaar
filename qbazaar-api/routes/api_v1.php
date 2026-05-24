@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
+use App\Http\Controllers\Api\V1\Search\SavedSearchController;
+use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
@@ -279,6 +281,31 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
         ->middleware('throttle:api')
         ->name('api.v1.account.ads.index');
 });
+
+// ── Sprint 6 — Search ───────────────────────────────────────────────────────
+//   Public:
+//     GET  /search              — paginated keyword + filter search + facets
+//     GET  /search/suggestions  — prefix-match title suggestions (cached)
+//   Authenticated (account group):
+//     GET    /account/saved-searches        — list (cap 10/user)
+//     POST   /account/saved-searches        — create
+//     DELETE /account/saved-searches/{id}   — remove
+Route::prefix('search')
+    ->name('api.v1.search.')
+    ->middleware('throttle:api')
+    ->group(function (): void {
+        Route::get('/', [SearchController::class, 'index'])->name('index');
+        Route::get('/suggestions', [SearchController::class, 'suggestions'])->name('suggestions');
+    });
+
+Route::prefix('account/saved-searches')
+    ->name('api.v1.account.saved-searches.')
+    ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
+    ->group(function (): void {
+        Route::get('/', [SavedSearchController::class, 'index'])->name('index');
+        Route::post('/', [SavedSearchController::class, 'store'])->name('store');
+        Route::delete('/{id}', [SavedSearchController::class, 'destroy'])->name('destroy');
+    });
 
 Route::prefix('users')
     ->name('api.v1.users.')

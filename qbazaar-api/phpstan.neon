@@ -28,6 +28,7 @@ parameters:
     - tests/Feature/Categories/*
     - tests/Feature/Locations/*
     - tests/Feature/Ads/*
+    - tests/Feature/Search/*
     - tests/Concerns/*
     - bootstrap/cache/*
     - storage/*

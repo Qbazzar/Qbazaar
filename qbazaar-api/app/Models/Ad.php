@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -47,7 +49,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class Ad extends Model implements HasMedia
 {
     /** @use HasFactory<AdFactory> */
-    use HasFactory, HasUlids, InteractsWithMedia, SoftDeletes;
+    use HasFactory, HasUlids, InteractsWithMedia, Searchable, SoftDeletes;
 
     protected $table = 'ads';
 
@@ -163,6 +165,11 @@ class Ad extends Model implements HasMedia
      * Publish a draft. In Wave A we skip the PENDING auto-moderation step
      * and transition straight to ACTIVE; Sprint 5 nice-to-have will add the
      * moderation hop without changing the public contract.
+     *
+     * Calls `searchable()` explicitly so the ad is pushed to Meilisearch
+     * the moment it transitions to ACTIVE — `shouldBeSearchable()` would
+     * otherwise rely on the next ::save() to trigger Scout's observer, and
+     * that lag is observable to the seller's "did my ad go live yet" flow.
      */
     public function publish(): void
     {
@@ -173,21 +180,32 @@ class Ad extends Model implements HasMedia
             'published_at' => now(),
             'expires_at' => now()->addDays($lifetimeDays),
         ])->save();
+
+        $this->searchable();
     }
 
     /**
      * Mark the ad as sold. Only ACTIVE and EXPIRED ads can be sold —
      * enforced by AdPolicy::markSold().
+     *
+     * Sold ads must drop out of search results immediately; we force the
+     * unindex rather than waiting for `shouldBeSearchable()` to win the
+     * next save cycle.
      */
     public function markSold(): void
     {
         $this->forceFill(['status' => AdStatus::SOLD])->save();
+
+        $this->unsearchable();
     }
 
     /**
      * Extend expiry by another lifetime window. If the ad has already
      * expired, flip it back to ACTIVE in the same call so the seller
      * doesn't need a separate "republish" step.
+     *
+     * Re-indexes the ad when it flips back to ACTIVE so renewed listings
+     * reappear in search without waiting for a re-save.
      */
     public function renew(): void
     {
@@ -197,12 +215,84 @@ class Ad extends Model implements HasMedia
             ? $this->expires_at
             : now();
 
+        $wasExpired = $this->status === AdStatus::EXPIRED;
+
         $this->forceFill([
             'expires_at' => $base->copy()->addDays($lifetimeDays),
-            'status' => $this->status === AdStatus::EXPIRED
+            'status' => $wasExpired
                 ? AdStatus::ACTIVE
                 : $this->status,
         ])->save();
+
+        if ($wasExpired) {
+            $this->searchable();
+        }
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     *  Scout / Meilisearch — Sprint 6.
+     *
+     *  Only ACTIVE ads are searchable; other statuses are skipped via
+     *  `shouldBeSearchable()`. The payload is deliberately denormalised
+     *  (category_slug / location_slug / has_images) so the frontend can
+     *  render result cards without an extra round-trip.
+     * ──────────────────────────────────────────────────────────────────*/
+
+    /**
+     * Name of the Meilisearch index for this model. Honours SCOUT_PREFIX so
+     * staging / prod / per-tenant deployments stay isolated when they share
+     * a single Meilisearch instance.
+     */
+    public function searchableAs(): string
+    {
+        return ((string) config('scout.prefix', '')) . 'ads_index';
+    }
+
+    /**
+     * Gate by status so DRAFT / PENDING / SOLD / EXPIRED rows never appear
+     * in search results. Scout consults this on every observer-driven sync;
+     * we also call `searchable()` / `unsearchable()` explicitly in the
+     * lifecycle methods above to avoid relying on a follow-up save.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === AdStatus::ACTIVE;
+    }
+
+    /**
+     * Shape sent to Meilisearch. Kept tight on purpose:
+     *  - `description` is truncated to 500 chars — search relevance peaks
+     *    long before that; the extra bytes just bloat the index.
+     *  - timestamps are stored as unix-int so Meili can sort + range-filter
+     *    without parsing ISO strings on every query.
+     *  - `has_images` is materialised so filter UI can show "with photos
+     *    only" without an extra DB lookup per result.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        // Avoid loading every Media row when we only need a count — the
+        // hot path runs on every save and the underlying query is indexed.
+        $hasImages = $this->media()->where('collection_name', 'images')->exists();
+
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => Str::limit((string) $this->description, 500, ''),
+            'category_id' => $this->category_id,
+            'category_slug' => $this->category->slug,
+            'location_id' => $this->location_id,
+            'location_slug' => $this->location->slug,
+            'user_id' => $this->user_id,
+            'price' => $this->price !== null ? (float) $this->price : null,
+            'price_type' => $this->price_type->value,
+            'condition' => $this->condition?->value,
+            'status' => $this->status->value,
+            'published_at' => $this->published_at?->getTimestamp(),
+            'created_at_ts' => $this->created_at instanceof Carbon ? $this->created_at->getTimestamp() : null,
+            'has_images' => $hasImages,
+        ];
     }
 
     /* ──────────────────────────────────────────────────────────────────

@@ -63,6 +63,8 @@ enum ErrorCode: string
     // ── Search (Sprint 6) ───────────────────────────────────────────
     case SEARCH_INDEX_UNAVAILABLE = 'SEARCH_001';
     case SEARCH_SAVED_NOT_FOUND = 'SEARCH_002';
+    case SEARCH_INVALID_PARAMS = 'SEARCH_003';
+    case SEARCH_SAVED_LIMIT = 'SEARCH_004';
 
     // ── Messaging (Sprint 8) ────────────────────────────────────────
     case MSG_BLOCKED = 'MSG_001';
@@ -126,7 +128,9 @@ enum ErrorCode: string
             self::OFFER_ALREADY_ACTIONED,
             self::REPORT_SELF_FORBIDDEN,
             self::REPORT_DUPLICATE,
-            self::NOTIF_DEVICE_TOKEN_INVALID => 422,
+            self::NOTIF_DEVICE_TOKEN_INVALID,
+            self::SEARCH_INVALID_PARAMS,
+            self::SEARCH_SAVED_LIMIT => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,

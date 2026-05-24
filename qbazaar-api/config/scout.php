@@ -142,9 +142,41 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            // 'users' => [
-            //     'filterableAttributes'=> ['id', 'name', 'email'],
-            // ],
+            // QBazaar — ads index. Filterable + sortable + searchable attributes
+            // must be declared here so Meilisearch sets them server-side; otherwise
+            // facet / range / sort queries error at runtime. Run
+            // `php artisan scout:sync-index-settings` after editing this block.
+            'ads_index' => [
+                'filterableAttributes' => [
+                    'category_id',
+                    'category_slug',
+                    'location_id',
+                    'location_slug',
+                    'price',
+                    'price_type',
+                    'condition',
+                    'status',
+                    'published_at',
+                    'has_images',
+                ],
+                'sortableAttributes' => [
+                    'published_at',
+                    'price',
+                    'created_at_ts',
+                ],
+                'searchableAttributes' => [
+                    'title',
+                    'description',
+                ],
+                'rankingRules' => [
+                    'words',
+                    'typo',
+                    'proximity',
+                    'attribute',
+                    'sort',
+                    'exactness',
+                ],
+            ],
         ],
     ],
 
