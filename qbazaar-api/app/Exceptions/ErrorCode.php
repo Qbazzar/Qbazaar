@@ -72,6 +72,8 @@ enum ErrorCode: string
     case MSG_FLAGGED = 'MSG_003';
     case MSG_CONVERSATION_NOT_FOUND = 'MSG_004';
     case MSG_NOT_PARTICIPANT = 'MSG_005';
+    case MSG_CONVERSATION_OWN_AD = 'MSG_006';
+    case MSG_NOT_FOUND = 'MSG_007';
 
     // ── Offers (Sprint 9) ───────────────────────────────────────────
     case OFFER_NOT_FOUND = 'OFFER_001';
@@ -125,6 +127,7 @@ enum ErrorCode: string
             self::AD_CUSTOM_FIELDS_INVALID,
             self::AD_NOT_PUBLISHABLE,
             self::MSG_FLAGGED,
+            self::MSG_CONVERSATION_OWN_AD,
             self::OFFER_ALREADY_ACTIONED,
             self::REPORT_SELF_FORBIDDEN,
             self::REPORT_DUPLICATE,
@@ -151,6 +154,7 @@ enum ErrorCode: string
             self::AD_IMAGE_NOT_FOUND,
             self::SEARCH_SAVED_NOT_FOUND,
             self::MSG_CONVERSATION_NOT_FOUND,
+            self::MSG_NOT_FOUND,
             self::OFFER_NOT_FOUND,
             self::NOTIF_NOT_FOUND,
             self::CMS_PAGE_NOT_FOUND,

@@ -152,6 +152,26 @@ return [
         ],
     ],
 
+    'msg' => [
+        'blocked' => 'You cannot message this user.',
+        'rate' => [
+            'limited' => 'You are sending messages too quickly. Please slow down.',
+        ],
+        'flagged' => 'Your message was blocked by automated moderation.',
+        'conversation' => [
+            'not' => [
+                'found' => 'Conversation not found.',
+            ],
+            'own' => [
+                'ad' => 'You cannot start a conversation about your own ad.',
+            ],
+        ],
+        'not' => [
+            'found' => 'Message not found.',
+            'participant' => 'You are not a participant of this conversation.',
+        ],
+    ],
+
     'user' => [
         'not' => [
             'found' => 'User not found.',

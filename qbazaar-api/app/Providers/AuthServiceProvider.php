@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\Ad;
+use App\Models\Conversation;
 use App\Models\User;
 use App\Policies\AccountPolicy;
 use App\Policies\AdPolicy;
 use App\Policies\BlockPolicy;
+use App\Policies\ConversationPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,6 +28,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         Gate::policy(User::class, AccountPolicy::class);
         Gate::policy(Ad::class, AdPolicy::class);
+        Gate::policy(Conversation::class, ConversationPolicy::class);
 
         Gate::define('block-user', [BlockPolicy::class, 'block']);
         Gate::define('unblock-user', [BlockPolicy::class, 'unblock']);

@@ -25,6 +25,8 @@ use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
+use App\Http\Controllers\Api\V1\Messaging\ConversationController;
+use App\Http\Controllers\Api\V1\Messaging\MessageController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
@@ -334,6 +336,39 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
 Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
     ->middleware(['throttle:api'])
     ->name('api.v1.ads.view');
+
+// ── Sprint 8 Wave A — Messaging ─────────────────────────────────────────────
+//   Authenticated:
+//     POST   /conversations                       — start / resolve a thread
+//     GET    /conversations                       — paginated inbox
+//     GET    /conversations/unread-count          — header badge
+//     GET    /conversations/{id}                  — full thread
+//     GET    /conversations/{id}/messages         — cursor transcript
+//     POST   /conversations/{id}/messages         — append + broadcast
+//     POST   /conversations/{id}/read             — mark all read
+Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
+    Route::post('/conversations', [ConversationController::class, 'store'])
+        ->name('api.v1.conversations.store');
+
+    Route::get('/conversations', [ConversationController::class, 'index'])
+        ->name('api.v1.conversations.index');
+
+    Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount'])
+        ->name('api.v1.conversations.unread-count');
+
+    Route::get('/conversations/{id}', [ConversationController::class, 'show'])
+        ->name('api.v1.conversations.show');
+
+    Route::get('/conversations/{id}/messages', [MessageController::class, 'index'])
+        ->name('api.v1.conversations.messages.index');
+
+    Route::post('/conversations/{id}/messages', [MessageController::class, 'store'])
+        ->middleware('throttle:messages')
+        ->name('api.v1.conversations.messages.store');
+
+    Route::post('/conversations/{id}/read', [ConversationController::class, 'markRead'])
+        ->name('api.v1.conversations.read');
+});
 
 Route::prefix('users')
     ->name('api.v1.users.')
