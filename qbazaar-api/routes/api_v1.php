@@ -12,6 +12,11 @@ use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
 use App\Http\Controllers\Api\V1\Account\ProfileController;
 use App\Http\Controllers\Api\V1\Account\SessionsController;
 use App\Http\Controllers\Api\V1\Account\VerificationStatusController;
+use App\Http\Controllers\Api\V1\Ads\AdController;
+use App\Http\Controllers\Api\V1\Ads\AdImageController;
+use App\Http\Controllers\Api\V1\Ads\MarkSoldController;
+use App\Http\Controllers\Api\V1\Ads\PublishAdController;
+use App\Http\Controllers\Api\V1\Ads\RenewAdController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
@@ -209,6 +214,71 @@ Route::prefix('locations')
     ->group(function (): void {
         Route::get('qatar', [LocationController::class, 'qatar'])->name('qatar');
     });
+
+// ── Sprint 4 + 5 Wave A — Ads ───────────────────────────────────────────────
+//   Public:
+//     GET    /ads               — paginated feed of active ads
+//     GET    /ads/{id}          — single ad detail (public visibility rules)
+//   Authenticated:
+//     POST   /ads               — create draft
+//     PUT    /ads/{id}          — owner update
+//     DELETE /ads/{id}          — owner soft-delete
+//     POST   /ads/{id}/publish  — draft → active (throttle:publish)
+//     POST   /ads/{id}/mark-sold
+//     POST   /ads/{id}/renew
+//     POST   /ads/{ad}/images          — multipart image upload
+//     POST   /ads/{ad}/images/reorder
+//     DELETE /media/{media}            — remove a single image
+//     GET    /account/ads              — caller's own ads (every status)
+Route::prefix('ads')
+    ->name('api.v1.ads.')
+    ->middleware('throttle:api')
+    ->group(function (): void {
+        Route::get('/', [AdController::class, 'index'])->name('index');
+        Route::get('/{id}', [AdController::class, 'show'])->name('show');
+    });
+
+Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
+    Route::post('/ads', [AdController::class, 'store'])
+        ->middleware('throttle:publish')
+        ->name('api.v1.ads.store');
+
+    Route::put('/ads/{id}', [AdController::class, 'update'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.update');
+
+    Route::delete('/ads/{id}', [AdController::class, 'destroy'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.destroy');
+
+    Route::post('/ads/{id}/publish', PublishAdController::class)
+        ->middleware('throttle:publish')
+        ->name('api.v1.ads.publish');
+
+    Route::post('/ads/{id}/mark-sold', MarkSoldController::class)
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.mark-sold');
+
+    Route::post('/ads/{id}/renew', RenewAdController::class)
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.renew');
+
+    Route::post('/ads/{ad}/images', [AdImageController::class, 'store'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.images.store');
+
+    Route::post('/ads/{ad}/images/reorder', [AdImageController::class, 'reorder'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.images.reorder');
+
+    Route::delete('/media/{media}', [AdImageController::class, 'destroy'])
+        ->middleware('throttle:api')
+        ->name('api.v1.media.destroy');
+
+    Route::get('/account/ads', [AdController::class, 'myAds'])
+        ->middleware('throttle:api')
+        ->name('api.v1.account.ads.index');
+});
 
 Route::prefix('users')
     ->name('api.v1.users.')

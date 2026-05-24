@@ -57,6 +57,8 @@ enum ErrorCode: string
     case AD_OWN_OFFER_FORBIDDEN = 'AD_008';
     case AD_IMAGES_REQUIRED = 'AD_009';
     case AD_CUSTOM_FIELDS_INVALID = 'AD_010';
+    case AD_NOT_PUBLISHABLE = 'AD_011';
+    case AD_IMAGE_NOT_FOUND = 'AD_012';
 
     // ── Search (Sprint 6) ───────────────────────────────────────────
     case SEARCH_INDEX_UNAVAILABLE = 'SEARCH_001';
@@ -119,6 +121,7 @@ enum ErrorCode: string
             self::AD_OWN_OFFER_FORBIDDEN,
             self::AD_IMAGES_REQUIRED,
             self::AD_CUSTOM_FIELDS_INVALID,
+            self::AD_NOT_PUBLISHABLE,
             self::MSG_FLAGGED,
             self::OFFER_ALREADY_ACTIONED,
             self::REPORT_SELF_FORBIDDEN,
@@ -141,6 +144,7 @@ enum ErrorCode: string
             self::CATEGORY_NOT_FOUND,
             self::LOCATION_NOT_FOUND,
             self::AD_NOT_FOUND,
+            self::AD_IMAGE_NOT_FOUND,
             self::SEARCH_SAVED_NOT_FOUND,
             self::MSG_CONVERSATION_NOT_FOUND,
             self::OFFER_NOT_FOUND,

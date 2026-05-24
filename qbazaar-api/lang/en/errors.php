@@ -73,6 +73,70 @@ return [
         ],
     ],
 
+    'ad' => [
+        'not' => [
+            'found' => 'Ad not found.',
+            'active' => 'This ad is not currently active.',
+            'publishable' => 'This ad cannot be published in its current state.',
+        ],
+        'edit' => [
+            'forbidden' => 'You cannot edit this ad.',
+        ],
+        'invalid' => [
+            'transition' => 'That status change is not allowed.',
+            'status_transition' => 'That status change is not allowed.',
+        ],
+        'auto' => [
+            'moderation' => [
+                'rejected' => 'The ad was rejected by automated moderation.',
+            ],
+        ],
+        'daily' => [
+            'publish' => [
+                'limit' => 'You have reached the daily publishing limit.',
+            ],
+        ],
+        'expired' => 'This ad has expired.',
+        'own' => [
+            'offer' => [
+                'forbidden' => 'You cannot place an offer on your own ad.',
+            ],
+        ],
+        'images' => [
+            'required' => 'At least one image is required.',
+            'too_many' => 'You can attach at most :max images to an ad.',
+        ],
+        'image' => [
+            'not' => [
+                'found' => 'Image not found for this ad.',
+            ],
+        ],
+        'custom' => [
+            'fields' => [
+                'invalid' => 'The custom fields for this category are invalid.',
+            ],
+        ],
+    ],
+
+    'upload' => [
+        'too' => [
+            'large' => 'The uploaded file is too large.',
+        ],
+        'invalid' => [
+            'mime' => 'The uploaded file type is not allowed.',
+        ],
+        'max' => [
+            'images' => [
+                'reached' => 'You have reached the maximum number of images.',
+            ],
+        ],
+        'magic' => [
+            'bytes' => [
+                'mismatch' => 'The uploaded file failed integrity verification.',
+            ],
+        ],
+    ],
+
     'user' => [
         'not' => [
             'found' => 'User not found.',

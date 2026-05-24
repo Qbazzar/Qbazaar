@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Ad;
 use App\Models\User;
 use App\Policies\AccountPolicy;
+use App\Policies\AdPolicy;
 use App\Policies\BlockPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -23,8 +25,17 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(User::class, AccountPolicy::class);
+        Gate::policy(Ad::class, AdPolicy::class);
 
         Gate::define('block-user', [BlockPolicy::class, 'block']);
         Gate::define('unblock-user', [BlockPolicy::class, 'unblock']);
+
+        // Custom Ad-related abilities — these live outside the policy's
+        // CRUD set so controllers can authorize them by string name
+        // (`$this->authorize('manage-images', $ad)`) while keeping the
+        // policy class as the single source of the rule.
+        Gate::define('manage-images', [AdPolicy::class, 'manageImages']);
+        Gate::define('mark-sold', [AdPolicy::class, 'markSold']);
+        Gate::define('renew', [AdPolicy::class, 'renew']);
     }
 }
