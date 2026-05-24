@@ -441,5 +441,174 @@
     "errors": {
       "not_found": "Could not load locations"
     }
+  },
+  "home": {
+    "breadcrumb": "Home",
+    "hero": {
+      "eyebrow": "Qatar marketplace",
+      "headline": "Qatar's friendly classifieds marketplace",
+      "subtitle": "Buy, sell, and discover near you — from a used car in West Bay to a kitten in Al Khor. Free, safe, and built for Qatar.",
+      "cta_post": "Post an ad",
+      "cta_browse": "Browse ads"
+    },
+    "sections": {
+      "top_categories": "Top categories",
+      "top_categories_title": "Every market in Qatar",
+      "latest_ads": "Latest ads",
+      "latest_ads_title": "Fresh from the neighbourhood",
+      "view_more": "View all"
+    },
+    "trust": {
+      "verified": "Verified sellers",
+      "free_to_post": "Free to post"
+    }
+  },
+  "media": {
+    "no_image": "No image",
+    "cover": "Cover",
+    "prev": "Previous",
+    "next": "Next",
+    "open_fullscreen": "Open fullscreen",
+    "close_fullscreen": "Close",
+    "reorder_handle": "Drag to reorder",
+    "delete_confirm": "Delete image",
+    "upload": {
+      "drop": "Drop images here, or",
+      "browse": "Browse files",
+      "max_size": "Up to 10 MB per image",
+      "max_count": "Maximum {max} images",
+      "constraints": "Up to {max} images · JPG/PNG/WEBP · 10MB each",
+      "uploading": "Uploading…",
+      "progress": "Uploading {percent}%",
+      "success": "Uploaded {count} image(s)",
+      "error": "Could not upload images",
+      "error_type": "Unsupported file type (JPG / PNG / WEBP only)",
+      "error_size": "File is larger than 10 MB",
+      "error_reorder": "Could not save the new order",
+      "error_delete": "Could not delete the image"
+    }
+  },
+  "ads": {
+    "list": {
+      "title": "All ads",
+      "subtitle": "Browse the latest from your neighbours in Qatar",
+      "prev": "Previous",
+      "next": "Next",
+      "page_of": "Page {current} of {total}"
+    },
+    "post": {
+      "title": "Post a new ad",
+      "subtitle": "Most ads go live in under a minute. Follow the steps to publish yours.",
+      "cancel": "Back to home",
+      "next": "Next",
+      "back": "Back",
+      "published": "Your ad is now live",
+      "steps": {
+        "category": "Category",
+        "category_subtitle": "Pick the category that fits best — you can refine later.",
+        "details": "Details",
+        "details_subtitle": "A clear title and an honest description get far more interest.",
+        "location": "Location",
+        "location_subtitle": "Pick your city and district so neighbours nearby see it first.",
+        "images": "Images",
+        "images_subtitle": "Up to 20 photos. The first one is the cover. Drag to reorder."
+      }
+    },
+    "my": {
+      "title": "My ads",
+      "subtitle": "Manage every ad from one place.",
+      "tabs": {
+        "all": "All",
+        "active": "Active",
+        "draft": "Drafts",
+        "pending": "Pending",
+        "sold": "Sold",
+        "expired": "Expired",
+        "rejected": "Rejected",
+        "blocked": "Blocked"
+      }
+    },
+    "detail": {
+      "description": "Description",
+      "specs": "Details",
+      "similar": "Similar ads",
+      "similar_soon": "Similar ads are coming soon.",
+      "safety_title": "Stay safe when meeting",
+      "safety_body": "Meet in public, inspect goods before paying, and never wire money to strangers.",
+      "ad_id": "Ad ID {id}",
+      "views": "{count} views"
+    },
+    "form": {
+      "title": "Ad title",
+      "title_placeholder": "e.g. iPhone 15 Pro Max 256GB — sealed box",
+      "description": "Description",
+      "description_placeholder": "Describe the condition, accessories, reason for selling, pickup options…",
+      "price": "Price (QAR)",
+      "price_type": "Price type",
+      "condition": "Condition",
+      "currency": "QAR",
+      "custom_fields": "Additional details"
+    },
+    "price": {
+      "fixed": "Fixed price",
+      "negotiable": "Negotiable",
+      "free": "Free",
+      "contact": "Contact for price",
+      "formatted": "{amount} QAR"
+    },
+    "status": {
+      "draft": "Draft",
+      "pending": "In review",
+      "active": "Active",
+      "sold": "Sold",
+      "expired": "Expired",
+      "rejected": "Rejected",
+      "blocked": "Blocked"
+    },
+    "condition": {
+      "new": "Brand new",
+      "like_new": "Like new",
+      "used": "Used"
+    },
+    "empty": {
+      "no_ads": "No ads here yet.",
+      "no_my_ads": "No ads in this tab yet.",
+      "go_browse": "Browse ads"
+    },
+    "actions": {
+      "post_ad": "Post a new ad",
+      "view": "View",
+      "edit": "Edit",
+      "mark_sold": "Mark as sold",
+      "mark_sold_success": "Ad marked as sold",
+      "renew": "Renew",
+      "renew_success": "Ad renewed",
+      "delete": "Delete",
+      "delete_success": "Ad deleted",
+      "delete_confirm_title": "Confirm delete",
+      "delete_confirm_body": "The ad will be removed permanently. This action cannot be undone.",
+      "publish": "Publish ad",
+      "save_for_later": "Save ad",
+      "save_soon": "Saving lands soon",
+      "contact_seller": "Contact seller",
+      "call": "Show phone",
+      "call_revealed": "Tap to call",
+      "share": "Share",
+      "report": "Report",
+      "report_soon": "Reporting lands soon"
+    },
+    "description": {
+      "show_more": "Show more",
+      "show_less": "Show less"
+    },
+    "errors": {
+      "ad_not_found": "We couldn't find this ad",
+      "ad_not_found_body": "It might have been removed or the link is broken.",
+      "ad_images_too_many": "You've reached the image limit",
+      "ad_invalid_status_transition": "This ad can't move to that status",
+      "ad_not_publishable": "Add at least one image before publishing",
+      "create_failed": "Could not save the draft",
+      "delete_failed": "Could not delete the ad"
+    }
   }
 }

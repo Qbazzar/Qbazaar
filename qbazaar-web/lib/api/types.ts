@@ -397,3 +397,151 @@ export interface Location {
 }
 
 export type ReferenceErrorCode = 'CATEGORY_NOT_FOUND' | 'LOCATION_NOT_FOUND';
+
+// ── Ads / Media (Sprint 4 + 5) ─────────────────────────────────────────────
+// Wave A covers the public listing surface plus owner CRUD. Search, favourites
+// and messaging hooks are deliberately deferred to later sprints — these
+// shapes mirror `qbazaar-contracts/openapi/v1.yaml` (BE-4.x / BE-5.x).
+
+export type PriceType = 'fixed' | 'negotiable' | 'free' | 'contact';
+export type AdCondition = 'new' | 'like_new' | 'used';
+export type AdStatus =
+  | 'draft'
+  | 'pending'
+  | 'active'
+  | 'sold'
+  | 'expired'
+  | 'rejected'
+  | 'blocked';
+
+/**
+ * The three responsive variants the backend pre-renders for every uploaded
+ * ad image, plus the canonical WebP fallback. URLs are absolute.
+ */
+export interface MediaSizes {
+  thumbnail: string;
+  medium: string;
+  large: string;
+  original_webp: string;
+}
+
+/**
+ * One image (or attachment) tied to an ad. `blurhash` is the compact preview
+ * the UI decodes client-side while the full image loads. `order` is the
+ * gallery sort key and is mutated by the reorder endpoint.
+ */
+export interface Media {
+  id: string;
+  collection: string;
+  url: string;
+  sizes: MediaSizes;
+  blurhash: string | null;
+  width: number | null;
+  height: number | null;
+  order: number;
+  size_bytes: number;
+}
+
+/**
+ * Lean user shape embedded on the ad detail payload. The full `PublicUserProfile`
+ * lives on the dedicated user-profile endpoint — this is the slice the ad-detail
+ * sidebar needs.
+ */
+export interface PublicUser {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  avatar_thumb_url?: string | null;
+  account_type: AccountType;
+  email_verified: boolean;
+  phone_verified: boolean;
+  joined_at: string;
+  ads_count?: number;
+}
+
+export interface Ad {
+  id: string;
+  user_id: string;
+  category_id: string;
+  location_id: string;
+  title: string;
+  description: string;
+  price: number | null;
+  price_type: PriceType;
+  currency: 'QAR';
+  condition: AdCondition | null;
+  status: AdStatus;
+  /** Free-form bag keyed by `CategoryField.key` — values arrive verbatim. */
+  custom_fields: Record<string, unknown>;
+  views_count: number;
+  favorites_count: number;
+  published_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+
+  // Included on `GET /ads/{id}` and `POST/PUT` responses.
+  user?: PublicUser;
+  category?: Category;
+  location?: Location;
+  /** Ordered by `order` asc — UI should not re-sort. */
+  images?: Media[];
+}
+
+/**
+ * Trimmed shape returned by the public list endpoint — keeps payloads small
+ * for the home feed. The full ad is fetched on the detail page.
+ */
+export interface AdSummary {
+  id: string;
+  title: string;
+  price: number | null;
+  price_type: PriceType;
+  currency: 'QAR';
+  status: AdStatus;
+  primary_image: Media | null;
+  location_slug: string;
+  category_slug: string;
+  published_at: string | null;
+  created_at: string;
+}
+
+export interface CreateAdRequest {
+  category_id: string;
+  location_id: string;
+  title: string;
+  description: string;
+  price: number | null;
+  price_type: PriceType;
+  condition: AdCondition | null;
+  custom_fields: Record<string, unknown>;
+}
+
+export type UpdateAdRequest = Partial<CreateAdRequest>;
+
+export type AdErrorCode =
+  | 'AD_NOT_FOUND'
+  | 'AD_NOT_PUBLISHABLE'
+  | 'AD_IMAGES_TOO_MANY'
+  | 'AD_IMAGE_NOT_FOUND'
+  | 'AD_INVALID_STATUS_TRANSITION';
+
+/**
+ * Laravel-style paginated envelope used by every list endpoint that exposes
+ * cursorless pagination (the ad feed + the owner-scoped `account/ads`).
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+  links: {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+}

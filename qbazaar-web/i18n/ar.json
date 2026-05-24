@@ -441,5 +441,174 @@
     "errors": {
       "not_found": "تعذّر تحميل المواقع"
     }
+  },
+  "home": {
+    "breadcrumb": "الرئيسية",
+    "hero": {
+      "eyebrow": "سوق قطر",
+      "headline": "سوق قطر الودود للإعلانات المبوبة",
+      "subtitle": "بيع واشترِ واكتشف من جيرانك — من سيارة مستعملة في الخليج الغربي إلى قطة صغيرة في الخور. مجاناً، آمناً، وبلمسة قطرية.",
+      "cta_post": "انشر إعلانك",
+      "cta_browse": "تصفّح الإعلانات"
+    },
+    "sections": {
+      "top_categories": "أهم الأقسام",
+      "top_categories_title": "كل الأسواق في قطر",
+      "latest_ads": "أحدث الإعلانات",
+      "latest_ads_title": "طازج من الحيّ",
+      "view_more": "عرض الكل"
+    },
+    "trust": {
+      "verified": "بائعون موثّقون",
+      "free_to_post": "النشر مجاني"
+    }
+  },
+  "media": {
+    "no_image": "بدون صورة",
+    "cover": "الغلاف",
+    "prev": "السابق",
+    "next": "التالي",
+    "open_fullscreen": "فتح بحجم كامل",
+    "close_fullscreen": "إغلاق",
+    "reorder_handle": "اسحب لإعادة الترتيب",
+    "delete_confirm": "حذف الصورة",
+    "upload": {
+      "drop": "اسحب الصور هنا أو",
+      "browse": "تصفّح الملفات",
+      "max_size": "حتى 10 ميغابايت لكل صورة",
+      "max_count": "الحد الأقصى {max} صورة",
+      "constraints": "حتى {max} صورة · JPG/PNG/WEBP · 10MB لكل صورة",
+      "uploading": "جاري الرفع…",
+      "progress": "جاري الرفع {percent}%",
+      "success": "تم رفع {count} صورة",
+      "error": "تعذّر رفع الصور",
+      "error_type": "الصيغة غير مدعومة (JPG / PNG / WEBP فقط)",
+      "error_size": "الملف أكبر من 10 ميغابايت",
+      "error_reorder": "تعذّر حفظ الترتيب",
+      "error_delete": "تعذّر حذف الصورة"
+    }
+  },
+  "ads": {
+    "list": {
+      "title": "كل الإعلانات",
+      "subtitle": "تصفّح آخر ما يبيعه جيرانك في قطر",
+      "prev": "السابق",
+      "next": "التالي",
+      "page_of": "الصفحة {current} من {total}"
+    },
+    "post": {
+      "title": "انشر إعلاناً جديداً",
+      "subtitle": "معظم الإعلانات تظهر للعموم خلال دقيقة. اكمل الخطوات لنشر إعلانك.",
+      "cancel": "العودة للرئيسية",
+      "next": "التالي",
+      "back": "السابق",
+      "published": "تم نشر إعلانك",
+      "steps": {
+        "category": "القسم",
+        "category_subtitle": "اختر القسم الأقرب لإعلانك — يمكنك التعديل لاحقاً.",
+        "details": "التفاصيل",
+        "details_subtitle": "عنوان واضح ووصف صادق يجذبان مشترين أكثر بكثير.",
+        "location": "الموقع",
+        "location_subtitle": "اختر المدينة والمنطقة لتظهر لجيرانك الأقرب.",
+        "images": "الصور",
+        "images_subtitle": "حتى 20 صورة. الأولى ستكون الغلاف. اسحب لإعادة الترتيب."
+      }
+    },
+    "my": {
+      "title": "إعلاناتي",
+      "subtitle": "أدِر إعلاناتك من مكان واحد.",
+      "tabs": {
+        "all": "الكل",
+        "active": "النشطة",
+        "draft": "المسودات",
+        "pending": "قيد المراجعة",
+        "sold": "المباعة",
+        "expired": "المنتهية",
+        "rejected": "المرفوضة",
+        "blocked": "المحظورة"
+      }
+    },
+    "detail": {
+      "description": "الوصف",
+      "specs": "التفاصيل",
+      "similar": "إعلانات مشابهة",
+      "similar_soon": "إعلانات مشابهة قادمة قريباً.",
+      "safety_title": "ابقَ آمناً عند اللقاء",
+      "safety_body": "التق في مكان عام، افحص البضاعة قبل الدفع، ولا ترسل أموالاً لأشخاص لم تقابلهم.",
+      "ad_id": "رقم الإعلان {id}",
+      "views": "{count} مشاهدة"
+    },
+    "form": {
+      "title": "عنوان الإعلان",
+      "title_placeholder": "مثال: آيفون 15 برو ماكس 256GB",
+      "description": "الوصف",
+      "description_placeholder": "صف الحالة، الإكسسوارات، سبب البيع، طريقة التسليم...",
+      "price": "السعر (ر.ق)",
+      "price_type": "نوع السعر",
+      "condition": "الحالة",
+      "currency": "ر.ق",
+      "custom_fields": "تفاصيل إضافية"
+    },
+    "price": {
+      "fixed": "سعر ثابت",
+      "negotiable": "قابل للتفاوض",
+      "free": "مجاناً",
+      "contact": "تواصل للسعر",
+      "formatted": "{amount} ر.ق"
+    },
+    "status": {
+      "draft": "مسودة",
+      "pending": "قيد المراجعة",
+      "active": "نشط",
+      "sold": "مباع",
+      "expired": "منتهي",
+      "rejected": "مرفوض",
+      "blocked": "محظور"
+    },
+    "condition": {
+      "new": "جديد",
+      "like_new": "كالجديد",
+      "used": "مستعمل"
+    },
+    "empty": {
+      "no_ads": "لا توجد إعلانات هنا بعد.",
+      "no_my_ads": "لا توجد إعلانات في هذا التبويب بعد.",
+      "go_browse": "تصفّح الإعلانات"
+    },
+    "actions": {
+      "post_ad": "انشر إعلاناً جديداً",
+      "view": "عرض",
+      "edit": "تعديل",
+      "mark_sold": "تم البيع",
+      "mark_sold_success": "تم تعليم الإعلان كمباع",
+      "renew": "تجديد",
+      "renew_success": "تم تجديد الإعلان",
+      "delete": "حذف",
+      "delete_success": "تم حذف الإعلان",
+      "delete_confirm_title": "تأكيد الحذف",
+      "delete_confirm_body": "سيتم حذف الإعلان نهائياً. لا يمكن التراجع عن هذا الإجراء.",
+      "publish": "نشر الإعلان",
+      "save_for_later": "حفظ الإعلان",
+      "save_soon": "الحفظ متاح قريباً",
+      "contact_seller": "تواصل مع البائع",
+      "call": "إظهار الرقم",
+      "call_revealed": "اضغط للاتصال",
+      "share": "مشاركة",
+      "report": "إبلاغ",
+      "report_soon": "الإبلاغ متاح قريباً"
+    },
+    "description": {
+      "show_more": "عرض المزيد",
+      "show_less": "عرض أقل"
+    },
+    "errors": {
+      "ad_not_found": "لم نعثر على هذا الإعلان",
+      "ad_not_found_body": "الإعلان ربما تم حذفه أو الرابط غير صحيح.",
+      "ad_images_too_many": "تجاوزت الحد الأقصى لعدد الصور",
+      "ad_invalid_status_transition": "لا يمكن نقل الإعلان لهذه الحالة",
+      "ad_not_publishable": "لا يمكن نشر الإعلان قبل إضافة صورة على الأقل",
+      "create_failed": "تعذّر حفظ المسودة",
+      "delete_failed": "تعذّر حذف الإعلان"
+    }
   }
 }
