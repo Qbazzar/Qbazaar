@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { BlurHashImage } from '@/components/upload/BlurHashImage';
 import { PriceTag } from './PriceTag';
+import { FavoriteButton } from './FavoriteButton';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import type { AdSummary } from '@/lib/api/types';
@@ -20,10 +21,18 @@ interface Props {
   className?: string;
   /** When true (default), the whole card is a link. Useful in the MyAds rows. */
   asLink?: boolean;
+  /** When false, the heart overlay is hidden (e.g. owner's own MyAds row). */
+  showFavorite?: boolean;
   footer?: React.ReactNode;
 }
 
-export function AdCard({ ad, className, asLink = true, footer }: Props) {
+export function AdCard({
+  ad,
+  className,
+  asLink = true,
+  showFavorite = true,
+  footer,
+}: Props) {
   const image = ad.primary_image;
   const inner = (
     <Card
@@ -52,6 +61,13 @@ export function AdCard({ ad, className, asLink = true, footer }: Props) {
             {t('media.no_image', 'بدون صورة')}
           </div>
         )}
+        {showFavorite ? (
+          <FavoriteButton
+            adId={ad.id}
+            size="sm"
+            className="absolute end-2 top-2"
+          />
+        ) : null}
       </div>
       <div className="space-y-2 px-3">
         <h3 className="text-ink-900 line-clamp-2 text-sm font-medium leading-snug">

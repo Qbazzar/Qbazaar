@@ -15,7 +15,8 @@
     "or": "or",
     "min": "Min",
     "max": "Max",
-    "filters": "Filters"
+    "filters": "Filters",
+    "view_all": "View all"
   },
   "auth": {
     "hero": {
@@ -196,6 +197,8 @@
       "privacy": "Privacy",
       "data": "Data & account",
       "blocked_users": "Blocked users",
+      "favorites": "Saved ads",
+      "recently_viewed": "Recently viewed",
       "saved_searches": "Saved searches",
       "sign_out": "Sign out",
       "sign_out_confirm": "Signed out"
@@ -607,6 +610,7 @@
       "call": "Show phone",
       "call_revealed": "Tap to call",
       "share": "Share",
+      "share_copied": "Link copied",
       "report": "Report",
       "report_soon": "Reporting lands soon"
     },
@@ -679,6 +683,37 @@
       "load_failed": "Could not load search results",
       "save_failed": "Could not save the search",
       "delete_failed": "Could not delete the saved search"
+    }
+  },
+  "favorites": {
+    "title": "Saved ads",
+    "count": "{count} ads",
+    "empty": {
+      "title": "You haven't saved any ads yet",
+      "description": "Save ads you're interested in so you can find them later.",
+      "cta": "Browse ads"
+    },
+    "tooltip": {
+      "add": "Save",
+      "remove": "Unsave"
+    },
+    "sign_in_required": "Sign in to save ads",
+    "errors": {
+      "ad_not_found": "We couldn't find that ad"
+    }
+  },
+  "recently_viewed": {
+    "title": "Recently viewed",
+    "strip_heading": "Pick up where you left off",
+    "empty": "No browsing history yet",
+    "empty_body": "Ads you view will show up here so you can come back to them.",
+    "clear": "Clear all",
+    "cleared": "History cleared",
+    "clear_confirm": {
+      "title": "Clear history?",
+      "body": "All recently-viewed ads will be removed. This action cannot be undone.",
+      "confirm": "Clear",
+      "cancel": "Cancel"
     }
   }
 }

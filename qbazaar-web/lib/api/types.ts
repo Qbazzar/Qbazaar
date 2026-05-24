@@ -610,3 +610,26 @@ export type SearchErrorCode =
   | 'SEARCH_INVALID_PARAMS'
   | 'SAVED_SEARCH_LIMIT'
   | 'SAVED_SEARCH_NOT_FOUND';
+
+// ── Favorites + Recently Viewed (Sprint 7) ─────────────────────────────────
+// Favorites are a per-user toggle on an ad. The backend returns the new
+// favorited state plus the total favorite count so the UI never has to guess.
+// Recently-viewed entries are recorded silently on every ad-detail mount; an
+// anonymous client sends a `X-Session-Id` header (UUID stored in localStorage)
+// so the backend can stitch the history once the user signs in.
+
+export interface FavoriteToggleResponse {
+  favorited: boolean;
+  count: number;
+}
+
+export interface FavoritedAdSummary extends AdSummary {
+  favorited_at: string;
+}
+
+export interface RecentlyViewedAdSummary extends AdSummary {
+  viewed_at: string;
+}
+
+export type FavoritesErrorCode = 'FAVORITE_AD_NOT_FOUND' | 'FAVORITE_FORBIDDEN';
+export type RecentlyViewedErrorCode = 'RECENTLY_VIEWED_AD_NOT_FOUND';

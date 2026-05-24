@@ -16,7 +16,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   BookmarkIcon,
+  ClockIcon,
   DatabaseIcon,
+  HeartIcon,
   HomeIcon,
   LogOutIcon,
   ShieldCheckIcon,
@@ -60,6 +62,16 @@ const NAV_ITEMS: NavItem[] = [
     href: '/account/data',
     labelKey: 'account.nav.data',
     icon: DatabaseIcon,
+  },
+  {
+    href: '/account/favorites',
+    labelKey: 'account.nav.favorites',
+    icon: HeartIcon,
+  },
+  {
+    href: '/account/recently-viewed',
+    labelKey: 'account.nav.recently_viewed',
+    icon: ClockIcon,
   },
   {
     href: '/account/saved-searches',

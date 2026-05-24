@@ -7,6 +7,7 @@
  */
 import { create } from 'zustand';
 import type { User } from '@/lib/api/types';
+import { clearFavoritesNonReactive } from './favorites';
 
 export interface AvatarUrls {
   avatar_url: string | null;
@@ -57,8 +58,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     ),
   setLoading: (isLoading) => set({ isLoading }),
   setHydrated: (isHydrated) => set({ isHydrated }),
-  clearAuth: () =>
-    set({ user: null, accessToken: null, isLoading: false }),
+  clearAuth: () => {
+    // Reset cross-cutting per-user caches so a future sign-in doesn't
+    // surface the previous account's favorites.
+    clearFavoritesNonReactive();
+    set({ user: null, accessToken: null, isLoading: false });
+  },
 }));
 
 /**

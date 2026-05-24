@@ -10,11 +10,11 @@
  * - 404 surface when the API returns AD_NOT_FOUND.
  */
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import {
   ChevronLeft,
   Flag,
-  Heart,
   Phone,
   Share2,
   ShieldCheck,
@@ -26,8 +26,10 @@ import { AdDescription } from '@/components/ads/AdDescription';
 import { AdGallery } from '@/components/ads/AdGallery';
 import { AdStatusPill } from '@/components/ads/AdStatusPill';
 import { CustomFieldsList } from '@/components/ads/CustomFieldsList';
+import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { PriceTag } from '@/components/ads/PriceTag';
 import { useAdQuery } from '@/lib/queries/ads';
+import { useTrackAdViewMutation } from '@/lib/queries/recently-viewed';
 import { localized, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 
@@ -38,6 +40,17 @@ interface Props {
 export function AdDetailClient({ id }: Props) {
   const locale = getLocale();
   const { data, isLoading, error } = useAdQuery(id);
+  const trackView = useTrackAdViewMutation();
+
+  // Fire a single silent tracking call per ad id. The mutation hook swallows
+  // its own errors so a 401/network blip doesn't bubble up to the page.
+  useEffect(() => {
+    if (!id) return;
+    trackView.mutate(id);
+    // We intentionally exclude `trackView` from deps — mutating the mutation
+    // object identity each render would cause an infinite tracking loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -253,34 +266,54 @@ function AdDetail({
                     ? t('ads.actions.call_revealed', 'اضغط للاتصال')
                     : t('ads.actions.call', 'إظهار الرقم')}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full"
-                  title={t('ads.actions.save_soon', 'الحفظ متاح قريباً')}
-                  disabled
-                >
-                  <Heart className="size-4" />
-                  {t('ads.actions.save_for_later', 'حفظ الإعلان')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="lg"
-                  className="rounded-full"
-                  onClick={() => {
-                    if (typeof navigator !== 'undefined' && navigator.share) {
-                      void navigator.share({
-                        title: ad.title,
-                        url: typeof window !== 'undefined' ? window.location.href : '',
-                      });
-                    }
-                  }}
-                >
-                  <Share2 className="size-4" />
-                  {t('ads.actions.share', 'مشاركة')}
-                </Button>
+                <div className="flex items-stretch gap-2">
+                  <FavoriteButton
+                    adId={ad.id}
+                    size="md"
+                    withLabel
+                    className="h-9 flex-1 justify-center rounded-full bg-white text-ink-700 ring-ink-200 hover:text-coral"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="lg"
+                    className="flex-1 rounded-full"
+                    onClick={() => {
+                      const url =
+                        typeof window !== 'undefined'
+                          ? window.location.href
+                          : '';
+                      if (
+                        typeof navigator !== 'undefined' &&
+                        typeof navigator.share === 'function'
+                      ) {
+                        void navigator
+                          .share({ title: ad.title, url })
+                          .catch(() => undefined);
+                        return;
+                      }
+                      // Clipboard fallback for desktop browsers without
+                      // navigator.share — surface a toast so the user knows
+                      // something happened.
+                      if (
+                        typeof navigator !== 'undefined' &&
+                        navigator.clipboard?.writeText
+                      ) {
+                        void navigator.clipboard
+                          .writeText(url)
+                          .then(() =>
+                            toast.success(
+                              t('ads.actions.share_copied', 'تم نسخ الرابط'),
+                            ),
+                          )
+                          .catch(() => undefined);
+                      }
+                    }}
+                  >
+                    <Share2 className="size-4" />
+                    {t('ads.actions.share', 'مشاركة')}
+                  </Button>
+                </div>
               </div>
 
               <div className="border-ink-200 mt-4 flex items-center justify-between border-t pt-3 text-xs">
