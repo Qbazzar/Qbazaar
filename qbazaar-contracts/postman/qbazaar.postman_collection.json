@@ -1098,6 +1098,113 @@
           }
         }
       ]
+    },
+    {
+      "name": "Messaging",
+      "description": "Sprint 8 Wave A — conversations + messages + realtime via Reverb",
+      "item": [
+        {
+          "name": "POST /conversations",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ad_id\": \"{{ad_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/conversations",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["conversations"]
+            }
+          }
+        },
+        {
+          "name": "GET /conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/conversations?page=1",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["conversations"],
+              "query": [{ "key": "page", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "GET /conversations/unread-count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/conversations/unread-count",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["conversations", "unread-count"]
+            }
+          }
+        },
+        {
+          "name": "GET /conversations/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/conversations/{{conversation_id}}",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["conversations", "{{conversation_id}}"]
+            }
+          }
+        },
+        {
+          "name": "GET /conversations/{id}/messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/conversations/{{conversation_id}}/messages?limit=50",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["conversations", "{{conversation_id}}", "messages"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "before", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /conversations/{id}/messages",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Hello! Is this still available?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/conversations/{{conversation_id}}/messages",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["conversations", "{{conversation_id}}", "messages"]
+            }
+          }
+        },
+        {
+          "name": "POST /conversations/{id}/read",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/conversations/{{conversation_id}}/read",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["conversations", "{{conversation_id}}", "read"]
+            }
+          }
+        }
+      ]
     }
   ]
 }

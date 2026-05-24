@@ -1667,6 +1667,174 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ──────────────────────────────────────────────────────────────────────────
+  # Messaging (Sprint 8 Wave A)
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/conversations:
+    post:
+      tags: [Conversations]
+      summary: Start (or resolve) a conversation about an ad
+      description: |
+        Find-or-create semantics: `POST /conversations` with the same
+        `ad_id` from the same buyer returns the existing conversation
+        (HTTP 200). The first call creates it (HTTP 201).
+      operationId: conversationsStore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartConversationRequest'
+      responses:
+        '200':
+          description: Existing conversation returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationEnvelope'
+        '201':
+          description: New conversation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: MSG_BLOCKED — one side has blocked the other
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: MSG_CONVERSATION_OWN_AD or VALIDATION_FAILED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    get:
+      tags: [Conversations]
+      summary: Paginated inbox, most recent first
+      operationId: conversationsIndex
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        '200':
+          description: Paginated list of the caller's conversations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedConversationListEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/conversations/unread-count:
+    get:
+      tags: [Conversations]
+      summary: Total unread messages across every conversation
+      description: Drives the header badge — one number for the whole inbox.
+      operationId: conversationsUnreadCount
+      responses:
+        '200':
+          description: Aggregate unread count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnreadCountEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/conversations/{id}:
+    get:
+      tags: [Conversations]
+      summary: Full conversation with ad + both participants
+      operationId: conversationsShow
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Full conversation envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/conversations/{id}/messages:
+    get:
+      tags: [Messages]
+      summary: Cursor-paginated transcript (newest first)
+      description: |
+        Returns messages newest-first. `before={messageId}` returns the page
+        strictly older than the supplied message id, so clients implement
+        "load more" by passing the oldest already-loaded id.
+      operationId: messagesIndex
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - { name: before, in: query, schema: { $ref: '#/components/schemas/ULID' } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        '200':
+          description: Page of messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageListEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: MSG_CONVERSATION_NOT_FOUND or MSG_NOT_FOUND (the `before` anchor was bad)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    post:
+      tags: [Messages]
+      summary: Append a message to a conversation
+      description: Rate-limited via the `messages` throttle (per-user per-minute).
+      operationId: messagesStore
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '201':
+          description: Message created and broadcast
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: MSG_BLOCKED — one side has blocked the other
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/conversations/{id}/read:
+    post:
+      tags: [Conversations]
+      summary: Mark every message NOT sent by the caller as read
+      operationId: conversationsMarkRead
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Number of messages newly marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkReadEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
 components:
   schemas:
     # ─── Envelopes ──────────────────────────────────────────────────
@@ -2811,6 +2979,181 @@ components:
               type: array
               items: { $ref: '#/components/schemas/RecentlyViewedAdSummary' }
             meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+    # ───── Messaging (Sprint 8 Wave A) ─────
+    MessageType:
+      type: string
+      enum: [text, offer, system]
+      description: |
+        - `text` — plain user chat. Wave A only emits this value.
+        - `offer` — inline offer card (Sprint 9).
+        - `system` — moderation / read-receipt placeholder (Sprint 9).
+
+    Conversation:
+      type: object
+      required: [id, buyer_id, seller_id, last_message_preview, last_message_at, unread_count, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        ad: { $ref: '#/components/schemas/AdSummary' }
+        buyer_id: { $ref: '#/components/schemas/ULID' }
+        seller_id: { $ref: '#/components/schemas/ULID' }
+        other_participant:
+          allOf:
+            - $ref: '#/components/schemas/PublicProfile'
+          nullable: true
+          description: The participant who is NOT the caller. Null when the caller is anonymous.
+        last_message_preview:
+          type: string
+          nullable: true
+          maxLength: 160
+        last_message_at:
+          type: string
+          format: date-time
+          nullable: true
+        unread_count:
+          type: integer
+          minimum: 0
+          description: Caller-relative — buyer and seller see different values from the same row.
+        created_at: { type: string, format: date-time }
+
+    ConversationListItem:
+      type: object
+      required: [id, last_message_preview, last_message_at, unread_count, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        ad:
+          type: object
+          nullable: true
+          required: [id, title, thumb_url]
+          properties:
+            id: { $ref: '#/components/schemas/ULID' }
+            title: { type: string }
+            thumb_url: { type: string, format: uri, nullable: true }
+        other_participant:
+          type: object
+          nullable: true
+          required: [id, full_name, avatar_thumb]
+          properties:
+            id: { $ref: '#/components/schemas/ULID' }
+            full_name: { type: string }
+            avatar_thumb: { type: string, format: uri, nullable: true }
+        last_message_preview: { type: string, nullable: true, maxLength: 160 }
+        last_message_at: { type: string, format: date-time, nullable: true }
+        unread_count: { type: integer, minimum: 0 }
+        created_at: { type: string, format: date-time }
+
+    Message:
+      type: object
+      required: [id, conversation_id, sender_id, body, type, read_at, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        conversation_id: { $ref: '#/components/schemas/ULID' }
+        sender_id: { $ref: '#/components/schemas/ULID' }
+        body: { type: string, minLength: 1, maxLength: 5000 }
+        type: { $ref: '#/components/schemas/MessageType' }
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Null while unread; set the moment the recipient hits /read.
+        created_at: { type: string, format: date-time }
+        sender:
+          type: object
+          nullable: true
+          required: [id, full_name, avatar_thumb]
+          properties:
+            id: { $ref: '#/components/schemas/ULID' }
+            full_name: { type: string }
+            avatar_thumb: { type: string, format: uri, nullable: true }
+
+    StartConversationRequest:
+      type: object
+      required: [ad_id]
+      properties:
+        ad_id: { $ref: '#/components/schemas/ULID' }
+
+    SendMessageRequest:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 5000 }
+        type:
+          $ref: '#/components/schemas/MessageType'
+          # Wave A only accepts `text`.
+
+    UnreadCountResponse:
+      type: object
+      required: [total]
+      properties:
+        total: { type: integer, minimum: 0 }
+
+    MarkReadResponse:
+      type: object
+      required: [marked]
+      properties:
+        marked:
+          type: integer
+          minimum: 0
+          description: Number of messages newly transitioned from unread → read.
+
+    ConversationEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Conversation' }
+
+    PaginatedConversationListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/ConversationListItem' }
+            meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+    MessageEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Message' }
+
+    MessageListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Message' }
+            meta:
+              type: object
+              required: [next_cursor, limit]
+              properties:
+                next_cursor:
+                  type: string
+                  nullable: true
+                  description: ULID of the last message on this page — pass back as `before` for the next page.
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+
+    UnreadCountEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/UnreadCountResponse' }
+
+    MarkReadEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/MarkReadResponse' }
 
   responses:
     Unauthorized:

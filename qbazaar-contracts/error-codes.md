@@ -87,6 +87,8 @@ requested locale.
 | `MSG_003` | Message contains flagged content — review required | 422 |
 | `MSG_004` | Conversation not found | 404 |
 | `MSG_005` | You are not a participant of this conversation | 403 |
+| `MSG_006` | Cannot start a conversation about your own ad | 422 |
+| `MSG_007` | Message not found (e.g. invalid `before` cursor) | 404 |
 
 ## Offers (Sprint 9)
 

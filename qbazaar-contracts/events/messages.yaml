@@ -24,6 +24,8 @@ channels:
       - ad.rejected
       - offer.received
       - saved_search.match
+      - message.sent          # also fan-out so the badge updates while the chat pane is closed
+      - conversation.read     # the other side marked our messages as read
 
   conversation:
     pattern: 'conversation.{conversationId}'
@@ -31,33 +33,51 @@ channels:
     description: Per-conversation chat. Subscribed when the user opens a chat.
     events:
       - message.sent
-      - message.read
       - user.typing
       - offer.updated
 
 events:
-  # ── Messaging (Sprint 8) ────────────────────────────────────────
+  # ── Messaging (Sprint 8 Wave A) ─────────────────────────────────
   message.sent:
-    channel: conversation.{conversationId}
-    description: A new message was posted to the conversation.
+    channels:
+      - conversation.{conversationId}    # for clients with the thread open
+      - user.{recipientId}               # for the recipient's badge / inbox row
+    description: |
+      A new message was posted to the conversation. Broadcast on TWO
+      channels — clients listening to both must dedupe by `message.id`.
     payload:
       type: object
-      required: [message]
+      required: [message, conversation]
       properties:
         message:
-          $ref: 'https://qbazaar.qa/spec#/Message'   # populated when Message schema lands in v1.yaml
+          $ref: '../openapi/v1.yaml#/components/schemas/Message'
+        conversation:
+          type: object
+          required: [id, last_message_preview, last_message_at, unread_count]
+          properties:
+            id: { type: string }
+            last_message_preview: { type: string, nullable: true }
+            last_message_at: { type: string, format: date-time, nullable: true }
+            unread_count:
+              type: integer
+              minimum: 0
+              description: Recipient-relative count (not sender-relative).
 
-  message.read:
-    channel: conversation.{conversationId}
-    description: Counterparty marked the conversation as read.
+  conversation.read:
+    channels:
+      - user.{otherUserId}               # the user whose messages were just read
+    description: |
+      The counterparty marked the conversation as read. Only emitted
+      when at least one message actually transitioned to read state.
     payload:
       type: object
-      required: [conversation_id, user_id, read_at]
+      required: [conversation_id, reader_id, read_at]
       properties:
         conversation_id:
           type: string
-        user_id:
+        reader_id:
           type: string
+          description: The user who just hit /read.
         read_at:
           type: string
           format: date-time
