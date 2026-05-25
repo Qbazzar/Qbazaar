@@ -19,8 +19,11 @@ use App\Models\User;
 use App\Observers\AdObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -51,6 +54,17 @@ class AppServiceProvider extends ServiceProvider
     {
         User::observe(UserObserver::class);
         Ad::observe(AdObserver::class);
+
+        // Rate limiters MUST be registered here (not in the withRouting `then:`
+        // closure) so they survive route:cache — Laravel skips that closure when
+        // routes come from cache, and the throttle middleware would crash with
+        // "Rate limiter [api] is not defined" in production.
+        RateLimiter::for('auth', fn (Request $r) => Limit::perMinute(5)->by($r->ip()));
+        RateLimiter::for('otp', fn (Request $r) => Limit::perMinute(3)->by($r->input('phone') ?? $r->ip()));
+        RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('publish', fn (Request $r) => Limit::perDay((int) config('qbazaar.ads.daily_publish_limit_per_user'))->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('messages', fn (Request $r) => Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
 
         // Laravel 12 prefers event discovery, but explicit listener bindings
         // keep the routing readable and survive `package:discover` cache
