@@ -1155,19 +1155,45 @@ paths:
   /api/v1/ads/{id}/publish:
     post:
       tags: [Ads]
-      summary: Publish a draft ad (DRAFT → ACTIVE)
+      summary: Publish a draft ad (DRAFT → ACTIVE or PENDING after auto-moderation)
+      description: >
+        Runs the draft through auto-moderation. A clean ad moves to `active`
+        and becomes searchable; a flagged ad moves to `pending` (awaiting
+        manual review) and the owner receives a rejection notification with
+        the list of fired flags. Either way the response carries the
+        updated ad — the client inspects `data.status` to render the right
+        post-publish UI.
+        Supply an `X-Idempotency-Key` header to safely retry on network
+        failure: subsequent calls with the same key replay the cached
+        response without re-running moderation or firing duplicate
+        notifications.
       operationId: adsPublish
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          description: >
+            16–128 chars, `[A-Za-z0-9_-]`. Same key replays the cached
+            response for 24 hours. Recommended: a fresh ULID per attempt.
+          schema:
+            type: string
+            example: 01J9YV3P5Q7AABBCCDDEEFFGG
       responses:
         '200':
-          description: Ad published
+          description: Ad published (active) or held for review (pending)
+          headers:
+            X-Idempotent-Replay:
+              description: Present and `true` when the response was served from the idempotency cache.
+              required: false
+              schema: { type: string }
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdEnvelope'
               examples:
                 published:
+                  summary: Auto-moderation cleared — ad is live
                   value:
                     success: true
                     data:
@@ -1175,6 +1201,15 @@ paths:
                       status: active
                       published_at: '2026-05-24T09:00:00+00:00'
                       expires_at: '2026-06-23T09:00:00+00:00'
+                pending_after_moderation:
+                  summary: Flagged by auto-moderation — awaiting manual review
+                  value:
+                    success: true
+                    data:
+                      id: 01HM3XQV0AAAAAAAAAAAAAAAAA
+                      status: pending
+                      published_at: null
+                      expires_at: null
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -1184,6 +1219,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/ads/featured:
+    get:
+      tags: [Ads]
+      summary: Featured ads feed (admin-curated)
+      description: >
+        Up to 12 active ads flagged `featured = true` in the database, ordered
+        by latest published. Cached for 5 minutes; the response shape mirrors
+        the public feed (`AdSummary[]`).
+      operationId: adsFeatured
+      security: []
+      responses:
+        '200':
+          description: Featured ads
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeaturedAdsResponse'
+
+  /api/v1/ads/{id}/similar:
+    get:
+      tags: [Ads]
+      summary: Similar ads — same category, latest first
+      description: >
+        Returns up to 12 active ads in the same category as `{id}`, ordered
+        by latest published, excluding the source ad. Cached for 5 minutes
+        per ad-id.
+      operationId: adsSimilar
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Similar ads
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimilarAdsResponse'
+        '404': { $ref: '#/components/responses/NotFound' }
 
   /api/v1/ads/{id}/mark-sold:
     post:
@@ -2840,6 +2914,26 @@ components:
               type: array
               items: { $ref: '#/components/schemas/AdSummary' }
             meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+    SimilarAdsResponse:
+      description: Up to 12 active ads in the same category as the source.
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/AdSummary' }
+
+    FeaturedAdsResponse:
+      description: Up to 12 admin-curated active+featured ads.
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/AdSummary' }
 
     # ───── Search (Sprint 6) ─────
     SearchFacets:

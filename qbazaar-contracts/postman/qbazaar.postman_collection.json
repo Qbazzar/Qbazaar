@@ -812,11 +812,41 @@
           "name": "POST /ads/:id/publish",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "X-Idempotency-Key",
+                "value": "01J9YV3P5Q7AABBCCDDEEFFGG",
+                "description": "Optional. 16-128 chars [A-Za-z0-9_-]. Same key replays the cached response for 24h."
+              }
+            ],
             "url": {
               "raw": "{{base_url}}{{api_prefix}}/ads/{{ad_id}}/publish",
               "host": ["{{base_url}}{{api_prefix}}"],
               "path": ["ads", "{{ad_id}}", "publish"]
+            }
+          }
+        },
+        {
+          "name": "GET /ads/featured",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/ads/featured",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["ads", "featured"]
+            }
+          }
+        },
+        {
+          "name": "GET /ads/:id/similar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/ads/{{ad_id}}/similar",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["ads", "{{ad_id}}", "similar"]
             }
           }
         },
