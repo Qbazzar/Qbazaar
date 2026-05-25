@@ -31,10 +31,13 @@ class AdApprovedNotification extends Notification implements ShouldQueue
      */
     public function via(mixed $notifiable): array
     {
-        // Database channel will be enabled once the Sprint 10 notifications
-        // table lands. For now we deliver via mail only to avoid coupling
-        // moderation hand-off to a not-yet-shipped migration.
-        return ['mail'];
+        // Sprint 10 wired the database channel — every user gets the bell-icon
+        // entry alongside the mail. Non-User notifiables (admin moderation,
+        // future broadcasts) fall back to mail-only to avoid persisting rows
+        // against the wrong morph type.
+        return $notifiable instanceof User
+            ? ['mail', 'database']
+            : ['mail'];
     }
 
     public function toMail(mixed $notifiable): MailMessage
@@ -50,15 +53,25 @@ class AdApprovedNotification extends Notification implements ShouldQueue
     }
 
     /**
+     * Database-channel payload — surfaced verbatim by `NotificationResource`.
+     *
+     * Keys are stable: rename a key here and you break every notification
+     * already stored in the table. Add new keys instead of repurposing
+     * existing ones.
+     *
      * @return array<string, mixed>
      */
     public function toArray(mixed $notifiable): array
     {
+        $locale = $this->resolveLocale($notifiable);
+
         return [
-            'kind' => 'ad.approved',
+            'category' => 'ad.approved',
+            'title' => __('messages.notifications.ad_approved.title', [], $locale),
+            'body' => __('messages.notifications.ad_approved.body', ['title' => $this->ad->title], $locale),
+            'cta_url' => $this->adUrl(),
+            'icon' => 'badge-check',
             'ad_id' => $this->ad->id,
-            'title' => $this->ad->title,
-            'url' => $this->adUrl(),
         ];
     }
 

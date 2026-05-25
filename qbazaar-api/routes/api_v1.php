@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
+use App\Http\Controllers\Api\V1\Account\NotificationsController;
 use App\Http\Controllers\Api\V1\Account\PasswordController;
 use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
 use App\Http\Controllers\Api\V1\Account\ProfileController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Api\V1\Offers\OfferController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
+use App\Http\Controllers\Api\V1\Reports\ReportsController;
 use App\Http\Controllers\Api\V1\Search\SavedSearchController;
 use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
@@ -62,7 +64,7 @@ use Illuminate\Support\Facades\Route;
 |   Sprint 7  → favorites/*
 |   Sprint 8  → conversations/*, messages/*
 |   Sprint 9  → offers/*
-|   Sprint 10 → reports/*, notifications/*, device-tokens/*
+|   Sprint 10 → reports/*, account/notifications/*
 |   Sprint 12 → cms/*, support/*
 */
 
@@ -402,6 +404,28 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/offers/{id}/withdraw', [OfferController::class, 'withdraw'])
         ->name('api.v1.offers.withdraw');
 });
+
+// ── Sprint 10 — Notifications inbox ─────────────────────────────────────────
+//   Authenticated, scoped to the caller. Mounted under `/account/*` so the
+//   ownership invariant is obvious from the URL ("MY notifications").
+Route::prefix('account/notifications')
+    ->name('api.v1.account.notifications.')
+    ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
+    ->group(function (): void {
+        Route::get('/', [NotificationsController::class, 'index'])->name('index');
+        Route::get('/unread-count', [NotificationsController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/read-all', [NotificationsController::class, 'markAllRead'])->name('read-all');
+        Route::post('/{id}/read', [NotificationsController::class, 'markRead'])->name('read');
+        Route::delete('/{id}', [NotificationsController::class, 'destroy'])->name('destroy');
+    });
+
+// ── Sprint 10 — Reports ─────────────────────────────────────────────────────
+//   POST /reports — file an abuse report. Single endpoint; admin-side
+//   listing/inspection ships in Sprint 11's Filament resource (intentionally
+//   not surfaced in the public API).
+Route::post('/reports', [ReportsController::class, 'store'])
+    ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
+    ->name('api.v1.reports.store');
 
 Route::prefix('users')
     ->name('api.v1.users.')

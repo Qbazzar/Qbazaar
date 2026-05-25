@@ -27,9 +27,9 @@ class AdExpiringSoonNotification extends Notification implements ShouldQueue
      */
     public function via(mixed $notifiable): array
     {
-        // Database channel will be enabled once the Sprint 10 notifications
-        // table lands. For now we deliver via mail only.
-        return ['mail'];
+        return $notifiable instanceof User
+            ? ['mail', 'database']
+            : ['mail'];
     }
 
     public function toMail(mixed $notifiable): MailMessage
@@ -54,12 +54,16 @@ class AdExpiringSoonNotification extends Notification implements ShouldQueue
      */
     public function toArray(mixed $notifiable): array
     {
+        $locale = $this->resolveLocale($notifiable);
+
         return [
-            'kind' => 'ad.expiring_soon',
+            'category' => 'ad.expiring_soon',
+            'title' => __('messages.notifications.ad_expiring_soon.title', [], $locale),
+            'body' => __('messages.notifications.ad_expiring_soon.body', ['title' => $this->ad->title], $locale),
+            'cta_url' => $this->renewUrl(),
+            'icon' => 'clock',
             'ad_id' => $this->ad->id,
-            'title' => $this->ad->title,
             'expires_at' => $this->ad->expires_at?->toIso8601String(),
-            'url' => $this->renewUrl(),
         ];
     }
 

@@ -89,10 +89,12 @@ enum ErrorCode: string
     // ── Reports (Sprint 10) ─────────────────────────────────────────
     case REPORT_SELF_FORBIDDEN = 'REPORT_001';
     case REPORT_DUPLICATE = 'REPORT_002';
+    case REPORT_INVALID_TARGET = 'REPORT_003';
 
     // ── Notifications (Sprint 10) ───────────────────────────────────
     case NOTIF_NOT_FOUND = 'NOTIF_001';
     case NOTIF_DEVICE_TOKEN_INVALID = 'NOTIF_002';
+    case NOTIF_FORBIDDEN = 'NOTIF_003';
 
     // ── CMS & Support (Sprint 12) ───────────────────────────────────
     case CMS_PAGE_NOT_FOUND = 'CMS_001';
@@ -139,7 +141,7 @@ enum ErrorCode: string
             self::OFFER_AD_NOT_ACTIVE,
             self::OFFER_NOT_PENDING,
             self::REPORT_SELF_FORBIDDEN,
-            self::REPORT_DUPLICATE,
+            self::REPORT_INVALID_TARGET,
             self::NOTIF_DEVICE_TOKEN_INVALID,
             self::SEARCH_INVALID_PARAMS,
             self::SEARCH_SAVED_LIMIT => 422,
@@ -155,7 +157,8 @@ enum ErrorCode: string
             self::MSG_BLOCKED,
             self::MSG_NOT_PARTICIPANT,
             self::OFFER_NOT_SELLER,
-            self::OFFER_FORBIDDEN => 403,
+            self::OFFER_FORBIDDEN,
+            self::NOTIF_FORBIDDEN => 403,
 
             self::USER_NOT_FOUND,
             self::CATEGORY_NOT_FOUND,
@@ -180,7 +183,8 @@ enum ErrorCode: string
             self::AUTH_RATE_LIMITED,
             self::RATE_LIMIT_EXCEEDED,
             self::AD_DAILY_PUBLISH_LIMIT,
-            self::MSG_RATE_LIMITED => 429,
+            self::MSG_RATE_LIMITED,
+            self::REPORT_DUPLICATE => 429,
 
             self::SEARCH_INDEX_UNAVAILABLE => 503,
 

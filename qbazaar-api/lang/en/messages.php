@@ -71,4 +71,41 @@ return [
             'line_outro' => 'You can bring it back live in one click.',
         ],
     ],
+
+    /*
+    |------------------------------------------------------------------
+    | In-app notification copy
+    |------------------------------------------------------------------
+    |
+    | Used by every Notification's `toArray()` to build the DB-channel
+    | payload (title + body). Short, declarative — these render inside the
+    | notification bell's compact list, so we keep them under 80 chars where
+    | possible and never include HTML.
+    */
+    'notifications' => [
+        'ad_approved' => [
+            'title' => 'Your ad is live',
+            'body' => 'Your ad ":title" has been approved and is now visible to buyers.',
+        ],
+        'ad_rejected' => [
+            'title' => 'Your ad needs changes',
+            'body' => 'We couldn\'t publish ":title". Tap to see what needs fixing.',
+        ],
+        'ad_expiring_soon' => [
+            'title' => 'Your ad expires soon',
+            'body' => 'Your ad ":title" will expire in 24 hours. Renew to stay visible.',
+        ],
+        'ad_expired' => [
+            'title' => 'Your ad has expired',
+            'body' => 'Your ad ":title" has expired. Renew it in one tap to bring it back.',
+        ],
+        'data_export_ready' => [
+            'title' => 'Your data export is ready',
+            'body' => 'Tap to download your personal data export.',
+        ],
+        'security_alert' => [
+            'title' => 'New sign-in detected',
+            'body' => 'A new sign-in from :device. If this wasn\'t you, secure your account now.',
+        ],
+    ],
 ];

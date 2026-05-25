@@ -13,11 +13,13 @@ use App\Events\Ads\AdRenewed;
 use App\Listeners\Ads\IndexAdInSearch;
 use App\Listeners\Ads\RemoveAdFromSearch;
 use App\Listeners\Ads\SendAdNotifications;
+use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
 use App\Models\Ad;
 use App\Models\User;
 use App\Observers\AdObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
+use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -58,5 +60,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(AdExpiringSoon::class, [SendAdNotifications::class, 'handle']);
         Event::listen(AdExpired::class, [SendAdNotifications::class, 'handle']);
         Event::listen(AdRenewed::class, [SendAdNotifications::class, 'handle']);
+
+        // Bridges Laravel's NotificationSent -> our own NotificationCreated
+        // broadcast (database channel only). See the listener for details.
+        Event::listen(NotificationSent::class, [BroadcastDatabaseNotificationCreated::class, 'handle']);
     }
 }

@@ -196,6 +196,28 @@ return [
         ],
     ],
 
+    'report' => [
+        'self' => [
+            'forbidden' => 'You cannot report yourself.',
+        ],
+        'duplicate' => 'You have already reported this recently. Please wait before reporting it again.',
+        'invalid' => [
+            'target' => 'The reported item could not be found.',
+        ],
+    ],
+
+    'notif' => [
+        'not' => [
+            'found' => 'Notification not found.',
+        ],
+        'forbidden' => 'You are not authorised to access this notification.',
+        'device' => [
+            'token' => [
+                'invalid' => 'The device token is invalid.',
+            ],
+        ],
+    ],
+
     'user' => [
         'not' => [
             'found' => 'User not found.',

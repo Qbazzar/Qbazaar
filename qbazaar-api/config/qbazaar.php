@@ -170,6 +170,11 @@ return [
     */
     'reports' => [
         'max_per_target_per_user_per_week' => 1,
+
+        // Window the duplicate-report guard uses when refusing a follow-up
+        // report against the same target. Tightening this is the first
+        // dial to turn if "report spam" becomes an abuse vector.
+        'duplicate_window_days' => 7,
     ],
 
     /*

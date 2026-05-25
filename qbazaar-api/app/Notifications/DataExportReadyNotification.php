@@ -34,7 +34,33 @@ class DataExportReadyNotification extends Notification implements ShouldQueue
      */
     public function via(mixed $notifiable): array
     {
-        return ['mail'];
+        return $notifiable instanceof User
+            ? ['mail', 'database']
+            : ['mail'];
+    }
+
+    /**
+     * Lightweight DB payload — the actual signed URL isn't stored, only a
+     * pointer that opens the account/data-export page where the user can
+     * re-request the link if it expired. We deliberately keep the signed
+     * URL out of the persisted notification because the URL grants
+     * download access; surfacing it in the bell list would re-expose it
+     * indefinitely.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(mixed $notifiable): array
+    {
+        $locale = $this->resolveLocale($notifiable);
+
+        return [
+            'category' => 'account.data_export_ready',
+            'title' => __('messages.notifications.data_export_ready.title', [], $locale),
+            'body' => __('messages.notifications.data_export_ready.body', [], $locale),
+            'cta_url' => rtrim((string) config('qbazaar.web_url', config('app.url')), '/') . '/account/data-export',
+            'icon' => 'download',
+            'expires_in_hours' => $this->expiresInHours,
+        ];
     }
 
     public function toMail(mixed $notifiable): MailMessage

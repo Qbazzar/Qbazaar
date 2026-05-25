@@ -34,6 +34,8 @@ parameters:
     - tests/Feature/Messaging/*
     - tests/Feature/Moderation/*
     - tests/Feature/Offers/*
+    - tests/Feature/Notifications/*
+    - tests/Feature/Reports/*
     - tests/Concerns/*
     - bootstrap/cache/*
     - storage/*

@@ -40,7 +40,28 @@ class SecurityAlertNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return $notifiable instanceof User
+            ? ['mail', 'database']
+            : ['mail'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        $locale = $this->resolveLocale($notifiable);
+
+        return [
+            'category' => 'security.new_device',
+            'title' => __('messages.notifications.security_alert.title', [], $locale),
+            'body' => __('messages.notifications.security_alert.body', ['device' => $this->deviceLabel], $locale),
+            'cta_url' => rtrim((string) config('qbazaar.web_url', config('app.url')), '/') . '/account/sessions',
+            'icon' => 'shield-alert',
+            'device_label' => $this->deviceLabel,
+            'ip' => $this->ip,
+            'occurred_at' => $this->occurredAt->toIso8601String(),
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
