@@ -18,6 +18,9 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -53,14 +56,31 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('QBazaar Admin')
-            ->brandLogo('/brand/logo.png')
+            ->brandLogo(fn (): View => view('filament.brand'))
+            ->brandLogoHeight('2.5rem')
             ->favicon('/brand/favicon.ico')
             ->colors([
                 'primary' => Color::Orange,
+                'gray' => Color::Slate,
             ])
             ->sidebarCollapsibleOnDesktop()
+            ->sidebarWidth('17rem')
+            ->collapsedSidebarWidth('4.5rem')
+            ->maxContentWidth(Width::Full)
+            ->navigationGroups([
+                'Marketplace',
+                'Communications',
+                'Moderation',
+                'Taxonomy',
+                'Content',
+                'Audit',
+            ])
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => view('filament.admin.head')->render(),
+            )
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([
