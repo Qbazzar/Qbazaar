@@ -52,3 +52,4 @@ next-env.d.ts
 
 # Bundle analyzer
 .next/analyze
+QBFront/

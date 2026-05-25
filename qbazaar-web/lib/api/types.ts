@@ -690,6 +690,12 @@ export interface Message {
     full_name: string;
     avatar_thumb_url: string | null;
   };
+  /**
+   * Populated when `type === 'offer'`. The backend bundles the offer envelope
+   * onto the message so the chat timeline can render an OfferBubble inline
+   * without an extra round-trip.
+   */
+  offer?: Offer | null;
 }
 
 export interface UnreadCountResponse {
@@ -701,3 +707,51 @@ export type MessagingErrorCode =
   | 'CONVERSATION_BLOCKED'
   | 'CONVERSATION_OWN_AD'
   | 'MESSAGE_NOT_FOUND';
+
+// ── Offers (Sprint 9) ──────────────────────────────────────────────────────
+// Buyer-initiated price offers attached to a conversation. The lifecycle is
+// pending → accepted | rejected | withdrawn | expired and the same Echo
+// channel (`conversation.{id}`) broadcasts every state change.
+
+export type OfferStatus =
+  | 'pending'
+  | 'accepted'
+  | 'rejected'
+  | 'withdrawn'
+  | 'expired';
+
+export interface Offer {
+  id: string;
+  conversation_id: string;
+  ad_id: string;
+  buyer_id: string;
+  seller_id: string;
+  message_id: string | null;
+  /** Amount in QAR. The server emits this as a string decimal; the API
+   *  client coerces it into a number before it reaches consumers. */
+  amount: number;
+  currency: 'QAR';
+  note: string | null;
+  status: OfferStatus;
+  expires_at: string;
+  accepted_at: string | null;
+  rejected_at: string | null;
+  withdrawn_at: string | null;
+  created_at: string;
+  /** Convenience flag computed server-side so the UI can decide whether to
+   *  show "accept/reject" (seller) or "withdraw" (buyer). */
+  viewer_role: 'buyer' | 'seller';
+}
+
+export interface CreateOfferRequest {
+  amount: number;
+  note?: string | null;
+}
+
+export type OfferErrorCode =
+  | 'OFFER_NOT_FOUND'
+  | 'OFFER_ACTIVE_EXISTS'
+  | 'OFFER_OWN_AD'
+  | 'OFFER_AD_NOT_ACTIVE'
+  | 'OFFER_NOT_PENDING'
+  | 'OFFER_FORBIDDEN';

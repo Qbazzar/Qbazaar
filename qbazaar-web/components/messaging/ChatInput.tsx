@@ -17,15 +17,18 @@ import { useSendMessageMutation } from '@/lib/queries/messaging';
 import { t } from '@/lib/i18n/messages';
 import { toast } from 'sonner';
 import { translateMaybeKey } from '@/lib/i18n/messages';
+import { OfferComposer } from './OfferComposer';
 
 interface Props {
   conversationId: string;
+  /** Buyers see the "Make offer" affordance; sellers don't. */
+  viewerRole?: 'buyer' | 'seller';
 }
 
 const MAX_ROWS = 6;
 const LINE_HEIGHT_PX = 22; // matches text-sm leading
 
-export function ChatInput({ conversationId }: Props) {
+export function ChatInput({ conversationId, viewerRole }: Props) {
   const [body, setBody] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const mutation = useSendMessageMutation();
@@ -88,6 +91,9 @@ export function ChatInput({ conversationId }: Props) {
         )}
         aria-label={t('messaging.placeholder', 'اكتب رسالتك…')}
       />
+      {viewerRole === 'buyer' ? (
+        <OfferComposer conversationId={conversationId} />
+      ) : null}
       <Button
         type="submit"
         size="icon"

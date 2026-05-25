@@ -24,9 +24,14 @@ import {
   useMarkReadMutation,
   messagingKeys,
 } from '@/lib/queries/messaging';
-import { useConversationChannel } from '@/lib/echo/useConversationChannel';
+import { offersKeys } from '@/lib/queries/offers';
+import {
+  useConversationChannel,
+  type OfferEvent,
+} from '@/lib/echo/useConversationChannel';
+import { useAuth } from '@/hooks/useAuth';
 import { t } from '@/lib/i18n/messages';
-import type { Message } from '@/lib/api/types';
+import type { Message, Offer } from '@/lib/api/types';
 
 interface Props {
   conversationId: string;
@@ -35,6 +40,7 @@ interface Props {
 
 export function ConversationView({ conversationId, onBack }: Props) {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const { data: conversation, isLoading, isError, error } = useConversationQuery(
     conversationId,
   );
@@ -48,7 +54,27 @@ export function ConversationView({ conversationId, onBack }: Props) {
     },
     [qc],
   );
-  useConversationChannel(conversationId, onIncoming);
+
+  // Real-time push: offer lifecycle event → invalidate offers + messages so
+  // the OfferBubble re-renders with the latest status and any new offer
+  // message lands in the timeline.
+  const onOfferEvent = useCallback(
+    (_event: OfferEvent, offer: Offer) => {
+      qc.invalidateQueries({
+        queryKey: offersKeys.byConversation(offer.conversation_id),
+      });
+      qc.invalidateQueries({
+        queryKey: messagingKeys.messages(offer.conversation_id),
+      });
+      qc.invalidateQueries({ queryKey: messagingKeys.lists() });
+    },
+    [qc],
+  );
+
+  useConversationChannel(conversationId, {
+    onMessage: onIncoming,
+    onOfferEvent,
+  });
 
   // Fire-and-forget mark-read whenever the open conversation has unread
   // messages. Re-runs when the id changes (switching threads).
@@ -103,6 +129,11 @@ export function ConversationView({ conversationId, onBack }: Props) {
     conversation.ad.primary_image?.sizes.thumbnail ??
     conversation.ad.primary_image?.url ??
     null;
+
+  // Buyer vs seller view drives the offer affordances: only buyers see the
+  // "Make offer" button, only sellers see accept/reject on a pending offer.
+  const viewerRole: 'buyer' | 'seller' =
+    user?.id === conversation.seller_id ? 'seller' : 'buyer';
 
   return (
     <div className="flex h-full flex-col">
@@ -175,7 +206,7 @@ export function ConversationView({ conversationId, onBack }: Props) {
       </header>
 
       <MessageList conversationId={conversationId} />
-      <ChatInput conversationId={conversationId} />
+      <ChatInput conversationId={conversationId} viewerRole={viewerRole} />
     </div>
   );
 }
