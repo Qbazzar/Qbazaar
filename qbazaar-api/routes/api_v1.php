@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
+use App\Http\Controllers\Api\V1\Offers\OfferController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
@@ -376,6 +377,30 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 
     Route::post('/conversations/{id}/read', [ConversationController::class, 'markRead'])
         ->name('api.v1.conversations.read');
+});
+
+// ── Sprint 9 — Offers ───────────────────────────────────────────────────────
+//   Authenticated:
+//     POST   /conversations/{id}/offers       — buyer creates an offer
+//     GET    /conversations/{id}/offers       — list offers in this thread
+//     POST   /offers/{id}/accept              — seller accepts (PENDING only)
+//     POST   /offers/{id}/reject              — seller rejects (PENDING only)
+//     POST   /offers/{id}/withdraw            — buyer withdraws (PENDING only)
+Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
+    Route::post('/conversations/{id}/offers', [OfferController::class, 'store'])
+        ->name('api.v1.conversations.offers.store');
+
+    Route::get('/conversations/{id}/offers', [OfferController::class, 'index'])
+        ->name('api.v1.conversations.offers.index');
+
+    Route::post('/offers/{id}/accept', [OfferController::class, 'accept'])
+        ->name('api.v1.offers.accept');
+
+    Route::post('/offers/{id}/reject', [OfferController::class, 'reject'])
+        ->name('api.v1.offers.reject');
+
+    Route::post('/offers/{id}/withdraw', [OfferController::class, 'withdraw'])
+        ->name('api.v1.offers.withdraw');
 });
 
 Route::prefix('users')

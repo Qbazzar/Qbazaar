@@ -80,6 +80,11 @@ enum ErrorCode: string
     case OFFER_EXPIRED = 'OFFER_002';
     case OFFER_ALREADY_ACTIONED = 'OFFER_003';
     case OFFER_NOT_SELLER = 'OFFER_004';
+    case OFFER_ACTIVE_EXISTS = 'OFFER_005';
+    case OFFER_OWN_AD = 'OFFER_006';
+    case OFFER_AD_NOT_ACTIVE = 'OFFER_007';
+    case OFFER_NOT_PENDING = 'OFFER_008';
+    case OFFER_FORBIDDEN = 'OFFER_009';
 
     // ── Reports (Sprint 10) ─────────────────────────────────────────
     case REPORT_SELF_FORBIDDEN = 'REPORT_001';
@@ -129,6 +134,10 @@ enum ErrorCode: string
             self::MSG_FLAGGED,
             self::MSG_CONVERSATION_OWN_AD,
             self::OFFER_ALREADY_ACTIONED,
+            self::OFFER_ACTIVE_EXISTS,
+            self::OFFER_OWN_AD,
+            self::OFFER_AD_NOT_ACTIVE,
+            self::OFFER_NOT_PENDING,
             self::REPORT_SELF_FORBIDDEN,
             self::REPORT_DUPLICATE,
             self::NOTIF_DEVICE_TOKEN_INVALID,
@@ -145,7 +154,8 @@ enum ErrorCode: string
             self::AD_EDIT_FORBIDDEN,
             self::MSG_BLOCKED,
             self::MSG_NOT_PARTICIPANT,
-            self::OFFER_NOT_SELLER => 403,
+            self::OFFER_NOT_SELLER,
+            self::OFFER_FORBIDDEN => 403,
 
             self::USER_NOT_FOUND,
             self::CATEGORY_NOT_FOUND,

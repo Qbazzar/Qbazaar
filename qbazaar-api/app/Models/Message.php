@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -31,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property Conversation $conversation
  * @property User $sender
+ * @property Offer|null $offer
  */
 class Message extends Model
 {
@@ -78,5 +80,18 @@ class Message extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    /**
+     * The Offer this message introduces (only set for `type=offer`
+     * bubbles). HasOne because `offers.message_id` is the FK; declared
+     * here so transcript responses can `with('offer')` and surface the
+     * full offer payload inline without an N+1 fan-out.
+     *
+     * @return HasOne<Offer, $this>
+     */
+    public function offer(): HasOne
+    {
+        return $this->hasOne(Offer::class, 'message_id');
     }
 }

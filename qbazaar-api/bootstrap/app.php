@@ -11,6 +11,7 @@ use App\Http\Middleware\Idempotent;
 use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\TrackClient;
 use App\Jobs\Ads\ExpireOldAdsJob;
+use App\Jobs\Offers\ExpireOldOffersJob;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -51,6 +52,15 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('02:00')
             ->timezone('Asia/Qatar')
             ->name('ads.expire-old')
+            ->withoutOverlapping();
+
+        // Runs 30 minutes after the ads sweep so the ad-status invariants
+        // the offer rules depend on (offers belong to ACTIVE ads) have
+        // already settled when offers are flipped to EXPIRED.
+        $schedule->job(new ExpireOldOffersJob)
+            ->dailyAt('02:30')
+            ->timezone('Asia/Qatar')
+            ->name('offers.expire-old')
             ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {

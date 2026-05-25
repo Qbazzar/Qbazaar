@@ -152,6 +152,30 @@ return [
         ],
     ],
 
+    'offer' => [
+        'not' => [
+            'found' => 'Offer not found.',
+            'seller' => 'Only the seller can perform this action.',
+            'pending' => 'This offer is no longer pending.',
+        ],
+        'expired' => 'This offer has expired.',
+        'already' => [
+            'actioned' => 'This offer has already been actioned.',
+        ],
+        'active' => [
+            'exists' => 'You already have a pending offer on this ad.',
+        ],
+        'own' => [
+            'ad' => 'You cannot make an offer on your own ad.',
+        ],
+        'ad' => [
+            'not' => [
+                'active' => 'You can only offer on active ads.',
+            ],
+        ],
+        'forbidden' => 'You are not authorised to act on this offer.',
+    ],
+
     'msg' => [
         'blocked' => 'You cannot message this user.',
         'rate' => [
