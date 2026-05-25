@@ -196,6 +196,18 @@ class User extends Authenticatable implements CanResetPasswordContract, Filament
         return $this->hasAnyRole(['super_admin', 'moderator', 'support']);
     }
 
+    /**
+     * Display name Filament reads for the avatar dropdown header. Our User
+     * model uses `full_name` instead of the framework default `name`, so
+     * without this override Filament's `FilamentManager::getUserName()`
+     * tries to read `$user->name`, gets null, and crashes with a
+     * "Return value must be of type string, null returned" type error.
+     */
+    public function getFilamentName(): string
+    {
+        return $this->full_name;
+    }
+
     /* ──────────────────────────────────────────────────────────────────
      *  Media library — avatar collection.
      *
