@@ -131,12 +131,63 @@ export async function deleteAd(id: string): Promise<void> {
   }
 }
 
+// ── Discovery: similar + featured ──────────────────────────────────────────
+
+/**
+ * "More like this" rail rendered on the ad-detail page. Backed by
+ * `GET /api/v1/ads/{id}/similar`. Returns an unwrapped list — the endpoint
+ * does not paginate.
+ */
+export async function getSimilarAds(id: string): Promise<AdSummary[]> {
+  try {
+    const { data } = await api.get<SuccessEnvelope<AdSummary[]>>(
+      `${BASE}/${encodeURIComponent(id)}/similar`,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/**
+ * Editorially-promoted ads shown on the homepage. Backed by
+ * `GET /api/v1/ads/featured`. Returns an unwrapped list.
+ */
+export async function getFeaturedAds(): Promise<AdSummary[]> {
+  try {
+    const { data } = await api.get<SuccessEnvelope<AdSummary[]>>(
+      `${BASE}/featured`,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
 // ── State transitions ──────────────────────────────────────────────────────
 
-export async function publishAd(id: string): Promise<Ad> {
+/**
+ * Publish a draft ad.
+ *
+ * Accepts an optional `idempotencyKey` so the caller can guarantee at-most-
+ * once semantics across retries (network blip → user re-clicks → axios
+ * retries on transient 5xx). The backend keys its publish cache off
+ * `X-Idempotency-Key` so the same key returns the cached response without
+ * double-charging quotas or re-firing notifications. See BE-5.33.
+ */
+export async function publishAd(
+  id: string,
+  options: { idempotencyKey?: string } = {},
+): Promise<Ad> {
   try {
+    const headers: Record<string, string> = {};
+    if (options.idempotencyKey) {
+      headers['X-Idempotency-Key'] = options.idempotencyKey;
+    }
     const { data } = await api.post<SuccessEnvelope<Ad>>(
       `${BASE}/${encodeURIComponent(id)}/publish`,
+      undefined,
+      Object.keys(headers).length ? { headers } : undefined,
     );
     return data.data;
   } catch (err) {

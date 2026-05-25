@@ -19,7 +19,7 @@
  * ad detail. If image upload fails, the ad stays in `draft` and the user can
  * retry.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -44,6 +44,7 @@ import { localized, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import type {
+  Ad,
   AdCondition,
   CategoryNode,
   CreateAdRequest,
@@ -61,7 +62,16 @@ const STEP_LABELS: Record<PostAdStep, string> = {
 const PRICE_TYPES: PriceType[] = ['fixed', 'negotiable', 'free', 'contact'];
 const CONDITIONS: AdCondition[] = ['new', 'like_new', 'used'];
 
-export function PostAdWizard() {
+export type PostAdMode = 'create' | 'edit';
+
+interface PostAdWizardProps {
+  /** `create` (default) drives the publish flow; `edit` patches an existing ad. */
+  mode?: PostAdMode;
+  /** Required when `mode === 'edit'` — the ad being modified. */
+  ad?: Ad;
+}
+
+export function PostAdWizard({ mode = 'create', ad }: PostAdWizardProps = {}) {
   const router = useRouter();
   const locale = getLocale();
   const state = usePostAdStore();
@@ -71,15 +81,53 @@ export function PostAdWizard() {
   const updateMutation = useUpdateAdMutation();
   const publishMutation = usePublishAdMutation();
   const [busy, setBusy] = useState(false);
+  // Track whether we've already seeded the store from an `ad` prop so we
+  // don't clobber the user's edits when React re-renders.
+  const seededRef = useRef(false);
+  // Stable idempotency key for the publish call. Generated once per mount so
+  // retries (network blip + user re-click) hit the server-side dedupe cache
+  // instead of double-publishing the ad. See BE-5.33.
+  const idempotencyKeyRef = useRef<string | null>(null);
+  if (idempotencyKeyRef.current === null && typeof crypto !== 'undefined') {
+    idempotencyKeyRef.current =
+      typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : // Older browsers — fall back to a coarse pseudo-uuid. Still per-mount
+          // so the dedupe property survives a single user-driven retry.
+          `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+  }
 
-  // Reset the wizard whenever the user lands on the page fresh.
-  // We deliberately *do not* reset on unmount — the user might briefly
-  // navigate to a category page from inside step 1.
+  // In edit mode, hydrate the wizard store from the loaded ad exactly once.
+  // We deliberately do not seed in create mode — the store starts clean and
+  // the user fills it in step by step.
   useEffect(() => {
+    if (mode !== 'edit' || !ad || seededRef.current) return;
+    seededRef.current = true;
+    state.setCategoryId(ad.category_id);
+    state.setLocationId(ad.location_id);
+    state.setDraftAdId(ad.id);
+    state.setImages(ad.images ?? []);
+    state.setDetails({
+      title: ad.title,
+      description: ad.description,
+      price: ad.price !== null ? String(ad.price) : '',
+      price_type: ad.price_type,
+      condition: ad.condition,
+      custom_fields: ad.custom_fields ?? {},
+    });
+    // We intentionally exclude `state` from deps — it's the imperative store
+    // bag and would re-fire this effect every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, ad?.id]);
+
+  // Reset the create-mode wizard whenever the user lands on the page fresh.
+  // Edit mode keeps its seeded state so the dirty form survives re-renders.
+  useEffect(() => {
+    if (mode === 'edit') return;
     return () => {
       // no-op for now
     };
-  }, []);
+  }, [mode]);
 
   // ── Step gating ─────────────────────────────────────────────────────────
 
@@ -164,19 +212,37 @@ export function PostAdWizard() {
     if (!state.draftAdId || busy) return;
     setBusy(true);
     try {
-      const ad = await publishMutation.mutateAsync(state.draftAdId);
+      // Edit mode: persist any pending text/category/location changes and
+      // bounce back to the user's ads list. No publish call — the ad is
+      // already live (or in whatever status it was before).
+      if (mode === 'edit') {
+        await persistDraft();
+        toast.success(t('ads.edit.saved', 'تم حفظ التعديلات'));
+        state.reset();
+        router.push('/account/ads');
+        return;
+      }
+      const updated = await publishMutation.mutateAsync({
+        id: state.draftAdId,
+        idempotencyKey: idempotencyKeyRef.current ?? undefined,
+      });
       toast.success(t('ads.post.published', 'تم نشر إعلانك'));
       state.reset();
-      router.push(`/ads/${ad.id}`);
+      router.push(`/ads/${updated.id}`);
     } catch (err) {
       toast.error(
         (err as { message?: string })?.message ??
-          t('ads.errors.ad_not_publishable', 'تعذّر النشر'),
+          t(
+            mode === 'edit'
+              ? 'ads.errors.update_failed'
+              : 'ads.errors.ad_not_publishable',
+            mode === 'edit' ? 'تعذّر حفظ التعديلات' : 'تعذّر النشر',
+          ),
       );
     } finally {
       setBusy(false);
     }
-  }, [busy, publishMutation, router, state]);
+  }, [busy, mode, persistDraft, publishMutation, router, state]);
 
   // ── Helpers for sub-views ──────────────────────────────────────────────
 
@@ -274,7 +340,9 @@ export function PostAdWizard() {
             className="bg-coral text-white hover:bg-coral/90"
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-            {t('ads.actions.publish', 'نشر الإعلان')}
+            {mode === 'edit'
+              ? t('ads.actions.save_changes', 'حفظ التعديلات')
+              : t('ads.actions.publish', 'نشر الإعلان')}
           </Button>
         )}
       </div>

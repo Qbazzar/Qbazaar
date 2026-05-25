@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { HomeCategoryStrip } from '@/components/home/HomeCategoryStrip';
+import { HomeFeaturedAds } from '@/components/home/HomeFeaturedAds';
 import { HomeLatestAds } from '@/components/home/HomeLatestAds';
 import { RecentlyViewedStrip } from '@/components/account/RecentlyViewedStrip';
 import { t } from '@/lib/i18n/messages';
@@ -95,6 +96,9 @@ export default function HomePage() {
         />
         <HomeCategoryStrip />
       </section>
+
+      {/* FEATURED — editorial cohort, hidden when empty */}
+      <HomeFeaturedAds />
 
       {/* RECENTLY VIEWED — auth-only, hidden when empty */}
       <section className="mx-auto w-full max-w-6xl px-6 pb-4">

@@ -24,6 +24,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AdDescription } from '@/components/ads/AdDescription';
 import { AdGallery } from '@/components/ads/AdGallery';
+import { AdSimilar } from '@/components/ads/AdSimilar';
 import { AdStatusPill } from '@/components/ads/AdStatusPill';
 import { CustomFieldsList } from '@/components/ads/CustomFieldsList';
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
@@ -210,18 +211,7 @@ function AdDetail({
               </div>
             </div>
 
-            {/* Similar — stub */}
-            <section className="border-ink-200 mt-6 border-t pt-6">
-              <h2 className="font-display text-2xl text-ink-900">
-                {t('ads.detail.similar', 'إعلانات مشابهة')}
-              </h2>
-              <p className="text-ink-500 mt-3 rounded-xl border border-dashed border-ink-200 bg-card px-6 py-10 text-center text-sm">
-                {t(
-                  'ads.detail.similar_soon',
-                  'إعلانات مشابهة قادمة قريباً.',
-                )}
-              </p>
-            </section>
+            <AdSimilar adId={ad.id} />
           </div>
 
           {/* SIDEBAR */}

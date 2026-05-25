@@ -548,8 +548,6 @@
     "detail": {
       "description": "Description",
       "specs": "Details",
-      "similar": "Similar ads",
-      "similar_soon": "Similar ads are coming soon.",
       "safety_title": "Stay safe when meeting",
       "safety_body": "Meet in public, inspect goods before paying, and never wire money to strangers.",
       "ad_id": "Ad ID {id}",
@@ -605,6 +603,7 @@
       "delete_confirm_title": "Confirm delete",
       "delete_confirm_body": "The ad will be removed permanently. This action cannot be undone.",
       "publish": "Publish ad",
+      "save_changes": "Save changes",
       "save_for_later": "Save ad",
       "save_soon": "Saving lands soon",
       "contact_seller": "Contact seller",
@@ -626,7 +625,22 @@
       "ad_invalid_status_transition": "This ad can't move to that status",
       "ad_not_publishable": "Add at least one image before publishing",
       "create_failed": "Could not save the draft",
-      "delete_failed": "Could not delete the ad"
+      "delete_failed": "Could not delete the ad",
+      "update_failed": "Could not save your changes"
+    },
+    "edit": {
+      "title": "Edit ad",
+      "subtitle": "Update your ad details, then save. We will not re-publish the ad.",
+      "back_to_my_ads": "Back to my ads",
+      "saved": "Changes saved"
+    },
+    "similar_section": {
+      "kicker": "Suggested for you",
+      "title": "Similar ads"
+    },
+    "featured_section": {
+      "kicker": "Hand-picked",
+      "title": "Featured ads"
     }
   },
   "search": {

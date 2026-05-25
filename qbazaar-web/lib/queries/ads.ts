@@ -22,7 +22,9 @@ import {
   createAd,
   deleteAd,
   getAd,
+  getFeaturedAds,
   getMyAds,
+  getSimilarAds,
   listAds,
   markSold,
   publishAd,
@@ -50,6 +52,8 @@ export const adKeys = {
   detail: (id: string) => [...adKeys.details(), id] as const,
   myLists: () => [...adKeys.all, 'mine'] as const,
   myList: (params: MyAdsParams) => [...adKeys.myLists(), params] as const,
+  similar: (id: string) => [...adKeys.all, 'similar', id] as const,
+  featured: () => [...adKeys.all, 'featured'] as const,
 };
 
 // ── Queries ────────────────────────────────────────────────────────────────
@@ -86,6 +90,36 @@ export function useMyAdsQuery(
     queryFn: () => getMyAds(params),
     staleTime: 15 * 1000,
     placeholderData: (prev) => prev,
+  });
+}
+
+/**
+ * Similar ads — same category, close in price/condition. 5min stale is fine:
+ * the similarity heuristic doesn't churn for typical traffic.
+ */
+export function useSimilarAdsQuery(
+  id: string | null | undefined,
+): UseQueryResult<AdSummary[], ApiClientError> {
+  return useQuery({
+    queryKey: adKeys.similar(id ?? ''),
+    queryFn: () => getSimilarAds(id as string),
+    enabled: Boolean(id),
+    staleTime: 5 * MINUTE,
+  });
+}
+
+/**
+ * Editorially-promoted ads for the homepage strip. Featured cohort changes
+ * slowly so a 5min stale window keeps the request budget low.
+ */
+export function useFeaturedAdsQuery(): UseQueryResult<
+  AdSummary[],
+  ApiClientError
+> {
+  return useQuery({
+    queryKey: adKeys.featured(),
+    queryFn: () => getFeaturedAds(),
+    staleTime: 5 * MINUTE,
   });
 }
 
@@ -138,14 +172,28 @@ export function useDeleteAdMutation(): UseMutationResult<
   });
 }
 
+export interface PublishAdVariables {
+  id: string;
+  /**
+   * Optional `X-Idempotency-Key` so retries dedupe server-side. Callers that
+   * still pass a bare id keep working — the helper below normalises both
+   * shapes.
+   */
+  idempotencyKey?: string;
+}
+
 export function usePublishAdMutation(): UseMutationResult<
   Ad,
   ApiClientError,
-  string
+  string | PublishAdVariables
 > {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => publishAd(id),
+    mutationFn: (input: string | PublishAdVariables) => {
+      const vars: PublishAdVariables =
+        typeof input === 'string' ? { id: input } : input;
+      return publishAd(vars.id, { idempotencyKey: vars.idempotencyKey });
+    },
     onSuccess: (ad) => {
       qc.setQueryData(adKeys.detail(ad.id), ad);
       qc.invalidateQueries({ queryKey: adKeys.lists() });

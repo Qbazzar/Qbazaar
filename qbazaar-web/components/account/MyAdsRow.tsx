@@ -100,8 +100,10 @@ export function MyAdsRow({ ad }: Props) {
                     {t('ads.actions.view', 'عرض')}
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled>
-                  {t('ads.actions.edit', 'تعديل')}
+                <DropdownMenuItem asChild>
+                  <Link href={`/account/ads/${ad.id}/edit`}>
+                    {t('ads.actions.edit', 'تعديل')}
+                  </Link>
                 </DropdownMenuItem>
                 {ad.status === 'active' ? (
                   <DropdownMenuItem onClick={() => void onMarkSold()}>
