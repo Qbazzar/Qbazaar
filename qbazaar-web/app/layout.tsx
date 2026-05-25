@@ -1,28 +1,21 @@
 import type { Metadata } from 'next';
-import { Cairo, DM_Sans, Geist_Mono, Instrument_Serif } from 'next/font/google';
+import { Inter, Noto_Naskh_Arabic, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
 import { Providers } from './providers';
 import './globals.css';
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-dm-sans',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-inter',
 });
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ['latin'],
-  weight: '400',
-  style: ['normal', 'italic'],
-  variable: '--font-instrument-serif',
-});
-
-const cairo = Cairo({
+const notoNaskh = Noto_Naskh_Arabic({
   subsets: ['arabic'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  variable: '--font-cairo',
+  weight: ['400', '500', '700'],
+  variable: '--font-naskh',
 });
 
 const geistMono = Geist_Mono({
@@ -41,13 +34,12 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Wave 1 ships a single Arabic locale + RTL — the `[locale]` segment lands in Wave 2.
   return (
     <html
       lang="ar"
       dir="rtl"
       suppressHydrationWarning
-      className={`${dmSans.variable} ${instrumentSerif.variable} ${cairo.variable} ${geistMono.variable}`}
+      className={`${inter.variable} ${notoNaskh.variable} ${geistMono.variable}`}
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
