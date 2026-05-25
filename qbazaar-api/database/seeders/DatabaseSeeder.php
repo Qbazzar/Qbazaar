@@ -19,6 +19,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CategorySeeder::class,
             LocationSeeder::class,
+            // Sprint 11 — admin RBAC + DB-backed moderation rules.
+            // Roles must exist before the admin user is granted super_admin,
+            // and moderation rules must be present so the publish hot path
+            // hits a populated table instead of a slow config-fallback.
+            RolesAndPermissionsSeeder::class,
+            ModerationRulesSeeder::class,
         ]);
 
         User::factory()->create([

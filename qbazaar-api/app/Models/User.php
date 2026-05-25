@@ -12,6 +12,8 @@ use App\Models\Pivot\UserBlock;
 use App\Notifications\EmailVerificationNotification;
 use App\Notifications\PasswordResetNotification;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -26,6 +28,7 @@ use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property string $id
@@ -46,10 +49,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
  */
-class User extends Authenticatable implements CanResetPasswordContract, HasMedia, MustVerifyEmailContract
+class User extends Authenticatable implements CanResetPasswordContract, FilamentUser, HasMedia, MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasUlids, InteractsWithMedia, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, HasUlids, InteractsWithMedia, Notifiable, SoftDeletes;
 
     /**
      * @var list<string>
@@ -178,6 +181,19 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     public function getEmailForVerification(): string
     {
         return $this->email;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     *  Filament admin panel access (Sprint 11).
+     *
+     *  Anyone reaching `/admin` must hold at least one of the three staff
+     *  roles seeded by RolesAndPermissionsSeeder. We deliberately do NOT
+     *  check `$panel->getId()` here — QBazaar only ships one panel and the
+     *  next one (analytics, partner dashboard) will get its own model contract.
+     * ──────────────────────────────────────────────────────────────────*/
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasAnyRole(['super_admin', 'moderator', 'support']);
     }
 
     /* ──────────────────────────────────────────────────────────────────

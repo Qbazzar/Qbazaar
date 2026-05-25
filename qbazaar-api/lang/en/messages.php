@@ -107,5 +107,9 @@ return [
             'title' => 'New sign-in detected',
             'body' => 'A new sign-in from :device. If this wasn\'t you, secure your account now.',
         ],
+        'system_announcement' => [
+            'greeting' => 'Hello,',
+            'footer' => 'Thanks for being a part of QBazaar.',
+        ],
     ],
 ];

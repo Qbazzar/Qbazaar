@@ -50,13 +50,9 @@ class BlockUserAction
      */
     private function isAdmin(User $user): bool
     {
-        if (method_exists($user, 'hasRole')) {
-            /** @var bool $hasAdmin */
-            $hasAdmin = $user->hasRole('admin');
+        /** @var bool $hasAdmin */
+        $hasAdmin = $user->hasRole('super_admin');
 
-            return $hasAdmin;
-        }
-
-        return false;
+        return $hasAdmin;
     }
 }
