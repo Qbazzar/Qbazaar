@@ -817,3 +817,115 @@ export type ReportErrorCode =
   | 'REPORT_INVALID_TARGET'
   | 'REPORT_SELF'
   | 'REPORT_RECENT_DUPLICATE';
+
+// ── CMS Pages / Help center / Support (Sprint 12) ──────────────────────────
+// Pages are admin-authored static content (about, terms, privacy, contact).
+// Help articles are categorised long-form content surfaced through search.
+// Support tickets are a lightweight contact-us channel with replies.
+
+/**
+ * One row in the public pages index. `body` is intentionally omitted from the
+ * list shape — the index endpoint is cheap to render and the body comes back
+ * with the detail call.
+ */
+export interface PageListItem {
+  id: string;
+  slug: string;
+  title: LocalizedString;
+  display_order: number;
+}
+
+export interface Page extends PageListItem {
+  body: LocalizedString;
+  meta_description: LocalizedString | null;
+  published_at: string | null;
+}
+
+export interface HelpCategory {
+  id: string;
+  slug: string;
+  name: LocalizedString;
+  description: LocalizedString | null;
+  /** Lucide-react icon name, resolved via DynamicIcon. */
+  icon: string | null;
+  display_order: number;
+  articles_count?: number;
+}
+
+export interface HelpArticleListItem {
+  id: string;
+  slug: string;
+  title: LocalizedString;
+  excerpt: LocalizedString | null;
+  display_order: number;
+}
+
+export interface HelpArticle extends HelpArticleListItem {
+  body: LocalizedString;
+  views_count: number;
+  category: {
+    id: string;
+    slug: string;
+    name: LocalizedString;
+    icon: string | null;
+  };
+}
+
+export type SupportTicketStatus =
+  | 'open'
+  | 'in_progress'
+  | 'waiting_user'
+  | 'resolved'
+  | 'closed';
+
+export type SupportTicketCategory =
+  | 'general'
+  | 'billing'
+  | 'technical'
+  | 'abuse'
+  | 'feedback'
+  | 'other';
+
+export type SupportTicketPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+export interface SupportTicketListItem {
+  id: string;
+  subject: string;
+  category: SupportTicketCategory;
+  status: SupportTicketStatus;
+  priority: SupportTicketPriority;
+  last_replied_at: string | null;
+  replies_count: number;
+  created_at: string;
+}
+
+export interface SupportReply {
+  id: string;
+  author: { id: string; name: string; is_staff: boolean };
+  body: string;
+  created_at: string;
+}
+
+export interface SupportTicket extends SupportTicketListItem {
+  body: string;
+  email: string | null;
+  replies: SupportReply[];
+}
+
+export interface MakeSupportTicketRequest {
+  subject: string;
+  category: SupportTicketCategory;
+  body: string;
+  email?: string;
+}
+
+export type CmsErrorCode = 'PAGE_NOT_FOUND';
+
+export type HelpErrorCode =
+  | 'HELP_CATEGORY_NOT_FOUND'
+  | 'HELP_ARTICLE_NOT_FOUND';
+
+export type SupportErrorCode =
+  | 'TICKET_NOT_FOUND'
+  | 'TICKET_FORBIDDEN'
+  | 'TICKET_INVALID_TRANSITION';

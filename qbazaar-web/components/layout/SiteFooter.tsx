@@ -73,7 +73,7 @@ export function SiteFooter() {
           <div>
             <div className="footer-col__title">{t('footer.col_classifieds', 'الإعلانات')}</div>
             <ul className="footer-col__links">
-              <li><Link href="/about">{t('footer.about', 'من نحن')}</Link></li>
+              <li><Link href="/p/about">{t('footer.about', 'من نحن')}</Link></li>
               <li><Link href="/ads">{t('footer.browse', 'تصفّح')}</Link></li>
               <li><Link href="/post-ad">{t('home.hero.cta_post', 'انشر إعلانك')}</Link></li>
               <li><Link href="/categories">{t('categories.all', 'كل الأقسام')}</Link></li>
@@ -84,10 +84,10 @@ export function SiteFooter() {
             <div className="footer-col__title">{t('footer.col_information', 'معلومات')}</div>
             <ul className="footer-col__links">
               <li><Link href="/help">{t('footer.help', 'المساعدة')}</Link></li>
-              <li><Link href="/help#safety">{t('footer.safety_tips', 'إرشادات الأمان')}</Link></li>
-              <li><Link href="/help#report">{t('footer.report', 'الإبلاغ عن مشكلة')}</Link></li>
-              <li><Link href="/help#privacy">{t('footer.privacy', 'سياسة الخصوصية')}</Link></li>
-              <li><Link href="/help#terms">{t('footer.terms', 'شروط الاستخدام')}</Link></li>
+              <li><Link href="/support">{t('footer.support', 'الدعم الفني')}</Link></li>
+              <li><Link href="/p/contact">{t('footer.contact', 'تواصل معنا')}</Link></li>
+              <li><Link href="/p/privacy">{t('footer.privacy', 'سياسة الخصوصية')}</Link></li>
+              <li><Link href="/p/terms">{t('footer.terms', 'شروط الاستخدام')}</Link></li>
             </ul>
           </div>
 

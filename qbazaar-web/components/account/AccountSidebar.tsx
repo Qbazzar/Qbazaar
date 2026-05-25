@@ -21,6 +21,7 @@ import {
   DatabaseIcon,
   HeartIcon,
   HomeIcon,
+  LifeBuoyIcon,
   LogOutIcon,
   MessageSquareIcon,
   ShieldCheckIcon,
@@ -74,6 +75,11 @@ const NAV_ITEMS: NavItem[] = [
     href: '/account/notifications',
     labelKey: 'account.nav.notifications',
     icon: BellIcon,
+  },
+  {
+    href: '/account/support',
+    labelKey: 'account.nav.support',
+    icon: LifeBuoyIcon,
   },
   {
     href: '/account/favorites',

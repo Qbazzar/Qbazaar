@@ -206,6 +206,7 @@
       "saved_searches": "Saved searches",
       "messages": "Messages",
       "notifications": "Notifications",
+      "support": "Support",
       "sign_out": "Sign out",
       "sign_out_confirm": "Signed out"
     },
@@ -879,6 +880,108 @@
       "recent_duplicate": "Already reported",
       "category_required": "Pick a reason",
       "description_max": "Description is too long"
+    }
+  },
+  "footer": {
+    "support": "Support",
+    "contact": "Contact us"
+  },
+  "cms": {
+    "page_not_found": "We couldn't find this page",
+    "last_updated": "Last updated"
+  },
+  "help": {
+    "title": "Help center",
+    "subtitle": "Search the help center or pick a topic. Most questions have answers in under 30 seconds.",
+    "search_placeholder": "Search 'how to post', 'safe meetup', 'refund'…",
+    "search_submit": "Search",
+    "search_min_chars": "Type at least two characters to search",
+    "categories_title": "Browse by topic",
+    "no_categories": "No help categories yet",
+    "articles_in_category": "Articles in this topic",
+    "articles_count_arrow": "{count} articles →",
+    "no_articles": "No articles in this category yet",
+    "search_results": "Found {count} results",
+    "no_results": "No results",
+    "related_articles": "Related articles",
+    "helpful_question": "Was this article helpful?",
+    "helpful_yes": "Yes",
+    "helpful_no": "No",
+    "feedback_thanks_yes": "Thanks! Glad it helped.",
+    "feedback_thanks_no": "Thanks — we'll improve this article.",
+    "views_count": "{count} views",
+    "back_to_help": "Back to help center",
+    "category_not_found": "We couldn't find this category",
+    "article_not_found": "We couldn't find this article"
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Start with the help center, or contact our team — we reply within hours.",
+    "new_ticket": "New ticket",
+    "new_ticket_subtitle": "Describe your issue with a bit of detail and our team will get back to you within a few hours.",
+    "new_ticket_sub": "Open a new ticket and our support team will follow up with you.",
+    "browse_help": "Browse help center",
+    "browse_help_sub": "In-depth articles on posting, buying, safety, and payments.",
+    "subject_label": "Subject",
+    "subject_placeholder": "e.g. I can't publish my ad",
+    "category_label": "Category",
+    "body_label": "Issue details",
+    "body_placeholder": "Describe the issue clearly. Steps you took, any error messages, and when it started.",
+    "email_label": "Your email",
+    "email_placeholder": "you@example.com",
+    "email_hint": "We'll reach out at this address. Sign in to follow your tickets from your account.",
+    "submit": "Submit",
+    "submit_success_toast": "We received your request — we'll reply soon",
+    "submit_success_title": "Your message has been received",
+    "submit_success_body": "We'll reply to the email you provided within a few hours. Keep this ticket reference for follow-up:",
+    "categories": {
+      "general": "General inquiry",
+      "billing": "Billing & payments",
+      "technical": "Technical issue",
+      "abuse": "Abuse / safety",
+      "feedback": "Feedback / suggestion",
+      "other": "Other"
+    },
+    "status": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "waiting_user": "Waiting on you",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "my_tickets": "Support tickets",
+    "my_tickets_subtitle": "All your support tickets in one place.",
+    "tabs": {
+      "all": "All",
+      "open": "Open",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
+    "no_tickets": "No tickets in this tab",
+    "replies_count": "{count} replies",
+    "back_to_list": "Back to my tickets",
+    "you": "You",
+    "staff_badge": "Support team",
+    "reply_label": "Add a reply",
+    "reply_placeholder": "Type your reply here…",
+    "send_reply": "Send reply",
+    "ticket_closed_notice": "You can't reply to a closed ticket. Please open a new one.",
+    "errors": {
+      "subject_min": "Subject is too short (min 3 characters)",
+      "subject_max": "Subject is too long (max 160 characters)",
+      "category_required": "Pick a category",
+      "body_required": "Type a reply",
+      "body_min": "Details are too short (min 10 characters)",
+      "body_max": "Details are too long (max 4000 characters)",
+      "ticket_not_found": "We couldn't find this ticket",
+      "ticket_forbidden": "You don't have access to this ticket",
+      "invalid_transition": "You can't reply to a closed ticket. Please open a new one."
     }
   }
 }

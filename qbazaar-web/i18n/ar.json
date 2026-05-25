@@ -206,6 +206,7 @@
       "saved_searches": "عمليات البحث المحفوظة",
       "messages": "الرسائل",
       "notifications": "الإشعارات",
+      "support": "الدعم الفني",
       "sign_out": "تسجيل الخروج",
       "sign_out_confirm": "تم تسجيل الخروج"
     },
@@ -879,6 +880,108 @@
       "recent_duplicate": "تم الإبلاغ مسبقاً",
       "category_required": "اختر سبب البلاغ",
       "description_max": "التفاصيل طويلة جداً"
+    }
+  },
+  "footer": {
+    "support": "الدعم الفني",
+    "contact": "تواصل معنا"
+  },
+  "cms": {
+    "page_not_found": "لم نعثر على هذه الصفحة",
+    "last_updated": "آخر تحديث"
+  },
+  "help": {
+    "title": "مركز المساعدة",
+    "subtitle": "ابحث في مركز المساعدة أو اختر موضوعاً. معظم الأسئلة لها إجابات في أقل من 30 ثانية.",
+    "search_placeholder": "ابحث عن \"كيفية النشر\"، \"الأمان\"، …",
+    "search_submit": "بحث",
+    "search_min_chars": "اكتب حرفين على الأقل لبدء البحث",
+    "categories_title": "تصفّح حسب الموضوع",
+    "no_categories": "لا توجد فئات مساعدة بعد",
+    "articles_in_category": "المقالات في هذه الفئة",
+    "articles_count_arrow": "{count} مقالات ←",
+    "no_articles": "لا توجد مقالات في هذه الفئة بعد",
+    "search_results": "تم العثور على {count} نتائج",
+    "no_results": "لا توجد نتائج",
+    "related_articles": "مقالات ذات صلة",
+    "helpful_question": "هل كان هذا المقال مفيداً؟",
+    "helpful_yes": "نعم",
+    "helpful_no": "لا",
+    "feedback_thanks_yes": "شكراً لك! يسعدنا أن المقال كان مفيداً",
+    "feedback_thanks_no": "شكراً لإخبارنا — سنحاول تحسين المقال",
+    "views_count": "{count} مشاهدة",
+    "back_to_help": "العودة إلى مركز المساعدة",
+    "category_not_found": "لم نعثر على هذه الفئة",
+    "article_not_found": "لم نعثر على هذا المقال"
+  },
+  "support": {
+    "title": "الدعم الفني",
+    "subtitle": "ابدأ بمركز المساعدة، أو راسل فريق الدعم وسنرد خلال ساعات.",
+    "new_ticket": "تذكرة جديدة",
+    "new_ticket_subtitle": "صف مشكلتك بتفصيل بسيط وسيرد فريق الدعم خلال ساعات قليلة.",
+    "new_ticket_sub": "افتح تذكرة جديدة وسيتولّى فريق الدعم متابعتها معك.",
+    "browse_help": "تصفّح مركز المساعدة",
+    "browse_help_sub": "مقالات شاملة عن النشر والشراء والأمان والمدفوعات.",
+    "subject_label": "الموضوع",
+    "subject_placeholder": "مثلاً: لم أتمكن من نشر إعلان",
+    "category_label": "التصنيف",
+    "body_label": "تفاصيل المشكلة",
+    "body_placeholder": "صف المشكلة بدقة. الخطوات التي قمت بها، رسائل الخطأ إن وجدت، ومتى بدأت تواجهها.",
+    "email_label": "بريدك الإلكتروني",
+    "email_placeholder": "you@example.com",
+    "email_hint": "سنتواصل معك على هذا البريد. سجّل الدخول لمتابعة تذاكرك من حسابك.",
+    "submit": "إرسال",
+    "submit_success_toast": "تم استلام طلبك، سنرد قريباً",
+    "submit_success_title": "تم استلام رسالتك",
+    "submit_success_body": "سنرد على البريد الذي زوّدتنا به خلال ساعات قليلة. احتفظ برقم التذكرة التالي للمراجعة:",
+    "categories": {
+      "general": "استفسار عام",
+      "billing": "الفوترة والمدفوعات",
+      "technical": "مشكلة تقنية",
+      "abuse": "إساءة استخدام",
+      "feedback": "اقتراح أو ملاحظة",
+      "other": "أخرى"
+    },
+    "status": {
+      "open": "مفتوحة",
+      "in_progress": "قيد المعالجة",
+      "waiting_user": "بانتظار ردك",
+      "resolved": "تم حلها",
+      "closed": "مغلقة"
+    },
+    "priority": {
+      "low": "منخفضة",
+      "normal": "عادية",
+      "high": "عالية",
+      "urgent": "عاجلة"
+    },
+    "my_tickets": "تذاكر الدعم",
+    "my_tickets_subtitle": "كل تذاكر الدعم الخاصة بك في مكان واحد.",
+    "tabs": {
+      "all": "الكل",
+      "open": "المفتوحة",
+      "in_progress": "قيد المعالجة",
+      "resolved": "المنتهية"
+    },
+    "no_tickets": "لا توجد تذاكر في هذا التبويب",
+    "replies_count": "{count} ردود",
+    "back_to_list": "العودة إلى تذاكري",
+    "you": "أنت",
+    "staff_badge": "فريق الدعم",
+    "reply_label": "إضافة رد",
+    "reply_placeholder": "اكتب ردك هنا…",
+    "send_reply": "إرسال الرد",
+    "ticket_closed_notice": "لا يمكن الرد على تذكرة مغلقة. افتح تذكرة جديدة.",
+    "errors": {
+      "subject_min": "الموضوع قصير جداً (3 أحرف على الأقل)",
+      "subject_max": "الموضوع طويل جداً (160 حرف كحد أقصى)",
+      "category_required": "اختر تصنيفاً",
+      "body_required": "اكتب نص الرد",
+      "body_min": "التفاصيل قصيرة جداً (10 أحرف على الأقل)",
+      "body_max": "التفاصيل طويلة جداً (4000 حرف كحد أقصى)",
+      "ticket_not_found": "لم نعثر على هذه التذكرة",
+      "ticket_forbidden": "ليس لديك صلاحية الوصول إلى هذه التذكرة",
+      "invalid_transition": "لا يمكن الرد على تذكرة مغلقة. افتح تذكرة جديدة."
     }
   }
 }
