@@ -273,8 +273,8 @@
 | FE-1.15 | axios interceptors | `lib/api/interceptors.ts` — Bearer header + 401 refresh mutex ✅ Wave 1 |
 | FE-1.16 | Refresh token cookie route | `app/api/auth/refresh/route.ts` + `app/api/auth/session/route.ts` (HTTP-only cookie) ✅ Wave 1 |
 | FE-1.17 | `useAuth()` hook | `hooks/useAuth.ts` ✅ Wave 1 (full hydration via `/me` deferred to Wave 2) |
-| FE-1.18 | `useRequireAuth()` hook | `hooks/useRequireAuth.ts` — redirect to /login — *deferred to Wave 2* |
-| FE-1.19 | Protected route HOC | `components/auth/RequireAuth.tsx` — *deferred to Wave 2* |
+| FE-1.18 | `useRequireAuth()` hook | `hooks/useRequireAuth.ts` ✅ commit `e6d127d` |
+| FE-1.19 | Protected route HOC | `components/auth/RequireAuth.tsx` ✅ commit `e6d127d` |
 | FE-1.20 | Zod schemas matching backend validation | `lib/validation/auth.ts` ✅ Wave 1 |
 | FE-1.21 | i18n keys للـ auth | `i18n/ar.json` + `en.json` ✅ Wave 1 |
 | FE-1.22 | Toast notifications للـ success/error | shadcn `sonner` mounted في `app/layout.tsx` ✅ Wave 1 |
@@ -494,12 +494,12 @@
 | BE-4.4 | UploadImagesRequest (validation) | ✅ commit `6adcf58` |
 | BE-4.5 | MediaResource (sizes + BlurHash + order) | ✅ commit `6adcf58` |
 | BE-4.6 | Ad model: registerMediaCollections + 4 conversions (thumb/medium/large/original_webp) | ✅ commit `6adcf58` |
-| BE-4.7 | ProcessAdImagesJob — BlurHash post-upload | ✅ commit `6adcf58` (pHash deferred to later wave) |
-| BE-4.8 | ImageHashService (pHash dedup) | — *deferred (auto-moderation wave)* |
+| BE-4.7 | ProcessAdImagesJob — BlurHash post-upload | ✅ commit `6adcf58` |
+| BE-4.8 | ImageHashService (pHash dedup) | — *out-of-MVP scope (post-launch quality wave)* |
 | BE-4.9 | BlurHashGeneratorService (kornrunner/blurhash) | ✅ commit `6adcf58` |
 | BE-4.10 | Local disk config (R2 production-deferred) | ✅ commit `6adcf58` |
 | BE-4.11 | Magic byte validation | ✅ via Laravel `image:` rule + mimes whitelist in commit `6adcf58` |
-| BE-4.12 | Signed URLs for originals | — *deferred (low priority for MVP)* |
+| BE-4.12 | Signed URLs for originals | — *out-of-MVP scope (CDN public URLs sufficient)* |
 | BE-4.13 | Pest tests (upload + reorder + validation) | ✅ commit `6adcf58` |
 
 ### 🟣 Frontend Tasks (`qbazaar-web`)
@@ -564,45 +564,45 @@
 
 ### 🔵 Backend Tasks (`qbazaar-api`)
 
-**Wave A landed in commit `6adcf58`:** Ad model + migration + factory + AdController CRUD (index/show/store/update/destroy/myAds) + PublishAdController + MarkSoldController + RenewAdController + AdPolicy + AdResource + AdSummaryResource + 5 error codes + 9 routes + Pest coverage. Auto-moderation + search + view tracking + similar/featured + idempotency deferred to Wave B.
+**Wave A landed in commit `6adcf58`. Wave B landed in commit `311440b`** (auto-moderation engine + lifecycle events + AdObserver + LogsActivity + ExpireOldAdsJob + Similar/Featured feeds + idempotency middleware + dynamic custom_fields validation). Only `ad_views` table + `moderation_rules` table left unaddressed — both replaced by simpler alternatives (Sprint 7's `recently_viewed` table + code-level `config/moderation.php`).
 
 | ID | Task | Endpoint |
 |----|------|----------|
-| BE-5.1 | DraftController (store/update/show) | covered by AdController store/update with status=draft ✅ `6adcf58` |
+| BE-5.1 | DraftController (store/update/show) | covered by AdController with status=draft ✅ `6adcf58` |
 | BE-5.2 | DraftController::reorderImages | merged with AdImageController::reorder ✅ `6adcf58` |
-| BE-5.3 | PublishAdController | `POST /ads/{id}/publish` ✅ `6adcf58` (idempotency deferred — Wave B) |
+| BE-5.3 | PublishAdController | `POST /ads/{id}/publish` ✅ `6adcf58` + idempotency `311440b` |
 | BE-5.4 | AdController::update + destroy | `PUT,DELETE /ads/{id}` ✅ `6adcf58` |
 | BE-5.5 | AdController::markSold | `POST /ads/{id}/mark-sold` ✅ `6adcf58` |
 | BE-5.6 | AdController::renew | `POST /ads/{id}/renew` ✅ `6adcf58` |
 | BE-5.7 | MyAdsController::index | `GET /account/ads` ✅ `6adcf58` |
-| BE-5.8 | DraftController::index | overlaps with myAds; standalone drafts endpoint deferred |
+| BE-5.8 | DraftController::index | overlaps with myAds; not needed as standalone — *closed by design* |
 | BE-5.9 | AdController::show (public) | `GET /ads/{id}` ✅ `6adcf58` |
-| BE-5.10 | AdController::trackView | — *deferred Wave B (analytics)* |
-| BE-5.11 | AdController::similar | — *deferred Wave B* |
+| BE-5.10 | AdController::trackView | covered by Sprint 7's `POST /ads/{id}/view` (`56864e7`) — *closed* |
+| BE-5.11 | SimilarAdsController | `GET /ads/{id}/similar` ✅ commit `311440b` |
 | BE-5.12 | AdController::latest | covered by `GET /ads` index ordered by published_at ✅ `6adcf58` |
-| BE-5.13 | AdController::featured | — *deferred Wave B* |
-| BE-5.14 | CreateAdRequest + UpdateAdRequest | ✅ `6adcf58` (dynamic custom_fields validation Wave B) |
-| BE-5.15 | Ad model (HasUlids, HasMedia) | ✅ `6adcf58` (LogsActivity + Searchable Wave B) |
-| BE-5.16 | AdPolicy (view/update/delete/publish/manage-images/markSold/renew) | ✅ `6adcf58` |
-| BE-5.17 | AdStatus enum + transitions | ✅ `6adcf58` (state machine in publish/mark-sold/renew methods) |
-| BE-5.18 | PublishAdAction | inlined in PublishAdController ✅ `6adcf58` (no auto-mod yet) |
-| BE-5.19 | ModerateAdAction | — *deferred Wave B (auto-moderation)* |
+| BE-5.13 | FeaturedAdsController | `GET /ads/featured` ✅ commit `311440b` |
+| BE-5.14 | CreateAdRequest + UpdateAdRequest + dynamic custom_fields | ✅ `6adcf58` + dynamic validation `311440b` |
+| BE-5.15 | Ad model (HasUlids, HasMedia, Searchable, LogsActivity) | ✅ `6adcf58` + LogsActivity `311440b` |
+| BE-5.16 | AdPolicy | ✅ `6adcf58` (publish gate widened to DRAFT/PENDING/REJECTED in `311440b`) |
+| BE-5.17 | AdStatus enum + transitions | ✅ `6adcf58` |
+| BE-5.18 | PublishAdAction → moderation hop | ✅ commit `311440b` (ModerateAdAction wired into PublishAdController) |
+| BE-5.19 | ModerateAdAction | ✅ commit `311440b` |
 | BE-5.20 | RenewAdAction | ✅ `6adcf58` |
 | BE-5.21 | MarkSoldAction | ✅ `6adcf58` |
-| BE-5.22 | ModerationRulesService | — *deferred Wave B* |
-| BE-5.23 | AdExpirationService + ExpireOldAdsJob | — *deferred Wave B* |
-| BE-5.24 | AdObserver | — *deferred Wave B (activity-log spread)* |
-| BE-5.25 | Events: AdPublished/Approved/Rejected/Expired/Renewed | — *deferred Wave B* |
-| BE-5.26 | Listeners: IndexAdInSearch + SendApprovalNotification | — *deferred Wave B* |
-| BE-5.27 | Notifications: AdApproved/Rejected/ExpiringSoon/Expired | — *deferred Wave B* |
+| BE-5.22 | ModerationRulesService | ✅ commit `311440b` |
+| BE-5.23 | ExpireOldAdsJob + daily 02:00 schedule | ✅ commit `311440b` |
+| BE-5.24 | AdObserver (created/status/title/price/description/deleted) | ✅ commit `311440b` |
+| BE-5.25 | Events: AdPublished/Approved/Rejected/Expired/ExpiringSoon/Renewed | ✅ commit `311440b` |
+| BE-5.26 | Listeners: IndexAdInSearch + RemoveAdFromSearch + SendAdNotifications | ✅ commit `311440b` |
+| BE-5.27 | Notifications: AdApproved/Rejected/ExpiringSoon/Expired | ✅ commit `311440b` (mail; database channel in Sprint 10) |
 | BE-5.28 | Migration: `ads` table | ✅ `6adcf58` |
-| BE-5.29 | Migration: `ad_views` | — *deferred Wave B* |
-| BE-5.30 | Migration: `moderation_rules` | — *deferred Wave B* |
-| BE-5.31 | AdFactory | ✅ `6adcf58` (ModerationRuleSeeder deferred) |
+| BE-5.29 | Migration: `ad_views` | — *replaced by Sprint 7's `recently_viewed` table (`56864e7`)* |
+| BE-5.30 | Migration: `moderation_rules` | — *replaced by `config/moderation.php` (`311440b`); DB-backed list lands with Filament admin (Sprint 11)* |
+| BE-5.31 | AdFactory | ✅ `6adcf58` |
 | BE-5.32 | AdResource + AdSummaryResource | ✅ `6adcf58` |
-| BE-5.33 | Idempotency middleware for publish | — *deferred Wave B* |
-| BE-5.34 | Pest tests: state machine + happy paths | ✅ `6adcf58` (auto-mod edge cases Wave B) |
-| BE-5.35 | OpenAPI + Localization | — *Wave B (contracts pending)* |
+| BE-5.33 | Idempotency middleware for publish | ✅ commit `311440b` |
+| BE-5.34 | Pest tests: state machine + happy paths + auto-mod edge cases | ✅ `6adcf58` + moderation/expiry/idempotency `311440b` |
+| BE-5.35 | OpenAPI + Localization | ✅ openapi + postman in `7b05007` + `c6f2c2c` |
 
 ### 🟣 Frontend Tasks (`qbazaar-web`)
 
@@ -619,7 +619,7 @@
 | FE-5.7 | Post Ad: Review step | implicit final step (publish CTA) ✅ commit `b89c83b` |
 | FE-5.8 | My Ads page | `app/account/ads/page.tsx` + `MyAdsRow` ✅ commit `b89c83b` |
 | FE-5.9 | My Drafts page | folded into My Ads "Draft" tab ✅ commit `b89c83b` |
-| FE-5.10 | Edit Ad page | — *deferred Wave B (covered by inline update via PostAdWizard re-entry)* |
+| FE-5.10 | Edit Ad page | `app/account/ads/[id]/edit/page.tsx` ✅ commit `e6d127d` (PostAdWizard in edit mode) |
 | FE-5.11 | HomeHero (CTA + search) | `components/home/Hero.tsx` |
 | FE-5.12 | HomeCategoryGrid | `components/home/CategoryGrid.tsx` |
 | FE-5.13 | HomeLatestAds + HomeFeaturedAds | `components/home/*.tsx` |

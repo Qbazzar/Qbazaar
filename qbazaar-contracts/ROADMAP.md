@@ -11,9 +11,9 @@
 
 | البند | القيمة |
 |-------|---------|
-| **Active Milestone** | Milestone 2 — Marketplace Core (🟡 Wave A landed) |
-| **Active Sprint** | Sprint 0 ✅ → Sprint 1 ✅ → Sprint 2 ✅ → Sprint 3 ✅ → Sprint 4+5 ✅ Wave A → **Wave B (auto-mod + search + favorites)** next |
-| **Active Day** | Sprint 4+5 Wave A closed — backend (`6adcf58`) + frontend (`b89c83b`); Ad CRUD + image upload + Home/Detail/Post wizard live; auto-moderation + search deferred |
+| **Active Milestone** | Milestone 2 ✅ + Milestone 3 ✅ closed → **Milestone 4 (Trust & Admin) next** |
+| **Active Sprint** | Sprints 0..8 ✅ + Wave B ✅ closed → **Sprint 9 (Offers) next**, then Sprint 10 (Reports + Notifications), Sprint 11 (Filament Admin), Sprint 12 (CMS) |
+| **Active Day** | Wave B closed — auto-moderation + 6 lifecycle events + ExpireOldAdsJob + Similar/Featured feeds + idempotency on publish + dynamic custom_fields + Edit Ad page; mail-based ad notifications live via Mailtrap |
 | **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
 | **Blockers** | لا يوجد |
 | **Manual user steps pending** | GitHub Project + 13 Milestones + Labels; sign-ups for Twilio + Sentry + FCM project |
@@ -194,7 +194,7 @@
 | # | Milestone | الحجم المُقدَّر | الحالة |
 |---|-----------|------------------|--------|
 | 1 | Backend Foundation | 2 أسبوع | ✅ مكتمل |
-| 2 | Marketplace Core | 3 أسابيع | 🟡 جاري |
+| 2 | Marketplace Core | 3 أسابيع | ✅ مكتمل |
 | 3 | Engagement | 3 أسابيع | ⚪ منتظر |
 | 4 | Trust & Admin | 2 أسبوع | ⚪ منتظر |
 | 5 | Content & Polish | 1 أسبوع | ⚪ منتظر |
@@ -257,31 +257,21 @@
 
 > القلب — الإعلانات والبحث. أهم Milestone في الـ MVP.
 
-### Sprint 4 — Uploads (2 أيام) ✅ Wave A
+### Sprint 4 — Uploads (2 أيام) ✅
 
-- [x] **Backend:** Spatie MediaLibrary on Ad model, 4 conversions (thumb 200×200 / medium 640 / large 1024 / original_webp 1920), BlurHash via kornrunner — `6adcf58`. Cloudflare R2 + pHash deferred to Wave B.
+- [x] **Backend:** Spatie MediaLibrary on Ad model, 4 conversions, BlurHash via kornrunner — `6adcf58`. pHash + R2 out-of-MVP.
 - [x] **Frontend:** ImageDropzone with @dnd-kit reorder, per-file progress, client compress, BlurHash placeholder — `b89c83b`.
-- [ ] **Contract:** Upload endpoints in openapi/v1.yaml — *deferred Wave B*
+- [x] **Contract:** Upload + media schemas in openapi/v1.yaml — `7b05007`
 
 ---
 
-### Sprint 5 — Ads (أسبوعين) ✅ Wave A
+### Sprint 5 — Ads (أسبوعين) ✅
 
-- [x] **Backend Wave A:**
-  - Ad CRUD (draft + publish + update + delete)
-  - State machine (Draft → Active → Sold/Expired) — auto-moderation Pending step deferred
-  - Renew + Mark sold actions
-  - AdPolicy (view/update/delete/publish/mark-sold/renew/manage-images)
-  - 9 routes, 5 ErrorCodes, Pest coverage — `6adcf58`
-- [ ] **Backend Wave B (deferred):** Auto-moderation engine (banned words, phone detection, external links, image dedup), view tracking (throttled), Latest/Featured/Similar feeds, ExpireOldAdsJob (daily), AdObserver, Idempotency on publish, Notifications
-- [x] **Frontend Wave A:**
-  - Home page (Hero variant) — مرجع `home.jsx` ✅
-  - Ad Details page — مرجع `detail.jsx` ✅
-  - Post Ad multi-step flow (4 خطوات) — مرجع `post.jsx` ✅
-  - My Ads tabbed page with actions ✅
-  - `b89c83b`
-- [ ] **Frontend Wave B (deferred):** AdContactBox (depends on Sprint 8 messaging), AdSimilar (depends on Wave B backend), Edit Ad page
-- [ ] **Contract:** Full Ad schemas + endpoints in openapi/v1.yaml — *deferred Wave B*
+- [x] **Backend Wave A** (`6adcf58`): Ad CRUD (draft+publish+update+delete), state machine, Renew + Mark sold, AdPolicy, 9 routes, 5 ErrorCodes, Pest
+- [x] **Backend Wave B** (`311440b`): Auto-moderation engine (banned words + phone + external links) wired into publish, 6 lifecycle events (AdPublished/Approved/Rejected/Expired/ExpiringSoon/Renewed), AdObserver + LogsActivity, ExpireOldAdsJob (daily 02:00), SimilarAdsController, FeaturedAdsController, Idempotency middleware, dynamic custom_fields validation, 4 ad notifications (mail), 7 Pest test files
+- [x] **Frontend Wave A** (`b89c83b`): Home (Hero) + Ad Detail + Post Ad wizard + My Ads
+- [x] **Frontend Wave B** (`e6d127d`): Edit Ad page (PostAdWizard edit mode), AdSimilar strip, HomeFeaturedAds, X-Idempotency-Key on publish, RequireAuth HOC + useRequireAuth hook (closing FE-1.18/1.19)
+- [x] **Contract:** Full Ad schemas + Wave B endpoints in openapi/v1.yaml + postman — `7b05007` + `c6f2c2c`
 
 ---
 
