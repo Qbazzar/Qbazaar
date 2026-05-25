@@ -28,12 +28,13 @@ jobs:
         with:
           host:     ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
           key:      ${{ secrets.DEPLOY_SSH_KEY }}
           port:     ${{ secrets.DEPLOY_PORT }}
           script_stop: true
           script: |
             set -euo pipefail
-            cd /home/sanad/qbazaar
+            cd "$HOME/qbazaar"
             git fetch origin --prune
             git reset --hard origin/production
             bash deploy/scripts/deploy-api.sh
