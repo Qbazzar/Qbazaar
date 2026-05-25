@@ -3,8 +3,11 @@
 /**
  * `/post-ad` — multi-step wizard for creating a new ad. Auth-required.
  *
- * Routing the unauth case through `useRequireAuth` matches the account-area
- * convention so refreshes don't kick the user out mid-flow.
+ * QBFront port of the page chrome (source: QBFront/post.html) — the wizard
+ * body itself keeps its existing internals (FE-3.x complex form). Scope-cut:
+ * the inner step UI may visually drift slightly from the prototype's
+ * `.cat-pick`/`.photo-slot`/`.tier-pick` styles; the chrome around it now
+ * matches.
  */
 import { Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
@@ -25,27 +28,33 @@ export default function PostAdPage() {
   }
 
   return (
-    <main className="bg-cream-50 min-h-svh">
-      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+    <main>
+      <div className="container post-wizard" style={{ paddingTop: 32, paddingBottom: 64 }}>
         <Link
           href="/"
-          className="text-ink-500 mb-4 inline-flex items-center gap-1.5 text-sm hover:text-coral"
+          className="breadcrumbs"
+          style={{ display: 'inline-flex', textDecoration: 'none' }}
         >
           <ArrowLeft className="size-3.5 rtl:rotate-180" />
           {t('ads.post.cancel', 'العودة للرئيسية')}
         </Link>
-        <h1 className="font-display text-4xl text-ink-900 md:text-5xl">
-          {t('ads.post.title', 'انشر إعلاناً جديداً')}
-        </h1>
-        <p className="text-ink-500 mt-2 max-w-lg text-sm">
-          {t(
-            'ads.post.subtitle',
-            'معظم الإعلانات تظهر للعموم خلال دقيقة. اكمل الخطوات لنشر إعلانك.',
-          )}
-        </p>
-        <div className="mt-8">
-          <PostAdWizard />
+
+        <div style={{ marginTop: 16, marginBottom: 32 }}>
+          <p className="step-title__kicker">
+            {t('ads.post.kicker', 'انشر إعلان جديد')}
+          </p>
+          <h1 className="step-title__h">
+            {t('ads.post.title', 'انشر إعلاناً جديداً')}
+          </h1>
+          <p className="step-title__sub">
+            {t(
+              'ads.post.subtitle',
+              'معظم الإعلانات تظهر للعموم خلال دقيقة. اكمل الخطوات لنشر إعلانك.',
+            )}
+          </p>
         </div>
+
+        <PostAdWizard />
       </div>
     </main>
   );

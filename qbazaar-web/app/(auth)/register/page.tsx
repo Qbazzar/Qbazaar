@@ -10,17 +10,21 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <div className="space-y-6">
+    <>
       <AuthTabs active="register" />
-      <header className="space-y-2">
-        <h1 className="font-display text-3xl tracking-tight">
-          {t('auth.register.title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {t('auth.register.subtitle')}
-        </p>
-      </header>
+      <h1 style={{ margin: '0 0 8px', fontSize: 36, fontWeight: 800 }}>
+        {t('auth.register.title', 'أنشئ حسابك')}
+      </h1>
+      <p
+        style={{
+          margin: '0 0 28px',
+          fontSize: '14.5px',
+          color: 'var(--ink-700)',
+        }}
+      >
+        {t('auth.register.subtitle', 'سجّل في QBazaar للنشر والشراء.')}
+      </p>
       <RegisterForm />
-    </div>
+    </>
   );
 }

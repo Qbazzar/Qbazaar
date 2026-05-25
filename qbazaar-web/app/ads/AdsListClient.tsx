@@ -1,20 +1,18 @@
 'use client';
 
 /**
- * Client island for the `/ads` page.
+ * Client island for the `/ads` page — QBFront port (source: QBFront/search.html).
  *
- * - Reads `category`, `location`, `page` from the URL.
- * - Resolves the slugs to ids via the cached category + location stores.
- * - Renders a sticky filter sidebar (CategoryTree + LocationPicker) on lg+
- *   and a grid of `AdCard`s with pagination underneath.
+ * Layout: breadcrumb · `.cat-page` (filters sidebar + main results) ·
+ * pagination. Sidebar uses `.filters` + `.filter-group` cards from
+ * QBFront; the main grid is `.grid.grid-3` of `.listing-card`s.
  */
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { AdGrid } from '@/components/ads/AdGrid';
 import { CategoryTree } from '@/components/categories/CategoryTree';
 import { LocationPicker } from '@/components/locations/LocationPicker';
+import { QbfListingCard } from '@/components/ads/QbfListingCard';
 import { useAdsListQuery } from '@/lib/queries/ads';
 import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
@@ -56,91 +54,146 @@ export function AdsListClient() {
     const params = new URLSearchParams(search.toString());
     if (value) params.set(key, value);
     else params.delete(key);
-    // Reset to page 1 whenever filters change.
     if (key !== 'page') params.delete('page');
     router.push(`/ads?${params.toString()}`);
   };
 
-  return (
-    <main className="bg-cream-50 min-h-svh">
-      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-        <header className="mb-8">
-          <h1 className="font-display text-4xl text-ink-900 md:text-5xl">
-            {t('ads.list.title', 'كل الإعلانات')}
-          </h1>
-          <p className="text-ink-500 mt-2 text-sm">
-            {t('ads.list.subtitle', 'تصفّح آخر ما يبيعه جيرانك في قطر')}
-          </p>
-        </header>
+  const clearFilters = () => router.push('/ads');
 
-        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <div className="rounded-xl border border-ink-200 bg-card p-4">
-              <h3 className="text-ink-500 mb-3 text-[11px] font-bold uppercase tracking-wider">
-                {t('locations.pick', 'الموقع')}
+  return (
+    <main>
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
+        <nav className="breadcrumbs">
+          <Link href="/">{t('home.breadcrumb', 'الرئيسية')}</Link>
+          <span>·</span>
+          <span className="breadcrumbs__current">
+            {t('ads.list.title', 'كل الإعلانات')}
+          </span>
+        </nav>
+
+        <div className="cat-page__head">
+          <div>
+            <h1 className="cat-page__title">{t('ads.list.title', 'كل الإعلانات')}</h1>
+            <p className="cat-page__meta">
+              {data ? (
+                <strong>
+                  {t(
+                    'ads.list.count',
+                    { count: String(data.meta.total) },
+                    `${data.meta.total} إعلان`,
+                  )}
+                </strong>
+              ) : null}
+              <span>{t('ads.list.subtitle', 'تصفّح آخر ما يبيعه جيرانك في قطر')}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="cat-page">
+          {/* Filter sidebar */}
+          <aside className="filters">
+            <div className="filters__head">
+              <h3 className="filters__title">
+                {t('ads.list.filters', 'تصفية النتائج')}
               </h3>
-              <LocationPicker
-                value={locationSlug}
-                onChange={(slug) => updateParam('location', slug)}
-              />
+              <button
+                type="button"
+                className="filters__reset"
+                onClick={clearFilters}
+              >
+                {t('ads.list.reset', 'إعادة الضبط')}
+              </button>
             </div>
-            <div className="rounded-xl border border-ink-200 bg-card p-4">
-              <h3 className="text-ink-500 mb-3 text-[11px] font-bold uppercase tracking-wider">
-                {t('categories.all', 'الأقسام')}
-              </h3>
-              {tree ? (
-                <CategoryTree nodes={tree} activeSlug={categorySlug} />
-              ) : (
-                <div className="bg-cream-200 h-32 animate-pulse rounded-lg" />
-              )}
+
+            <div className="filter-group">
+              <div className="filter-group__head">
+                <span>{t('locations.pick', 'الموقع')}</span>
+              </div>
+              <div className="filter-group__body">
+                <LocationPicker
+                  value={locationSlug}
+                  onChange={(slug) => updateParam('location', slug)}
+                />
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <div className="filter-group__head">
+                <span>{t('categories.all', 'الأقسام')}</span>
+              </div>
+              <div className="filter-group__body">
+                {tree ? (
+                  <CategoryTree nodes={tree} activeSlug={categorySlug} />
+                ) : (
+                  <div className="bg-cream-200 h-32 animate-pulse rounded-lg" />
+                )}
+              </div>
             </div>
           </aside>
 
+          {/* Results */}
           <section className="min-w-0">
             {isLoading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => (
+              <div className="cat-listings" aria-busy="true">
+                {Array.from({ length: 9 }).map((_, i) => (
                   <div
                     key={i}
-                    className="bg-cream-200 h-64 animate-pulse rounded-xl"
+                    className="listing-card animate-pulse"
+                    style={{ height: 320 }}
                   />
                 ))}
               </div>
-            ) : isError || !data ? (
-              <p className="text-ink-500 py-12 text-center text-sm">
-                {t('common.error', 'تعذّر تحميل الإعلانات')}
-              </p>
+            ) : isError || !data || data.data.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state__title">
+                  {t('ads.empty.no_ads', 'لا توجد إعلانات هنا بعد.')}
+                </div>
+                <div className="empty-state__sub">
+                  {t('ads.empty.try_filters', 'جرّب تعديل الفلاتر أو استعراض كل الأقسام.')}
+                </div>
+              </div>
             ) : (
               <>
-                <AdGrid ads={data.data} />
+                <div className="cat-listings">
+                  {data.data.map((ad) => (
+                    <QbfListingCard key={ad.id} ad={ad} />
+                  ))}
+                </div>
                 {data.meta.last_page > 1 ? (
-                  <nav className="mt-8 flex items-center justify-between">
-                    <Button
+                  <div className="pagination">
+                    <button
                       type="button"
-                      variant="outline"
+                      className="pagination__num"
                       onClick={() => updateParam('page', String(page - 1))}
                       disabled={page <= 1}
+                      aria-label={t('ads.list.prev', 'السابق')}
                     >
-                      <ChevronRight className="size-4" />
-                      {t('ads.list.prev', 'السابق')}
-                    </Button>
-                    <span className="text-ink-500 text-sm">
-                      {t(
-                        'ads.list.page_of',
-                        { current: String(page), total: String(data.meta.last_page) },
-                        `${page} / ${data.meta.last_page}`,
-                      )}
-                    </span>
-                    <Button
+                      ‹
+                    </button>
+                    {pageNumbers(page, data.meta.last_page).map((p, i) =>
+                      p === 'gap' ? (
+                        <span key={`gap-${i}`} className="pagination__gap">…</span>
+                      ) : (
+                        <button
+                          key={p}
+                          type="button"
+                          className={`pagination__num ${p === page ? 'is-active' : ''}`}
+                          onClick={() => updateParam('page', String(p))}
+                        >
+                          {p}
+                        </button>
+                      ),
+                    )}
+                    <button
                       type="button"
-                      variant="outline"
+                      className="pagination__num"
                       onClick={() => updateParam('page', String(page + 1))}
                       disabled={page >= data.meta.last_page}
+                      aria-label={t('ads.list.next', 'التالي')}
                     >
-                      {t('ads.list.next', 'التالي')}
-                      <ChevronLeft className="size-4" />
-                    </Button>
-                  </nav>
+                      ›
+                    </button>
+                  </div>
                 ) : null}
               </>
             )}
@@ -149,4 +202,22 @@ export function AdsListClient() {
       </div>
     </main>
   );
+}
+
+/**
+ * Compact pagination strip: show first, last, the current page, and its two
+ * neighbours, collapsing the rest into `…`.
+ */
+function pageNumbers(current: number, total: number): Array<number | 'gap'> {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const out: Array<number | 'gap'> = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) out.push('gap');
+  for (let i = start; i <= end; i++) out.push(i);
+  if (end < total - 1) out.push('gap');
+  out.push(total);
+  return out;
 }

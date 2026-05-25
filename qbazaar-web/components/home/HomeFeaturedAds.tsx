@@ -4,8 +4,11 @@
  * Featured-ads strip rendered between the categories rail and the latest-ads
  * feed on the homepage. Hidden when the API returns an empty list so the
  * page never shows an editorial slot with no content.
+ *
+ * Renders as a QBFront `.grid.grid-4` of `.listing-card`s with a `.section-header`.
  */
-import { AdGrid } from '@/components/ads/AdGrid';
+import Link from 'next/link';
+import { QbfListingCard } from '@/components/ads/QbfListingCard';
 import { useFeaturedAdsQuery } from '@/lib/queries/ads';
 import { t } from '@/lib/i18n/messages';
 
@@ -16,17 +19,14 @@ export function HomeFeaturedAds() {
 
   if (isLoading) {
     return (
-      <section
-        className="mx-auto w-full max-w-6xl px-6 pb-4"
-        aria-busy="true"
-        aria-live="polite"
-      >
+      <section className="container" style={{ paddingTop: 48 }} aria-busy="true" aria-live="polite">
         <SectionHeader />
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="bg-cream-200 h-64 animate-pulse rounded-xl"
+              className="listing-card animate-pulse"
+              style={{ height: 320 }}
               aria-hidden="true"
             />
           ))}
@@ -38,10 +38,12 @@ export function HomeFeaturedAds() {
   if (isError || !data || data.length === 0) return null;
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 pb-4">
+    <section className="container" style={{ paddingTop: 48 }}>
       <SectionHeader />
-      <div className="mt-6">
-        <AdGrid ads={data.slice(0, MAX_FEATURED)} />
+      <div className="grid grid-4">
+        {data.slice(0, MAX_FEATURED).map((ad) => (
+          <QbfListingCard key={ad.id} ad={ad} />
+        ))}
       </div>
     </section>
   );
@@ -49,13 +51,21 @@ export function HomeFeaturedAds() {
 
 function SectionHeader() {
   return (
-    <div className="mb-2">
-      <p className="text-ink-500 text-xs font-bold uppercase tracking-[0.18em]">
-        {t('ads.featured_section.kicker', 'اختيارنا')}
-      </p>
-      <h2 className="font-display mt-1 text-3xl italic text-ink-900 md:text-4xl">
-        {t('ads.featured_section.title', 'إعلانات مختارة')}
-      </h2>
+    <div className="section-header">
+      <div>
+        <h2 className="section-header__title">
+          {t('ads.featured_section.title', 'إعلانات مختارة')}
+        </h2>
+        <p className="section-header__sub">
+          {t('ads.featured_section.subtitle', 'أحدث الإعلانات المنتقاة لك')}
+        </p>
+      </div>
+      <Link href="/ads" className="section-header__action">
+        {t('home.sections.view_more', 'عرض الكل')}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </Link>
     </div>
   );
 }

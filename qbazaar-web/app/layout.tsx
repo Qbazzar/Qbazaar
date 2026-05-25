@@ -3,8 +3,10 @@ import { Cairo, Inter, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
+import { SiteFooterGate } from '@/components/layout/SiteFooter';
 import { Providers } from './providers';
 import './globals.css';
+import '../styles/qbfront.css';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -46,7 +48,8 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <Providers>
             <SiteHeaderGate />
-            {children}
+            <div className="flex-1">{children}</div>
+            <SiteFooterGate />
           </Providers>
           <Toaster richColors closeButton position="top-center" />
         </ThemeProvider>

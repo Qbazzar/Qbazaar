@@ -17,9 +17,9 @@ import {
   parseAsInteger,
   parseAsStringEnum,
 } from 'nuqs';
-import { ChevronLeft, ChevronRight, SlidersHorizontalIcon } from 'lucide-react';
+import { SlidersHorizontalIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AdGrid } from '@/components/ads/AdGrid';
+import { QbfListingCard } from '@/components/ads/QbfListingCard';
 import {
   FilterSidebar,
   type FilterValues,
@@ -144,35 +144,32 @@ export function SearchClient() {
     : t('search.title_all', 'كل الإعلانات');
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <header className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
+      <div className="cat-page__head">
         <div className="min-w-0">
-          <p className="text-coral text-xs font-bold uppercase tracking-[0.18em]">
-            {t('search.title', 'نتائج البحث')}
-          </p>
-          <h1 className="font-display text-ink-900 mt-1 truncate text-3xl md:text-4xl">
-            {headline}
-          </h1>
+          <h1 className="cat-page__title">{headline}</h1>
           {data ? (
-            <p className="text-ink-500 mt-1 text-sm">
-              {t('search.results_count', { count: String(total) })}
+            <p className="cat-page__meta">
+              <strong>
+                {t('search.results_count', { count: String(total) }, `${total} نتيجة`)}
+              </strong>
             </p>
           ) : null}
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="cat-page__head-actions">
           <SortDropdown value={urlState.sort} onChange={handleSort} />
           <SaveSearchButton params={apiParams} />
         </div>
-      </header>
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="lg:sticky lg:top-6 lg:self-start">
-          <details className="lg:open:hidden border-ink-200 bg-card mb-3 rounded-xl border lg:hidden">
-            <summary className="text-ink-700 flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-medium">
+      <div className="cat-page">
+        <aside className="filters">
+          <details className="mb-3 lg:hidden">
+            <summary className="text-ink-700 flex cursor-pointer items-center gap-2 px-2 py-2 text-sm font-medium">
               <SlidersHorizontalIcon className="size-4" aria-hidden />
               {t('common.filters', 'الفلاتر')}
             </summary>
-            <div className="px-4 pb-4">
+            <div className="px-2 pb-2">
               <FilterSidebar
                 values={filterValues}
                 onChange={handleFilterPatch}
@@ -193,11 +190,12 @@ export function SearchClient() {
 
         <section className="min-w-0">
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, index) => (
+            <div className="cat-listings" aria-busy="true">
+              {Array.from({ length: 9 }).map((_, index) => (
                 <div
                   key={index}
-                  className="bg-cream-200 h-64 animate-pulse rounded-xl"
+                  className="listing-card animate-pulse"
+                  style={{ height: 320 }}
                 />
               ))}
             </div>
@@ -214,41 +212,42 @@ export function SearchClient() {
           ) : (
             <>
               <div
-                className={
-                  isFetching
-                    ? 'opacity-70 transition-opacity'
-                    : 'transition-opacity'
-                }
+                className={`cat-listings ${
+                  isFetching ? 'opacity-70 transition-opacity' : 'transition-opacity'
+                }`}
               >
-                <AdGrid ads={data.data} />
+                {data.data.map((ad) => (
+                  <QbfListingCard key={ad.id} ad={ad} />
+                ))}
               </div>
               {lastPage > 1 ? (
-                <nav className="mt-8 flex items-center justify-between">
-                  <Button
+                <div className="pagination">
+                  <button
                     type="button"
-                    variant="outline"
+                    className="pagination__num"
                     onClick={() => handlePage(urlState.page - 1)}
                     disabled={urlState.page <= 1}
+                    aria-label={t('search.prev', 'السابق')}
                   >
-                    <ChevronRight className="size-4" aria-hidden />
-                    {t('search.prev', 'السابق')}
-                  </Button>
-                  <span className="text-ink-500 text-sm">
-                    {t('search.page_of', {
-                      current: String(urlState.page),
-                      total: String(lastPage),
-                    })}
+                    ‹
+                  </button>
+                  <span className="pagination__gap">
+                    {t(
+                      'search.page_of',
+                      { current: String(urlState.page), total: String(lastPage) },
+                      `${urlState.page} / ${lastPage}`,
+                    )}
                   </span>
-                  <Button
+                  <button
                     type="button"
-                    variant="outline"
+                    className="pagination__num"
                     onClick={() => handlePage(urlState.page + 1)}
                     disabled={urlState.page >= lastPage}
+                    aria-label={t('search.next', 'التالي')}
                   >
-                    {t('search.next', 'التالي')}
-                    <ChevronLeft className="size-4" aria-hidden />
-                  </Button>
-                </nav>
+                    ›
+                  </button>
+                </div>
               ) : null}
             </>
           )}
@@ -260,10 +259,13 @@ export function SearchClient() {
 
 function EmptyState({ onReset }: { onReset: () => void }) {
   return (
-    <div className="border-ink-200 bg-cream-50 rounded-xl border border-dashed px-6 py-16 text-center">
-      <p className="text-ink-700 text-base">
-        {t('search.no_results', 'لم نعثر على نتائج. جرّب تغيير الفلاتر.')}
-      </p>
+    <div className="empty-state">
+      <div className="empty-state__title">
+        {t('search.no_results', 'لم نعثر على نتائج')}
+      </div>
+      <div className="empty-state__sub">
+        {t('search.try_other_filters', 'جرّب تغيير الفلاتر أو استعرض كل الأقسام.')}
+      </div>
       <div className="mt-5 flex items-center justify-center gap-2">
         <Button
           type="button"
@@ -273,13 +275,9 @@ function EmptyState({ onReset }: { onReset: () => void }) {
         >
           {t('search.reset_filters', 'إعادة ضبط الفلاتر')}
         </Button>
-        <Button
-          asChild
-          variant="default"
-          className="bg-coral hover:bg-coral/90 rounded-full text-white"
-        >
-          <Link href="/ads">{t('home.hero.cta_browse', 'تصفّح الإعلانات')}</Link>
-        </Button>
+        <Link href="/ads" className="btn btn--primary btn--pill">
+          {t('home.hero.cta_browse', 'تصفّح الإعلانات')}
+        </Link>
       </div>
     </div>
   );

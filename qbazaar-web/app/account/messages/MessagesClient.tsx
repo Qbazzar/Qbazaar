@@ -1,15 +1,11 @@
 'use client';
 
 /**
- * Inbox split layout.
+ * Inbox split layout — QBFront port (source: QBFront/messages.html).
  *
- * URL `?c={conversationId}` is the source of truth for which thread is open
- * — nuqs keeps the query string in sync with the Zustand mirror so deep
- * links and the browser back-button both behave naturally.
- *
- * On lg+ both panes are visible side by side (40/60). On smaller screens
- * we toggle between list and view depending on whether a conversation is
- * selected.
+ * URL `?c={conversationId}` drives which thread is open. The grid follows
+ * `.messages-page` (340px list · flex view) and mobile collapses to a single
+ * pane via the QBFront breakpoint rule.
  */
 import { useCallback, useEffect } from 'react';
 import { parseAsString, useQueryState } from 'nuqs';
@@ -29,8 +25,6 @@ export function MessagesClient() {
     (s) => s.setActiveConversation,
   );
 
-  // Mirror URL → store on every change so non-React callers (Echo hooks)
-  // can read the current selection without a hook.
   useEffect(() => {
     setActiveConversation(activeId || null);
     return () => setActiveConversation(null);
@@ -50,27 +44,16 @@ export function MessagesClient() {
   const hasActive = Boolean(activeId);
 
   return (
-    <div className="space-y-4">
-      <header className="space-y-1">
-        <p className="text-coral text-xs font-bold uppercase tracking-[0.18em]">
-          {t('account.nav.messages', 'الرسائل')}
-        </p>
-        <h1 className="font-display text-ink-900 text-3xl md:text-4xl">
-          {t('messaging.title', 'صندوق رسائلي')}
-        </h1>
+    <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
+      <header style={{ marginBottom: 20 }}>
+        <h1 className="cat-page__title">{t('messaging.title', 'صندوق رسائلي')}</h1>
       </header>
 
-      <div
-        className={cn(
-          'bg-card ring-foreground/10 grid h-[calc(100svh-260px)] min-h-[480px] overflow-hidden rounded-2xl ring-1',
-          'lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]',
-        )}
-      >
-        {/* LIST */}
+      <div className="messages-page">
         <aside
           className={cn(
-            'border-ink-200 h-full overflow-hidden lg:border-e',
-            hasActive ? 'hidden lg:block' : 'block',
+            'thread-list',
+            hasActive ? 'hidden lg:flex' : 'flex',
           )}
         >
           <ConversationsList
@@ -79,20 +62,17 @@ export function MessagesClient() {
           />
         </aside>
 
-        {/* VIEW */}
-        <section
-          className={cn(
-            'h-full overflow-hidden',
-            hasActive ? 'block' : 'hidden lg:block',
-          )}
-        >
+        <section className={cn('conv', hasActive ? 'flex' : 'hidden lg:flex')}>
           {hasActive ? (
             <ConversationView
               conversationId={activeId}
               onBack={handleBack}
             />
           ) : (
-            <div className="text-ink-500 hidden h-full items-center justify-center p-6 text-center text-sm lg:flex">
+            <div
+              className="text-muted hidden h-full items-center justify-center p-6 text-center text-sm lg:flex"
+              style={{ minHeight: 480 }}
+            >
               {t('messaging.empty.view', 'اختر محادثة لعرض الرسائل.')}
             </div>
           )}

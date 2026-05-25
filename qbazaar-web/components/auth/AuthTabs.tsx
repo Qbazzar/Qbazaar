@@ -7,20 +7,17 @@ export interface AuthTabsProps {
 }
 
 /**
- * Segmented control linking to /login and /register. Renders as `<Link>` so
- * SSR + browser back-button work, and so users without JS still navigate.
+ * QBFront `.auth-tabs` segmented control linking to /login and /register.
+ * Renders as `<Link>` so SSR + browser back-button work.
  */
 export function AuthTabs({ active }: AuthTabsProps) {
   return (
-    <nav
-      aria-label="Auth tabs"
-      className="bg-muted text-muted-foreground flex gap-1 rounded-xl p-1 text-sm font-semibold"
-    >
+    <nav aria-label="Auth tabs" className="auth-tabs">
       <Tab href="/login" active={active === 'login'}>
-        {t('auth.tabs.login')}
+        {t('auth.tabs.login', 'تسجيل الدخول')}
       </Tab>
       <Tab href="/register" active={active === 'register'}>
-        {t('auth.tabs.register')}
+        {t('auth.tabs.register', 'إنشاء حساب')}
       </Tab>
     </nav>
   );
@@ -39,12 +36,7 @@ function Tab({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={cn(
-        'flex-1 rounded-lg px-4 py-2 text-center transition-colors',
-        active
-          ? 'bg-card text-foreground shadow-sm'
-          : 'hover:text-foreground',
-      )}
+      className={cn('auth-tabs__btn', active && 'is-active')}
     >
       {children}
     </Link>

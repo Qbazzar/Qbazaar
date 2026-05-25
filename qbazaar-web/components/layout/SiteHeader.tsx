@@ -1,227 +1,248 @@
 'use client';
 
 /**
- * Global site header (Sprint 6).
+ * Global site header — QBFront port.
  *
- * Three rows of affordances:
- *  1. Brand wordmark + primary nav links (home, categories, ads, post-ad).
- *  2. Search bar — full-width on desktop, icon button on mobile.
- *  3. Account avatar / sign-in link.
+ * Structure mirrors QBFront/index.html `header.site-header`:
+ *   logo  · spacer  · "Add Ads" CTA  · icon buttons (saved · notifs · messages)
+ *         · avatar  · theme toggle  · mobile burger
  *
- * The header is path-aware: it self-hides on the auth split-layout and the
- * post-ad wizard (both have their own chrome). Rendering is gated by the
- * wrapper component `SiteHeaderGate` so this file only worries about layout.
+ * Behaviour is identical to before: gated by `SiteHeaderGate` (hides on auth
+ * pages + post-ad wizard), wires the user-channel subscription, and lights
+ * up the unread badges via the live queries. Inline SVGs match QBFront —
+ * lucide-react is avoided in this file so the marks stay 1:1 with the
+ * prototype.
  */
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  SearchIcon,
-  MenuIcon,
-  PlusIcon,
-  UserCircle2Icon,
-  XIcon,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { SearchBar } from '@/components/search/SearchBar';
-import { MessagesBadge } from '@/components/messaging/MessagesBadge';
-import { NotificationsBadge } from '@/components/notifications/NotificationsBadge';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserChannel } from '@/lib/echo/useUserChannel';
-
-interface NavLink {
-  href: string;
-  labelKey: string;
-}
-
-const NAV_LINKS: NavLink[] = [
-  { href: '/', labelKey: 'home.breadcrumb' },
-  { href: '/categories', labelKey: 'categories.all' },
-  { href: '/ads', labelKey: 'ads.list.title' },
-];
+import { useUnreadCountQuery } from '@/lib/queries/messaging';
+import { useUnreadNotificationsCountQuery } from '@/lib/queries/notifications';
 
 export function SiteHeader() {
   const pathname = usePathname() ?? '/';
   const { isAuthenticated, isHydrated, user } = useAuth();
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Global user-channel subscription keeps the badge + inbox previews live
-  // for the whole authenticated app — one subscription, one set of cache
-  // invalidations.
   useUserChannel(isAuthenticated ? user?.id : null);
 
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return pathname === href || pathname.startsWith(`${href}/`);
-  };
+  // Badges are no-ops when signed out (the hooks short-circuit themselves).
+  const { data: msgCount } = useUnreadCountQuery();
+  const { data: notifCount } = useUnreadNotificationsCountQuery();
+
+  const messages = isHydrated && isAuthenticated ? msgCount?.total ?? 0 : 0;
+  const notifications = isHydrated && isAuthenticated ? notifCount?.total ?? 0 : 0;
+
+  const initials = userInitials(user?.full_name ?? user?.email ?? '');
+  const navItems = [
+    { href: '/ads', label: t('ads.list.title', 'تصفّح') },
+    { href: '/account/favorites', label: t('account.nav.favorites', 'المحفوظات') },
+    { href: '/account/messages', label: t('account.nav.messages', 'الرسائل') },
+    { href: '/account/notifications', label: t('account.nav.notifications', 'الإشعارات') },
+    { href: '/account', label: t('account.nav.title', 'حسابي') },
+    { href: '/help', label: t('footer.help', 'المساعدة') },
+  ];
 
   return (
-    <header className="border-ink-200 bg-card/95 supports-[backdrop-filter]:bg-card/70 sticky top-0 z-30 border-b backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
-        {/* Brand */}
-        <Link href="/" className="shrink-0" aria-label={t('brand.name', 'QBazaar')}>
+    <header className="site-header">
+      <div className="container site-header__inner">
+        <Link
+          href="/"
+          className="logo"
+          aria-label={t('brand.name', 'QBazaar')}
+        >
           <Logo />
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              aria-current={isActive(link.href) ? 'page' : undefined}
-              className={cn(
-                'rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
-                isActive(link.href)
-                  ? 'bg-coral/10 text-coral'
-                  : 'text-ink-700 hover:bg-cream-200',
-              )}
+        <div className="site-header__spacer" />
+
+        {/* Desktop actions */}
+        <div className="site-header__actions desktop-only">
+          <Link href="/post-ad" className="btn btn--primary btn--pill">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
             >
-              {t(link.labelKey)}
-            </Link>
-          ))}
-        </nav>
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {t('home.hero.cta_post', 'انشر إعلانك')}
+          </Link>
 
-        {/* Desktop search */}
-        <div className="hidden flex-1 md:block">
-          <Suspense fallback={<SearchBarSkeleton />}>
-            <SearchBar className="mx-auto max-w-xl" compact />
-          </Suspense>
-        </div>
-
-        <div className="ms-auto flex shrink-0 items-center gap-1.5 md:ms-2">
-          {/* Mobile search trigger */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={t('search.open', 'فتح البحث')}
-            className="md:hidden"
-            onClick={() => setMobileSearchOpen(true)}
+          <Link
+            href="/account/favorites"
+            className="icon-btn"
+            aria-label={t('account.nav.favorites', 'المحفوظات')}
           >
-            <SearchIcon className="size-5" aria-hidden />
-          </Button>
+            <SaveIcon />
+          </Link>
 
-          {/* Post-ad CTA */}
-          <Button
-            asChild
-            size="default"
-            className="bg-coral hover:bg-coral/90 hidden rounded-full text-white sm:inline-flex"
+          <Link
+            href="/account/notifications"
+            className="icon-btn"
+            aria-label={t('account.nav.notifications', 'الإشعارات')}
           >
-            <Link href="/post-ad">
-              <PlusIcon className="size-3.5" aria-hidden />
-              {t('home.hero.cta_post', 'انشر إعلانك')}
-            </Link>
-          </Button>
+            <BellIcon />
+            {notifications > 0 ? (
+              <span className="icon-btn__badge">
+                {notifications > 99 ? '99+' : notifications}
+              </span>
+            ) : null}
+          </Link>
 
-          {/* Theme switcher */}
+          <Link
+            href="/account/messages"
+            className="icon-btn"
+            aria-label={t('account.nav.messages', 'الرسائل')}
+          >
+            <ChatIcon />
+            {messages > 0 ? (
+              <span className="icon-btn__badge">
+                {messages > 99 ? '99+' : messages}
+              </span>
+            ) : null}
+          </Link>
+
           <ThemeToggle />
 
-          {/* Messages badge — auto-hides when signed out or count is 0 */}
-          <MessagesBadge />
-
-          {/* Notifications badge — bell popover (Sprint 10) */}
-          <NotificationsBadge />
-
-          {/* Account */}
           {isHydrated && isAuthenticated ? (
-            <Button
-              asChild
-              variant="ghost"
-              size="icon"
-              aria-label={t('account.nav.title', 'حسابي')}
-            >
-              <Link href="/account">
-                <UserCircle2Icon className="size-5" aria-hidden />
-              </Link>
-            </Button>
+            <Link href="/account" className="avatar-link" aria-label={t('account.nav.title', 'حسابي')}>
+              {initials || 'Q'}
+            </Link>
           ) : (
-            <Button
-              asChild
-              variant="outline"
-              size="default"
-              className="rounded-full"
-            >
-              <Link href="/login">{t('auth.tabs.login', 'تسجيل الدخول')}</Link>
-            </Button>
+            <Link href="/login" className="btn btn--ghost btn--sm btn--pill">
+              {t('auth.tabs.login', 'تسجيل الدخول')}
+            </Link>
           )}
+        </div>
 
-          {/* Mobile menu (kept tiny in Wave A — just links to existing pages) */}
-          <details className="relative lg:hidden">
-            <summary
-              className="hover:bg-cream-200 grid size-8 cursor-pointer list-none place-items-center rounded-full [&::-webkit-details-marker]:hidden"
-              aria-label={t('account.nav.title', 'القائمة')}
+        {/* Mobile shortcut bar */}
+        <div className="site-header__mobile">
+          <Link href="/post-ad" className="btn btn--primary btn--sm btn--pill">
+            + {t('home.hero.cta_post_short', 'انشر')}
+          </Link>
+          <button
+            type="button"
+            className="btn-mobile-toggle"
+            aria-expanded={mobileOpen}
+            aria-label={t('account.nav.title', 'القائمة')}
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
             >
-              <MenuIcon className="size-5" aria-hidden />
-            </summary>
-            <ul className="border-ink-200 bg-card absolute end-0 top-full z-30 mt-2 w-52 rounded-xl border p-1 shadow-lg">
-              {NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-ink-700 hover:bg-cream-200 block rounded-md px-3 py-2 text-sm"
-                  >
-                    {t(link.labelKey)}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <Link
-                  href="/post-ad"
-                  className="text-coral hover:bg-coral/10 block rounded-md px-3 py-2 text-sm font-medium"
-                >
-                  {t('home.hero.cta_post', 'انشر إعلانك')}
-                </Link>
-              </li>
-            </ul>
-          </details>
+              <path d="M3 6h18M3 12h18M3 18h18" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      {/* Mobile search overlay */}
-      {mobileSearchOpen ? (
-        <div className="border-ink-200 bg-card border-t px-4 py-3 md:hidden">
-          <div className="flex items-center gap-2">
-            <Suspense fallback={<SearchBarSkeleton />}>
-              <SearchBar
-                className="flex-1"
-                compact
-                autoFocus
-                onAfterSubmit={() => setMobileSearchOpen(false)}
-              />
-            </Suspense>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={t('search.close', 'إغلاق')}
-              onClick={() => setMobileSearchOpen(false)}
-            >
-              <XIcon className="size-5" aria-hidden />
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      <nav className={cn('mobile-nav', mobileOpen && 'is-open')}>
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={() => setMobileOpen(false)}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
     </header>
   );
 }
 
-function SearchBarSkeleton() {
+function SaveIcon() {
   return (
-    <div className="bg-cream-200 mx-auto h-10 w-full max-w-xl animate-pulse rounded-full" />
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" />
+    </svg>
   );
+}
+
+function BellIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 16V10a6 6 0 1 1 12 0v6l2 2H4z" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
+    </svg>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 12a8 8 0 0 1-12 7l-5 1 1-5A8 8 0 1 1 21 12z" />
+    </svg>
+  );
+}
+
+function userInitials(input: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return '';
+  if (trimmed.includes('@')) return trimmed[0]?.toUpperCase() ?? '';
+  return trimmed
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
 }
 
 /**
  * Wrapper that hides the header on routes with their own chrome (auth pages
- * and the post-ad wizard). Kept in the same file so the routing rules live
- * next to the component they affect.
+ * and the post-ad wizard).
  */
-const HIDE_HEADER_PREFIXES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-otp', '/post-ad'];
+const HIDE_HEADER_PREFIXES = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-otp',
+  '/post-ad',
+];
 
 export function SiteHeaderGate() {
   const pathname = usePathname() ?? '/';

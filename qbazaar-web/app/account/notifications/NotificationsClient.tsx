@@ -1,19 +1,16 @@
 'use client';
 
 /**
- * Notifications index — paginated list with "All / Unread" tabs.
+ * Notifications index — QBFront port (source: QBFront/notifications.html).
  *
- * URL `?tab=unread|all` is the source of truth so deep links restore the
- * active filter and the browser back-button works. Bulk "Mark all as read"
- * lives in the header and is disabled while a request is in flight.
+ * Layout: `.notif-page` container · `.notif-head` (title + mark-all CTA) ·
+ * `.notif-filters` (chip tabs) · `.notif-list` (rows).
  */
 import { useState } from 'react';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 import {
   BellIcon,
   CheckCheckIcon,
-  ChevronLeft,
-  ChevronRight,
   Loader2Icon,
 } from 'lucide-react';
 
@@ -58,55 +55,52 @@ export function NotificationsClient() {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <p className="text-coral text-xs font-bold uppercase tracking-[0.18em]">
-          {t('account.nav.notifications', 'الإشعارات')}
-        </p>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="font-display text-ink-900 text-3xl md:text-4xl">
+    <div className="container notif-page" style={{ paddingTop: 24, paddingBottom: 48 }}>
+      <div className="notif-head">
+        <div>
+          <h1 className="notif-head__h">
             {t('notifications.title', 'الإشعارات')}
           </h1>
-          {unreadCount > 0 ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              className="rounded-full"
-              disabled={markAllRead.isPending}
-              onClick={() => markAllRead.mutate()}
-            >
-              {markAllRead.isPending ? (
-                <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
-              ) : (
-                <CheckCheckIcon className="size-3.5" aria-hidden />
-              )}
-              {t('notifications.mark_all_read', 'تعليم الكل كمقروء')}
-            </Button>
-          ) : null}
+          <p className="notif-head__sub">
+            {t(
+              'notifications.subtitle',
+              'كل الإشعارات الجديدة والقديمة في مكان واحد.',
+            )}
+          </p>
         </div>
-      </header>
+        {unreadCount > 0 ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="default"
+            className="rounded-full"
+            disabled={markAllRead.isPending}
+            onClick={() => markAllRead.mutate()}
+          >
+            {markAllRead.isPending ? (
+              <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
+            ) : (
+              <CheckCheckIcon className="size-3.5" aria-hidden />
+            )}
+            {t('notifications.mark_all_read', 'تعليم الكل كمقروء')}
+          </Button>
+        ) : null}
+      </div>
 
-      {/* Tabs */}
-      <nav
-        role="tablist"
-        aria-label={t('notifications.title', 'الإشعارات')}
-        className="border-ink-200 bg-card inline-flex rounded-full border p-1"
-      >
-        <TabButton
+      <div className="notif-filters" role="tablist" aria-label={t('notifications.title', 'الإشعارات')}>
+        <TabChip
           active={tab === 'all'}
           onClick={() => handleTabChange('all')}
           label={t('notifications.tabs.all', 'الكل')}
         />
-        <TabButton
+        <TabChip
           active={tab === 'unread'}
           onClick={() => handleTabChange('unread')}
           label={t('notifications.tabs.unread', 'غير المقروء')}
           badge={unreadCount > 0 ? unreadCount : undefined}
         />
-      </nav>
+      </div>
 
-      {/* List */}
       {isLoading ? (
         <div className="flex justify-center py-12" role="status">
           <Loader2Icon
@@ -126,42 +120,42 @@ export function NotificationsClient() {
         <EmptyState tab={tab} />
       ) : (
         <>
-          <ul className="space-y-2.5">
+          <ul className="notif-list" style={{ display: 'block' }}>
             {items.map((n) => (
-              <li key={n.id}>
+              <li key={n.id} style={{ listStyle: 'none' }}>
                 <NotificationRow notification={n} />
               </li>
             ))}
           </ul>
 
           {lastPage > 1 ? (
-            <nav className="mt-8 flex items-center justify-between">
-              <Button
+            <div className="pagination">
+              <button
                 type="button"
-                variant="outline"
+                className="pagination__num"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
+                aria-label={t('ads.list.prev', 'السابق')}
               >
-                <ChevronRight className="size-4" />
-                {t('ads.list.prev', 'السابق')}
-              </Button>
-              <span className="text-ink-500 text-sm">
+                ‹
+              </button>
+              <span className="pagination__gap">
                 {t(
                   'ads.list.page_of',
                   { current: String(page), total: String(lastPage) },
                   `${page} / ${lastPage}`,
                 )}
               </span>
-              <Button
+              <button
                 type="button"
-                variant="outline"
+                className="pagination__num"
                 onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                 disabled={page >= lastPage}
+                aria-label={t('ads.list.next', 'التالي')}
               >
-                {t('ads.list.next', 'التالي')}
-                <ChevronLeft className="size-4" />
-              </Button>
-            </nav>
+                ›
+              </button>
+            </div>
           ) : null}
         </>
       )}
@@ -169,7 +163,7 @@ export function NotificationsClient() {
   );
 }
 
-function TabButton({
+function TabChip({
   active,
   onClick,
   label,
@@ -186,12 +180,7 @@ function TabButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={cn(
-        'inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-        active
-          ? 'bg-coral text-white shadow-sm'
-          : 'text-ink-700 hover:bg-cream-200',
-      )}
+      className={cn('chip', active && 'is-active')}
     >
       <span>{label}</span>
       {typeof badge === 'number' ? (
@@ -210,15 +199,15 @@ function TabButton({
 
 function EmptyState({ tab }: { tab: Tab }) {
   return (
-    <div className="border-ink-200 bg-card flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-12 text-center">
-      <div className="bg-coral/10 text-coral grid size-12 place-items-center rounded-full">
+    <div className="empty-state">
+      <div className="bg-coral/10 text-coral mx-auto grid size-12 place-items-center rounded-full">
         <BellIcon className="size-5" aria-hidden />
       </div>
-      <h2 className="font-display text-ink-900 text-xl">
+      <div className="empty-state__title">
         {tab === 'unread'
           ? t('notifications.empty.unread', 'لا توجد إشعارات غير مقروءة')
           : t('notifications.empty.all', 'لا توجد إشعارات بعد')}
-      </h2>
+      </div>
     </div>
   );
 }

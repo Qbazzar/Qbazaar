@@ -1,18 +1,13 @@
 'use client';
 
 /**
- * FE-7.x — Favorites index.
- *
- * Auth-gated by the wrapping `app/account/layout.tsx`. Lists every ad the
- * user has favorited as a paginated `AdGrid`. The query hydrates the
- * favorites store on success so the heart icons across the rest of the app
- * stay in sync after a refresh.
+ * Favorites index — QBFront port. Renders saved ads as `.cat-listings` grid
+ * with the prototype's header + pill counter. Auth gated by `account/layout`.
  */
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Loader2Icon } from 'lucide-react';
+import { Loader2Icon } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { AdGrid } from '@/components/ads/AdGrid';
+import { QbfListingCard } from '@/components/ads/QbfListingCard';
 import { FavoritesEmptyState } from '@/components/account/FavoritesEmptyState';
 import { useFavoritesQuery } from '@/lib/queries/favorites';
 import { t } from '@/lib/i18n/messages';
@@ -31,22 +26,21 @@ export default function FavoritesPage() {
   const lastPage = data?.meta.last_page ?? 1;
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <p className="text-coral text-xs font-bold uppercase tracking-[0.18em]">
-          {t('account.nav.favorites', 'الإعلانات المحفوظة')}
-        </p>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="font-display text-ink-900 text-3xl md:text-4xl">
+    <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
+      <div className="saved-head">
+        <div>
+          <h1 className="cat-page__title">
             {t('favorites.title', 'الإعلانات المحفوظة')}
           </h1>
           {data ? (
-            <span className="bg-coral/10 text-coral inline-flex items-center rounded-full px-3 py-1 text-xs font-bold">
-              {t('favorites.count', { count: String(total) }, `${total} إعلان`)}
-            </span>
+            <p className="cat-page__meta">
+              <strong>
+                {t('favorites.count', { count: String(total) }, `${total} إعلان`)}
+              </strong>
+            </p>
           ) : null}
         </div>
-      </header>
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center py-12" role="status">
@@ -65,35 +59,39 @@ export default function FavoritesPage() {
         <FavoritesEmptyState />
       ) : (
         <>
-          <AdGrid ads={data.data} />
+          <div className="cat-listings">
+            {data.data.map((ad) => (
+              <QbfListingCard key={ad.id} ad={ad} />
+            ))}
+          </div>
           {lastPage > 1 ? (
-            <nav className="mt-8 flex items-center justify-between">
-              <Button
+            <div className="pagination">
+              <button
                 type="button"
-                variant="outline"
+                className="pagination__num"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
+                aria-label={t('ads.list.prev', 'السابق')}
               >
-                <ChevronRight className="size-4" />
-                {t('ads.list.prev', 'السابق')}
-              </Button>
-              <span className="text-ink-500 text-sm">
+                ‹
+              </button>
+              <span className="pagination__gap">
                 {t(
                   'ads.list.page_of',
                   { current: String(page), total: String(lastPage) },
                   `${page} / ${lastPage}`,
                 )}
               </span>
-              <Button
+              <button
                 type="button"
-                variant="outline"
+                className="pagination__num"
                 onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
                 disabled={page >= lastPage}
+                aria-label={t('ads.list.next', 'التالي')}
               >
-                {t('ads.list.next', 'التالي')}
-                <ChevronLeft className="size-4" />
-              </Button>
-            </nav>
+                ›
+              </button>
+            </div>
           ) : null}
         </>
       )}

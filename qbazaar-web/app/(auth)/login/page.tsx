@@ -11,31 +11,35 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="space-y-6">
+    <>
       <AuthTabs active="login" />
-      <header className="space-y-2">
-        <h1 className="font-display text-3xl tracking-tight">
-          {t('auth.login.title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {t('auth.login.subtitle')}
-        </p>
-      </header>
+      <h1 style={{ margin: '0 0 8px', fontSize: 36, fontWeight: 800 }}>
+        {t('auth.login.title', 'مرحباً بعودتك')}
+      </h1>
+      <p
+        style={{
+          margin: '0 0 28px',
+          fontSize: '14.5px',
+          color: 'var(--ink-700)',
+        }}
+      >
+        {t('auth.login.subtitle', 'سجّل دخولك إلى حساب QBazaar.')}
+      </p>
       {/* useSearchParams() inside LoginForm requires a Suspense boundary
           so the page can stream during static generation. */}
       <Suspense fallback={<LoginFormSkeleton />}>
         <LoginForm />
       </Suspense>
-    </div>
+    </>
   );
 }
 
 function LoginFormSkeleton() {
   return (
-    <div className="space-y-4" aria-hidden="true">
-      <div className="bg-muted h-16 rounded-lg" />
-      <div className="bg-muted h-16 rounded-lg" />
-      <div className="bg-muted h-11 rounded-full" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }} aria-hidden="true">
+      <div className="field animate-pulse" style={{ height: 44 }} />
+      <div className="field animate-pulse" style={{ height: 44 }} />
+      <div className="btn btn--primary btn--lg btn--full animate-pulse" style={{ opacity: 0.5 }} />
     </div>
   );
 }

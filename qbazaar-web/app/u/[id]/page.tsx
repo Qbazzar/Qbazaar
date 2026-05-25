@@ -114,8 +114,8 @@ export default function PublicProfilePage({ params }: PageProps) {
   const isSelf = authedUser?.id === profile.id;
 
   return (
-    <div className="bg-cream-50 min-h-svh">
-      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+    <main>
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
         <PublicProfileHeader
           profile={profile}
           isSelf={isSelf}
@@ -129,27 +129,26 @@ export default function PublicProfilePage({ params }: PageProps) {
         <Tabs
           value={tab}
           onValueChange={(value: string) => setTab(value as 'ads' | 'about')}
-          className="mt-8"
         >
-          <TabsList variant="line" className="border-border w-full border-b">
-            <TabsTrigger value="ads">
+          <TabsList variant="line" className="tab-bar">
+            <TabsTrigger value="ads" className="tab-bar__btn">
               {t('users.profile.tabs.ads')}
             </TabsTrigger>
-            <TabsTrigger value="about">
+            <TabsTrigger value="about" className="tab-bar__btn">
               {t('users.profile.tabs.about')}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="ads" className="pt-6">
+          <TabsContent value="ads">
             <UserAdsTab userId={profile.id} userName={profile.full_name} />
           </TabsContent>
 
-          <TabsContent value="about" className="pt-6">
+          <TabsContent value="about">
             <AboutTab profile={profile} />
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -168,34 +167,30 @@ function PublicProfileHeader({
   onPlaceholderMessage: () => void;
 }) {
   return (
-    <header className="bg-card ring-foreground/10 flex flex-wrap items-center gap-6 rounded-2xl p-6 ring-1 sm:p-8">
-      <Avatar
-        size="lg"
-        className="size-20 sm:size-24"
-      >
+    <header className="profile-head">
+      <div className="profile-head__avatar">
         {profile.avatar_url ? (
-          <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
-        ) : null}
-        <AvatarFallback className="font-display text-terracotta text-3xl">
-          {initials(profile.full_name)}
-        </AvatarFallback>
-      </Avatar>
+          <Avatar size="lg" className="size-24">
+            <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
+            <AvatarFallback>{initials(profile.full_name)}</AvatarFallback>
+          </Avatar>
+        ) : (
+          initials(profile.full_name) || 'Q'
+        )}
+      </div>
 
-      <div className="min-w-0 flex-1">
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-          {profile.full_name}
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          {t('users.profile.joined', {
-            date: formatMonthYear(profile.joined_at),
-          })}
-        </p>
+      <div className="profile-head__info">
+        <div className="profile-head__name">{profile.full_name}</div>
+        <div className="profile-head__meta">
+          <span>
+            {t('users.profile.joined', {
+              date: formatMonthYear(profile.joined_at),
+            })}
+          </span>
+        </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge
-            variant="outline"
-            className="border-coral/30 text-coral"
-          >
+        <div className="profile-head__pills">
+          <Badge variant="outline" className="border-coral/30 text-coral">
             {t(`users.profile.account_type.${profile.account_type}`)}
           </Badge>
           {profile.email_verified ? (
@@ -217,7 +212,7 @@ function PublicProfileHeader({
       </div>
 
       {!isSelf ? (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="profile-head__actions">
           <Button
             type="button"
             size="default"
@@ -228,9 +223,7 @@ function PublicProfileHeader({
             {t('users.profile.send_message')}
           </Button>
           {blocked ? (
-            <Badge variant="destructive">
-              {t('users.block.success')}
-            </Badge>
+            <Badge variant="destructive">{t('users.block.success')}</Badge>
           ) : (
             <BlockUserButton
               userId={profile.id}
@@ -239,7 +232,6 @@ function PublicProfileHeader({
               onBlocked={onBlocked}
             />
           )}
-          {/* Sprint 10 — real abuse-report dialog. */}
           <ReportButton target_type="user" target_id={profile.id} />
         </div>
       ) : null}
