@@ -426,7 +426,7 @@
 | BE-3.10 | Migration: `locations` | ✅ commit `4e2a9b3` |
 | BE-3.11 | CategorySeeder (63 categories; cars/apartments/mobiles fully fielded) | ✅ commit `4e2a9b3` |
 | BE-3.12 | LocationSeeder (9 cities + 36 districts, bilingual) | ✅ commit `4e2a9b3` |
-| BE-3.13 | Cache invalidation hooks (Filament-driven in Sprint 11) | — *deferred to Sprint 11* |
+| BE-3.13 | Cache invalidation hooks (Filament-driven) | ✅ commit `b9f62e9` — `->after()` save hooks on Filament Category/Location resources bust `categories.tree/main/{slug}.*` + `locations.qatar` cache keys |
 | BE-3.14 | CategoryResource + CategoryNodeResource + LocationResource (+ Filter/Field) | ✅ commit `4e2a9b3` |
 | BE-3.15 | Pest tests (tree, filters, qatar) + OpenAPI examples | ✅ commit `4e2a9b3` |
 
@@ -1234,3 +1234,39 @@ CT-12.1: 7 endpoints, schemas: `CmsPage`, `HelpArticle`, `SupportTicket`, `Suppo
 
 **نهاية ملف MILESTONES.md.**
 **الملف ده هيكون live document — كل أسبوع يتحدّث بناءً على ما تم في الـ retro.**
+
+---
+
+## 🏁 MVP feature-complete — 2026-05-25
+
+All 13 sprints landed across both repos + design system migrated to QBFront.
+Live tracking has been collapsed into the per-sprint tables above and the
+`ROADMAP.md` Progress Log; this section is the single-line index.
+
+| Sprint | Status | Anchor commits |
+|---|---|---|
+| 0 — Infrastructure | ✅ | scaffolding + Sprint 0 retro |
+| 1 — Auth | ✅ | `e3c5349` + `40fe7a7` + `965ff11` + `df77ac3` |
+| 2 — Account + Users | ✅ Wave 1 + Wave 2 | `ceccd95` + `8d80865` + `c9c22f8` + `4f164f8` + `4b6afa3` |
+| 3 — Categories + Locations | ✅ | `4e2a9b3` + `a37b426` + `5b7bbf5` |
+| 4 — Uploads | ✅ | `6adcf58` + `b89c83b` |
+| 5 — Ads | ✅ Wave A + Wave B | `6adcf58` + `b89c83b` + `311440b` + `e6d127d` + `c6f2c2c` |
+| 6 — Search | ✅ | `f758369` + `9fdb351` + `7b05007` |
+| 7 — Favorites + Recently Viewed | ✅ | `56864e7` + `636a8f6` + `1d8c354` |
+| 8 — Messaging via Reverb | ✅ Wave A | `4eb509a` + `015149d` + `6b45095` |
+| 9 — Offers | ✅ | `5aca9c0` + `d9e8a11` |
+| 10 — Reports + Notifications | ✅ Wave A | `5b29ca9` + `13fb816` + `2c60020` |
+| 11 — Filament Admin Panel | ✅ | `b9f62e9` + `e4c6578` + `5eea748` + `9173a99` + `3937927` |
+| 12 — CMS + Help + Support | ✅ | `54ec549` + `1f6fb43` + `eea6333` |
+| — QBFront design migration | ✅ | `46a79bc` + `72aa2cc` + `ceefd95` |
+
+**Demo logins (after `migrate:fresh --seed`):**
+- `admin@qbazaar.qa / password` — Filament `/admin`
+- `demo@qbazaar.qa / password` — public app UAT user
+
+**Post-MVP backlog (intentional defer):**
+- Typing indicators in chat (Reverb client-events — needs broadcaster opt-in)
+- FCM push notifications (needs Firebase project + `device_tokens` table)
+- pHash dedup for ad images
+- Dedicated Filament resources for Pages / Help / Support (admin can use tinker / DB tooling for now)
+- VPS deploy linking — waiting on `sudo` for `sanad` at 147.79.115.44

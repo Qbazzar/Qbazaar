@@ -11,9 +11,9 @@
 
 | البند | القيمة |
 |-------|---------|
-| **Active Milestone** | Milestone 2 ✅ + Milestone 3 ✅ closed → **Milestone 4 (Trust & Admin) next** |
-| **Active Sprint** | Sprints 0..8 ✅ + Wave B ✅ closed → **Sprint 9 (Offers) next**, then Sprint 10 (Reports + Notifications), Sprint 11 (Filament Admin), Sprint 12 (CMS) |
-| **Active Day** | Wave B closed — auto-moderation + 6 lifecycle events + ExpireOldAdsJob + Similar/Featured feeds + idempotency on publish + dynamic custom_fields + Edit Ad page; mail-based ad notifications live via Mailtrap |
+| **Active Milestone** | **MVP feature-complete** — Milestones 1–5 ✅ closed → polish + QA + deploy linking next |
+| **Active Sprint** | Sprints 0..12 ✅ closed + QBFront design migration ✅ + Filament admin ✅ + DemoDataSeeder ✅ |
+| **Active Day** | Sprint 12 closed — CMS pages, help center, support tickets; demo fixtures seeded (18 users + 60 ads + convos + offers + favorites + reports + tickets). Remaining backlog: typing indicators (Reverb client-events) + VPS deploy linking (awaiting sudo for sanad). |
 | **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
 | **Blockers** | لا يوجد |
 | **Manual user steps pending** | GitHub Project + 13 Milestones + Labels; sign-ups for Twilio + Sentry + FCM project |
@@ -153,6 +153,45 @@
 
 ---
 
+### 🏁 Sprint 12 close — MVP feature-complete (2026-05-25)
+
+All 13 sprints landed. The full MVP surface is on `main` and pushed to
+[Qbazzar/Qbazaar](https://github.com/Qbazzar/Qbazaar).
+
+**End-to-end shipped:**
+- Auth (register / login / OTP / password reset / email verification)
+- Account (profile / privacy / sessions / data export / deactivate / delete / avatar upload)
+- Categories (63 seeded) + Locations (45 districts seeded)
+- Ad CRUD + Spatie MediaLibrary + BlurHash + auto-moderation (banned words / phone / external links) + featured/similar feeds + Edit Ad wizard + Idempotency on publish
+- Meilisearch indexing + `/search` w/ facets + saved searches + header type-ahead
+- Favorites + Recently-viewed (50/user cap) + anon session UUID
+- Reverb messaging (private channels + Echo client) + StartConversationButton + MessagesBadge
+- Offers in chat (5 events + ExpireOldOffersJob daily 02:30 Qatar)
+- DB-backed notifications + Reports system (7 categories / 7-day duplicate window)
+- Filament v4 admin (12 resources + 6 widgets + RBAC + ModerationRule DB editor + Send Announcement action + Cairo font + Q-SVG brand)
+- CMS pages (4 default slugs) + Help center (5 categories × 3 articles) + Support tickets w/ threaded replies
+- QBFront design system applied to every public page; SiteHeader + SiteFooter global
+- DemoDataSeeder ships realistic dev fixtures (18 users + 60 ads + 12 convos + 7 offers + 40 favs + 8 reports + 5 tickets)
+
+**Backlog (post-MVP):**
+- Typing indicators (Reverb client-events — needs broadcaster opt-in)
+- FCM push notifications (needs Firebase project + device_tokens table)
+- pHash dedup for ad images
+- Filament resources for Pages/Help/Support (admin currently uses tinker / direct DB)
+- VPS deploy linking — waiting for `sudo` access on sanad user at 147.79.115.44
+
+**Verification quick start:**
+```
+cd c:\laragon\www\QB\qbazaar-api
+php artisan migrate:fresh --seed --force      # 18 users + 60 ads + …
+php artisan serve                             # http://localhost:8000/admin → admin@qbazaar.qa / password
+
+cd c:\laragon\www\QB\qbazaar-web
+npm run dev                                   # http://localhost:3000
+```
+
+---
+
 ## 🎬 Sprint 0 Retrospective (2026-05-20)
 
 ### ✅ What went well
@@ -195,11 +234,11 @@
 |---|-----------|------------------|--------|
 | 1 | Backend Foundation | 2 أسبوع | ✅ مكتمل |
 | 2 | Marketplace Core | 3 أسابيع | ✅ مكتمل |
-| 3 | Engagement | 3 أسابيع | ⚪ منتظر |
-| 4 | Trust & Admin | 2 أسبوع | ⚪ منتظر |
-| 5 | Content & Polish | 1 أسبوع | ⚪ منتظر |
-| 6 | Web Frontend (parallel) | — | ⚪ منتظر |
-| 7 | Launch Prep | 1 أسبوع | ⚪ منتظر |
+| 3 | Engagement | 3 أسابيع | ✅ مكتمل |
+| 4 | Trust & Admin | 2 أسبوع | ✅ مكتمل |
+| 5 | Content & Polish | 1 أسبوع | ✅ مكتمل |
+| 6 | Web Frontend (parallel) | — | ✅ مكتمل (QBFront design system) |
+| 7 | Launch Prep | 1 أسبوع | 🟡 جاري (VPS deploy linking) |
 
 **Legend:** ✅ مكتمل · 🟢 جاهز للإغلاق · 🟡 جاري · ⚪ منتظر · 🔴 blocked
 
@@ -275,106 +314,78 @@
 
 ---
 
-### Sprint 6 — Search (3 أيام)
+### Sprint 6 — Search (3 أيام) ✅
 
-- [ ] **Backend:**
-  - Laravel Scout + Meilisearch setup
-  - Searchable trait on Ad model
-  - Synonyms dictionary (Arabic)
-  - Saved searches CRUD
-  - Saved search alert job (scheduled)
-  - Search suggestions endpoint
-- [ ] **Frontend:**
-  - Search page (search.jsx mockup)
-  - Filters bottom sheet
-  - Sort options (priceAsc/priceDesc/newest)
-  - Saved searches UI
-  - Recent searches in localStorage
-- [ ] **Contract:** Search endpoints + filters schema
+- [x] **Backend:** Scout + Meilisearch indexing on Ad; `/search` + `/search/suggestions` + saved-searches CRUD; auto-(un)index on publish/markSold/renew — `f758369`
+- [x] **Frontend:** `/search` results + FilterSidebar (categories/locations/price/condition) + SortDropdown + header SearchBar w/ type-ahead + `/account/saved-searches` — `9fdb351`
+- [x] **Contract:** Search endpoints + Wave A ads paths catch-up — `7b05007`
 
 ---
 
-## 💞 Milestone 3 — Engagement (3 أسابيع)
+## 💞 Milestone 3 — Engagement (3 أسابيع) ✅
 
-> ما يحول المستخدم من زائر لمستخدم نشط.
+### Sprint 7 — Favorites & Recently Viewed (1 يوم) ✅
 
-### Sprint 7 — Favorites & Recently Viewed (1 يوم)
-
-- [ ] **Backend:** Favorites CRUD, Recently viewed (cap 50/user), cleanup job
-- [ ] **Frontend:** Saved page (saved.jsx), Favorite toggle on cards, Recently viewed strip
-- [ ] **Contract:** Favorites endpoints
+- [x] **Backend:** favorites + recently_viewed tables, toggle + list + view tracking (Cache::lock 1h throttle), 50-row cap inline cleanup — `56864e7`
+- [x] **Frontend:** Saved page + RecentlyViewedStrip on home + FavoriteButton w/ optimistic toggle + anon-session UUID — `636a8f6`
+- [x] **Contract:** Favorites + Recently-viewed endpoints — `1d8c354`
 
 ---
 
-### Sprint 8 — Messaging via Reverb (أسبوعين)
+### Sprint 8 — Messaging via Reverb (أسبوعين) ✅ Wave A
 
-- [ ] **Backend:**
-  - Reverb setup (config + supervisor instructions)
-  - Conversations + Messages CRUD
-  - Broadcasting channels (private conversations)
-  - MessageSent event
-  - Content safety service (phone, links, banned words detection)
-  - ConversationPolicy
-  - Read/unread tracking
-- [ ] **Frontend:**
-  - Messages inbox (messages.jsx)
-  - Chat UI (real-time via Echo)
-  - Typing indicators (لاحقاً)
-  - Conversation report action
-  - Unread badges
-- [ ] **Contract:** Messages endpoints + WebSocket events spec
-- [ ] **Infra:** Document how to run Reverb on Windows for dev
+- [x] **Backend:** Reverb broadcasting (MessageSent + ConversationRead on private channels), Conversations + Messages CRUD, ConversationPolicy, block integration, cursor pagination — `4eb509a`
+- [x] **Frontend:** `/account/messages` inbox + chat split-pane, Echo client (lazy + axios-backed authorizer), MessagesBadge polling fallback, StartConversationButton on ad detail — `015149d`
+- [x] **Contract:** Messages endpoints + `events/messaging.md` — `6b45095`
+- [ ] **Wave B (deferred):** typing indicators (needs Reverb broadcaster opt-in for client-* events)
 
 ---
 
-### Sprint 9 — Offers (1 يوم)
+### Sprint 9 — Offers (1 يوم) ✅
 
-- [ ] **Backend:** Offer CRUD, Accept/Reject/Counter actions, Offer expiry (7 days), Notification triggers
-- [ ] **Frontend:** Make offer modal on ad page, Offers list in chat
-- [ ] **Contract:** Offers endpoints
-
----
-
-## 🛡️ Milestone 4 — Trust & Admin (أسبوعين)
-
-> الموثوقية + الإدارة.
-
-### Sprint 10 — Reports & Notifications (1 أسبوع)
-
-- [ ] **Backend:**
-  - Reports CRUD (Ad/User/Conversation)
-  - Laravel Notifications (database + mail + FCM channels)
-  - Notification preferences per user
-  - Device tokens management
-  - FCM Channel integration
-- [ ] **Frontend:**
-  - Report modal (3 types)
-  - Notifications inbox
-  - Notification preferences page
-  - Push notification permission flow
-- [ ] **Contract:** Reports + Notifications endpoints
-- [ ] **Account:** تسجيل Firebase project لـ FCM
+- [x] **Backend:** Offer model + 5 events (Created/Accepted/Rejected/Withdrawn/Expired) + actions (own-ad / block / active-offer guards) + ExpireOldOffersJob daily 02:30 Qatar — `5aca9c0`
+- [x] **Frontend:** OfferComposer modal in ChatInput + OfferBubble in MessageList + OfferStatusBadge + Echo wiring for offer.* events — `d9e8a11`
 
 ---
 
-### Sprint 11 — Filament Admin Panel (1 أسبوع)
+## 🛡️ Milestone 4 — Trust & Admin (أسبوعين) ✅
 
-- [ ] **Resources (16):** User, Ad, Report, Category, Location, BusinessApplication, SupportTicket, ModerationRule, CmsPage, HelpArticle, NotificationTemplate, AdminUser, + 4 more
-- [ ] **Pages:** Dashboard with widgets, SystemSettings, AuditLogsPage
-- [ ] **Widgets:** StatsOverview, AdsChart, PendingReportsWidget
-- [ ] **Auth:** 2FA plugin, custom admin guard
-- [ ] **Polish:** Approve/Reject/Block actions on ads with reason input
+### Sprint 10 — Reports & Notifications (1 أسبوع) ✅ Wave A
+
+- [x] **Backend:** notifications table (ULID morphs) + DB channel on 6 existing notifications + NotificationCreated Reverb event + Reports system (7 categories + 7-day duplicate window) — `5b29ca9`
+- [x] **Frontend:** NotificationsBadge bell + popover + `/account/notifications` + ReportButton wired into ad detail + public profile — `13fb816`
+- [x] **Contract:** Notifications + Reports paths + `events/notifications.md` — `2c60020`
+- [ ] **Deferred:** FCM push notifications (needs Firebase project + device-token table)
 
 ---
 
-## 📚 Milestone 5 — Content & Polish (أسبوع)
+### Sprint 11 — Filament Admin Panel (1 أسبوع) ✅
 
-### Sprint 12 — CMS, Help, Support (2 أيام)
+- [x] **RBAC:** super_admin / moderator / support roles + ~30 permissions seeder — `b9f62e9`
+- [x] **12 Resources:** User, Ad, Category, Location, Report, Notification, Conversation, Message, Offer, SavedSearch, ModerationRule, ActivityLog
+- [x] **6 Widgets:** UsersStats, AdsStats, ReportsStats, RevenueStats, AdsPublishedChart, RecentReports
+- [x] **Custom Dashboard:** "Send Announcement" action + SystemAnnouncementNotification (database + mail to all/active users)
+- [x] **ModerationRule** DB table backs the auto-moderation service (cache 1h + config fallback)
+- [x] **Polish:** Cairo font + Q-SVG brand + sidebar group labels + coral active item — `e4c6578`
+- [x] **Admin login fixes:** Spatie morph key char(26) + getFilamentName() + SESSION_DRIVER=file — `5eea748` + `9173a99` + `3937927`
 
-- [ ] **Backend:** CMS Pages (about, terms, privacy, safety), Help articles, Support tickets
-- [ ] **Frontend:** CMS pages, Help center (help.jsx), Support contact form
-- [ ] **Contract:** CMS endpoints
-- [ ] **Filament:** CMS + Help + Support resources
+---
+
+## 📚 Milestone 5 — Content & Polish (أسبوع) ✅
+
+### Sprint 12 — CMS, Help, Support (2 أيام) ✅
+
+- [x] **Backend:** CMS pages + Help (5 categories × 3 articles) + Support tickets (auth-optional submission + threaded replies + status lifecycle) — `54ec549`
+- [x] **Frontend:** `/p/[slug]` CMS + `/help` + `/help/c/[slug]` + `/help/articles/[slug]` + `/help/search` + `/support` landing + `/support/new` + `/account/support` + `/account/support/[id]` — `1f6fb43`
+- [x] **DemoDataSeeder:** 18 users + 60 ads (35 active inc. 6 featured + 6 sold + …) + 12 convos + 7 offers + 40 favorites + 8 reports + 5 tickets — `eea6333`
+- [ ] **Filament:** dedicated Filament resources for Pages/Help/Support — *deferred (admin can manage via tinker / direct DB for now)*
+
+### Web Frontend — QBFront design system ✅
+
+- [x] Inter + Cairo fonts via next/font/google
+- [x] Coral #F37335 + cool grey background palette
+- [x] Inline Q-SVG brand mark (header + footer + admin panel)
+- [x] Full QBFront HTML → Next.js port: home, /ads, /ads/[id], /post-ad, /account/messages, /account/notifications, /account/favorites, /u/[id], /categories, /login, /register — `72aa2cc`
 
 ### QA + Buffer (3 أيام)
 
