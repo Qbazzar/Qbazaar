@@ -1436,6 +1436,207 @@
           }
         }
       ]
+    },
+    {
+      "name": "CMS Pages",
+      "description": "Sprint 12 — public CMS pages (about / terms / privacy / safety). Both endpoints cached server-side for 1 hour. No auth.",
+      "item": [
+        {
+          "name": "GET /pages",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/pages",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["pages"]
+            }
+          }
+        },
+        {
+          "name": "GET /pages/:slug",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/pages/{{cms_page_slug}}",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["pages", "{{cms_page_slug}}"],
+              "variable": [
+                { "key": "cms_page_slug", "value": "about", "description": "Default slugs: about, terms, privacy, safety" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Help",
+      "description": "Sprint 12 — help center (5 categories × 3 articles seeded by DemoDataSeeder). All public, no auth.",
+      "item": [
+        {
+          "name": "GET /help/categories",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/help/categories",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["help", "categories"]
+            }
+          }
+        },
+        {
+          "name": "GET /help/categories/:slug",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/help/categories/{{help_category_slug}}",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["help", "categories", "{{help_category_slug}}"],
+              "variable": [
+                { "key": "help_category_slug", "value": "getting-started", "description": "e.g. getting-started, posting-ads, messaging, payments, account" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /help/articles/:slug",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/help/articles/{{help_article_slug}}",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["help", "articles", "{{help_article_slug}}"],
+              "variable": [
+                { "key": "help_article_slug", "value": "how-to-post-an-ad", "description": "Article slug; views_count auto-increments (throttled per IP)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /help/search",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/help/search?q=ad",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["help", "search"],
+              "query": [
+                { "key": "q", "value": "ad", "description": "LIKE on title + excerpt; min 2 chars; max 20 hits" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Support",
+      "description": "Sprint 12 — support tickets. POST /support/tickets accepts anon (with `email`) or authed submissions. /account/support/tickets/* is auth-only and scopes to the caller. Admin workflow lives in Filament (Sprint 11 + 2026-05-25 polish).",
+      "item": [
+        {
+          "name": "POST /support/tickets (authed)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Charge on my card I do not recognise\",\n  \"category\": \"billing\",\n  \"body\": \"I noticed a charge of 50 QAR on May 20 — could you help track it down?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/support/tickets",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["support", "tickets"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j && j.data && j.data.id) {",
+                  "  pm.environment.set('support_ticket_id', j.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /support/tickets (anon)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Cannot register from Qatar\",\n  \"category\": \"technical\",\n  \"body\": \"My +974 number is not accepted in the OTP step.\",\n  \"email\": \"visitor@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/support/tickets",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["support", "tickets"]
+            }
+          }
+        },
+        {
+          "name": "GET /account/support/tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/support/tickets",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "support", "tickets"]
+            }
+          }
+        },
+        {
+          "name": "GET /account/support/tickets/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/support/tickets/{{support_ticket_id}}",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "support", "tickets", "{{support_ticket_id}}"]
+            }
+          }
+        },
+        {
+          "name": "POST /account/support/tickets/:id/reply",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Thanks for getting back — the OTP still isn't arriving. Could you re-send?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/account/support/tickets/{{support_ticket_id}}/reply",
+              "host": ["{{base_url}}{{api_prefix}}"],
+              "path": ["account", "support", "tickets", "{{support_ticket_id}}", "reply"]
+            }
+          }
+        }
+      ]
     }
   ]
 }

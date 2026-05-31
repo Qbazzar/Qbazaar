@@ -53,8 +53,12 @@ tags:
     description: User reports on ads, users, conversations
   - name: Notifications
     description: In-app, email, and push notifications
-  - name: CMS
-    description: Static pages, help articles, support tickets
+  - name: CMS Pages
+    description: Static CMS pages (about, terms, privacy, safety)
+  - name: Help
+    description: Help center categories, articles, and search
+  - name: Support
+    description: Support tickets (anon + authed submission, threaded replies)
 
 paths:
   /api/v1/health:
@@ -2211,6 +2215,327 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  # ──────────────────────────────────────────────────────────────────────────
+  # CMS Pages (Sprint 12) — public, 1-hour Cache::remember on both endpoints
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/pages:
+    get:
+      tags: [CMS Pages]
+      summary: List published CMS pages
+      description: |
+        Returns the lean list (id + slug + title + display_order) of every
+        published CMS page, ordered by `display_order`. Cached for 1 hour.
+        No auth required.
+      operationId: pagesIndex
+      security: []
+      responses:
+        '200':
+          description: List of pages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsPageListEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/pages/{slug}:
+    get:
+      tags: [CMS Pages]
+      summary: Fetch a single CMS page by slug
+      description: |
+        Returns the full payload (body + meta_description + published_at) for
+        a published page. Returns CMS_PAGE_NOT_FOUND if the slug is unknown or
+        the page is unpublished. Cached for 1 hour per slug. No auth required.
+      operationId: pagesShow
+      security: []
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+          description: Page slug, e.g. `about`, `terms`, `privacy`, `safety`
+      responses:
+        '200':
+          description: Page payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CmsPageEnvelope'
+        '404':
+          description: CMS_PAGE_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Help Center (Sprint 12) — public, mostly cached
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/help/categories:
+    get:
+      tags: [Help]
+      summary: List help-center categories
+      description: |
+        Returns each category with a count of its published articles. Cached
+        for 1 hour. No auth required.
+      operationId: helpCategoriesIndex
+      security: []
+      responses:
+        '200':
+          description: Category list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelpCategoryListEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/help/categories/{slug}:
+    get:
+      tags: [Help]
+      summary: Fetch a category + its published articles
+      description: |
+        Returns the category metadata plus its published articles (lean shape:
+        id + slug + title + excerpt + display_order). No auth required.
+      operationId: helpCategoryShow
+      security: []
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+          description: Category slug
+      responses:
+        '200':
+          description: Category with article list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelpCategoryEnvelope'
+        '404':
+          description: HELP_CATEGORY_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/help/articles/{slug}:
+    get:
+      tags: [Help]
+      summary: Fetch a help article
+      description: |
+        Returns the full article (body + excerpt + views_count + parent
+        category). `views_count` is incremented once per (article, IP) per
+        hour. No auth required.
+      operationId: helpArticleShow
+      security: []
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+          description: Article slug
+      responses:
+        '200':
+          description: Article payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelpArticleEnvelope'
+        '404':
+          description: HELP_ARTICLE_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/help/search:
+    get:
+      tags: [Help]
+      summary: Search help articles
+      description: |
+        LIKE-based search across the title and excerpt of every published
+        article. Returns at most 20 hits. Queries shorter than 2 chars return
+        an empty list. No auth required.
+      operationId: helpSearch
+      security: []
+      parameters:
+        - in: query
+          name: q
+          required: false
+          schema: { type: string, minLength: 2 }
+          description: Search keyword. Minimum 2 characters; shorter → empty list.
+      responses:
+        '200':
+          description: Matching articles (lean)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelpArticleSummaryListEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Support Tickets (Sprint 12)
+  # POST /support/tickets accepts anon (with email) or authed submissions.
+  # /account/support/tickets/* is auth-only and scopes to the caller.
+  # Admin-side workflow lives in Filament (Sprint 11 + 2026-05-25 polish).
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/support/tickets:
+    post:
+      tags: [Support]
+      summary: Submit a support ticket (anon or authed)
+      description: |
+        Anyone may submit. Anonymous submissions MUST supply an `email`;
+        authenticated submissions ignore `email` and attach `user_id`
+        automatically. Newly created tickets default to status `open` and
+        priority `normal`.
+      operationId: supportTicketsCreate
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MakeSupportTicketRequest'
+            examples:
+              authed_billing:
+                summary: Authed user submitting a billing question
+                value:
+                  subject: Charge on my card I do not recognise
+                  category: billing
+                  body: I noticed a charge of 50 QAR on May 20 — could you help?
+              anon_general:
+                summary: Anonymous submission with email
+                value:
+                  subject: Cannot register from Qatar
+                  category: technical
+                  body: My +974 number is not accepted in the OTP step.
+                  email: visitor@example.com
+      responses:
+        '201':
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicketEnvelope'
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/account/support/tickets:
+    get:
+      tags: [Support]
+      summary: List the caller's support tickets
+      description: |
+        Returns the calling user's tickets, newest first, paginated 20/page.
+        Each row carries `replies_count` for the inbox preview.
+      operationId: supportTicketsIndex
+      parameters:
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Paginated ticket list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicketListEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/account/support/tickets/{id}:
+    get:
+      tags: [Support]
+      summary: Fetch a ticket + its replies
+      description: |
+        Returns the full ticket including the threaded reply history sorted by
+        `created_at` ascending. Returns TICKET_FORBIDDEN if the caller is not
+        the ticket owner.
+      operationId: supportTicketShow
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/ULID' }
+      responses:
+        '200':
+          description: Ticket with replies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportTicketEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: TICKET_FORBIDDEN — ticket belongs to another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: TICKET_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/account/support/tickets/{id}/reply:
+    post:
+      tags: [Support]
+      summary: Append a reply to a ticket
+      description: |
+        Posts a non-staff reply (`is_staff = false`) on behalf of the caller.
+        If the ticket was in `waiting_user`, this transitions it back to
+        `open` and bumps `last_replied_at`. Terminal tickets (`resolved`,
+        `closed`) reject with TICKET_INVALID_TRANSITION.
+      operationId: supportTicketReply
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: '#/components/schemas/ULID' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplySupportTicketRequest'
+            examples:
+              followup:
+                value:
+                  body: Thanks for getting back — the OTP still isn't arriving. Could you re-send?
+      responses:
+        '201':
+          description: Reply created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportReplyEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: TICKET_FORBIDDEN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: TICKET_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: TICKET_INVALID_TRANSITION (terminal ticket) or VALIDATION_FAILED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
 components:
   schemas:
     # ─── Envelopes ──────────────────────────────────────────────────
@@ -3772,17 +4097,6 @@ components:
               items: { $ref: '#/components/schemas/Notification' }
             meta: { $ref: '#/components/schemas/PaginationMeta' }
 
-    UnreadCountEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/SuccessEnvelope'
-        - type: object
-          properties:
-            data:
-              type: object
-              required: [total]
-              properties:
-                total: { type: integer, minimum: 0 }
-
     MarkedCountEnvelope:
       allOf:
         - $ref: '#/components/schemas/SuccessEnvelope'
@@ -3793,6 +4107,319 @@ components:
               required: [marked]
               properties:
                 marked: { type: integer, minimum: 0 }
+
+    # ─── CMS Pages (Sprint 12) ──────────────────────────────────────
+    CmsPageSummary:
+      type: object
+      required: [id, slug, title, display_order]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        slug:
+          type: string
+          example: about
+        title:
+          type: string
+          example: About QBazaar
+        display_order:
+          type: integer
+          minimum: 0
+          example: 1
+
+    CmsPage:
+      type: object
+      required: [id, slug, title, body, display_order]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        slug:
+          type: string
+          example: terms
+        title:
+          type: string
+          example: Terms of Service
+        body:
+          type: string
+          description: Markdown body of the page (rendered client-side).
+        meta_description:
+          type: [string, 'null']
+          description: SEO meta description; null when unset.
+        published_at:
+          type: [string, 'null']
+          format: date-time
+        display_order:
+          type: integer
+          minimum: 0
+
+    CmsPageListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CmsPageSummary'
+
+    CmsPageEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/CmsPage'
+
+    # ─── Help Center (Sprint 12) ────────────────────────────────────
+    HelpCategorySummary:
+      type: object
+      required: [id, slug, name, display_order, articles_count]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        slug:
+          type: string
+          example: getting-started
+        name:
+          type: string
+          example: Getting started
+        description:
+          type: [string, 'null']
+        icon:
+          type: [string, 'null']
+          description: Optional icon name (lucide-react) the FE can render.
+        display_order:
+          type: integer
+          minimum: 0
+        articles_count:
+          type: integer
+          minimum: 0
+          description: Number of published articles under this category.
+
+    HelpArticleSummary:
+      type: object
+      required: [id, slug, title, display_order]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        slug:
+          type: string
+          example: how-to-post-an-ad
+        title:
+          type: string
+        excerpt:
+          type: [string, 'null']
+        display_order:
+          type: integer
+          minimum: 0
+
+    HelpCategoryWithArticles:
+      type: object
+      required: [id, slug, name, articles]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: [string, 'null']
+        icon:
+          type: [string, 'null']
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/HelpArticleSummary'
+
+    HelpArticle:
+      type: object
+      required: [id, slug, title, body, views_count, category]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        slug:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+          description: Markdown body (rendered client-side).
+        excerpt:
+          type: [string, 'null']
+        views_count:
+          type: integer
+          minimum: 0
+        category:
+          type: object
+          required: [id, slug, name]
+          properties:
+            id: { $ref: '#/components/schemas/ULID' }
+            slug: { type: string }
+            name: { type: string }
+            icon:
+              type: [string, 'null']
+
+    HelpCategoryListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/HelpCategorySummary'
+
+    HelpCategoryEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/HelpCategoryWithArticles'
+
+    HelpArticleEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/HelpArticle'
+
+    HelpArticleSummaryListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/HelpArticleSummary'
+
+    # ─── Support Tickets (Sprint 12) ────────────────────────────────
+    SupportTicketCategory:
+      type: string
+      enum: [general, billing, technical, abuse, feedback, other]
+
+    SupportTicketStatus:
+      type: string
+      enum: [open, in_progress, waiting_user, resolved, closed]
+
+    SupportTicketPriority:
+      type: string
+      enum: [low, normal, high, urgent]
+
+    SupportReply:
+      type: object
+      required: [id, author, body, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        author:
+          type: object
+          required: [id, name, is_staff]
+          properties:
+            id: { $ref: '#/components/schemas/ULID' }
+            name:
+              type: string
+              example: Support Team
+            is_staff:
+              type: boolean
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    SupportTicketSummary:
+      type: object
+      required: [id, subject, category, status, priority, replies_count, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        subject:
+          type: string
+        category:
+          $ref: '#/components/schemas/SupportTicketCategory'
+        status:
+          $ref: '#/components/schemas/SupportTicketStatus'
+        priority:
+          $ref: '#/components/schemas/SupportTicketPriority'
+        last_replied_at:
+          type: [string, 'null']
+          format: date-time
+        replies_count:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+
+    SupportTicket:
+      allOf:
+        - $ref: '#/components/schemas/SupportTicketSummary'
+        - type: object
+          required: [body, replies]
+          properties:
+            body:
+              type: string
+              description: Original ticket body submitted by the user.
+            email:
+              type: [string, 'null']
+              format: email
+              description: Set only for anonymous submissions.
+            replies:
+              type: array
+              items:
+                $ref: '#/components/schemas/SupportReply'
+
+    MakeSupportTicketRequest:
+      type: object
+      required: [subject, category, body]
+      properties:
+        subject:
+          type: string
+          minLength: 3
+          maxLength: 160
+        category:
+          $ref: '#/components/schemas/SupportTicketCategory'
+        body:
+          type: string
+          minLength: 10
+          maxLength: 5000
+        email:
+          type: string
+          format: email
+          maxLength: 120
+          description: Required for anonymous submissions; ignored when the caller is authenticated.
+
+    ReplySupportTicketRequest:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 5000
+
+    SupportTicketEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SupportTicket'
+
+    SupportTicketListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/SupportTicketSummary'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    SupportReplyEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SupportReply'
 
   responses:
     Unauthorized:

@@ -1078,35 +1078,37 @@ CT-10.1: 10+ endpoints, schemas: `Notification`, `NotificationPreferences`, `Rep
 
 ### 🔵 Backend Tasks
 
-| ID | Task | Endpoint |
-|----|------|----------|
-| BE-12.1 | CmsController::show | `GET /cms/pages/{slug}` |
-| BE-12.2 | HelpController (index/show/search) | `GET /cms/help-articles`, `GET /cms/help-articles/{slug}` |
-| BE-12.3 | SupportController (store, index, show, reply) | `POST /support/tickets`, `GET /account/support-tickets[/{id}]`, `POST /support/tickets/{id}/messages` |
-| BE-12.4 | Models: CmsPage, HelpArticle, SupportTicket, SupportMessage (all translatable) | — |
-| BE-12.5 | Migrations | — |
-| BE-12.6 | Filament resources for CMS/Help/Support (added in Sprint 11 actually, polish here) | — |
-| BE-12.7 | Seeders: initial CMS pages (Arabic + English) | — |
+| ID | Task | Endpoint | Status |
+|----|------|----------|--------|
+| BE-12.1 | PageController (index/show) | `GET /pages`, `GET /pages/{slug}` | ✅ commit `54ec549` |
+| BE-12.2 | HelpController (categories/categoryShow/articleShow/search) | `GET /help/categories`, `GET /help/categories/{slug}`, `GET /help/articles/{slug}`, `GET /help/search` | ✅ commit `54ec549` |
+| BE-12.3 | SupportController (store, myTickets, show, reply) | `POST /support/tickets`, `GET /account/support/tickets[/{id}]`, `POST /account/support/tickets/{id}/reply` | ✅ commit `54ec549` |
+| BE-12.4 | Models: Page, HelpCategory, HelpArticle, SupportTicket, SupportReply (+ enums: SupportTicketStatus/Category/Priority) | — | ✅ commit `54ec549` |
+| BE-12.5 | Migrations: pages, help_categories, help_articles, support_tickets, support_replies | — | ✅ commit `54ec549` |
+| BE-12.6 | Filament resources for Pages/Help/Support | — | ✅ commit `69110de` (Sprint 11 deferred this — closed in 2026-05-25 polish pass) |
+| BE-12.7 | Seeders: 4 default CMS pages + 5 help categories × 3 articles + demo tickets in DemoDataSeeder | — | ✅ commits `54ec549` + `eea6333` (DemoDataSeeder refresh on 2026-05-25) |
 
 ### 🟣 Frontend Tasks
 
-| ID | Task | Path / Component |
-|----|------|------------------|
-| FE-12.1 | About page | `app/[locale]/about/page.tsx` |
-| FE-12.2 | Terms page | `app/[locale]/terms/page.tsx` |
-| FE-12.3 | Privacy page | `app/[locale]/privacy/page.tsx` |
-| FE-12.4 | Safety page | `app/[locale]/safety/page.tsx` |
-| FE-12.5 | Help center | `app/[locale]/help/page.tsx` — مرجع `help.jsx` |
-| FE-12.6 | Help article | `app/[locale]/help/[slug]/page.tsx` |
-| FE-12.7 | Help search | `components/help/HelpSearch.tsx` |
-| FE-12.8 | Contact page | `app/[locale]/contact/page.tsx` |
-| FE-12.9 | Support tickets list | `app/[locale]/account/support/page.tsx` |
-| FE-12.10 | Support ticket detail + reply | `app/[locale]/account/support/[id]/page.tsx` |
-| FE-12.11 | CmsContent (markdown/rich text renderer) | `components/cms/CmsContent.tsx` |
+| ID | Task | Path / Component | Status |
+|----|------|------------------|--------|
+| FE-12.1 | About page | `app/p/about/page.tsx` (via `/p/[slug]`) | ✅ commit `1f6fb43` |
+| FE-12.2 | Terms page | `/p/terms` (via `/p/[slug]`) | ✅ commit `1f6fb43` |
+| FE-12.3 | Privacy page | `/p/privacy` (via `/p/[slug]`) | ✅ commit `1f6fb43` |
+| FE-12.4 | Safety page | `/p/safety` (via `/p/[slug]`) | ✅ commit `1f6fb43` |
+| FE-12.5 | Help center | `app/help/page.tsx` | ✅ commit `1f6fb43` |
+| FE-12.6 | Help article | `app/help/articles/[slug]/page.tsx` + `app/help/c/[slug]/page.tsx` | ✅ commit `1f6fb43` |
+| FE-12.7 | Help search | `app/help/search/page.tsx` | ✅ commit `1f6fb43` |
+| FE-12.8 | Contact page | folded into `app/support/page.tsx` + `app/support/new/page.tsx` | ✅ commit `1f6fb43` |
+| FE-12.9 | Support tickets list | `app/account/support/page.tsx` | ✅ commit `1f6fb43` |
+| FE-12.10 | Support ticket detail + reply | `app/account/support/[id]/page.tsx` | ✅ commit `1f6fb43` |
+| FE-12.11 | CmsContent (markdown/rich text renderer) | `components/cms/CmsContent.tsx` | ✅ commit `1f6fb43` |
 
 ### 🟡 Contract Tasks
 
-CT-12.1: 7 endpoints, schemas: `CmsPage`, `HelpArticle`, `SupportTicket`, `SupportMessage`
+| ID | Task | Status |
+|----|------|--------|
+| CT-12.1 | OpenAPI paths for `/pages/*`, `/help/*`, `/support/*`, `/account/support/*` + schemas `CmsPage`, `CmsPageSummary`, `HelpCategory`, `HelpArticle`, `HelpArticleSummary`, `SupportTicket`, `SupportTicketSummary`, `SupportReply`, `MakeSupportTicketRequest`, `ReplySupportTicketRequest` + matching Postman folders | ✅ 2026-05-25 docs-sync commit |
 
 ---
 

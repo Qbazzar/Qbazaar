@@ -1,6 +1,6 @@
 # QBazaar — Roadmap (Solo Dev MVP)
 
-> **آخر تحديث:** 2026-05-20
+> **آخر تحديث:** 2026-05-25
 > **تاريخ البدء:** 2026-05-20
 > **النطاق:** Backend (Laravel) + Web (Next.js). بدون Mobile/Phase 2.
 > **ملاحظة:** لا نلتزم بتواريخ انتهاء متوقعة — نمشي per-sprint وفق ما يجهز.
@@ -11,12 +11,12 @@
 
 | البند | القيمة |
 |-------|---------|
-| **Active Milestone** | **MVP feature-complete** — Milestones 1–5 ✅ closed → polish + QA + deploy linking next |
-| **Active Sprint** | Sprints 0..12 ✅ closed + QBFront design migration ✅ + Filament admin ✅ + DemoDataSeeder ✅ |
-| **Active Day** | Sprint 12 closed — CMS pages, help center, support tickets; demo fixtures seeded (18 users + 60 ads + convos + offers + favorites + reports + tickets). Remaining backlog: typing indicators (Reverb client-events) + VPS deploy linking (awaiting sudo for sanad). |
+| **Active Milestone** | **Deploy + Polish** — MVP feature-complete (Milestones 1–5 ✅). Laravel running on VPS (`147.79.115.44`, CloudPanel tenant `qb-user`); DNS/SSL for `miete.site` pending user action. |
+| **Active Sprint** | Sprints 0..12 ✅ closed + QBFront design migration ✅ + Filament admin (incl. Pages/Help/Support resources) ✅ + DemoDataSeeder ✅ + VPS bootstrap ✅ |
+| **Active Issues** | (1) DNS + SSL for `https://miete.site` — user action. (2) Post-MVP backlog: typing indicators (Reverb client-events), FCM push, pHash dedup, signed URLs for originals, full QA sweep (bug bash / perf / a11y / security / RTL). |
 | **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
-| **Blockers** | لا يوجد |
-| **Manual user steps pending** | GitHub Project + 13 Milestones + Labels; sign-ups for Twilio + Sentry + FCM project |
+| **Blockers** | لا blockers على dev. Production publish blocked on DNS/SSL only. |
+| **Manual user steps pending** | DNS A-record `miete.site` → `147.79.115.44` + Let's Encrypt SSL via CloudPanel; sign-ups for Twilio (production creds) + Sentry DSN + FCM project. |
 
 ## ✅ Progress Log
 
@@ -177,8 +177,8 @@ All 13 sprints landed. The full MVP surface is on `main` and pushed to
 - Typing indicators (Reverb client-events — needs broadcaster opt-in)
 - FCM push notifications (needs Firebase project + device_tokens table)
 - pHash dedup for ad images
-- Filament resources for Pages/Help/Support (admin currently uses tinker / direct DB)
-- VPS deploy linking — waiting for `sudo` access on sanad user at 147.79.115.44
+- ~~Filament resources for Pages/Help/Support~~ ✅ landed 2026-05-25 (`69110de`)
+- ~~VPS deploy linking~~ ✅ Laravel now serving on `147.79.115.44`; DNS + SSL for `miete.site` still pending user action
 
 **Verification quick start:**
 ```
@@ -189,6 +189,72 @@ php artisan serve                             # http://localhost:8000/admin → 
 cd c:\laragon\www\QB\qbazaar-web
 npm run dev                                   # http://localhost:3000
 ```
+
+---
+
+### 🚀 Deploy linking + admin polish + demo refresh (2026-05-25)
+
+Post-MVP "deploy + polish" pass — first VPS install, admin Filament resources
+for the Sprint 12 surface, richer demo fixtures, and three production-only
+boot-time bugs squashed.
+
+**Filament admin — Pages / Help / Support resources**
+- New resources cover the remaining Sprint 12 surface so admins can run the
+  whole MVP from `/admin`:
+  - `PageResource` — CMS pages (slug + title + body + meta_description +
+    published_at + display_order); 4 default slugs seeded (about, terms,
+    privacy, safety).
+  - `HelpCategoryResource` + `HelpArticleResource` — 5 categories × 3
+    articles seeded; both edit Markdown body, slug, display_order, is_published.
+  - `SupportTicketResource` — list + filters by status / priority / category;
+    detail view shows threaded replies, lets staff post replies (`is_staff=1`)
+    and transitions ticket status (open → in_progress → waiting_user →
+    resolved → closed).
+- Previously these models were managed via tinker / direct DB only — closing
+  the deferred item from Sprint 12 (`BE-12.6`).
+
+**DemoDataSeeder — richer dev fixtures**
+- Counts after `php artisan migrate:fresh --seed --force`:
+  - **20 users** (admin + 19 demo accounts incl. 6 sellers)
+  - **27 ads** (mix of active / pending / sold / draft across cars / apartments / mobiles / electronics)
+  - **11 conversations** with **36 messages** total (cursor-paginated)
+  - **7 offers** in various OfferStatus states (pending / accepted / rejected / withdrawn / expired)
+  - **40 favorites** spread across the 20 users
+  - **8 reports** filed against ads / users / messages
+  - **5 support tickets** with threaded replies (open + in_progress + resolved)
+  - **4 CMS pages** (about / terms / privacy / safety) with bilingual bodies
+  - **15 help articles** (5 categories × 3 articles)
+- Replaces the older "18 users + 60 ads" seed numbers from the Sprint 12 close
+  entry above — the 2026-05-25 demo is tighter, more representative, and
+  every relation is wired so the admin panel demos cleanly end-to-end.
+
+**Deploy linked to VPS**
+- Target: `147.79.115.44` (CloudPanel) — tenant user `qb-user`, public URL
+  `https://miete.site` (DNS + SSL still pending user action).
+- Laravel app is live: `GET /api/v1/health` returns `200` with the success
+  envelope under the raw IP.
+- `deploy/scripts/deploy-api.sh` rewritten for the `qb-user` /
+  `www.miete.site` layout (commit `f644147`).
+
+**Production-only boot bugs fixed**
+- `01b2f25` — Telescope service-provider registration gated on
+  `APP_ENV !== 'production'`; otherwise it bombed boot on the VPS where
+  `telescope` is `require-dev` only.
+- `168e674` — moved the dead-code `jsonError()` helper out of the
+  exception-handler closure where Opcache + production cache combo caused
+  a "function already defined" fatal on the second request.
+- `da46ccf` — `RateLimiter::for(...)` calls relocated out of the
+  `withRouting()->then(...)` closure into a dedicated bootstrap step; the
+  closure ran twice under route caching on the VPS, double-registering the
+  named limiters and breaking `/api/v1/auth/login`.
+
+**Commits today (qbazaar-api):**
+- `eea6333` chore(seed): DemoDataSeeder counts refreshed for admin demo
+- `69110de` feat(admin): Filament resources for Pages / Help / Support [BE-12.6 follow-up]
+- `f644147` chore(deploy): rewrite deploy-api.sh for qb-user / www.miete.site layout
+- `01b2f25` fix(boot): Telescope provider gated on non-production
+- `168e674` fix(boot): hoist jsonError() helper out of handler closure
+- `da46ccf` fix(boot): RateLimiter::for relocated outside withRouting() closure
 
 ---
 
@@ -459,3 +525,40 @@ npm run dev                                   # http://localhost:3000
 - ✅ ...
 - 🟡 ...
 - 🔴 ...
+
+---
+
+## 🗂️ Post-MVP Backlog
+
+> Tracked here so they don't get lost. None are blockers for the MVP launch —
+> they're scheduled to land after the production go-live on `miete.site`.
+
+### Real-time + notifications
+- [ ] **Typing indicators via Reverb client-events** — requires opting the
+      broadcaster into `client-*` events + an Echo `.whisper()` wire on the
+      chat composer. Sprint 8 Wave B carry-over.
+- [ ] **FCM push notifications** — needs Firebase project + `device_tokens`
+      table + a notification channel that wraps `kreait/firebase-php`. Wires
+      onto the existing 6+ database-channel notifications.
+
+### Trust & media
+- [ ] **pHash dedup for ad images** — phash-style perceptual hash on every
+      uploaded image; reject (or flag) near-duplicates of an existing ad's
+      photos. Originally scoped in Sprint 4 (BE-4.8) but deferred as
+      post-launch quality work.
+- [ ] **Signed URLs for original-resolution ad images** — currently the
+      `original_webp` conversion is public; production should serve the
+      full-res file behind a short-TTL signed URL (Sprint 4 BE-4.12).
+
+### QA + audit sweep (pre-launch checklist)
+- [ ] **Bug bash** — manually run every user story from Sprint 1–12 against
+      the staging VPS.
+- [ ] **Performance audit** — Lighthouse on every public page (mobile +
+      desktop) + Laravel Pulse review (slow queries, slow jobs).
+- [ ] **Accessibility audit** — axe DevTools sweep on every page; fix any
+      critical/serious violations.
+- [ ] **Security review** — `composer audit` + `npm audit` + OWASP Top 10
+      walkthrough + SQL-injection / XSS / CSRF spot-checks + rate-limit
+      verification on auth/otp/publish/messages.
+- [ ] **RTL audit** — every page in `/ar/*` rendered with correct
+      direction, mirrored icons, and aligned form controls.
