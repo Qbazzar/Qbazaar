@@ -31,10 +31,11 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
  * MUST be declared before the `return Application::configure(...)` chain below,
  * otherwise it never reaches PHP's symbol table (everything after `return` is
  * dead code) and exception rendering blows up with "undefined function jsonError".
- *
- * @param array<string,mixed>|null $details
  */
 if (! function_exists('jsonError')) {
+    /**
+     * @param array<string, mixed>|null $details
+     */
     function jsonError(ErrorCode $code, string $message, ?array $details = null, ?string $requestId = null): JsonResponse
     {
         return response()->json([
@@ -208,4 +209,3 @@ return Application::configure(basePath: dirname(__DIR__))
             ], $e->getStatusCode());
         });
     })->create();
-
