@@ -15,7 +15,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Notifications\DatabaseNotification;
-use UnitEnum;
 
 /**
  * Read-only audit view over the `notifications` table. Lets an admin verify
@@ -36,7 +35,10 @@ class NotificationResource extends Resource
 
     protected static ?int $navigationSort = 50;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Communications';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.communications');
+    }
 
     public static function getNavigationLabel(): string
     {

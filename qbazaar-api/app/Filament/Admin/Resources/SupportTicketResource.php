@@ -20,15 +20,19 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\TextSize;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use UnitEnum;
 
 /**
  * Support ticket admin surface. Staff can:
@@ -49,7 +53,10 @@ class SupportTicketResource extends Resource
 
     protected static ?int $navigationSort = 25;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Communications';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.communications');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -86,37 +93,137 @@ class SupportTicketResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('subject')
-                ->label(__('admin.fields.subject'))
-                ->required()
-                ->maxLength(160),
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make('subject')
+                        ->label(__('admin.fields.subject'))
+                        ->required()
+                        ->maxLength(160)
+                        ->columnSpanFull(),
 
-            Select::make('category')
-                ->label(__('admin.fields.category'))
-                ->options(self::enumOptions(SupportTicketCategory::class))
-                ->required(),
+                    Textarea::make('body')
+                        ->label(__('admin.fields.body'))
+                        ->rows(6)
+                        ->disabled()
+                        ->columnSpanFull(),
 
-            Textarea::make('body')
-                ->label(__('admin.fields.body'))
-                ->rows(6)
-                ->disabled(),
+                    Select::make('category')
+                        ->label(__('admin.fields.category'))
+                        ->options(self::enumOptions(SupportTicketCategory::class))
+                        ->required(),
 
-            Select::make('status')
-                ->label(__('admin.fields.status'))
-                ->options(self::enumOptions(SupportTicketStatus::class))
-                ->required(),
+                    Select::make('priority')
+                        ->label(__('admin.fields.priority'))
+                        ->options(self::enumOptions(SupportTicketPriority::class))
+                        ->required(),
+                ]),
 
-            Select::make('priority')
-                ->label(__('admin.fields.priority'))
-                ->options(self::enumOptions(SupportTicketPriority::class))
-                ->required(),
+            Section::make(__('admin.sections.assignment'))
+                ->columns(2)
+                ->schema([
+                    Select::make('status')
+                        ->label(__('admin.fields.status'))
+                        ->options(self::enumOptions(SupportTicketStatus::class))
+                        ->required(),
 
-            Select::make('assigned_to')
-                ->label(__('admin.fields.assignee'))
-                ->relationship('assignee', 'full_name')
-                ->searchable()
-                ->preload(),
-        ])->columns(2);
+                    Select::make('assigned_to')
+                        ->label(__('admin.fields.assignee'))
+                        ->relationship('assignee', 'full_name')
+                        ->searchable()
+                        ->preload(),
+                ]),
+        ])->columns(1);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('subject')
+                        ->label(__('admin.fields.subject'))
+                        ->weight(FontWeight::SemiBold)
+                        ->size(TextSize::Large)
+                        ->columnSpanFull(),
+
+                    TextEntry::make('body')
+                        ->label(__('admin.fields.body'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+
+                    TextEntry::make('category')
+                        ->label(__('admin.fields.category'))
+                        ->badge()
+                        ->formatStateUsing(static fn (SupportTicketCategory $state): string => (string) __('admin.support.category.' . $state->value)),
+
+                    TextEntry::make('priority')
+                        ->label(__('admin.fields.priority'))
+                        ->badge()
+                        ->color(static fn (SupportTicketPriority $state): string => match ($state) {
+                            SupportTicketPriority::LOW => 'gray',
+                            SupportTicketPriority::NORMAL => 'info',
+                            SupportTicketPriority::HIGH => 'warning',
+                            SupportTicketPriority::URGENT => 'danger',
+                        })
+                        ->formatStateUsing(static fn (SupportTicketPriority $state): string => (string) __('admin.support.priority.' . $state->value)),
+                ]),
+
+            Section::make(__('admin.sections.assignment'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('status')
+                        ->label(__('admin.fields.status'))
+                        ->badge()
+                        ->color(static fn (SupportTicketStatus $state): string => match ($state) {
+                            SupportTicketStatus::OPEN => 'primary',
+                            SupportTicketStatus::IN_PROGRESS => 'info',
+                            SupportTicketStatus::WAITING_USER => 'warning',
+                            SupportTicketStatus::RESOLVED => 'success',
+                            SupportTicketStatus::CLOSED => 'gray',
+                        })
+                        ->formatStateUsing(static fn (SupportTicketStatus $state): string => (string) __('admin.support.status.' . $state->value)),
+
+                    TextEntry::make('assignee.full_name')
+                        ->label(__('admin.fields.assignee'))
+                        ->placeholder('—'),
+                ]),
+
+            Section::make(__('admin.sections.reporter'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('user.full_name')
+                        ->label(__('admin.fields.reporter'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('email')
+                        ->label(__('admin.fields.email'))
+                        ->copyable()
+                        ->placeholder('—'),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->collapsed()
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+
+                    TextEntry::make('last_replied_at')
+                        ->label(__('admin.fields.last_reply'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -169,16 +276,16 @@ class SupportTicketResource extends Resource
                     ->placeholder('—'),
 
                 TextColumn::make('replies_count')
-                    ->label('Replies')
+                    ->label(__('admin.fields.replies'))
                     ->sortable(),
 
                 TextColumn::make('last_replied_at')
-                    ->label('Last reply')
+                    ->label(__('admin.fields.last_reply'))
                     ->since()
                     ->sortable(),
 
                 TextColumn::make('created_at')
-                    ->label('Opened')
+                    ->label(__('admin.fields.opened'))
                     ->since()
                     ->sortable(),
             ])

@@ -17,6 +17,10 @@ declare(strict_types=1);
 */
 
 return [
+    'dashboard' => [
+        'title' => 'Dashboard',
+    ],
+
     'navigation' => [
         'users' => 'Users',
         'ads' => 'Ads',
@@ -33,6 +37,19 @@ return [
         'offers' => 'Offers',
         'notifications' => 'Notifications',
         'saved_searches' => 'Saved searches',
+        'support_tickets' => 'Support tickets',
+        'pages' => 'Pages',
+        'help_categories' => 'Help categories',
+        'help_articles' => 'Help articles',
+    ],
+
+    'navigation_groups' => [
+        'marketplace' => 'Marketplace',
+        'communications' => 'Communications',
+        'moderation' => 'Moderation',
+        'taxonomy' => 'Taxonomy',
+        'content' => 'Content',
+        'audit' => 'Audit',
     ],
 
     'resources' => [
@@ -84,6 +101,49 @@ return [
             'label' => 'Activity entry',
             'plural' => 'Activity log',
         ],
+        'support_ticket' => [
+            'label' => 'Support ticket',
+            'plural' => 'Support tickets',
+        ],
+        'page' => [
+            'label' => 'Page',
+            'plural' => 'Pages',
+        ],
+        'help_category' => [
+            'label' => 'Help category',
+            'plural' => 'Help categories',
+        ],
+        'help_article' => [
+            'label' => 'Help article',
+            'plural' => 'Help articles',
+        ],
+    ],
+
+    'support' => [
+        'assigned_to_me' => 'Assign to me',
+        'reply' => 'Reply',
+        'change_status' => 'Change status',
+        'category' => [
+            'general' => 'General inquiry',
+            'account' => 'Account',
+            'ad' => 'Ad',
+            'payment' => 'Payment',
+            'abuse' => 'Abuse',
+            'other' => 'Other',
+        ],
+        'status' => [
+            'open' => 'Open',
+            'in_progress' => 'In progress',
+            'waiting_user' => 'Waiting on user',
+            'resolved' => 'Resolved',
+            'closed' => 'Closed',
+        ],
+        'priority' => [
+            'low' => 'Low',
+            'normal' => 'Normal',
+            'high' => 'High',
+            'urgent' => 'Urgent',
+        ],
     ],
 
     'fields' => [
@@ -101,7 +161,12 @@ return [
         'last_login_at' => 'Last login',
         'created_at' => 'Created',
         'updated_at' => 'Updated',
+        'updated' => 'Updated',
+        'opened' => 'Opened',
+        'sent' => 'Sent',
         'title' => 'Title',
+        'title_en' => 'Title (EN)',
+        'title_ar' => 'Title (AR)',
         'description' => 'Description',
         'category' => 'Category',
         'location' => 'Location',
@@ -132,6 +197,9 @@ return [
         'reviewer' => 'Reviewed by',
         'reviewed_at' => 'Reviewed at',
         'amount' => 'Amount',
+        'accepted_at' => 'Accepted at',
+        'rejected_at' => 'Rejected at',
+        'withdrawn_at' => 'Withdrawn at',
         'last_message_at' => 'Last message',
         'message_count' => 'Messages',
         'buyer' => 'Buyer',
@@ -145,7 +213,28 @@ return [
         'event' => 'Event',
         'properties' => 'Properties',
         'name' => 'Name',
+        'name_en' => 'Name (EN)',
+        'name_ar' => 'Name (AR)',
         'query_params' => 'Query',
+        'custom_fields' => 'Custom fields',
+        'custom_filters' => 'Custom filters',
+        'excerpt' => 'Excerpt',
+        'views' => 'Views',
+        'articles' => 'Articles',
+        'meta_description' => 'Meta description',
+        'field_key' => 'Field key',
+        'filter_key' => 'Filter key',
+        'definition_json' => 'Definition (JSON)',
+        'short_summary' => 'Short summary',
+        'is_published' => 'Published',
+        'priority' => 'Priority',
+        'assignee' => 'Assignee',
+        'last_reply' => 'Last reply',
+        'replies' => 'Replies',
+        'reply' => 'Reply',
+        'author' => 'Author',
+        'is_staff' => 'Staff?',
+        'reply_as_staff' => 'Reply as staff',
     ],
 
     'actions' => [
@@ -156,6 +245,7 @@ return [
         'save' => 'Save',
         'cancel' => 'Cancel',
         'ban' => 'Ban',
+        'assign_to_me' => 'Assign to me',
         'unban' => 'Unban',
         'suspend' => 'Suspend',
         'reset_password' => 'Reset password',
@@ -246,5 +336,29 @@ return [
 
     'helpers' => [
         'lucide_icon' => 'Lucide icon name (e.g. tag, map-pin, smartphone)',
+    ],
+
+    'sections' => [
+        'general' => 'General',
+        'translations' => 'Translations',
+        'content' => 'Content',
+        'meta' => 'Meta',
+        'taxonomy' => 'Taxonomy',
+        'pricing' => 'Pricing',
+        'moderation' => 'Moderation',
+        'audit' => 'Audit',
+        'audience' => 'Audience',
+        'assignment' => 'Assignment',
+        'verification' => 'Verification',
+        'images' => 'Images',
+        'seo' => 'SEO',
+        'geo' => 'Geo coordinates',
+        'reporter' => 'Reporter',
+        'target' => 'Target',
+    ],
+
+    'locales' => [
+        'ar' => 'العربية',
+        'en' => 'English',
     ],
 ];

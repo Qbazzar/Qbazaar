@@ -17,15 +17,19 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use UnitEnum;
 
 /**
  * CRUD over the moderation_rules table. The model's saved/deleted hooks bust
@@ -41,7 +45,10 @@ class ModerationRuleResource extends Resource
 
     protected static ?int $navigationSort = 41;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Moderation';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.moderation');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -61,32 +68,77 @@ class ModerationRuleResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('type')
-                ->label(__('admin.fields.type'))
-                ->options([
-                    ModerationRuleType::BANNED_WORD->value => 'Banned word',
-                    ModerationRuleType::BLOCKED_DOMAIN->value => 'Blocked domain',
-                ])
-                ->required(),
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    Select::make('type')
+                        ->label(__('admin.fields.type'))
+                        ->options([
+                            ModerationRuleType::BANNED_WORD->value => 'Banned word',
+                            ModerationRuleType::BLOCKED_DOMAIN->value => 'Blocked domain',
+                        ])
+                        ->required(),
 
-            TextInput::make('value')
-                ->label(__('admin.fields.value'))
-                ->required()
-                ->maxLength(255),
+                    Select::make('language')
+                        ->label(__('admin.fields.language_scope'))
+                        ->options([
+                            ModerationRuleLanguage::ANY->value => 'Any',
+                            ModerationRuleLanguage::AR->value => 'Arabic',
+                            ModerationRuleLanguage::EN->value => 'English',
+                        ])
+                        ->required()
+                        ->default(ModerationRuleLanguage::ANY->value),
 
-            Select::make('language')
-                ->label(__('admin.fields.language_scope'))
-                ->options([
-                    ModerationRuleLanguage::ANY->value => 'Any',
-                    ModerationRuleLanguage::AR->value => 'Arabic',
-                    ModerationRuleLanguage::EN->value => 'English',
-                ])
-                ->required()
-                ->default(ModerationRuleLanguage::ANY->value),
+                    TextInput::make('value')
+                        ->label(__('admin.fields.value'))
+                        ->required()
+                        ->maxLength(255)
+                        ->columnSpanFull(),
 
-            Toggle::make('is_active')
-                ->label(__('admin.fields.is_active'))
-                ->default(true),
+                    Toggle::make('is_active')
+                        ->label(__('admin.fields.is_active'))
+                        ->default(true),
+                ]),
+        ])->columns(1);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('type')
+                        ->label(__('admin.fields.type'))
+                        ->badge()
+                        ->color('warning'),
+
+                    TextEntry::make('language')
+                        ->label(__('admin.fields.language_scope'))
+                        ->badge()
+                        ->color('gray'),
+
+                    IconEntry::make('is_active')
+                        ->label(__('admin.fields.is_active'))
+                        ->boolean(),
+
+                    TextEntry::make('value')
+                        ->label(__('admin.fields.value'))
+                        ->weight(FontWeight::SemiBold)
+                        ->fontFamily(FontFamily::Mono)
+                        ->copyable()
+                        ->columnSpanFull(),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+
+                    TextEntry::make('updated_at')
+                        ->label(__('admin.fields.updated_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
         ]);
     }
 

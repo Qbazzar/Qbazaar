@@ -14,7 +14,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Spatie\Activitylog\Models\Activity;
-use UnitEnum;
 
 /**
  * Read-only Spatie Activitylog viewer.
@@ -33,7 +32,10 @@ class ActivityResource extends Resource
 
     protected static ?int $navigationSort = 60;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Moderation';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.moderation');
+    }
 
     public static function getNavigationLabel(): string
     {

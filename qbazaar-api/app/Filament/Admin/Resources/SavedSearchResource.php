@@ -13,7 +13,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use UnitEnum;
 
 /**
  * Read-only audit view of per-user saved searches. Mostly here so the
@@ -28,7 +27,10 @@ class SavedSearchResource extends Resource
 
     protected static ?int $navigationSort = 54;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Communications';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.communications');
+    }
 
     public static function getNavigationLabel(): string
     {

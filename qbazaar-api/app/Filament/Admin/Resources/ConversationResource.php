@@ -13,7 +13,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use UnitEnum;
 
 /**
  * Read-only admin window over the buyer↔seller chat threads.
@@ -32,7 +31,10 @@ class ConversationResource extends Resource
 
     protected static ?int $navigationSort = 51;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Communications';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.communications');
+    }
 
     public static function getNavigationLabel(): string
     {

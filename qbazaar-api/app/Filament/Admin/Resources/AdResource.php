@@ -21,9 +21,16 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\TextSize;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
@@ -74,61 +81,207 @@ class AdResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('title')
-                ->label(__('admin.fields.title'))
-                ->required()
-                ->maxLength(120),
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make('title')
+                        ->label(__('admin.fields.title'))
+                        ->required()
+                        ->maxLength(120)
+                        ->columnSpanFull(),
 
-            Textarea::make('description')
-                ->label(__('admin.fields.description'))
-                ->required()
-                ->rows(6),
-
-            Select::make('category_id')
-                ->label(__('admin.fields.category'))
-                ->relationship('category', 'slug')
-                ->searchable()
-                ->preload()
-                ->required(),
-
-            Select::make('location_id')
-                ->label(__('admin.fields.location'))
-                ->relationship('location', 'slug')
-                ->searchable()
-                ->preload()
-                ->required(),
-
-            TextInput::make('price')
-                ->label(__('admin.fields.price'))
-                ->numeric()
-                ->step(0.01)
-                ->minValue(0),
-
-            Select::make('price_type')
-                ->label(__('admin.fields.price_type'))
-                ->options([
-                    'fixed' => 'Fixed',
-                    'negotiable' => 'Negotiable',
-                    'free' => 'Free',
-                    'contact' => 'Contact',
-                ])
-                ->required(),
-
-            Select::make('condition')
-                ->label(__('admin.fields.condition'))
-                ->options([
-                    Condition::NEW->value => 'New',
-                    Condition::LIKE_NEW->value => 'Like new',
-                    Condition::USED->value => 'Used',
+                    Textarea::make('description')
+                        ->label(__('admin.fields.description'))
+                        ->required()
+                        ->rows(6)
+                        ->columnSpanFull(),
                 ]),
 
-            Select::make('status')
-                ->label(__('admin.fields.status'))
-                ->options(self::statusOptions())
-                ->required(),
+            Section::make(__('admin.sections.taxonomy'))
+                ->columns(2)
+                ->schema([
+                    Select::make('category_id')
+                        ->label(__('admin.fields.category'))
+                        ->relationship('category', 'slug')
+                        ->searchable()
+                        ->preload()
+                        ->required(),
 
-            Toggle::make('featured')
-                ->label(__('admin.fields.featured')),
+                    Select::make('location_id')
+                        ->label(__('admin.fields.location'))
+                        ->relationship('location', 'slug')
+                        ->searchable()
+                        ->preload()
+                        ->required(),
+                ]),
+
+            Section::make(__('admin.sections.pricing'))
+                ->columns(3)
+                ->schema([
+                    TextInput::make('price')
+                        ->label(__('admin.fields.price'))
+                        ->numeric()
+                        ->step(0.01)
+                        ->minValue(0),
+
+                    Select::make('price_type')
+                        ->label(__('admin.fields.price_type'))
+                        ->options([
+                            'fixed' => 'Fixed',
+                            'negotiable' => 'Negotiable',
+                            'free' => 'Free',
+                            'contact' => 'Contact',
+                        ])
+                        ->required(),
+
+                    Select::make('condition')
+                        ->label(__('admin.fields.condition'))
+                        ->options([
+                            Condition::NEW->value => 'New',
+                            Condition::LIKE_NEW->value => 'Like new',
+                            Condition::USED->value => 'Used',
+                        ]),
+                ]),
+
+            Section::make(__('admin.sections.moderation'))
+                ->columns(2)
+                ->schema([
+                    Select::make('status')
+                        ->label(__('admin.fields.status'))
+                        ->options(self::statusOptions())
+                        ->required(),
+
+                    Toggle::make('featured')
+                        ->label(__('admin.fields.featured')),
+                ]),
+        ])->columns(1);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('title')
+                        ->label(__('admin.fields.title'))
+                        ->weight(FontWeight::SemiBold)
+                        ->size(TextSize::Large)
+                        ->columnSpanFull(),
+
+                    TextEntry::make('description')
+                        ->label(__('admin.fields.description'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+
+                    TextEntry::make('status')
+                        ->label(__('admin.fields.status'))
+                        ->badge()
+                        ->color(static fn (AdStatus $state): string => match ($state) {
+                            AdStatus::ACTIVE => 'success',
+                            AdStatus::PENDING => 'warning',
+                            AdStatus::REJECTED, AdStatus::BLOCKED => 'danger',
+                            AdStatus::SOLD => 'info',
+                            AdStatus::DRAFT, AdStatus::EXPIRED => 'gray',
+                        }),
+
+                    IconEntry::make('featured')
+                        ->label(__('admin.fields.featured'))
+                        ->boolean(),
+                ]),
+
+            Section::make(__('admin.sections.pricing'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('price')
+                        ->label(__('admin.fields.price'))
+                        ->money('QAR')
+                        ->placeholder('—'),
+
+                    TextEntry::make('price_type')
+                        ->label(__('admin.fields.price_type'))
+                        ->badge()
+                        ->color('gray'),
+
+                    TextEntry::make('condition')
+                        ->label(__('admin.fields.condition'))
+                        ->badge()
+                        ->placeholder('—')
+                        ->color('gray'),
+                ]),
+
+            Section::make(__('admin.sections.taxonomy'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('user.full_name')
+                        ->label(__('admin.fields.seller'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('category.slug')
+                        ->label(__('admin.fields.category'))
+                        ->badge()
+                        ->color('primary')
+                        ->placeholder('—'),
+
+                    TextEntry::make('location.slug')
+                        ->label(__('admin.fields.location'))
+                        ->badge()
+                        ->color('info')
+                        ->placeholder('—'),
+                ]),
+
+            Section::make(__('admin.sections.images'))
+                ->collapsible()
+                ->schema([
+                    ImageEntry::make('media_thumbnails')
+                        ->label('')
+                        ->hiddenLabel()
+                        ->placeholder('—')
+                        ->state(static function (Ad $record): array {
+                            return $record
+                                ->getMedia('images')
+                                ->map(static fn ($m) => $m->hasGeneratedConversion('medium') ? $m->getUrl('medium') : $m->getUrl())
+                                ->all();
+                        })
+                        ->square()
+                        ->size(120)
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->collapsed()
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('views_count')
+                        ->label(__('admin.fields.views_count'))
+                        ->numeric(),
+
+                    TextEntry::make('favorites_count')
+                        ->label(__('admin.fields.favorites_count'))
+                        ->numeric(),
+
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    TextEntry::make('published_at')
+                        ->label(__('admin.fields.published_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('expires_at')
+                        ->label(__('admin.fields.expires_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
         ]);
     }
 

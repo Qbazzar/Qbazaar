@@ -20,9 +20,15 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
@@ -78,51 +84,158 @@ class UserResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('full_name')
-                ->label(__('admin.fields.full_name'))
-                ->required()
-                ->maxLength(255),
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make('full_name')
+                        ->label(__('admin.fields.full_name'))
+                        ->required()
+                        ->maxLength(255),
 
-            TextInput::make('email')
-                ->label(__('admin.fields.email'))
-                ->email()
-                ->required()
-                ->maxLength(255),
+                    TextInput::make('email')
+                        ->label(__('admin.fields.email'))
+                        ->email()
+                        ->required()
+                        ->maxLength(255),
 
-            TextInput::make('phone')
-                ->label(__('admin.fields.phone'))
-                ->tel()
-                ->required()
-                ->maxLength(32),
+                    TextInput::make('phone')
+                        ->label(__('admin.fields.phone'))
+                        ->tel()
+                        ->required()
+                        ->maxLength(32),
 
-            Select::make('account_type')
-                ->label(__('admin.fields.account_type'))
-                ->options(self::enumOptions(AccountType::class))
-                ->required(),
+                    Select::make('language')
+                        ->label(__('admin.fields.language'))
+                        ->options(self::enumOptions(Language::class))
+                        ->required(),
+                ]),
 
-            Select::make('status')
-                ->label(__('admin.fields.status'))
-                ->options(self::enumOptions(UserStatus::class))
-                ->required(),
+            Section::make(__('admin.sections.moderation'))
+                ->columns(2)
+                ->schema([
+                    Select::make('account_type')
+                        ->label(__('admin.fields.account_type'))
+                        ->options(self::enumOptions(AccountType::class))
+                        ->required(),
 
-            Select::make('language')
-                ->label(__('admin.fields.language'))
-                ->options(self::enumOptions(Language::class))
-                ->required(),
+                    Select::make('status')
+                        ->label(__('admin.fields.status'))
+                        ->options(self::enumOptions(UserStatus::class))
+                        ->required(),
+                ]),
 
-            Toggle::make('email_verified')->label(__('admin.fields.email_verified')),
-            Toggle::make('phone_verified')->label(__('admin.fields.phone_verified')),
+            Section::make(__('admin.sections.verification'))
+                ->columns(2)
+                ->schema([
+                    Toggle::make('email_verified')->label(__('admin.fields.email_verified')),
+                    Toggle::make('phone_verified')->label(__('admin.fields.phone_verified')),
+                ]),
 
-            Textarea::make('privacy_settings')
-                ->label(__('admin.fields.privacy_settings'))
-                ->disabled()
-                ->rows(4)
-                ->dehydrated(false)
-                ->formatStateUsing(
-                    static fn (mixed $state): string => is_string($state)
-                    ? $state
-                    : (string) json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-                ),
+            Section::make(__('admin.sections.meta'))
+                ->collapsed()
+                ->schema([
+                    Textarea::make('privacy_settings')
+                        ->label(__('admin.fields.privacy_settings'))
+                        ->disabled()
+                        ->rows(4)
+                        ->dehydrated(false)
+                        ->formatStateUsing(
+                            static fn (mixed $state): string => is_string($state)
+                            ? $state
+                            : (string) json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+                        ),
+                ]),
+        ])->columns(1);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(3)
+                ->schema([
+                    ImageEntry::make('avatar_url')
+                        ->label(__('admin.fields.avatar'))
+                        ->getStateUsing(static fn (User $record): ?string => $record->avatarThumbUrl())
+                        ->circular()
+                        ->placeholder('—'),
+
+                    TextEntry::make('full_name')
+                        ->label(__('admin.fields.full_name'))
+                        ->weight(FontWeight::SemiBold)
+                        ->placeholder('—'),
+
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    TextEntry::make('email')
+                        ->label(__('admin.fields.email'))
+                        ->copyable()
+                        ->placeholder('—'),
+
+                    TextEntry::make('phone')
+                        ->label(__('admin.fields.phone'))
+                        ->copyable()
+                        ->placeholder('—'),
+
+                    TextEntry::make('language')
+                        ->label(__('admin.fields.language'))
+                        ->badge()
+                        ->color('gray'),
+                ]),
+
+            Section::make(__('admin.sections.moderation'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('account_type')
+                        ->label(__('admin.fields.account_type'))
+                        ->badge()
+                        ->color('info'),
+
+                    TextEntry::make('status')
+                        ->label(__('admin.fields.status'))
+                        ->badge()
+                        ->color(static fn (UserStatus $state): string => match ($state) {
+                            UserStatus::ACTIVE => 'success',
+                            UserStatus::SUSPENDED => 'danger',
+                            UserStatus::DEACTIVATED, UserStatus::PENDING_DELETION => 'gray',
+                        }),
+                ]),
+
+            Section::make(__('admin.sections.verification'))
+                ->columns(2)
+                ->schema([
+                    IconEntry::make('email_verified')
+                        ->label(__('admin.fields.email_verified'))
+                        ->boolean(),
+
+                    IconEntry::make('phone_verified')
+                        ->label(__('admin.fields.phone_verified'))
+                        ->boolean(),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->collapsed()
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('last_login_at')
+                        ->label(__('admin.fields.last_login_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+
+                    TextEntry::make('updated_at')
+                        ->label(__('admin.fields.updated_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
         ]);
     }
 

@@ -15,15 +15,18 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
-use UnitEnum;
 
 /**
  * Moderation queue.
@@ -46,7 +49,10 @@ class ReportResource extends Resource
 
     protected static ?int $navigationSort = 40;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Moderation';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.moderation');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -76,6 +82,92 @@ class ReportResource extends Resource
         // for the read-only infolist. The form is required by Resource but
         // unused on this surface.
         return $schema->components([]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    TextEntry::make('category')
+                        ->label(__('admin.fields.type'))
+                        ->badge()
+                        ->color('warning'),
+
+                    TextEntry::make('status')
+                        ->label(__('admin.fields.status'))
+                        ->badge()
+                        ->color(static fn (ReportStatus $state): string => match ($state) {
+                            ReportStatus::PENDING => 'warning',
+                            ReportStatus::ACTIONED => 'success',
+                            ReportStatus::DISMISSED => 'gray',
+                            ReportStatus::REVIEWED => 'info',
+                        }),
+
+                    TextEntry::make('description')
+                        ->label(__('admin.fields.description'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make(__('admin.sections.target'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('target_type')
+                        ->label(__('admin.fields.target_type'))
+                        ->badge()
+                        ->color('gray'),
+
+                    TextEntry::make('target_id')
+                        ->label(__('admin.fields.target_id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+                ]),
+
+            Section::make(__('admin.sections.reporter'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('reporter.full_name')
+                        ->label(__('admin.fields.reporter'))
+                        ->weight(FontWeight::Medium)
+                        ->placeholder('—'),
+
+                    TextEntry::make('reporter.email')
+                        ->label(__('admin.fields.email'))
+                        ->copyable()
+                        ->placeholder('—'),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('reviewer.full_name')
+                        ->label(__('admin.fields.reviewer'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('reviewed_at')
+                        ->label(__('admin.fields.reviewed_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+
+                    TextEntry::make('admin_notes')
+                        ->label(__('admin.fields.admin_notes'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table

@@ -17,15 +17,20 @@ use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Cache;
-use UnitEnum;
 
 /**
  * CMS page editor — drives the `/p/{slug}` public surface (About, Terms,
@@ -45,7 +50,10 @@ class PageResource extends Resource
 
     protected static ?int $navigationSort = 80;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Content';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.content');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -65,48 +73,161 @@ class PageResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('slug')
-                ->label(__('admin.fields.slug'))
-                ->required()
-                ->maxLength(64)
-                ->alphaDash()
-                ->unique(ignoreRecord: true),
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make('slug')
+                        ->label(__('admin.fields.slug'))
+                        ->required()
+                        ->maxLength(64)
+                        ->alphaDash()
+                        ->unique(ignoreRecord: true),
 
-            KeyValue::make('title')
-                ->label(__('admin.fields.title'))
-                ->keyLabel('Locale')
-                ->valueLabel('Translation')
-                ->required()
-                ->default(['ar' => '', 'en' => '']),
+                    TextInput::make('display_order')
+                        ->label(__('admin.fields.order'))
+                        ->numeric()
+                        ->default(0),
 
-            RichEditor::make('body.ar')
-                ->label('Body (AR)')
-                ->required()
-                ->columnSpanFull(),
+                    Toggle::make('is_published')
+                        ->label(__('admin.fields.is_published'))
+                        ->default(true),
 
-            RichEditor::make('body.en')
-                ->label('Body (EN)')
-                ->required()
-                ->columnSpanFull(),
+                    DateTimePicker::make('published_at')
+                        ->label(__('admin.fields.published_at'))
+                        ->seconds(false),
+                ]),
 
-            KeyValue::make('meta_description')
-                ->label('Meta description')
-                ->keyLabel('Locale')
-                ->valueLabel('Translation'),
+            Section::make(__('admin.sections.translations'))
+                ->columns(1)
+                ->schema([
+                    KeyValue::make('title')
+                        ->label(__('admin.fields.title'))
+                        ->keyLabel(__('admin.fields.language'))
+                        ->valueLabel(__('admin.fields.value'))
+                        ->required()
+                        ->default(['ar' => '', 'en' => '']),
+                ]),
 
-            Toggle::make('is_published')
-                ->label(__('admin.fields.is_published'))
-                ->default(true),
+            Section::make(__('admin.sections.content'))
+                ->schema([
+                    Tabs::make('body_tabs')
+                        ->columnSpanFull()
+                        ->tabs([
+                            Tab::make(__('admin.locales.ar'))->schema([
+                                RichEditor::make('body.ar')
+                                    ->label('')
+                                    ->hiddenLabel()
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ]),
+                            Tab::make(__('admin.locales.en'))->schema([
+                                RichEditor::make('body.en')
+                                    ->label('')
+                                    ->hiddenLabel()
+                                    ->required()
+                                    ->columnSpanFull(),
+                            ]),
+                        ]),
+                ]),
 
-            DateTimePicker::make('published_at')
-                ->label('Published at')
-                ->seconds(false),
-
-            TextInput::make('display_order')
-                ->label(__('admin.fields.order'))
-                ->numeric()
-                ->default(0),
+            Section::make(__('admin.sections.seo'))
+                ->collapsed()
+                ->schema([
+                    KeyValue::make('meta_description')
+                        ->label(__('admin.fields.meta_description'))
+                        ->keyLabel(__('admin.fields.language'))
+                        ->valueLabel(__('admin.fields.value')),
+                ]),
         ])->columns(1);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('slug')
+                        ->label(__('admin.fields.slug'))
+                        ->weight(FontWeight::SemiBold)
+                        ->copyable(),
+
+                    IconEntry::make('is_published')
+                        ->label(__('admin.fields.is_published'))
+                        ->boolean(),
+
+                    TextEntry::make('display_order')
+                        ->label(__('admin.fields.order'))
+                        ->numeric(),
+
+                    TextEntry::make('published_at')
+                        ->label(__('admin.fields.published_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('updated_at')
+                        ->label(__('admin.fields.updated_at'))
+                        ->dateTime()
+                        ->since(),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
+
+            Section::make(__('admin.sections.translations'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('title.ar')
+                        ->label(__('admin.locales.ar'))
+                        ->weight(FontWeight::Medium)
+                        ->placeholder('—'),
+
+                    TextEntry::make('title.en')
+                        ->label(__('admin.locales.en'))
+                        ->weight(FontWeight::Medium)
+                        ->placeholder('—'),
+                ]),
+
+            Section::make(__('admin.sections.content'))
+                ->schema([
+                    Tabs::make('body_tabs')
+                        ->columnSpanFull()
+                        ->tabs([
+                            Tab::make(__('admin.locales.ar'))->schema([
+                                TextEntry::make('body.ar')
+                                    ->label('')
+                                    ->hiddenLabel()
+                                    ->html()
+                                    ->placeholder('—')
+                                    ->columnSpanFull(),
+                            ]),
+                            Tab::make(__('admin.locales.en'))->schema([
+                                TextEntry::make('body.en')
+                                    ->label('')
+                                    ->hiddenLabel()
+                                    ->html()
+                                    ->placeholder('—')
+                                    ->columnSpanFull(),
+                            ]),
+                        ]),
+                ]),
+
+            Section::make(__('admin.sections.seo'))
+                ->collapsed()
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('meta_description.ar')
+                        ->label(__('admin.locales.ar'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('meta_description.en')
+                        ->label(__('admin.locales.en'))
+                        ->placeholder('—'),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -121,11 +242,11 @@ class PageResource extends Resource
                     ->sortable(),
 
                 TextColumn::make('title.ar')
-                    ->label('Title (AR)')
+                    ->label(__('admin.fields.title_ar'))
                     ->searchable(query: static fn ($query, string $search) => $query->where('title->ar', 'like', "%{$search}%")),
 
                 TextColumn::make('title.en')
-                    ->label('Title (EN)')
+                    ->label(__('admin.fields.title_en'))
                     ->searchable(query: static fn ($query, string $search) => $query->where('title->en', 'like', "%{$search}%"))
                     ->toggleable(),
 
@@ -138,7 +259,7 @@ class PageResource extends Resource
                     ->sortable(),
 
                 TextColumn::make('updated_at')
-                    ->label('Updated')
+                    ->label(__('admin.fields.updated'))
                     ->dateTime('Y-m-d H:i')
                     ->since(),
             ])
