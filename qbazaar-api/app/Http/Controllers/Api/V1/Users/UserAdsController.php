@@ -8,48 +8,43 @@ use App\Enums\UserStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
+use App\Models\Ad;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * @group Users
  */
 class UserAdsController extends Controller
 {
+    private const PER_PAGE = 20;
+
     /**
      * Public, paginated list of a user's active ads.
      *
-     * STUB: the ads table doesn't exist until Sprint 5. We return an empty
-     * data array with a valid pagination meta block so clients can integrate
-     * against the wire shape today. When ads ships, the real query lands
-     * here without changing the response envelope.
+     * Mirrors the public feed ordering (latest published first) and is
+     * restricted to ACTIVE ads via the model scope, so drafts, pending,
+     * sold and expired listings never leak on a public profile.
      *
      * @unauthenticated
      *
      * @throws DomainException
      */
-    public function __invoke(Request $request, User $user): JsonResponse
+    public function __invoke(Request $request, User $user): AnonymousResourceCollection
     {
         if ($user->status !== UserStatus::ACTIVE) {
             throw new DomainException(ErrorCode::USER_NOT_FOUND);
         }
 
-        $perPage = 20;
-        $currentPage = max(1, (int) $request->query('page', '1'));
+        $paginator = Ad::query()
+            ->forUser($user)
+            ->active()
+            ->orderedForFeed()
+            ->with(['category', 'location', 'media'])
+            ->paginate(self::PER_PAGE);
 
-        // TODO Sprint 5: replace stub with Ad::query()->where('user_id', $user->id)->where('status', 'active')->paginate(20)
-        return response()->json([
-            'data' => [],
-            'meta' => [
-                'current_page' => $currentPage,
-                'per_page' => $perPage,
-                'total' => 0,
-                'last_page' => 1,
-                'has_more' => false,
-                'next_cursor' => null,
-                'prev_cursor' => null,
-            ],
-        ]);
+        return AdSummaryResource::collection($paginator);
     }
 }

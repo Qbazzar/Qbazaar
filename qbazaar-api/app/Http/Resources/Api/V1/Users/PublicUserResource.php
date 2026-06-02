@@ -17,7 +17,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *  - `email` is omitted unless `show_email` is true (default false)
  *
  * `business_name` is only populated when the account type is business.
- * `ads_count` is a stub (0) until the ads module ships in Sprint 5.
+ * `ads_count` reflects the user's currently-active (public) listings.
  *
  * @mixin User
  */
@@ -42,7 +42,7 @@ class PublicUserResource extends JsonResource
                 'phone_verified' => (bool) $this->phone_verified,
                 'business_verified' => false, // TODO Phase 2
             ],
-            'ads_count' => 0, // TODO Sprint 5: count ads where status=active
+            'ads_count' => $this->resource->ads()->active()->count(),
         ];
 
         if ($privacy->show_phone) {

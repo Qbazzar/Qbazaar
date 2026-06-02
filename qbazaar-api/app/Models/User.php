@@ -20,6 +20,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -108,6 +109,16 @@ class User extends Authenticatable implements CanResetPasswordContract, Filament
     public function privacySettings(): PrivacySettings
     {
         return $this->privacy_settings ?? PrivacySettings::defaults();
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     *  Ads — a user's listings across every status.
+     * ──────────────────────────────────────────────────────────────────*/
+
+    /** @return HasMany<Ad, $this> */
+    public function ads(): HasMany
+    {
+        return $this->hasMany(Ad::class);
     }
 
     /* ──────────────────────────────────────────────────────────────────
