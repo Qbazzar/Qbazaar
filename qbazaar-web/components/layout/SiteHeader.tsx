@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/ui/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LocaleSwitcher } from '@/components/i18n/LocaleSwitcher';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 import { useAuth } from '@/hooks/useAuth';
@@ -113,6 +114,8 @@ export function SiteHeader() {
             ) : null}
           </Link>
 
+          <LocaleSwitcher className="icon-btn" />
+
           <ThemeToggle />
 
           {isHydrated && isAuthenticated ? (
@@ -131,6 +134,7 @@ export function SiteHeader() {
           <Link href="/post-ad" className="btn btn--primary btn--sm btn--pill">
             + {t('home.hero.cta_post_short', 'انشر')}
           </Link>
+          <LocaleSwitcher className="btn-mobile-toggle" />
           <button
             type="button"
             className="btn-mobile-toggle"
