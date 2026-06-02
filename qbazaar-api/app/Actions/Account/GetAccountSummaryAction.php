@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace App\Actions\Account;
 
+use App\Enums\AdStatus;
+use App\Models\Ad;
+use App\Models\Conversation;
 use App\Models\Favorite;
 use App\Models\User;
 
 /**
  * Returns the at-a-glance counters used by the account dashboard.
  *
- * Most underlying tables (ads, conversations, notifications, favorites)
- * land in later sprints. To keep the wire contract stable from day one,
- * the schema is fixed and we return 0 for any field whose table doesn't
- * exist yet. Each placeholder carries a TODO comment so the Sprint owner
- * can plug the real query in without breaking clients.
+ * Ads are counted with a single grouped query (one row per status) so the
+ * "my ads" / "drafts" split costs one round-trip rather than two; the
+ * remaining counters are a single COUNT each — five numbers, four queries,
+ * no N+1.
  */
 class GetAccountSummaryAction
 {
@@ -29,11 +31,23 @@ class GetAccountSummaryAction
      */
     public function execute(User $user): array
     {
+        $adCountsByStatus = Ad::query()
+            ->forUser($user)
+            ->toBase()
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $drafts = (int) ($adCountsByStatus[AdStatus::DRAFT->value] ?? 0);
+        $totalAds = (int) $adCountsByStatus->sum();
+
         return [
-            'my_ads' => 0,             // TODO Sprint 5: $user->ads()->whereNot('status', 'draft')->count()
-            'drafts' => 0,             // TODO Sprint 5: $user->ads()->where('status', 'draft')->count()
-            'conversations' => 0,      // TODO Sprint 8: count conversations the user participates in
-            'unread_notifications' => 0, // TODO Sprint 10: count unread DatabaseNotifications
+            // "My ads" is every listing that has left the draft stage —
+            // active, pending, sold and expired all count as published work.
+            'my_ads' => $totalAds - $drafts,
+            'drafts' => $drafts,
+            'conversations' => Conversation::query()->forUser($user)->count(),
+            'unread_notifications' => $user->unreadNotifications()->count(),
             'favorites' => Favorite::query()->where('user_id', $user->id)->count(),
         ];
     }

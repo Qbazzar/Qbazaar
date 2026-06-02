@@ -6,11 +6,11 @@ use App\Models\OtpCode;
 use App\Models\User;
 use App\Services\Auth\OtpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\RateLimiter;
 
 use function Pest\Laravel\postJson;
 
@@ -18,8 +18,11 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Cache::flush();
-    RateLimiter::clear('otp|+97455123456');
-    RateLimiter::clear('otp|127.0.0.1');
+    // These cases exercise the OTP attempt-burn logic (max 3 attempts) and so
+    // make up to 4 verify calls. The HTTP `throttle:otp` limiter is 3/min, an
+    // orthogonal concern that's covered by OtpSend/OtpResend tests — disable it
+    // here so the verify logic isn't masked by a 429.
+    $this->withoutMiddleware(ThrottleRequests::class);
     Notification::fake();
 });
 

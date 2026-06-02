@@ -3,13 +3,16 @@
 declare(strict_types=1);
 
 use App\Data\Account\PrivacySettings;
+use App\Enums\AdStatus;
 use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\getJson;
 
-uses(RefreshDatabase::class);
+use Tests\Concerns\CreatesAds;
+
+uses(RefreshDatabase::class, CreatesAds::class);
 
 beforeEach(function (): void {
     $this->target = User::factory()->create([
@@ -32,6 +35,22 @@ it('returns the public profile without auth', function (): void {
                 ->where('data.ads_count', 0)
                 ->etc(),
         );
+});
+
+it('counts only the target active ads', function (): void {
+    $this->seedReferenceData();
+
+    $this->makeAd($this->target, ['status' => AdStatus::ACTIVE->value, 'published_at' => now()]);
+    $this->makeAd($this->target, ['status' => AdStatus::ACTIVE->value, 'published_at' => now()]);
+    // Draft and sold listings are not public, so they must not be counted.
+    $this->makeAd($this->target, ['status' => AdStatus::DRAFT->value]);
+    $this->makeAd($this->target, ['status' => AdStatus::SOLD->value]);
+    // Another user's active ad must not inflate this profile's count.
+    $this->makeAd(User::factory()->create(), ['status' => AdStatus::ACTIVE->value, 'published_at' => now()]);
+
+    getJson('/api/v1/users/' . $this->target->id . '/public-profile')
+        ->assertOk()
+        ->assertJsonPath('data.ads_count', 2);
 });
 
 it('exposes phone only when show_phone is true', function (): void {

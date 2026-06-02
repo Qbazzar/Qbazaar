@@ -14,10 +14,11 @@ use Illuminate\Support\Facades\DB;
  * Record an ad view for an authenticated user OR an anonymous client
  * identified by a stable session id.
  *
- *  - Throttled to one row per (viewer, ad) per hour via Cache::lock.
- *    Bots hammering the endpoint are turned into no-ops cheaply, before
- *    the row insert and counter increment land. We DO NOT release the
- *    lock — its TTL is the throttle window.
+ *  - Throttled to one row per (viewer, ad) per hour via an atomic
+ *    Cache::add window. Bots hammering the endpoint are turned into no-ops
+ *    cheaply, before the row insert and counter increment land. We use
+ *    add() rather than a lock so the throttle window is a plain, flushable
+ *    cache entry — a held lock survives Cache::flush() on some stores.
  *  - Caps stored history at 50 rows per user. The cap-cleanup runs in
  *    the same transaction as the insert so a crash can never leave the
  *    history bloated. Anonymous histories are not capped here; we let
@@ -43,12 +44,13 @@ class TrackAdViewAction
             return false;
         }
 
-        $lock = Cache::lock(
-            'view:' . $viewerKey . ':' . $ad->id,
-            self::THROTTLE_TTL_SECONDS,
-        );
+        $throttleKey = 'view:' . $viewerKey . ':' . $ad->id;
 
-        if (! $lock->get()) {
+        // Cache::add is atomic: it returns true only for the first caller
+        // within the window and false for everyone else until the entry's TTL
+        // lapses — exactly the once-per-hour semantics we want, and a plain
+        // entry that Cache::flush() / a real TTL can clear.
+        if (! Cache::add($throttleKey, true, self::THROTTLE_TTL_SECONDS)) {
             // Within the throttle window — silent no-op.
             return false;
         }

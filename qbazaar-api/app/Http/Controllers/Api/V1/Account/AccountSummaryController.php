@@ -20,19 +20,19 @@ class AccountSummaryController extends Controller
      * Dashboard counters for the signed-in user.
      *
      * Returns five at-a-glance numbers — see the OpenAPI spec for the
-     * exact shape. Most counters are 0 until the corresponding module
-     * ships in later sprints.
+     * exact shape. `my_ads` counts every non-draft listing; `drafts`
+     * counts unpublished ones.
      *
      * @authenticated
      *
      * @response 200 scenario="Success" {
      *   "success": true,
      *   "data": {
-     *     "my_ads": 0,
-     *     "drafts": 0,
-     *     "conversations": 0,
-     *     "unread_notifications": 0,
-     *     "favorites": 0
+     *     "my_ads": 4,
+     *     "drafts": 1,
+     *     "conversations": 2,
+     *     "unread_notifications": 3,
+     *     "favorites": 7
      *   }
      * }
      */

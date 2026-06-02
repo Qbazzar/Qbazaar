@@ -125,7 +125,14 @@ class MessageController extends Controller
         $user = $request->user();
 
         $conversation = $this->findOrFail($id);
-        $this->authorize('send', $conversation);
+
+        // Non-participants get 404 (not 403) so the API never leaks the
+        // existence of someone else's conversation — the same oracle-leak
+        // precaution as index() above. The block check stays in
+        // SendMessageAction so it can surface the stable MSG_BLOCKED code.
+        if (! $conversation->isParticipant($user)) {
+            throw new DomainException(ErrorCode::MSG_CONVERSATION_NOT_FOUND);
+        }
 
         /** @var array{body: string, type?: string} $validated */
         $validated = $request->validated();

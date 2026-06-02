@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Services\Search;
 
 use App\Models\Ad;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use GuzzleHttp\Exception\ConnectException as GuzzleConnectException;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
+use Meilisearch\Exceptions\CommunicationException;
 use stdClass;
 
 /**
@@ -46,33 +49,53 @@ class AdSearchService
         // any future bug that lets a non-active ad slip into the index.
         $filter = $this->composeFilter($params);
 
-        $builder = Ad::search($query, function ($meilisearch, string $q, array $options) use ($filter, $sort, $perPage, $page): mixed {
-            $options['filter'] = $filter;
-            $options['sort'] = $sort;
-            $options['hitsPerPage'] = $perPage;
-            $options['page'] = $page;
-            $options['facets'] = ['category_slug', 'location_slug', 'condition', 'price_type'];
+        try {
+            $builder = Ad::search($query, function ($meilisearch, string $q, array $options) use ($filter, $sort, $perPage, $page): mixed {
+                $options['filter'] = $filter;
+                $options['sort'] = $sort;
+                $options['hitsPerPage'] = $perPage;
+                $options['page'] = $page;
+                $options['facets'] = ['category_slug', 'location_slug', 'condition', 'price_type'];
 
-            return $meilisearch->rawSearch($q, $options);
-        });
+                return $meilisearch->rawSearch($q, $options);
+            });
 
-        // Eager-load the relationships AdSummaryResource needs so the result
-        // mapping doesn't fire N+1 queries when the controller iterates.
-        $builder->query(fn (EloquentBuilder $eloquent): EloquentBuilder => $eloquent->with(['category', 'location', 'media']));
+            /** @var LengthAwarePaginator<int, Ad> $paginator */
+            $paginator = $builder->paginate($perPage, 'page', $page);
 
-        /** @var LengthAwarePaginator<int, Ad> $paginator */
-        $paginator = $builder->paginate($perPage, 'page', $page);
+            // Eager-load AFTER pagination instead of via Scout's ->query()
+            // callback. A query callback flips Scout's getTotalCount() into a
+            // path that recomputes the total from the *current page's* ids —
+            // and because our search callback pins hitsPerPage/page, that
+            // recount caps at one page, corrupting `total` and `last_page`
+            // (page 2 becomes unreachable). Loading on the paginated models
+            // keeps the Meili `totalHits` intact and still avoids N+1.
+            EloquentCollection::make($paginator->items())->load(['category', 'location', 'media']);
 
-        // Facets need a second, hits-free Meili call (Scout doesn't expose
-        // the raw response from paginate() in this version). Cheap because
-        // `hitsPerPage=0` returns no documents.
-        $raw = $this->fetchFacetDistribution($query, $filter, $sort);
-        $facets = $this->extractFacets($raw);
+            // Facets need a second, hits-free Meili call (Scout doesn't expose
+            // the raw response from paginate() in this version). Cheap because
+            // `hitsPerPage=0` returns no documents.
+            $raw = $this->fetchFacetDistribution($query, $filter, $sort);
+            $facets = $this->extractFacets($raw);
 
-        return [
-            'paginator' => $paginator,
-            'facets' => $facets,
-        ];
+            return [
+                'paginator' => $paginator,
+                'facets' => $facets,
+            ];
+        } catch (CommunicationException|GuzzleConnectException $e) {
+            // Meilisearch unreachable — surface an empty result set instead
+            // of a 500 so the UI degrades to "no matches" rather than a
+            // hard error. Logged at warning so ops still gets paged in prod.
+            Log::warning('Search engine unavailable, returning empty result set', [
+                'error' => $e->getMessage(),
+                'query' => $query,
+            ]);
+
+            return [
+                'paginator' => $this->emptyPaginator($perPage, $page),
+                'facets' => $this->extractFacets([]),
+            ];
+        }
     }
 
     /**
@@ -89,16 +112,25 @@ class AdSearchService
             return [];
         }
 
-        $builder = Ad::search($query, function ($meilisearch, string $q, array $options): mixed {
-            $options['limit'] = 10;
-            $options['attributesToRetrieve'] = ['id', 'title'];
-            $options['attributesToHighlight'] = [];
+        try {
+            $builder = Ad::search($query, function ($meilisearch, string $q, array $options): mixed {
+                $options['limit'] = 10;
+                $options['attributesToRetrieve'] = ['id', 'title'];
+                $options['attributesToHighlight'] = [];
 
-            return $meilisearch->rawSearch($q, $options);
-        });
+                return $meilisearch->rawSearch($q, $options);
+            });
 
-        /** @var array<string, mixed> $raw */
-        $raw = $builder->raw();
+            /** @var array<string, mixed> $raw */
+            $raw = $builder->raw();
+        } catch (CommunicationException|GuzzleConnectException $e) {
+            Log::warning('Search engine unavailable for suggestions', [
+                'error' => $e->getMessage(),
+                'query' => $query,
+            ]);
+
+            return [];
+        }
 
         /** @var list<array<string, mixed>> $hits */
         $hits = is_array($raw['hits'] ?? null) ? $raw['hits'] : [];
@@ -132,6 +164,19 @@ class AdSearchService
         $value = is_numeric($candidate) ? (int) $candidate : self::DEFAULT_PER_PAGE;
 
         return max(1, min(self::MAX_PER_PAGE, $value));
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, Ad>
+     */
+    private function emptyPaginator(int $perPage, int $page): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator(
+            items: [],
+            total: 0,
+            perPage: $perPage,
+            currentPage: $page,
+        );
     }
 
     /**
