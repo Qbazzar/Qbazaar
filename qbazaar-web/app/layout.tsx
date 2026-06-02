@@ -4,6 +4,9 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
 import { SiteFooterGate } from '@/components/layout/SiteFooter';
+import { LocaleProvider } from '@/components/i18n/LocaleProvider';
+import { dirFor } from '@/lib/i18n/locale';
+import { resolveServerLocale } from '@/lib/i18n/server';
 import { Providers } from './providers';
 import './globals.css';
 import '../styles/qbfront.css';
@@ -34,25 +37,29 @@ export const metadata: Metadata = {
   description: 'QBazaar — buy, sell and discover near you in Qatar.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await resolveServerLocale();
+
   return (
     <html
-      lang="ar"
-      dir="rtl"
+      lang={locale}
+      dir={dirFor(locale)}
       suppressHydrationWarning
       className={`${inter.variable} ${cairo.variable} ${geistMono.variable}`}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <Providers>
-            <SiteHeaderGate />
-            <div className="flex-1">{children}</div>
-            <SiteFooterGate />
-          </Providers>
-          <Toaster richColors closeButton position="top-center" />
-        </ThemeProvider>
+        <LocaleProvider locale={locale}>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <Providers>
+              <SiteHeaderGate />
+              <div className="flex-1">{children}</div>
+              <SiteFooterGate />
+            </Providers>
+            <Toaster richColors closeButton position="top-center" />
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

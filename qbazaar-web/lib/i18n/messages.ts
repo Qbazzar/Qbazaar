@@ -1,17 +1,25 @@
 /**
- * Minimal i18n shim for Wave 1.
+ * Synchronous i18n lookup used across the app as `t('dot.path')`.
  *
- * Wave 1 ships a single Arabic locale, so we import the JSON statically and
- * expose a `t(key)` helper that walks dot-paths. Wave 2 will replace this
- * with `next-intl` once the `[locale]` segment lands.
- *
- * The same JSON files are used here and will be picked up by `next-intl`
- * later without changes.
+ * Both locale dictionaries are bundled; the active one is chosen per call via
+ * `getLocale()` (cookie-driven — see ./locale), so a language switch is just a
+ * cookie change + reload, with no change to the ~120 call-sites.
  */
 import ar from '@/i18n/ar.json';
+import en from '@/i18n/en.json';
+
+import { getLocale, type Locale } from './locale';
 
 type Dict = Record<string, unknown>;
-const messages: Dict = ar as Dict;
+
+const dictionaries: Record<Locale, Dict> = {
+  ar: ar as Dict,
+  en: en as Dict,
+};
+
+function activeMessages(): Dict {
+  return dictionaries[getLocale()] ?? dictionaries.ar;
+}
 
 export function t(
   key: string,
@@ -27,7 +35,7 @@ export function t(
     typeof varsOrFallback === 'string' ? varsOrFallback : maybeFallback;
 
   const parts = key.split('.');
-  let cur: unknown = messages;
+  let cur: unknown = activeMessages();
   for (const part of parts) {
     if (cur && typeof cur === 'object' && part in (cur as Dict)) {
       cur = (cur as Dict)[part];
