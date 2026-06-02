@@ -57,19 +57,40 @@ trait InteractsWithMeilisearch
     }
 
     /**
-     * Truncate the ads index so each test starts from zero. We delete the
-     * index entirely + recreate via Scout's sync command so settings stay
-     * in step.
+     * Truncate the ads index so each test starts from zero, and (re)install the
+     * configured index settings. Settings come first because `updateSettings`
+     * creates the index when it's missing and installs the filterable / sortable
+     * attributes every facet / range / sort query depends on — without them
+     * Meilisearch 400s with "Attribute `status` is not filterable".
      */
     protected function flushAdsIndex(): void
     {
         try {
-            $index = $this->adIndex();
-            $index->deleteAllDocuments();
+            $this->syncAdsIndexSettings();
+            $this->adIndex()->deleteAllDocuments();
             $this->waitForMeilisearch();
         } catch (Throwable) {
             // Index didn't exist yet — first `searchable()` will create it.
         }
+    }
+
+    /**
+     * Apply config('scout.meilisearch.index-settings.ads_index') to the prefixed
+     * test index. Scout's `scout:sync-index-settings` only targets the index for
+     * the active SCOUT_PREFIX, so the `test_`-prefixed index used under PHPUnit
+     * never receives settings unless we push them here.
+     */
+    protected function syncAdsIndexSettings(): void
+    {
+        /** @var array<string, mixed>|null $settings */
+        $settings = config('scout.meilisearch.index-settings.ads_index');
+
+        if (! is_array($settings)) {
+            return;
+        }
+
+        $task = $this->adIndex()->updateSettings($settings);
+        $this->meilisearchClient()->waitForTask($task['taskUid']);
     }
 
     private function adIndex(): Indexes
