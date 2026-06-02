@@ -31,7 +31,7 @@ class RepliesRelationManager extends RelationManager
     {
         return $schema->components([
             Textarea::make('body')
-                ->label('Reply')
+                ->label(__('admin.fields.reply'))
                 ->required()
                 ->rows(5)
                 ->maxLength(5000)
@@ -45,25 +45,25 @@ class RepliesRelationManager extends RelationManager
             ->defaultSort('created_at')
             ->columns([
                 TextColumn::make('author.full_name')
-                    ->label('Author'),
+                    ->label(__('admin.fields.author')),
 
                 IconColumn::make('is_staff')
-                    ->label('Staff?')
+                    ->label(__('admin.fields.is_staff'))
                     ->boolean(),
 
                 TextColumn::make('body')
-                    ->label('Body')
+                    ->label(__('admin.fields.body'))
                     ->wrap()
                     ->limit(120),
 
                 TextColumn::make('created_at')
-                    ->label('Sent')
+                    ->label(__('admin.fields.sent'))
                     ->dateTime('Y-m-d H:i')
                     ->since(),
             ])
             ->headerActions([
                 CreateAction::make()
-                    ->label('Reply as staff')
+                    ->label(__('admin.fields.reply_as_staff'))
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['author_id'] = (string) auth()->id();
                         $data['is_staff'] = true;

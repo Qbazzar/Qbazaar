@@ -13,7 +13,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use UnitEnum;
 
 /**
  * Read-only admin view of individual chat messages. Mostly useful for
@@ -28,7 +27,10 @@ class MessageResource extends Resource
 
     protected static ?int $navigationSort = 52;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Communications';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.communications');
+    }
 
     public static function getNavigationLabel(): string
     {

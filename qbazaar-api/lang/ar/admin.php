@@ -9,6 +9,10 @@ declare(strict_types=1);
 */
 
 return [
+    'dashboard' => [
+        'title' => 'لوحة التحكم',
+    ],
+
     'navigation' => [
         'users' => 'المستخدمون',
         'ads' => 'الإعلانات',
@@ -25,6 +29,19 @@ return [
         'offers' => 'العروض',
         'notifications' => 'الإشعارات',
         'saved_searches' => 'عمليات البحث المحفوظة',
+        'support_tickets' => 'تذاكر الدعم',
+        'pages' => 'الصفحات',
+        'help_categories' => 'فئات المساعدة',
+        'help_articles' => 'مقالات المساعدة',
+    ],
+
+    'navigation_groups' => [
+        'marketplace' => 'السوق',
+        'communications' => 'الاتصالات',
+        'moderation' => 'الإشراف',
+        'taxonomy' => 'التصنيفات',
+        'content' => 'المحتوى',
+        'audit' => 'المراجعة',
     ],
 
     'resources' => [
@@ -40,6 +57,37 @@ return [
         'saved_search' => ['label' => 'بحث محفوظ', 'plural' => 'عمليات البحث المحفوظة'],
         'moderation_rule' => ['label' => 'قاعدة إشراف', 'plural' => 'قواعد الإشراف'],
         'activity' => ['label' => 'سجل', 'plural' => 'سجل النشاط'],
+        'support_ticket' => ['label' => 'تذكرة دعم', 'plural' => 'تذاكر الدعم'],
+        'page' => ['label' => 'صفحة', 'plural' => 'الصفحات'],
+        'help_category' => ['label' => 'فئة مساعدة', 'plural' => 'فئات المساعدة'],
+        'help_article' => ['label' => 'مقال مساعدة', 'plural' => 'مقالات المساعدة'],
+    ],
+
+    'support' => [
+        'assigned_to_me' => 'تكليفي بالتذكرة',
+        'reply' => 'الرد',
+        'change_status' => 'تغيير الحالة',
+        'category' => [
+            'general' => 'استفسار عام',
+            'account' => 'الحساب',
+            'ad' => 'إعلان',
+            'payment' => 'الدفع',
+            'abuse' => 'إساءة استخدام',
+            'other' => 'أخرى',
+        ],
+        'status' => [
+            'open' => 'مفتوحة',
+            'in_progress' => 'قيد المعالجة',
+            'waiting_user' => 'بانتظار المستخدم',
+            'resolved' => 'تم الحل',
+            'closed' => 'مغلقة',
+        ],
+        'priority' => [
+            'low' => 'منخفضة',
+            'normal' => 'عادية',
+            'high' => 'عالية',
+            'urgent' => 'عاجلة',
+        ],
     ],
 
     'fields' => [
@@ -57,7 +105,12 @@ return [
         'last_login_at' => 'آخر دخول',
         'created_at' => 'تاريخ الإنشاء',
         'updated_at' => 'تاريخ التحديث',
+        'updated' => 'آخر تحديث',
+        'opened' => 'تاريخ الفتح',
+        'sent' => 'وقت الإرسال',
         'title' => 'العنوان',
+        'title_en' => 'العنوان (إنجليزي)',
+        'title_ar' => 'العنوان (عربي)',
         'description' => 'الوصف',
         'category' => 'الفئة',
         'location' => 'الموقع',
@@ -88,6 +141,9 @@ return [
         'reviewer' => 'تمت المراجعة بواسطة',
         'reviewed_at' => 'تاريخ المراجعة',
         'amount' => 'المبلغ',
+        'accepted_at' => 'وقت القبول',
+        'rejected_at' => 'وقت الرفض',
+        'withdrawn_at' => 'وقت السحب',
         'last_message_at' => 'آخر رسالة',
         'message_count' => 'الرسائل',
         'buyer' => 'المشتري',
@@ -101,7 +157,28 @@ return [
         'event' => 'الحدث',
         'properties' => 'الخصائص',
         'name' => 'الاسم',
+        'name_en' => 'الاسم (إنجليزي)',
+        'name_ar' => 'الاسم (عربي)',
         'query_params' => 'الاستعلام',
+        'custom_fields' => 'الحقول المخصصة',
+        'custom_filters' => 'الفلاتر المخصصة',
+        'excerpt' => 'مقتطف',
+        'views' => 'المشاهدات',
+        'articles' => 'المقالات',
+        'meta_description' => 'وصف الميتا',
+        'field_key' => 'مفتاح الحقل',
+        'filter_key' => 'مفتاح الفلتر',
+        'definition_json' => 'التعريف (JSON)',
+        'short_summary' => 'ملخص قصير',
+        'is_published' => 'منشور',
+        'priority' => 'الأولوية',
+        'assignee' => 'المُسنَد إليه',
+        'last_reply' => 'آخر رد',
+        'replies' => 'الردود',
+        'reply' => 'رد',
+        'author' => 'الكاتب',
+        'is_staff' => 'موظف؟',
+        'reply_as_staff' => 'الرد كموظف',
     ],
 
     'actions' => [
@@ -112,6 +189,7 @@ return [
         'save' => 'حفظ',
         'cancel' => 'إلغاء',
         'ban' => 'حظر',
+        'assign_to_me' => 'إسناد إليّ',
         'unban' => 'رفع الحظر',
         'suspend' => 'إيقاف',
         'reset_password' => 'إعادة تعيين كلمة المرور',
@@ -202,5 +280,29 @@ return [
 
     'helpers' => [
         'lucide_icon' => 'اسم أيقونة Lucide (مثل tag, map-pin)',
+    ],
+
+    'sections' => [
+        'general' => 'عام',
+        'translations' => 'الترجمات',
+        'content' => 'المحتوى',
+        'meta' => 'بيانات إضافية',
+        'taxonomy' => 'التصنيف',
+        'pricing' => 'التسعير',
+        'moderation' => 'الإشراف',
+        'audit' => 'سجل المراجعة',
+        'audience' => 'الجمهور',
+        'assignment' => 'الإسناد',
+        'verification' => 'التحقق',
+        'images' => 'الصور',
+        'seo' => 'SEO',
+        'geo' => 'الإحداثيات الجغرافية',
+        'reporter' => 'المُبلِّغ',
+        'target' => 'الهدف',
+    ],
+
+    'locales' => [
+        'ar' => 'العربية',
+        'en' => 'English',
     ],
 ];

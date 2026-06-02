@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
+use App\Enums\OfferStatus;
 use App\Filament\Admin\Resources\OfferResource\Pages;
 use App\Models\Offer;
 use BackedEnum;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use UnitEnum;
 
 /**
  * Read-only listing of buyer offers — Sprint 9 lifecycle audit. No edits;
@@ -29,7 +33,10 @@ class OfferResource extends Resource
 
     protected static ?int $navigationSort = 53;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Communications';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.communications');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -49,6 +56,94 @@ class OfferResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    TextEntry::make('amount')
+                        ->label(__('admin.fields.amount'))
+                        ->money(static fn (Offer $record): string => $record->currency ?: 'QAR')
+                        ->weight(FontWeight::SemiBold),
+
+                    TextEntry::make('status')
+                        ->label(__('admin.fields.status'))
+                        ->badge()
+                        ->color(static fn (OfferStatus $state): string => match ($state) {
+                            OfferStatus::PENDING => 'warning',
+                            OfferStatus::ACCEPTED => 'success',
+                            OfferStatus::REJECTED, OfferStatus::WITHDRAWN, OfferStatus::EXPIRED => 'gray',
+                        }),
+
+                    TextEntry::make('note')
+                        ->label(__('admin.fields.body'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make(__('admin.sections.target'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('ad.title')
+                        ->label(__('admin.fields.ad'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('buyer.full_name')
+                        ->label(__('admin.fields.buyer'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('seller.full_name')
+                        ->label(__('admin.fields.seller'))
+                        ->placeholder('—'),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->collapsed()
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('expires_at')
+                        ->label(__('admin.fields.expires_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('accepted_at')
+                        ->label(__('admin.fields.accepted_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('rejected_at')
+                        ->label(__('admin.fields.rejected_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('withdrawn_at')
+                        ->label(__('admin.fields.withdrawn_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+
+                    TextEntry::make('updated_at')
+                        ->label(__('admin.fields.updated_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table

@@ -15,6 +15,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -57,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->brandName('QBazaar Admin')
             ->brandLogo(fn (): View => view('filament.brand'))
-            ->brandLogoHeight('2.5rem')
+            ->brandLogoHeight('2.25rem')
             ->favicon('/brand/favicon.ico')
             ->colors([
                 'primary' => Color::Orange,
@@ -67,13 +68,17 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarWidth('17rem')
             ->collapsedSidebarWidth('4.5rem')
             ->maxContentWidth(Width::Full)
+            // Panel-side group order. Each label is the translated string so the
+            // sidebar reads natively in Arabic / English. Resources declare their
+            // group via getNavigationGroup() returning the SAME translation lookup,
+            // so Filament's string match groups them under the right header.
             ->navigationGroups([
-                'Marketplace',
-                'Communications',
-                'Moderation',
-                'Taxonomy',
-                'Content',
-                'Audit',
+                NavigationGroup::make((string) __('admin.navigation_groups.marketplace')),
+                NavigationGroup::make((string) __('admin.navigation_groups.communications')),
+                NavigationGroup::make((string) __('admin.navigation_groups.moderation')),
+                NavigationGroup::make((string) __('admin.navigation_groups.taxonomy')),
+                NavigationGroup::make((string) __('admin.navigation_groups.content')),
+                NavigationGroup::make((string) __('admin.navigation_groups.audit')),
             ])
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')

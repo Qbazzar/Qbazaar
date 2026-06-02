@@ -16,8 +16,12 @@ use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -25,7 +29,6 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
-use UnitEnum;
 
 /**
  * Category taxonomy editor.
@@ -38,6 +41,9 @@ use UnitEnum;
  *    feed picks up the change without a deploy. We don't try to be clever
  *    about which keys to wipe — busting the whole taxonomy cache for a
  *    handful of admin saves is cheap.
+ *  - The View page renders an InfoList rather than a disabled-form fallback
+ *    so translation pairs surface as side-by-side cards and optional fields
+ *    collapse to a placeholder instead of empty boxes.
  */
 class CategoryResource extends Resource
 {
@@ -48,7 +54,10 @@ class CategoryResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Taxonomy';
+    public static function getNavigationGroup(): ?string
+    {
+        return (string) __('admin.navigation_groups.taxonomy');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -68,57 +77,132 @@ class CategoryResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            KeyValue::make('name')
-                ->label(__('admin.fields.name'))
-                ->keyLabel('Locale')
-                ->valueLabel('Translation')
-                ->required()
-                ->default(['en' => '', 'ar' => '']),
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextInput::make('slug')
+                        ->label(__('admin.fields.slug'))
+                        ->required()
+                        ->maxLength(64)
+                        ->alphaDash()
+                        ->unique(ignoreRecord: true),
 
-            KeyValue::make('description')
-                ->label(__('admin.fields.description'))
-                ->keyLabel('Locale')
-                ->valueLabel('Translation')
-                ->default(['en' => '', 'ar' => '']),
+                    Select::make('parent_id')
+                        ->label(__('admin.fields.parent'))
+                        ->relationship('parent', 'slug')
+                        ->searchable()
+                        ->preload(),
 
-            Select::make('parent_id')
-                ->label(__('admin.fields.parent'))
-                ->relationship('parent', 'slug')
-                ->searchable()
-                ->preload(),
+                    TextInput::make('icon')
+                        ->label(__('admin.fields.icon'))
+                        ->helperText(__('admin.helpers.lucide_icon'))
+                        ->maxLength(64),
 
-            TextInput::make('slug')
-                ->label(__('admin.fields.slug'))
-                ->required()
-                ->maxLength(64)
-                ->alphaDash()
-                ->unique(ignoreRecord: true),
+                    TextInput::make('order')
+                        ->label(__('admin.fields.order'))
+                        ->numeric()
+                        ->default(0),
 
-            TextInput::make('icon')
-                ->label(__('admin.fields.icon'))
-                ->helperText(__('admin.helpers.lucide_icon'))
-                ->maxLength(64),
+                    Toggle::make('is_active')
+                        ->label(__('admin.fields.is_active'))
+                        ->default(true)
+                        ->columnSpanFull(),
+                ]),
 
-            TextInput::make('order')
-                ->label(__('admin.fields.order'))
-                ->numeric()
-                ->default(0),
+            Section::make(__('admin.sections.translations'))
+                ->columns(1)
+                ->schema([
+                    KeyValue::make('name')
+                        ->label(__('admin.fields.name'))
+                        ->keyLabel(__('admin.fields.language'))
+                        ->valueLabel(__('admin.fields.value'))
+                        ->required()
+                        ->default(['en' => '', 'ar' => '']),
 
-            Toggle::make('is_active')
-                ->label(__('admin.fields.is_active'))
-                ->default(true),
+                    KeyValue::make('description')
+                        ->label(__('admin.fields.description'))
+                        ->keyLabel(__('admin.fields.language'))
+                        ->valueLabel(__('admin.fields.value'))
+                        ->default(['en' => '', 'ar' => '']),
+                ]),
 
-            KeyValue::make('custom_fields')
-                ->label('Custom fields')
-                ->keyLabel('Field key')
-                ->valueLabel('Definition (JSON)'),
+            Section::make(__('admin.sections.meta'))
+                ->collapsed()
+                ->columns(1)
+                ->schema([
+                    KeyValue::make('custom_fields')
+                        ->label(__('admin.fields.custom_fields'))
+                        ->keyLabel(__('admin.fields.field_key'))
+                        ->valueLabel(__('admin.fields.definition_json')),
 
-            KeyValue::make('custom_filters')
-                ->label('Custom filters')
-                ->keyLabel('Filter key')
-                ->valueLabel('Definition (JSON)'),
-        ])
-            ->columns(1);
+                    KeyValue::make('custom_filters')
+                        ->label(__('admin.fields.custom_filters'))
+                        ->keyLabel(__('admin.fields.filter_key'))
+                        ->valueLabel(__('admin.fields.definition_json')),
+                ]),
+        ])->columns(1);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('slug')
+                        ->label(__('admin.fields.slug'))
+                        ->weight(FontWeight::SemiBold)
+                        ->copyable(),
+
+                    TextEntry::make('parent.slug')
+                        ->label(__('admin.fields.parent'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('order')
+                        ->label(__('admin.fields.order'))
+                        ->numeric(),
+
+                    IconEntry::make('is_active')
+                        ->label(__('admin.fields.is_active'))
+                        ->boolean(),
+
+                    TextEntry::make('icon')
+                        ->label(__('admin.fields.icon'))
+                        ->placeholder('—')
+                        ->badge()
+                        ->color('gray'),
+
+                    TextEntry::make('updated_at')
+                        ->label(__('admin.fields.updated_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+                ]),
+
+            Section::make(__('admin.sections.translations'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('name.ar')
+                        ->label(__('admin.locales.ar'))
+                        ->placeholder('—')
+                        ->weight(FontWeight::Medium),
+
+                    TextEntry::make('name.en')
+                        ->label(__('admin.locales.en'))
+                        ->placeholder('—')
+                        ->weight(FontWeight::Medium),
+
+                    TextEntry::make('description.ar')
+                        ->label(__('admin.locales.ar') . ' — ' . __('admin.fields.description'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+
+                    TextEntry::make('description.en')
+                        ->label(__('admin.locales.en') . ' — ' . __('admin.fields.description'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -128,12 +212,12 @@ class CategoryResource extends Resource
             ->defaultSort('order')
             ->columns([
                 TextColumn::make('name.en')
-                    ->label('Name (EN)')
+                    ->label(__('admin.fields.name_en'))
                     ->searchable(query: static fn ($query, string $search) => $query->where('name->en', 'like', "%{$search}%"))
                     ->sortable(),
 
                 TextColumn::make('name.ar')
-                    ->label('Name (AR)')
+                    ->label(__('admin.fields.name_ar'))
                     ->searchable(query: static fn ($query, string $search) => $query->where('name->ar', 'like', "%{$search}%")),
 
                 TextColumn::make('parent.slug')
