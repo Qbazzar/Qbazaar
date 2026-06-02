@@ -12,8 +12,8 @@
 | البند | القيمة |
 |-------|---------|
 | **Active Milestone** | **Deploy + Polish** — MVP feature-complete (Milestones 1–5 ✅). Laravel running on VPS (`147.79.115.44`, CloudPanel tenant `qb-user`); DNS/SSL for `miete.site` pending user action. |
-| **Active Sprint** | Sprints 0..12 ✅ closed + QBFront design migration ✅ + Filament admin (incl. Pages/Help/Support resources) ✅ + DemoDataSeeder ✅ + VPS bootstrap ✅ |
-| **Active Issues** | (1) DNS + SSL for `https://miete.site` — user action. (2) Post-MVP backlog: typing indicators (Reverb client-events), FCM push, pHash dedup, signed URLs for originals, full QA sweep (bug bash / perf / a11y / security / RTL). |
+| **Active Sprint** | Sprints 0..12 ✅ closed + QBFront design migration ✅ + Filament admin ✅ + DemoDataSeeder ✅ + VPS bootstrap ✅. **2026-06-02:** backend correctness pass + AR/EN i18n switch + admin localization — on 3 open PRs (`fix/backend-counters-and-gates`, `feat/i18n-locale-switch`, `feat/admin-i18n`), not yet merged to `main`. |
+| **Active Issues** | (1) DNS + SSL for `https://miete.site` — user action. (2) ⚠️ The Pest suite was found **not actually green** (13 pre-existing failures locally + in CI) — fixed on `fix/backend-counters-and-gates`: now **270 passed**, PHPStan/Pint clean. (3) Post-MVP backlog: typing indicators (Reverb client-events), FCM push, pHash dedup, signed URLs for originals, remaining QA sweep (perf / a11y / full RTL); `<title>` metadata still single-locale (needs `generateMetadata`). |
 | **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
 | **Blockers** | لا blockers على dev. Production publish blocked on DNS/SSL only. |
 | **Manual user steps pending** | DNS A-record `miete.site` → `147.79.115.44` + Let's Encrypt SSL via CloudPanel; sign-ups for Twilio (production creds) + Sentry DSN + FCM project. |
@@ -255,6 +255,62 @@ boot-time bugs squashed.
 - `01b2f25` fix(boot): Telescope provider gated on non-production
 - `168e674` fix(boot): hoist jsonError() helper out of handler closure
 - `da46ccf` fix(boot): RateLimiter::for relocated outside withRouting() closure
+
+---
+
+### 🔧 Backend correctness pass + i18n switch + admin localization (2026-06-02)
+
+Three independent branches pushed to GitHub — **PRs pending review, not yet
+merged to `main`**. Each is branched from `main` and opens cleanly on its own.
+
+**🩺 Discovery — the suite was not actually green.** `php artisan test` had
+**13 pre-existing failures** locally, and would fail in CI too (`ci.yml` never
+syncs the Meilisearch index settings the search tests need). The earlier
+"MVP feature-complete + green" status was optimistic. All 13 now pass:
+**270 passed (1203 assertions)**, PHPStan level 8 + Pint clean.
+
+**1️⃣ `fix/backend-counters-and-gates` (7 commits) — real bugs + green suite:**
+- Three endpoints shipped as zero-returning **stubs** and were never wired once
+  their tables landed: `UserAdsController` (public profile showed 0 ads for
+  *every* seller — a test even asserted the stub), `GetAccountSummaryAction`
+  (4/5 dashboard counters hardcoded 0), `PublicUserResource.ads_count`
+  (+ a new `User::ads()` relation).
+- **Blocking a user 500'd in production** — `user_blocks` lacked the `updated_at`
+  column that `BelongsToMany::attach()` writes; added via a forward migration.
+- **Search pagination was broken** — `total` / `last_page` were recomputed from
+  the *current page's* ids (Scout `->query()` callback + pinned `hitsPerPage`),
+  so **page 2 was unreachable**; eager-load after pagination instead.
+- `GET /ads/{id}/similar` double-wrapped its body (`{data:{data:[…]}}`).
+- **Messaging oracle-leak** — posting to a conversation you're not a participant
+  of returned **403** (confirming it exists) instead of **404**.
+- CI-gate / test-infra fixes: Meili test-index settings synced in the test
+  concern, `OTP_FIXED_CODE` pinned empty + OTP-verify isolated from
+  `throttle:otp`, Recents throttle moved from a flush-surviving `Cache::lock`
+  to atomic `Cache::add`, `jsonError()` PHPStan docblock placement.
+
+**2️⃣ `feat/i18n-locale-switch` (1 commit) — closes the long-deferred i18n wiring
+(`FE-0.10`), cookie-based rather than `[locale]` routing:** the synchronous
+`t()` shim (~120 files) is now locale-aware via a `NEXT_LOCALE` cookie — a React
+`cache()`-backed server holder + a client provider keep `getLocale()` correct in
+both module graphs (SSR + browser) with **zero call-site migration**.
+`<html lang/dir>` follow the cookie; a header switcher toggles AR⇄EN; the
+fully-authored **English dictionary (749 keys) is finally live**. `next build` +
+`tsc` green; verified via SSR (`مركز المساعدة` ⇄ `Help center`).
+*Follow-up:* static `export const metadata` titles don't switch yet (need
+`generateMetadata`); LTR layout may need CSS polish (the design is RTL-first).
+
+**3️⃣ `feat/admin-i18n` (1 commit, 22 files) — Filament panel fully localized:**
+completed the in-progress admin i18n — every resource label / keyLabel /
+valueLabel + the nav groups resolve through `lang/{ar,en}/admin.php` (88 field
+keys, full ar↔en parity), including **four referenced-but-undefined keys**
+(`fields.is_published/priority/assignee`, `actions.assign_to_me`) that would
+otherwise have rendered as raw keys in the panel.
+
+**Still WIP on the working tree (user-owned, uncommitted):** deploy scripts +
+`SCOUT_DRIVER=database` pivot, `FeaturedAdsController` double-wrap fix,
+`CategoryDetailClient` real ad grid, `HomeCityTags`, vercel deploy scripts.
+*Note:* the `AdSearchService` graceful-Meili-degradation try/catch rode along
+with branch ①, since it was intertwined with the pagination fix.
 
 ---
 
