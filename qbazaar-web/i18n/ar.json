@@ -143,6 +143,7 @@
       "back_to_login": "العودة لتسجيل الدخول"
     },
     "verify_email": {
+      "title": "تأكيد البريد الإلكتروني",
       "checking_title": "نتحقق من بريدك…",
       "checking_body": "ثوانٍ قليلة فقط.",
       "success_title": "تم تأكيد بريدك الإلكتروني",

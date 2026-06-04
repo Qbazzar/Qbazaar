@@ -1,10 +1,16 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { resolveServerLocale } from '@/lib/i18n/server';
+import { t } from '@/lib/i18n/messages';
 import { MessagesClient } from './MessagesClient';
 
-export const metadata: Metadata = {
-  title: 'Messages',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('account.nav.messages', 'الرسائل'),
+  };
+}
 
 /**
  * Inbox shell — Next 16 requires us to wrap any client component reaching

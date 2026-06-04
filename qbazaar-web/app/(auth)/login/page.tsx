@@ -2,12 +2,17 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 import { AuthTabs } from '@/components/auth/AuthTabs';
 
-export const metadata: Metadata = {
-  title: 'تسجيل الدخول',
-  description: 'سجّل دخولك إلى حساب QBazaar.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('auth.tabs.login', 'تسجيل الدخول'),
+    description: t('auth.login.subtitle', 'سجّل دخولك إلى حساب QBazaar.'),
+  };
+}
 
 export default function LoginPage() {
   return (

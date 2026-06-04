@@ -1,14 +1,19 @@
 import type { Metadata } from 'next';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 import { CategoriesIndexClient } from './CategoriesIndexClient';
 
 /**
  * Top-level category index — `/categories`. QBFront port using the
  * `.category-grid` + `.category-card` markup from QBFront/ar/shop pages.
  */
-export const metadata: Metadata = {
-  title: t('categories.all', 'الأقسام'),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('categories.all', 'الأقسام'),
+  };
+}
 
 export default function CategoriesIndexPage() {
   return (

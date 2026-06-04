@@ -3,11 +3,16 @@ import Link from 'next/link';
 import { LifeBuoyIcon, MessageSquareIcon } from 'lucide-react';
 
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: t('support.title', 'الدعم الفني'),
-  description: t('support.subtitle'),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('support.title', 'الدعم الفني'),
+    description: t('support.subtitle'),
+  };
+}
 
 /**
  * Support landing — pure server component. Two big cards:

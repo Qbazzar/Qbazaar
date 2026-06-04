@@ -1,12 +1,17 @@
 import type { Metadata } from 'next';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 import { AuthTabs } from '@/components/auth/AuthTabs';
 
-export const metadata: Metadata = {
-  title: 'إنشاء حساب',
-  description: 'أنشئ حساباً جديداً على QBazaar.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('auth.tabs.register', 'إنشاء حساب'),
+    description: t('auth.register.subtitle', 'أنشئ حساباً جديداً على QBazaar.'),
+  };
+}
 
 export default function RegisterPage() {
   return (

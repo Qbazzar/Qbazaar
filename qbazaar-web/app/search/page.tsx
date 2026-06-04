@@ -9,10 +9,15 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { SearchClient } from './SearchClient';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: t('search.title', 'نتائج البحث'),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('search.title', 'نتائج البحث'),
+  };
+}
 
 export default function SearchPage() {
   return (

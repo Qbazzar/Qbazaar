@@ -2,11 +2,16 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'تعيين كلمة مرور جديدة',
-  description: 'اختر كلمة مرور جديدة لحسابك.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('auth.reset_password.title', 'تعيين كلمة مرور جديدة'),
+    description: t('auth.reset_password.subtitle', 'اختر كلمة مرور جديدة لحسابك.'),
+  };
+}
 
 export default function ResetPasswordPage() {
   return (

@@ -2,11 +2,15 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { VerifyOtpForm } from '@/components/auth/VerifyOtpForm';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'تأكيد رقم الهاتف',
-  description: 'أدخل رمز التحقق المرسل إلى هاتفك.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('auth.verify_otp.title', 'تأكيد رقم الهاتف'),
+  };
+}
 
 export default function VerifyOtpPage() {
   return (

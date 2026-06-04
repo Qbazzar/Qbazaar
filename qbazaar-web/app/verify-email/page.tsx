@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { resolveServerLocale } from '@/lib/i18n/server';
+import { t } from '@/lib/i18n/messages';
 import { VerifyEmailLanding } from '@/components/auth/VerifyEmailLanding';
 
-export const metadata: Metadata = {
-  title: 'تأكيد البريد الإلكتروني',
-  description: 'صفحة تأكيد البريد الإلكتروني لـ QBazaar.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+
+  return {
+    title: t('auth.verify_email.title', 'تأكيد البريد الإلكتروني'),
+    description: 'صفحة تأكيد البريد الإلكتروني لـ QBazaar.',
+  };
+}
 
 /**
  * Standalone landing page reached from the Laravel signed verification email.
