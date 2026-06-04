@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { HomeCategoryStrip } from '@/components/home/HomeCategoryStrip';
+import { HomeCityTags } from '@/components/home/HomeCityTags';
 import { HomeFeaturedAds } from '@/components/home/HomeFeaturedAds';
 import { HomeLatestAds } from '@/components/home/HomeLatestAds';
 import { RecentlyViewedStrip } from '@/components/account/RecentlyViewedStrip';
@@ -107,38 +108,7 @@ export default function HomePage() {
             </svg>
           </Link>
         </div>
-        <div className="city-tags">
-          <span className="city-tag city-tag--lg city-tag--accent city-tag--r1">
-            {t('home.cities.doha', 'الدوحة')}
-          </span>
-          <span className="city-tag city-tag--md city-tag--r2">
-            {t('home.cities.west_bay', 'الخليج الغربي')}
-          </span>
-          <span className="city-tag city-tag--sm city-tag--r3">
-            {t('home.cities.lusail', 'لوسيل')}
-          </span>
-          <span className="city-tag city-tag--lg city-tag--r4">
-            {t('home.cities.al_wakrah', 'الوكرة')}
-          </span>
-          <span className="city-tag city-tag--md city-tag--accent city-tag--r5">
-            {t('home.cities.al_khor', 'الخور')}
-          </span>
-          <span className="city-tag city-tag--sm city-tag--r6">
-            {t('home.cities.mesaieed', 'مسيعيد')}
-          </span>
-          <span className="city-tag city-tag--lg city-tag--r7">
-            {t('home.cities.education_city', 'المدينة التعليمية')}
-          </span>
-          <span className="city-tag city-tag--md city-tag--r8">
-            {t('home.cities.the_pearl', 'اللؤلؤة')}
-          </span>
-          <span className="city-tag city-tag--sm city-tag--accent city-tag--r9">
-            {t('home.cities.al_rayyan', 'الريان')}
-          </span>
-          <span className="city-tag city-tag--lg city-tag--r10">
-            {t('home.cities.al_daayen', 'الضعاين')}
-          </span>
-        </div>
+        <HomeCityTags />
       </section>
     </main>
   );
