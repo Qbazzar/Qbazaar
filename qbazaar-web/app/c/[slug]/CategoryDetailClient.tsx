@@ -7,12 +7,18 @@
  *  1. Pull the full category tree (so we can render the breadcrumb +
  *     resolve the active node + display children).
  *  2. Pull per-category filters/fields/stats — driven off the slug.
- *  3. Render the layout: breadcrumb → header → empty ads card → children
- *     grid → filters sidebar.
+ *  3. Render the layout: breadcrumb → header → ads grid + pagination →
+ *     children grid → filters sidebar.
  *  4. Call `notFound()` once the tree resolves and the slug is absent.
+ *
+ * Ads listing uses `GET /api/v1/ads?category_id=…&location_id=…` (does not
+ * depend on Meilisearch). Location filter resolves slug → id via the
+ * locations store; custom per-category filters remain UI-only until the
+ * backend `/ads` endpoint accepts dynamic field filters.
  */
 import { useMemo, useState } from 'react';
 import { notFound } from 'next/navigation';
+import { AdGrid } from '@/components/ads/AdGrid';
 import { CategoryGrid } from '@/components/categories/CategoryGrid';
 import { CategoryBreadcrumb } from '@/components/categories/CategoryBreadcrumb';
 import {
@@ -25,10 +31,15 @@ import {
   useCategoryStatsQuery,
   useCategoryTreeQuery,
 } from '@/lib/queries/categories';
+import { useAdsListQuery } from '@/lib/queries/ads';
+import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { findCategoryBySlug } from '@/store/categories';
+import { findLocationBySlug } from '@/store/locations';
 import { localized, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import type { CategoryNode } from '@/lib/api/types';
+
+const PAGE_SIZE = 12;
 
 interface Props {
   slug: string;
@@ -47,6 +58,33 @@ export function CategoryDetailClient({ slug }: Props) {
 
   const [filterValues, setFilterValues] = useState<FilterValues>({});
   const [locationSlug, setLocationSlug] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  // Locations tree — used to resolve the picker slug → location_id.
+  const locationsQuery = useQatarLocationsQuery();
+  const locationId = useMemo(() => {
+    if (!locationSlug) return undefined;
+    const loc = findLocationBySlug(locationsQuery.data ?? null, locationSlug);
+    return loc?.id;
+  }, [locationsQuery.data, locationSlug]);
+
+  // Reset to page 1 whenever the location filter changes.
+  const onLocationChange = (next: string | null) => {
+    setLocationSlug(next);
+    setPage(1);
+  };
+
+  // Drive the ads request only once we have a category id.
+  const adsQuery = useAdsListQuery(
+    node?.id
+      ? {
+          category_id: node.id,
+          location_id: locationId,
+          page,
+          per_page: PAGE_SIZE,
+        }
+      : {},
+  );
 
   if (treeQuery.isLoading) {
     return <DetailSkeleton />;
@@ -102,7 +140,15 @@ export function CategoryDetailClient({ slug }: Props) {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_280px]">
         <section className="space-y-8">
-          <EmptyAdsCard />
+          <AdsSection
+            isLoading={adsQuery.isLoading}
+            isError={adsQuery.isError}
+            ads={adsQuery.data?.data ?? []}
+            currentPage={page}
+            lastPage={adsQuery.data?.meta?.last_page ?? 1}
+            onPage={setPage}
+            onRetry={() => adsQuery.refetch()}
+          />
 
           {category.children.length > 0 ? (
             <section aria-labelledby="subcats-heading">
@@ -127,7 +173,7 @@ export function CategoryDetailClient({ slug }: Props) {
             </h2>
             <LocationPicker
               value={locationSlug}
-              onChange={setLocationSlug}
+              onChange={onLocationChange}
             />
           </section>
 
@@ -162,18 +208,100 @@ export function CategoryDetailClient({ slug }: Props) {
   );
 }
 
-function EmptyAdsCard() {
+interface AdsSectionProps {
+  isLoading: boolean;
+  isError: boolean;
+  ads: import('@/lib/api/types').AdSummary[];
+  currentPage: number;
+  lastPage: number;
+  onPage: (next: number) => void;
+  onRetry: () => void;
+}
+
+function AdsSection({
+  isLoading,
+  isError,
+  ads,
+  currentPage,
+  lastPage,
+  onPage,
+  onRetry,
+}: AdsSectionProps) {
+  if (isLoading) {
+    return (
+      <ul
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        aria-busy="true"
+      >
+        {Array.from({ length: 8 }).map((_, i) => (
+          <li
+            key={i}
+            className="bg-cream-200/60 h-64 animate-pulse rounded-xl"
+            aria-hidden
+          />
+        ))}
+      </ul>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="border-destructive/30 bg-destructive/5 rounded-xl border p-6 text-center">
+        <p className="text-destructive mb-3 text-sm">
+          {t(
+            'ads.errors.load_failed',
+            'تعذّر تحميل الإعلانات. حاول مرة أخرى.',
+          )}
+        </p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="text-destructive text-sm font-medium underline"
+        >
+          {t('common.retry', 'إعادة المحاولة')}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="border-sage/30 bg-sage/5 rounded-2xl border p-8 text-center">
-      <p className="text-sage font-display text-2xl tracking-tight">
-        {t('categories.ads_coming_soon', 'الإعلانات قادمة قريباً')}
-      </p>
-      <p className="text-ink-700 mx-auto mt-2 max-w-md text-sm leading-relaxed">
-        {t(
-          'categories.ads_coming_soon_subtitle',
-          'نعمل على إطلاق صفحة الإعلانات. تابعنا — هي قادمة في القريب العاجل.',
+    <div className="space-y-6">
+      <AdGrid
+        ads={ads}
+        empty={t(
+          'categories.no_ads_in_category',
+          'لا توجد إعلانات في هذا القسم حتى الآن.',
         )}
-      </p>
+      />
+
+      {lastPage > 1 ? (
+        <nav
+          aria-label={t('common.pagination', 'التنقل بين الصفحات')}
+          className="flex items-center justify-center gap-3 pt-2"
+        >
+          <button
+            type="button"
+            onClick={() => onPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className="border-ink-200 text-ink-700 hover:bg-cream-100 inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-3 text-sm transition disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label={t('common.previous_page', 'السابق')}
+          >
+            ‹
+          </button>
+          <span className="text-ink-700 text-sm" aria-live="polite">
+            {currentPage} / {lastPage}
+          </span>
+          <button
+            type="button"
+            onClick={() => onPage(currentPage + 1)}
+            disabled={currentPage >= lastPage}
+            className="border-ink-200 text-ink-700 hover:bg-cream-100 inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-3 text-sm transition disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label={t('common.next_page', 'التالي')}
+          >
+            ›
+          </button>
+        </nav>
+      ) : null}
     </div>
   );
 }
