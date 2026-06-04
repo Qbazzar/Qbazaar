@@ -7,6 +7,7 @@ import { SiteFooterGate } from '@/components/layout/SiteFooter';
 import { LocaleProvider } from '@/components/i18n/LocaleProvider';
 import { dirFor } from '@/lib/i18n/locale';
 import { resolveServerLocale } from '@/lib/i18n/server';
+import { siteUrl } from '@/lib/seo';
 import { Providers } from './providers';
 import './globals.css';
 import '../styles/qbfront.css';
@@ -30,11 +31,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "QBazaar — Qatar's friendly classifieds marketplace",
     template: '%s · QBazaar',
   },
   description: 'QBazaar — buy, sell and discover near you in Qatar.',
+  openGraph: {
+    siteName: 'QBazaar',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 };
 
 export default async function RootLayout({
