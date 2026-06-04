@@ -1146,16 +1146,18 @@ CT-10.1: 10+ endpoints, schemas: `Notification`, `NotificationPreferences`, `Rep
 
 ### Tasks
 
-- [ ] `FE-M6.1` PWA capabilities: `manifest.json` + service worker (offline shell) — اختياري
-- [ ] `FE-M6.2` Sitemap dynamic generation (consumes `/sitemap/ads` + `/sitemap/categories`)
-- [ ] `FE-M6.3` OpenGraph + Twitter Cards على كل ad page
-- [ ] `FE-M6.4` JSON-LD Product schema على ad detail
-- [ ] `FE-M6.5` JSON-LD BreadcrumbList على category pages
-- [ ] `FE-M6.6` robots.txt + canonical URLs
-- [ ] `FE-M6.7` Lighthouse score > 90 mobile لكل page رئيسية
-- [ ] `FE-M6.8` next-bundle-analyzer pass + code splitting حيث ينفع
-- [ ] `FE-M6.9` Error boundary على كل route
-- [ ] `FE-M6.10` Analytics setup (Plausible أو Vercel Analytics)
+> **2026-06-02:** 8/10 landed on the `feat/seo-pwa` PR (pending merge). `next build` + `tsc` green.
+
+- [x] `FE-M6.1` PWA manifest (`app/manifest.ts`) — service worker still optional
+- [x] `FE-M6.2` Sitemap (`app/sitemap.ts`): static + categories + recent ads, resilient — *full ad sitemap still needs a `/sitemap/ads` backend endpoint*
+- [x] `FE-M6.3` OpenGraph + Twitter Cards on ad pages (+ default in root layout)
+- [x] `FE-M6.4` JSON-LD Product schema on ad detail
+- [x] `FE-M6.5` JSON-LD BreadcrumbList on ad + category pages
+- [x] `FE-M6.6` robots.txt (`app/robots.ts`) + canonical URLs
+- [ ] `FE-M6.7` Lighthouse score > 90 mobile — *measurement, run against the deployed app*
+- [x] `FE-M6.8` `@next/bundle-analyzer` wired (`ANALYZE=true`)
+- [x] `FE-M6.9` Error boundaries (`app/error.tsx` + `app/global-error.tsx`)
+- [x] `FE-M6.10` Analytics — Vercel Analytics (`<Analytics/>` in root layout)
 
 ---
 

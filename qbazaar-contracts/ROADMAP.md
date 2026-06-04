@@ -12,7 +12,7 @@
 | البند | القيمة |
 |-------|---------|
 | **Active Milestone** | **Deploy + Polish** — MVP feature-complete (Milestones 1–5 ✅). Laravel running on VPS (`147.79.115.44`, CloudPanel tenant `qb-user`); DNS/SSL for `miete.site` pending user action. |
-| **Active Sprint** | Sprints 0..12 ✅ closed + QBFront design migration ✅ + Filament admin ✅ + DemoDataSeeder ✅ + VPS bootstrap ✅. **2026-06-02:** backend correctness pass + AR/EN i18n switch + admin localization — on 3 open PRs (`fix/backend-counters-and-gates`, `feat/i18n-locale-switch`, `feat/admin-i18n`), not yet merged to `main`. |
+| **Active Sprint** | Sprints 0..12 ✅ closed + QBFront design migration ✅ + Filament admin ✅ + DemoDataSeeder ✅ + VPS bootstrap ✅. **2026-06-02:** backend correctness pass + AR/EN i18n (incl. metadata) + admin localization + monorepo CI + Milestone-6 SEO/PWA — on **7 open PRs**, not yet merged to `main` (merge order: backend → i18n → admin → category-home → ci → seo). |
 | **Active Issues** | (1) DNS + SSL for `https://miete.site` — user action. (2) ⚠️ The Pest suite was found **not actually green** (13 pre-existing failures locally + in CI) — fixed on `fix/backend-counters-and-gates`: now **270 passed**, PHPStan/Pint clean. (3) Post-MVP backlog: typing indicators (Reverb client-events), FCM push, pHash dedup, signed URLs for originals, remaining QA sweep (perf / a11y / full RTL); `<title>` metadata still single-locale (needs `generateMetadata`). |
 | **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
 | **Blockers** | لا blockers على dev. Production publish blocked on DNS/SSL only. |
@@ -260,8 +260,9 @@ boot-time bugs squashed.
 
 ### 🔧 Backend correctness pass + i18n switch + admin localization (2026-06-02)
 
-Three independent branches pushed to GitHub — **PRs pending review, not yet
-merged to `main`**. Each is branched from `main` and opens cleanly on its own.
+Seven independent branches pushed to GitHub — **PRs pending review, not yet
+merged to `main`**. Suggested merge order: backend → i18n → admin →
+category-home → ci → seo (docs anytime).
 
 **🩺 Discovery — the suite was not actually green.** `php artisan test` had
 **13 pre-existing failures** locally, and would fail in CI too (`ci.yml` never
@@ -296,8 +297,10 @@ both module graphs (SSR + browser) with **zero call-site migration**.
 `<html lang/dir>` follow the cookie; a header switcher toggles AR⇄EN; the
 fully-authored **English dictionary (749 keys) is finally live**. `next build` +
 `tsc` green; verified via SSR (`مركز المساعدة` ⇄ `Help center`).
-*Follow-up:* static `export const metadata` titles don't switch yet (need
-`generateMetadata`); LTR layout may need CSS polish (the design is RTL-first).
+A second commit converts 16 pages from static `export const metadata` to
+`generateMetadata`, so titles/descriptions switch too (verified: `/ads`
+"كل الإعلانات" ⇄ "All ads"). *Follow-up:* LTR layout may need CSS polish
+(the design is RTL-first).
 
 **3️⃣ `feat/admin-i18n` (1 commit, 22 files) — Filament panel fully localized:**
 completed the in-progress admin i18n — every resource label / keyLabel /
@@ -306,11 +309,31 @@ keys, full ar↔en parity), including **four referenced-but-undefined keys**
 (`fields.is_published/priority/assignee`, `actions.assign_to_me`) that would
 otherwise have rendered as raw keys in the panel.
 
-**Still WIP on the working tree (user-owned, uncommitted):** deploy scripts +
-`SCOUT_DRIVER=database` pivot, `FeaturedAdsController` double-wrap fix,
-`CategoryDetailClient` real ad grid, `HomeCityTags`, vercel deploy scripts.
-*Note:* the `AdSearchService` graceful-Meili-degradation try/catch rode along
-with branch ①, since it was intertwined with the pagination fix.
+**4️⃣ `feat/category-home-and-deploy` (3 commits) — finishes the in-progress
+work** (the user's own code, verified + committed in coherent groups):
+`FeaturedAdsController` double-wrap fix, the production `SCOUT_DRIVER=database`
+pivot + deploy-script host fixes (+ vercel scripts), and the real category-browse
+ad grid (DB-backed `/ads`, no Meili dependency) + live home city tags. The
+`AdSearchService` graceful-Meili-degradation try/catch rode along with branch ①
+(intertwined with the pagination fix).
+
+**5️⃣ `ci/monorepo-workflows` (1 commit) — CI was never actually running.**
+GitHub only reads workflows from the repo-root `.github/workflows/`, so the API CI
+sitting in `qbazaar-api/.github/workflows/` was silently ignored — there were **no
+quality gates on PRs at all** (which is how the suite drifted red unnoticed). Adds
+a root `ci.yml` with an `api` job (Pint + PHPStan + Pest on MySQL/Redis/Meili) and
+a `web` job (tsc + next build). ⚠️ Merge branch ① first or the `api` job stays red
+on `main`.
+
+**6️⃣ `feat/seo-pwa` (4 commits, based on ②) — Milestone 6 SEO/PWA (8/10):**
+robots.txt, dynamic sitemap (static + categories + recent ads, degrades
+gracefully), PWA manifest, route + root error boundaries, ad-detail OpenGraph +
+Twitter + canonical + Schema.org Product & BreadcrumbList JSON-LD, category
+metadata + breadcrumb, `@next/bundle-analyzer` (`ANALYZE=true`), and Vercel
+Analytics. Remaining M6: Lighthouse >90 (a measurement) + a full-ads sitemap
+(needs a dedicated backend endpoint).
+
+**7️⃣ `docs/progress-2026-06-02` — this log.**
 
 ---
 
