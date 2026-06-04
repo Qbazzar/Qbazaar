@@ -1,5 +1,10 @@
 name: CI
 
+# Monorepo quality gates. GitHub only reads workflows from the repository-root
+# `.github/workflows/`, so the per-package workflow that used to live in
+# `qbazaar-api/.github/workflows/` never actually ran. This root workflow runs
+# the API and Web gates on every push / PR to the main branches.
+
 on:
   push:
     branches: [main, develop]
@@ -11,9 +16,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
-    name: Quality (Pint + PHPStan + Pest)
+  api:
+    name: API — Pint + PHPStan + Pest
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: qbazaar-api
 
     services:
       mysql:
@@ -65,8 +74,8 @@ jobs:
       - name: Cache Composer packages
         uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-php83-${{ hashFiles('composer.lock') }}
+          path: qbazaar-api/vendor
+          key: ${{ runner.os }}-php83-${{ hashFiles('qbazaar-api/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-php83-
 
@@ -77,7 +86,6 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate
-          # CI overrides
           sed -i 's|^DB_HOST=.*|DB_HOST=127.0.0.1|' .env
           sed -i 's|^DB_USERNAME=.*|DB_USERNAME=root|' .env
           sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=|' .env
@@ -91,7 +99,7 @@ jobs:
             sleep 1
           done
 
-      - name: Run migrations
+      - name: Run migrations (MySQL sanity)
         run: php artisan migrate --force --no-interaction
 
       - name: Laravel Pint
@@ -102,3 +110,35 @@ jobs:
 
       - name: Pest tests
         run: ./vendor/bin/pest --colors=always
+
+  web:
+    name: Web — typecheck + build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: qbazaar-web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: qbazaar-web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+        env:
+          # Build-time placeholder — the app fetches the real API at runtime
+          # via NEXT_PUBLIC_API_URL; the build only needs a well-formed value.
+          NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
