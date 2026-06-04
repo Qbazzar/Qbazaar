@@ -2,36 +2,28 @@
 
 > Next.js frontend for **QBazaar** — Qatar's friendly classifieds marketplace.
 
-[![Sprint](https://img.shields.io/badge/sprint-0-blue)](../qbazaar-contracts/ROADMAP.md)
-[![Status](https://img.shields.io/badge/status-Day%201%20done%20·%20Day%206%20pending-orange)](../qbazaar-contracts/ROADMAP.md)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
+[![Status](https://img.shields.io/badge/status-MVP%20feature--complete-success)](../qbazaar-contracts/ROADMAP.md)
+[![Phase](https://img.shields.io/badge/phase-launch%20prep-yellow)](../qbazaar-contracts/ROADMAP.md)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![Tailwind](https://img.shields.io/badge/Tailwind-4-38BDF8)](https://tailwindcss.com)
 
 ---
 
-## 📊 Current Progress
+## 📊 Status
 
-**Sprint:** 0 — Infrastructure & Foundation
-**Days touched on this repo:**
+**MVP feature-complete — now in launch prep.** The web client is fully built out against the live API. Surfaces shipped:
 
-| Sprint Day | Status | Task IDs |
-|------------|--------|----------|
-| **Day 1** | ✅ | `FE-0.1` repo init + README + .gitignore |
-| **Day 6** | ⚪ | `FE-0.2` → `FE-0.14` — `create-next-app`, Tailwind 4 + shadcn/ui, Bazzar palette + dark mode, fonts (DM Sans + Instrument Serif + Cairo), i18n routing, axios client, brand assets |
-| **Day 7** | ⚪ | `FE-0.15` `.env.local` pointing at Prism mock (`http://localhost:4010`) |
+- **Home** — featured ads, city tags, category browse
+- **Ads** — list + filtering, ad detail, **post-ad wizard**
+- **Categories** & **search** (facets + saved searches)
+- **Account dashboard** — profile, sessions, privacy, data export, messages, notifications, favorites, saved searches, support
+- **Public profile** pages
+- **CMS / help / support** content surfaces
+- **Auth** — register, login, OTP, password reset, email verification
 
-> The frontend will rev up in **Sprint 0 Day 6** once the backend has a stable shape. Until then this repo holds only the README + .gitignore so the commit history doesn't drift.
+Plus **AR/EN cookie-based i18n** and a **Milestone-6 SEO/PWA pass** (sitemap, robots, web manifest, Open Graph, JSON-LD).
 
-### What's next (Day 6)
-
-```bash
-cd c:\laragon\www\QB\qbazaar-web
-npx create-next-app@latest . --typescript --tailwind --app --src-dir=false --import-alias="@/*"
-npx shadcn@latest init
-npm install @tanstack/react-query zustand axios next-intl react-hook-form zod next-themes lucide-react embla-carousel-react laravel-echo pusher-js nuqs
-```
-
-Followed by porting the Bazzar mockup tokens to `tailwind.config.ts`, fonts to `app/layout.tsx`, RTL-aware locale layout, and a placeholder home page that proves the design system loads. See [PLAN.md → Day 6](../qbazaar-contracts/PLAN.md) for the full step list.
+See [ROADMAP.md](../qbazaar-contracts/ROADMAP.md) and [MILESTONES.md](../qbazaar-contracts/MILESTONES.md) for the full per-sprint detail.
 
 ---
 
@@ -55,15 +47,15 @@ Dark mode palette is derived (warmer dark cream + reversed ink) and wired via `n
 
 ---
 
-## 🏗️ Planned Stack
+## 🏗️ Stack
 
-- **Framework:** Next.js 15 (App Router, Server Components)
+- **Framework:** Next.js 16 (App Router, Server Components)
 - **Language:** TypeScript 5 (strict)
 - **Styling:** Tailwind CSS 4 + shadcn/ui
 - **Data:** TanStack Query v5 + axios
 - **State:** Zustand (client state)
 - **Forms:** React Hook Form + Zod (matches backend validation rules)
-- **i18n:** next-intl (AR/EN + RTL)
+- **i18n:** cookie-based AR/EN switch on a synchronous `t()` shim (next-intl is a dependency; its full routing is not used)
 - **Theme:** next-themes (light/dark)
 - **Real-time:** Laravel Echo + Pusher.js (against Reverb)
 - **Icons:** Lucide React
@@ -73,7 +65,7 @@ Dark mode palette is derived (warmer dark cream + reversed ink) and wired via `n
 
 ---
 
-## 🚀 Local Setup (after Day 6 scaffolding)
+## 🚀 Local Setup
 
 ```bash
 npm install
@@ -81,21 +73,17 @@ cp .env.example .env.local
 npm run dev   # http://localhost:3000
 ```
 
-Development pattern:
-
-1. **Day 6 onwards:** the app talks to the **Prism mock server** in `qbazaar-contracts` on `http://localhost:4010` via `NEXT_PUBLIC_API_URL`.
-2. **Once a real backend endpoint exists** for a path: swap to `http://localhost:8000` in `.env.local` and you get the real shape.
-
-The mock and the real server speak the same OpenAPI 3 contract, so the swap is transparent.
+Point `NEXT_PUBLIC_API_URL` at the running API (`http://localhost:8000` for the real backend, or the **Prism mock server** in `qbazaar-contracts` on `http://localhost:4010`). The mock and the real server speak the same OpenAPI 3 contract, so the swap is transparent.
 
 ---
 
-## ✅ Quality Gates (will be wired Day 6)
+## ✅ Quality Gates
 
 ```bash
-npm run lint        # ESLint
+npm run dev         # next dev (local dev server)
+npm run build       # next build (production build)
+npm run start       # next start (serve the production build)
 npm run typecheck   # tsc --noEmit
-npm test            # Vitest / Playwright (later)
 ```
 
 ---
@@ -114,5 +102,5 @@ The bazaar React mockup is in [`../DOCS/bazzar/`](../DOCS/bazzar/) — read the 
 
 ## 🔗 Related Repositories
 
-- **[`qbazaar-api`](../qbazaar-api)** — Laravel 12 backend (Sprint 0 — Days 1–4 done, Day 5 in progress)
-- **[`qbazaar-contracts`](../qbazaar-contracts)** — OpenAPI spec, error catalogue, WebSocket events spec, planning docs (Sprint 0 — Day 1 done)
+- **[`qbazaar-api`](../qbazaar-api)** — Laravel 12 backend
+- **[`qbazaar-contracts`](../qbazaar-contracts)** — OpenAPI spec, error catalogue, WebSocket events spec, planning docs
