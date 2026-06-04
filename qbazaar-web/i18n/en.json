@@ -143,6 +143,7 @@
       "back_to_login": "Back to sign in"
     },
     "verify_email": {
+      "title": "Verify your email",
       "checking_title": "Verifying your email…",
       "checking_body": "Just a moment.",
       "success_title": "Email verified",
