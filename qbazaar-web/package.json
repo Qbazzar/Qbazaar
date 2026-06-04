@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "vercel --prod --yes",
+    "deploy:preview": "vercel --yes"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

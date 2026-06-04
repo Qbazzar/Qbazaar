@@ -13,9 +13,9 @@ shopt -s inherit_errexit
 
 REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 API_DIR="$REPO_DIR/qbazaar-api"
-DOCROOT="${DOCROOT:-$HOME/htdocs/www.miete.site}"
+DOCROOT="${DOCROOT:-$HOME/htdocs/www.miete.site/public}"
 BRANCH="${DEPLOY_BRANCH:-production}"
-HEALTH_URL="${HEALTH_URL:-https://www.miete.site/api/v1/health}"
+HEALTH_URL="${HEALTH_URL:-https://miete.site/api/v1/health}"
 
 log() { printf '\n\033[1;36m> %s\033[0m\n' "$*"; }
 
