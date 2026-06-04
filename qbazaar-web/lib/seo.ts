@@ -45,3 +45,22 @@ export async function fetchApiData<T>(
     return null;
   }
 }
+
+/**
+ * Build a Schema.org BreadcrumbList from ordered { name, path } crumbs.
+ * Paths are resolved to absolute URLs.
+ */
+export function breadcrumbJsonLd(
+  crumbs: Array<{ name: string; path: string }>,
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: absoluteUrl(crumb.path),
+    })),
+  };
+}

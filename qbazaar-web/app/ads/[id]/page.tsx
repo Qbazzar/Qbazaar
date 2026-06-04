@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 
 import type { Ad } from '@/lib/api/types';
-import { absoluteUrl, fetchApiData } from '@/lib/seo';
+import { localized } from '@/lib/i18n/locale';
+import { t } from '@/lib/i18n/messages';
+import { absoluteUrl, breadcrumbJsonLd, fetchApiData } from '@/lib/seo';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { AdDetailClient } from './AdDetailClient';
 
 interface PageProps {
@@ -50,14 +53,11 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Schema.org Product JSON-LD so the listing is eligible for rich results.
- * Rendered server-side from the ad payload; absent when the ad can't be loaded.
- */
-function AdProductJsonLd({ ad }: { ad: Ad }) {
+/** Schema.org Product graph for the listing. */
+function adProductJsonLd(ad: Ad): Record<string, unknown> {
   const images = (ad.images ?? []).map((media) => media.url).filter(Boolean);
 
-  const jsonLd: Record<string, unknown> = {
+  return {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: ad.title,
@@ -78,21 +78,33 @@ function AdProductJsonLd({ ad }: { ad: Ad }) {
         }
       : {}),
   };
+}
 
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-    />
-  );
+/** Home › Categories › {category} › {ad} breadcrumb. */
+function adBreadcrumbJsonLd(ad: Ad): Record<string, unknown> {
+  const crumbs = [
+    { name: t('brand.name', 'QBazaar'), path: '/' },
+    { name: t('categories.all', 'الأقسام'), path: '/categories' },
+  ];
+
+  if (ad.category?.slug) {
+    crumbs.push({
+      name: localized(ad.category.name) || ad.category.slug,
+      path: `/c/${ad.category.slug}`,
+    });
+  }
+
+  crumbs.push({ name: ad.title, path: `/ads/${ad.id}` });
+
+  return breadcrumbJsonLd(crumbs);
 }
 
 /**
  * Ad detail — `/ads/{id}`.
  *
  * The interactive detail (gallery, custom fields, seller card) is rendered by
- * the client island; the server entrypoint adds crawlable Product JSON-LD when
- * the ad can be fetched.
+ * the client island; the server entrypoint adds crawlable Product + Breadcrumb
+ * JSON-LD when the ad can be fetched.
  */
 export default async function AdDetailPage({ params }: PageProps) {
   const { id } = await params;
@@ -100,7 +112,9 @@ export default async function AdDetailPage({ params }: PageProps) {
 
   return (
     <>
-      {ad ? <AdProductJsonLd ad={ad} /> : null}
+      {ad ? (
+        <JsonLd data={[adProductJsonLd(ad), adBreadcrumbJsonLd(ad)]} />
+      ) : null}
       <AdDetailClient id={id} />
     </>
   );
