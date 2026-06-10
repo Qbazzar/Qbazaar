@@ -8,6 +8,7 @@ use App\Enums\AdStatus;
 use App\Models\Ad;
 use App\Services\Media\PerceptualHashService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Finds ACTIVE ads (other sellers only) whose images are perceptual
@@ -28,13 +29,30 @@ class DuplicateImageDetector
         private readonly PerceptualHashService $hasher,
     ) {}
 
+    private const PHASH_PATTERN = '/^[0-9a-f]{16}$/';
+
     /**
      * @return list<string> ad ULIDs that contain a near-duplicate image
      */
     public function findDuplicateAdIds(Ad $ad): array
     {
         /** @var list<string> $candidateHashes */
-        $candidateHashes = $ad->media()->whereNotNull('phash')->pluck('phash')->all();
+        $candidateHashes = array_values(
+            array_filter(
+                $ad->media()->whereNotNull('phash')->pluck('phash', 'id')->all(),
+                function (mixed $phash, int|string $mediaId): bool {
+                    if (! preg_match(self::PHASH_PATTERN, (string) $phash)) {
+                        Log::warning('phash.malformed', ['media_id' => $mediaId, 'phash' => $phash]);
+
+                        return false;
+                    }
+
+                    return true;
+                },
+                ARRAY_FILTER_USE_BOTH,
+            ),
+        );
+
         if ($candidateHashes === []) {
             return [];
         }
@@ -51,11 +69,16 @@ class DuplicateImageDetector
             ->where('ads.user_id', '!=', $ad->user_id)
             ->whereNull('ads.deleted_at')
             ->whereNotNull('media.phash')
-            ->select(['ads.id as ad_id', 'media.phash'])
-            ->orderBy('media.id')
-            ->chunk(self::CHUNK_SIZE, function ($rows) use ($candidateHashes, $threshold, &$duplicateAdIds): void {
+            ->select(['media.id as id', 'ads.id as ad_id', 'media.phash'])
+            ->chunkById(self::CHUNK_SIZE, function ($rows) use ($candidateHashes, $threshold, &$duplicateAdIds): void {
                 foreach ($rows as $row) {
                     if (isset($duplicateAdIds[$row->ad_id])) {
+                        continue;
+                    }
+
+                    if (! preg_match(self::PHASH_PATTERN, (string) $row->phash)) {
+                        Log::warning('phash.malformed', ['media_id' => $row->id, 'phash' => $row->phash]);
+
                         continue;
                     }
 
@@ -66,7 +89,7 @@ class DuplicateImageDetector
                         }
                     }
                 }
-            });
+            }, 'media.id', 'id');
 
         // ULIDs contain letters so PHP keeps the array keys as strings, but
         // the explicit map pins the list<string> contract for static analysis.

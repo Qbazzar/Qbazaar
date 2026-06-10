@@ -187,3 +187,20 @@ it('publishes to ACTIVE when the candidate image has no phash yet', function ():
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::ACTIVE->value);
 });
+
+it('publishes to ACTIVE when another seller has an active ad with a malformed phash', function (): void {
+    // A corrupted DB row (phash = 'ZZZZ') must not throw or produce a false
+    // duplicate flag — the detector skips it and publish succeeds.
+    ($this->makeActiveAdWithPhash)($this->otherSeller, 'ZZZZ');
+
+    $draft = ($this->makeCleanDraft)();
+    attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
+
+    postJson("/api/v1/ads/{$draft->id}/publish", [], [
+        'Accept' => 'application/json',
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.status', AdStatus::ACTIVE->value);
+
+    expect($draft->fresh()->status)->toBe(AdStatus::ACTIVE);
+});
