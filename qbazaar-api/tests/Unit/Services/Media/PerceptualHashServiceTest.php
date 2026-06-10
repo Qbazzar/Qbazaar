@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Services\Media\PerceptualHashService;
 
-function makeTestImage(int $seed): string
+function makePhashTestImage(int $seed): string
 {
     $img = imagecreatetruecolor(64, 64);
     mt_srand($seed);
@@ -25,7 +25,7 @@ function makeTestImage(int $seed): string
 
 it('produces a 16-char hex hash', function (): void {
     $service = new PerceptualHashService;
-    $hash = $service->hash(makeTestImage(1));
+    $hash = $service->hash(makePhashTestImage(1));
 
     expect($hash)->toMatch('/^[0-9a-f]{16}$/');
 });
@@ -33,12 +33,12 @@ it('produces a 16-char hex hash', function (): void {
 it('is deterministic for the same image', function (): void {
     $service = new PerceptualHashService;
 
-    expect($service->hash(makeTestImage(2)))->toBe($service->hash(makeTestImage(2)));
+    expect($service->hash(makePhashTestImage(2)))->toBe($service->hash(makePhashTestImage(2)));
 });
 
 it('survives a resize of the same image (distance 0..4)', function (): void {
     $service = new PerceptualHashService;
-    $original = makeTestImage(3);
+    $original = makePhashTestImage(3);
 
     $src = imagecreatefrompng($original);
     assert($src !== false);
@@ -58,8 +58,8 @@ it('survives a resize of the same image (distance 0..4)', function (): void {
 it('returns a large distance for unrelated images', function (): void {
     $service = new PerceptualHashService;
 
-    $hashA = $service->hash(makeTestImage(4));
-    $hashB = $service->hash(makeTestImage(5));
+    $hashA = $service->hash(makePhashTestImage(4));
+    $hashB = $service->hash(makePhashTestImage(5));
     assert($hashA !== null && $hashB !== null);
 
     $distance = $service->distance($hashA, $hashB);
@@ -69,3 +69,15 @@ it('returns a large distance for unrelated images', function (): void {
 it('returns null for an unreadable file', function (): void {
     expect((new PerceptualHashService)->hash('/nonexistent.jpg'))->toBeNull();
 });
+
+it('computes known hamming distances', function (): void {
+    $service = new PerceptualHashService;
+
+    expect($service->distance('0000000000000000', 'ffffffffffffffff'))->toBe(64)
+        ->and($service->distance('8000000000000000', '0000000000000000'))->toBe(1)
+        ->and($service->distance('00000000000000ff', '0000000000000000'))->toBe(8);
+});
+
+it('rejects malformed hex input', function (): void {
+    (new PerceptualHashService)->distance('abc', 'xyz');
+})->throws(InvalidArgumentException::class);

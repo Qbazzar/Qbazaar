@@ -6,6 +6,7 @@ namespace App\Services\Media;
 
 use GdImage;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -65,8 +66,20 @@ class PerceptualHashService
         }
     }
 
+    /**
+     * Compute the Hamming distance between two 64-bit dHashes.
+     *
+     * @param string $hexA 16-char lowercase hex hash produced by hash().
+     * @param string $hexB 16-char lowercase hex hash produced by hash().
+     *
+     * @throws InvalidArgumentException if either argument is not a 16-char lowercase hex string.
+     */
     public function distance(string $hexA, string $hexB): int
     {
+        if (! preg_match('/^[0-9a-f]{16}$/', $hexA) || ! preg_match('/^[0-9a-f]{16}$/', $hexB)) {
+            throw new InvalidArgumentException('distance() expects 16-char lowercase hex hashes.');
+        }
+
         $a = str_pad((string) hex2bin($hexA), 8, "\0", STR_PAD_LEFT);
         $b = str_pad((string) hex2bin($hexB), 8, "\0", STR_PAD_LEFT);
 
