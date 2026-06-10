@@ -6,13 +6,15 @@ namespace App\Actions\Ads;
 
 use App\Data\Moderation\ModerationResult;
 use App\Models\Ad;
+use App\Services\Moderation\DuplicateImageDetector;
 use App\Services\Moderation\ModerationRulesService;
 
 /**
- * Runs an ad's title + description through the three moderation rule families
- * and returns a structured outcome. Kept as a thin invokable action because
- * it composes one service call and has no side effects — easy to unit-test
- * and to dispatch from synchronous AND queued contexts.
+ * Runs an ad through the four moderation rule families — banned words,
+ * phone-in-text, external links (title + description) and near-duplicate
+ * images — and returns a structured outcome. Kept as a thin invokable
+ * action because it composes service calls and has no side effects — easy
+ * to unit-test and to dispatch from synchronous AND queued contexts.
  *
  * If moderation is disabled (`config('moderation.enabled') === false`) we
  * return a clean result immediately so the publish flow short-circuits to the
@@ -23,6 +25,7 @@ class ModerateAdAction
 {
     public function __construct(
         private readonly ModerationRulesService $rules,
+        private readonly DuplicateImageDetector $duplicateImages,
     ) {}
 
     public function __invoke(Ad $ad): ModerationResult
@@ -51,6 +54,12 @@ class ModerateAdAction
         if ($linkHits !== []) {
             $flags[] = 'external_link';
             $details['external_link'] = $linkHits;
+        }
+
+        $duplicateAdIds = $this->duplicateImages->findDuplicateAdIds($ad);
+        if ($duplicateAdIds !== []) {
+            $flags[] = 'duplicate_image';
+            $details['duplicate_image'] = ['duplicate_ad_ids' => $duplicateAdIds];
         }
 
         if ($flags === []) {
