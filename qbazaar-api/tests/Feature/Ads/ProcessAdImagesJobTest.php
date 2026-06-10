@@ -31,9 +31,9 @@ beforeEach(function (): void {
 });
 
 /**
- * Create a real 32×32 PNG in a system temp file.
- * Returns the path; the caller owns the file (it is deleted on process exit
- * by the OS — no explicit cleanup needed for short-lived test processes).
+ * Create a real 32×32 PNG in a system temp file and return its path.
+ * tempnam() creates an extensionless stub; we append .png and unlink the
+ * stub so the OS does not accumulate orphaned zero-byte files.
  */
 function makeTempPng(string $prefix): string
 {
@@ -43,7 +43,11 @@ function makeTempPng(string $prefix): string
     assert($colour !== false);
     imagefill($image, 0, 0, $colour);
 
-    $path = tempnam(sys_get_temp_dir(), $prefix) . '.png';
+    $stub = tempnam(sys_get_temp_dir(), $prefix);
+    assert($stub !== false);
+    unlink($stub);
+
+    $path = $stub . '.png';
     imagepng($image, $path);
     imagedestroy($image);
 
@@ -70,6 +74,7 @@ it('populates phash on media after the job runs', function (): void {
     assert($fresh !== null);
 
     expect($fresh->phash)->toMatch('/^[0-9a-f]{16}$/');
+    expect($fresh->getCustomProperty('blurhash'))->not->toBe(BlurHashGeneratorService::PLACEHOLDER);
 });
 
 it('completes without throwing when the media file is missing and leaves phash null', function (): void {
@@ -83,10 +88,10 @@ it('completes without throwing when the media file is missing and leaves phash n
         ->usingFileName('missing.png')
         ->toMediaCollection('images');
 
-    // Delete all stored files so getPath() points to a non-existent path.
+    // Delete just this media file so getPath() points to a non-existent path.
     // This mirrors the blurhash graceful-degradation contract: the job must
     // complete without throwing, and phash stays null.
-    Storage::disk('public')->deleteDirectory('');
+    Storage::disk('public')->delete($media->getPathRelativeToRoot());
 
     expect(fn () => (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(
         app(BlurHashGeneratorService::class),

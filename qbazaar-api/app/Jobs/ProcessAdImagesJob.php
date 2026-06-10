@@ -47,7 +47,7 @@ class ProcessAdImagesJob implements ShouldQueue
         $this->onQueue('low');
     }
 
-    public function handle(BlurHashGeneratorService $blurHasher, PerceptualHashService $hasher): void
+    public function handle(BlurHashGeneratorService $blurHasher, PerceptualHashService $perceptualHasher): void
     {
         if ($this->mediaIds === []) {
             return;
@@ -73,7 +73,9 @@ class ProcessAdImagesJob implements ShouldQueue
 
                 $hash = $blurHasher->forFile($path);
                 $media->setCustomProperty('blurhash', $hash);
-                $media->phash = $hasher->hash($path);
+                // Guard re-runs: a transient decode failure must not overwrite
+                // a previously valid hash with null.
+                $media->phash = $perceptualHasher->hash($path) ?? $media->phash;
                 $media->save();
 
                 if ($media->model_type === Ad::class && is_string($media->model_id)) {
