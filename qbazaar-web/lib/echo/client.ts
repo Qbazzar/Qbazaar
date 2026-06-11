@@ -22,11 +22,21 @@ import { api } from '@/lib/api/client';
 // Echo is bundled with a non-trivial Pusher footprint; lazy-load to keep the
 // initial chunk lean and to avoid any "window is not defined" surprises in
 // server components.
+export type EchoPrivateChannel = {
+  listen: (event: string, cb: (payload: unknown) => void) => unknown;
+  stopListening: (event: string) => unknown;
+  // Pusher-protocol client events ("whispers") — Reverb relays these between
+  // channel members without a server round-trip.
+  whisper: (event: string, payload: Record<string, unknown>) => unknown;
+  listenForWhisper: (event: string, cb: (payload: unknown) => void) => unknown;
+  stopListeningForWhisper: (
+    event: string,
+    cb?: (payload: unknown) => void,
+  ) => unknown;
+};
+
 type EchoInstance = {
-  private: (channel: string) => {
-    listen: (event: string, cb: (payload: unknown) => void) => unknown;
-    stopListening: (event: string) => unknown;
-  };
+  private: (channel: string) => EchoPrivateChannel;
   leave: (channel: string) => void;
   leaveChannel: (channel: string) => void;
   disconnect: () => void;
