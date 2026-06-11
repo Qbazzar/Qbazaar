@@ -12,6 +12,7 @@ import { useCallback } from 'react';
 import { useAuthStore } from '@/store/auth';
 import { logout as apiLogout } from '@/lib/api/auth';
 import { disconnectEcho } from '@/lib/echo/client';
+import { disablePush } from '@/lib/push/fcm';
 
 export function useAuth() {
   const user = useAuthStore((s) => s.user);
@@ -22,6 +23,14 @@ export function useAuth() {
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
   const logout = useCallback(async () => {
+    // Unregister this browser's push token BEFORE the session is burned —
+    // the DELETE needs the still-valid bearer. disablePush() never throws
+    // and returns instantly when push was never enabled; the timeout race
+    // caps the cost on a flaky network so sign-out is never held hostage.
+    await Promise.race([
+      disablePush(),
+      new Promise((resolve) => setTimeout(resolve, 2500)),
+    ]);
     await apiLogout();
     // Tear down the WebSocket so a future sign-in instantiates a fresh
     // Echo client with the next user's auth context.
