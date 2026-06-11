@@ -1,5 +1,11 @@
 # QBazaar — Production Deploy
 
+> **⚠️ Hosting moved (2026-06):** production now lives on the **WHM/cPanel server**
+> at `qbazaar.taqat.space` (`/home/space/public_html/qbazaar`, root via WHM,
+> AlmaLinux 9). The CloudPanel/Miete sections below predate the move and are kept
+> for reference until the runbooks are fully migrated. New-server runbooks so far:
+> [Meilisearch](#-meilisearch-on-the-whm-server-qbazaartaqatspace) below.
+
 This deploys the Laravel API to the **Miete VPS** under the existing
 CloudPanel-managed site `www.miete.site`.
 
@@ -140,3 +146,63 @@ deploy/
 
 Next.js is **not** deployed to this VPS — it lives on Vercel
 (`qbazaar-web` repo, auto-deploys from `main`). Only the API runs on the VPS.
+
+---
+
+## 🔎 Meilisearch on the WHM server (qbazaar.taqat.space)
+
+Production search currently runs on the Scout `database` driver (commit
+`a0280e9`) because the old host had no Meilisearch. The WHM server gives us
+root, so we run real Meilisearch and restore the Sprint-6 search experience
+(typo tolerance + ranking).
+
+### Install (as root, once)
+
+```bash
+# 1) Binary + dedicated system user
+curl -L https://install.meilisearch.com | sh
+mv ./meilisearch /usr/local/bin/
+useradd -r -s /sbin/nologin meilisearch
+mkdir -p /var/lib/meilisearch && chown meilisearch: /var/lib/meilisearch
+
+# 2) Config — loopback only, master key REQUIRED (shared server)
+MASTER_KEY=$(openssl rand -hex 32)
+cat > /etc/meilisearch.toml <<TOML
+env = "production"
+master_key = "${MASTER_KEY}"
+db_path = "/var/lib/meilisearch"
+http_addr = "127.0.0.1:7700"
+TOML
+chmod 600 /etc/meilisearch.toml
+echo "SAVE THIS for the app .env -> MEILISEARCH_KEY=${MASTER_KEY}"
+
+# 3) Service (unit file lives in this repo: deploy/systemd/meilisearch.service)
+cp /home/space/public_html/qbazaar/deploy/systemd/meilisearch.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now meilisearch
+curl -s http://127.0.0.1:7700/health   # → {"status":"available"}
+```
+
+### Point the app at it (as the site user, NOT root)
+
+```bash
+cd /home/space/public_html/qbazaar/qbazaar-api
+# .env:
+#   SCOUT_DRIVER=meilisearch
+#   MEILISEARCH_HOST=http://127.0.0.1:7700
+#   MEILISEARCH_KEY=<master key from above>
+php artisan config:clear && php artisan config:cache
+php artisan scout:sync-index-settings
+php artisan scout:import "App\Models\Ad"
+php artisan queue:restart
+```
+
+### Verify
+
+```bash
+# Typo tolerance proves Meili (the database driver can't do this):
+curl -s 'https://qbazaar.taqat.space/api/v1/search?q=iphnoe' | head -c 400
+```
+
+Rollback: set `SCOUT_DRIVER=database`, `config:cache` — no data loss (Meili
+index rebuilds any time via `scout:import`).
