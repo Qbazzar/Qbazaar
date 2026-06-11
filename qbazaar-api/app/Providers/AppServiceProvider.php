@@ -14,7 +14,7 @@ use App\Listeners\Ads\IndexAdInSearch;
 use App\Listeners\Ads\RemoveAdFromSearch;
 use App\Listeners\Ads\SendAdNotifications;
 use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
-use App\Listeners\PruneStaleDeviceTokens;
+use App\Listeners\Notifications\PruneStaleDeviceTokens;
 use App\Models\Ad;
 use App\Models\User;
 use App\Observers\AdObserver;

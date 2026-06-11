@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Listeners;
+namespace App\Listeners\Notifications;
 
 use App\Models\DeviceToken;
 use Illuminate\Notifications\Events\NotificationFailed;
@@ -49,17 +49,20 @@ class PruneStaleDeviceTokens
             return;
         }
 
-        DeviceToken::query()
+        $deviceToken = DeviceToken::query()
             ->where('token', $target->value())
-            ->get()
-            ->each(static function (DeviceToken $deviceToken): void {
-                $deviceToken->delete();
+            ->first();
 
-                Log::info('Pruned stale FCM device token', [
-                    'device_token_id' => $deviceToken->id,
-                    'user_id' => $deviceToken->user_id,
-                    'platform' => $deviceToken->platform,
-                ]);
-            });
+        if ($deviceToken === null) {
+            return;
+        }
+
+        $deviceToken->delete();
+
+        Log::info('Pruned stale FCM device token', [
+            'device_token_id' => $deviceToken->id,
+            'user_id' => $deviceToken->user_id,
+            'platform' => $deviceToken->platform,
+        ]);
     }
 }

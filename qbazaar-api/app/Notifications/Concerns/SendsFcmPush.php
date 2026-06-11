@@ -79,6 +79,9 @@ trait SendsFcmPush
      * True when the kreait package would be able to authenticate: the default
      * firebase project has credentials configured AND (for file paths) the
      * file exists on disk. Mirrors FirebaseProjectManager's resolution rules.
+     *
+     * Note: kreait also accepts a decoded service-account array as credentials;
+     * this gate treats that shape as absent (push skipped, never a crash).
      */
     private function fcmCredentialsExist(): bool
     {
