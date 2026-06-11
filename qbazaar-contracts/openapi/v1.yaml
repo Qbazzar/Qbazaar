@@ -2215,6 +2215,59 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /api/v1/account/device-tokens:
+    post:
+      tags: [Notifications]
+      summary: Register (or refresh) an FCM device token for web push
+      description: |
+        Idempotent upsert keyed on the token: `201` on first registration,
+        `200` when the token was already known. A token registered by a
+        different user is re-pointed at the caller (the device belongs to
+        whoever logged in last). The raw token is never echoed back.
+      operationId: deviceTokensStore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDeviceTokenRequest'
+      responses:
+        '200':
+          description: Token already registered — re-pointed/refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceTokenEnvelope'
+        '201':
+          description: Token registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceTokenEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Notifications]
+      summary: Unregister an FCM device token
+      description: |
+        Token travels in the body — FCM tokens are too long (and too
+        sensitive) for the URL. Always `204`, even for unknown tokens or
+        tokens owned by another user (silent no-op, prevents enumeration).
+      operationId: deviceTokensDestroy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string, maxLength: 512 }
+      responses:
+        '204': { description: Token unregistered (or was never registered) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   # ──────────────────────────────────────────────────────────────────────────
   # CMS Pages (Sprint 12) — public, 1-hour Cache::remember on both endpoints
   # ──────────────────────────────────────────────────────────────────────────
@@ -4107,6 +4160,36 @@ components:
               required: [marked]
               properties:
                 marked: { type: integer, minimum: 0 }
+
+    # ─── Device tokens (web push) ───────────────────────────────────
+    RegisterDeviceTokenRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          maxLength: 512
+          description: FCM registration token for this browser/device.
+        platform:
+          type: string
+          enum: [web, android, ios]
+          default: web
+
+    DeviceToken:
+      type: object
+      required: [id, platform, created_at]
+      description: The raw FCM token is intentionally never returned.
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        platform: { type: string, enum: [web, android, ios] }
+        created_at: { type: string, format: date-time }
+
+    DeviceTokenEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/DeviceToken' }
 
     # ─── CMS Pages (Sprint 12) ──────────────────────────────────────
     CmsPageSummary:
