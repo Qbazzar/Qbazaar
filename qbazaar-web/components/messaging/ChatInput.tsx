@@ -23,12 +23,14 @@ interface Props {
   conversationId: string;
   /** Buyers see the "Make offer" affordance; sellers don't. */
   viewerRole?: 'buyer' | 'seller';
+  /** Fired on every keystroke so the parent can whisper a typing event. */
+  onTyping?: () => void;
 }
 
 const MAX_ROWS = 6;
 const LINE_HEIGHT_PX = 22; // matches text-sm leading
 
-export function ChatInput({ conversationId, viewerRole }: Props) {
+export function ChatInput({ conversationId, viewerRole, onTyping }: Props) {
   const [body, setBody] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const mutation = useSendMessageMutation();
@@ -82,7 +84,10 @@ export function ChatInput({ conversationId, viewerRole }: Props) {
       <Textarea
         ref={textareaRef}
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={(e) => {
+          setBody(e.target.value);
+          onTyping?.();
+        }}
         onKeyDown={onKeyDown}
         placeholder={t('messaging.placeholder', 'اكتب رسالتك…')}
         rows={1}

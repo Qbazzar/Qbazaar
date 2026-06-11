@@ -750,6 +750,7 @@
     "own_ad_badge": "This is your ad",
     "send": "Send",
     "placeholder": "Type a message…",
+    "typing": "Typing…",
     "read_indicator": "Read",
     "unread_count": "{count} unread",
     "load_older": "Show older messages",
