@@ -86,13 +86,16 @@ it('omits the FCM channel for a user without device tokens', function (): void {
     expect($this->notification->via($this->seller))->not->toContain(FcmChannel::class);
 });
 
-it('builds the FCM message from the same payload toArray() persists', function (): void {
+it('builds a data-only FCM message from the same payload toArray() persists', function (): void {
     $payload = $this->notification->toArray($this->seller);
     $message = $this->notification->toFcm($this->seller)->toArray();
 
-    expect($message['notification']['title'])->toBe($payload['title']);
-    expect($message['notification']['body'])->toBe($payload['body']);
+    // Data-only: a top-level notification block would make the firebase web
+    // SDK auto-display a duplicate notification alongside the SW's own.
+    expect($message)->not->toHaveKey('notification');
     expect($message['data'])->toBe([
+        'title' => (string) $payload['title'],
+        'body' => (string) $payload['body'],
         'category' => 'ad.approved',
         'cta_url' => (string) $payload['cta_url'],
     ]);

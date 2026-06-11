@@ -35,10 +35,20 @@ const SERVICE_WORKER_PATH = '/firebase-messaging-sw.js';
 
 export type EnablePushResult = 'enabled' | 'denied' | 'unsupported' | 'error';
 
-/** Foreground push payload — mirrors the FCM channel's backend contract. */
+/**
+ * Foreground push payload — mirrors the FCM channel's backend contract.
+ * The backend sends data-only messages (title/body live in `data`), so the
+ * firebase SDK never auto-displays a duplicate notification on web.
+ */
 export interface ForegroundPushPayload {
+  /** Only present on Firebase-console test sends — backend never sets it. */
   notification?: { title?: string; body?: string };
-  data?: { category?: string; cta_url?: string } & Record<string, string>;
+  data?: {
+    title?: string;
+    body?: string;
+    category?: string;
+    cta_url?: string;
+  } & Record<string, string>;
 }
 
 // NEXT_PUBLIC_ vars are inlined at build time, so each one must be referenced

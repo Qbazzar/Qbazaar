@@ -6,13 +6,19 @@ namespace App\Notifications\Concerns;
 
 use App\Models\User;
 use NotificationChannels\Fcm\FcmMessage;
-use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
 /**
  * Adds web-push (FCM) delivery to an existing notification.
  *
  * The push payload derives from the SAME toArray() data the database channel
  * persists, so the web push and the in-app bell feed can never disagree.
+ *
+ * The payload is data-only (no top-level `notification` block): with a
+ * `notification` block the firebase web SDK auto-displays its own copy AND
+ * still invokes onBackgroundMessage, so web users would see two notifications
+ * — the SDK one icon-less with a dead click (no fcm_options.link). Data-only
+ * gives the service worker full display/click control. Native apps can later
+ * add platform-scoped (android/apns) notification blocks without regressing web.
  *
  * The whole feature is gated on the Firebase service-account credentials
  * actually existing — the configuration that ships today has none, so via()
@@ -66,10 +72,11 @@ trait SendsFcmPush
             : null;
 
         return FcmMessage::create()
-            ->notification(FcmNotification::create(title: $title, body: $body))
             // FCM rejects non-string data values (FcmMessage::data() enforces
             // it), hence the explicit casts.
             ->data([
+                'title' => $title,
+                'body' => (string) $body,
                 'category' => (string) ($payload['category'] ?? ''),
                 'cta_url' => (string) ($payload['cta_url'] ?? ''),
             ]);

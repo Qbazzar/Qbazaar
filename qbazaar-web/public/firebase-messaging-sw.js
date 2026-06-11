@@ -39,13 +39,15 @@ if (firebaseConfig) {
   firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
 
-  // Payload contract (qbazaar-api FCM channel): notification {title, body}
-  // plus data {category, cta_url}.
+  // Payload contract (qbazaar-api FCM channel): data-only —
+  // data {title, body, category, cta_url}. No notification block, or the
+  // firebase SDK would auto-display a duplicate alongside this one.
   messaging.onBackgroundMessage(function (payload) {
+    // notification.* fallback exists only for Firebase-console test sends.
     const notification = payload.notification || {};
     const data = payload.data || {};
-    self.registration.showNotification(notification.title || 'QBazaar', {
-      body: notification.body || '',
+    self.registration.showNotification(data.title || notification.title || 'QBazaar', {
+      body: data.body || notification.body || '',
       icon: '/brand/logo.png',
       data: { cta_url: data.cta_url || '/' },
     });
