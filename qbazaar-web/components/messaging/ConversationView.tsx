@@ -79,7 +79,7 @@ export function ConversationView({ conversationId, onBack }: Props) {
 
   // Peer-to-peer typing presence over the same channel (whispers — no
   // backend round-trip). `notifyTyping` is throttled inside the hook.
-  const { typingName, notifyTyping } = useTypingIndicator(conversationId);
+  const { isPeerTyping, notifyTyping } = useTypingIndicator(conversationId);
 
   // Fire-and-forget mark-read whenever the open conversation has unread
   // messages. Re-runs when the id changes (switching threads).
@@ -218,7 +218,7 @@ export function ConversationView({ conversationId, onBack }: Props) {
         className="text-ink-500 min-h-5 shrink-0 px-4 text-[11px]"
         aria-live="polite"
       >
-        {typingName ? t('messaging.typing', 'يكتب الآن…') : null}
+        {isPeerTyping ? t('messaging.typing', 'يكتب الآن…') : null}
       </p>
 
       <ChatInput

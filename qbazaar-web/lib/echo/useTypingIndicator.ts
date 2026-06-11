@@ -19,7 +19,6 @@ import { useAuthStore } from '@/store/auth';
 
 interface TypingWhisperPayload {
   user_id: string;
-  name: string;
 }
 
 /** How long the indicator stays visible after the last incoming whisper. */
@@ -34,8 +33,8 @@ const WHISPER_THROTTLE_MS = 2_000;
  */
 export function useTypingIndicator(
   conversationId: string | null | undefined,
-): { typingName: string | null; notifyTyping: () => void } {
-  const [typingName, setTypingName] = useState<string | null>(null);
+): { isPeerTyping: boolean; notifyTyping: () => void } {
+  const [isPeerTyping, setIsPeerTyping] = useState(false);
 
   // Stash the auth user in a ref so whisper handlers always see the current
   // identity without re-subscribing on every render (Echo channel teardown
@@ -62,16 +61,16 @@ export function useTypingIndicator(
 
       const typingHandler = (payload: unknown) => {
         const p = payload as Partial<TypingWhisperPayload> | null;
-        if (!p?.user_id || !p.name) return;
+        if (!p?.user_id) return;
         // Pusher doesn't echo client events back to the sender, but guard
         // anyway so a second tab of our own never shows "typing".
         if (p.user_id === userRef.current?.id) return;
 
-        setTypingName(p.name);
+        setIsPeerTyping(true);
         if (decayTimerRef.current) clearTimeout(decayTimerRef.current);
         decayTimerRef.current = setTimeout(() => {
           decayTimerRef.current = null;
-          setTypingName(null);
+          setIsPeerTyping(false);
         }, TYPING_DECAY_MS);
       };
 
@@ -95,7 +94,7 @@ export function useTypingIndicator(
         decayTimerRef.current = null;
       }
       lastWhisperAtRef.current = 0;
-      setTypingName(null);
+      setIsPeerTyping(false);
     };
   }, [conversationId]);
 
@@ -109,11 +108,11 @@ export function useTypingIndicator(
     lastWhisperAtRef.current = now;
 
     try {
-      channel.whisper('typing', { user_id: me.id, name: me.full_name });
+      channel.whisper('typing', { user_id: me.id });
     } catch {
       // ignore — typing announcements are best-effort
     }
   }, []);
 
-  return { typingName, notifyTyping };
+  return { isPeerTyping, notifyTyping };
 }
