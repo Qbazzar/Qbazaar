@@ -122,6 +122,29 @@ class User extends Authenticatable implements CanResetPasswordContract, Filament
     }
 
     /* ──────────────────────────────────────────────────────────────────
+     *  Device tokens — FCM registration tokens, one row per browser/device.
+     *  `routeNotificationForFcm()` is the hook the FCM notification channel
+     *  calls to resolve where a push should go.
+     * ──────────────────────────────────────────────────────────────────*/
+
+    /** @return HasMany<DeviceToken, $this> */
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    /** @return list<string> FCM registration tokens for this user's devices */
+    public function routeNotificationForFcm(): array
+    {
+        $tokens = $this->deviceTokens()
+            ->pluck('token')
+            ->filter(static fn (mixed $token): bool => is_string($token) && $token !== '')
+            ->all();
+
+        return array_values($tokens);
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
      *  Blocked users — many-to-many via `user_blocks` pivot.
      * ──────────────────────────────────────────────────────────────────*/
 
