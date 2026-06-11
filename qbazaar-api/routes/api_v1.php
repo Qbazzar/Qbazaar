@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Cms\PageController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Help\HelpController;
+use App\Http\Controllers\Api\V1\Media\MediaOriginalController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
 use App\Http\Controllers\Api\V1\Offers\OfferController;
@@ -233,6 +234,7 @@ Route::prefix('locations')
 //   Public:
 //     GET    /ads               — paginated feed of active ads
 //     GET    /ads/{id}          — single ad detail (public visibility rules)
+//     GET    /media/{media}/original   — original image (signed, expiring)
 //   Authenticated:
 //     POST   /ads               — create draft
 //     PUT    /ads/{id}          — owner update
@@ -257,6 +259,14 @@ Route::prefix('ads')
         Route::get('/{id}', [AdController::class, 'show'])->name('show');
         Route::get('/{id}/similar', SimilarAdsController::class)->name('similar');
     });
+
+// Original-resolution image download. Public content (ad images need no
+// auth) but `signed`: MediaResource embeds a temporary signed URL so
+// originals expire instead of becoming permanent hotlinkable links. The
+// sizes.* conversion URLs remain plain public URLs.
+Route::get('/media/{media}/original', MediaOriginalController::class)
+    ->middleware(['signed', 'throttle:api'])
+    ->name('api.v1.media.original');
 
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/ads', [AdController::class, 'store'])
