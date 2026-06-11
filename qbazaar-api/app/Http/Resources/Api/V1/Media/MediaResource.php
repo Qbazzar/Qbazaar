@@ -60,7 +60,7 @@ class MediaResource extends JsonResource
     {
         return URL::temporarySignedRoute(
             'api.v1.media.original',
-            now()->addHours((int) config('qbazaar.uploads.original_url_ttl_hours', 24)),
+            now()->addHours((int) config('qbazaar.uploads.original_url_ttl_hours')),
             ['media' => $this->resource->getKey()],
         );
     }

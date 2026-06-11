@@ -20,6 +20,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  * (collection `images`) whose file still exists on disk. The `sizes.*`
  * conversion URLs stay plain public URLs — only the original expires.
  *
+ * Decision: a signed URL issued before an ad is taken down stays valid until
+ * it expires (max 24 h); acceptable for public ad images — revisit if
+ * moderation takedown must be instant.
+ *
  * @group Media
  */
 class MediaOriginalController extends Controller
@@ -32,6 +36,6 @@ class MediaOriginalController extends Controller
 
         abort_unless(is_file($path), 404);
 
-        return response()->file($path);
+        return response()->file($path, ['Cache-Control' => 'private, max-age=3600']);
     }
 }
