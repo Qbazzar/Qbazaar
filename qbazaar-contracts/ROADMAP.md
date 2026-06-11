@@ -1,6 +1,6 @@
 # QBazaar — Roadmap (Solo Dev MVP)
 
-> **آخر تحديث:** 2026-05-25
+> **آخر تحديث:** 2026-06-10
 > **تاريخ البدء:** 2026-05-20
 > **النطاق:** Backend (Laravel) + Web (Next.js). بدون Mobile/Phase 2.
 > **ملاحظة:** لا نلتزم بتواريخ انتهاء متوقعة — نمشي per-sprint وفق ما يجهز.
@@ -11,12 +11,12 @@
 
 | البند | القيمة |
 |-------|---------|
-| **Active Milestone** | **Deploy + Polish** — MVP feature-complete (Milestones 1–5 ✅). Laravel running on VPS (`147.79.115.44`, CloudPanel tenant `qb-user`); DNS/SSL for `miete.site` pending user action. |
-| **Active Sprint** | Sprints 0..12 ✅ closed + QBFront design migration ✅ + Filament admin ✅ + DemoDataSeeder ✅ + VPS bootstrap ✅. **2026-06-02:** backend correctness pass + AR/EN i18n (incl. metadata) + admin localization + monorepo CI + Milestone-6 SEO/PWA — on **7 open PRs**, not yet merged to `main` (merge order: backend → i18n → admin → category-home → ci → seo). |
-| **Active Issues** | (1) DNS + SSL for `https://miete.site` — user action. (2) ⚠️ The Pest suite was found **not actually green** (13 pre-existing failures locally + in CI) — fixed on `fix/backend-counters-and-gates`: now **270 passed**, PHPStan/Pint clean. (3) Post-MVP backlog: typing indicators (Reverb client-events), FCM push, pHash dedup, signed URLs for originals, remaining QA sweep (perf / a11y / full RTL); `<title>` metadata still single-locale (needs `generateMetadata`). |
+| **Active Milestone** | **Launch Prep (M7)** — MVP feature-complete (Milestones 1–6 ✅) + gap-closure pass ✅ (2026-06-10). Production = **WHM server `qbazaar.taqat.space`** (`/home/space/public_html/qbazaar`); web on Vercel. |
+| **Active Sprint** | All 2026-06-02 PRs (#1–#9) merged. **2026-06-10 gap closure** on 5 branches awaiting PR/merge: `feat/phash-dedup-and-signed-originals`, `feat/typing-indicators`, `feat/fcm-push-scaffold`, `chore/meili-production`, `docs/qa-sweep-report` (details in the 2026-06-10 progress entry). |
+| **Active Issues** | (1) Server bring-up on taqat.space: Redis ✅; pending — Horizon + Reverb services, Meilisearch install (runbook ready). (2) Launch secrets: Twilio, Sentry DSN, Firebase project. (3) Deployed-app audits pending: Lighthouse / axe / RTL / bug bash (script in `QA-REPORT-2026-06.md`). |
 | **Repo** | https://github.com/Qbazzar/Qbazaar — single monorepo, baseline pushed `71216d3`, transferred to `Qbazzar` org |
-| **Blockers** | لا blockers على dev. Production publish blocked on DNS/SSL only. |
-| **Manual user steps pending** | DNS A-record `miete.site` → `147.79.115.44` + Let's Encrypt SSL via CloudPanel; sign-ups for Twilio (production creds) + Sentry DSN + FCM project. |
+| **Blockers** | لا blockers على dev. Launch blocked on server services + production secrets (user signups). |
+| **Manual user steps pending** | Open/merge the 5 gap-closure PRs; run the Meilisearch + Horizon/Reverb runbooks on the server; sign-ups for Twilio (production creds) + Sentry DSN + Firebase project; final domain decision (`qbazaar.qa` vs `taqat.space`). |
 
 ## ✅ Progress Log
 
@@ -334,6 +334,53 @@ Analytics. Remaining M6: Lighthouse >90 (a measurement) + a full-ads sitemap
 (needs a dedicated backend endpoint).
 
 **7️⃣ `docs/progress-2026-06-02` — this log.**
+
+---
+
+### 🧩 Gap-closure pass + hosting move to WHM (2026-06-10)
+
+**🏠 Hosting decision:** production moved off the CloudPanel VPS (`miete.site`,
+`147.79.115.44`) to the **WHM/cPanel server `qbazaar.taqat.space`**
+(`/home/space/public_html/qbazaar`, root via WHM, AlmaLinux 9). Web stays on
+Vercel; `chore/point-web-to-taqat-backend` points it at the new API. Server
+bring-up so far: Redis (`requirepass` + `.env` `REDIS_PASSWORD`); still pending:
+Horizon + Reverb systemd services, Meilisearch (runbook below), prod secrets.
+
+**The 2026-06-02 PRs (#1–#9) are all merged** — the "7 open PRs" status above is
+historical. This pass closed the four remaining MVP gaps, one branch/PR each
+(plan: `qbazaar-contracts/plans/2026-06-10-mvp-gap-closure.md`; every task went
+through spec-compliance + code-quality subagent review):
+
+**1️⃣ `feat/phash-dedup-and-signed-originals` (8 commits):** GD-based dHash
+`PerceptualHashService` (no new dependency), `media.phash` column computed in
+`ProcessAdImagesJob`, 4th moderation rule `duplicate_image` (cross-seller
+near-duplicates → PENDING review; PHP-side Hamming since the test suite is
+sqlite), originals now served via 24h signed URLs (`/media/{id}/original`).
+Bonus: blurhash generator finally downscales before pixel-sampling (real perf
+bug on full-res photos).
+
+**2️⃣ `feat/typing-indicators` (3 commits, FE-only):** Reverb whispers on the
+existing `conversation.{id}` channel — no backend change. `useTypingIndicator`
+(2s throttle / 3s decay), indicator strip in ConversationView, ar/en strings.
+
+**3️⃣ `feat/fcm-push-scaffold` (7 commits):** `device_tokens` table + endpoints,
+FCM channel on 6 notifications gated by kreait credentials (no-op until
+`FIREBASE_CREDENTIALS` lands), **data-only payloads** (verified against the
+firebase SW SDK source — a `notification` block would double-display), stale-token
+pruning on send failure, device tokens burned on deactivate/password-reset/deletion,
+env-gated web SW + enable-push UI + logout cleanup. Activation = Firebase project
++ 1 backend env + 5 web envs, zero code.
+
+**4️⃣ `chore/meili-production` + `docs/qa-sweep-report`:** Meilisearch systemd
+unit + WHM install runbook in `deploy/README.md` (restores Sprint-6 search on
+prod — currently on the database driver); QA sweep: **composer audit 5 CVEs → 0**
+(Symfony bump), npm audit 2 moderate accepted/tracked (postcss-in-next, no fix
+upstream yet), full report + bug-bash script in
+`qbazaar-contracts/QA-REPORT-2026-06.md`.
+
+**Still deferred (now the only backlog):** physically-private originals disk,
+instant signed-URL invalidation on takedown, Lighthouse/axe/RTL/bug-bash against
+the deployed app, and the launch-prep secrets (Twilio, Sentry, Firebase).
 
 ---
 
