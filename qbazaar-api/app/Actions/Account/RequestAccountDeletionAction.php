@@ -52,6 +52,9 @@ class RequestAccountDeletionAction
 
             $this->refreshTokens->burnAllForUser($user);
             $user->tokens()->delete();
+
+            // Pushes must stop when sessions are burned — drop FCM tokens too.
+            $user->deviceTokens()->delete();
         });
 
         // Why dispatch outside the transaction? If the DB write rolls back

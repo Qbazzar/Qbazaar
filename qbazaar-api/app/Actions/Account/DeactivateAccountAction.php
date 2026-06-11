@@ -54,6 +54,9 @@ class DeactivateAccountAction
             // change we don't keep the current device alive: the user
             // explicitly asked to be logged out.
             $user->tokens()->delete();
+
+            // Pushes must stop when sessions are burned — drop FCM tokens too.
+            $user->deviceTokens()->delete();
         });
     }
 }

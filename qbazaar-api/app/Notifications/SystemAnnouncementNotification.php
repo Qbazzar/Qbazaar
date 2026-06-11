@@ -6,10 +6,12 @@ namespace App\Notifications;
 
 use App\Enums\Language;
 use App\Models\User;
+use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Fcm\FcmChannel;
 
 /**
  * Admin-broadcast announcement (Sprint 11).
@@ -28,7 +30,7 @@ use Illuminate\Notifications\Notification;
  */
 class SystemAnnouncementNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SendsFcmPush;
 
     public function __construct(
         public readonly string $title,
@@ -42,9 +44,15 @@ class SystemAnnouncementNotification extends Notification implements ShouldQueue
     {
         // Non-User notifiables (admin testing) would crash the database
         // channel — fall back to mail-only as the rest of the codebase does.
-        return $notifiable instanceof User
+        $channels = $notifiable instanceof User
             ? ['mail', 'database']
             : ['mail'];
+
+        if ($this->fcmEnabledFor($notifiable)) {
+            $channels[] = FcmChannel::class;
+        }
+
+        return $channels;
     }
 
     public function toMail(mixed $notifiable): MailMessage

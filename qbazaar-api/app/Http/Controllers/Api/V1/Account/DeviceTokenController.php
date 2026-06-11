@@ -77,7 +77,7 @@ class DeviceTokenController extends Controller
     {
         /** @var array{token: string} $validated */
         $validated = $request->validate([
-            'token' => ['required', 'string'],
+            'token' => ['required', 'string', 'max:512'],
         ]);
 
         /** @var User $user */

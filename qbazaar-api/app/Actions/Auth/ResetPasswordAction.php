@@ -57,6 +57,9 @@ class ResetPasswordAction
                 $this->refreshTokens->burnAllForUser($user);
                 $user->tokens()->delete();
 
+                // Pushes must stop when sessions are burned — drop FCM tokens too.
+                $user->deviceTokens()->delete();
+
                 Event::dispatch(new PasswordReset($user));
             },
         );

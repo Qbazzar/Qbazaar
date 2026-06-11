@@ -7,10 +7,12 @@ namespace App\Notifications\Ads;
 use App\Enums\Language;
 use App\Models\Ad;
 use App\Models\User;
+use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Fcm\FcmChannel;
 
 /**
  * "Your ad is live" — sent when a draft clears auto-moderation (or admin
@@ -22,7 +24,7 @@ use Illuminate\Notifications\Notification;
  */
 class AdApprovedNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SendsFcmPush;
 
     public function __construct(public readonly Ad $ad) {}
 
@@ -35,9 +37,15 @@ class AdApprovedNotification extends Notification implements ShouldQueue
         // entry alongside the mail. Non-User notifiables (admin moderation,
         // future broadcasts) fall back to mail-only to avoid persisting rows
         // against the wrong morph type.
-        return $notifiable instanceof User
+        $channels = $notifiable instanceof User
             ? ['mail', 'database']
             : ['mail'];
+
+        if ($this->fcmEnabledFor($notifiable)) {
+            $channels[] = FcmChannel::class;
+        }
+
+        return $channels;
     }
 
     public function toMail(mixed $notifiable): MailMessage
