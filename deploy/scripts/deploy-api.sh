@@ -61,6 +61,11 @@ log "Restarting workers (horizon + reverb)"
 sudo systemctl restart qbazaar-horizon
 sudo systemctl restart qbazaar-reverb
 
+# Leave maintenance mode BEFORE probing (the trap also runs `up`, but the probe
+# must hit a live app, not the 503 maintenance page).
+log "Bringing application up"
+php artisan up || true
+
 # Probe Apache on the box's own primary IPv4 with the vhost Host header. We
 # avoid the public FQDN because the server resolves its own domains to ::1
 # (a self-signed default vhost), which would false-fail the probe.
