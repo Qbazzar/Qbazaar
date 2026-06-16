@@ -145,6 +145,11 @@ return [
     'uploads' => [
         'max_image_size_kb' => 10_240, // 10 MB
         'allowed_mime_types' => ['image/jpeg', 'image/png', 'image/webp'],
+
+        // Lifetime of the signed link to an original-resolution image —
+        // originals are served via an expiring signed route so they can't
+        // be hotlinked permanently (conversions stay public).
+        'original_url_ttl_hours' => 24,
         'image_conversions' => [
             'thumbnail' => ['width' => 200, 'height' => 200],
             'medium' => ['width' => 640],

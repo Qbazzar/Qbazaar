@@ -29,6 +29,7 @@ parameters:
     - tests/Feature/Locations/*
     - tests/Feature/Ads/*
     - tests/Feature/Search/*
+    - tests/Feature/Media/*
     - tests/Feature/Favorites/*
     - tests/Feature/Recents/*
     - tests/Feature/Messaging/*

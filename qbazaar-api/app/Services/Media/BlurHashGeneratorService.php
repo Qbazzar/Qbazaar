@@ -64,12 +64,38 @@ class BlurHashGeneratorService
      */
     private function encodeWithKornrunner(string $absolutePath): string
     {
-        // Sample down to ~64px on the longest side for speed; BlurHash
-        // doesn't need full resolution because the output is 4x3 components.
         $image = imagecreatefromstring((string) file_get_contents($absolutePath));
 
         if ($image === false) {
             return self::PLACEHOLDER;
+        }
+
+        // Downscale to ≤64px on the longest side before sampling pixels.
+        // Without this, a 12MP photo triggers ~12M imagecolorat calls;
+        // BlurHash only produces 4×3 DCT components so full resolution adds
+        // no quality while costing orders of magnitude more CPU.
+        $origWidth = imagesx($image);
+        $origHeight = imagesy($image);
+        $maxSide = 64;
+
+        if ($origWidth > $maxSide || $origHeight > $maxSide) {
+            if ($origWidth >= $origHeight) {
+                $scaledWidth = $maxSide;
+                $scaledHeight = (int) max(1, round($origHeight * $maxSide / $origWidth));
+            } else {
+                $scaledHeight = $maxSide;
+                $scaledWidth = (int) max(1, round($origWidth * $maxSide / $origHeight));
+            }
+
+            $scaled = imagescale($image, $scaledWidth, $scaledHeight, IMG_BICUBIC);
+            imagedestroy($image);
+            // Fall back to the original (already destroyed) is impossible here;
+            // if imagescale fails we return the placeholder rather than corrupt data.
+            if ($scaled === false) {
+                return self::PLACEHOLDER;
+            }
+
+            $image = $scaled;
         }
 
         $width = imagesx($image);

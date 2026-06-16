@@ -8,6 +8,7 @@ use App\Enums\AdStatus;
 use App\Enums\Condition;
 use App\Enums\PriceType;
 use App\Events\Ads\AdRejected;
+use App\Http\Resources\Api\V1\Media\MediaResource;
 use Database\Factories\AdFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -402,32 +403,21 @@ class Ad extends Model implements HasMedia
      * Lives here (rather than on the resource) so admin / Filament screens
      * can render the same payload without re-implementing the mapping.
      *
+     * Delegates each row to {@see MediaResource} so the URL semantics
+     * (expiring signed original + public conversion sizes) are defined in
+     * exactly one place.
+     *
      * @return list<array<string, mixed>>
      */
     public function imagesPayload(): array
     {
-        $ordered = $this->getMedia('images')->sortBy('order_column')->values();
+        $request = request();
 
-        $rows = [];
-        foreach ($ordered as $m) {
-            $rows[] = [
-                'id' => $m->getKey(),
-                'collection' => $m->collection_name,
-                'url' => $m->getUrl(),
-                'sizes' => [
-                    'thumbnail' => $m->hasGeneratedConversion('thumbnail') ? $m->getUrl('thumbnail') : $m->getUrl(),
-                    'medium' => $m->hasGeneratedConversion('medium') ? $m->getUrl('medium') : $m->getUrl(),
-                    'large' => $m->hasGeneratedConversion('large') ? $m->getUrl('large') : $m->getUrl(),
-                    'original_webp' => $m->hasGeneratedConversion('original_webp') ? $m->getUrl('original_webp') : $m->getUrl(),
-                ],
-                'blurhash' => $m->getCustomProperty('blurhash'),
-                'width' => $m->getCustomProperty('width'),
-                'height' => $m->getCustomProperty('height'),
-                'order' => $m->order_column ?? 0,
-                'size_bytes' => $m->size,
-            ];
-        }
+        $rows = $this->getMedia('images')
+            ->sortBy('order_column')
+            ->map(static fn (Media $m): array => (new MediaResource($m))->toArray($request))
+            ->all();
 
-        return $rows;
+        return array_values($rows);
     }
 }

@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\Ad;
 use App\Services\Media\BlurHashGeneratorService;
+use App\Services\Media\PerceptualHashService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Queue\Queueable;
@@ -22,16 +23,16 @@ use Throwable;
  *
  *   1. Compute a BlurHash for each image and stash it in
  *      `media.custom_properties['blurhash']`.
- *   2. Touch the parent ad so cache-busting / "updated_at" consumers can
+ *   2. Compute a 64-bit dHash (perceptual hash) and persist it to the real
+ *      `media.phash` column (CHAR 16 hex) so Task 1.3 can run SQL Hamming
+ *      distance queries via BIT_COUNT(CONV(a,16,10) ^ CONV(b,16,10)).
+ *   3. Touch the parent ad so cache-busting / "updated_at" consumers can
  *      see the change.
- *
- * Wave B will extend this job with pHash (for duplicate detection); the
- * dispatch shape stays the same so callers don't change.
  *
  * Failure handling: each image is processed inside its own try-catch so
  * a single bad file never poisons the whole batch. Errors are logged and
- * the job completes — the BlurHash field stays null and the resource layer
- * handles that gracefully.
+ * the job completes — the blurhash and phash fields stay null and the
+ * resource layer handles that gracefully.
  */
 class ProcessAdImagesJob implements ShouldQueue
 {
@@ -46,7 +47,7 @@ class ProcessAdImagesJob implements ShouldQueue
         $this->onQueue('low');
     }
 
-    public function handle(BlurHashGeneratorService $blurHasher): void
+    public function handle(BlurHashGeneratorService $blurHasher, PerceptualHashService $perceptualHasher): void
     {
         if ($this->mediaIds === []) {
             return;
@@ -72,6 +73,9 @@ class ProcessAdImagesJob implements ShouldQueue
 
                 $hash = $blurHasher->forFile($path);
                 $media->setCustomProperty('blurhash', $hash);
+                // Guard re-runs: a transient decode failure must not overwrite
+                // a previously valid hash with null.
+                $media->phash = $perceptualHasher->hash($path) ?? $media->phash;
                 $media->save();
 
                 if ($media->model_type === Ad::class && is_string($media->model_id)) {

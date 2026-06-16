@@ -3429,7 +3429,14 @@ components:
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         collection: { type: string, example: images }
-        url: { type: string, format: uri }
+        url:
+          type: string
+          format: uri
+          description: |
+            Temporary signed URL for the original-resolution file
+            (GET /media/{media}/original). Expires after 24h by default —
+            do not persist it; re-fetch the resource for a fresh link.
+            The `sizes.*` conversion URLs remain permanent public URLs.
         sizes: { $ref: '#/components/schemas/MediaSizes' }
         blurhash: { type: string, nullable: true }
         width: { type: integer, nullable: true }
