@@ -12,6 +12,11 @@
 set -euo pipefail
 shopt -s inherit_errexit
 
+# cPanel: put the ea-php84 CLI binary + composer first so bare `php`/`composer`
+# resolve to the 8.4 CLI SAPI in the minimal non-login PATH that GitHub
+# Actions's SSH shell provides (/usr/bin/php is a cgi-fcgi wrapper).
+export PATH="/opt/cpanel/ea-php84/root/usr/bin:/usr/local/bin:$PATH"
+
 REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 API_DIR="$REPO_DIR/qbazaar-api"
 BRANCH="${DEPLOY_BRANCH:-production}"
