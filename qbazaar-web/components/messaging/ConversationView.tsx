@@ -29,6 +29,7 @@ import {
   useConversationChannel,
   type OfferEvent,
 } from '@/lib/echo/useConversationChannel';
+import { useTypingIndicator } from '@/lib/echo/useTypingIndicator';
 import { useAuth } from '@/hooks/useAuth';
 import { t } from '@/lib/i18n/messages';
 import type { Message, Offer } from '@/lib/api/types';
@@ -75,6 +76,10 @@ export function ConversationView({ conversationId, onBack }: Props) {
     onMessage: onIncoming,
     onOfferEvent,
   });
+
+  // Peer-to-peer typing presence over the same channel (whispers — no
+  // backend round-trip). `notifyTyping` is throttled inside the hook.
+  const { isPeerTyping, notifyTyping } = useTypingIndicator(conversationId);
 
   // Fire-and-forget mark-read whenever the open conversation has unread
   // messages. Re-runs when the id changes (switching threads).
@@ -206,7 +211,21 @@ export function ConversationView({ conversationId, onBack }: Props) {
       </header>
 
       <MessageList conversationId={conversationId} />
-      <ChatInput conversationId={conversationId} viewerRole={viewerRole} />
+
+      {/* Height is always reserved (min-h-5) so the indicator appearing or
+          decaying never shifts the message list / input. */}
+      <p
+        className="text-ink-500 min-h-5 shrink-0 px-4 text-[11px]"
+        aria-live="polite"
+      >
+        {isPeerTyping ? t('messaging.typing', 'يكتب الآن…') : null}
+      </p>
+
+      <ChatInput
+        conversationId={conversationId}
+        viewerRole={viewerRole}
+        onTyping={notifyTyping}
+      />
     </div>
   );
 }
