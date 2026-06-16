@@ -1,5 +1,5 @@
 # QBazaar Reverb (websockets) — systemd unit
-# Listens on 127.0.0.1:8080; Apache proxies wss://api.qbazzar.fleeteye.de/app
+# Listens on 127.0.0.1:8080; Apache proxies wss://api.qbazaar.fleeteye.de/app
 # to it. The Laravel app PUBLISHES events to it on localhost (REVERB_HOST=
 # 127.0.0.1 in qbazaar-api/.env) — the public host is for the browser only.
 # Install (as root):

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# QBazaar — Web (Next.js) deploy (WHM/cPanel VPS · qbazzar.fleeteye.de)
+# QBazaar — Web (Next.js) deploy (WHM/cPanel VPS · qbazaar.fleeteye.de)
 #
 # Invoked by .github/workflows/deploy-web.yml over SSH as the `fleeteye` user.
 # Builds in place, then restarts the qbazaar-web systemd unit (the sudoers
@@ -12,7 +12,7 @@ shopt -s inherit_errexit
 REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 WEB_DIR="$REPO_DIR/qbazaar-web"
 BRANCH="${DEPLOY_BRANCH:-production}"
-HEALTH_URL="${HEALTH_URL:-https://qbazzar.fleeteye.de/}"
+HEALTH_URL="${HEALTH_URL:-https://qbazaar.fleeteye.de/}"
 
 log() { printf '\n\033[1;36m> %s\033[0m\n' "$*"; }
 

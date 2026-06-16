@@ -3,7 +3,7 @@
 > خطة/runbook لنشر **الـ API و الفرونت على نفس السيرفر** (WHM/cPanel، root)،
 > الاثنين من **GitHub Actions**. القرارات المعتمدة:
 > - الفرونت: **systemd `next start` + Apache reverse proxy**
-> - التوزيع: **فرونت على `qbazzar.fleeteye.de`** + **API على `api.qbazzar.fleeteye.de`**
+> - التوزيع: **فرونت على `qbazaar.fleeteye.de`** + **API على `api.qbazaar.fleeteye.de`**
 > - البناء: **على السيرفر مباشرة**
 >
 > ⚠️ هذا يستبدل إعداد CloudPanel/miete.site القديم في `deploy/README.md`.
@@ -15,8 +15,8 @@
 | `CPANEL_USER` / `DEPLOY_USER` | **`fleeteye`** |
 | `HOME` | `/home/fleeteye` |
 | `REPO_DIR` | `/home/fleeteye/qbazaar` (git clone، بديل رفع الـ zip) |
-| دومين الفرونت | `qbazzar.fleeteye.de` |
-| دومين الـ API | `api.qbazzar.fleeteye.de` |
+| دومين الفرونت | `qbazaar.fleeteye.de` |
+| دومين الـ API | `api.qbazaar.fleeteye.de` |
 | Node | `/usr/bin/node` · v20.20.2 · npm 10.8.2 ✅ |
 | PHP CLI | `/opt/cpanel/ea-php84/root/usr/bin/php` (أكّد: `… -v` = 8.4، + ext-pcntl/posix) |
 | IP السيرفر | `__FILL__` |
@@ -26,10 +26,10 @@
 ## 1) ما يلزمك تعمله أنت (لا أقدر أعمله من الكود)
 
 ### أ. DNS + الدومينات في WHM/cPanel
-1. سجّلات A: `qbazzar.fleeteye.de` و `api.qbazzar.fleeteye.de` → IP السيرفر.
+1. سجّلات A: `qbazaar.fleeteye.de` و `api.qbazaar.fleeteye.de` → IP السيرفر.
 2. في cPanel للحساب `space`:
-   - **Subdomain** `api.qbazzar.fleeteye.de` → docroot = `/home/space/qbazaar/qbazaar-api/public`.
-   - الدومين الرئيسي/addon `qbazzar.fleeteye.de` → أنشئه (الـ docroot ما رح يُستخدم مباشرة لأن Apache يعمل proxy لـ Node، بس cPanel يحتاج الـ vhost موجود عشان SSL).
+   - **Subdomain** `api.qbazaar.fleeteye.de` → docroot = `/home/space/qbazaar/qbazaar-api/public`.
+   - الدومين الرئيسي/addon `qbazaar.fleeteye.de` → أنشئه (الـ docroot ما رح يُستخدم مباشرة لأن Apache يعمل proxy لـ Node، بس cPanel يحتاج الـ vhost موجود عشان SSL).
 3. **SSL**: شغّل AutoSSL (WHM → Manage AutoSSL) أو Let's Encrypt للدومينين.
 
 ### ب. أدوات على السيرفر (root عبر SSH)
@@ -81,14 +81,14 @@
 - `qbazaar-reverb.service` — `php artisan reverb:start --host=127.0.0.1 --port=8080` (الشات الفوري).
 
 ### ب. تضمينات Apache (`deploy/apache/`)
-- **الفرونت** `qbazzar.fleeteye.de` (proxy لـ Node):
+- **الفرونت** `qbazaar.fleeteye.de` (proxy لـ Node):
   ```apache
   ProxyPreserveHost On
   ProxyPass        /  http://127.0.0.1:3000/
   ProxyPassReverse /  http://127.0.0.1:3000/
   ```
   (`next start` يخدم `/_next` والأصول الثابتة بنفسه — لا حاجة لتوجيه منفصل.)
-- **الـ API** `api.qbazzar.fleeteye.de` — docroot عادي لـ Laravel + توجيه websockets لـ Reverb:
+- **الـ API** `api.qbazaar.fleeteye.de` — docroot عادي لـ Laravel + توجيه websockets لـ Reverb:
   ```apache
   RewriteEngine On
   RewriteCond %{HTTP:Upgrade} =websocket [NC]
@@ -99,18 +99,18 @@
   `/etc/apache2/conf.d/userdata/ssl/2_4/space/<domain>/qbazaar.conf` ثم rebuild+restart.)
 
 ### ج. تكييف سكربتات النشر
-- `deploy/scripts/deploy-api.sh` — تحديث المسارات/الدومين/`HEALTH_URL=https://api.qbazzar.fleeteye.de/api/v1/health`، وإضافة `sudo systemctl restart qbazaar-horizon qbazaar-reverb` بعد الـ migrate/cache.
+- `deploy/scripts/deploy-api.sh` — تحديث المسارات/الدومين/`HEALTH_URL=https://api.qbazaar.fleeteye.de/api/v1/health`، وإضافة `sudo systemctl restart qbazaar-horizon qbazaar-reverb` بعد الـ migrate/cache.
 - `deploy/scripts/deploy-web.sh` — إزالة PM2، استبداله بـ:
   ```bash
   npm ci --no-audit --no-fund
   NODE_OPTIONS=--max-old-space-size=1536 NEXT_TELEMETRY_DISABLED=1 npm run build
   sudo systemctl restart qbazaar-web
   ```
-  وتحديث الـ health probe لـ `https://qbazzar.fleeteye.de/`.
+  وتحديث الـ health probe لـ `https://qbazaar.fleeteye.de/`.
 
 ### د. env — قالبان (مولّدان)
 - **الباك** `deploy/env.production.template`: `APP_URL=https://api...`، `WEB_URL=https://qbazzar...` (روابط الإشعارات للفرونت)، Reverb **مفصول**: الباك ينشر محليًا `REVERB_HOST=127.0.0.1 / PORT=8080 / SCHEME=http`. (CORS الافتراضي يكفي — لا إضافات env.)
-- **الفرونت** `deploy/web.env.production.template` → `qbazaar-web/.env.production`: `NEXT_PUBLIC_API_URL=https://api...`، و Reverb العام للمتصفح `NEXT_PUBLIC_REVERB_HOST=api.qbazzar.fleeteye.de / PORT=443 / SCHEME=https`، و `NEXT_PUBLIC_REVERB_APP_KEY` = نفس `REVERB_APP_KEY` بالباك، + متغيرات `NEXT_PUBLIC_FCM_*` (اختيارية).
+- **الفرونت** `deploy/web.env.production.template` → `qbazaar-web/.env.production`: `NEXT_PUBLIC_API_URL=https://api...`، و Reverb العام للمتصفح `NEXT_PUBLIC_REVERB_HOST=api.qbazaar.fleeteye.de / PORT=443 / SCHEME=https`، و `NEXT_PUBLIC_REVERB_APP_KEY` = نفس `REVERB_APP_KEY` بالباك، + متغيرات `NEXT_PUBLIC_FCM_*` (اختيارية).
 
 ### هـ. الـ workflows (مولّدة/مصحّحة)
 - `deploy-web.yml`: المسار صار `$HOME/qbazaar`. كلا الـ workflows: trigger على push لـ `production` + path filters (جاهزة).
@@ -142,15 +142,15 @@ cd ~/qbazaar/qbazaar-api && php artisan key:generate && php artisan migrate --fo
 ```
 
 4. ادفع commit على `production` (أو `workflow_dispatch`) → Actions يبني وينشر تلقائيًا.
-5. تحقّق: `curl https://api.qbazzar.fleeteye.de/api/v1/health` = 200 · `https://qbazzar.fleeteye.de/` يفتح · الشات الفوري عبر wss (devtools → WS).
+5. تحقّق: `curl https://api.qbazaar.fleeteye.de/api/v1/health` = 200 · `https://qbazaar.fleeteye.de/` يفتح · الشات الفوري عبر wss (devtools → WS).
 
 ---
 
 ## 4) نقاط حرجة لا تُنسى
-- **CORS**: ليس blocker — لا يوجد `config/cors.php` منشور، فاللارافيل يستخدم الافتراضي (`allowed_origins: *` على `api/*`)، والمشروع يعمل cross-origin أصلًا (Vercel→API). و`/api/v1/broadcasting/auth` مغطّى تحت `api/*` ويمر بـ Bearer token. **تشديد اختياري لاحقًا**: انشر `config/cors.php` وحصر `allowed_origins` على `https://qbazzar.fleeteye.de`.
+- **CORS**: ليس blocker — لا يوجد `config/cors.php` منشور، فاللارافيل يستخدم الافتراضي (`allowed_origins: *` على `api/*`)، والمشروع يعمل cross-origin أصلًا (Vercel→API). و`/api/v1/broadcasting/auth` مغطّى تحت `api/*` ويمر بـ Bearer token. **تشديد اختياري لاحقًا**: انشر `config/cors.php` وحصر `allowed_origins` على `https://qbazaar.fleeteye.de`.
 - **Reverb عبر wss**: يتطلب `mod_proxy_wstunnel`؛ بدونه الشات يفشل صامتًا. اختبره بـ devtools → WS.
 - **ذاكرة البناء**: `next build` + MySQL/Redis/PHP-FPM معًا على رام صغير = خطر OOM. الـ swap في 1.ب.8 هو شبكة الأمان.
 - **systemd كـ `fleeteye`**: الوحدات تشتغل بمستخدم cPanel عشان صلاحيات الملفات تتطابق مع git clone؛ والـ CI يعيد التشغيل عبر sudoers المحدود.
-- **Reverb مفصول**: الباك `REVERB_HOST=127.0.0.1:8080` (نشر محلي) — المتصفح فقط يستخدم `api.qbazzar.fleeteye.de:443`. لا تخلط بينهما.
+- **Reverb مفصول**: الباك `REVERB_HOST=127.0.0.1:8080` (نشر محلي) — المتصفح فقط يستخدم `api.qbazaar.fleeteye.de:443`. لا تخلط بينهما.
 - **`next build` على السيرفر**: env الفرونت (`NEXT_PUBLIC_*`) يُحقَن وقت البناء — أي تغيير فيه يحتاج إعادة بناء (النشر يعمل ذلك)، مش مجرد restart.
 - **أسرار الإطلاق** (مستقلة عن النشر): Twilio (OTP حقيقي)، Sentry DSN، Firebase (للـ push). النشر يشتغل بدونها لكن الميزات المرتبطة تبقى معطّلة بأمان.

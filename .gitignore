@@ -27,3 +27,7 @@ data.ms/
 # Production .env source (real secrets — never committed)
 deploy/.env.production.local
 
+
+# Claude working dir + local artifacts
+.claude/
+*.zip

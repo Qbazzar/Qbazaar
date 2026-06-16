@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# QBazaar — API deploy (WHM/cPanel VPS · api.qbazzar.fleeteye.de)
+# QBazaar — API deploy (WHM/cPanel VPS · api.qbazaar.fleeteye.de)
 #
 # Invoked by .github/workflows/deploy-api.yml over SSH as the `fleeteye` user.
 # Assumes:
@@ -15,7 +15,7 @@ shopt -s inherit_errexit
 REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 API_DIR="$REPO_DIR/qbazaar-api"
 BRANCH="${DEPLOY_BRANCH:-production}"
-HEALTH_URL="${HEALTH_URL:-https://api.qbazzar.fleeteye.de/api/v1/health}"
+HEALTH_URL="${HEALTH_URL:-https://api.qbazaar.fleeteye.de/api/v1/health}"
 
 log() { printf '\n\033[1;36m> %s\033[0m\n' "$*"; }
 
