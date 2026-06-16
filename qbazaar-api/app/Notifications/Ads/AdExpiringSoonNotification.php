@@ -7,10 +7,12 @@ namespace App\Notifications\Ads;
 use App\Enums\Language;
 use App\Models\Ad;
 use App\Models\User;
+use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\Fcm\FcmChannel;
 
 /**
  * Daily reminder fired ~24h before `expires_at`. Encourages a one-click
@@ -18,7 +20,7 @@ use Illuminate\Notifications\Notification;
  */
 class AdExpiringSoonNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SendsFcmPush;
 
     public function __construct(public readonly Ad $ad) {}
 
@@ -27,9 +29,15 @@ class AdExpiringSoonNotification extends Notification implements ShouldQueue
      */
     public function via(mixed $notifiable): array
     {
-        return $notifiable instanceof User
+        $channels = $notifiable instanceof User
             ? ['mail', 'database']
             : ['mail'];
+
+        if ($this->fcmEnabledFor($notifiable)) {
+            $channels[] = FcmChannel::class;
+        }
+
+        return $channels;
     }
 
     public function toMail(mixed $notifiable): MailMessage

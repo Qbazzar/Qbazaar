@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
+use App\Http\Controllers\Api\V1\Account\DeviceTokenController;
 use App\Http\Controllers\Api\V1\Account\NotificationsController;
 use App\Http\Controllers\Api\V1\Account\PasswordController;
 use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
@@ -183,6 +184,11 @@ Route::prefix('account')
         Route::put('/privacy-settings', [PrivacySettingsController::class, 'update'])->name('privacy.update');
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
+
+        // Web-push device tokens (FCM). DELETE takes the token in the body —
+        // FCM tokens are too long (and too sensitive) to put in the URL.
+        Route::post('/device-tokens', [DeviceTokenController::class, 'store'])->name('device-tokens.store');
+        Route::delete('/device-tokens', [DeviceTokenController::class, 'destroy'])->name('device-tokens.destroy');
 
         // Account lifecycle (Wave 2) — deactivate / schedule-deletion / data-export.
         Route::post('/deactivate', DeactivateAccountController::class)->name('deactivate');

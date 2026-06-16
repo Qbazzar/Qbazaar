@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { EnablePushButton } from '@/components/notifications/EnablePushButton';
 import { NotificationRow } from '@/components/notifications/NotificationRow';
 import {
   useMarkAllNotificationsReadMutation,
@@ -68,23 +69,27 @@ export function NotificationsClient() {
             )}
           </p>
         </div>
-        {unreadCount > 0 ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="default"
-            className="rounded-full"
-            disabled={markAllRead.isPending}
-            onClick={() => markAllRead.mutate()}
-          >
-            {markAllRead.isPending ? (
-              <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
-            ) : (
-              <CheckCheckIcon className="size-3.5" aria-hidden />
-            )}
-            {t('notifications.mark_all_read', 'تعليم الكل كمقروء')}
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Hidden entirely while FCM env vars are absent. */}
+          <EnablePushButton />
+          {unreadCount > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="default"
+              className="rounded-full"
+              disabled={markAllRead.isPending}
+              onClick={() => markAllRead.mutate()}
+            >
+              {markAllRead.isPending ? (
+                <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
+              ) : (
+                <CheckCheckIcon className="size-3.5" aria-hidden />
+              )}
+              {t('notifications.mark_all_read', 'تعليم الكل كمقروء')}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <div className="notif-filters" role="tablist" aria-label={t('notifications.title', 'الإشعارات')}>

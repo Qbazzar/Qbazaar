@@ -17,6 +17,7 @@ import type {
 } from './types';
 
 const NOTIFICATIONS_BASE = '/api/v1/account/notifications';
+const DEVICE_TOKENS_BASE = '/api/v1/account/device-tokens';
 
 function toApiClientError(err: unknown): ApiClientError {
   if (isAxiosError<ErrorEnvelope>(err) && err.response?.data?.error) {
@@ -123,6 +124,45 @@ export async function getUnreadNotificationsCount(): Promise<UnreadNotifications
       SuccessEnvelope<UnreadNotificationsCountResponse>
     >(`${NOTIFICATIONS_BASE}/unread-count`);
     return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+// ── Device tokens (web push) ───────────────────────────────────────────────
+
+export interface RegisterDeviceTokenInput {
+  /** FCM registration token issued to this browser. */
+  token: string;
+  platform: 'web';
+}
+
+/** The raw FCM token is intentionally never echoed back by the API. */
+export interface DeviceToken {
+  id: string;
+  platform: 'web' | 'android' | 'ios';
+  created_at: string;
+}
+
+export async function registerDeviceToken(
+  input: RegisterDeviceTokenInput,
+): Promise<DeviceToken> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<DeviceToken>>(
+      DEVICE_TOKENS_BASE,
+      input,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+export async function unregisterDeviceToken(token: string): Promise<void> {
+  try {
+    // FCM tokens are too long (and too sensitive) for the URL, so the
+    // contract carries the token in the DELETE body. Always 204 server-side.
+    await api.delete(DEVICE_TOKENS_BASE, { data: { token } });
   } catch (err) {
     throw toApiClientError(err);
   }

@@ -14,6 +14,7 @@ use App\Listeners\Ads\IndexAdInSearch;
 use App\Listeners\Ads\RemoveAdFromSearch;
 use App\Listeners\Ads\SendAdNotifications;
 use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
+use App\Listeners\Notifications\PruneStaleDeviceTokens;
 use App\Models\Ad;
 use App\Models\User;
 use App\Observers\AdObserver;
@@ -21,6 +22,7 @@ use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
@@ -86,5 +88,9 @@ class AppServiceProvider extends ServiceProvider
         // Bridges Laravel's NotificationSent -> our own NotificationCreated
         // broadcast (database channel only). See the listener for details.
         Event::listen(NotificationSent::class, [BroadcastDatabaseNotificationCreated::class, 'handle']);
+
+        // FCM reports dead registration tokens via NotificationFailed —
+        // prune them so future pushes stop fanning out to gone devices.
+        Event::listen(NotificationFailed::class, [PruneStaleDeviceTokens::class, 'handle']);
     }
 }

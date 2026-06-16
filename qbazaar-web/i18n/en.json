@@ -832,6 +832,12 @@
     "errors": {
       "not_found": "Notification not found",
       "forbidden": "You don't have access to this notification"
+    },
+    "push": {
+      "enable": "Enable browser notifications",
+      "enabled": "Browser notifications are on",
+      "denied": "Notifications are blocked in your browser settings",
+      "error": "Couldn't enable browser notifications, please try again"
     }
   },
   "reports": {
