@@ -1,0 +1,25 @@
+# QBazaar Horizon (queue workers) — systemd unit
+# Handles: ad-image processing, notifications, ad/offer expiry, FCM pushes.
+# Install (as root):
+#   cp deploy/systemd/qbazaar-horizon.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now qbazaar-horizon
+#
+# PHP path: adjust if EA-PHP 8.4 lives elsewhere (verify with:
+#   /opt/cpanel/ea-php84/root/usr/bin/php -v   # must be 8.4
+# Requires ext-pcntl + ext-posix in the ea-php84 CLI build.
+[Unit]
+Description=QBazaar Horizon (queues)
+After=network.target redis.service mysqld.service
+
+[Service]
+Type=simple
+User=fleeteye
+Group=fleeteye
+WorkingDirectory=/home/fleeteye/qbazaar/qbazaar-api
+ExecStart=/opt/cpanel/ea-php84/root/usr/bin/php /home/fleeteye/qbazaar/qbazaar-api/artisan horizon
+ExecStop=/opt/cpanel/ea-php84/root/usr/bin/php /home/fleeteye/qbazaar/qbazaar-api/artisan horizon:terminate
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

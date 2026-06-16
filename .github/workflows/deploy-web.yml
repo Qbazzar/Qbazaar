@@ -33,7 +33,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            cd /home/sanad/qbazaar
+            cd "$HOME/qbazaar"
             git fetch origin --prune
             git reset --hard origin/production
             bash deploy/scripts/deploy-web.sh

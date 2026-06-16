@@ -1,0 +1,24 @@
+# QBazaar Web (Next.js) — systemd unit
+# Install (as root):
+#   cp deploy/systemd/qbazaar-web.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now qbazaar-web
+# Reads qbazaar-web/.env.production automatically (next start).
+[Unit]
+Description=QBazaar Web (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=fleeteye
+Group=fleeteye
+WorkingDirectory=/home/fleeteye/qbazaar/qbazaar-web
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/usr/bin/node /home/fleeteye/qbazaar/qbazaar-web/node_modules/.bin/next start -p 3000
+Restart=always
+RestartSec=5
+# Next writes nothing outside the repo; give it a private tmp.
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
