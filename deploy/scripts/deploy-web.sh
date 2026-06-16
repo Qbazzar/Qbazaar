@@ -17,7 +17,7 @@ export PATH="/opt/cpanel/ea-php84/root/usr/bin:/usr/local/bin:$PATH"
 REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 WEB_DIR="$REPO_DIR/qbazaar-web"
 BRANCH="${DEPLOY_BRANCH:-production}"
-HEALTH_URL="${HEALTH_URL:-https://qbazaar.fleeteye.de/}"
+HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/}"
 
 log() { printf '\n\033[1;36m> %s\033[0m\n' "$*"; }
 
@@ -38,6 +38,8 @@ NODE_OPTIONS="--max-old-space-size=1536" NEXT_TELEMETRY_DISABLED=1 npm run build
 log "Restarting qbazaar-web"
 sudo systemctl restart qbazaar-web
 
+# Probe the Next.js server directly (Apache reverse-proxies to it). Avoids the
+# box resolving its own public FQDN to ::1 / a self-signed default vhost.
 log "Health probe ($HEALTH_URL)"
 sleep 2
 STATUS=$(curl -fsS -m 8 -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")

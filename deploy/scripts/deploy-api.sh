@@ -20,7 +20,7 @@ export PATH="/opt/cpanel/ea-php84/root/usr/bin:/usr/local/bin:$PATH"
 REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 API_DIR="$REPO_DIR/qbazaar-api"
 BRANCH="${DEPLOY_BRANCH:-production}"
-HEALTH_URL="${HEALTH_URL:-https://api.qbazaar.fleeteye.de/api/v1/health}"
+HEALTH_HOST="${HEALTH_HOST:-api.qbazaar.fleeteye.de}"
 
 log() { printf '\n\033[1;36m> %s\033[0m\n' "$*"; }
 
@@ -61,9 +61,13 @@ log "Restarting workers (horizon + reverb)"
 sudo systemctl restart qbazaar-horizon
 sudo systemctl restart qbazaar-reverb
 
-log "Health probe ($HEALTH_URL)"
+# Probe Apache on the box's own primary IPv4 with the vhost Host header. We
+# avoid the public FQDN because the server resolves its own domains to ::1
+# (a self-signed default vhost), which would false-fail the probe.
+log "Health probe (Host: $HEALTH_HOST)"
 sleep 1
-HEALTH=$(curl -fsS -m 5 -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
+SERVER_IP=$(hostname -I | tr ' ' '\n' | grep -m1 -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+HEALTH=$(curl -fsS -m 5 -o /dev/null -w "%{http_code}" -H "Host: $HEALTH_HOST" "http://${SERVER_IP}/api/v1/health" || echo "000")
 echo "  health => $HEALTH"
 if [[ "$HEALTH" != "200" ]]; then
     echo "Health probe failed (expected 200, got $HEALTH). Check storage/logs/laravel.log + Apache error logs."
