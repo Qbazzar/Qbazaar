@@ -25,7 +25,7 @@ use Illuminate\Support\Carbon;
  * // TODO Phase 2: lookup city for the IP via a geo library and surface it
  *    in the mail. For now we emit the IP as-is.
  */
-class SecurityAlertNotification extends Notification
+class SecurityAlertNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

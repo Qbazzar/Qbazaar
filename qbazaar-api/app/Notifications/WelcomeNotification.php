@@ -7,6 +7,7 @@ namespace App\Notifications;
 use App\Enums\Language;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\URL;
  * is a different notification — but we deliberately reuse the URL contract to
  * avoid maintaining two signing schemes.
  */
-class WelcomeNotification extends Notification
+class WelcomeNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
