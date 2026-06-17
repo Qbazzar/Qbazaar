@@ -25,6 +25,7 @@ export function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const setHydrated = useAuthStore((s) => s.setHydrated);
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginInput>({
@@ -37,6 +38,7 @@ export function LoginForm() {
     try {
       const data = await login(values);
       setAuth({ user: data.user, accessToken: data.tokens.access_token });
+      setHydrated(true);
       toast.success(t('auth.login.success'));
 
       const from = search.get('from');

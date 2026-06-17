@@ -24,6 +24,7 @@ import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 export function RegisterForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const setHydrated = useAuthStore((s) => s.setHydrated);
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<RegisterInput>({
@@ -44,6 +45,7 @@ export function RegisterForm() {
     try {
       const data = await apiRegister(values);
       setAuth({ user: data.user, accessToken: data.tokens.access_token });
+      setHydrated(true);
       toast.success(t('auth.register.success'));
       router.replace('/');
     } catch (err) {
