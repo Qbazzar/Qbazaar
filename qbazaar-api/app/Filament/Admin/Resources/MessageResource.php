@@ -13,6 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Read-only admin view of individual chat messages. Mostly useful for
@@ -55,7 +56,10 @@ class MessageResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(static fn ($q) => $q->with(['sender:id,full_name', 'conversation:id,ad_id']))
+            ->modifyQueryUsing(static fn (Builder $query): Builder => $query->with([
+                'sender:id,full_name',
+                'conversation:id,ad_id',
+            ]))
             ->columns([
                 TextColumn::make('sender.full_name')
                     ->label(__('admin.fields.subject'))

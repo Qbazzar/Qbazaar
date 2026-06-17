@@ -26,6 +26,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -173,7 +174,7 @@ class ReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(static fn ($query) => $query->with(['reporter:id,full_name,email']))
+            ->modifyQueryUsing(static fn (Builder $query): Builder => $query->with(['reporter:id,full_name,email']))
             ->columns([
                 TextColumn::make('id')
                     ->label(__('admin.fields.id'))

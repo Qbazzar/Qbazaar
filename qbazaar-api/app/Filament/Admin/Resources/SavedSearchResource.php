@@ -13,6 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Read-only audit view of per-user saved searches. Mostly here so the
@@ -55,7 +56,7 @@ class SavedSearchResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(static fn ($q) => $q->with(['user:id,full_name,email']))
+            ->modifyQueryUsing(static fn (Builder $query): Builder => $query->with(['user:id,full_name,email']))
             ->columns([
                 TextColumn::make('name')
                     ->label(__('admin.fields.name'))
