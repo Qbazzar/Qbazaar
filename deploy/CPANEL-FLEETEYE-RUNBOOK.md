@@ -154,3 +154,5 @@ cd ~/qbazaar/qbazaar-api && php artisan key:generate && php artisan migrate --fo
 - **Reverb مفصول**: الباك `REVERB_HOST=127.0.0.1:8080` (نشر محلي) — المتصفح فقط يستخدم `api.qbazaar.fleeteye.de:443`. لا تخلط بينهما.
 - **`next build` على السيرفر**: env الفرونت (`NEXT_PUBLIC_*`) يُحقَن وقت البناء — أي تغيير فيه يحتاج إعادة بناء (النشر يعمل ذلك)، مش مجرد restart.
 - **أسرار الإطلاق** (مستقلة عن النشر): Twilio (OTP حقيقي)، Sentry DSN، Firebase (للـ push). النشر يشتغل بدونها لكن الميزات المرتبطة تبقى معطّلة بأمان.
+
+<!-- live on https://qbazaar.fleeteye.de + https://api.qbazaar.fleeteye.de since 2026-06-17 -->
