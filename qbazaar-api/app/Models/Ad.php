@@ -340,14 +340,23 @@ class Ad extends Model implements HasMedia
         // hot path runs on every save and the underlying query is indexed.
         $hasImages = $this->media()->where('collection_name', 'images')->exists();
 
+        // The belongsTo accessors are typed non-null, but Eloquent returns null
+        // for an orphaned/missing foreign key. Pin them as nullable so indexing
+        // (and the database-driver search, which runs toSearchableArray on every
+        // row) degrades to null instead of throwing "property slug on null".
+        /** @var Category|null $category */
+        $category = $this->category;
+        /** @var Location|null $location */
+        $location = $this->location;
+
         return [
             'id' => $this->id,
             'title' => $this->title,
             'description' => Str::limit((string) $this->description, 500, ''),
             'category_id' => $this->category_id,
-            'category_slug' => $this->category->slug,
+            'category_slug' => $category?->slug,
             'location_id' => $this->location_id,
-            'location_slug' => $this->location->slug,
+            'location_slug' => $location?->slug,
             'user_id' => $this->user_id,
             'price' => $this->price !== null ? (float) $this->price : null,
             'price_type' => $this->price_type->value,

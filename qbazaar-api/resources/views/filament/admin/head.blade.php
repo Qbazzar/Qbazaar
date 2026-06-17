@@ -131,13 +131,6 @@
     .fi-topbar a.qb-brand {
         display: none !important;
     }
-    /* Make the topbar span edge-to-edge (no centred max-width gap). */
-    .fi-topbar,
-    .fi-topbar > nav,
-    .fi-topbar-ctn {
-        max-width: none !important;
-        width: 100% !important;
-    }
     .dark .fi-topbar {
         border-bottom-color: rgb(255 255 255 / 0.08);
     }
