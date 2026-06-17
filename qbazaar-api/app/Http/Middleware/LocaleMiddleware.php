@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Enums\Language;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -41,10 +42,16 @@ class LocaleMiddleware
             return $request->query('lang');
         }
 
-        // 2. Authenticated user preference
+        // 2. Authenticated user preference. The `language` column is cast to the
+        //    Language enum, so normalise to its string value before matching —
+        //    a strict in_array() of an enum against ['ar','en'] never hits.
         $user = $request->user();
-        if ($user && isset($user->language) && in_array($user->language, $supported, true)) {
-            return $user->language;
+        if ($user !== null) {
+            $language = $user->language;
+            $value = $language instanceof Language ? $language->value : $language;
+            if (is_string($value) && in_array($value, $supported, true)) {
+                return $value;
+            }
         }
 
         // 3. Accept-Language header — take the first supported tag
