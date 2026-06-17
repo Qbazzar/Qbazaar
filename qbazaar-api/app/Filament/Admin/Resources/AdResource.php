@@ -386,6 +386,7 @@ class AdResource extends Resource
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('approve')
+                    ->iconButton()
                     ->label(__('admin.actions.approve'))
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
@@ -394,6 +395,7 @@ class AdResource extends Resource
                     ->action(static fn (Ad $record) => self::approve($record)),
 
                 Action::make('reject')
+                    ->iconButton()
                     ->label(__('admin.actions.reject'))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
@@ -407,6 +409,7 @@ class AdResource extends Resource
                     ->action(static fn (Ad $record, array $data) => self::reject($record, (string) ($data['admin_notes'] ?? ''))),
 
                 Action::make('feature')
+                    ->iconButton()
                     ->label(__('admin.actions.feature'))
                     ->icon('heroicon-o-star')
                     ->color('warning')
@@ -416,6 +419,7 @@ class AdResource extends Resource
                     }),
 
                 Action::make('force_expire')
+                    ->iconButton()
                     ->label(__('admin.actions.force_expire'))
                     ->icon('heroicon-o-clock')
                     ->color('gray')

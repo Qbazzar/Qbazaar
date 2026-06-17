@@ -307,6 +307,7 @@ class SupportTicketResource extends Resource
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('assign_to_me')
+                    ->iconButton()
                     ->label(__('admin.actions.assign_to_me'))
                     ->icon(Heroicon::OutlinedUserPlus)
                     ->visible(static fn (SupportTicket $record): bool => auth()->id() !== $record->assigned_to)

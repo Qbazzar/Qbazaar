@@ -242,6 +242,7 @@ class ReportResource extends Resource
                 ViewAction::make(),
 
                 Action::make('dismiss')
+                    ->iconButton()
                     ->label(__('admin.actions.dismiss'))
                     ->icon('heroicon-o-x-mark')
                     ->color('gray')
@@ -250,6 +251,7 @@ class ReportResource extends Resource
                     ->action(static fn (Report $r) => self::transition($r, ReportStatus::DISMISSED, null, 'admin.actions.report_dismissed')),
 
                 Action::make('action_taken')
+                    ->iconButton()
                     ->label(__('admin.actions.mark_actioned'))
                     ->icon('heroicon-o-shield-check')
                     ->color('success')
@@ -263,6 +265,7 @@ class ReportResource extends Resource
                     ->action(static fn (Report $r, array $data) => self::transition($r, ReportStatus::ACTIONED, (string) ($data['admin_notes'] ?? ''), 'admin.actions.report_actioned')),
 
                 Action::make('mark_reviewed')
+                    ->iconButton()
                     ->label(__('admin.actions.mark_reviewed'))
                     ->icon('heroicon-o-eye')
                     ->color('info')
