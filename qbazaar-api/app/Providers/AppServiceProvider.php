@@ -22,6 +22,8 @@ use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -68,6 +70,8 @@ class AppServiceProvider extends ServiceProvider
         ViewAction::configureUsing(static fn (ViewAction $action): ViewAction => $action->iconButton());
         EditAction::configureUsing(static fn (EditAction $action): EditAction => $action->iconButton());
         DeleteAction::configureUsing(static fn (DeleteAction $action): DeleteAction => $action->iconButton());
+        ForceDeleteAction::configureUsing(static fn (ForceDeleteAction $action): ForceDeleteAction => $action->iconButton());
+        RestoreAction::configureUsing(static fn (RestoreAction $action): RestoreAction => $action->iconButton());
 
         // Rate limiters MUST be registered here (not in the withRouting `then:`
         // closure) so they survive route:cache — Laravel skips that closure when
