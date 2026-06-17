@@ -60,10 +60,13 @@
 
     /* ── Brand / sidebar header ─────────────────────────────────────────── */
     .fi-sidebar-header {
-        padding-block: 0.9rem !important;
+        padding-block: 0 !important;
         padding-inline: 1rem !important;
         border-bottom: 1px solid rgb(0 0 0 / 0.06);
-        min-height: 4rem;
+        height: 4rem !important;
+        min-height: 4rem !important;
+        display: flex !important;
+        align-items: center !important;
     }
     .dark .fi-sidebar-header {
         border-bottom-color: rgb(255 255 255 / 0.08);
@@ -131,9 +134,12 @@
         min-height: 4rem;
     }
 
-    /* Brand: keep glyph + wordmark vertically centred and never overflow. */
-    .qb-brand { align-items: center; min-height: 2.5rem; }
-    .qb-brand__glyph { width: 2rem; height: 2rem; }
+    /* Brand: compact, vertically centred, fits the 4rem header cleanly. */
+    .qb-brand { align-items: center !important; gap: 0.5rem !important; height: 100%; }
+    .qb-brand__glyph { width: 1.75rem !important; height: 1.75rem !important; flex: none; }
+    .qb-brand__wordmark { gap: 0 !important; justify-content: center; }
+    .qb-brand__wordmark > span:first-child { font-size: 13px !important; line-height: 1.15 !important; }
+    .qb-brand__wordmark > span:last-child { font-size: 9px !important; line-height: 1.15 !important; }
 
     /* ── Page shell — breathing room around the title + actions ──────────── */
     .fi-page {

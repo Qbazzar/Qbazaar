@@ -131,6 +131,19 @@ class UserResource extends Resource
                     Toggle::make('phone_verified')->label(__('admin.fields.phone_verified')),
                 ]),
 
+            // Role assignment is how an admin promotes a user to staff
+            // (admin / moderator / support). Restricted to super_admin so
+            // lower-privilege staff cannot escalate anyone's access.
+            Section::make(__('admin.sections.roles'))
+                ->visible(static fn (): bool => auth()->user()?->hasRole('super_admin') === true)
+                ->schema([
+                    Select::make('roles')
+                        ->label(__('admin.fields.roles'))
+                        ->relationship('roles', 'name')
+                        ->multiple()
+                        ->preload(),
+                ]),
+
             Section::make(__('admin.sections.meta'))
                 ->collapsed()
                 ->schema([
@@ -214,6 +227,15 @@ class UserResource extends Resource
                     IconEntry::make('phone_verified')
                         ->label(__('admin.fields.phone_verified'))
                         ->boolean(),
+                ]),
+
+            Section::make(__('admin.sections.roles'))
+                ->schema([
+                    TextEntry::make('roles.name')
+                        ->label(__('admin.fields.roles'))
+                        ->badge()
+                        ->color('primary')
+                        ->placeholder('—'),
                 ]),
 
             Section::make(__('admin.sections.audit'))
@@ -313,6 +335,7 @@ class UserResource extends Resource
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('reset_password')
+                    ->iconButton()
                     ->label(__('admin.actions.reset_password'))
                     ->icon('heroicon-o-key')
                     ->color('warning')
@@ -325,6 +348,7 @@ class UserResource extends Resource
                             ->send();
                     }),
                 Action::make('ban')
+                    ->iconButton()
                     ->label(static fn (User $record): string => (string) __(
                         $record->status === UserStatus::SUSPENDED ? 'admin.actions.unban' : 'admin.actions.ban',
                     ))
@@ -343,6 +367,7 @@ class UserResource extends Resource
                             ->send();
                     }),
                 Action::make('view_as_user')
+                    ->iconButton()
                     ->label(__('admin.actions.view_as_user'))
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->color('gray')

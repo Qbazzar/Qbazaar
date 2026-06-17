@@ -56,6 +56,7 @@ class RecentReportsWidget extends TableWidget
             ])
             ->recordActions([
                 Action::make('dismiss')
+                    ->iconButton()
                     ->label(__('admin.actions.dismiss'))
                     ->icon('heroicon-o-x-mark')
                     ->color('gray')
@@ -63,6 +64,7 @@ class RecentReportsWidget extends TableWidget
                     ->action(fn (Report $record) => $this->dismiss($record)),
 
                 Action::make('reviewed')
+                    ->iconButton()
                     ->label(__('admin.actions.mark_reviewed'))
                     ->icon('heroicon-o-check')
                     ->color('success')

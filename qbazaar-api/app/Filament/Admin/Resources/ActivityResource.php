@@ -7,8 +7,11 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\ActivityResource\Pages;
 use BackedEnum;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -55,6 +58,65 @@ class ActivityResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('log_name')
+                        ->label(__('admin.fields.log_name'))
+                        ->badge()
+                        ->placeholder('—'),
+
+                    TextEntry::make('event')
+                        ->label(__('admin.fields.event'))
+                        ->badge()
+                        ->placeholder('—'),
+
+                    TextEntry::make('description')
+                        ->label(__('admin.fields.description'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make(__('admin.sections.target'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('subject_type')
+                        ->label(__('admin.fields.subject'))
+                        ->formatStateUsing(static fn (?string $state): string => $state !== null ? (string) class_basename($state) : '—'),
+
+                    TextEntry::make('subject_id')
+                        ->label(__('admin.fields.target_id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono)
+                        ->placeholder('—'),
+
+                    TextEntry::make('causer_id')
+                        ->label(__('admin.fields.causer'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono)
+                        ->placeholder('—'),
+                ]),
+
+            Section::make(__('admin.sections.meta'))
+                ->schema([
+                    TextEntry::make('properties')
+                        ->label(__('admin.fields.properties'))
+                        ->formatStateUsing(static fn ($state): string => (string) json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))
+                        ->fontFamily(FontFamily::Mono)
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table

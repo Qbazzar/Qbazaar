@@ -8,8 +8,12 @@ use App\Filament\Admin\Resources\NotificationResource\Pages;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -58,6 +62,59 @@ class NotificationResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('type')
+                        ->label(__('admin.fields.type'))
+                        ->badge()
+                        ->formatStateUsing(static fn (string $state): string => (string) class_basename($state)),
+
+                    TextEntry::make('notifiable_id')
+                        ->label(__('admin.fields.subject'))
+                        ->formatStateUsing(static function (DatabaseNotification $record): string {
+                            if ($record->notifiable_type === User::class || is_a($record->notifiable_type, User::class, true)) {
+                                return User::query()->find($record->notifiable_id)?->full_name ?? $record->notifiable_id;
+                            }
+
+                            return $record->notifiable_id;
+                        }),
+
+                    TextEntry::make('data')
+                        ->label(__('admin.fields.title'))
+                        ->formatStateUsing(static fn ($state): string => (string) (is_array($state) ? ($state['title'] ?? '') : ''))
+                        ->placeholder('—'),
+
+                    TextEntry::make('data_body')
+                        ->label(__('admin.fields.body'))
+                        ->state(static fn (DatabaseNotification $record): string => is_array($record->data) ? (string) ($record->data['body'] ?? '') : '')
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    IconEntry::make('read_at')
+                        ->label(__('admin.fields.read_at'))
+                        ->boolean(),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table
