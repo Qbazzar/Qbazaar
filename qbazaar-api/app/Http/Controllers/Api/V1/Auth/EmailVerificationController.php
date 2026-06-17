@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Symfony\Component\HttpFoundation\Response;
@@ -91,12 +92,22 @@ class EmailVerificationController extends Controller
      *   }
      * }
      */
-    public function verify(Request $request, string $id, string $hash): JsonResponse
+    public function verify(Request $request, string $id, string $hash): Response
     {
+        // XHR callers (the frontend re-validating) get JSON and exceptions;
+        // browsers hitting the link directly get redirected to the web app's
+        // result page so they never see raw JSON.
+        $wantsHtml = ! $request->expectsJson()
+            || str_contains((string) $request->header('Accept'), 'text/html');
+
         /** @var User|null $user */
         $user = User::query()->find($id);
 
         if ($user === null) {
+            if ($wantsHtml) {
+                return $this->redirectToResult('invalid');
+            }
+
             throw new DomainException(ErrorCode::USER_NOT_FOUND);
         }
 
@@ -105,10 +116,18 @@ class EmailVerificationController extends Controller
         // address so a signed URL minted for user A can't verify user B
         // even if the IDs were swapped after signing.
         if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+            if ($wantsHtml) {
+                return $this->redirectToResult('invalid');
+            }
+
             throw new DomainException(ErrorCode::AUTH_TOKEN_INVALID);
         }
 
         if ($user->hasVerifiedEmail()) {
+            if ($wantsHtml) {
+                return $this->redirectToResult('already');
+            }
+
             return response()->json([
                 'email_verified' => true,
                 'message_key' => 'messages.auth.email_already_verified',
@@ -118,9 +137,23 @@ class EmailVerificationController extends Controller
         $user->markEmailAsVerified();
         Event::dispatch(new Verified($user));
 
+        if ($wantsHtml) {
+            return $this->redirectToResult('success');
+        }
+
         return response()->json([
             'email_verified' => true,
             'message_key' => 'messages.auth.email_verified',
         ]);
+    }
+
+    /**
+     * Redirect a browser to the web app's verification-result page.
+     */
+    private function redirectToResult(string $status): RedirectResponse
+    {
+        $webBase = rtrim((string) config('qbazaar.web_url'), '/');
+
+        return redirect()->away($webBase . '/verify-email/result?status=' . $status);
     }
 }

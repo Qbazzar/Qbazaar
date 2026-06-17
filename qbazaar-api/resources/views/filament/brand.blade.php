@@ -28,8 +28,7 @@
         </g>
         <path d="M58 58 L72 72" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
     </svg>
-    <span class="qb-brand__wordmark flex min-w-0 flex-col gap-[2px] leading-none">
+    <span class="qb-brand__wordmark flex min-w-0 flex-col justify-center leading-none">
         <span class="text-[15px] font-extrabold tracking-[0.04em] truncate">QBAZAAR</span>
-        <span class="text-[10px] tracking-[0.02em] opacity-70 truncate" dir="rtl">إدارة كيو بازار</span>
     </span>
 </a>

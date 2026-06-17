@@ -125,6 +125,19 @@
     .fi-topbar {
         border-bottom: 1px solid rgb(0 0 0 / 0.06);
     }
+    /* Single brand only: the wordmark lives in the sidebar header, so hide the
+       duplicate Filament renders inside the topbar. */
+    .fi-topbar .qb-brand,
+    .fi-topbar a.qb-brand {
+        display: none !important;
+    }
+    /* Make the topbar span edge-to-edge (no centred max-width gap). */
+    .fi-topbar,
+    .fi-topbar > nav,
+    .fi-topbar-ctn {
+        max-width: none !important;
+        width: 100% !important;
+    }
     .dark .fi-topbar {
         border-bottom-color: rgb(255 255 255 / 0.08);
     }

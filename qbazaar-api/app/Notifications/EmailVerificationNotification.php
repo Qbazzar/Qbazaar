@@ -6,10 +6,9 @@ namespace App\Notifications;
 
 use App\Enums\Language;
 use App\Models\User;
+use App\Notifications\Concerns\BuildsEmailVerificationUrl;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\URL;
 
 /**
  * Localised email-verification mail.
@@ -20,6 +19,8 @@ use Illuminate\Support\Facades\URL;
  */
 class EmailVerificationNotification extends VerifyEmail
 {
+    use BuildsEmailVerificationUrl;
+
     /**
      * @param object|User $notifiable
      */
@@ -33,7 +34,8 @@ class EmailVerificationNotification extends VerifyEmail
             ->greeting(__('auth.email_verification.mail.greeting', [], $locale))
             ->line(__('auth.email_verification.mail.line_intro', [], $locale))
             ->action(__('auth.email_verification.mail.action', [], $locale), $url)
-            ->line(__('auth.email_verification.mail.line_ignore', [], $locale));
+            ->line(__('auth.email_verification.mail.line_ignore', [], $locale))
+            ->salutation(__('auth.mail.salutation', [], $locale));
     }
 
     protected function verificationUrl($notifiable): string
@@ -49,16 +51,7 @@ class EmailVerificationNotification extends VerifyEmail
             return '';
         }
 
-        $minutes = (int) config('auth.verification.expire', 60);
-
-        return URL::temporarySignedRoute(
-            'api.v1.auth.verify-email',
-            Carbon::now()->addMinutes($minutes),
-            [
-                'id' => $notifiable->getKey(),
-                'hash' => sha1($notifiable->email),
-            ],
-        );
+        return $this->buildFrontendVerificationUrl($notifiable);
     }
 
     /**

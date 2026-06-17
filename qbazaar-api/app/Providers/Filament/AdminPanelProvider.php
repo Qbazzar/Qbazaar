@@ -16,6 +16,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -85,6 +86,21 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
+            // Language switch in the user menu — shows only the OTHER language
+            // so it reads as a one-tap toggle. Persists to the user's `language`
+            // column; LocaleMiddleware applies it on the next request.
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('العربية')
+                    ->icon('heroicon-o-language')
+                    ->url(fn (): string => route('admin.locale', ['locale' => 'ar']))
+                    ->visible(fn (): bool => app()->getLocale() !== 'ar'),
+                MenuItem::make()
+                    ->label('English')
+                    ->icon('heroicon-o-language')
+                    ->url(fn (): string => route('admin.locale', ['locale' => 'en']))
+                    ->visible(fn (): bool => app()->getLocale() !== 'en'),
+            ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): string => view('filament.admin.head')->render(),

@@ -372,7 +372,7 @@ class UserResource extends Resource
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->color('gray')
                     ->url(static fn (User $record): string => rtrim((string) config('qbazaar.web_url', config('app.url')), '/')
-                        . '/users/' . $record->id, shouldOpenInNewTab: true),
+                        . '/u/' . $record->id, shouldOpenInNewTab: true),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

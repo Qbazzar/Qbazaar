@@ -25,6 +25,10 @@ return [
     'token' => 'This password reset token is invalid.',
     'user' => 'We can\'t find a user with that email address.',
 
+    'mail' => [
+        'salutation' => 'Best regards, the QBazaar team',
+    ],
+
     'otp' => [
         'sms' => [
             'body' => 'Your QBazaar verification code is :code. It expires in :minutes minutes.',

@@ -78,7 +78,8 @@ class SecurityAlertNotification extends Notification implements ShouldQueue
             ->line(__('auth.security_alert.mail.line_ip', ['ip' => $this->ip], $locale))
             ->line(__('auth.security_alert.mail.line_time', ['time' => $this->occurredAt->toIso8601String()], $locale))
             ->line(__('auth.security_alert.mail.line_if_you', [], $locale))
-            ->line(__('auth.security_alert.mail.line_if_not_you', [], $locale));
+            ->line(__('auth.security_alert.mail.line_if_not_you', [], $locale))
+            ->salutation(__('auth.mail.salutation', [], $locale));
     }
 
     private function resolveLocale(object $notifiable): string

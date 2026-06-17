@@ -37,7 +37,8 @@ class PasswordResetNotification extends ResetPassword
             ->line(__('auth.password_reset.mail.line_intro', [], $locale))
             ->action(__('auth.password_reset.mail.action', [], $locale), $url)
             ->line(__('auth.password_reset.mail.line_expires', ['minutes' => $expiresIn], $locale))
-            ->line(__('auth.password_reset.mail.line_ignore', [], $locale));
+            ->line(__('auth.password_reset.mail.line_ignore', [], $locale))
+            ->salutation(__('auth.mail.salutation', [], $locale));
     }
 
     private function buildResetUrl(object $notifiable): string
@@ -53,7 +54,7 @@ class PasswordResetNotification extends ResetPassword
             return '';
         }
 
-        $webBase = rtrim((string) config('app.frontend_url', config('app.url', '')), '/');
+        $webBase = rtrim((string) config('qbazaar.web_url'), '/');
         $email = $notifiable->email;
 
         // Sign the API route so a frontend-driven reset still rides a token

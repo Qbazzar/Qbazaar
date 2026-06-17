@@ -6,12 +6,11 @@ namespace App\Notifications;
 
 use App\Enums\Language;
 use App\Models\User;
+use App\Notifications\Concerns\BuildsEmailVerificationUrl;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\URL;
 
 /**
  * Localised welcome mail sent on successful sign-up.
@@ -28,6 +27,7 @@ use Illuminate\Support\Facades\URL;
  */
 class WelcomeNotification extends Notification implements ShouldQueue
 {
+    use BuildsEmailVerificationUrl;
     use Queueable;
 
     /**
@@ -54,25 +54,18 @@ class WelcomeNotification extends Notification implements ShouldQueue
                 ->action(__('auth.welcome.mail.action', [], $locale), $this->verificationUrl($notifiable));
         }
 
-        return $message->line(__('auth.welcome.mail.line_ignore', [], $locale));
+        return $message
+            ->line(__('auth.welcome.mail.line_ignore', [], $locale))
+            ->salutation(__('auth.mail.salutation', [], $locale));
     }
 
     /**
-     * Mirrors the signing recipe used by EmailVerificationNotification so the
-     * same verify-email API route accepts URLs minted from either notification.
+     * Reuses the shared verification-URL recipe so the same verify-email link
+     * (pointing at the frontend page) is accepted from either notification.
      */
     private function verificationUrl(User $user): string
     {
-        $minutes = (int) config('auth.verification.expire', 60);
-
-        return URL::temporarySignedRoute(
-            'api.v1.auth.verify-email',
-            Carbon::now()->addMinutes($minutes),
-            [
-                'id' => $user->getKey(),
-                'hash' => sha1($user->email),
-            ],
-        );
+        return $this->buildFrontendVerificationUrl($user);
     }
 
     private function resolveLocale(object $notifiable): string

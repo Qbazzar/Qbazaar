@@ -117,4 +117,23 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Markdown Mail Settings
+    |--------------------------------------------------------------------------
+    |
+    | Branded QBazaar theme (RTL, Coral accent). Published components live
+    | under resources/views/vendor/mail; the default Laravel components are
+    | kept as a fallback path.
+    |
+    */
+
+    'markdown' => [
+        'theme' => 'qbazaar',
+
+        'paths' => [
+            resource_path('views/vendor/mail'),
+        ],
+    ],
+
 ];
