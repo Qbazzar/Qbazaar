@@ -33,6 +33,7 @@ return [
         'pages' => 'الصفحات',
         'help_categories' => 'فئات المساعدة',
         'help_articles' => 'مقالات المساعدة',
+        'roles' => 'الأدوار والصلاحيات',
     ],
 
     'navigation_groups' => [
@@ -61,6 +62,34 @@ return [
         'page' => ['label' => 'صفحة', 'plural' => 'الصفحات'],
         'help_category' => ['label' => 'فئة مساعدة', 'plural' => 'فئات المساعدة'],
         'help_article' => ['label' => 'مقال مساعدة', 'plural' => 'مقالات المساعدة'],
+        'role' => ['label' => 'دور', 'plural' => 'الأدوار والصلاحيات'],
+    ],
+
+    'message' => [
+        'type' => [
+            'text' => 'نص',
+            'offer' => 'عرض',
+            'system' => 'نظام',
+        ],
+    ],
+
+    'offer' => [
+        'status' => [
+            'pending' => 'قيد الانتظار',
+            'accepted' => 'مقبول',
+            'rejected' => 'مرفوض',
+            'withdrawn' => 'مسحوب',
+            'expired' => 'منتهي',
+        ],
+    ],
+
+    'report' => [
+        'status' => [
+            'pending' => 'معلق',
+            'reviewed' => 'تمت المراجعة',
+            'dismissed' => 'تم التجاهل',
+            'actioned' => 'تم اتخاذ إجراء',
+        ],
     ],
 
     'support' => [
@@ -179,6 +208,11 @@ return [
         'author' => 'الكاتب',
         'is_staff' => 'موظف؟',
         'reply_as_staff' => 'الرد كموظف',
+        'roles' => 'الأدوار',
+        'permissions' => 'الصلاحيات',
+        'users' => 'المستخدمون',
+        'guard_name' => 'الحارس',
+        'sender' => 'المُرسِل',
     ],
 
     'actions' => [
@@ -299,6 +333,8 @@ return [
         'geo' => 'الإحداثيات الجغرافية',
         'reporter' => 'المُبلِّغ',
         'target' => 'الهدف',
+        'roles' => 'الأدوار',
+        'permissions' => 'الصلاحيات',
     ],
 
     'locales' => [

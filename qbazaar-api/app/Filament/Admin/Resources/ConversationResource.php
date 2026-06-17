@@ -8,8 +8,11 @@ use App\Filament\Admin\Resources\ConversationResource\Pages;
 use App\Models\Conversation;
 use BackedEnum;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -55,6 +58,53 @@ class ConversationResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('ad.title')
+                        ->label(__('admin.fields.ad'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+
+                    TextEntry::make('buyer.full_name')
+                        ->label(__('admin.fields.buyer'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('seller.full_name')
+                        ->label(__('admin.fields.seller'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('messages_count')
+                        ->label(__('admin.fields.message_count'))
+                        ->state(static fn (Conversation $record): int => $record->messages()->count())
+                        ->badge(),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    TextEntry::make('last_message_at')
+                        ->label(__('admin.fields.last_message_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table

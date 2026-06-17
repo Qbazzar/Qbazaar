@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
+use App\Enums\MessageType;
 use App\Filament\Admin\Resources\MessageResource\Pages;
 use App\Models\Message;
 use BackedEnum;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -53,6 +57,53 @@ class MessageResource extends Resource
         return $schema->components([]);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('sender.full_name')
+                        ->label(__('admin.fields.sender'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('type')
+                        ->label(__('admin.fields.type'))
+                        ->badge()
+                        ->formatStateUsing(static fn (MessageType $state): string => (string) __('admin.message.type.' . $state->value)),
+
+                    TextEntry::make('conversation.ad.title')
+                        ->label(__('admin.fields.ad'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('body')
+                        ->label(__('admin.fields.body'))
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    TextEntry::make('read_at')
+                        ->label(__('admin.fields.read_at'))
+                        ->dateTime()
+                        ->since()
+                        ->placeholder('—'),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
+        ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -72,7 +123,8 @@ class MessageResource extends Resource
 
                 TextColumn::make('type')
                     ->label(__('admin.fields.type'))
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(static fn (MessageType $state): string => (string) __('admin.message.type.' . $state->value)),
 
                 TextColumn::make('conversation.ad_id')
                     ->label(__('admin.fields.ad'))

@@ -41,6 +41,7 @@ return [
         'pages' => 'Pages',
         'help_categories' => 'Help categories',
         'help_articles' => 'Help articles',
+        'roles' => 'Roles & permissions',
     ],
 
     'navigation_groups' => [
@@ -116,6 +117,37 @@ return [
         'help_article' => [
             'label' => 'Help article',
             'plural' => 'Help articles',
+        ],
+        'role' => [
+            'label' => 'Role',
+            'plural' => 'Roles & permissions',
+        ],
+    ],
+
+    'message' => [
+        'type' => [
+            'text' => 'Text',
+            'offer' => 'Offer',
+            'system' => 'System',
+        ],
+    ],
+
+    'offer' => [
+        'status' => [
+            'pending' => 'Pending',
+            'accepted' => 'Accepted',
+            'rejected' => 'Rejected',
+            'withdrawn' => 'Withdrawn',
+            'expired' => 'Expired',
+        ],
+    ],
+
+    'report' => [
+        'status' => [
+            'pending' => 'Pending',
+            'reviewed' => 'Reviewed',
+            'dismissed' => 'Dismissed',
+            'actioned' => 'Actioned',
         ],
     ],
 
@@ -235,6 +267,11 @@ return [
         'author' => 'Author',
         'is_staff' => 'Staff?',
         'reply_as_staff' => 'Reply as staff',
+        'roles' => 'Roles',
+        'permissions' => 'Permissions',
+        'users' => 'Users',
+        'guard_name' => 'Guard',
+        'sender' => 'Sender',
     ],
 
     'actions' => [
@@ -355,6 +392,8 @@ return [
         'geo' => 'Geo coordinates',
         'reporter' => 'Reporter',
         'target' => 'Target',
+        'roles' => 'Roles',
+        'permissions' => 'Permissions',
     ],
 
     'locales' => [

@@ -99,7 +99,8 @@ class ReportResource extends Resource
                     TextEntry::make('category')
                         ->label(__('admin.fields.type'))
                         ->badge()
-                        ->color('warning'),
+                        ->color('warning')
+                        ->formatStateUsing(static fn (ReportCategory $state): string => $state->label()[app()->getLocale()] ?? $state->label()['en']),
 
                     TextEntry::make('status')
                         ->label(__('admin.fields.status'))
@@ -109,7 +110,8 @@ class ReportResource extends Resource
                             ReportStatus::ACTIONED => 'success',
                             ReportStatus::DISMISSED => 'gray',
                             ReportStatus::REVIEWED => 'info',
-                        }),
+                        })
+                        ->formatStateUsing(static fn (ReportStatus $state): string => (string) __('admin.report.status.' . $state->value)),
 
                     TextEntry::make('description')
                         ->label(__('admin.fields.description'))
@@ -193,7 +195,8 @@ class ReportResource extends Resource
                 TextColumn::make('category')
                     ->label(__('admin.fields.type'))
                     ->badge()
-                    ->color('warning'),
+                    ->color('warning')
+                    ->formatStateUsing(static fn (ReportCategory $state): string => $state->label()[app()->getLocale()] ?? $state->label()['en']),
 
                 TextColumn::make('reporter.full_name')
                     ->label(__('admin.fields.reporter'))
@@ -207,7 +210,8 @@ class ReportResource extends Resource
                         ReportStatus::ACTIONED => 'success',
                         ReportStatus::DISMISSED => 'gray',
                         ReportStatus::REVIEWED => 'info',
-                    }),
+                    })
+                    ->formatStateUsing(static fn (ReportStatus $state): string => (string) __('admin.report.status.' . $state->value)),
 
                 TextColumn::make('created_at')
                     ->label(__('admin.fields.created_at'))
@@ -320,12 +324,12 @@ class ReportResource extends Resource
      */
     private static function statusOptions(): array
     {
-        return [
-            ReportStatus::PENDING->value => 'Pending',
-            ReportStatus::REVIEWED->value => 'Reviewed',
-            ReportStatus::DISMISSED->value => 'Dismissed',
-            ReportStatus::ACTIONED->value => 'Actioned',
-        ];
+        $options = [];
+        foreach (ReportStatus::cases() as $case) {
+            $options[$case->value] = (string) __('admin.report.status.' . $case->value);
+        }
+
+        return $options;
     }
 
     /**
@@ -335,7 +339,7 @@ class ReportResource extends Resource
     {
         $options = [];
         foreach (ReportCategory::cases() as $case) {
-            $options[$case->value] = (string) str($case->value)->replace('_', ' ')->title();
+            $options[$case->value] = $case->label()[app()->getLocale()] ?? $case->label()['en'];
         }
 
         return $options;

@@ -11,6 +11,7 @@ use App\Filament\Admin\Widgets\RecentReportsWidget;
 use App\Filament\Admin\Widgets\ReportsStatsWidget;
 use App\Filament\Admin\Widgets\RevenueStatsWidget;
 use App\Filament\Admin\Widgets\UsersStatsWidget;
+use App\Http\Middleware\LocaleMiddleware;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -112,6 +113,10 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // Resolve the request locale from the staff member's `language`
+                // column so both our admin.* strings AND Filament's own bundled
+                // UI translations render in Arabic / English per preference.
+                LocaleMiddleware::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

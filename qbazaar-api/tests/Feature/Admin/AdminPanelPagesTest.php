@@ -16,6 +16,7 @@ use App\Filament\Admin\Resources\NotificationResource;
 use App\Filament\Admin\Resources\OfferResource;
 use App\Filament\Admin\Resources\PageResource;
 use App\Filament\Admin\Resources\ReportResource;
+use App\Filament\Admin\Resources\RoleResource;
 use App\Filament\Admin\Resources\SavedSearchResource;
 use App\Filament\Admin\Resources\SupportTicketResource;
 use App\Filament\Admin\Resources\UserResource;
@@ -30,6 +31,7 @@ use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
 
+use Spatie\Permission\Models\Role;
 use Tests\Concerns\CreatesAds;
 
 uses(RefreshDatabase::class, CreatesAds::class);
@@ -115,4 +117,24 @@ it('renders every admin resource list page', function (string $resource): void {
     'saved searches' => SavedSearchResource::class,
     'support tickets' => SupportTicketResource::class,
     'users' => UserResource::class,
+    'roles' => RoleResource::class,
 ]);
+
+it('renders the role resource view page', function (): void {
+    $role = Role::findByName('moderator', 'web');
+
+    Livewire::test(RoleResource\Pages\ViewRole::class, ['record' => $role->getKey()])
+        ->assertSuccessful();
+});
+
+it('lets a super_admin access the role resource but forbids a support user', function (): void {
+    // The beforeEach actor is a super_admin — they can reach the RBAC editor.
+    expect(RoleResource::canAccess())->toBeTrue();
+
+    // A support-role staff member must NOT be able to manage roles/permissions.
+    $support = User::factory()->create();
+    $support->assignRole('support');
+    actingAs($support);
+
+    expect(RoleResource::canAccess())->toBeFalse();
+});

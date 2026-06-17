@@ -81,7 +81,8 @@ class OfferResource extends Resource
                             OfferStatus::PENDING => 'warning',
                             OfferStatus::ACCEPTED => 'success',
                             OfferStatus::REJECTED, OfferStatus::WITHDRAWN, OfferStatus::EXPIRED => 'gray',
-                        }),
+                        })
+                        ->formatStateUsing(static fn (OfferStatus $state): string => (string) __('admin.offer.status.' . $state->value)),
 
                     TextEntry::make('note')
                         ->label(__('admin.fields.body'))
@@ -161,7 +162,13 @@ class OfferResource extends Resource
 
                 TextColumn::make('status')
                     ->label(__('admin.fields.status'))
-                    ->badge(),
+                    ->badge()
+                    ->color(static fn (OfferStatus $state): string => match ($state) {
+                        OfferStatus::PENDING => 'warning',
+                        OfferStatus::ACCEPTED => 'success',
+                        OfferStatus::REJECTED, OfferStatus::WITHDRAWN, OfferStatus::EXPIRED => 'gray',
+                    })
+                    ->formatStateUsing(static fn (OfferStatus $state): string => (string) __('admin.offer.status.' . $state->value)),
 
                 TextColumn::make('buyer_id')
                     ->label(__('admin.fields.buyer'))
@@ -185,13 +192,9 @@ class OfferResource extends Resource
             ->filters([
                 SelectFilter::make('status')
                     ->label(__('admin.fields.status'))
-                    ->options([
-                        'pending' => 'Pending',
-                        'accepted' => 'Accepted',
-                        'rejected' => 'Rejected',
-                        'withdrawn' => 'Withdrawn',
-                        'expired' => 'Expired',
-                    ]),
+                    ->options(static fn (): array => collect(OfferStatus::cases())
+                        ->mapWithKeys(static fn (OfferStatus $s): array => [$s->value => (string) __('admin.offer.status.' . $s->value)])
+                        ->all()),
             ])
             ->recordActions([ViewAction::make()])
             ->defaultSort('created_at', 'desc');

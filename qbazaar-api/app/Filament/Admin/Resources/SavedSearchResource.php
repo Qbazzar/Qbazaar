@@ -8,8 +8,11 @@ use App\Filament\Admin\Resources\SavedSearchResource\Pages;
 use App\Models\SavedSearch;
 use BackedEnum;
 use Filament\Actions\ViewAction;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -51,6 +54,46 @@ class SavedSearchResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema->components([
+            Section::make(__('admin.sections.general'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('name')
+                        ->label(__('admin.fields.name'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('user.full_name')
+                        ->label(__('admin.fields.subject'))
+                        ->placeholder('—'),
+
+                    TextEntry::make('query_params')
+                        ->label(__('admin.fields.query_params'))
+                        ->formatStateUsing(static fn ($state): string => is_array($state)
+                            ? (string) json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                            : (string) $state)
+                        ->fontFamily(FontFamily::Mono)
+                        ->placeholder('—')
+                        ->columnSpanFull(),
+                ]),
+
+            Section::make(__('admin.sections.audit'))
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('id')
+                        ->label(__('admin.fields.id'))
+                        ->copyable()
+                        ->fontFamily(FontFamily::Mono),
+
+                    TextEntry::make('created_at')
+                        ->label(__('admin.fields.created_at'))
+                        ->dateTime()
+                        ->since(),
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table
