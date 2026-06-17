@@ -16,7 +16,39 @@
         --qb-font-cairo: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         --qb-coral: 243 115 53;
         --qb-page-gutter: 1.75rem;
+        /* Layered near-black dark palette (no navy). */
+        --qb-dark-bg: #141414;      /* deepest — page / main */
+        --qb-dark-surface: #1a1a1a; /* sidebar + topbar (rgb 26,26,26) */
+        --qb-dark-card: #1e1e1e;    /* sections / tables / cards */
+        --qb-dark-input: #242424;   /* inputs */
+        --qb-dark-border: rgb(255 255 255 / 0.06);
     }
+
+    /* ── Dark mode: neutral near-black surfaces (replaces the navy/slate tint) ── */
+    .dark body,
+    .dark .fi-body,
+    .dark .fi-main,
+    .dark .fi-main-ctn,
+    .dark .fi-layout { background-color: var(--qb-dark-bg) !important; }
+
+    .dark .fi-sidebar,
+    .dark .fi-sidebar-header,
+    .dark .fi-topbar,
+    .dark .fi-topbar > nav { background-color: var(--qb-dark-surface) !important; }
+
+    .dark .fi-section,
+    .dark .fi-section-content-ctn,
+    .dark .fi-wi-stats-overview-stat,
+    .dark .fi-wi-chart,
+    .dark .fi-ta,
+    .dark .fi-ta-ctn,
+    .dark .fi-dropdown-list,
+    .dark .fi-modal-window { background-color: var(--qb-dark-card) !important; border-color: var(--qb-dark-border) !important; }
+
+    .dark .fi-input-wrp,
+    .dark .fi-input,
+    .dark .fi-select-input,
+    .dark .fi-ta-search-field-input { background-color: var(--qb-dark-input) !important; }
 
     /* Cairo across the whole admin shell. */
     html, body,
@@ -96,8 +128,12 @@
     .fi-topbar > nav,
     .fi-topbar-ctn {
         padding-inline: var(--qb-page-gutter) !important;
-        min-height: 3.5rem;
+        min-height: 4rem;
     }
+
+    /* Brand: keep glyph + wordmark vertically centred and never overflow. */
+    .qb-brand { align-items: center; min-height: 2.5rem; }
+    .qb-brand__glyph { width: 2rem; height: 2rem; }
 
     /* ── Page shell — breathing room around the title + actions ──────────── */
     .fi-page {
@@ -137,8 +173,8 @@
     .dark .fi-resource-edit-record-page .fi-main-ctn > .fi-page > form,
     .dark .fi-resource-create-record-page .fi-main-ctn > .fi-page > form,
     .dark .fi-resource-view-record-page .fi-main-ctn > .fi-page > .fi-in {
-        background-color: rgb(15 23 42);
-        border-color: rgb(255 255 255 / 0.08);
+        background-color: var(--qb-dark-card);
+        border-color: var(--qb-dark-border);
         box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
     }
 
