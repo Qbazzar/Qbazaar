@@ -6,6 +6,7 @@ use App\Models\OtpCode;
 use App\Models\User;
 use App\Notifications\Channels\TwilioSmsChannel;
 use App\Notifications\OtpNotification;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -57,6 +58,13 @@ it('routes the notification to the phone when no user owns it', function (): voi
         return in_array(TwilioSmsChannel::class, $channels, true)
             && $notifiable->routes[TwilioSmsChannel::class] === '+97455999000';
     });
+});
+
+it('queues the OTP notification so a mail/SMS delivery failure never 500s send-otp', function (): void {
+    // Regression: OtpNotification used to send synchronously; a bouncing OTP
+    // email (e.g. an undeliverable address) bubbled a 550 into a 500 response.
+    expect(new OtpNotification('+97455123456', '123456', 300))
+        ->toBeInstanceOf(ShouldQueue::class);
 });
 
 it('rejects non-Qatari phone numbers', function (): void {

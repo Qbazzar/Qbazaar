@@ -15,6 +15,9 @@ beforeEach(function (): void {
     Cache::flush();
 });
 
+/**
+ * @param array<string, mixed> $overrides
+ */
 function makeHelpCategory(array $overrides = []): HelpCategory
 {
     return HelpCategory::query()->create(array_merge([
@@ -26,6 +29,9 @@ function makeHelpCategory(array $overrides = []): HelpCategory
     ], $overrides));
 }
 
+/**
+ * @param array<string, mixed> $overrides
+ */
 function makeHelpArticle(HelpCategory $category, array $overrides = []): HelpArticle
 {
     return HelpArticle::query()->create(array_merge([

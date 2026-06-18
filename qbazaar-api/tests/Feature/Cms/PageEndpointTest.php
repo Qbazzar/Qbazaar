@@ -14,6 +14,9 @@ beforeEach(function (): void {
     Cache::flush();
 });
 
+/**
+ * @param array<string, mixed> $overrides
+ */
 function makePage(array $overrides = []): Page
 {
     return Page::query()->create(array_merge([

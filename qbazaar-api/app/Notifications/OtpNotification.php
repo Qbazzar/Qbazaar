@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\Channels\TwilioSmsChannel;
 use App\Notifications\Channels\TwilioSmsMessage;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -25,7 +26,7 @@ use Illuminate\Notifications\Notification;
  * Localisation: the body is rendered against the user's preferred language
  * if available, otherwise the app default.
  */
-class OtpNotification extends Notification
+class OtpNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
