@@ -66,7 +66,11 @@ export async function uploadAdImages(
       form.append('images[]', file, filename);
     });
 
-    const { data } = await api.post<SuccessEnvelope<Media[]>>(
+    // The endpoint wraps the new rows under `data.images` (see the API's
+    // AdImageController + the OpenAPI contract) — NOT a bare array. Reading
+    // `data.data` directly handed callers an object, which blew up the
+    // dropzone's `[...images, ...uploaded]` spread with "not iterable".
+    const { data } = await api.post<SuccessEnvelope<{ images: Media[] }>>(
       `/api/v1/ads/${encodeURIComponent(adId)}/images`,
       form,
       {
@@ -79,7 +83,7 @@ export async function uploadAdImages(
         },
       },
     );
-    return data.data;
+    return data.data.images ?? [];
   } catch (err) {
     throw toApiClientError(err);
   }
