@@ -56,10 +56,31 @@
     .dark .fi-select-input,
     .dark .fi-ta-search-field-input { background-color: var(--qb-dark-input) !important; }
 
-    /* Single brand only: hide the duplicate Filament can render in the topbar;
-       the wordmark stays in the sidebar header. */
+    /* Single brand: it now lives in the topbar (injected via TOPBAR_START).
+       Hide the sidebar-header brand row and any brand Filament renders
+       natively in the topbar so the only logo is our .qb-topbar-logo. */
+    .fi-sidebar-header { display: none !important; }
     .fi-topbar .qb-brand,
     .fi-topbar a.qb-brand { display: none !important; }
+
+    .qb-topbar-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 100%;
+        text-decoration: none;
+        color: #1a1a1a;
+        white-space: nowrap;
+    }
+    .dark .qb-topbar-logo { color: #fff; }
+    .qb-topbar-logo__glyph { width: 1.85rem; height: 1.85rem; flex: none; }
+    .qb-topbar-logo__wordmark {
+        font-family: var(--qb-font-cairo);
+        font-weight: 800;
+        font-size: 15px;
+        letter-spacing: 0.04em;
+        line-height: 1;
+    }
 
     /* Hide the wordmark when the sidebar is collapsed — only the Q glyph remains. */
     .fi-sidebar.fi-sidebar-collapsed .qb-brand__wordmark,
