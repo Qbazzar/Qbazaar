@@ -76,10 +76,13 @@ class AdController extends Controller
     {
         $ad = $this->findAdOrFail($id);
 
-        // Use the Gate facade explicitly — `$this->authorize()` requires
-        // an authenticated user, but this endpoint is public and the
-        // policy itself handles null-callers.
-        if (Gate::forUser($request->user())->denies('view', $ad)) {
+        // This route is public (no `auth:sanctum` middleware), so the DEFAULT
+        // guard is `web` and `$request->user()` is null even when a valid
+        // Bearer token is present — which hid an owner's own draft behind a
+        // 404 (they couldn't open the edit page). Resolve the caller through
+        // the `sanctum` guard explicitly so a token-authenticated owner is
+        // recognised; the policy still handles the null (truly anonymous) case.
+        if (Gate::forUser($request->user('sanctum'))->denies('view', $ad)) {
             // Treat hidden ads (drafts, expired) as "not found" so we
             // don't leak the existence of someone else's draft.
             throw new DomainException(ErrorCode::AD_NOT_FOUND);
