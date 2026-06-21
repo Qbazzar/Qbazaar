@@ -18,16 +18,10 @@ export default function LoginPage() {
   return (
     <>
       <AuthTabs active="login" />
-      <h1 style={{ margin: '0 0 8px', fontSize: 36, fontWeight: 800 }}>
+      <h1 className="font-display text-ink-900 mb-2 text-3xl tracking-tight sm:text-4xl">
         {t('auth.login.title', 'مرحباً بعودتك')}
       </h1>
-      <p
-        style={{
-          margin: '0 0 28px',
-          fontSize: '14.5px',
-          color: 'var(--ink-700)',
-        }}
-      >
+      <p className="text-ink-700 mb-7 text-sm">
         {t('auth.login.subtitle', 'سجّل دخولك إلى حساب QBazaar.')}
       </p>
       {/* useSearchParams() inside LoginForm requires a Suspense boundary

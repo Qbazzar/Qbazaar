@@ -17,16 +17,10 @@ export default function RegisterPage() {
   return (
     <>
       <AuthTabs active="register" />
-      <h1 style={{ margin: '0 0 8px', fontSize: 36, fontWeight: 800 }}>
+      <h1 className="font-display text-ink-900 mb-2 text-3xl tracking-tight sm:text-4xl">
         {t('auth.register.title', 'أنشئ حسابك')}
       </h1>
-      <p
-        style={{
-          margin: '0 0 28px',
-          fontSize: '14.5px',
-          color: 'var(--ink-700)',
-        }}
-      >
+      <p className="text-ink-700 mb-7 text-sm">
         {t('auth.register.subtitle', 'سجّل في QBazaar للنشر والشراء.')}
       </p>
       <RegisterForm />
