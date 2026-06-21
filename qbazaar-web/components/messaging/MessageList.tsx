@@ -120,7 +120,7 @@ export function MessageList({ conversationId }: Props) {
   return (
     <div
       ref={scrollRef}
-      className="flex-1 space-y-2 overflow-y-auto p-4"
+      className="bg-cream-50 flex-1 space-y-2 overflow-y-auto p-4"
       aria-live="polite"
     >
       {hasNextPage ? (
