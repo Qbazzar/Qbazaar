@@ -65,7 +65,7 @@ export default async function CmsPage({ params }: PageProps) {
 
   return (
     <main className="page-section">
-      <div className="container" style={{ maxWidth: 820 }}>
+      <div className="container" style={{ maxWidth: 900 }}>
         <header className="mb-8">
           <h1 className="text-h1 text-ink-900">{title}</h1>
         </header>
