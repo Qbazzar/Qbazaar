@@ -151,7 +151,10 @@ export async function enablePush(): Promise<EnablePushResult> {
     const permission = await Notification.requestPermission();
     if (permission === 'denied') return 'denied';
     // 'default' means the prompt was dismissed — recoverable, so not 'denied'.
-    if (permission !== 'granted') return 'error';
+    if (permission !== 'granted') {
+      console.warn('[push] permission prompt dismissed (not granted)');
+      return 'error';
+    }
 
     const registration = await registerServiceWorker();
     const messaging = await getFirebaseMessaging();
@@ -161,12 +164,18 @@ export async function enablePush(): Promise<EnablePushResult> {
       vapidKey: process.env.NEXT_PUBLIC_FCM_VAPID_KEY,
       serviceWorkerRegistration: registration,
     });
-    if (!token) return 'error';
+    if (!token) {
+      console.error('[push] getToken returned empty — verify the VAPID key.');
+      return 'error';
+    }
 
     await registerDeviceToken({ token, platform: 'web' });
     storePushToken(token);
     return 'enabled';
-  } catch {
+  } catch (err) {
+    // Surface the real cause (VAPID mismatch, SW failure, blocked request,
+    // unsupported API) — the broad catch otherwise hides it from us.
+    console.error('[push] enable failed:', err);
     return 'error';
   }
 }
