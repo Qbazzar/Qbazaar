@@ -74,17 +74,17 @@ class ModerationRuleResource extends Resource
                     Select::make('type')
                         ->label(__('admin.fields.type'))
                         ->options([
-                            ModerationRuleType::BANNED_WORD->value => 'Banned word',
-                            ModerationRuleType::BLOCKED_DOMAIN->value => 'Blocked domain',
+                            ModerationRuleType::BANNED_WORD->value => __('admin.moderation_rule.type.banned_word'),
+                            ModerationRuleType::BLOCKED_DOMAIN->value => __('admin.moderation_rule.type.blocked_domain'),
                         ])
                         ->required(),
 
                     Select::make('language')
                         ->label(__('admin.fields.language_scope'))
                         ->options([
-                            ModerationRuleLanguage::ANY->value => 'Any',
-                            ModerationRuleLanguage::AR->value => 'Arabic',
-                            ModerationRuleLanguage::EN->value => 'English',
+                            ModerationRuleLanguage::ANY->value => __('admin.moderation_rule.language.any'),
+                            ModerationRuleLanguage::AR->value => __('admin.moderation_rule.language.ar'),
+                            ModerationRuleLanguage::EN->value => __('admin.moderation_rule.language.en'),
                         ])
                         ->required()
                         ->default(ModerationRuleLanguage::ANY->value),
@@ -111,12 +111,14 @@ class ModerationRuleResource extends Resource
                     TextEntry::make('type')
                         ->label(__('admin.fields.type'))
                         ->badge()
-                        ->color('warning'),
+                        ->color('warning')
+                        ->formatStateUsing(static fn (ModerationRuleType $state): string => (string) __('admin.moderation_rule.type.' . $state->value)),
 
                     TextEntry::make('language')
                         ->label(__('admin.fields.language_scope'))
                         ->badge()
-                        ->color('gray'),
+                        ->color('gray')
+                        ->formatStateUsing(static fn (ModerationRuleLanguage $state): string => (string) __('admin.moderation_rule.language.' . $state->value)),
 
                     IconEntry::make('is_active')
                         ->label(__('admin.fields.is_active'))
@@ -149,6 +151,7 @@ class ModerationRuleResource extends Resource
                 TextColumn::make('type')
                     ->label(__('admin.fields.type'))
                     ->badge()
+                    ->formatStateUsing(static fn (ModerationRuleType $state): string => (string) __('admin.moderation_rule.type.' . $state->value))
                     ->searchable(),
 
                 TextColumn::make('value')
@@ -157,7 +160,8 @@ class ModerationRuleResource extends Resource
 
                 TextColumn::make('language')
                     ->label(__('admin.fields.language_scope'))
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(static fn (ModerationRuleLanguage $state): string => (string) __('admin.moderation_rule.language.' . $state->value)),
 
                 IconColumn::make('is_active')
                     ->label(__('admin.fields.is_active'))
@@ -172,16 +176,16 @@ class ModerationRuleResource extends Resource
             ->filters([
                 SelectFilter::make('type')
                     ->options([
-                        ModerationRuleType::BANNED_WORD->value => 'Banned word',
-                        ModerationRuleType::BLOCKED_DOMAIN->value => 'Blocked domain',
+                        ModerationRuleType::BANNED_WORD->value => __('admin.moderation_rule.type.banned_word'),
+                        ModerationRuleType::BLOCKED_DOMAIN->value => __('admin.moderation_rule.type.blocked_domain'),
                     ]),
 
                 SelectFilter::make('language')
                     ->label(__('admin.fields.language_scope'))
                     ->options([
-                        ModerationRuleLanguage::ANY->value => 'Any',
-                        ModerationRuleLanguage::AR->value => 'Arabic',
-                        ModerationRuleLanguage::EN->value => 'English',
+                        ModerationRuleLanguage::ANY->value => __('admin.moderation_rule.language.any'),
+                        ModerationRuleLanguage::AR->value => __('admin.moderation_rule.language.ar'),
+                        ModerationRuleLanguage::EN->value => __('admin.moderation_rule.language.en'),
                     ]),
 
                 TernaryFilter::make('is_active')->label(__('admin.fields.is_active')),

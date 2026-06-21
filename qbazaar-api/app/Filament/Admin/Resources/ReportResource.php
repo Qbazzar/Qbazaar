@@ -125,7 +125,8 @@ class ReportResource extends Resource
                     TextEntry::make('target_type')
                         ->label(__('admin.fields.target_type'))
                         ->badge()
-                        ->color('gray'),
+                        ->color('gray')
+                        ->formatStateUsing(static fn (ReportTarget $state): string => (string) __('admin.report.target.' . $state->value)),
 
                     TextEntry::make('target_id')
                         ->label(__('admin.fields.target_id'))
@@ -185,7 +186,8 @@ class ReportResource extends Resource
 
                 TextColumn::make('target_type')
                     ->label(__('admin.fields.target_type'))
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(static fn (ReportTarget $state): string => (string) __('admin.report.target.' . $state->value)),
 
                 TextColumn::make('target_id')
                     ->label(__('admin.fields.target_id'))
@@ -228,10 +230,10 @@ class ReportResource extends Resource
                 SelectFilter::make('target_type')
                     ->label(__('admin.fields.target_type'))
                     ->options([
-                        ReportTarget::AD->value => 'Ad',
-                        ReportTarget::USER->value => 'User',
-                        ReportTarget::CONVERSATION->value => 'Conversation',
-                        ReportTarget::MESSAGE->value => 'Message',
+                        ReportTarget::AD->value => __('admin.report.target.ad'),
+                        ReportTarget::USER->value => __('admin.report.target.user'),
+                        ReportTarget::CONVERSATION->value => __('admin.report.target.conversation'),
+                        ReportTarget::MESSAGE->value => __('admin.report.target.message'),
                     ]),
 
                 SelectFilter::make('category')

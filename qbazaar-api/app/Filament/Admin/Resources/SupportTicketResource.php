@@ -359,18 +359,31 @@ class SupportTicketResource extends Resource
     }
 
     /**
-     * Build a label-keyed dropdown for an enum that defines string `value`s.
+     * Build a translated, value-keyed dropdown for a support enum. Each case
+     * value is mapped to its `admin.support.<group>.<value>` translation so the
+     * form Selects + SelectFilters render localized labels instead of raw
+     * enum values.
      *
      * @param class-string<BackedEnum> $enumClass
      * @return array<string, string>
      */
     private static function enumOptions(string $enumClass): array
     {
+        $group = match ($enumClass) {
+            SupportTicketCategory::class => 'category',
+            SupportTicketPriority::class => 'priority',
+            SupportTicketStatus::class => 'status',
+            default => null,
+        };
+
         $out = [];
         /** @var array<int, BackedEnum> $cases */
         $cases = $enumClass::cases();
         foreach ($cases as $case) {
-            $out[(string) $case->value] = (string) $case->value;
+            $value = (string) $case->value;
+            $out[$value] = $group === null
+                ? $value
+                : (string) __('admin.support.' . $group . '.' . $value);
         }
 
         return $out;

@@ -149,6 +149,32 @@ return [
             'dismissed' => 'Dismissed',
             'actioned' => 'Actioned',
         ],
+        'target' => [
+            'ad' => 'Listing',
+            'user' => 'User',
+            'conversation' => 'Conversation',
+            'message' => 'Message',
+        ],
+    ],
+
+    'location' => [
+        'type' => [
+            'city' => 'City',
+            'district' => 'District',
+            'area' => 'Area',
+        ],
+    ],
+
+    'moderation_rule' => [
+        'type' => [
+            'banned_word' => 'Banned word',
+            'blocked_domain' => 'Blocked domain',
+        ],
+        'language' => [
+            'any' => 'Any',
+            'ar' => 'Arabic',
+            'en' => 'English',
+        ],
     ],
 
     'support' => [
@@ -157,10 +183,10 @@ return [
         'change_status' => 'Change status',
         'category' => [
             'general' => 'General inquiry',
-            'account' => 'Account',
-            'ad' => 'Ad',
-            'payment' => 'Payment',
+            'billing' => 'Billing',
+            'technical' => 'Technical',
             'abuse' => 'Abuse',
+            'feedback' => 'Feedback',
             'other' => 'Other',
         ],
         'status' => [

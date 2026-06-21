@@ -84,9 +84,9 @@ class LocationResource extends Resource
                     Select::make('type')
                         ->label(__('admin.fields.type'))
                         ->options([
-                            LocationType::CITY->value => 'City',
-                            LocationType::DISTRICT->value => 'District',
-                            LocationType::AREA->value => 'Area',
+                            LocationType::CITY->value => __('admin.location.type.city'),
+                            LocationType::DISTRICT->value => __('admin.location.type.district'),
+                            LocationType::AREA->value => __('admin.location.type.area'),
                         ])
                         ->required(),
 
@@ -137,7 +137,8 @@ class LocationResource extends Resource
                     TextEntry::make('type')
                         ->label(__('admin.fields.type'))
                         ->badge()
-                        ->color('info'),
+                        ->color('info')
+                        ->formatStateUsing(static fn (LocationType $state): string => (string) __('admin.location.type.' . $state->value)),
 
                     TextEntry::make('parent.slug')
                         ->label(__('admin.fields.parent'))
@@ -196,14 +197,14 @@ class LocationResource extends Resource
                 TextColumn::make('name.ar')->label(__('admin.fields.name_ar'))->searchable(query: static fn ($q, $s) => $q->where('name->ar', 'like', "%{$s}%")),
                 TextColumn::make('parent.slug')->label(__('admin.fields.parent'))->placeholder('—'),
                 TextColumn::make('slug')->label(__('admin.fields.slug'))->searchable(),
-                TextColumn::make('type')->label(__('admin.fields.type'))->badge(),
+                TextColumn::make('type')->label(__('admin.fields.type'))->badge()->formatStateUsing(static fn (LocationType $state): string => (string) __('admin.location.type.' . $state->value)),
                 TextColumn::make('order')->label(__('admin.fields.order'))->sortable(),
             ])
             ->filters([
                 SelectFilter::make('type')->options([
-                    LocationType::CITY->value => 'City',
-                    LocationType::DISTRICT->value => 'District',
-                    LocationType::AREA->value => 'Area',
+                    LocationType::CITY->value => __('admin.location.type.city'),
+                    LocationType::DISTRICT->value => __('admin.location.type.district'),
+                    LocationType::AREA->value => __('admin.location.type.area'),
                 ]),
             ])
             ->recordActions([

@@ -90,6 +90,32 @@ return [
             'dismissed' => 'تم التجاهل',
             'actioned' => 'تم اتخاذ إجراء',
         ],
+        'target' => [
+            'ad' => 'إعلان',
+            'user' => 'مستخدم',
+            'conversation' => 'محادثة',
+            'message' => 'رسالة',
+        ],
+    ],
+
+    'location' => [
+        'type' => [
+            'city' => 'مدينة',
+            'district' => 'منطقة',
+            'area' => 'منطقة سكنية',
+        ],
+    ],
+
+    'moderation_rule' => [
+        'type' => [
+            'banned_word' => 'كلمة محظورة',
+            'blocked_domain' => 'نطاق محظور',
+        ],
+        'language' => [
+            'any' => 'الكل',
+            'ar' => 'العربية',
+            'en' => 'الإنجليزية',
+        ],
     ],
 
     'support' => [
@@ -98,10 +124,10 @@ return [
         'change_status' => 'تغيير الحالة',
         'category' => [
             'general' => 'استفسار عام',
-            'account' => 'الحساب',
-            'ad' => 'إعلان',
-            'payment' => 'الدفع',
+            'billing' => 'الفوترة',
+            'technical' => 'مشكلة تقنية',
             'abuse' => 'إساءة استخدام',
+            'feedback' => 'ملاحظات',
             'other' => 'أخرى',
         ],
         'status' => [
