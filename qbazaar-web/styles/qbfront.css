@@ -1142,14 +1142,24 @@ select.field-native {
 /* ---------- Messages ---------- */
 .messages-page {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  /* Two separate cards (list + conversation) — no merged outer frame. */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+.thread-list {
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--ink-200);
   border-radius: 16px;
   overflow: hidden;
-  min-height: 640px;
+  height: 78vh;
 }
-.thread-list { border-right: 1px solid var(--ink-200); display: flex; flex-direction: column; }
 .thread-list__head { padding: 16px 16px 12px; border-bottom: 1px solid var(--ink-200); }
 .thread-list__search {
   display: flex;
@@ -1219,7 +1229,15 @@ select.field-native {
   border-radius: 999px; padding: 2px 7px;
   font-size: 11px; font-weight: 700;
 }
-.conv { display: flex; flex-direction: column; }
+.conv {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--ink-200);
+  border-radius: 16px;
+  overflow: hidden;
+  height: 78vh;
+}
 .conv__head { padding: 14px 24px; border-bottom: 1px solid var(--ink-200); display: flex; align-items: center; gap: 14px; }
 .conv__head-name { font-weight: 700; font-size: 15px; color: var(--ink-900); }
 .conv__head-status { font-size: 12px; color: var(--ink-500); }
@@ -1776,14 +1794,9 @@ img, video, canvas { max-width: 100%; height: auto; }
   .hero { padding: 32px 16px 36px; }
   .site-footer__inner { padding: 40px 16px 28px; }
 
-  /* Chat fills the screen as a single pane and loses the floating-card chrome. */
-  .messages-page {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    min-height: calc(100vh - 120px);
-  }
-  .conv, .thread-list { min-height: 60vh; }
+  /* Single pane fills the viewport height on phones. */
+  .messages-page { gap: 0; }
+  .conv, .thread-list { height: calc(100svh - 150px); }
 }
 
 /* ============================================================

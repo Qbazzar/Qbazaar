@@ -136,8 +136,10 @@ export function AccountSidebar() {
 
       <ul
         className={cn(
-          'flex gap-1 overflow-x-auto pb-1',
-          'lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0',
+          // Mobile: a clean edge-to-edge chip scroller (hidden scrollbar) so the
+          // many tabs read as an intentional swipeable bar, not a cut-off row.
+          '-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          'lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0',
         )}
       >
         {NAV_ITEMS.map((item) => {
@@ -149,11 +151,11 @@ export function AccountSidebar() {
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex items-center gap-2.5 rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors',
-                  'lg:rounded-lg lg:px-3 lg:py-2',
+                  'flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors',
+                  'lg:rounded-lg lg:border-0 lg:px-3 lg:py-2',
                   active
-                    ? 'bg-coral/10 text-coral'
-                    : 'text-ink-700 hover:bg-muted hover:text-ink-900',
+                    ? 'border-coral/30 bg-coral/10 text-coral lg:border-0'
+                    : 'border-ink-200 text-ink-700 hover:bg-muted hover:text-ink-900 lg:border-0',
                 )}
               >
                 <Icon

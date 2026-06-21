@@ -44,7 +44,9 @@ export function MessagesClient() {
   const hasActive = Boolean(activeId);
 
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
+    // No inner `.container` — the account layout already provides the width
+    // and padding, so the chat fills the full main column.
+    <div>
       <header style={{ marginBottom: 20 }}>
         <h1 className="cat-page__title">{t('messaging.title', 'صندوق رسائلي')}</h1>
       </header>
