@@ -99,7 +99,14 @@ export async function changePassword(
   payload: ChangePasswordRequest,
 ): Promise<void> {
   try {
-    await api.put('/api/v1/account/password', payload);
+    // The endpoint expects `password` (+ `password_confirmation`), per Laravel's
+    // `confirmed` rule — the form models it as `new_password`, so map it here.
+    // Sending `new_password` left `password` empty and the change always 422-ed.
+    await api.put('/api/v1/account/password', {
+      current_password: payload.current_password,
+      password: payload.new_password,
+      password_confirmation: payload.password_confirmation,
+    });
   } catch (err) {
     throw toApiClientError(err);
   }

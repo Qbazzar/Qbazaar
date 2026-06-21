@@ -1723,11 +1723,15 @@ select.field-native {
   .filters { position: static; }
   .site-footer__cols { grid-template-columns: 1fr 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
-  .messages-page { grid-template-columns: 1fr; }
+  .messages-page { grid-template-columns: 1fr; min-height: auto; }
   .thread-list { border-right: none; border-bottom: 1px solid var(--ink-200); }
   .auth-card { grid-template-columns: 1fr; }
   .auth-card__pitch { display: none; }
   .auth-card__form { padding: 32px 24px; }
+  /* Tablet: collapse the 5-column search bar to a readable 2-up grid, and
+     let chat bubbles use more of the narrower viewport. */
+  .search-bar { grid-template-columns: 1fr 1fr; }
+  .msg-bubble { max-width: 82%; }
 }
 
 @media (max-width: 760px) {
@@ -1754,6 +1758,11 @@ select.field-native {
   .cat-listings, .subcat-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .category-grid { grid-template-columns: 1fr; }
+  /* Phone: give chat bubbles room and tighten the thread padding so long
+     messages don't wrap one word per line. */
+  .msg-bubble { max-width: 88%; }
+  .conv__messages { padding: 14px; gap: 12px; }
+  .container { padding: 0 14px; }
 }
 
 /* ============================================================

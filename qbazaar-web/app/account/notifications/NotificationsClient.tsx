@@ -125,9 +125,9 @@ export function NotificationsClient() {
         <EmptyState tab={tab} />
       ) : (
         <>
-          <ul className="notif-list" style={{ display: 'block' }}>
+          <ul className="flex list-none flex-col gap-3 p-0">
             {items.map((n) => (
-              <li key={n.id} style={{ listStyle: 'none' }}>
+              <li key={n.id}>
                 <NotificationRow notification={n} />
               </li>
             ))}

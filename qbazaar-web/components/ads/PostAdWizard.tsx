@@ -226,9 +226,22 @@ export function PostAdWizard({ mode = 'create', ad }: PostAdWizardProps = {}) {
         id: state.draftAdId,
         idempotencyKey: idempotencyKeyRef.current ?? undefined,
       });
-      toast.success(t('ads.post.published', 'تم نشر إعلانك'));
       state.reset();
-      router.push(`/ads/${updated.id}`);
+      // Every ad now goes through admin review (status `pending`) before going
+      // live, so send the seller to their ads list with an "under review"
+      // message instead of a public ad page that 404s for everyone else.
+      if (updated.status === 'pending') {
+        toast.success(
+          t(
+            'ads.post.pending_review',
+            'تم إرسال إعلانك للمراجعة. سيظهر للجميع بعد موافقة الإدارة.',
+          ),
+        );
+        router.push('/account/ads');
+      } else {
+        toast.success(t('ads.post.published', 'تم نشر إعلانك'));
+        router.push(`/ads/${updated.id}`);
+      }
     } catch (err) {
       toast.error(
         (err as { message?: string })?.message ??
