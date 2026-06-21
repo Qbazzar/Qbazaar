@@ -70,7 +70,7 @@ export function MessageBubble({
         <div
           title={time}
           className={cn(
-            'rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words',
+            'rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap break-words',
             isMine
               ? 'bg-coral text-white rounded-ee-sm'
               : 'bg-cream-100 text-ink-900 rounded-es-sm',
