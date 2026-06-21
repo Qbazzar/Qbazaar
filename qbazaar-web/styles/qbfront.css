@@ -1499,7 +1499,7 @@ select.field-native {
   background: transparent; color: var(--ink-900);
   font-family: inherit;
 }
-.topic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.topic-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
 .topic-card {
   display: flex; gap: 14px; padding: 20px;
   background: var(--surface);
@@ -1781,9 +1781,13 @@ select.field-native {
   .grid-4, .grid-3, .grid-5, .grid-6 { grid-template-columns: 1fr; }
   .cat-grid, .company-grid { grid-template-columns: 1fr; }
   .cat-listings, .subcat-grid { grid-template-columns: 1fr; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr; }
   .category-grid { grid-template-columns: 1fr; }
   .container { padding: 0 14px; }
+  /* Stack the profile header actions full-width on phones. */
+  .profile-head__actions { flex-direction: column; width: 100%; }
+  /* City-tag rotations overlap/clip on small screens — straighten them. */
+  [class*="city-tag--r"] { transform: none; }
 }
 
 /* ============================================================

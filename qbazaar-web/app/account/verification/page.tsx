@@ -195,7 +195,7 @@ function VerificationRow({
   action: React.ReactNode;
 }) {
   return (
-    <li className="bg-card ring-foreground/10 flex items-center gap-3 rounded-2xl p-4 ring-1">
+    <li className="bg-card ring-foreground/10 flex flex-col items-start gap-3 rounded-2xl p-4 ring-1 sm:flex-row sm:items-center">
       <span className="bg-muted text-ink-700 inline-flex size-10 shrink-0 items-center justify-center rounded-xl">
         <Icon className="size-5" aria-hidden />
       </span>

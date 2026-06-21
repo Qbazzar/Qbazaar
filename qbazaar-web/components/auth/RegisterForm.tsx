@@ -150,7 +150,7 @@ export function RegisterForm() {
           control={form.control}
           name="account_type"
           render={({ field }) => (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <RadioCard
                 checked={field.value === 'private'}
                 onSelect={() => field.onChange('private')}

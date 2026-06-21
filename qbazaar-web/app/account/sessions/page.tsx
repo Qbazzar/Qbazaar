@@ -31,7 +31,7 @@ export default function AccountSessionsPage() {
         </p>
       </header>
 
-      <div className="bg-card ring-foreground/10 rounded-2xl p-2 sm:p-3 ring-1">
+      <div className="bg-card ring-foreground/10 rounded-2xl p-4 ring-1 sm:p-5">
         {isLoading ? (
           <div
             className="flex justify-center py-10"
