@@ -22,6 +22,7 @@ import { StartConversationButton } from '@/components/messaging/StartConversatio
 import { ReportButton } from '@/components/reports/ReportButton';
 import { useAdQuery } from '@/lib/queries/ads';
 import { useTrackAdViewMutation } from '@/lib/queries/recently-viewed';
+import { useAuth } from '@/hooks/useAuth';
 import { localized, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 
@@ -100,8 +101,15 @@ function AdDetail({
   locale: 'ar' | 'en';
 }) {
   const [phoneShown, setPhoneShown] = useState(false);
+  const { user, isAuthenticated, isHydrated } = useAuth();
   const categoryName = ad.category ? localized(ad.category.name, locale) : '';
   const locationName = ad.location ? localized(ad.location.name, locale) : '';
+
+  // The owner can't contact themselves, and a sold ad takes no contact action —
+  // hide the phone CTA in both cases (the message button handles its own state).
+  const isOwner =
+    isHydrated && isAuthenticated && user?.id === ad.user_id;
+  const contactDisabled = isOwner || ad.status === 'sold';
 
   const onRevealPhone = () => setPhoneShown(true);
 
@@ -235,19 +243,23 @@ function AdDetail({
               ) : null}
 
               <div className="seller-card__actions">
-                <StartConversationButton ad={{ id: ad.id, user_id: ad.user_id }} />
-                <Button
-                  type="button"
-                  size="lg"
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={onRevealPhone}
-                >
-                  <Phone className="size-4" />
-                  {phoneShown
-                    ? t('ads.actions.call_revealed', 'اضغط للاتصال')
-                    : t('ads.actions.call', 'إظهار الرقم')}
-                </Button>
+                <StartConversationButton
+                  ad={{ id: ad.id, user_id: ad.user_id, status: ad.status }}
+                />
+                {!contactDisabled ? (
+                  <Button
+                    type="button"
+                    size="lg"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={onRevealPhone}
+                  >
+                    <Phone className="size-4" />
+                    {phoneShown
+                      ? t('ads.actions.call_revealed', 'اضغط للاتصال')
+                      : t('ads.actions.call', 'إظهار الرقم')}
+                  </Button>
+                ) : null}
                 <div style={{ display: 'flex', gap: 8 }}>
                   <FavoriteButton
                     adId={ad.id}

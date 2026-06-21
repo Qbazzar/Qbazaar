@@ -21,7 +21,7 @@ import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import type { Ad } from '@/lib/api/types';
 
 interface Props {
-  ad: Pick<Ad, 'id' | 'user_id'>;
+  ad: Pick<Ad, 'id' | 'user_id' | 'status'>;
 }
 
 export function StartConversationButton({ ad }: Props) {
@@ -29,6 +29,16 @@ export function StartConversationButton({ ad }: Props) {
   const { user, isAuthenticated, isHydrated } = useAuth();
   const startMutation = useStartConversationMutation();
   const [signedOutClicked, setSignedOutClicked] = useState(false);
+
+  // Sold ad — no contact action; surface the sold state instead (shown to
+  // everyone, including the owner).
+  if (ad.status === 'sold') {
+    return (
+      <span className="bg-ink-100 text-ink-600 inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-bold">
+        {t('ads.status.sold', 'تم البيع')}
+      </span>
+    );
+  }
 
   // Owner badge — they can't message themselves.
   if (isHydrated && isAuthenticated && user?.id === ad.user_id) {
