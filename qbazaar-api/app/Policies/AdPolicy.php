@@ -47,10 +47,13 @@ class AdPolicy
             return false;
         }
 
+        // REJECTED is editable too — the owner fixes the ad and re-submits it
+        // (publishing then sends it back to PENDING for review).
         return in_array($ad->status, [
             AdStatus::DRAFT,
             AdStatus::ACTIVE,
             AdStatus::PENDING,
+            AdStatus::REJECTED,
         ], true);
     }
 
