@@ -224,15 +224,20 @@ function handleSubmitError(
 ) {
   if (err instanceof ApiClientError) {
     if (err.code === AuthErrorCode.ValidationFailed && err.details) {
-      const known: (keyof ChangePasswordInput)[] = [
-        'current_password',
-        'new_password',
-        'password_confirmation',
-      ];
+      // The API validates the new password under the key `password` (Laravel's
+      // `confirmed` rule), while the form field is `new_password` — map it so
+      // the "password too weak / same as current" message actually shows.
+      const fieldMap: Record<string, keyof ChangePasswordInput> = {
+        current_password: 'current_password',
+        password: 'new_password',
+        new_password: 'new_password',
+        password_confirmation: 'password_confirmation',
+      };
       let mapped = false;
       for (const [field, messages] of Object.entries(err.details)) {
-        if ((known as string[]).includes(field) && messages?.length) {
-          form.setError(field as keyof ChangePasswordInput, {
+        const formField = fieldMap[field];
+        if (formField && messages?.length) {
+          form.setError(formField, {
             type: 'server',
             message: messages[0],
           });
