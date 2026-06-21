@@ -68,7 +68,7 @@ export function PasswordChangeForm() {
   const newPasswordValue = form.watch('new_password');
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-5">
+    <form onSubmit={onSubmit} noValidate className="max-w-md space-y-5">
       <p className="border-coral/30 bg-coral/5 text-ink-700 rounded-xl border px-4 py-3 text-sm">
         {t('account.security.sign_out_notice')}
       </p>

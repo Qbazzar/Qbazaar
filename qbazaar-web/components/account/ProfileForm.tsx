@@ -100,7 +100,7 @@ export function ProfileForm({ initial }: ProfileFormProps) {
   const languageValue = form.watch('language');
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-5">
+    <form onSubmit={onSubmit} noValidate className="max-w-2xl space-y-5">
       <div className="space-y-1.5">
         <Label htmlFor="full_name">
           {t('account.profile.full_name_label')}
