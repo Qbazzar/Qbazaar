@@ -32,21 +32,27 @@ class NotifyAdminsOfPendingAd
         $ad = $event->ad;
         $flagged = ! $event->result->clean;
 
+        // The notification text is rendered + stored at creation time (during
+        // the SELLER's publish request, whose locale may be English). The admin
+        // panel is Arabic, so render these labels in Arabic explicitly rather
+        // than in the request locale.
+        $locale = (string) config('app.admin_locale', 'ar');
+
         Notification::make()
-            ->title(__('admin.ad_review.title'))
+            ->title(__('admin.ad_review.title', [], $locale))
             ->body(__('admin.ad_review.body', [
                 'title' => $ad->title,
                 'hint' => $flagged
                     ? __('admin.ad_review.flagged', [
                         'flags' => implode(', ', $event->result->flags),
-                    ])
+                    ], $locale)
                     : '',
-            ]))
+            ], $locale))
             ->icon($flagged ? 'heroicon-o-flag' : 'heroicon-o-inbox-arrow-down')
             ->color($flagged ? 'warning' : 'info')
             ->actions([
                 Action::make('review')
-                    ->label(__('admin.ad_review.action'))
+                    ->label(__('admin.ad_review.action', [], $locale))
                     ->url(AdResource::getUrl('view', ['record' => $ad]))
                     ->markAsRead(),
             ])
