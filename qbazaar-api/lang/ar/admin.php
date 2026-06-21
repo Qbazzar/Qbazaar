@@ -249,6 +249,13 @@ return [
         'unban_applied' => 'تم رفع الحظر عن المستخدم.',
     ],
 
+    'ad_review' => [
+        'title' => 'إعلان جديد بانتظار المراجعة',
+        'body' => ':title:hint',
+        'flagged' => ' — معلّم تلقائياً: :flags',
+        'action' => 'مراجعة الإعلان',
+    ],
+
     'announcement' => [
         'title_field' => 'العنوان',
         'body_field' => 'النص',

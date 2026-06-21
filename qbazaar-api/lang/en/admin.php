@@ -308,6 +308,13 @@ return [
         'unban_applied' => 'User unbanned.',
     ],
 
+    'ad_review' => [
+        'title' => 'New ad awaiting review',
+        'body' => ':title:hint',
+        'flagged' => ' — auto-flagged: :flags',
+        'action' => 'Review ad',
+    ],
+
     'announcement' => [
         'title_field' => 'Title',
         'body_field' => 'Body',

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\AdStatus;
-use App\Events\Ads\AdRejected;
+use App\Events\Ads\AdSubmittedForReview;
 use App\Models\Ad;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -105,75 +105,88 @@ function attachImageWithPhash(Ad $ad, ?string $phash): Media
     return $media;
 }
 
-it('parks an ad in PENDING when another seller has an active ad with an identical image hash', function (): void {
-    Event::fake([AdRejected::class]);
+// Publish now always parks the ad in PENDING for manual admin review, so the
+// duplicate-image signal rides the AdSubmittedForReview event's
+// ModerationResult (flags + details) rather than the resulting status.
+
+it('flags duplicate_image when another seller has an active ad with an identical image hash', function (): void {
+    Event::fake([AdSubmittedForReview::class]);
 
     $existing = ($this->makeActiveAdWithPhash)($this->otherSeller, 'a1b2c3d4e5f60718');
 
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], [
-        'Accept' => 'application/json',
-    ])
+    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
-    expect($draft->fresh()->status)->toBe(AdStatus::PENDING);
-
-    // Flags are not persisted on a column — they ride the AdRejected event
-    // into the seller notification + activity log, so assert them there.
     Event::assertDispatched(
-        AdRejected::class,
-        fn (AdRejected $event): bool => in_array('duplicate_image', $event->result->flags, true)
-            && $event->result->details['duplicate_image'] === ['duplicate_ad_ids' => [$existing->id]],
+        AdSubmittedForReview::class,
+        fn (AdSubmittedForReview $e): bool => in_array('duplicate_image', $e->result->flags, true)
+            && $e->result->details['duplicate_image'] === ['duplicate_ad_ids' => [$existing->id]],
     );
 });
 
-it('publishes to ACTIVE when the matching image belongs to the same seller', function (): void {
+it('does not flag duplicate_image when the matching image belongs to the same seller', function (): void {
+    Event::fake([AdSubmittedForReview::class]);
+
     ($this->makeActiveAdWithPhash)($this->seller, 'a1b2c3d4e5f60718');
 
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], [
-        'Accept' => 'application/json',
-    ])
+    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
         ->assertOk()
-        ->assertJsonPath('data.status', AdStatus::ACTIVE->value);
+        ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
-    expect($draft->fresh()->status)->toBe(AdStatus::ACTIVE);
+    Event::assertDispatched(
+        AdSubmittedForReview::class,
+        fn (AdSubmittedForReview $e): bool => $e->result->clean,
+    );
 });
 
-it('publishes to ACTIVE when the Hamming distance exceeds the threshold', function (): void {
+it('does not flag duplicate_image when the Hamming distance exceeds the threshold', function (): void {
+    Event::fake([AdSubmittedForReview::class]);
+
     // 12 bits apart — above the configured threshold of 8.
     ($this->makeActiveAdWithPhash)($this->otherSeller, '0000000000000000');
 
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, '0000000000000fff');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], [
-        'Accept' => 'application/json',
-    ])
+    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
         ->assertOk()
-        ->assertJsonPath('data.status', AdStatus::ACTIVE->value);
+        ->assertJsonPath('data.status', AdStatus::PENDING->value);
+
+    Event::assertDispatched(
+        AdSubmittedForReview::class,
+        fn (AdSubmittedForReview $e): bool => $e->result->clean,
+    );
 });
 
-it('parks an ad in PENDING when the Hamming distance equals the threshold', function (): void {
+it('flags duplicate_image when the Hamming distance equals the threshold', function (): void {
+    Event::fake([AdSubmittedForReview::class]);
+
     // Exactly 8 bits apart — the threshold is inclusive.
     ($this->makeActiveAdWithPhash)($this->otherSeller, '0000000000000000');
 
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, '00000000000000ff');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], [
-        'Accept' => 'application/json',
-    ])
+    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
+
+    Event::assertDispatched(
+        AdSubmittedForReview::class,
+        fn (AdSubmittedForReview $e): bool => in_array('duplicate_image', $e->result->flags, true),
+    );
 });
 
-it('publishes to ACTIVE when the candidate image has no phash yet', function (): void {
+it('does not flag duplicate_image when the candidate image has no phash yet', function (): void {
+    Event::fake([AdSubmittedForReview::class]);
+
     // ProcessAdImagesJob lag: media exists but phash is still null —
     // the detector must not raise a false duplicate flag.
     ($this->makeActiveAdWithPhash)($this->otherSeller, 'a1b2c3d4e5f60718');
@@ -181,26 +194,32 @@ it('publishes to ACTIVE when the candidate image has no phash yet', function ():
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, null);
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], [
-        'Accept' => 'application/json',
-    ])
+    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
         ->assertOk()
-        ->assertJsonPath('data.status', AdStatus::ACTIVE->value);
+        ->assertJsonPath('data.status', AdStatus::PENDING->value);
+
+    Event::assertDispatched(
+        AdSubmittedForReview::class,
+        fn (AdSubmittedForReview $e): bool => $e->result->clean,
+    );
 });
 
-it('publishes to ACTIVE when another seller has an active ad with a malformed phash', function (): void {
+it('does not flag duplicate_image when another seller has an active ad with a malformed phash', function (): void {
+    Event::fake([AdSubmittedForReview::class]);
+
     // A corrupted DB row (phash = 'ZZZZ') must not throw or produce a false
-    // duplicate flag — the detector skips it and publish succeeds.
+    // duplicate flag — the detector skips it and the ad passes cleanly.
     ($this->makeActiveAdWithPhash)($this->otherSeller, 'ZZZZ');
 
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], [
-        'Accept' => 'application/json',
-    ])
+    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
         ->assertOk()
-        ->assertJsonPath('data.status', AdStatus::ACTIVE->value);
+        ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
-    expect($draft->fresh()->status)->toBe(AdStatus::ACTIVE);
+    Event::assertDispatched(
+        AdSubmittedForReview::class,
+        fn (AdSubmittedForReview $e): bool => $e->result->clean,
+    );
 });

@@ -101,6 +101,12 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(AdExpired::class, [SendAdNotifications::class, 'handle']);
         Event::listen(AdRenewed::class, [SendAdNotifications::class, 'handle']);
 
+        // NOTE: AdSubmittedForReview → NotifyAdminsOfPendingAd is intentionally
+        // NOT registered here. That listener's handle() is single-typed, so
+        // Laravel 11 auto-discovers it from app/Listeners; registering it again
+        // would fire the admin notification twice. (The listeners above use
+        // union-typed handles, which auto-discovery skips — hence manual.)
+
         // Bridges Laravel's NotificationSent -> our own NotificationCreated
         // broadcast (database channel only). See the listener for details.
         Event::listen(NotificationSent::class, [BroadcastDatabaseNotificationCreated::class, 'handle']);
