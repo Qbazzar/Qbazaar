@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Cairo, Inter, Geist_Mono } from 'next/font/google';
+import { Cairo, DM_Sans, Instrument_Serif, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
@@ -13,10 +13,19 @@ import { Providers } from './providers';
 import './globals.css';
 import '../styles/qbfront.css';
 
-const inter = Inter({
+// Brand Latin faces (design system): DM Sans for body/UI, Instrument Serif for
+// large display headings. Arabic always uses Cairo.
+const dmSans = DM_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-inter',
+  variable: '--font-dm-sans',
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  variable: '--font-instrument-serif',
 });
 
 // Cairo for all Arabic text (body + headings). User preference.
@@ -57,7 +66,7 @@ export default async function RootLayout({
       lang={locale}
       dir={dirFor(locale)}
       suppressHydrationWarning
-      className={`${inter.variable} ${cairo.variable} ${geistMono.variable}`}
+      className={`${dmSans.variable} ${instrumentSerif.variable} ${cairo.variable} ${geistMono.variable}`}
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale}>

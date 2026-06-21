@@ -61,14 +61,13 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Typography — Inter for Latin, Cairo for Arabic (body + headings).
-     font-display kept as an alias for back-compat and resolves to the same
-     stack as font-sans (no separate display face). */
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-display: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  /* Typography (brand design system) — DM Sans for Latin body/UI, Instrument
+     Serif for large display headings, Cairo for all Arabic. */
+  --font-sans: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: var(--font-instrument-serif), Georgia, serif;
   --font-arabic: var(--font-cairo), system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
-  --font-heading: var(--font-inter);
+  --font-heading: var(--font-instrument-serif), Georgia, serif;
 
   /* Radius scale — QBFront's compact 10px lg with bigger 16/20px for cards */
   --radius-sm: 6px;
@@ -211,11 +210,18 @@
   /* Headings — Inter 800 with negative tracking (QBFront `.text-h*` shape).
      The `.font-display` Tailwind class continues to exist for back-compat —
      it now resolves to Inter (no italic serif). */
-  h1, h2, h3, h4, h5, h6,
-  .font-display {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-sans);
     font-weight: 800;
     letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  /* The display class uses the brand serif (Instrument Serif) in LTR. */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
     line-height: 1.1;
     text-wrap: balance;
   }
