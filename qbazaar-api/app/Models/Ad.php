@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\AdStatus;
 use App\Enums\Condition;
+use App\Enums\OfferStatus;
 use App\Enums\PriceType;
 use App\Events\Ads\AdRejected;
 use App\Http\Resources\Api\V1\Media\MediaResource;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -134,6 +136,18 @@ class Ad extends Model implements HasMedia
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * The accepted offer (if any) — identifies the buyer of a sold ad.
+     *
+     * @return HasOne<Offer, $this>
+     */
+    public function acceptedOffer(): HasOne
+    {
+        return $this->hasOne(Offer::class)
+            ->where('status', OfferStatus::ACCEPTED->value)
+            ->latest('accepted_at');
     }
 
     /** @return BelongsTo<Category, $this> */

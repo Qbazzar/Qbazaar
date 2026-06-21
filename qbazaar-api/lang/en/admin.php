@@ -306,6 +306,23 @@ return [
         'report_actioned' => 'Report marked as actioned.',
         'ban_applied' => 'User banned.',
         'unban_applied' => 'User unbanned.',
+        'suspend' => 'Suspend',
+        'unsuspend' => 'Reactivate',
+        'ad_suspended' => 'Ad suspended.',
+        'ad_unsuspended' => 'Ad reactivated.',
+    ],
+
+    'price_type' => [
+        'fixed' => 'Fixed price',
+        'negotiable' => 'Negotiable',
+        'free' => 'Free',
+        'contact' => 'Contact for price',
+    ],
+
+    'condition' => [
+        'new' => 'New',
+        'like_new' => 'Like new',
+        'used' => 'Used',
     ],
 
     'ad_review' => [

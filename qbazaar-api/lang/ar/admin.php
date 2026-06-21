@@ -247,6 +247,23 @@ return [
         'report_actioned' => 'تم تسجيل إجراء على البلاغ.',
         'ban_applied' => 'تم حظر المستخدم.',
         'unban_applied' => 'تم رفع الحظر عن المستخدم.',
+        'suspend' => 'إيقاف',
+        'unsuspend' => 'إعادة تفعيل',
+        'ad_suspended' => 'تم إيقاف الإعلان.',
+        'ad_unsuspended' => 'تمت إعادة تفعيل الإعلان.',
+    ],
+
+    'price_type' => [
+        'fixed' => 'سعر ثابت',
+        'negotiable' => 'قابل للتفاوض',
+        'free' => 'مجاني',
+        'contact' => 'تواصل للسعر',
+    ],
+
+    'condition' => [
+        'new' => 'جديد',
+        'like_new' => 'شبه جديد',
+        'used' => 'مستعمل',
     ],
 
     'ad_review' => [

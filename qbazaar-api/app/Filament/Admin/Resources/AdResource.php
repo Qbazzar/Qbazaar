@@ -7,6 +7,7 @@ namespace App\Filament\Admin\Resources;
 use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
 use App\Enums\Condition;
+use App\Enums\PriceType;
 use App\Events\Ads\AdApproved;
 use App\Events\Ads\AdRejected;
 use App\Filament\Admin\Resources\AdResource\Pages;
@@ -177,6 +178,7 @@ class AdResource extends Resource
                     TextEntry::make('status')
                         ->label(__('admin.fields.status'))
                         ->badge()
+                        ->formatStateUsing(static fn (AdStatus $state): string => $state->label()[app()->getLocale()] ?? $state->label()['en'])
                         ->color(static fn (AdStatus $state): string => match ($state) {
                             AdStatus::ACTIVE => 'success',
                             AdStatus::PENDING => 'warning',
@@ -201,12 +203,14 @@ class AdResource extends Resource
                     TextEntry::make('price_type')
                         ->label(__('admin.fields.price_type'))
                         ->badge()
+                        ->formatStateUsing(static fn (PriceType $state): string => (string) __('admin.price_type.' . $state->value))
                         ->color('gray'),
 
                     TextEntry::make('condition')
                         ->label(__('admin.fields.condition'))
                         ->badge()
                         ->placeholder('—')
+                        ->formatStateUsing(static fn (?Condition $state): string => $state ? (string) __('admin.condition.' . $state->value) : '—')
                         ->color('gray'),
                 ]),
 
@@ -217,17 +221,24 @@ class AdResource extends Resource
                         ->label(__('admin.fields.seller'))
                         ->placeholder('—'),
 
-                    TextEntry::make('category.slug')
+                    TextEntry::make('category.name')
                         ->label(__('admin.fields.category'))
                         ->badge()
                         ->color('primary')
+                        ->state(static fn (Ad $record): ?string => $record->category?->getLocalizedName(app()->getLocale()))
                         ->placeholder('—'),
 
-                    TextEntry::make('location.slug')
+                    TextEntry::make('location.name')
                         ->label(__('admin.fields.location'))
                         ->badge()
                         ->color('info')
+                        ->state(static fn (Ad $record): ?string => $record->location?->getLocalizedName(app()->getLocale()))
                         ->placeholder('—'),
+
+                    TextEntry::make('acceptedOffer.buyer.full_name')
+                        ->label(__('admin.fields.buyer'))
+                        ->placeholder('—')
+                        ->visible(static fn (Ad $record): bool => $record->status === AdStatus::SOLD),
                 ]),
 
             Section::make(__('admin.sections.images'))
@@ -428,6 +439,34 @@ class AdResource extends Resource
                     ->action(static function (Ad $record): void {
                         $record->markExpired();
                         Notification::make()->title('Ad expired.')->success()->send();
+                    }),
+
+                // Suspend a live ad (ACTIVE → BLOCKED) and pull it from search.
+                Action::make('suspend')
+                    ->iconButton()
+                    ->label(__('admin.actions.suspend'))
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->visible(static fn (Ad $record): bool => $record->status === AdStatus::ACTIVE)
+                    ->requiresConfirmation()
+                    ->action(static function (Ad $record): void {
+                        $record->forceFill(['status' => AdStatus::BLOCKED])->save();
+                        $record->unsearchable();
+                        Notification::make()->title(__('admin.actions.ad_suspended'))->success()->send();
+                    }),
+
+                // Lift a suspension (BLOCKED → ACTIVE) and re-index it.
+                Action::make('unsuspend')
+                    ->iconButton()
+                    ->label(__('admin.actions.unsuspend'))
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('success')
+                    ->visible(static fn (Ad $record): bool => $record->status === AdStatus::BLOCKED)
+                    ->requiresConfirmation()
+                    ->action(static function (Ad $record): void {
+                        $record->publish();
+                        AdApproved::dispatch($record);
+                        Notification::make()->title(__('admin.actions.ad_unsuspended'))->success()->send();
                     }),
 
                 DeleteAction::make(),
