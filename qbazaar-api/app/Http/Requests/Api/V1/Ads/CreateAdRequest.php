@@ -60,6 +60,8 @@ class CreateAdRequest extends FormRequest
         return [
             'category_id' => ['required', 'ulid', 'exists:categories,id'],
             'location_id' => ['required', 'ulid', 'exists:locations,id'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'title' => ['required', 'string', 'min:5', 'max:120'],
             'description' => ['required', 'string', 'min:20', 'max:5000'],
             'price' => ['nullable', 'numeric', 'min:0', 'max:9999999'],

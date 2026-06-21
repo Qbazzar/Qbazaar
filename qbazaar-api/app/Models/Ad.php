@@ -33,6 +33,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string $user_id
  * @property string $category_id
  * @property string $location_id
+ * @property string|null $latitude
+ * @property string|null $longitude
  * @property string $title
  * @property string $description
  * @property string|null $price
@@ -70,6 +72,8 @@ class Ad extends Model implements HasMedia
         'user_id',
         'category_id',
         'location_id',
+        'latitude',
+        'longitude',
         'title',
         'description',
         'price',

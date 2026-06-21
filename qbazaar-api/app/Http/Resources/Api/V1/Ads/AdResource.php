@@ -41,6 +41,8 @@ class AdResource extends JsonResource
             'price_type' => $this->price_type->value,
             'currency' => $this->currency,
             'condition' => $this->condition?->value,
+            'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'custom_fields' => $this->custom_fields,
