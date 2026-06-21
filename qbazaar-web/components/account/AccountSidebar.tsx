@@ -10,7 +10,7 @@
  * The sign-out button at the bottom calls the shared `useAuth().logout()`
  * helper, then pushes the user to `/login`.
  */
-import { useTransition } from 'react';
+import { useEffect, useRef, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -108,6 +108,16 @@ export function AccountSidebar() {
   const router = useRouter();
   const { logout } = useAuth();
   const [pendingLogout, startLogout] = useTransition();
+  // On the mobile chip scroller, bring the active tab into view so the user
+  // always sees where they are (it can otherwise sit off-screen).
+  const activeRef = useRef<HTMLAnchorElement | null>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({
+      inline: 'center',
+      block: 'nearest',
+      behavior: 'smooth',
+    });
+  }, [pathname]);
 
   const isActive = (href: string) => {
     if (href === '/account') return pathname === '/account';
@@ -148,6 +158,7 @@ export function AccountSidebar() {
           return (
             <li key={item.href} className="shrink-0 lg:shrink">
               <Link
+                ref={active ? activeRef : undefined}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
