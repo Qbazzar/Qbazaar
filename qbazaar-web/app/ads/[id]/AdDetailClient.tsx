@@ -268,12 +268,14 @@ function AdDetail({
                   </Button>
                 ) : null}
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <FavoriteButton
-                    adId={ad.id}
-                    size="md"
-                    withLabel
-                    className="h-10 flex-1 justify-center rounded-full bg-white text-ink-700 ring-ink-200 hover:text-coral"
-                  />
+                  {!isOwner ? (
+                    <FavoriteButton
+                      adId={ad.id}
+                      size="md"
+                      withLabel
+                      className="h-10 flex-1 justify-center rounded-full bg-white text-ink-700 ring-ink-200 hover:text-coral"
+                    />
+                  ) : null}
                   <Button
                     type="button"
                     variant="ghost"
@@ -314,14 +316,16 @@ function AdDetail({
                 </div>
               </div>
 
-              <div className="seller-card__foot">
-                <ReportButton
-                  target_type="ad"
-                  target_id={ad.id}
-                  variant="ghost"
-                  className="text-ink-500 hover:text-coral inline-flex items-center gap-1.5 rounded-full"
-                />
-              </div>
+              {!isOwner ? (
+                <div className="seller-card__foot">
+                  <ReportButton
+                    target_type="ad"
+                    target_id={ad.id}
+                    variant="ghost"
+                    className="text-ink-500 hover:text-coral inline-flex items-center gap-1.5 rounded-full"
+                  />
+                </div>
+              ) : null}
             </div>
 
             {locationName ? (
