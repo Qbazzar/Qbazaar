@@ -31,6 +31,7 @@ export interface PostAdState {
   draftAdId: string | null;
   categoryId: string | null;
   locationId: string | null;
+  coords: { lat: number; lng: number } | null;
   details: PostAdDetails;
   images: Media[];
 
@@ -39,6 +40,7 @@ export interface PostAdState {
   prev: () => void;
   setCategoryId: (id: string | null) => void;
   setLocationId: (id: string | null) => void;
+  setCoords: (coords: { lat: number; lng: number } | null) => void;
   setDetails: (patch: Partial<PostAdDetails>) => void;
   setDraftAdId: (id: string | null) => void;
   setImages: (images: Media[]) => void;
@@ -59,6 +61,7 @@ export const usePostAdStore = create<PostAdState>((set, get) => ({
   draftAdId: null,
   categoryId: null,
   locationId: null,
+  coords: null,
   details: INITIAL_DETAILS,
   images: [],
 
@@ -73,6 +76,7 @@ export const usePostAdStore = create<PostAdState>((set, get) => ({
   },
   setCategoryId: (categoryId) => set({ categoryId }),
   setLocationId: (locationId) => set({ locationId }),
+  setCoords: (coords) => set({ coords }),
   setDetails: (patch) =>
     set((state) => ({ details: { ...state.details, ...patch } })),
   setDraftAdId: (draftAdId) => set({ draftAdId }),
@@ -83,6 +87,7 @@ export const usePostAdStore = create<PostAdState>((set, get) => ({
       draftAdId: null,
       categoryId: null,
       locationId: null,
+      coords: null,
       details: INITIAL_DETAILS,
       images: [],
     }),

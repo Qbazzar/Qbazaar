@@ -8,6 +8,7 @@
  * + favorite/share + report).
  */
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ChevronLeft, Phone, Share2, ShieldCheck } from 'lucide-react';
@@ -25,6 +26,12 @@ import { useTrackAdViewMutation } from '@/lib/queries/recently-viewed';
 import { useAuth } from '@/hooks/useAuth';
 import { localized, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+
+// Leaflet touches `window` at import time, so load the read-only map client-only.
+const MapView = dynamic(
+  () => import('@/components/locations/MapView').then((m) => m.MapView),
+  { ssr: false },
+);
 
 interface Props {
   id: string;
@@ -325,7 +332,13 @@ function AdDetail({
                 <div className="trust-card__list">
                   <div>{locationName}</div>
                 </div>
-                <div className="map-box" style={{ marginTop: 12, height: 160 }} aria-hidden="true" />
+                {ad.latitude != null && ad.longitude != null ? (
+                  <div style={{ marginTop: 12 }}>
+                    <MapView lat={ad.latitude} lng={ad.longitude} className="h-40 w-full overflow-hidden rounded-xl" />
+                  </div>
+                ) : (
+                  <div className="map-box" style={{ marginTop: 12, height: 160 }} aria-hidden="true" />
+                )}
               </div>
             ) : null}
           </aside>

@@ -21,6 +21,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { CategoryTree } from '@/components/categories/CategoryTree';
 import { LocationPicker } from '@/components/locations/LocationPicker';
+// Leaflet touches `window` at import time, so load the picker client-only.
+const MapPicker = dynamic(
+  () => import('@/components/locations/MapPicker').then((m) => m.MapPicker),
+  { ssr: false },
+);
 import { ImageDropzone } from '@/components/upload/ImageDropzone';
 import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
@@ -105,6 +111,11 @@ export function PostAdWizard({ mode = 'create', ad }: PostAdWizardProps = {}) {
     seededRef.current = true;
     state.setCategoryId(ad.category_id);
     state.setLocationId(ad.location_id);
+    state.setCoords(
+      ad.latitude != null && ad.longitude != null
+        ? { lat: ad.latitude, lng: ad.longitude }
+        : null,
+    );
     state.setDraftAdId(ad.id);
     state.setImages(ad.images ?? []);
     state.setDetails({
@@ -162,6 +173,8 @@ export function PostAdWizard({ mode = 'create', ad }: PostAdWizardProps = {}) {
     const payload: CreateAdRequest = {
       category_id: state.categoryId,
       location_id: state.locationId,
+      latitude: state.coords?.lat ?? null,
+      longitude: state.coords?.lng ?? null,
       title: state.details.title.trim(),
       description: state.details.description.trim(),
       price:
@@ -308,6 +321,8 @@ export function PostAdWizard({ mode = 'create', ad }: PostAdWizardProps = {}) {
             cities={cities ?? []}
             value={state.locationId}
             onChange={state.setLocationId}
+            coords={state.coords}
+            onCoordsChange={state.setCoords}
           />
         ) : null}
 
@@ -607,12 +622,16 @@ function StepLocation({
   cities,
   value,
   onChange,
+  coords,
+  onCoordsChange,
 }: {
   cities: ReturnType<typeof useQatarLocationsQuery>['data'] extends infer T
     ? NonNullable<T>
     : never;
   value: string | null;
   onChange: (id: string | null) => void;
+  coords: { lat: number; lng: number } | null;
+  onCoordsChange: (coords: { lat: number; lng: number } | null) => void;
 }) {
   // The picker is slug-driven, but the ad payload wants an id — translate
   // between the two using the cached tree.
@@ -650,6 +669,12 @@ function StepLocation({
         onChange={(slug) => onChange(slug ? slugToId.get(slug) ?? null : null)}
         className="max-w-md"
       />
+      <div className="space-y-1.5">
+        <p className="text-ink-700 text-sm font-medium">
+          {t('ads.post.steps.map_label', 'حدّد الموقع على الخريطة (اختياري)')}
+        </p>
+        <MapPicker value={coords} onChange={onCoordsChange} />
+      </div>
     </div>
   );
 }

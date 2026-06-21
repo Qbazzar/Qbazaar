@@ -464,6 +464,8 @@ export interface Ad {
   user_id: string;
   category_id: string;
   location_id: string;
+  latitude: number | null;
+  longitude: number | null;
   title: string;
   description: string;
   price: number | null;
@@ -509,6 +511,8 @@ export interface AdSummary {
 export interface CreateAdRequest {
   category_id: string;
   location_id: string;
+  latitude?: number | null;
+  longitude?: number | null;
   title: string;
   description: string;
   price: number | null;
