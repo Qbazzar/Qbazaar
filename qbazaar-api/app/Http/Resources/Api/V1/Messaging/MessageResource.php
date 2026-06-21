@@ -50,7 +50,7 @@ class MessageResource extends JsonResource
             'sender' => $sender === null ? null : [
                 'id' => $sender->id,
                 'full_name' => $sender->full_name,
-                'avatar_thumb' => $sender->avatarThumbUrl(),
+                'avatar_thumb_url' => $sender->avatarThumbUrl(),
             ],
         ];
 

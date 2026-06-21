@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\MessageType;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Offer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -68,6 +70,36 @@ it('paginates with the before cursor', function (): void {
     $response->assertOk();
     $bodies = collect($response->json('data'))->pluck('body')->all();
     expect($bodies)->toBe(['msg-2', 'msg-1']);
+});
+
+it('includes the offer envelope + sender.avatar_thumb_url in the transcript', function (): void {
+    // Regression: the transcript only eager-loaded `sender`, so offer messages
+    // came back with offer=null and the seller couldn't see/accept the offer.
+    // Also pins the sender avatar key the frontend reads (avatar_thumb_url).
+    $message = Message::factory()->create([
+        'conversation_id' => $this->conversation->id,
+        'sender_id' => $this->buyer->id,
+        'type' => MessageType::OFFER->value,
+        'body' => 'offer',
+    ]);
+    Offer::factory()->pending()->create([
+        'conversation_id' => $this->conversation->id,
+        'ad_id' => $this->ad->id,
+        'buyer_id' => $this->buyer->id,
+        'seller_id' => $this->seller->id,
+        'message_id' => $message->id,
+        'amount' => 250,
+    ]);
+
+    Sanctum::actingAs($this->seller, ['*']);
+
+    $response = getJson('/api/v1/conversations/' . $this->conversation->id . '/messages?limit=10');
+
+    $response->assertOk()
+        ->assertJsonPath('data.0.offer.amount', '250.00')
+        ->assertJsonPath('data.0.offer.status', 'pending');
+
+    expect($response->json('data.0.sender'))->toHaveKey('avatar_thumb_url');
 });
 
 it('returns 404 for non-participants to avoid leaking existence', function (): void {

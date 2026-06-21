@@ -68,7 +68,10 @@ class MessageController extends Controller
 
         $query = Message::query()
             ->where('conversation_id', $conversation->id)
-            ->with('sender')
+            // Eager-load `offer` too: offer messages carry the offer card the
+            // seller acts on. Without it MessageResource serialised offer=null
+            // and the buyer's offer never rendered (seller couldn't accept).
+            ->with(['sender', 'offer'])
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
