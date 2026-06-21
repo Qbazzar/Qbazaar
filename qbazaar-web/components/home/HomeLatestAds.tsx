@@ -5,7 +5,7 @@
  * `.grid.grid-4` of `.listing-card`s.
  */
 import { QbfListingCard } from '@/components/ads/QbfListingCard';
-import { useAdsListQuery } from '@/lib/queries/ads';
+import { useAdsListQuery, useFeaturedAdsQuery } from '@/lib/queries/ads';
 import { t } from '@/lib/i18n/messages';
 
 const PER_PAGE = 12;
@@ -15,6 +15,11 @@ export function HomeLatestAds() {
     page: 1,
     per_page: PER_PAGE,
   });
+  // Featured ads already have their own strip above — drop them here so the
+  // same ad doesn't appear twice on the home page. The featured query is
+  // cached (the strip already ran it), so this adds no extra request.
+  const { data: featured } = useFeaturedAdsQuery();
+  const featuredIds = new Set((featured ?? []).map((ad) => ad.id));
 
   if (isLoading) {
     return (
@@ -37,9 +42,11 @@ export function HomeLatestAds() {
       </p>
     );
   }
+  const ads = data.data.filter((ad) => !featuredIds.has(ad.id));
+
   return (
     <div className="grid grid-4">
-      {data.data.map((ad) => (
+      {ads.map((ad) => (
         <QbfListingCard key={ad.id} ad={ad} />
       ))}
     </div>
