@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/lib/api/client', () => ({ api: { post: vi.fn() } }));
 
 import { api } from '@/lib/api/client';
-import { uploadAdImages } from '@/lib/api/ad-images';
+import { reorderAdImages, uploadAdImages } from '@/lib/api/ad-images';
 
 const mockPost = vi.mocked(api.post);
 
@@ -40,5 +40,18 @@ describe('uploadAdImages', () => {
 
     expect(result).toEqual([]);
     expect(mockPost).not.toHaveBeenCalled();
+  });
+});
+
+describe('reorderAdImages', () => {
+  it('sends the ids under the `order` key (regression: was `media_ids`)', async () => {
+    mockPost.mockResolvedValue({ data: {} } as never);
+
+    await reorderAdImages('ad-1', ['3', '1', '2']);
+
+    expect(mockPost).toHaveBeenCalledWith(
+      '/api/v1/ads/ad-1/images/reorder',
+      { order: ['3', '1', '2'] },
+    );
   });
 });

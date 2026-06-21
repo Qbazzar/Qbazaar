@@ -98,9 +98,13 @@ export async function reorderAdImages(
   mediaIds: string[],
 ): Promise<void> {
   try {
+    // The endpoint validates an `order` array of media ids (see the API's
+    // ReorderImagesRequest + the OpenAPI contract). Sending `media_ids` made
+    // the request fail validation ("The given data was invalid") on every
+    // cover/reorder change.
     await api.post(
       `/api/v1/ads/${encodeURIComponent(adId)}/images/reorder`,
-      { media_ids: mediaIds },
+      { order: mediaIds },
     );
   } catch (err) {
     throw toApiClientError(err);
