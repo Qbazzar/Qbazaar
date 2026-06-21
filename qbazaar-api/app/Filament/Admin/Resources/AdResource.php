@@ -321,12 +321,14 @@ class AdResource extends Resource
                     ->searchable()
                     ->toggleable(),
 
-                TextColumn::make('category.slug')
+                TextColumn::make('category.name')
                     ->label(__('admin.fields.category'))
+                    ->state(static fn (Ad $record): ?string => $record->category?->getLocalizedName(app()->getLocale()))
                     ->toggleable(),
 
-                TextColumn::make('location.slug')
+                TextColumn::make('location.name')
                     ->label(__('admin.fields.location'))
+                    ->state(static fn (Ad $record): ?string => $record->location?->getLocalizedName(app()->getLocale()))
                     ->toggleable(),
 
                 TextColumn::make('price')
@@ -337,6 +339,7 @@ class AdResource extends Resource
                 TextColumn::make('status')
                     ->label(__('admin.fields.status'))
                     ->badge()
+                    ->formatStateUsing(static fn (AdStatus $state): string => $state->label()[app()->getLocale()] ?? $state->label()['en'])
                     ->color(static fn (AdStatus $state): string => match ($state) {
                         AdStatus::ACTIVE => 'success',
                         AdStatus::PENDING => 'warning',
@@ -449,11 +452,7 @@ class AdResource extends Resource
                     ->color('danger')
                     ->visible(static fn (Ad $record): bool => $record->status === AdStatus::ACTIVE)
                     ->requiresConfirmation()
-                    ->action(static function (Ad $record): void {
-                        $record->forceFill(['status' => AdStatus::BLOCKED])->save();
-                        $record->unsearchable();
-                        Notification::make()->title(__('admin.actions.ad_suspended'))->success()->send();
-                    }),
+                    ->action(static fn (Ad $record) => self::suspend($record)),
 
                 // Lift a suspension (BLOCKED → ACTIVE) and re-index it.
                 Action::make('unsuspend')
@@ -463,11 +462,7 @@ class AdResource extends Resource
                     ->color('success')
                     ->visible(static fn (Ad $record): bool => $record->status === AdStatus::BLOCKED)
                     ->requiresConfirmation()
-                    ->action(static function (Ad $record): void {
-                        $record->publish();
-                        AdApproved::dispatch($record);
-                        Notification::make()->title(__('admin.actions.ad_unsuspended'))->success()->send();
-                    }),
+                    ->action(static fn (Ad $record) => self::unsuspend($record)),
 
                 DeleteAction::make(),
                 ForceDeleteAction::make(),
@@ -493,7 +488,7 @@ class AdResource extends Resource
      * run. We use the same event the public API would, on purpose — admin
      * approvals must be indistinguishable downstream.
      */
-    private static function approve(Ad $ad): void
+    public static function approve(Ad $ad): void
     {
         $ad->publish();
         AdApproved::dispatch($ad);
@@ -504,13 +499,37 @@ class AdResource extends Resource
             ->send();
     }
 
+    /** Suspend a live ad (ACTIVE → BLOCKED) and pull it from search. */
+    public static function suspend(Ad $ad): void
+    {
+        $ad->forceFill(['status' => AdStatus::BLOCKED])->save();
+        $ad->unsearchable();
+
+        Notification::make()
+            ->title(__('admin.actions.ad_suspended'))
+            ->success()
+            ->send();
+    }
+
+    /** Lift a suspension (BLOCKED → ACTIVE) and re-index it. */
+    public static function unsuspend(Ad $ad): void
+    {
+        $ad->publish();
+        AdApproved::dispatch($ad);
+
+        Notification::make()
+            ->title(__('admin.actions.ad_unsuspended'))
+            ->success()
+            ->send();
+    }
+
     /**
      * Reject a pending ad and persist admin_notes inline on the ad payload
      * for later audit. We wrap the notes in a ModerationResult so the
      * AdRejected event keeps the existing shape — listeners care about the
      * `flags` list, not where it came from.
      */
-    private static function reject(Ad $ad, string $notes): void
+    public static function reject(Ad $ad, string $notes): void
     {
         $ad->forceFill([
             'status' => AdStatus::REJECTED,
