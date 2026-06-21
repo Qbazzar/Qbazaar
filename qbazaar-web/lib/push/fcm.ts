@@ -51,6 +51,14 @@ export interface ForegroundPushPayload {
   } & Record<string, string>;
 }
 
+// Last failure reason from enablePush(), surfaced to the UI so users can tell
+// us *why* enabling failed without opening the console.
+let lastPushError = '';
+
+export function getLastPushError(): string {
+  return lastPushError;
+}
+
 // NEXT_PUBLIC_ vars are inlined at build time, so each one must be referenced
 // as a full `process.env.NEXT_PUBLIC_*` literal — no dynamic lookups.
 function firebaseConfig() {
@@ -148,10 +156,12 @@ export async function enablePush(): Promise<EnablePushResult> {
   if (!isPushConfigured()) return 'unsupported';
 
   try {
+    lastPushError = '';
     const permission = await Notification.requestPermission();
     if (permission === 'denied') return 'denied';
     // 'default' means the prompt was dismissed — recoverable, so not 'denied'.
     if (permission !== 'granted') {
+      lastPushError = 'permission not granted (prompt dismissed)';
       console.warn('[push] permission prompt dismissed (not granted)');
       return 'error';
     }
@@ -165,6 +175,7 @@ export async function enablePush(): Promise<EnablePushResult> {
       serviceWorkerRegistration: registration,
     });
     if (!token) {
+      lastPushError = 'getToken returned empty (check the VAPID key)';
       console.error('[push] getToken returned empty — verify the VAPID key.');
       return 'error';
     }
@@ -175,6 +186,8 @@ export async function enablePush(): Promise<EnablePushResult> {
   } catch (err) {
     // Surface the real cause (VAPID mismatch, SW failure, blocked request,
     // unsupported API) — the broad catch otherwise hides it from us.
+    lastPushError =
+      err instanceof Error ? `${err.name}: ${err.message}` : String(err);
     console.error('[push] enable failed:', err);
     return 'error';
   }

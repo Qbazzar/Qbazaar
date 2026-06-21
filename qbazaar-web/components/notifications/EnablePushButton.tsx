@@ -21,6 +21,7 @@ import { BellOffIcon, BellRingIcon, Loader2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   enablePush,
+  getLastPushError,
   getStoredPushToken,
   isPushConfigured,
   onForegroundMessage,
@@ -128,11 +129,16 @@ export function EnablePushButton() {
         {t('notifications.push.enable', 'فعّل إشعارات المتصفح')}
       </Button>
       {state === 'error' ? (
-        <p role="alert" className="text-destructive text-xs">
+        <p role="alert" className="text-destructive max-w-xs text-xs">
           {t(
             'notifications.push.error',
             'تعذّر تفعيل إشعارات المتصفح، حاول مرة أخرى',
           )}
+          {getLastPushError() ? (
+            <span className="text-ink-400 mt-0.5 block break-words font-mono text-[10px]">
+              {getLastPushError()}
+            </span>
+          ) : null}
         </p>
       ) : null}
     </div>
