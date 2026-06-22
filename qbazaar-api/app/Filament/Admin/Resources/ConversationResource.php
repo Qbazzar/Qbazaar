@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\ConversationResource\Pages;
+use App\Filament\Admin\Resources\ConversationResource\RelationManagers\MessagesRelationManager;
 use App\Models\Conversation;
 use BackedEnum;
 use Filament\Actions\ViewAction;
@@ -158,6 +159,16 @@ class ConversationResource extends Resource
         return [
             'index' => Pages\ListConversations::route('/'),
             'view' => Pages\ViewConversation::route('/{record}'),
+        ];
+    }
+
+    /**
+     * @return array<int, class-string>
+     */
+    public static function getRelations(): array
+    {
+        return [
+            MessagesRelationManager::class,
         ];
     }
 
