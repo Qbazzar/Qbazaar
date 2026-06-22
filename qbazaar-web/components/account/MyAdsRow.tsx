@@ -9,7 +9,7 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal } from 'lucide-react';
+import { Eye, Heart, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -77,7 +77,25 @@ export function MyAdsRow({ ad }: Props) {
         ad={ad}
         footer={
           <div className="flex items-center justify-between pt-1">
-            <AdStatusPill status={ad.status} />
+            <div className="flex items-center gap-3">
+              <AdStatusPill status={ad.status} />
+              <span className="text-ink-500 inline-flex items-center gap-2.5 text-xs">
+                <span
+                  className="inline-flex items-center gap-1"
+                  title={t('ads.stats.views', 'مشاهدات')}
+                >
+                  <Eye className="size-3.5" aria-hidden />
+                  {ad.views_count}
+                </span>
+                <span
+                  className="inline-flex items-center gap-1"
+                  title={t('ads.stats.favorites', 'حفظ')}
+                >
+                  <Heart className="size-3.5" aria-hidden />
+                  {ad.favorites_count}
+                </span>
+              </span>
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

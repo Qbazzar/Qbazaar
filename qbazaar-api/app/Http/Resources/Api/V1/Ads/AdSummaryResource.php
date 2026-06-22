@@ -43,6 +43,8 @@ class AdSummaryResource extends JsonResource
             'price_type' => $this->price_type->value,
             'currency' => $this->currency,
             'status' => $this->status->value,
+            'views_count' => (int) $this->views_count,
+            'favorites_count' => (int) $this->favorites_count,
             'primary_image' => $primary instanceof Media
                 ? (new MediaResource($primary))->toArray($request)
                 : null,

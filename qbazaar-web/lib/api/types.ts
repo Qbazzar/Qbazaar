@@ -501,6 +501,8 @@ export interface AdSummary {
   price_type: PriceType;
   currency: 'QAR';
   status: AdStatus;
+  views_count: number;
+  favorites_count: number;
   primary_image: Media | null;
   location_slug: string;
   category_slug: string;
