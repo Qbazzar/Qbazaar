@@ -8,6 +8,7 @@ use App\Enums\Condition;
 use App\Enums\PriceType;
 use App\Models\Category;
 use App\Models\Location;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -83,7 +84,11 @@ class SearchRequest extends FormRequest
             'location_id' => ['nullable', 'ulid'],
             'location_slug' => ['nullable', 'string', 'max:120'],
             'price_min' => ['nullable', 'numeric', 'min:0'],
-            'price_max' => ['nullable', 'numeric', 'min:0', 'gte:price_min'],
+            // The min<=max relationship is enforced in withValidator() only when
+            // BOTH are present — a max-only ("under 1000") or min-only filter must
+            // stay valid. A plain `gte:price_min` rule fails when price_min is
+            // absent, which silently broke the budget filter.
+            'price_max' => ['nullable', 'numeric', 'min:0'],
             'condition' => ['nullable', Rule::in([
                 Condition::NEW->value,
                 Condition::LIKE_NEW->value,
@@ -99,5 +104,19 @@ class SearchRequest extends FormRequest
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v): void {
+            $min = $this->query('price_min');
+            $max = $this->query('price_max');
+            if (is_numeric($min) && is_numeric($max) && (float) $max < (float) $min) {
+                $v->errors()->add('price_max', (string) __('validation.gte.numeric', [
+                    'attribute' => 'price_max',
+                    'value' => 'price_min',
+                ]));
+            }
+        });
     }
 }

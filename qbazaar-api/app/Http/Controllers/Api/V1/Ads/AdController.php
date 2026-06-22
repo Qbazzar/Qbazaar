@@ -46,7 +46,6 @@ class AdController extends Controller
     {
         $query = Ad::query()
             ->active()
-            ->orderedForFeed()
             ->with(['category', 'location', 'media']);
 
         if (($categoryId = $request->query('category_id')) !== null && is_string($categoryId)) {
@@ -55,6 +54,27 @@ class AdController extends Controller
 
         if (($locationId = $request->query('location_id')) !== null && is_string($locationId)) {
             $query->where('location_id', $locationId);
+        }
+
+        // Price range — ads without a numeric price (free/contact) drop out of a
+        // bounded range, which is the expected behaviour when filtering by budget.
+        if (is_numeric($priceMin = $request->query('price_min'))) {
+            $query->where('price', '>=', (float) $priceMin);
+        }
+        if (is_numeric($priceMax = $request->query('price_max'))) {
+            $query->where('price', '<=', (float) $priceMax);
+        }
+
+        // Sort — default is the canonical "newest published" feed order.
+        $sort = $request->query('sort');
+        if ($sort === 'price_asc') {
+            $query->orderBy('price');
+        } elseif ($sort === 'price_desc') {
+            $query->orderByDesc('price');
+        } elseif ($sort === 'oldest') {
+            $query->orderBy('published_at');
+        } else {
+            $query->orderedForFeed();
         }
 
         $paginator = $query->paginate(self::PER_PAGE);

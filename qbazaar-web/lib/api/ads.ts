@@ -52,6 +52,10 @@ function toApiClientError(err: unknown): ApiClientError {
 export interface ListAdsParams extends Record<string, unknown> {
   category_id?: string;
   location_id?: string;
+  price_min?: number;
+  price_max?: number;
+  /** 'price_asc' | 'price_desc' | 'oldest' — default is newest-first. */
+  sort?: string;
   page?: number;
   per_page?: number;
   status?: string;
