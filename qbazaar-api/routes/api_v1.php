@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
 use App\Http\Controllers\Api\V1\Reports\ReportsController;
+use App\Http\Controllers\Api\V1\Reviews\ReviewController;
 use App\Http\Controllers\Api\V1\Search\SavedSearchController;
 use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Support\SupportController;
@@ -299,6 +300,10 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
         ->middleware('throttle:api')
         ->name('api.v1.ads.renew');
 
+    Route::post('/ads/{ad}/reviews', [ReviewController::class, 'store'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.reviews.store');
+
     Route::post('/ads/{ad}/images', [AdImageController::class, 'store'])
         ->middleware('throttle:api')
         ->name('api.v1.ads.images.store');
@@ -457,6 +462,10 @@ Route::prefix('users')
         Route::get('/{user}/ads', UserAdsController::class)
             ->middleware('throttle:api')
             ->name('ads');
+
+        Route::get('/{user}/reviews', [ReviewController::class, 'index'])
+            ->middleware('throttle:api')
+            ->name('reviews');
 
         // Authenticated — block / unblock
         Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {

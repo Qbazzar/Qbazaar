@@ -43,6 +43,8 @@ class PublicUserResource extends JsonResource
                 'business_verified' => false, // TODO Phase 2
             ],
             'ads_count' => $this->resource->ads()->active()->count(),
+            'rating_avg' => (float) $this->rating_avg,
+            'rating_count' => (int) $this->rating_count,
         ];
 
         if ($privacy->show_phone) {

@@ -42,6 +42,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserStatus $status
  * @property bool $email_verified
  * @property bool $phone_verified
+ * @property numeric-string $rating_avg
+ * @property int $rating_count
  * @property Language $language
  * @property string|null $avatar_url
  * @property PrivacySettings|null $privacy_settings
@@ -98,7 +100,19 @@ class User extends Authenticatable implements CanResetPasswordContract, Filament
             'status' => UserStatus::class,
             'language' => Language::class,
             'privacy_settings' => PrivacySettings::class,
+            'rating_avg' => 'decimal:2',
+            'rating_count' => 'integer',
         ];
+    }
+
+    /**
+     * Reviews this user received as a seller.
+     *
+     * @return HasMany<Review, $this>
+     */
+    public function reviewsReceived(): HasMany
+    {
+        return $this->hasMany(Review::class, 'seller_id');
     }
 
     /**

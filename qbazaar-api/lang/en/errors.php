@@ -206,6 +206,18 @@ return [
         ],
     ],
 
+    'review' => [
+        'not' => [
+            'eligible' => 'You can only review a seller after a completed deal (an accepted offer) on this ad.',
+        ],
+        'already' => [
+            'exists' => 'You have already reviewed this ad.',
+        ],
+        'own' => [
+            'ad' => 'You cannot review your own ad.',
+        ],
+    ],
+
     'notif' => [
         'not' => [
             'found' => 'Notification not found.',

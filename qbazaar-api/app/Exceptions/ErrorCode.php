@@ -86,6 +86,11 @@ enum ErrorCode: string
     case OFFER_NOT_PENDING = 'OFFER_008';
     case OFFER_FORBIDDEN = 'OFFER_009';
 
+    // ── Reviews ─────────────────────────────────────────────────────
+    case REVIEW_NOT_ELIGIBLE = 'REVIEW_001';
+    case REVIEW_ALREADY_EXISTS = 'REVIEW_002';
+    case REVIEW_OWN_AD = 'REVIEW_003';
+
     // ── Reports (Sprint 10) ─────────────────────────────────────────
     case REPORT_SELF_FORBIDDEN = 'REPORT_001';
     case REPORT_DUPLICATE = 'REPORT_002';
@@ -148,6 +153,8 @@ enum ErrorCode: string
             self::NOTIF_DEVICE_TOKEN_INVALID,
             self::SEARCH_INVALID_PARAMS,
             self::SEARCH_SAVED_LIMIT,
+            self::REVIEW_ALREADY_EXISTS,
+            self::REVIEW_OWN_AD,
             self::TICKET_INVALID_TRANSITION => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
@@ -163,6 +170,7 @@ enum ErrorCode: string
             self::OFFER_NOT_SELLER,
             self::OFFER_FORBIDDEN,
             self::NOTIF_FORBIDDEN,
+            self::REVIEW_NOT_ELIGIBLE,
             self::TICKET_FORBIDDEN => 403,
 
             self::USER_NOT_FOUND,
