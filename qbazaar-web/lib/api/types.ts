@@ -225,8 +225,25 @@ export interface PublicUserProfile {
   email_verified: boolean;
   phone_verified: boolean;
   ads_count: number;
+  rating_avg: number;
+  rating_count: number;
   joined_at: string;
   bio: string | null;
+}
+
+/** A buyer's review of a seller. */
+export interface Review {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  reviewer?: { id: string; full_name: string; avatar_url: string | null };
+  ad?: { id: string; title: string };
+}
+
+export interface CreateReviewRequest {
+  rating: number;
+  comment?: string | null;
 }
 
 /**

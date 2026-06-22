@@ -20,6 +20,7 @@ import { AdStatusPill } from '@/components/ads/AdStatusPill';
 import { CustomFieldsList } from '@/components/ads/CustomFieldsList';
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { StartConversationButton } from '@/components/messaging/StartConversationButton';
+import { ReviewSellerButton } from '@/components/reviews/ReviewSellerButton';
 import { ReportButton } from '@/components/reports/ReportButton';
 import { useAdQuery } from '@/lib/queries/ads';
 import { useTrackAdViewMutation } from '@/lib/queries/recently-viewed';
@@ -267,6 +268,7 @@ function AdDetail({
                       : t('ads.actions.call', 'إظهار الرقم')}
                   </Button>
                 ) : null}
+                <ReviewSellerButton adId={ad.id} sellerId={ad.user_id} />
                 <div style={{ display: 'flex', gap: 8 }}>
                   {!isOwner ? (
                     <FavoriteButton

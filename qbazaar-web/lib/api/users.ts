@@ -9,10 +9,12 @@ import { api } from './client';
 import { ApiClientError } from './auth';
 import { isAxiosError } from 'axios';
 import type {
+  CreateReviewRequest,
   ErrorEnvelope,
   PaginatedEnvelope,
   PublicUserAd,
   PublicUserProfile,
+  Review,
   SuccessEnvelope,
 } from './types';
 
@@ -72,6 +74,38 @@ export async function getUserAds(
       { params },
     );
     return data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Public — a seller's reviews, newest first. */
+export async function getUserReviews(
+  userId: string,
+  page = 1,
+): Promise<PaginatedEnvelope<Review>> {
+  try {
+    const { data } = await api.get<PaginatedEnvelope<Review>>(
+      `/api/v1/users/${encodeURIComponent(userId)}/reviews`,
+      { params: { page } },
+    );
+    return data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Leave a review for an ad's seller (requires an accepted offer on the ad). */
+export async function createReview(
+  adId: string,
+  payload: CreateReviewRequest,
+): Promise<Review> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<Review>>(
+      `/api/v1/ads/${encodeURIComponent(adId)}/reviews`,
+      payload,
+    );
+    return data.data;
   } catch (err) {
     throw toApiClientError(err);
   }

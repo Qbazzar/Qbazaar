@@ -21,6 +21,7 @@ import {
   MailIcon,
   AlertCircleIcon,
   CheckCircle2Icon,
+  Star,
 } from 'lucide-react';
 
 import {
@@ -38,6 +39,7 @@ import {
 } from '@/components/ui/tabs';
 import { BlockUserButton } from '@/components/users/BlockUserButton';
 import { ReportButton } from '@/components/reports/ReportButton';
+import { SellerReviews } from '@/components/reviews/SellerReviews';
 import { t } from '@/lib/i18n/messages';
 import { formatMonthYear } from '@/lib/utils';
 import { getPublicProfile, getUserAds } from '@/lib/api/users';
@@ -147,6 +149,14 @@ export default function PublicProfilePage({ params }: PageProps) {
             <AboutTab profile={profile} />
           </TabsContent>
         </Tabs>
+
+        <div className="mt-6">
+          <SellerReviews
+            userId={profile.id}
+            ratingAvg={profile.rating_avg}
+            ratingCount={profile.rating_count}
+          />
+        </div>
       </div>
     </main>
   );
@@ -208,6 +218,12 @@ function PublicProfileHeader({
           <Badge variant="outline">
             {t('users.profile.ads_count', { count: profile.ads_count })}
           </Badge>
+          {profile.rating_count > 0 ? (
+            <Badge variant="outline" className="gap-1">
+              <Star className="fill-coral text-coral size-3" aria-hidden />
+              {profile.rating_avg.toFixed(1)} ({profile.rating_count})
+            </Badge>
+          ) : null}
         </div>
       </div>
 
