@@ -99,6 +99,10 @@ return [
             'title' => 'Your ad has expired',
             'body' => 'Your ad ":title" has expired. Renew it in one tap to bring it back.',
         ],
+        'saved_search_match' => [
+            'title' => 'New ad matches your search',
+            'body' => 'A new ad ":title" matches your saved search ":search".',
+        ],
         'data_export_ready' => [
             'title' => 'Your data export is ready',
             'body' => 'Tap to download your personal data export.',

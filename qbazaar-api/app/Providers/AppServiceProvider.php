@@ -15,6 +15,7 @@ use App\Listeners\Ads\RemoveAdFromSearch;
 use App\Listeners\Ads\SendAdNotifications;
 use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
 use App\Listeners\Notifications\PruneStaleDeviceTokens;
+use App\Listeners\Search\NotifySavedSearchMatches;
 use App\Models\Ad;
 use App\Models\User;
 use App\Observers\AdObserver;
@@ -100,6 +101,10 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(AdExpiringSoon::class, [SendAdNotifications::class, 'handle']);
         Event::listen(AdExpired::class, [SendAdNotifications::class, 'handle']);
         Event::listen(AdRenewed::class, [SendAdNotifications::class, 'handle']);
+
+        // Saved-search alerts: a newly-live ad notifies matching searchers.
+        Event::listen(AdPublished::class, [NotifySavedSearchMatches::class, 'handle']);
+        Event::listen(AdApproved::class, [NotifySavedSearchMatches::class, 'handle']);
 
         // NOTE: AdSubmittedForReview → NotifyAdminsOfPendingAd is intentionally
         // NOT registered here. That listener's handle() is single-typed, so
