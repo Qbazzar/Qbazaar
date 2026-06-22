@@ -313,6 +313,7 @@ return [
         'suspend' => 'Suspend',
         'reset_password' => 'Reset password',
         'view_as_user' => 'View public profile',
+        'view_ads' => "View user's ads",
         'approve' => 'Approve',
         'reject' => 'Reject',
         'force_expire' => 'Force expire',

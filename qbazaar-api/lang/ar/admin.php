@@ -254,6 +254,7 @@ return [
         'suspend' => 'إيقاف',
         'reset_password' => 'إعادة تعيين كلمة المرور',
         'view_as_user' => 'عرض الملف العام',
+        'view_ads' => 'عرض إعلانات المستخدم',
         'approve' => 'اعتماد',
         'reject' => 'رفض',
         'force_expire' => 'إنهاء قسري',

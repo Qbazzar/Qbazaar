@@ -373,6 +373,13 @@ class UserResource extends Resource
                     ->color('gray')
                     ->url(static fn (User $record): string => rtrim((string) config('qbazaar.web_url', config('app.url')), '/')
                         . '/u/' . $record->id, shouldOpenInNewTab: true),
+                // Shortcut to this user's ads (pre-searches the ads table by name).
+                Action::make('view_ads')
+                    ->iconButton()
+                    ->label(__('admin.actions.view_ads'))
+                    ->icon('heroicon-o-rectangle-stack')
+                    ->color('gray')
+                    ->url(static fn (User $record): string => AdResource::getUrl('index', ['tableSearch' => $record->full_name])),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

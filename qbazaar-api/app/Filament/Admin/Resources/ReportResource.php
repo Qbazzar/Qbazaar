@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
+use App\Enums\AdStatus;
 use App\Enums\ReportCategory;
 use App\Enums\ReportStatus;
 use App\Enums\ReportTarget;
+use App\Enums\UserStatus;
 use App\Filament\Admin\Resources\ReportResource\Pages;
+use App\Models\Ad;
 use App\Models\Report;
+use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -274,6 +278,39 @@ class ReportResource extends Resource
                     ->visible(static fn (Report $r): bool => $r->status === ReportStatus::PENDING)
                     ->requiresConfirmation()
                     ->action(static fn (Report $r) => self::transition($r, ReportStatus::REVIEWED, null, 'admin.actions.report_reviewed')),
+
+                // Act on the reported target in one step, then mark the report
+                // actioned — closes the report→moderation loop without leaving
+                // this screen.
+                Action::make('suspend_ad')
+                    ->iconButton()
+                    ->label(__('admin.actions.suspend'))
+                    ->icon('heroicon-o-no-symbol')
+                    ->color('danger')
+                    ->visible(static fn (Report $r): bool => $r->target_type === ReportTarget::AD && $r->status === ReportStatus::PENDING)
+                    ->requiresConfirmation()
+                    ->action(static function (Report $r): void {
+                        $ad = Ad::find($r->target_id);
+                        if ($ad !== null && $ad->status === AdStatus::ACTIVE) {
+                            AdResource::suspend($ad);
+                        }
+                        self::transition($r, ReportStatus::ACTIONED, 'Reported ad suspended.', 'admin.actions.report_actioned');
+                    }),
+
+                Action::make('ban_user')
+                    ->iconButton()
+                    ->label(__('admin.actions.ban'))
+                    ->icon('heroicon-o-user-minus')
+                    ->color('danger')
+                    ->visible(static fn (Report $r): bool => $r->target_type === ReportTarget::USER && $r->status === ReportStatus::PENDING)
+                    ->requiresConfirmation()
+                    ->action(static function (Report $r): void {
+                        $user = User::find($r->target_id);
+                        if ($user !== null && $user->status !== UserStatus::SUSPENDED) {
+                            $user->forceFill(['status' => UserStatus::SUSPENDED])->save();
+                        }
+                        self::transition($r, ReportStatus::ACTIONED, 'Reported user banned.', 'admin.actions.report_actioned');
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
