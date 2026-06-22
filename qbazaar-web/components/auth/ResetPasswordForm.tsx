@@ -17,13 +17,15 @@ import {
   resetPasswordSchema,
   type ResetPasswordInput,
 } from '@/lib/validation/auth';
-import { ApiClientError, resetPassword } from '@/lib/api/auth';
+import { ApiClientError, login, resetPassword } from '@/lib/api/auth';
+import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { FieldError } from './FieldError';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 export function ResetPasswordForm() {
   const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
   const search = useSearchParams();
   const email = (search.get('email') ?? '').trim();
   const token = (search.get('token') ?? '').trim();
@@ -47,8 +49,25 @@ export function ResetPasswordForm() {
   const onSubmit = form.handleSubmit(async (values) => {
     try {
       await resetPassword(values);
-      toast.success(t('auth.reset_password.success_toast'));
-      router.replace('/login');
+      // Auto-login with the brand-new password so the user lands signed-in
+      // instead of on the login page, where browser autofill would re-submit
+      // their OLD saved password (the #1 "I reset but can't log in" cause).
+      try {
+        const data = await login({
+          identifier: values.email,
+          password: values.password,
+        });
+        setAuth({
+          user: data.user,
+          accessToken: data.tokens.access_token,
+        });
+        toast.success(t('auth.reset_password.success_toast'));
+        router.replace('/account');
+      } catch {
+        // Reset succeeded but auto-login didn't — fall back to manual login.
+        toast.success(t('auth.reset_password.success_toast'));
+        router.replace('/login');
+      }
     } catch (err) {
       handleSubmitError(err, form);
     }
