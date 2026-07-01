@@ -12,7 +12,7 @@ import { t } from '@/lib/i18n/messages';
  */
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="container" style={{ padding: '40px 0 80px' }}>
+    <div className="container py-10 md:py-20">
       <div className="auth-card">
         <div className="auth-card__pitch">
           <Link href="/" className="logo" aria-label={t('brand.name', 'QBazaar')}>

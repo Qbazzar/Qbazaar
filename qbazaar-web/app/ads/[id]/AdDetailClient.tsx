@@ -52,17 +52,11 @@ export function AdDetailClient({ id }: Props) {
   if (isLoading) {
     return (
       <main>
-        <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
-          <div
-            className="animate-pulse"
-            style={{ height: 18, width: 220, background: 'var(--cream-200)', borderRadius: 8, marginBottom: 24 }}
-          />
+        <div className="container py-6">
+          <div className="bg-cream-200 mb-6 h-[18px] w-[220px] animate-pulse rounded-lg" />
           <div className="detail-grid">
             <div className="gallery animate-pulse" />
-            <div
-              className="card animate-pulse"
-              style={{ minHeight: 300 }}
-            />
+            <div className="card min-h-[300px] animate-pulse" />
           </div>
         </div>
       </main>

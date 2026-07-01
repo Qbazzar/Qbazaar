@@ -201,7 +201,7 @@ function Card({
         : 'bg-muted text-muted-foreground';
 
   return (
-    <div className="bg-card border-border w-full max-w-md space-y-5 rounded-3xl border p-8 shadow-sm">
+    <div className="bg-card border-border w-full max-w-md space-y-5 rounded-2xl border p-8 shadow-sm">
       <div className="flex flex-col items-center gap-3 text-center">
         <span
           className={`inline-flex size-12 items-center justify-center rounded-full ${toneClasses}`}

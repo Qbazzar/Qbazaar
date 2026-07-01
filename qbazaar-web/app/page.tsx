@@ -37,7 +37,7 @@ export default function HomePage() {
       </section>
 
       {/* BROWSE CATEGORIES */}
-      <section className="container" style={{ paddingTop: 48 }}>
+      <section className="container pt-12">
         <div className="section-header">
           <div>
             <h2 className="section-header__title">
@@ -61,12 +61,12 @@ export default function HomePage() {
       <HomeFeaturedAds />
 
       {/* RECENTLY VIEWED — auth-only, auto-hidden when empty */}
-      <section className="container" style={{ paddingTop: 48 }}>
+      <section className="container pt-12">
         <RecentlyViewedStrip />
       </section>
 
       {/* LATEST ADS */}
-      <section className="container" style={{ paddingTop: 48 }}>
+      <section className="container pt-12">
         <div className="section-header">
           <div>
             <h2 className="section-header__title">
@@ -84,7 +84,7 @@ export default function HomePage() {
           </Link>
         </div>
         <HomeLatestAds />
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+        <div className="mt-6 flex justify-center">
           <Link href="/ads" className="btn btn--primary btn--pill">
             {t('ads.list.load_more', 'تحميل المزيد')}
           </Link>
@@ -100,7 +100,7 @@ export default function HomePage() {
           {t('home.find_places.subtitle_a', 'حول')}{' '}
           <em>{t('home.find_places.subtitle_b', 'موقعك')}</em>
         </div>
-        <div style={{ marginTop: 28 }}>
+        <div className="mt-7">
           <Link href="/ads" className="btn btn--primary btn--pill">
             {t('home.sections.view_more', 'عرض الكل')}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
