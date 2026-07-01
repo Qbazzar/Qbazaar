@@ -382,7 +382,9 @@ select.field-native {
   gap: 16px;
   flex-wrap: wrap;
 }
-.section-header__title { font-size: 22px; font-weight: 700; color: var(--ink-900); letter-spacing: -0.005em; line-height: 1.2; }
+.section-header__title { font-family: var(--font-display); font-weight: 400; font-size: 26px; color: var(--ink-900); letter-spacing: -0.01em; line-height: 1.15; }
+/* Arabic keeps the brand Arabic face (Instrument Serif is Latin-only). */
+[dir="rtl"] .section-header__title { font-family: var(--font-arabic); font-weight: 700; }
 .section-header__sub { margin-top: 4px; font-size: 13px; color: var(--ink-500); }
 .section-header__action {
   font-size: 13px;
@@ -956,7 +958,7 @@ select.field-native {
 .gallery-thumb.is-active { border-color: var(--coral); }
 .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .detail-title { margin: 10px 0 12px; font-size: clamp(32px, 4vw, 44px); font-weight: 800; color: var(--ink-900); line-height: 1.1; letter-spacing: -0.015em; }
-.detail-price { font-size: 48px; color: var(--terracotta); line-height: 1; font-weight: 400; }
+.detail-price { font-family: var(--font-display); font-size: 48px; color: var(--terracotta); line-height: 1; font-weight: 400; }
 .detail-price__currency { font-size: 18px; color: var(--ink-700); margin-left: 6px; }
 .detail-meta { display: flex; gap: 18px; margin-top: 14px; font-size: 13.5px; color: var(--ink-700); flex-wrap: wrap; }
 .detail-meta__item { display: inline-flex; align-items: center; gap: 6px; }
