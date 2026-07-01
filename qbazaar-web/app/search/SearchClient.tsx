@@ -35,6 +35,7 @@ import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { ApiClientError } from '@/lib/api/auth';
 import type {
   AdCondition,
+  CustomFieldsFilter,
   SearchQueryParams,
   SortMode,
 } from '@/lib/api/types';
@@ -55,6 +56,9 @@ export function SearchClient() {
       condition: parseAsStringEnum<AdCondition>([...CONDITION_VALUES]),
       sort: parseAsStringEnum<SortMode>(SORT_VALUES).withDefault('latest'),
       page: parseAsInteger.withDefault(1),
+      // Category custom-field filters, JSON-encoded so the dynamic keys ride a
+      // single URL param.
+      cf: parseAsString,
     },
     {
       history: 'push',
@@ -65,10 +69,23 @@ export function SearchClient() {
   const { data: categoryTree } = useCategoryTreeQuery();
   const { data: locationTree } = useQatarLocationsQuery();
 
-  const categoryId = useMemo(() => {
+  const selectedCategory = useMemo(() => {
     if (!urlState.category_slug || !categoryTree) return undefined;
-    return findCategoryBySlug(categoryTree, urlState.category_slug)?.id;
+    return findCategoryBySlug(categoryTree, urlState.category_slug);
   }, [categoryTree, urlState.category_slug]);
+
+  const categoryId = selectedCategory?.id;
+
+  // Decode the JSON custom-field filter bag from the URL (tolerant of junk).
+  const customFields = useMemo<CustomFieldsFilter>(() => {
+    if (!urlState.cf) return {};
+    try {
+      const parsed = JSON.parse(urlState.cf);
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }, [urlState.cf]);
 
   const locationId = useMemo(() => {
     if (!urlState.location_slug || !locationTree) return undefined;
@@ -94,8 +111,11 @@ export function SearchClient() {
     if (urlState.price_min !== null) params.price_min = urlState.price_min;
     if (urlState.price_max !== null) params.price_max = urlState.price_max;
     if (urlState.condition) params.condition = urlState.condition;
+    if (Object.keys(customFields).length > 0) {
+      params.custom_fields = customFields;
+    }
     return params;
-  }, [urlState, categoryId, locationId]);
+  }, [urlState, categoryId, locationId, customFields]);
 
   const { data, isLoading, isFetching, isError, error } =
     useSearchQuery(apiParams);
@@ -121,6 +141,14 @@ export function SearchClient() {
       price_min: null,
       price_max: null,
       condition: null,
+      cf: null,
+      page: 1,
+    });
+  };
+
+  const handleCustomFieldsChange = (next: CustomFieldsFilter) => {
+    setUrlState({
+      cf: Object.keys(next).length > 0 ? JSON.stringify(next) : null,
       page: 1,
     });
   };
@@ -175,6 +203,9 @@ export function SearchClient() {
                 onChange={handleFilterPatch}
                 facets={data?.facets ?? null}
                 onClearAll={handleClearAll}
+                customFieldSchema={selectedCategory?.custom_fields ?? null}
+                customFields={customFields}
+                onCustomFieldsChange={handleCustomFieldsChange}
               />
             </div>
           </details>

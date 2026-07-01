@@ -14,9 +14,15 @@ import { CategoryFilters } from './filters/CategoryFilters';
 import { LocationFilters } from './filters/LocationFilters';
 import { PriceRangeFilter } from './filters/PriceRangeFilter';
 import { ConditionFilter } from './filters/ConditionFilter';
+import { CustomFieldFilters } from './filters/CustomFieldFilters';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
-import type { AdCondition, SearchFacets } from '@/lib/api/types';
+import type {
+  AdCondition,
+  CategoryField,
+  CustomFieldsFilter,
+  SearchFacets,
+} from '@/lib/api/types';
 
 export interface FilterValues {
   category_slug: string | null;
@@ -32,6 +38,10 @@ interface Props {
   facets: SearchFacets | null;
   onClearAll: () => void;
   className?: string;
+  /** The selected category's custom-field schema (null when none selected). */
+  customFieldSchema?: CategoryField[] | null;
+  customFields?: CustomFieldsFilter;
+  onCustomFieldsChange?: (next: CustomFieldsFilter) => void;
 }
 
 export function FilterSidebar({
@@ -40,6 +50,9 @@ export function FilterSidebar({
   facets,
   onClearAll,
   className,
+  customFieldSchema,
+  customFields,
+  onCustomFieldsChange,
 }: Props) {
   const hasAnyFilter = useMemo(
     () =>
@@ -86,6 +99,16 @@ export function FilterSidebar({
           counts={facets?.conditions ?? null}
         />
       </FilterCard>
+
+      {customFieldSchema && customFieldSchema.length > 0 && onCustomFieldsChange ? (
+        <FilterCard title={t('search.facets.details', 'تفاصيل')}>
+          <CustomFieldFilters
+            fields={customFieldSchema}
+            value={customFields ?? {}}
+            onChange={onCustomFieldsChange}
+          />
+        </FilterCard>
+      ) : null}
 
       {hasAnyFilter ? (
         <button

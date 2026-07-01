@@ -595,7 +595,14 @@ export interface SearchQueryParams extends Record<string, unknown> {
   sort?: SortMode;
   page?: number;
   per_page?: number;
+  /** Category-specific filters: { make: 'Toyota', year: { min: 2015 } }. */
+  custom_fields?: CustomFieldsFilter;
 }
+
+export type CustomFieldsFilter = Record<
+  string,
+  string | { min?: number; max?: number }
+>;
 
 /**
  * Aggregated counts returned alongside the result page so the UI can render

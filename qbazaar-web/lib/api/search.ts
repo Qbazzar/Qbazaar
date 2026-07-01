@@ -70,12 +70,43 @@ export async function runSearch(
 ): Promise<SearchResponse> {
   try {
     const { data } = await api.get<SearchResponse>(SEARCH_BASE, {
-      params: cleanParams(params),
+      params: flattenSearchParams(cleanParams(params)),
     });
     return data;
   } catch (err) {
     throw toApiClientError(err);
   }
+}
+
+/**
+ * Flatten the nested `custom_fields` object into bracket-notation query keys
+ * (`custom_fields[make]=Toyota`, `custom_fields[year][min]=2015`) that Laravel
+ * parses back into a nested array — instead of relying on axios's object
+ * serialisation.
+ */
+function flattenSearchParams(
+  params: Partial<SearchQueryParams>,
+): Record<string, unknown> {
+  const { custom_fields, ...rest } = params;
+  const out: Record<string, unknown> = { ...rest };
+
+  if (custom_fields && typeof custom_fields === 'object') {
+    for (const [key, value] of Object.entries(custom_fields)) {
+      if (value === undefined || value === null || value === '') continue;
+      if (typeof value === 'object') {
+        if (value.min !== undefined && value.min !== null) {
+          out[`custom_fields[${key}][min]`] = value.min;
+        }
+        if (value.max !== undefined && value.max !== null) {
+          out[`custom_fields[${key}][max]`] = value.max;
+        }
+      } else {
+        out[`custom_fields[${key}]`] = value;
+      }
+    }
+  }
+
+  return out;
 }
 
 export async function getSuggestions(q: string): Promise<SearchSuggestion[]> {
