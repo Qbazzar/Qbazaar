@@ -128,19 +128,19 @@ class AdResource extends Resource
                     Select::make('price_type')
                         ->label(__('admin.fields.price_type'))
                         ->options([
-                            'fixed' => 'Fixed',
-                            'negotiable' => 'Negotiable',
-                            'free' => 'Free',
-                            'contact' => 'Contact',
+                            'fixed' => __('admin.price_type.fixed'),
+                            'negotiable' => __('admin.price_type.negotiable'),
+                            'free' => __('admin.price_type.free'),
+                            'contact' => __('admin.price_type.contact'),
                         ])
                         ->required(),
 
                     Select::make('condition')
                         ->label(__('admin.fields.condition'))
                         ->options([
-                            Condition::NEW->value => 'New',
-                            Condition::LIKE_NEW->value => 'Like new',
-                            Condition::USED->value => 'Used',
+                            Condition::NEW->value => __('admin.condition.new'),
+                            Condition::LIKE_NEW->value => __('admin.condition.like_new'),
+                            Condition::USED->value => __('admin.condition.used'),
                         ]),
                 ]),
 
