@@ -103,6 +103,10 @@ class SearchRequest extends FormRequest
             'sort' => ['nullable', Rule::in(['latest', 'oldest', 'price_asc', 'price_desc'])],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
+            // Category-specific filters: custom_fields[make]=Toyota or
+            // custom_fields[year][min]=2015. Keys/values are sanitised in the
+            // search service, so we only assert the outer shape here.
+            'custom_fields' => ['nullable', 'array'],
         ];
     }
 

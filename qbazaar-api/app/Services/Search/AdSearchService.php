@@ -230,6 +230,30 @@ class AdSearchService
             $clauses[] = sprintf('price <= %s', (float) $params['price_max']);
         }
 
+        // Category-specific custom-field filters. Shape (parsed from the query
+        // string): custom_fields[make]=Toyota (equality) or
+        // custom_fields[year][min]=2015&custom_fields[year][max]=2020 (range).
+        if (isset($params['custom_fields']) && is_array($params['custom_fields'])) {
+            foreach ($params['custom_fields'] as $key => $value) {
+                // Keys mirror the category schema (make/year/…) — reject
+                // anything that isn't a safe attribute path.
+                if (! is_string($key) || preg_match('/^[a-z0-9_]+$/i', $key) !== 1) {
+                    continue;
+                }
+
+                if (is_array($value)) {
+                    if (isset($value['min']) && is_numeric($value['min'])) {
+                        $clauses[] = sprintf('custom_fields.%s >= %s', $key, (float) $value['min']);
+                    }
+                    if (isset($value['max']) && is_numeric($value['max'])) {
+                        $clauses[] = sprintf('custom_fields.%s <= %s', $key, (float) $value['max']);
+                    }
+                } elseif (is_string($value) && $value !== '') {
+                    $clauses[] = sprintf('custom_fields.%s = "%s"', $key, str_replace('"', '\"', $value));
+                }
+            }
+        }
+
         return implode(' AND ', $clauses);
     }
 

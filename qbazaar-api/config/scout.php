@@ -158,6 +158,9 @@ return [
                     'status',
                     'published_at',
                     'has_images',
+                    // Declaring the parent makes every custom_fields.<key>
+                    // filterable (make/year/bedrooms/…) without listing each.
+                    'custom_fields',
                 ],
                 'sortableAttributes' => [
                     'published_at',

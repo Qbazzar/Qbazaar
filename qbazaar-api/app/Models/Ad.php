@@ -383,7 +383,24 @@ class Ad extends Model implements HasMedia
             'published_at' => $this->published_at?->getTimestamp(),
             'created_at_ts' => $this->created_at instanceof Carbon ? $this->created_at->getTimestamp() : null,
             'has_images' => $hasImages,
+            // Category-specific attributes, indexed as a nested object so the
+            // search can filter `custom_fields.year >= 2015` etc. Numeric-looking
+            // strings are cast to real numbers so range filters compare correctly.
+            'custom_fields' => $this->customFieldsForSearch(),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function customFieldsForSearch(): array
+    {
+        $fields = is_array($this->custom_fields) ? $this->custom_fields : [];
+
+        return array_map(
+            static fn (mixed $value): mixed => is_string($value) && is_numeric($value) ? $value + 0 : $value,
+            $fields,
+        );
     }
 
     /* ──────────────────────────────────────────────────────────────────
