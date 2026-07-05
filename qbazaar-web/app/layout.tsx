@@ -70,7 +70,8 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale}>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          {/* Light-only product — force light and ignore the OS/system theme. */}
+          <ThemeProvider attribute="class" forcedTheme="light">
             <Providers>
               <SiteHeaderGate />
               <div className="flex-1">{children}</div>

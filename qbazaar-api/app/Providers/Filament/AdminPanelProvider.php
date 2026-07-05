@@ -65,9 +65,10 @@ class AdminPanelProvider extends PanelProvider
             ->favicon('/brand/favicon.ico')
             ->colors([
                 'primary' => Color::Orange,
-                // Neutral (not Slate) so dark mode is true black-grey, no navy tint.
                 'gray' => Color::Neutral,
             ])
+            // Light-only admin — no dark-mode toggle.
+            ->darkMode(false)
             ->sidebarCollapsibleOnDesktop()
             ->sidebarWidth('17rem')
             ->collapsedSidebarWidth('4.5rem')

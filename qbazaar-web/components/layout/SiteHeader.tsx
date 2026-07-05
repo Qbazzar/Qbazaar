@@ -17,7 +17,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/ui/logo';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { LocaleSwitcher } from '@/components/i18n/LocaleSwitcher';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
@@ -115,8 +114,6 @@ export function SiteHeader() {
           </Link>
 
           <LocaleSwitcher className="icon-btn" />
-
-          <ThemeToggle />
 
           {isHydrated && isAuthenticated ? (
             <Link href="/account" className="avatar-link" aria-label={t('account.nav.title', 'حسابي')}>
