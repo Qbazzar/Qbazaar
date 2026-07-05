@@ -6,6 +6,7 @@ use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Middleware\ApiResponseWrapper;
 use App\Http\Middleware\EnsurePhoneVerified;
+use App\Http\Middleware\EnsureStaff;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\Idempotent;
 use App\Http\Middleware\LocaleMiddleware;
@@ -93,6 +94,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active.user' => EnsureUserIsActive::class,
             'phone.verified' => EnsurePhoneVerified::class,
             'idempotent' => Idempotent::class,
+            'staff' => EnsureStaff::class,
         ]);
 
         // API group — every /api/v1/* request runs through these in order

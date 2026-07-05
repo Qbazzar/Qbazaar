@@ -3,10 +3,38 @@
 declare(strict_types=1);
 
 use App\Enums\Language;
+use App\Http\Controllers\Manage\AdController;
+use App\Http\Controllers\Manage\AuthController;
+use App\Http\Controllers\Manage\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Custom admin panel (/manage) — Tailwind, session-authenticated
+|--------------------------------------------------------------------------
+| Session (web guard) auth, gated to staff roles by the `staff` middleware.
+| Runs alongside the legacy Filament panel (/admin) during the migration.
+*/
+Route::prefix('manage')->name('manage.')->group(function () {
+    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [AuthController::class, 'login'])->name('login.attempt');
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::middleware('staff')->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('ads', [AdController::class, 'index'])->name('ads.index');
+        Route::get('ads/{ad}', [AdController::class, 'show'])->name('ads.show');
+        Route::post('ads/{ad}/approve', [AdController::class, 'approve'])->name('ads.approve');
+        Route::post('ads/{ad}/reject', [AdController::class, 'reject'])->name('ads.reject');
+        Route::post('ads/{ad}/suspend', [AdController::class, 'suspend'])->name('ads.suspend');
+        Route::post('ads/{ad}/unsuspend', [AdController::class, 'unsuspend'])->name('ads.unsuspend');
+        Route::post('ads/{ad}/feature', [AdController::class, 'toggleFeature'])->name('ads.feature');
+    });
 });
 
 /*

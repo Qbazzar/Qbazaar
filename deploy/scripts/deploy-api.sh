@@ -42,6 +42,13 @@ trap cleanup EXIT
 log "composer install --no-dev --optimize-autoloader"
 composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
+# Build the Vite bundle for the server-rendered surfaces (the custom /manage
+# admin panel + welcome page). Assets are gitignored, so they must be compiled
+# on the box. Node/npm are already present on this VPS (the web deploy uses them).
+log "npm ci + vite build"
+npm ci --no-audit --no-fund
+NODE_OPTIONS="--max-old-space-size=1536" npm run build
+
 log "Migrations"
 php artisan migrate --force --no-interaction
 

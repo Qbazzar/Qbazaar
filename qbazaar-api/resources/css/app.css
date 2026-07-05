@@ -6,6 +6,19 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* QBazaar brand palette — mirrors qbazaar-web design tokens so the
+       /manage panel reads as part of the same product. */
+    --color-coral: #f37335;
+    --color-coral-soft: #ffe8d9;
+    --color-cream-50: #f7f8fa;
+    --color-cream-100: #ffffff;
+    --color-cream-200: #f1f2f5;
+    --color-ink-900: #1a1a1a;
+    --color-ink-700: #4a4a4a;
+    --color-ink-500: #8a8a8a;
+    --color-ink-300: #d1d5db;
+    --color-ink-200: #e5e7eb;
 }

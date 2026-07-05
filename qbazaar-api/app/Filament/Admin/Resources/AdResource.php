@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
-use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
 use App\Enums\Condition;
 use App\Enums\PriceType;
-use App\Events\Ads\AdApproved;
-use App\Events\Ads\AdRejected;
 use App\Filament\Admin\Resources\AdResource\Pages;
 use App\Models\Ad;
+use App\Services\Ads\AdModerationService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -490,8 +488,7 @@ class AdResource extends Resource
      */
     public static function approve(Ad $ad): void
     {
-        $ad->publish();
-        AdApproved::dispatch($ad);
+        app(AdModerationService::class)->approve($ad);
 
         Notification::make()
             ->title(__('admin.actions.ad_approved'))
@@ -502,8 +499,7 @@ class AdResource extends Resource
     /** Suspend a live ad (ACTIVE → BLOCKED) and pull it from search. */
     public static function suspend(Ad $ad): void
     {
-        $ad->forceFill(['status' => AdStatus::BLOCKED])->save();
-        $ad->unsearchable();
+        app(AdModerationService::class)->suspend($ad);
 
         Notification::make()
             ->title(__('admin.actions.ad_suspended'))
@@ -514,8 +510,7 @@ class AdResource extends Resource
     /** Lift a suspension (BLOCKED → ACTIVE) and re-index it. */
     public static function unsuspend(Ad $ad): void
     {
-        $ad->publish();
-        AdApproved::dispatch($ad);
+        app(AdModerationService::class)->unsuspend($ad);
 
         Notification::make()
             ->title(__('admin.actions.ad_unsuspended'))
@@ -531,16 +526,7 @@ class AdResource extends Resource
      */
     public static function reject(Ad $ad, string $notes): void
     {
-        $ad->forceFill([
-            'status' => AdStatus::REJECTED,
-            'published_at' => null,
-            'expires_at' => null,
-        ])->save();
-
-        $ad->unsearchable();
-
-        $result = ModerationResult::rejected(['admin_manual'], ['admin_notes' => $notes]);
-        AdRejected::dispatch($ad, $result);
+        app(AdModerationService::class)->reject($ad, $notes);
 
         Notification::make()
             ->title(__('admin.actions.ad_rejected'))
