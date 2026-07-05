@@ -5,7 +5,11 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            // CSS only — the server-rendered surfaces (welcome + /manage) need
+            // no client JS. resources/js/* is vestigial Breeze scaffolding whose
+            // Echo import pulls uninstalled deps; excluded so the build stays
+            // self-contained.
+            input: ['resources/css/app.css'],
             refresh: true,
         }),
         tailwindcss(),
