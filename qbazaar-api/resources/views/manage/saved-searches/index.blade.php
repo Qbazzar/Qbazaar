@@ -1,0 +1,39 @@
+@extends('manage.layout')
+
+@section('title', 'عمليات البحث المحفوظة')
+@section('heading', 'عمليات البحث المحفوظة')
+
+@section('content')
+    <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-sm">
+                <thead class="border-b border-ink-200 text-xs font-semibold text-ink-500">
+                    <tr>
+                        <th class="px-4 py-3 font-semibold">الاسم</th>
+                        <th class="px-4 py-3 font-semibold">المستخدم</th>
+                        <th class="px-4 py-3 font-semibold">معايير البحث</th>
+                        <th class="px-4 py-3 font-semibold">التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-ink-200">
+                    @forelse ($savedSearches as $savedSearch)
+                        <tr class="hover:bg-cream-50">
+                            <td class="px-4 py-3 font-semibold">{{ $savedSearch->name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-ink-700">{{ $savedSearch->user?->full_name ?? '—' }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-ink-500" dir="ltr">
+                                {{ \Illuminate\Support\Str::limit(is_array($savedSearch->query_params) ? (string) json_encode($savedSearch->query_params, JSON_UNESCAPED_UNICODE) : (string) $savedSearch->query_params, 70) }}
+                            </td>
+                            <td class="px-4 py-3 text-ink-500">{{ optional($savedSearch->created_at)->format('Y-m-d') }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="px-4 py-12 text-center text-ink-500">لا توجد عمليات بحث محفوظة.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        {{ $savedSearches->links() }}
+    </div>
+@endsection

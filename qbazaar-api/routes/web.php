@@ -3,9 +3,24 @@
 declare(strict_types=1);
 
 use App\Enums\Language;
+use App\Http\Controllers\Manage\ActivityController;
 use App\Http\Controllers\Manage\AdController;
 use App\Http\Controllers\Manage\AuthController;
+use App\Http\Controllers\Manage\CategoryController;
+use App\Http\Controllers\Manage\ConversationController;
 use App\Http\Controllers\Manage\DashboardController;
+use App\Http\Controllers\Manage\HelpArticleController;
+use App\Http\Controllers\Manage\HelpCategoryController;
+use App\Http\Controllers\Manage\LocationController;
+use App\Http\Controllers\Manage\ModerationRuleController;
+use App\Http\Controllers\Manage\NotificationController;
+use App\Http\Controllers\Manage\OfferController;
+use App\Http\Controllers\Manage\PageController;
+use App\Http\Controllers\Manage\ReportController;
+use App\Http\Controllers\Manage\RoleController;
+use App\Http\Controllers\Manage\SavedSearchController;
+use App\Http\Controllers\Manage\SupportTicketController;
+use App\Http\Controllers\Manage\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -34,6 +49,87 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::post('ads/{ad}/suspend', [AdController::class, 'suspend'])->name('ads.suspend');
         Route::post('ads/{ad}/unsuspend', [AdController::class, 'unsuspend'])->name('ads.unsuspend');
         Route::post('ads/{ad}/feature', [AdController::class, 'toggleFeature'])->name('ads.feature');
+
+        // Users
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::post('users/{user}/suspend', [UserController::class, 'suspend'])->name('users.suspend');
+        Route::post('users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
+        Route::post('users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles');
+
+        // Roles (read-only)
+        Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+
+        // Reports (moderation queue)
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+        Route::post('reports/{report}/resolve', [ReportController::class, 'resolve'])->name('reports.resolve');
+        Route::post('reports/{report}/dismiss', [ReportController::class, 'dismiss'])->name('reports.dismiss');
+        Route::post('reports/{report}/action', [ReportController::class, 'action'])->name('reports.action');
+
+        // Moderation rules (CRUD)
+        Route::get('moderation-rules', [ModerationRuleController::class, 'index'])->name('moderation-rules.index');
+        Route::get('moderation-rules/create', [ModerationRuleController::class, 'create'])->name('moderation-rules.create');
+        Route::post('moderation-rules', [ModerationRuleController::class, 'store'])->name('moderation-rules.store');
+        Route::get('moderation-rules/{rule}/edit', [ModerationRuleController::class, 'edit'])->name('moderation-rules.edit');
+        Route::put('moderation-rules/{rule}', [ModerationRuleController::class, 'update'])->name('moderation-rules.update');
+        Route::delete('moderation-rules/{rule}', [ModerationRuleController::class, 'destroy'])->name('moderation-rules.destroy');
+
+        // Categories (CRUD)
+        Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::get('categories/create', [CategoryController::class, 'create'])->name('categories.create');
+        Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::get('categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+        Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+        // Locations (CRUD)
+        Route::get('locations', [LocationController::class, 'index'])->name('locations.index');
+        Route::get('locations/create', [LocationController::class, 'create'])->name('locations.create');
+        Route::post('locations', [LocationController::class, 'store'])->name('locations.store');
+        Route::get('locations/{location}/edit', [LocationController::class, 'edit'])->name('locations.edit');
+        Route::put('locations/{location}', [LocationController::class, 'update'])->name('locations.update');
+        Route::delete('locations/{location}', [LocationController::class, 'destroy'])->name('locations.destroy');
+
+        // CMS Pages (CRUD)
+        Route::get('pages', [PageController::class, 'index'])->name('pages.index');
+        Route::get('pages/create', [PageController::class, 'create'])->name('pages.create');
+        Route::post('pages', [PageController::class, 'store'])->name('pages.store');
+        Route::get('pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
+        Route::put('pages/{page}', [PageController::class, 'update'])->name('pages.update');
+        Route::delete('pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+
+        // Help Categories (CRUD)
+        Route::get('help-categories', [HelpCategoryController::class, 'index'])->name('help-categories.index');
+        Route::get('help-categories/create', [HelpCategoryController::class, 'create'])->name('help-categories.create');
+        Route::post('help-categories', [HelpCategoryController::class, 'store'])->name('help-categories.store');
+        Route::get('help-categories/{help_category}/edit', [HelpCategoryController::class, 'edit'])->name('help-categories.edit');
+        Route::put('help-categories/{help_category}', [HelpCategoryController::class, 'update'])->name('help-categories.update');
+        Route::delete('help-categories/{help_category}', [HelpCategoryController::class, 'destroy'])->name('help-categories.destroy');
+
+        // Help Articles (CRUD)
+        Route::get('help-articles', [HelpArticleController::class, 'index'])->name('help-articles.index');
+        Route::get('help-articles/create', [HelpArticleController::class, 'create'])->name('help-articles.create');
+        Route::post('help-articles', [HelpArticleController::class, 'store'])->name('help-articles.store');
+        Route::get('help-articles/{help_article}/edit', [HelpArticleController::class, 'edit'])->name('help-articles.edit');
+        Route::put('help-articles/{help_article}', [HelpArticleController::class, 'update'])->name('help-articles.update');
+        Route::delete('help-articles/{help_article}', [HelpArticleController::class, 'destroy'])->name('help-articles.destroy');
+
+        // Support tickets
+        Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');
+        Route::get('support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');
+        Route::post('support/{ticket}/reply', [SupportTicketController::class, 'reply'])->name('support.reply');
+        Route::post('support/{ticket}/status', [SupportTicketController::class, 'updateStatus'])->name('support.status');
+
+        // Conversations (read-only)
+        Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
+        Route::get('conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
+
+        // Read-only surfaces
+        Route::get('offers', [OfferController::class, 'index'])->name('offers.index');
+        Route::get('saved-searches', [SavedSearchController::class, 'index'])->name('saved-searches.index');
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('activity', [ActivityController::class, 'index'])->name('activity.index');
     });
 });
 
