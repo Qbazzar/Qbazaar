@@ -45,8 +45,10 @@ composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 # Build the Vite bundle for the server-rendered surfaces (the custom /manage
 # admin panel + welcome page). Assets are gitignored, so they must be compiled
 # on the box. Node/npm are already present on this VPS (the web deploy uses them).
-log "npm ci + vite build"
-npm ci --no-audit --no-fund
+# `npm install` (not `ci`): the API has no committed package-lock.json, and this
+# dependency set only feeds the Vite/Tailwind build for server-rendered views.
+log "npm install + vite build"
+npm install --no-audit --no-fund
 NODE_OPTIONS="--max-old-space-size=1536" npm run build
 
 log "Migrations"
