@@ -1,26 +1,24 @@
 @extends('manage.layout')
 
-@php($isEdit = $rule->exists)
-
-@section('title', $isEdit ? 'تعديل قاعدة' : 'إضافة قاعدة')
-@section('heading', $isEdit ? 'تعديل قاعدة إشراف' : 'إضافة قاعدة إشراف')
-
-@php
-    $typeLabels = [
-        'banned_word' => 'كلمة محظورة',
-        'blocked_domain' => 'نطاق محظور',
-    ];
-    $languageLabels = [
-        'any' => 'الكل',
-        'ar' => 'العربية',
-        'en' => 'الإنجليزية',
-    ];
-    $currentType = old('type', $rule->type?->value);
-    $currentLanguage = old('language', $rule->language?->value ?? 'any');
-    $currentActive = old('is_active', $rule->is_active ?? true);
-@endphp
+@section('title', $rule->exists ? 'تعديل قاعدة' : 'إضافة قاعدة')
+@section('heading', $rule->exists ? 'تعديل قاعدة إشراف' : 'إضافة قاعدة إشراف')
 
 @section('content')
+    @php
+        $isEdit = $rule->exists;
+        $typeLabels = [
+            'banned_word' => 'كلمة محظورة',
+            'blocked_domain' => 'نطاق محظور',
+        ];
+        $languageLabels = [
+            'any' => 'الكل',
+            'ar' => 'العربية',
+            'en' => 'الإنجليزية',
+        ];
+        $currentType = old('type', $rule->type?->value);
+        $currentLanguage = old('language', $rule->language?->value ?? 'any');
+        $currentActive = old('is_active', $rule->is_active ?? true);
+    @endphp
     <a href="{{ route('manage.moderation-rules.index') }}" class="mb-4 inline-block text-sm font-semibold text-ink-500 hover:text-coral">→ رجوع</a>
 
     <div class="max-w-2xl rounded-2xl border border-ink-200 bg-cream-100 p-6">
