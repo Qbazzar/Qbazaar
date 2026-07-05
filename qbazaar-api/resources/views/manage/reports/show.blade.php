@@ -26,7 +26,9 @@
 @endphp
 
 @section('content')
-    <a href="{{ url()->previous() }}" class="mb-4 inline-block text-sm font-semibold text-ink-500 hover:text-coral">→ رجوع</a>
+    <a href="{{ route('manage.reports.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
+        <x-manage.icon name="arrow-right" class="size-4" /> رجوع للبلاغات
+    </a>
 
     <div class="grid gap-6 lg:grid-cols-3">
         {{-- Details --}}
@@ -88,12 +90,16 @@
                     <div class="space-y-3">
                         <form method="POST" action="{{ route('manage.reports.resolve', $report) }}">
                             @csrf
-                            <button class="w-full rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">تعليم كمراجَع</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                <x-manage.icon name="check" class="size-[18px]" /> تعليم كمراجَع
+                            </button>
                         </form>
 
                         <form method="POST" action="{{ route('manage.reports.dismiss', $report) }}">
                             @csrf
-                            <button class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-cream-200">رفض البلاغ</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
+                                <x-manage.icon name="x-circle" class="size-[18px]" /> رفض البلاغ
+                            </button>
                         </form>
 
                         <form method="POST" action="{{ route('manage.reports.action', $report) }}" class="space-y-2">
@@ -101,8 +107,31 @@
                             <textarea name="admin_notes" rows="3" required placeholder="ملاحظات الإجراء المتخذ…"
                                       class="w-full rounded-xl border border-ink-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-coral">{{ old('admin_notes') }}</textarea>
                             @error('admin_notes')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                            <button class="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">تم اتخاذ إجراء</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                <x-manage.icon name="check" class="size-[18px]" /> تم اتخاذ إجراء
+                            </button>
                         </form>
+
+                        {{-- Direct action on the reported target --}}
+                        @if ($report->target_type === \App\Enums\ReportTarget::AD)
+                            <form method="POST" action="{{ route('manage.reports.suspend-ad', $report) }}"
+                                  onsubmit="return confirm('إيقاف الإعلان المُبلَّغ عنه وإغلاق البلاغ؟')">
+                                @csrf
+                                <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                    <x-manage.icon name="ban" class="size-[18px]" /> إيقاف الإعلان المُبلَّغ عنه
+                                </button>
+                            </form>
+                        @endif
+
+                        @if ($report->target_type === \App\Enums\ReportTarget::USER)
+                            <form method="POST" action="{{ route('manage.reports.ban-user', $report) }}"
+                                  onsubmit="return confirm('إيقاف المستخدم المُبلَّغ عنه وإغلاق البلاغ؟')">
+                                @csrf
+                                <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                    <x-manage.icon name="ban" class="size-[18px]" /> إيقاف المستخدم المُبلَّغ عنه
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             @endif

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
@@ -76,6 +77,14 @@ class UserController extends Controller
         $user->forceFill(['status' => UserStatus::ACTIVE])->save();
 
         return back()->with('status', 'تم تفعيل المستخدم.');
+    }
+
+    /** Email the user a password-reset link (self-service recovery on their behalf). */
+    public function sendPasswordReset(User $user): RedirectResponse
+    {
+        Password::broker()->sendResetLink(['email' => $user->email]);
+
+        return back()->with('status', 'تم إرسال رابط إعادة تعيين كلمة المرور للمستخدم.');
     }
 
     /**

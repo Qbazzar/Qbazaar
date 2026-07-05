@@ -4,7 +4,9 @@
 @section('heading', 'عرض المحادثة')
 
 @section('content')
-    <a href="{{ route('manage.conversations.index') }}" class="mb-4 inline-block text-sm font-semibold text-ink-500 hover:text-coral">→ رجوع</a>
+    <a href="{{ route('manage.conversations.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
+        <x-manage.icon name="arrow-right" class="size-4" /> رجوع للمحادثات
+    </a>
 
     {{-- Meta --}}
     <div class="mb-6 rounded-2xl border border-ink-200 bg-cream-100 p-6">
@@ -18,6 +20,9 @@
 
     {{-- Thread --}}
     <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
+        <div class="mb-4 flex items-center gap-2 text-sm font-semibold text-ink-500">
+            <x-manage.icon name="chat" class="size-[18px] text-coral" /> المحادثة
+        </div>
         <div class="space-y-4">
             @php($sellerId = $conversation->seller_id)
             @forelse ($messages as $message)

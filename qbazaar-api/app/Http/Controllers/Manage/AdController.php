@@ -91,4 +91,20 @@ class AdController extends Controller
 
         return back()->with('status', $featured ? 'تم تمييز الإعلان.' : 'تم إلغاء تمييز الإعلان.');
     }
+
+    public function forceExpire(Ad $ad): RedirectResponse
+    {
+        $this->moderation->forceExpire($ad);
+
+        return back()->with('status', 'تم إنهاء الإعلان.');
+    }
+
+    public function destroy(Ad $ad): RedirectResponse
+    {
+        $ad->delete();
+
+        return redirect()
+            ->route('manage.ads.index')
+            ->with('status', 'تم حذف الإعلان.');
+    }
 }

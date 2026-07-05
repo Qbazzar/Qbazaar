@@ -7,24 +7,33 @@
     @php($max = max(1, collect($trend)->max('count')))
 
     {{-- Ads --}}
-    <h2 class="mb-3 text-sm font-bold text-ink-500">الإعلانات</h2>
+    <div class="mb-3 flex items-center gap-2 text-sm font-bold text-ink-500">
+        <x-manage.icon name="tag" class="size-4" /> الإعلانات
+    </div>
     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
         @foreach ([
-            ['نشطة', $ads['active'], 'manage.ads.index', ['status' => 'active']],
-            ['بانتظار المراجعة', $ads['pending'], 'manage.ads.index', ['status' => 'pending']],
-            ['نُشرت اليوم', $ads['published_today'], null, null],
-            ['الإجمالي', $ads['total'], 'manage.ads.index', []],
-        ] as [$label, $value, $route, $params])
+            ['نشطة', $ads['active'], 'check', 'manage.ads.index', ['status' => 'active']],
+            ['بانتظار المراجعة', $ads['pending'], 'clock', 'manage.ads.index', ['status' => 'pending']],
+            ['نُشرت اليوم', $ads['published_today'], 'trend', null, null],
+            ['الإجمالي', $ads['total'], 'tag', 'manage.ads.index', []],
+        ] as [$label, $value, $icon, $route, $params])
             <a @if($route) href="{{ route($route, $params) }}" @endif
-               class="block rounded-2xl border border-ink-200 bg-cream-100 p-5 {{ $route ? 'transition hover:border-coral' : '' }}">
-                <div class="text-sm font-medium text-ink-500">{{ $label }}</div>
+               class="group block rounded-2xl border border-ink-200 bg-cream-100 p-5 {{ $route ? 'transition hover:border-coral hover:shadow-sm' : '' }}">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm font-medium text-ink-500">{{ $label }}</div>
+                    <span class="flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-500 {{ $route ? 'group-hover:bg-coral-soft group-hover:text-coral' : '' }}">
+                        <x-manage.icon :name="$icon" class="size-[18px]" />
+                    </span>
+                </div>
                 <div class="mt-2 text-3xl font-extrabold">{{ number_format($value) }}</div>
             </a>
         @endforeach
     </div>
 
     {{-- Users --}}
-    <h2 class="mb-3 mt-8 text-sm font-bold text-ink-500">المستخدمون</h2>
+    <div class="mb-3 mt-8 flex items-center gap-2 text-sm font-bold text-ink-500">
+        <x-manage.icon name="users" class="size-4" /> المستخدمون
+    </div>
     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
         @foreach ([
             ['الإجمالي', $users['total']],
@@ -40,7 +49,9 @@
     </div>
 
     {{-- Reports --}}
-    <h2 class="mb-3 mt-8 text-sm font-bold text-ink-500">البلاغات</h2>
+    <div class="mb-3 mt-8 flex items-center gap-2 text-sm font-bold text-ink-500">
+        <x-manage.icon name="flag" class="size-4" /> البلاغات
+    </div>
     <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
         @foreach ([
             ['معلّقة', $reports['pending']],
@@ -57,7 +68,7 @@
     <div class="mt-8 grid gap-6 lg:grid-cols-2">
         {{-- Published trend (CSS bars — no JS) --}}
         <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-            <h2 class="mb-4 font-bold">الإعلانات المنشورة — آخر ١٤ يوماً</h2>
+            <h2 class="mb-4 flex items-center gap-2 font-bold"><x-manage.icon name="trend" class="size-5 text-coral" /> الإعلانات المنشورة — آخر ١٤ يوماً</h2>
             <div class="flex h-40 items-end gap-1.5">
                 @foreach ($trend as $point)
                     <div class="flex flex-1 flex-col items-center gap-1" title="{{ $point['label'] }}: {{ $point['count'] }}">

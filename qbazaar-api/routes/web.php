@@ -49,6 +49,8 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::post('ads/{ad}/suspend', [AdController::class, 'suspend'])->name('ads.suspend');
         Route::post('ads/{ad}/unsuspend', [AdController::class, 'unsuspend'])->name('ads.unsuspend');
         Route::post('ads/{ad}/feature', [AdController::class, 'toggleFeature'])->name('ads.feature');
+        Route::post('ads/{ad}/force-expire', [AdController::class, 'forceExpire'])->name('ads.force-expire');
+        Route::delete('ads/{ad}', [AdController::class, 'destroy'])->name('ads.destroy');
 
         // Users
         Route::get('users', [UserController::class, 'index'])->name('users.index');
@@ -56,6 +58,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::post('users/{user}/suspend', [UserController::class, 'suspend'])->name('users.suspend');
         Route::post('users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
         Route::post('users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles');
+        Route::post('users/{user}/reset-password', [UserController::class, 'sendPasswordReset'])->name('users.reset-password');
 
         // Roles (read-only)
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
@@ -66,6 +69,8 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::post('reports/{report}/resolve', [ReportController::class, 'resolve'])->name('reports.resolve');
         Route::post('reports/{report}/dismiss', [ReportController::class, 'dismiss'])->name('reports.dismiss');
         Route::post('reports/{report}/action', [ReportController::class, 'action'])->name('reports.action');
+        Route::post('reports/{report}/suspend-ad', [ReportController::class, 'suspendAd'])->name('reports.suspend-ad');
+        Route::post('reports/{report}/ban-user', [ReportController::class, 'banUser'])->name('reports.ban-user');
 
         // Moderation rules (CRUD)
         Route::get('moderation-rules', [ModerationRuleController::class, 'index'])->name('moderation-rules.index');
@@ -120,6 +125,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::get('support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');
         Route::post('support/{ticket}/reply', [SupportTicketController::class, 'reply'])->name('support.reply');
         Route::post('support/{ticket}/status', [SupportTicketController::class, 'updateStatus'])->name('support.status');
+        Route::post('support/{ticket}/assign', [SupportTicketController::class, 'assignToMe'])->name('support.assign');
 
         // Conversations (read-only)
         Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');

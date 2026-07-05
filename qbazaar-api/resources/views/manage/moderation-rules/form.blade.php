@@ -19,7 +19,9 @@
         $currentLanguage = old('language', $rule->language?->value ?? 'any');
         $currentActive = old('is_active', $rule->is_active ?? true);
     @endphp
-    <a href="{{ route('manage.moderation-rules.index') }}" class="mb-4 inline-block text-sm font-semibold text-ink-500 hover:text-coral">→ رجوع</a>
+    <a href="{{ route('manage.moderation-rules.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
+        <x-manage.icon name="arrow-right" class="size-4" /> رجوع للقواعد
+    </a>
 
     <div class="max-w-2xl rounded-2xl border border-ink-200 bg-cream-100 p-6">
         <form method="POST"
@@ -70,7 +72,8 @@
             </label>
 
             <div class="flex items-center gap-3 pt-2">
-                <button type="submit" class="rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white hover:brightness-95">
+                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                    <x-manage.icon name="check" class="size-[18px]" />
                     {{ $isEdit ? 'حفظ التغييرات' : 'إضافة' }}
                 </button>
                 <a href="{{ route('manage.moderation-rules.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">إلغاء</a>

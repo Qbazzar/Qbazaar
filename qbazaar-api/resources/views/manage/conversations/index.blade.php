@@ -7,7 +7,7 @@
     <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
         <div class="overflow-x-auto">
             <table class="w-full text-right text-sm">
-                <thead class="border-b border-ink-200 text-xs font-semibold text-ink-500">
+                <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
                     <tr>
                         <th class="px-4 py-3 font-semibold">الإعلان</th>
                         <th class="px-4 py-3 font-semibold">المشتري</th>
@@ -30,11 +30,23 @@
                             </td>
                             <td class="px-4 py-3 text-ink-500">{{ optional($conversation->last_message_at)->format('Y-m-d H:i') ?? '—' }}</td>
                             <td class="px-4 py-3 text-left">
-                                <a href="{{ route('manage.conversations.show', $conversation) }}" class="rounded-lg bg-cream-200 px-3 py-1.5 text-xs font-semibold hover:bg-ink-200">عرض</a>
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a href="{{ route('manage.conversations.show', $conversation) }}" title="عرض"
+                                       class="inline-flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-700 transition hover:bg-coral-soft hover:text-coral">
+                                        <x-manage.icon name="eye" class="size-[18px]" />
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-12 text-center text-ink-500">لا توجد محادثات.</td></tr>
+                        <tr>
+                            <td colspan="6" class="px-4 py-16 text-center">
+                                <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
+                                    <x-manage.icon name="chat" class="size-6" />
+                                </span>
+                                <p class="text-sm font-semibold text-ink-500">لا توجد محادثات.</p>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

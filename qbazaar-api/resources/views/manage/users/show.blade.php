@@ -20,7 +20,9 @@
 @endphp
 
 @section('content')
-    <a href="{{ url()->previous() }}" class="mb-4 inline-block text-sm font-semibold text-ink-500 hover:text-coral">→ رجوع</a>
+    <a href="{{ route('manage.users.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
+        <x-manage.icon name="arrow-right" class="size-4" /> رجوع للمستخدمين
+    </a>
 
     <div class="grid gap-6 lg:grid-cols-3">
         {{-- Profile --}}
@@ -81,7 +83,9 @@
                                 </label>
                             @endforeach
                         </div>
-                        <button class="mt-4 w-full rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">حفظ الأدوار</button>
+                        <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                            <x-manage.icon name="key" class="size-[18px]" /> حفظ الأدوار
+                        </button>
                     </form>
                 @endif
             </div>
@@ -95,14 +99,26 @@
                     @if ($user->status === \App\Enums\UserStatus::SUSPENDED)
                         <form method="POST" action="{{ route('manage.users.activate', $user) }}">
                             @csrf
-                            <button class="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">تفعيل المستخدم</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                <x-manage.icon name="check" class="size-[18px]" /> تفعيل المستخدم
+                            </button>
                         </form>
                     @else
                         <form method="POST" action="{{ route('manage.users.suspend', $user) }}">
                             @csrf
-                            <button class="w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">إيقاف المستخدم</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                <x-manage.icon name="ban" class="size-[18px]" /> إيقاف المستخدم
+                            </button>
                         </form>
                     @endif
+
+                    <form method="POST" action="{{ route('manage.users.reset-password', $user) }}"
+                          onsubmit="return confirm('إرسال رابط إعادة تعيين كلمة المرور إلى بريد المستخدم؟')">
+                        @csrf
+                        <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
+                            <x-manage.icon name="key" class="size-[18px]" /> إرسال رابط تعيين كلمة المرور
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Enums\AdStatus;
 use App\Enums\ReportCategory;
 use App\Enums\ReportStatus;
+use App\Enums\ReportTarget;
+use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Ad;
 use App\Models\Report;
+use App\Models\User;
+use App\Services\Ads\AdModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -82,6 +88,36 @@ class ReportController extends Controller
         $this->transition($report, ReportStatus::ACTIONED, $data['admin_notes']);
 
         return back()->with('status', 'تم اتخاذ إجراء على البلاغ.');
+    }
+
+    /** Suspend the reported ad, then mark the report actioned. */
+    public function suspendAd(Report $report, AdModerationService $moderation): RedirectResponse
+    {
+        abort_unless($report->target_type === ReportTarget::AD, 404);
+
+        $ad = Ad::find($report->target_id);
+        if ($ad !== null && $ad->status === AdStatus::ACTIVE) {
+            $moderation->suspend($ad);
+        }
+
+        $this->transition($report, ReportStatus::ACTIONED, 'تم إيقاف الإعلان المُبلَّغ عنه.');
+
+        return back()->with('status', 'تم إيقاف الإعلان واتخاذ إجراء على البلاغ.');
+    }
+
+    /** Suspend the reported user, then mark the report actioned. */
+    public function banUser(Report $report): RedirectResponse
+    {
+        abort_unless($report->target_type === ReportTarget::USER, 404);
+
+        $user = User::find($report->target_id);
+        if ($user !== null && $user->status !== UserStatus::SUSPENDED) {
+            $user->forceFill(['status' => UserStatus::SUSPENDED])->save();
+        }
+
+        $this->transition($report, ReportStatus::ACTIONED, 'تم إيقاف المستخدم المُبلَّغ عنه.');
+
+        return back()->with('status', 'تم إيقاف المستخدم واتخاذ إجراء على البلاغ.');
     }
 
     private function transition(Report $report, ReportStatus $status, ?string $notes = null): void

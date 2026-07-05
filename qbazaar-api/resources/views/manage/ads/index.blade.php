@@ -6,8 +6,13 @@
 @section('content')
     {{-- Filters --}}
     <form method="GET" class="mb-6 flex flex-wrap items-center gap-3">
-        <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالعنوان أو الرقم…"
-               class="w-64 rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
+        <div class="relative">
+            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-300">
+                <x-manage.icon name="search" class="size-[18px]" />
+            </span>
+            <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالعنوان أو الرقم…"
+                   class="w-64 rounded-xl border border-ink-200 bg-cream-100 py-2.5 pr-10 pl-4 text-sm outline-none focus:border-coral">
+        </div>
 
         <select name="status" class="rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
             <option value="">كل الحالات</option>
@@ -16,7 +21,9 @@
             @endforeach
         </select>
 
-        <button type="submit" class="rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">تصفية</button>
+        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+            <x-manage.icon name="filter" class="size-[18px]" /> تصفية
+        </button>
         @if ($search !== '' || $status !== '')
             <a href="{{ route('manage.ads.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">مسح</a>
         @endif
@@ -25,7 +32,7 @@
     <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
         <div class="overflow-x-auto">
             <table class="w-full text-right text-sm">
-                <thead class="border-b border-ink-200 text-xs font-semibold text-ink-500">
+                <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
                     <tr>
                         <th class="px-4 py-3 font-semibold">#</th>
                         <th class="px-4 py-3 font-semibold">العنوان</th>
@@ -37,7 +44,7 @@
                 </thead>
                 <tbody class="divide-y divide-ink-200">
                     @forelse ($ads as $ad)
-                        <tr class="hover:bg-cream-50">
+                        <tr class="transition hover:bg-cream-50">
                             <td class="px-4 py-3 text-ink-500">{{ $ad->id }}</td>
                             <td class="px-4 py-3">
                                 <a href="{{ route('manage.ads.show', $ad) }}" class="font-semibold hover:text-coral">{{ \Illuminate\Support\Str::limit($ad->title, 50) }}</a>
@@ -46,11 +53,21 @@
                             <td class="px-4 py-3">@include('manage.partials.status-badge', ['status' => $ad->status])</td>
                             <td class="px-4 py-3 text-ink-500">{{ optional($ad->created_at)->format('Y-m-d') }}</td>
                             <td class="px-4 py-3 text-left">
-                                <a href="{{ route('manage.ads.show', $ad) }}" class="rounded-lg bg-cream-200 px-3 py-1.5 text-xs font-semibold hover:bg-ink-200">عرض</a>
+                                <a href="{{ route('manage.ads.show', $ad) }}" title="عرض"
+                                   class="inline-flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-700 transition hover:bg-coral-soft hover:text-coral">
+                                    <x-manage.icon name="eye" class="size-[18px]" />
+                                </a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-12 text-center text-ink-500">لا توجد إعلانات مطابقة.</td></tr>
+                        <tr>
+                            <td colspan="6" class="px-4 py-16 text-center">
+                                <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
+                                    <x-manage.icon name="tag" class="size-6" />
+                                </span>
+                                <p class="text-sm font-semibold text-ink-500">لا توجد إعلانات مطابقة.</p>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

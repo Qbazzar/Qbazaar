@@ -102,4 +102,12 @@ class SupportTicketController extends Controller
 
         return back()->with('status', 'تم تحديث حالة التذكرة');
     }
+
+    /** Assign the ticket to the current staff member. */
+    public function assignToMe(SupportTicket $ticket): RedirectResponse
+    {
+        $ticket->forceFill(['assigned_to' => auth()->id()])->save();
+
+        return back()->with('status', 'تم إسناد التذكرة إليك');
+    }
 }

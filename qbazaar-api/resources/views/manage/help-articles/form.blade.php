@@ -107,8 +107,12 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <button type="submit" class="rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white hover:brightness-95">حفظ</button>
-            <a href="{{ route('manage.help-articles.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">إلغاء</a>
+            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                <x-manage.icon name="check" class="size-[18px]" /> حفظ
+            </button>
+            <a href="{{ route('manage.help-articles.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
+                <x-manage.icon name="arrow-right" class="size-4" /> إلغاء
+            </a>
         </div>
     </form>
 @endsection

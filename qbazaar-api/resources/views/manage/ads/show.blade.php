@@ -4,7 +4,9 @@
 @section('heading', 'مراجعة إعلان')
 
 @section('content')
-    <a href="{{ url()->previous() }}" class="mb-4 inline-block text-sm font-semibold text-ink-500 hover:text-coral">→ رجوع</a>
+    <a href="{{ route('manage.ads.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
+        <x-manage.icon name="arrow-right" class="size-4" /> رجوع للإعلانات
+    </a>
 
     <div class="grid gap-6 lg:grid-cols-3">
         {{-- Details --}}
@@ -60,7 +62,9 @@
                     @if ($ad->status === \App\Enums\AdStatus::PENDING)
                         <form method="POST" action="{{ route('manage.ads.approve', $ad) }}">
                             @csrf
-                            <button class="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">اعتماد الإعلان</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                <x-manage.icon name="check" class="size-[18px]" /> اعتماد الإعلان
+                            </button>
                         </form>
 
                         <form method="POST" action="{{ route('manage.ads.reject', $ad) }}" class="space-y-2">
@@ -68,28 +72,56 @@
                             <textarea name="admin_notes" rows="3" required placeholder="سبب الرفض (يظهر للبائع)…"
                                       class="w-full rounded-xl border border-ink-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-coral">{{ old('admin_notes') }}</textarea>
                             @error('admin_notes')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                            <button class="w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">رفض الإعلان</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                <x-manage.icon name="x-circle" class="size-[18px]" /> رفض الإعلان
+                            </button>
                         </form>
                     @endif
 
                     @if ($ad->status === \App\Enums\AdStatus::ACTIVE)
                         <form method="POST" action="{{ route('manage.ads.suspend', $ad) }}">
                             @csrf
-                            <button class="w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">إيقاف الإعلان</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                <x-manage.icon name="ban" class="size-[18px]" /> إيقاف الإعلان
+                            </button>
                         </form>
                     @endif
 
                     @if ($ad->status === \App\Enums\AdStatus::BLOCKED)
                         <form method="POST" action="{{ route('manage.ads.unsuspend', $ad) }}">
                             @csrf
-                            <button class="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">رفع الإيقاف</button>
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                                <x-manage.icon name="check" class="size-[18px]" /> رفع الإيقاف
+                            </button>
                         </form>
                     @endif
 
                     <form method="POST" action="{{ route('manage.ads.feature', $ad) }}">
                         @csrf
-                        <button class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-cream-200">
+                        <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
+                            <x-manage.icon name="star" class="size-[18px] {{ $ad->featured ? 'text-coral' : '' }}" />
                             {{ $ad->featured ? 'إلغاء التمييز' : 'تمييز الإعلان' }}
+                        </button>
+                    </form>
+
+                    @if ($ad->status === \App\Enums\AdStatus::ACTIVE)
+                        <form method="POST" action="{{ route('manage.ads.force-expire', $ad) }}"
+                              onsubmit="return confirm('إنهاء صلاحية هذا الإعلان؟')">
+                            @csrf
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
+                                <x-manage.icon name="clock" class="size-[18px]" /> إنهاء الصلاحية
+                            </button>
+                        </form>
+                    @endif
+                </div>
+
+                <div class="mt-6 border-t border-ink-200 pt-4">
+                    <form method="POST" action="{{ route('manage.ads.destroy', $ad) }}"
+                          onsubmit="return confirm('حذف هذا الإعلان نهائياً؟ لا يمكن التراجع.')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50">
+                            <x-manage.icon name="trash" class="size-[18px]" /> حذف الإعلان
                         </button>
                     </form>
                 </div>

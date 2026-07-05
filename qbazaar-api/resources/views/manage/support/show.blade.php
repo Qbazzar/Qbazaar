@@ -35,7 +35,9 @@
 @endphp
 
 @section('content')
-    <a href="{{ route('manage.support.index') }}" class="mb-4 inline-block text-sm font-semibold text-ink-500 hover:text-coral">→ رجوع</a>
+    <a href="{{ route('manage.support.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
+        <x-manage.icon name="arrow-right" class="size-4" /> رجوع للتذاكر
+    </a>
 
     <div class="grid gap-6 lg:grid-cols-3">
         {{-- Conversation --}}
@@ -58,7 +60,9 @@
 
             {{-- Thread bubbles: user messages on the right, staff on the left --}}
             <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <div class="mb-4 text-sm font-semibold text-ink-500">المحادثة</div>
+                <div class="mb-4 flex items-center gap-2 text-sm font-semibold text-ink-500">
+                    <x-manage.icon name="lifebuoy" class="size-[18px] text-coral" /> المحادثة
+                </div>
                 <div class="space-y-4">
                     {{-- Original ticket body as first (user) message --}}
                     <div class="flex justify-end">
@@ -91,7 +95,9 @@
                     <textarea name="body" rows="4" required placeholder="اكتب ردك هنا…"
                               class="w-full rounded-xl border border-ink-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-coral">{{ old('body') }}</textarea>
                     @error('body')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                    <button class="rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white hover:brightness-95">إرسال الرد</button>
+                    <button class="inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                        <x-manage.icon name="chat" class="size-[18px]" /> إرسال الرد
+                    </button>
                 </form>
             </div>
         </div>
@@ -114,8 +120,21 @@
                         @endforeach
                     </select>
                     @error('status')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                    <button class="w-full rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white hover:brightness-95">تحديث الحالة</button>
+                    <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
+                        <x-manage.icon name="check" class="size-[18px]" /> تحديث الحالة
+                    </button>
                 </form>
+
+                @if ($ticket->assigned_to !== auth()->id())
+                    <form method="POST" action="{{ route('manage.support.assign', $ticket) }}" class="mt-3">
+                        @csrf
+                        <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                            <x-manage.icon name="check" class="size-[18px]" /> إسناد التذكرة إليّ
+                        </button>
+                    </form>
+                @else
+                    <p class="mt-3 text-center text-xs font-semibold text-emerald-600">التذكرة مُسنَدة إليك</p>
+                @endif
             </div>
         </div>
     </div>

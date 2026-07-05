@@ -7,7 +7,7 @@
     <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
         <div class="overflow-x-auto">
             <table class="w-full text-right text-sm">
-                <thead class="border-b border-ink-200 text-xs font-semibold text-ink-500">
+                <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
                     <tr>
                         <th class="px-4 py-3 font-semibold">الاسم</th>
                         <th class="px-4 py-3 font-semibold">المستخدم</th>
@@ -26,7 +26,14 @@
                             <td class="px-4 py-3 text-ink-500">{{ optional($savedSearch->created_at)->format('Y-m-d') }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="px-4 py-12 text-center text-ink-500">لا توجد عمليات بحث محفوظة.</td></tr>
+                        <tr>
+                            <td colspan="4" class="px-4 py-16 text-center">
+                                <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
+                                    <x-manage.icon name="bookmark" class="size-6" />
+                                </span>
+                                <p class="text-sm font-semibold text-ink-500">لا توجد عمليات بحث محفوظة.</p>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
