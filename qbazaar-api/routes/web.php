@@ -44,6 +44,8 @@ Route::prefix('manage')->name('manage.')->group(function () {
 
         Route::get('ads', [AdController::class, 'index'])->name('ads.index');
         Route::get('ads/{ad}', [AdController::class, 'show'])->name('ads.show');
+        Route::get('ads/{ad}/edit', [AdController::class, 'edit'])->name('ads.edit');
+        Route::put('ads/{ad}', [AdController::class, 'update'])->name('ads.update');
         Route::post('ads/{ad}/approve', [AdController::class, 'approve'])->name('ads.approve');
         Route::post('ads/{ad}/reject', [AdController::class, 'reject'])->name('ads.reject');
         Route::post('ads/{ad}/suspend', [AdController::class, 'suspend'])->name('ads.suspend');
@@ -51,6 +53,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::post('ads/{ad}/feature', [AdController::class, 'toggleFeature'])->name('ads.feature');
         Route::post('ads/{ad}/force-expire', [AdController::class, 'forceExpire'])->name('ads.force-expire');
         Route::delete('ads/{ad}', [AdController::class, 'destroy'])->name('ads.destroy');
+        Route::post('ads/bulk-destroy', [AdController::class, 'bulkDestroy'])->name('ads.bulk-destroy');
 
         // Users
         Route::get('users', [UserController::class, 'index'])->name('users.index');
@@ -71,6 +74,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::post('reports/{report}/action', [ReportController::class, 'action'])->name('reports.action');
         Route::post('reports/{report}/suspend-ad', [ReportController::class, 'suspendAd'])->name('reports.suspend-ad');
         Route::post('reports/{report}/ban-user', [ReportController::class, 'banUser'])->name('reports.ban-user');
+        Route::post('reports/bulk-dismiss', [ReportController::class, 'bulkDismiss'])->name('reports.bulk-dismiss');
 
         // Moderation rules (CRUD)
         Route::get('moderation-rules', [ModerationRuleController::class, 'index'])->name('moderation-rules.index');
@@ -79,6 +83,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::get('moderation-rules/{rule}/edit', [ModerationRuleController::class, 'edit'])->name('moderation-rules.edit');
         Route::put('moderation-rules/{rule}', [ModerationRuleController::class, 'update'])->name('moderation-rules.update');
         Route::delete('moderation-rules/{rule}', [ModerationRuleController::class, 'destroy'])->name('moderation-rules.destroy');
+        Route::post('moderation-rules/bulk-destroy', [ModerationRuleController::class, 'bulkDestroy'])->name('moderation-rules.bulk-destroy');
 
         // Categories (CRUD)
         Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -87,6 +92,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::get('categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
         Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        Route::post('categories/bulk-destroy', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
 
         // Locations (CRUD)
         Route::get('locations', [LocationController::class, 'index'])->name('locations.index');
@@ -95,6 +101,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::get('locations/{location}/edit', [LocationController::class, 'edit'])->name('locations.edit');
         Route::put('locations/{location}', [LocationController::class, 'update'])->name('locations.update');
         Route::delete('locations/{location}', [LocationController::class, 'destroy'])->name('locations.destroy');
+        Route::post('locations/bulk-destroy', [LocationController::class, 'bulkDestroy'])->name('locations.bulk-destroy');
 
         // CMS Pages (CRUD)
         Route::get('pages', [PageController::class, 'index'])->name('pages.index');
@@ -103,6 +110,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::get('pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
         Route::put('pages/{page}', [PageController::class, 'update'])->name('pages.update');
         Route::delete('pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+        Route::post('pages/bulk-destroy', [PageController::class, 'bulkDestroy'])->name('pages.bulk-destroy');
 
         // Help Categories (CRUD)
         Route::get('help-categories', [HelpCategoryController::class, 'index'])->name('help-categories.index');
@@ -111,6 +119,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::get('help-categories/{help_category}/edit', [HelpCategoryController::class, 'edit'])->name('help-categories.edit');
         Route::put('help-categories/{help_category}', [HelpCategoryController::class, 'update'])->name('help-categories.update');
         Route::delete('help-categories/{help_category}', [HelpCategoryController::class, 'destroy'])->name('help-categories.destroy');
+        Route::post('help-categories/bulk-destroy', [HelpCategoryController::class, 'bulkDestroy'])->name('help-categories.bulk-destroy');
 
         // Help Articles (CRUD)
         Route::get('help-articles', [HelpArticleController::class, 'index'])->name('help-articles.index');
@@ -119,6 +128,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::get('help-articles/{help_article}/edit', [HelpArticleController::class, 'edit'])->name('help-articles.edit');
         Route::put('help-articles/{help_article}', [HelpArticleController::class, 'update'])->name('help-articles.update');
         Route::delete('help-articles/{help_article}', [HelpArticleController::class, 'destroy'])->name('help-articles.destroy');
+        Route::post('help-articles/bulk-destroy', [HelpArticleController::class, 'bulkDestroy'])->name('help-articles.bulk-destroy');
 
         // Support tickets
         Route::get('support', [SupportTicketController::class, 'index'])->name('support.index');

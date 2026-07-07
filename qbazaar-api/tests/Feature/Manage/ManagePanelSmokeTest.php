@@ -20,6 +20,10 @@ beforeEach(function (): void {
     // stub it so @vite in the layout doesn't 500 the whole panel under test.
     $this->withoutVite();
 
+    // Keep the smoke test hermetic: don't push factory models to Meilisearch
+    // (Scout) — this suite only exercises Blade rendering, not search.
+    config(['scout.driver' => null]);
+
     $this->seed(RolesAndPermissionsSeeder::class);
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
@@ -69,6 +73,7 @@ it('renders the ad detail page', function (): void {
     $ad = Ad::factory()->create();
 
     expect($this->get("/manage/ads/{$ad->id}")->getStatusCode())->toBeLessThan(500);
+    expect($this->get("/manage/ads/{$ad->id}/edit")->getStatusCode())->toBeLessThan(500);
 });
 
 it('renders the user detail page', function (): void {

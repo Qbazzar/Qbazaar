@@ -57,11 +57,14 @@
         @endif
     </form>
 
+    @include('manage.partials.bulk-bar', ['action' => route('manage.reports.bulk-dismiss'), 'method' => 'POST', 'icon' => 'x-circle', 'tone' => 'coral', 'label' => 'رفض المحدد', 'confirm' => 'رفض البلاغات المحددة (المعلّقة فقط)؟'])
+
     <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
         <div class="overflow-x-auto">
             <table class="w-full text-right text-sm">
                 <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
                     <tr>
+                        <th class="px-4 py-3"><input type="checkbox" id="qb-bulk-all" onclick="qbBulkAll(this)" class="rounded border-ink-300 text-coral"></th>
                         <th class="px-4 py-3 font-semibold">الهدف</th>
                         <th class="px-4 py-3 font-semibold">السبب</th>
                         <th class="px-4 py-3 font-semibold">المُبلِّغ</th>
@@ -73,6 +76,7 @@
                 <tbody class="divide-y divide-ink-200">
                     @forelse ($reports as $report)
                         <tr class="transition hover:bg-cream-50">
+                            <td class="px-4 py-3"><input type="checkbox" name="ids[]" value="{{ $report->id }}" form="qb-bulk-form" class="qb-bulk-cb rounded border-ink-300 text-coral" onchange="qbBulkSync()"></td>
                             <td class="px-4 py-3">
                                 <span class="font-semibold">{{ $targetLabels[$report->target_type->value] ?? $report->target_type->value }}</span>
                                 <span class="block text-xs text-ink-500">{{ \Illuminate\Support\Str::limit($report->target_id, 12) }}</span>
@@ -96,7 +100,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-16 text-center">
+                            <td colspan="7" class="px-4 py-16 text-center">
                                 <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
                                     <x-manage.icon name="flag" class="size-6" />
                                 </span>

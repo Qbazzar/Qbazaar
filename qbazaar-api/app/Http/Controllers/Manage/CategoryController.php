@@ -90,6 +90,19 @@ class CategoryController extends Controller
             ->with('status', 'تم حذف التصنيف.');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string'],
+        ]);
+
+        $count = Category::whereIn('id', $data['ids'])->delete();
+        $this->flushCache();
+
+        return back()->with('status', "تم حذف {$count} عنصراً.");
+    }
+
     /**
      * @return array<string, mixed>
      */

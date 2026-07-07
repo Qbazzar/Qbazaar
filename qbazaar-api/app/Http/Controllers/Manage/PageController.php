@@ -69,6 +69,19 @@ class PageController extends Controller
             ->with('status', 'تم حذف الصفحة.');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string'],
+        ]);
+
+        $count = Page::whereIn('id', $data['ids'])->delete();
+        $this->flushCache();
+
+        return back()->with('status', "تم حذف {$count} عنصراً.");
+    }
+
     /**
      * @return array<string, mixed>
      */

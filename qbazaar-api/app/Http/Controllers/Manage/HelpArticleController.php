@@ -72,6 +72,19 @@ class HelpArticleController extends Controller
             ->with('status', 'تم حذف المقال.');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string'],
+        ]);
+
+        $count = HelpArticle::whereIn('id', $data['ids'])->delete();
+        $this->flushCache();
+
+        return back()->with('status', "تم حذف {$count} عنصراً.");
+    }
+
     /**
      * @return array<string, mixed>
      */

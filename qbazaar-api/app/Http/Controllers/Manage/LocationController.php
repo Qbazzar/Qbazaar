@@ -96,6 +96,19 @@ class LocationController extends Controller
             ->with('status', 'تم حذف الموقع.');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string'],
+        ]);
+
+        $count = Location::whereIn('id', $data['ids'])->delete();
+        $this->flushCache();
+
+        return back()->with('status', "تم حذف {$count} عنصراً.");
+    }
+
     /**
      * @return array<string, mixed>
      */

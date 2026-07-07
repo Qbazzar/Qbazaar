@@ -94,6 +94,18 @@ class ModerationRuleController extends Controller
             ->with('status', 'تم حذف القاعدة.');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string'],
+        ]);
+
+        $count = ModerationRule::whereIn('id', $data['ids'])->delete();
+
+        return back()->with('status', "تم حذف {$count} عنصراً.");
+    }
+
     /**
      * @return array<string, mixed>
      */

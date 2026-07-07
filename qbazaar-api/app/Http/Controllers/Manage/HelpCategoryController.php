@@ -65,6 +65,19 @@ class HelpCategoryController extends Controller
             ->with('status', 'تم حذف القسم.');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string'],
+        ]);
+
+        $count = HelpCategory::whereIn('id', $data['ids'])->delete();
+        $this->flushCache();
+
+        return back()->with('status', "تم حذف {$count} عنصراً.");
+    }
+
     /**
      * @return array<string, mixed>
      */

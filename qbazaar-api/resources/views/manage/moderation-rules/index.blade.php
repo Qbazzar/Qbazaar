@@ -54,11 +54,14 @@
         </a>
     </div>
 
+    @include('manage.partials.bulk-bar', ['action' => route('manage.moderation-rules.bulk-destroy'), 'label' => 'حذف المحدد', 'confirm' => 'حذف العناصر المحددة نهائياً؟'])
+
     <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
         <div class="overflow-x-auto">
             <table class="w-full text-right text-sm">
                 <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
                     <tr>
+                        <th class="px-4 py-3"><input type="checkbox" id="qb-bulk-all" onclick="qbBulkAll(this)" class="rounded border-ink-300 text-coral"></th>
                         <th class="px-4 py-3 font-semibold">النوع</th>
                         <th class="px-4 py-3 font-semibold">القيمة</th>
                         <th class="px-4 py-3 font-semibold">اللغة</th>
@@ -70,6 +73,7 @@
                 <tbody class="divide-y divide-ink-200">
                     @forelse ($rules as $rule)
                         <tr class="transition hover:bg-cream-50">
+                            <td class="px-4 py-3"><input type="checkbox" name="ids[]" value="{{ $rule->id }}" form="qb-bulk-form" class="qb-bulk-cb rounded border-ink-300 text-coral" onchange="qbBulkSync()"></td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
                                     {{ $typeLabels[$rule->type->value] ?? $rule->type->value }}
@@ -105,7 +109,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-16 text-center">
+                            <td colspan="7" class="px-4 py-16 text-center">
                                 <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
                                     <x-manage.icon name="shield" class="size-6" />
                                 </span>

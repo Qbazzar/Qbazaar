@@ -90,6 +90,26 @@ class ReportController extends Controller
         return back()->with('status', 'تم اتخاذ إجراء على البلاغ.');
     }
 
+    /** Bulk-dismiss the selected pending reports. */
+    public function bulkDismiss(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string'],
+        ]);
+
+        $count = 0;
+        Report::whereIn('id', $data['ids'])
+            ->where('status', ReportStatus::PENDING->value)
+            ->get()
+            ->each(function (Report $report) use (&$count): void {
+                $this->transition($report, ReportStatus::DISMISSED);
+                $count++;
+            });
+
+        return back()->with('status', "تم رفض {$count} بلاغاً.");
+    }
+
     /** Suspend the reported ad, then mark the report actioned. */
     public function suspendAd(Report $report, AdModerationService $moderation): RedirectResponse
     {

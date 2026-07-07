@@ -4,9 +4,14 @@
 @section('heading', 'مراجعة إعلان')
 
 @section('content')
-    <a href="{{ route('manage.ads.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
-        <x-manage.icon name="arrow-right" class="size-4" /> رجوع للإعلانات
-    </a>
+    <div class="mb-4 flex items-center justify-between">
+        <a href="{{ route('manage.ads.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
+            <x-manage.icon name="arrow-right" class="size-4" /> رجوع للإعلانات
+        </a>
+        <a href="{{ route('manage.ads.edit', $ad) }}" class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-cream-100 px-4 py-2 text-sm font-semibold text-ink-700 transition hover:border-coral hover:text-coral">
+            <x-manage.icon name="pencil" class="size-[18px]" /> تعديل المحتوى
+        </a>
+    </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
         {{-- Details --}}
