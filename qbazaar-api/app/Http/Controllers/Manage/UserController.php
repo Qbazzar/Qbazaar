@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Manage;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Auth\RefreshTokenService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -85,6 +86,34 @@ class UserController extends Controller
         Password::broker()->sendResetLink(['email' => $user->email]);
 
         return back()->with('status', 'تم إرسال رابط إعادة تعيين كلمة المرور للمستخدم.');
+    }
+
+    /**
+     * Impersonate a user: mint a real token pair for them and hand it to the
+     * Next.js web app so the admin browses the marketplace as that user.
+     *
+     * super_admin only. Staff accounts can't be impersonated (avoids privilege
+     * confusion). Tokens ride in the URL *fragment* (never sent to servers or
+     * logs); the web /impersonate page consumes and clears them immediately.
+     */
+    public function impersonate(Request $request, User $user, RefreshTokenService $tokens): RedirectResponse
+    {
+        abort_unless(auth()->user()?->hasRole('super_admin') === true, 403);
+
+        if ($user->hasAnyRole(['super_admin', 'moderator', 'support'])) {
+            return back()->with('error', 'لا يمكن انتحال هوية عضو من فريق الإدارة.');
+        }
+
+        $pair = $tokens->issue($user, null, $request->ip(), 'impersonation');
+
+        $webUrl = rtrim((string) config('qbazaar.web_url', config('app.url')), '/');
+        $fragment = http_build_query([
+            'access' => $pair->accessToken,
+            'refresh' => $pair->refreshToken,
+            'name' => $user->full_name,
+        ]);
+
+        return redirect()->away("{$webUrl}/impersonate#{$fragment}");
     }
 
     /**

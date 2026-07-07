@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
 import { SiteFooterGate } from '@/components/layout/SiteFooter';
+import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner';
 import { LocaleProvider } from '@/components/i18n/LocaleProvider';
 import { dirFor } from '@/lib/i18n/locale';
 import { resolveServerLocale } from '@/lib/i18n/server';
@@ -76,6 +77,7 @@ export default async function RootLayout({
               <SiteHeaderGate />
               <div className="flex-1">{children}</div>
               <SiteFooterGate />
+              <ImpersonationBanner />
             </Providers>
             <Toaster richColors closeButton position="top-center" />
           </ThemeProvider>

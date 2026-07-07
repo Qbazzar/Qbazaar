@@ -62,6 +62,7 @@ Route::prefix('manage')->name('manage.')->group(function () {
         Route::post('users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
         Route::post('users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles');
         Route::post('users/{user}/reset-password', [UserController::class, 'sendPasswordReset'])->name('users.reset-password');
+        Route::post('users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate');
 
         // Roles (read-only)
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');

@@ -119,6 +119,16 @@
                             <x-manage.icon name="key" class="size-[18px]" /> إرسال رابط تعيين كلمة المرور
                         </button>
                     </form>
+
+                    @if (auth()->user()?->hasRole('super_admin') && ! $user->hasAnyRole(['super_admin', 'moderator', 'support']))
+                        <form method="POST" action="{{ route('manage.users.impersonate', $user) }}"
+                              onsubmit="return confirm('فتح الموقع كأنك هذا المستخدم في تبويب جديد؟')" target="_blank">
+                            @csrf
+                            <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
+                                <x-manage.icon name="external" class="size-[18px]" /> تصفّح كهذا المستخدم
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
