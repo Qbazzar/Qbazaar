@@ -16,8 +16,6 @@ parameters:
     # Laravel scaffold configs — env() returns bool|string and the scaffold doesn't cast.
     # We control app behaviour through config/qbazaar.php which IS analysed via app/.
     - config/*
-    # Filament uses runtime-generated schemas; analysis adds noise pre-stable.
-    - app/Filament/**/*
     # Pest's dynamic $this binding magic in beforeEach/it scopes (e.g. $this->user) is
     # something PHPStan can't track. We rely on Pest's own runtime checks for tests.
     - tests/Pest.php
@@ -37,7 +35,7 @@ parameters:
     - tests/Feature/Offers/*
     - tests/Feature/Notifications/*
     - tests/Feature/Reports/*
-    - tests/Feature/Admin/*
+    - tests/Feature/Manage/*
     - tests/Concerns/*
     - bootstrap/cache/*
     - storage/*

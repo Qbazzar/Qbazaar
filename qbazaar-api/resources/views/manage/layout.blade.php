@@ -78,10 +78,6 @@
                         @endforeach
                     </div>
                 @endforeach
-                <a href="/admin" class="flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium text-ink-500 hover:bg-cream-200">
-                    <x-manage.icon name="external" class="size-[18px] shrink-0" />
-                    اللوحة القديمة (Filament)
-                </a>
             </nav>
         </aside>
 

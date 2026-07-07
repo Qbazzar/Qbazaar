@@ -12,9 +12,6 @@ use App\Models\Pivot\UserBlock;
 use App\Notifications\EmailVerificationNotification;
 use App\Notifications\PasswordResetNotification;
 use Database\Factories\UserFactory;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Models\Contracts\HasName;
-use Filament\Panel;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -53,7 +50,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
  */
-class User extends Authenticatable implements CanResetPasswordContract, FilamentUser, HasMedia, HasName, MustVerifyEmailContract
+class User extends Authenticatable implements CanResetPasswordContract, HasMedia, MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUlids, InteractsWithMedia, Notifiable, SoftDeletes;
@@ -230,31 +227,6 @@ class User extends Authenticatable implements CanResetPasswordContract, Filament
     public function getEmailForVerification(): string
     {
         return $this->email;
-    }
-
-    /* ──────────────────────────────────────────────────────────────────
-     *  Filament admin panel access (Sprint 11).
-     *
-     *  Anyone reaching `/admin` must hold at least one of the three staff
-     *  roles seeded by RolesAndPermissionsSeeder. We deliberately do NOT
-     *  check `$panel->getId()` here — QBazaar only ships one panel and the
-     *  next one (analytics, partner dashboard) will get its own model contract.
-     * ──────────────────────────────────────────────────────────────────*/
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return $this->hasAnyRole(['super_admin', 'moderator', 'support']);
-    }
-
-    /**
-     * Display name Filament reads for the avatar dropdown header. Our User
-     * model uses `full_name` instead of the framework default `name`, so
-     * without this override Filament's `FilamentManager::getUserName()`
-     * tries to read `$user->name`, gets null, and crashes with a
-     * "Return value must be of type string, null returned" type error.
-     */
-    public function getFilamentName(): string
-    {
-        return $this->full_name;
     }
 
     /* ──────────────────────────────────────────────────────────────────
