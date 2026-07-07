@@ -93,12 +93,12 @@
                 <div class="flex items-center gap-3">
                     @php($me = auth()->user())
                     @php($meName = $me?->full_name ?? $me?->email ?? '')
-                    <div class="flex items-center gap-2.5">
+                    <a href="{{ route('admin.profile.edit') }}" class="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition hover:bg-cream-200" title="حسابي">
                         <span class="flex size-8 items-center justify-center rounded-full bg-coral-soft text-sm font-bold text-coral">
                             {{ mb_strtoupper(mb_substr($meName, 0, 1)) ?: 'Q' }}
                         </span>
                         <span class="hidden text-sm font-semibold text-ink-700 sm:block">{{ $meName }}</span>
-                    </div>
+                    </a>
                     <form method="POST" action="{{ route('admin.logout') }}">
                         @csrf
                         <button type="submit" class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-ink-500 transition hover:bg-cream-200 hover:text-ink-900">

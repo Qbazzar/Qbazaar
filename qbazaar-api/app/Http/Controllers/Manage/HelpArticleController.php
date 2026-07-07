@@ -15,15 +15,36 @@ use Illuminate\View\View;
 
 class HelpArticleController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = $request->string('q')->toString();
+        $categoryId = $request->string('category_id')->toString();
+
         $articles = HelpArticle::query()
             ->with('category')
+            ->when(
+                $search !== '',
+                fn ($query) => $query->where(function ($inner) use ($search): void {
+                    $inner->where('title->ar', 'like', "%{$search}%")
+                        ->orWhere('title->en', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%");
+                }),
+            )
+            ->when(
+                $categoryId !== '',
+                fn ($query) => $query->where('category_id', $categoryId),
+            )
             ->orderBy('display_order')
             ->orderBy('id')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.help-articles.index', ['articles' => $articles]);
+        return view('admin.help-articles.index', [
+            'articles' => $articles,
+            'search' => $search,
+            'categoryId' => $categoryId,
+            'categories' => $this->categoryOptions(),
+        ]);
     }
 
     public function create(): View

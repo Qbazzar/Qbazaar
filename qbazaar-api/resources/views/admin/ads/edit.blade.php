@@ -14,7 +14,7 @@
         <x-admin.icon name="arrow-right" class="size-4" /> رجوع للإعلان
     </a>
 
-    <form method="POST" action="{{ route('admin.ads.update', $ad) }}" class="max-w-3xl space-y-6">
+    <form method="POST" action="{{ route('admin.ads.update', $ad) }}" class="mx-auto max-w-4xl space-y-6">
         @csrf
         @method('PUT')
 

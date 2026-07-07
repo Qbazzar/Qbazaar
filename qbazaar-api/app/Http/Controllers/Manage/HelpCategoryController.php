@@ -14,15 +14,29 @@ use Illuminate\View\View;
 
 class HelpCategoryController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = $request->string('q')->toString();
+
         $categories = HelpCategory::query()
             ->withCount('articles')
+            ->when(
+                $search !== '',
+                fn ($query) => $query->where(function ($inner) use ($search): void {
+                    $inner->where('name->ar', 'like', "%{$search}%")
+                        ->orWhere('name->en', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%");
+                }),
+            )
             ->orderBy('display_order')
             ->orderBy('id')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.help-categories.index', ['categories' => $categories]);
+        return view('admin.help-categories.index', [
+            'categories' => $categories,
+            'search' => $search,
+        ]);
     }
 
     public function create(): View

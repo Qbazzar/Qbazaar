@@ -14,14 +14,34 @@ use Illuminate\View\View;
 
 class PageController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = $request->string('q')->toString();
+        $published = $request->string('published')->toString();
+
         $pages = Page::query()
+            ->when(
+                $search !== '',
+                fn ($query) => $query->where(function ($inner) use ($search): void {
+                    $inner->where('title->ar', 'like', "%{$search}%")
+                        ->orWhere('title->en', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%");
+                }),
+            )
+            ->when(
+                in_array($published, ['1', '0'], true),
+                fn ($query) => $query->where('is_published', $published === '1'),
+            )
             ->orderBy('display_order')
             ->orderBy('id')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.pages.index', ['pages' => $pages]);
+        return view('admin.pages.index', [
+            'pages' => $pages,
+            'search' => $search,
+            'published' => $published,
+        ]);
     }
 
     public function create(): View

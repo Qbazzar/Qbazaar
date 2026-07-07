@@ -18,7 +18,7 @@
 
     <form method="POST"
           action="{{ $isEdit ? route('admin.help-articles.update', $article) : route('admin.help-articles.store') }}"
-          class="max-w-3xl space-y-6">
+          class="mx-auto max-w-4xl space-y-6">
         @csrf
         @if ($isEdit)
             @method('PUT')

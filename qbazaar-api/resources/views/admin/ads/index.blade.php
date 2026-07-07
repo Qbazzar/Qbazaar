@@ -17,7 +17,7 @@
         <select name="status" class="rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
             <option value="">كل الحالات</option>
             @foreach ($statuses as $case)
-                <option value="{{ $case->value }}" @selected($status === $case->value)>{{ $case->value }}</option>
+                <option value="{{ $case->value }}" @selected($status === $case->value)>{{ $case->label()['ar'] }}</option>
             @endforeach
         </select>
 

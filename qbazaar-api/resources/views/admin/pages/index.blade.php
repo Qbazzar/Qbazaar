@@ -4,8 +4,33 @@
 @section('heading', 'الصفحات')
 
 @section('content')
-    <div class="mb-6 flex items-center justify-between">
-        <p class="text-sm text-ink-500">صفحات المحتوى الثابتة (من نحن، الشروط، الخصوصية…).</p>
+    <p class="mb-4 text-sm text-ink-500">صفحات المحتوى الثابتة (من نحن، الشروط، الخصوصية…).</p>
+
+    {{-- Toolbar --}}
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <form method="GET" class="flex flex-wrap items-center gap-3">
+            <div class="relative">
+                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-300">
+                    <x-admin.icon name="search" class="size-[18px]" />
+                </span>
+                <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالعنوان أو المعرف…"
+                       class="w-64 rounded-xl border border-ink-200 bg-cream-100 py-2.5 pr-10 pl-4 text-sm outline-none focus:border-coral">
+            </div>
+
+            <select name="published" class="rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
+                <option value="">الكل</option>
+                <option value="1" @selected($published === '1')>منشورة</option>
+                <option value="0" @selected($published === '0')>غير منشورة</option>
+            </select>
+
+            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+                <x-admin.icon name="filter" class="size-[18px]" /> تصفية
+            </button>
+            @if ($search !== '' || $published !== '')
+                <a href="{{ route('admin.pages.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">مسح</a>
+            @endif
+        </form>
+
         <a href="{{ route('admin.pages.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
             <x-admin.icon name="plus" class="size-[18px]" /> صفحة جديدة
         </a>

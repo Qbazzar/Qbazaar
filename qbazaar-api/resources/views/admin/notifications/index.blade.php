@@ -4,6 +4,30 @@
 @section('heading', 'الإشعارات')
 
 @section('content')
+    {{-- Filters --}}
+    <form method="GET" class="mb-6 flex flex-wrap items-center gap-3">
+        <div class="relative">
+            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-300">
+                <x-admin.icon name="search" class="size-[18px]" />
+            </span>
+            <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالعنوان أو النوع…"
+                   class="w-64 rounded-xl border border-ink-200 bg-cream-100 py-2.5 pr-10 pl-4 text-sm outline-none focus:border-coral">
+        </div>
+
+        <select name="read" class="rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
+            <option value="">الكل</option>
+            <option value="read" @selected($read === 'read')>مقروءة</option>
+            <option value="unread" @selected($read === 'unread')>غير مقروءة</option>
+        </select>
+
+        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
+            <x-admin.icon name="filter" class="size-[18px]" /> تصفية
+        </button>
+        @if ($search !== '' || $read !== '')
+            <a href="{{ route('admin.notifications.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">مسح</a>
+        @endif
+    </form>
+
     <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
         <div class="overflow-x-auto">
             <table class="w-full text-right text-sm">

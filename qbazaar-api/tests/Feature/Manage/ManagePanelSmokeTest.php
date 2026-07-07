@@ -42,6 +42,7 @@ it('renders every /admin index + create page', function (string $uri): void {
     expect($response->getStatusCode())->toBeLessThan(500);
 })->with([
     '/admin',
+    '/admin/profile',
     '/admin/ads',
     '/admin/users',
     '/admin/roles',

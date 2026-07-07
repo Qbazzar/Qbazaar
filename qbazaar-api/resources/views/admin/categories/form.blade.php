@@ -18,7 +18,7 @@
 
     <form method="POST"
           action="{{ $editing ? route('admin.categories.update', $category) : route('admin.categories.store') }}"
-          class="max-w-3xl space-y-6">
+          class="mx-auto max-w-4xl space-y-6">
         @csrf
         @if ($editing)
             @method('PUT')

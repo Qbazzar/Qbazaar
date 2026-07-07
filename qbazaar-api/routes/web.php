@@ -15,6 +15,7 @@ use App\Http\Controllers\Manage\ModerationRuleController;
 use App\Http\Controllers\Manage\NotificationController;
 use App\Http\Controllers\Manage\OfferController;
 use App\Http\Controllers\Manage\PageController;
+use App\Http\Controllers\Manage\ProfileController;
 use App\Http\Controllers\Manage\ReportController;
 use App\Http\Controllers\Manage\RoleController;
 use App\Http\Controllers\Manage\SavedSearchController;
@@ -40,6 +41,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('staff')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Signed-in staff manage their own account.
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
 
         Route::get('ads', [AdController::class, 'index'])->name('ads.index');
         Route::get('ads/{ad}', [AdController::class, 'show'])->name('ads.show');
