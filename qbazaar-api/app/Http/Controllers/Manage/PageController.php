@@ -21,12 +21,12 @@ class PageController extends Controller
             ->orderBy('id')
             ->paginate(20);
 
-        return view('manage.pages.index', ['pages' => $pages]);
+        return view('admin.pages.index', ['pages' => $pages]);
     }
 
     public function create(): View
     {
-        return view('manage.pages.form', ['page' => new Page]);
+        return view('admin.pages.form', ['page' => new Page]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -37,13 +37,13 @@ class PageController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.pages.index')
+            ->route('admin.pages.index')
             ->with('status', 'تم إنشاء الصفحة بنجاح.');
     }
 
     public function edit(Page $page): View
     {
-        return view('manage.pages.form', ['page' => $page]);
+        return view('admin.pages.form', ['page' => $page]);
     }
 
     public function update(Request $request, Page $page): RedirectResponse
@@ -54,7 +54,7 @@ class PageController extends Controller
         $this->flushCache($page->slug);
 
         return redirect()
-            ->route('manage.pages.index')
+            ->route('admin.pages.index')
             ->with('status', 'تم تحديث الصفحة بنجاح.');
     }
 
@@ -65,7 +65,7 @@ class PageController extends Controller
         $this->flushCache($slug);
 
         return redirect()
-            ->route('manage.pages.index')
+            ->route('admin.pages.index')
             ->with('status', 'تم حذف الصفحة.');
     }
 

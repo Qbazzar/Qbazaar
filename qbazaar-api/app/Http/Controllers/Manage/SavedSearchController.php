@@ -17,6 +17,6 @@ class SavedSearchController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('manage.saved-searches.index', ['savedSearches' => $savedSearches]);
+        return view('admin.saved-searches.index', ['savedSearches' => $savedSearches]);
     }
 }

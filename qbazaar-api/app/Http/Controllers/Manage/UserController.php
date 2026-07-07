@@ -44,7 +44,7 @@ class UserController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('manage.users.index', [
+        return view('admin.users.index', [
             'users' => $users,
             'status' => $status,
             'role' => $role,
@@ -59,7 +59,7 @@ class UserController extends Controller
         $user->load('roles');
         $user->loadCount('ads');
 
-        return view('manage.users.show', [
+        return view('admin.users.show', [
             'user' => $user,
             'roles' => Role::orderBy('name')->get(),
             'canManageRoles' => auth()->user()?->hasRole('super_admin') === true,

@@ -23,12 +23,12 @@ class HelpArticleController extends Controller
             ->orderBy('id')
             ->paginate(20);
 
-        return view('manage.help-articles.index', ['articles' => $articles]);
+        return view('admin.help-articles.index', ['articles' => $articles]);
     }
 
     public function create(): View
     {
-        return view('manage.help-articles.form', [
+        return view('admin.help-articles.form', [
             'article' => new HelpArticle,
             'categories' => $this->categoryOptions(),
         ]);
@@ -40,13 +40,13 @@ class HelpArticleController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.help-articles.index')
+            ->route('admin.help-articles.index')
             ->with('status', 'تم إنشاء المقال بنجاح.');
     }
 
     public function edit(HelpArticle $help_article): View
     {
-        return view('manage.help-articles.form', [
+        return view('admin.help-articles.form', [
             'article' => $help_article,
             'categories' => $this->categoryOptions(),
         ]);
@@ -58,7 +58,7 @@ class HelpArticleController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.help-articles.index')
+            ->route('admin.help-articles.index')
             ->with('status', 'تم تحديث المقال بنجاح.');
     }
 
@@ -68,7 +68,7 @@ class HelpArticleController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.help-articles.index')
+            ->route('admin.help-articles.index')
             ->with('status', 'تم حذف المقال.');
     }
 

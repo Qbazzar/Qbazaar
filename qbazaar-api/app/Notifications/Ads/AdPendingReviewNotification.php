@@ -53,7 +53,7 @@ class AdPendingReviewNotification extends Notification implements ShouldQueue
             'category' => 'ad.pending_review',
             'title' => __('admin.ad_review.title', [], $locale),
             'body' => __('admin.ad_review.body', ['title' => $this->ad->title, 'hint' => $hint], $locale),
-            'cta_url' => rtrim((string) config('app.url'), '/') . '/manage/ads/' . $this->ad->id,
+            'cta_url' => rtrim((string) config('app.url'), '/') . '/admin/ads/' . $this->ad->id,
             'icon' => $this->flagged ? 'flag' : 'inbox',
             'ad_id' => $this->ad->id,
         ];

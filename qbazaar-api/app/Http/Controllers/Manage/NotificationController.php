@@ -27,7 +27,7 @@ class NotificationController extends Controller
             ->whereIn('id', $userIds)
             ->pluck('full_name', 'id');
 
-        return view('manage.notifications.index', [
+        return view('admin.notifications.index', [
             'notifications' => $notifications,
             'userNames' => $userNames,
         ]);

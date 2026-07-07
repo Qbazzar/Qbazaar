@@ -19,7 +19,7 @@ class ConversationController extends Controller
             ->orderByDesc('created_at')
             ->paginate(20);
 
-        return view('manage.conversations.index', ['conversations' => $conversations]);
+        return view('admin.conversations.index', ['conversations' => $conversations]);
     }
 
     public function show(Conversation $conversation): View
@@ -35,7 +35,7 @@ class ConversationController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        return view('manage.conversations.show', [
+        return view('admin.conversations.show', [
             'conversation' => $conversation,
             'messages' => $messages,
         ]);

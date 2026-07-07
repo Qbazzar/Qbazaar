@@ -44,7 +44,7 @@ class AdController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('manage.ads.index', [
+        return view('admin.ads.index', [
             'ads' => $ads,
             'status' => $status,
             'search' => $search,
@@ -56,12 +56,12 @@ class AdController extends Controller
     {
         $ad->load(['user', 'category', 'location', 'media']);
 
-        return view('manage.ads.show', ['ad' => $ad]);
+        return view('admin.ads.show', ['ad' => $ad]);
     }
 
     public function edit(Ad $ad): View
     {
-        return view('manage.ads.edit', [
+        return view('admin.ads.edit', [
             'ad' => $ad,
             'categories' => $this->categoryOptions(),
             'locations' => $this->locationOptions(),
@@ -91,7 +91,7 @@ class AdController extends Controller
         ]);
 
         return redirect()
-            ->route('manage.ads.show', $ad)
+            ->route('admin.ads.show', $ad)
             ->with('status', 'تم حفظ تعديلات الإعلان.');
     }
 
@@ -166,7 +166,7 @@ class AdController extends Controller
         $ad->delete();
 
         return redirect()
-            ->route('manage.ads.index')
+            ->route('admin.ads.index')
             ->with('status', 'تم حذف الإعلان.');
     }
 

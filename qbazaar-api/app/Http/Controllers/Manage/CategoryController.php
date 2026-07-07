@@ -34,7 +34,7 @@ class CategoryController extends Controller
             ->paginate(30)
             ->withQueryString();
 
-        return view('manage.categories.index', [
+        return view('admin.categories.index', [
             'categories' => $categories,
             'search' => $search,
         ]);
@@ -42,7 +42,7 @@ class CategoryController extends Controller
 
     public function create(): View
     {
-        return view('manage.categories.form', [
+        return view('admin.categories.form', [
             'category' => new Category,
             'parents' => $this->parentOptions(),
         ]);
@@ -56,13 +56,13 @@ class CategoryController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.categories.index')
+            ->route('admin.categories.index')
             ->with('status', 'تم إنشاء التصنيف بنجاح.');
     }
 
     public function edit(Category $category): View
     {
-        return view('manage.categories.form', [
+        return view('admin.categories.form', [
             'category' => $category,
             'parents' => $this->parentOptions($category->id),
         ]);
@@ -76,7 +76,7 @@ class CategoryController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.categories.index')
+            ->route('admin.categories.index')
             ->with('status', 'تم تحديث التصنيف بنجاح.');
     }
 
@@ -86,7 +86,7 @@ class CategoryController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.categories.index')
+            ->route('admin.categories.index')
             ->with('status', 'تم حذف التصنيف.');
     }
 

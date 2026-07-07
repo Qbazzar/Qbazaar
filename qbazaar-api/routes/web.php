@@ -28,12 +28,12 @@ Route::get('/', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Custom admin panel (/manage) — Tailwind, session-authenticated
+| Admin panel (/admin) — custom Tailwind, session-authenticated
 |--------------------------------------------------------------------------
 | Session (web guard) auth, gated to staff roles by the `staff` middleware.
-| Runs alongside the legacy Filament panel (/admin) during the migration.
+| The sole admin panel (Filament was removed).
 */
-Route::prefix('manage')->name('manage.')->group(function () {
+Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->name('login.attempt');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');

@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Gate the custom /manage panel to staff roles only. Mirrors the access rule
+ * Gate the custom /admin panel to staff roles only. Mirrors the access rule
  * enforced by the Filament panel (super_admin / moderator / support) so both
  * surfaces share the same authorization boundary.
  */
@@ -20,7 +20,7 @@ class EnsureStaff
         $user = $request->user();
 
         if ($user === null) {
-            return redirect()->route('manage.login');
+            return redirect()->route('admin.login');
         }
 
         if (! $user->hasAnyRole(['super_admin', 'moderator', 'support'])) {

@@ -22,12 +22,12 @@ class HelpCategoryController extends Controller
             ->orderBy('id')
             ->paginate(20);
 
-        return view('manage.help-categories.index', ['categories' => $categories]);
+        return view('admin.help-categories.index', ['categories' => $categories]);
     }
 
     public function create(): View
     {
-        return view('manage.help-categories.form', ['category' => new HelpCategory]);
+        return view('admin.help-categories.form', ['category' => new HelpCategory]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -36,13 +36,13 @@ class HelpCategoryController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.help-categories.index')
+            ->route('admin.help-categories.index')
             ->with('status', 'تم إنشاء القسم بنجاح.');
     }
 
     public function edit(HelpCategory $help_category): View
     {
-        return view('manage.help-categories.form', ['category' => $help_category]);
+        return view('admin.help-categories.form', ['category' => $help_category]);
     }
 
     public function update(Request $request, HelpCategory $help_category): RedirectResponse
@@ -51,7 +51,7 @@ class HelpCategoryController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.help-categories.index')
+            ->route('admin.help-categories.index')
             ->with('status', 'تم تحديث القسم بنجاح.');
     }
 
@@ -61,7 +61,7 @@ class HelpCategoryController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.help-categories.index')
+            ->route('admin.help-categories.index')
             ->with('status', 'تم حذف القسم.');
     }
 

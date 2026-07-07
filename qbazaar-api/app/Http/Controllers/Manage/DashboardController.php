@@ -21,7 +21,7 @@ class DashboardController extends Controller
 
     public function index(): View
     {
-        return view('manage.dashboard', [
+        return view('admin.dashboard', [
             'ads' => $this->adStats(),
             'users' => $this->userStats(),
             'reports' => $this->reportStats(),

@@ -48,7 +48,7 @@ class ReportController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('manage.reports.index', [
+        return view('admin.reports.index', [
             'reports' => $reports,
             'status' => $status,
             'category' => $category,
@@ -62,7 +62,7 @@ class ReportController extends Controller
     {
         $report->load(['reporter', 'reviewer']);
 
-        return view('manage.reports.show', ['report' => $report]);
+        return view('admin.reports.show', ['report' => $report]);
     }
 
     public function resolve(Report $report): RedirectResponse

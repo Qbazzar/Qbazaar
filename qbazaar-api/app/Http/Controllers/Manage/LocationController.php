@@ -40,7 +40,7 @@ class LocationController extends Controller
             ->paginate(30)
             ->withQueryString();
 
-        return view('manage.locations.index', [
+        return view('admin.locations.index', [
             'locations' => $locations,
             'search' => $search,
             'type' => $type,
@@ -50,7 +50,7 @@ class LocationController extends Controller
 
     public function create(): View
     {
-        return view('manage.locations.form', [
+        return view('admin.locations.form', [
             'location' => new Location,
             'parents' => $this->parentOptions(),
             'types' => LocationType::cases(),
@@ -63,13 +63,13 @@ class LocationController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.locations.index')
+            ->route('admin.locations.index')
             ->with('status', 'تم إنشاء الموقع بنجاح.');
     }
 
     public function edit(Location $location): View
     {
-        return view('manage.locations.form', [
+        return view('admin.locations.form', [
             'location' => $location,
             'parents' => $this->parentOptions($location->id),
             'types' => LocationType::cases(),
@@ -82,7 +82,7 @@ class LocationController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.locations.index')
+            ->route('admin.locations.index')
             ->with('status', 'تم تحديث الموقع بنجاح.');
     }
 
@@ -92,7 +92,7 @@ class LocationController extends Controller
         $this->flushCache();
 
         return redirect()
-            ->route('manage.locations.index')
+            ->route('admin.locations.index')
             ->with('status', 'تم حذف الموقع.');
     }
 

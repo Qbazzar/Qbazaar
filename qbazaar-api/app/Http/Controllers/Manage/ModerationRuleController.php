@@ -37,7 +37,7 @@ class ModerationRuleController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('manage.moderation-rules.index', [
+        return view('admin.moderation-rules.index', [
             'rules' => $rules,
             'type' => $type,
             'language' => $language,
@@ -49,7 +49,7 @@ class ModerationRuleController extends Controller
 
     public function create(): View
     {
-        return view('manage.moderation-rules.form', [
+        return view('admin.moderation-rules.form', [
             'rule' => new ModerationRule(['is_active' => true, 'language' => ModerationRuleLanguage::ANY]),
             'types' => ModerationRuleType::cases(),
             'languages' => ModerationRuleLanguage::cases(),
@@ -63,13 +63,13 @@ class ModerationRuleController extends Controller
         ModerationRule::query()->create($data);
 
         return redirect()
-            ->route('manage.moderation-rules.index')
+            ->route('admin.moderation-rules.index')
             ->with('status', 'تمت إضافة القاعدة.');
     }
 
     public function edit(ModerationRule $rule): View
     {
-        return view('manage.moderation-rules.form', [
+        return view('admin.moderation-rules.form', [
             'rule' => $rule,
             'types' => ModerationRuleType::cases(),
             'languages' => ModerationRuleLanguage::cases(),
@@ -81,7 +81,7 @@ class ModerationRuleController extends Controller
         $rule->update($this->validated($request));
 
         return redirect()
-            ->route('manage.moderation-rules.index')
+            ->route('admin.moderation-rules.index')
             ->with('status', 'تم تحديث القاعدة.');
     }
 
@@ -90,7 +90,7 @@ class ModerationRuleController extends Controller
         $rule->delete();
 
         return redirect()
-            ->route('manage.moderation-rules.index')
+            ->route('admin.moderation-rules.index')
             ->with('status', 'تم حذف القاعدة.');
     }
 

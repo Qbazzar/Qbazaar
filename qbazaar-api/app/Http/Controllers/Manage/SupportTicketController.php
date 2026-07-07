@@ -44,7 +44,7 @@ class SupportTicketController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('manage.support.index', [
+        return view('admin.support.index', [
             'tickets' => $tickets,
             'status' => $status,
             'priority' => $priority,
@@ -62,7 +62,7 @@ class SupportTicketController extends Controller
             'replies' => fn ($query) => $query->with('author')->oldest(),
         ]);
 
-        return view('manage.support.show', [
+        return view('admin.support.show', [
             'ticket' => $ticket,
             'statuses' => SupportTicketStatus::cases(),
         ]);

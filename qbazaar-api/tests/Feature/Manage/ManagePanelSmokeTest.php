@@ -31,39 +31,39 @@ beforeEach(function (): void {
 });
 
 /**
- * Every GET surface in the custom /manage panel must render without a server
+ * Every GET surface in the custom /admin panel must render without a server
  * error against empty tables (the "does the view/controller actually run"
  * check that a 302-gate probe can't give us). We assert < 500 rather than
  * exactly 200 so legitimate redirects/404s on missing records don't fail.
  */
-it('renders every /manage index + create page', function (string $uri): void {
+it('renders every /admin index + create page', function (string $uri): void {
     $response = $this->get($uri);
 
     expect($response->getStatusCode())->toBeLessThan(500);
 })->with([
-    '/manage',
-    '/manage/ads',
-    '/manage/users',
-    '/manage/roles',
-    '/manage/reports',
-    '/manage/moderation-rules',
-    '/manage/moderation-rules/create',
-    '/manage/categories',
-    '/manage/categories/create',
-    '/manage/locations',
-    '/manage/locations/create',
-    '/manage/pages',
-    '/manage/pages/create',
-    '/manage/help-categories',
-    '/manage/help-categories/create',
-    '/manage/help-articles',
-    '/manage/help-articles/create',
-    '/manage/support',
-    '/manage/conversations',
-    '/manage/offers',
-    '/manage/saved-searches',
-    '/manage/notifications',
-    '/manage/activity',
+    '/admin',
+    '/admin/ads',
+    '/admin/users',
+    '/admin/roles',
+    '/admin/reports',
+    '/admin/moderation-rules',
+    '/admin/moderation-rules/create',
+    '/admin/categories',
+    '/admin/categories/create',
+    '/admin/locations',
+    '/admin/locations/create',
+    '/admin/pages',
+    '/admin/pages/create',
+    '/admin/help-categories',
+    '/admin/help-categories/create',
+    '/admin/help-articles',
+    '/admin/help-articles/create',
+    '/admin/support',
+    '/admin/conversations',
+    '/admin/offers',
+    '/admin/saved-searches',
+    '/admin/notifications',
+    '/admin/activity',
 ]);
 
 it('renders the ad detail page', function (): void {
@@ -72,20 +72,20 @@ it('renders the ad detail page', function (): void {
     $this->seed(LocationSeeder::class);
     $ad = Ad::factory()->create();
 
-    expect($this->get("/manage/ads/{$ad->id}")->getStatusCode())->toBeLessThan(500);
-    expect($this->get("/manage/ads/{$ad->id}/edit")->getStatusCode())->toBeLessThan(500);
+    expect($this->get("/admin/ads/{$ad->id}")->getStatusCode())->toBeLessThan(500);
+    expect($this->get("/admin/ads/{$ad->id}/edit")->getStatusCode())->toBeLessThan(500);
 });
 
 it('renders the user detail page', function (): void {
     $user = User::factory()->create();
 
-    expect($this->get("/manage/users/{$user->id}")->getStatusCode())->toBeLessThan(500);
+    expect($this->get("/admin/users/{$user->id}")->getStatusCode())->toBeLessThan(500);
 });
 
 it('renders the report detail page', function (): void {
     $report = Report::factory()->create();
 
-    expect($this->get("/manage/reports/{$report->id}")->getStatusCode())->toBeLessThan(500);
+    expect($this->get("/admin/reports/{$report->id}")->getStatusCode())->toBeLessThan(500);
 });
 
 it('renders the conversation detail page', function (): void {
@@ -93,5 +93,5 @@ it('renders the conversation detail page', function (): void {
     $this->seed(LocationSeeder::class);
     $conversation = Conversation::factory()->create();
 
-    expect($this->get("/manage/conversations/{$conversation->id}")->getStatusCode())->toBeLessThan(500);
+    expect($this->get("/admin/conversations/{$conversation->id}")->getStatusCode())->toBeLessThan(500);
 });

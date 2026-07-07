@@ -26,7 +26,7 @@ class OfferController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('manage.offers.index', [
+        return view('admin.offers.index', [
             'offers' => $offers,
             'status' => $status,
             'statuses' => OfferStatus::cases(),

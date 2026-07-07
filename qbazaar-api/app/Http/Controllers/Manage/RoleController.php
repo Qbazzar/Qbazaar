@@ -17,6 +17,6 @@ class RoleController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('manage.roles.index', ['roles' => $roles]);
+        return view('admin.roles.index', ['roles' => $roles]);
     }
 }

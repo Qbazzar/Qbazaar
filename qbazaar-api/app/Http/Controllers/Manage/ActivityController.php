@@ -17,6 +17,6 @@ class ActivityController extends Controller
             ->latest()
             ->paginate(30);
 
-        return view('manage.activity.index', ['activities' => $activities]);
+        return view('admin.activity.index', ['activities' => $activities]);
     }
 }
