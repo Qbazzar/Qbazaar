@@ -169,6 +169,7 @@ return [
     'admin' => [
         'login_max_attempts' => 5,
         'login_lockout_seconds' => 900,
+        'bulk_action_max' => 100,
     ],
 
     /*
