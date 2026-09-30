@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Ads;
 
+use App\Actions\Ads\UpdateAdAction;
 use App\Enums\AdStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
@@ -146,19 +147,21 @@ class AdController extends Controller
     /**
      * PUT /api/v1/ads/{id} — partial update by the owner.
      *
+     * Editing the title, description, category or custom fields of an active
+     * ad sends it back to pending review.
+     *
      * @authenticated
      *
      * @throws DomainException
      */
-    public function update(UpdateAdRequest $request, string $id): JsonResponse
+    public function update(UpdateAdRequest $request, string $id, UpdateAdAction $updateAd): JsonResponse
     {
         $ad = $this->findAdOrFail($id);
         $this->authorize('update', $ad);
 
         /** @var array<string, mixed> $validated */
         $validated = $request->validated();
-        $ad->fill($validated);
-        $ad->save();
+        $ad = $updateAd($ad, $validated);
 
         $ad->load(['user', 'category', 'location', 'media']);
 

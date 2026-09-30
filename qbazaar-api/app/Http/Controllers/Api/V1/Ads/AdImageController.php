@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Ads;
 
+use App\Actions\Ads\ResubmitActiveAdAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
@@ -33,11 +34,13 @@ class AdImageController extends Controller
     /**
      * POST /api/v1/ads/{ad}/images — attach 1..10 images to the ad.
      *
+     * New images on an active ad send it back to pending review.
+     *
      * @authenticated
      *
      * @throws DomainException
      */
-    public function store(UploadImagesRequest $request, string $adId): JsonResponse
+    public function store(UploadImagesRequest $request, string $adId, ResubmitActiveAdAction $resubmit): JsonResponse
     {
         $ad = $this->findAdOrFail($adId);
         $this->authorize('manage-images', $ad);
@@ -59,6 +62,8 @@ class AdImageController extends Controller
             static fn (Media $m): string => (string) $m->getKey(),
             $created,
         ));
+
+        $resubmit($ad);
 
         return response()
             ->json([
