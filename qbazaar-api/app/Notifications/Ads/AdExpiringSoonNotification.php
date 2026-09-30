@@ -15,8 +15,8 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 
 /**
- * Daily reminder fired ~24h before `expires_at`. Encourages a one-click
- * renewal so listings don't drop out of search.
+ * Sent once when an ad enters the expiry warning window. Encourages a
+ * one-click renewal so listings don't drop out of search.
  */
 class AdExpiringSoonNotification extends Notification implements ShouldQueue
 {
@@ -67,7 +67,10 @@ class AdExpiringSoonNotification extends Notification implements ShouldQueue
         return [
             'category' => 'ad.expiring_soon',
             'title' => __('messages.notifications.ad_expiring_soon.title', [], $locale),
-            'body' => __('messages.notifications.ad_expiring_soon.body', ['title' => $this->ad->title], $locale),
+            'body' => __('messages.notifications.ad_expiring_soon.body', [
+                'title' => $this->ad->title,
+                'expires_at' => $this->ad->expires_at?->toDayDateTimeString() ?? '',
+            ], $locale),
             'cta_url' => $this->renewUrl(),
             'icon' => 'clock',
             'ad_id' => $this->ad->id,

@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Jobs\Ads;
 
 use App\Enums\AdStatus;
+use App\Enums\PlatformSetting;
 use App\Events\Ads\AdExpired;
 use App\Events\Ads\AdExpiringSoon;
 use App\Models\Ad;
-use DateTimeImmutable;
-use DateTimeInterface;
+use App\Services\Settings\SettingsService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Carbon;
 
 /**
  * Daily sweeper for ad lifecycle.
@@ -20,20 +20,16 @@ use Illuminate\Foundation\Queue\Queueable;
  * Two passes:
  *   1. Active ads whose `expires_at` is in the past → flip to EXPIRED,
  *      unindex from search, fire AdExpired.
- *   2. Active ads expiring in the next 24h → fire AdExpiringSoon so the
- *      seller receives a renewal nudge.
+ *   2. Active ads expiring within the admin-set warning window (the
+ *      `ad_expiry_warning_days` platform setting) → fire AdExpiringSoon once
+ *      per expiry, guarded by `expiring_notified_at`.
  *
  * Pass 1 iterates row-by-row (instead of a single mass UPDATE) so that
  * Spatie\Activitylog observers, Scout's unsearchable() and the AdExpired
- * listener chain all run with full model context. The cohort is small
- * (one day's worth of expiries) — readability beats raw throughput here.
+ * listener chain all run with full model context.
  *
- * Pass 2 also iterates so we can dispatch the event per-ad. We accept that
- * duplicate notifications can occur if the job runs more than once a day —
- * a follow-up sprint adds `ads.expiring_notified_at` to suppress repeats.
- *
- * Failure handling: each row processes in isolation. A single failure is
- * logged via the queue worker's default exception path and the loop moves on.
+ * Both passes walk by primary key only: combining another ORDER BY with
+ * keyset chunking skips rows once the two orders disagree.
  */
 class ExpireOldAdsJob implements ShouldQueue
 {
@@ -44,53 +40,52 @@ class ExpireOldAdsJob implements ShouldQueue
         $this->onQueue('low');
     }
 
-    public function handle(): void
+    public function handle(SettingsService $settings): void
     {
-        $now = now()->toDateTimeImmutable();
+        $now = now();
 
         $this->expirePastDueAds($now);
-        $this->notifyExpiringSoon($now);
+        $this->notifyExpiringSoon($now, $settings->integer(PlatformSetting::AD_EXPIRY_WARNING_DAYS));
     }
 
-    /**
-     * Pass 1 — move ACTIVE ads whose expires_at < now into EXPIRED.
-     */
-    private function expirePastDueAds(DateTimeInterface $now): void
+    private function expirePastDueAds(Carbon $now): void
     {
-        Ad::query()
+        $ads = Ad::query()
             ->where('status', AdStatus::ACTIVE->value)
             ->whereNotNull('expires_at')
             ->where('expires_at', '<', $now)
-            ->orderBy('expires_at')
-            ->chunkById(100, function (Collection $ads): void {
-                /** @var Collection<int, Ad> $ads */
-                foreach ($ads as $ad) {
-                    $ad->markExpired();
-                    AdExpired::dispatch($ad);
-                }
-            });
+            ->lazyById(100);
+
+        foreach ($ads as $ad) {
+            $ad->markExpired();
+            AdExpired::dispatch($ad);
+        }
+    }
+
+    private function notifyExpiringSoon(Carbon $now, int $warningDays): void
+    {
+        $ads = Ad::query()
+            ->where('status', AdStatus::ACTIVE->value)
+            ->whereBetween('expires_at', [$now, $now->copy()->addDays($warningDays)])
+            ->whereNull('expiring_notified_at')
+            ->lazyById(100);
+
+        foreach ($ads as $ad) {
+            if ($this->claimExpiryWarning($ad, $now)) {
+                AdExpiringSoon::dispatch($ad);
+            }
+        }
     }
 
     /**
-     * Pass 2 — fire the expiring-soon event for ads whose window closes in
-     * the next 24h. We pass the cached "now" so both passes see the same
-     * time baseline regardless of clock drift inside long-running queues.
+     * Conditional update so an overlapping run cannot warn the same ad twice;
+     * a query-level write also keeps Scout and the activity log out of it.
      */
-    private function notifyExpiringSoon(DateTimeInterface $now): void
+    private function claimExpiryWarning(Ad $ad, Carbon $now): bool
     {
-        $windowStart = new DateTimeImmutable($now->format('c'));
-        $windowEnd = $windowStart->modify('+1 day');
-
-        Ad::query()
-            ->where('status', AdStatus::ACTIVE->value)
-            ->whereNotNull('expires_at')
-            ->whereBetween('expires_at', [$windowStart, $windowEnd])
-            ->orderBy('expires_at')
-            ->chunkById(100, function (Collection $ads): void {
-                /** @var Collection<int, Ad> $ads */
-                foreach ($ads as $ad) {
-                    AdExpiringSoon::dispatch($ad);
-                }
-            });
+        return Ad::query()
+            ->whereKey($ad->getKey())
+            ->whereNull('expiring_notified_at')
+            ->update(['expiring_notified_at' => $now]) === 1;
     }
 }

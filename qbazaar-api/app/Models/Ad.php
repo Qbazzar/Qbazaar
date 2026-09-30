@@ -48,6 +48,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property int $favorites_count
  * @property Carbon|null $published_at
  * @property Carbon|null $expires_at
+ * @property Carbon|null $expiring_notified_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
@@ -104,6 +105,7 @@ class Ad extends Model implements HasMedia
             'favorites_count' => 'integer',
             'published_at' => 'datetime',
             'expires_at' => 'datetime',
+            'expiring_notified_at' => 'datetime',
             'price' => 'decimal:2',
             'featured' => 'boolean',
         ];
@@ -239,6 +241,7 @@ class Ad extends Model implements HasMedia
             'status' => AdStatus::ACTIVE,
             'published_at' => now(),
             'expires_at' => now()->addDays($lifetimeDays),
+            'expiring_notified_at' => null,
         ])->save();
     }
 
@@ -294,6 +297,7 @@ class Ad extends Model implements HasMedia
 
         $this->forceFill([
             'expires_at' => $base->copy()->addDays($lifetimeDays),
+            'expiring_notified_at' => null,
             'status' => $wasExpired
                 ? AdStatus::ACTIVE
                 : $this->status,

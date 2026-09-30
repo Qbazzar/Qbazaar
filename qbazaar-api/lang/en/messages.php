@@ -66,7 +66,7 @@ return [
             'line_outro' => 'Once you update the listing, resubmit it for review.',
         ],
         'expiring_soon' => [
-            'subject' => 'Your ad expires in 24 hours',
+            'subject' => 'Your ad expires soon',
             'greeting' => 'Hello,',
             'line_intro' => 'Your ad ":title" will expire on :expires_at.',
             'action' => 'Renew now',
@@ -102,7 +102,7 @@ return [
         ],
         'ad_expiring_soon' => [
             'title' => 'Your ad expires soon',
-            'body' => 'Your ad ":title" will expire in 24 hours. Renew to stay visible.',
+            'body' => 'Your ad ":title" will expire on :expires_at. Renew to stay visible.',
         ],
         'ad_expired' => [
             'title' => 'Your ad has expired',
