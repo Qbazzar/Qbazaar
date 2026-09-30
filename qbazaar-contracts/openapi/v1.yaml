@@ -1215,7 +1215,12 @@ paths:
                       published_at: null
                       expires_at: null
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { $ref: '#/components/responses/Forbidden' }
+        '403':
+          description: Not the owner, or AUTH_003 — caller has not verified their phone
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
           description: AD_NOT_PUBLISHABLE / AD_IMAGES_REQUIRED / AD_DAILY_PUBLISH_LIMIT
@@ -1778,7 +1783,7 @@ paths:
                 $ref: '#/components/schemas/ConversationEnvelope'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: MSG_BLOCKED — one side has blocked the other
+          description: MSG_BLOCKED — one side has blocked the other; AUTH_003 — caller has not verified their phone
           content:
             application/json:
               schema:
@@ -1886,7 +1891,7 @@ paths:
                 $ref: '#/components/schemas/MessageEnvelope'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: MSG_BLOCKED — one side has blocked the other
+          description: MSG_BLOCKED — one side has blocked the other; AUTH_003 — caller has not verified their phone
           content:
             application/json:
               schema:
@@ -1942,7 +1947,7 @@ paths:
                 $ref: '#/components/schemas/OfferEnvelope'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: MSG_BLOCKED — one side has blocked the other
+          description: MSG_BLOCKED — one side has blocked the other; AUTH_003 — caller has not verified their phone
           content:
             application/json:
               schema:

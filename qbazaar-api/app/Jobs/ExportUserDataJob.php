@@ -26,7 +26,7 @@ use Spatie\Activitylog\Models\Activity;
  * Contents (denormalised JSON, GDPR-style "everything we hold about you"):
  *   user           : the public profile + privacy settings
  *   refresh_tokens : id, device fingerprint, created_at, expires_at (no hashes)
- *   otp_codes      : id, kind, used_at, created_at (no codes)
+ *   otp_codes      : id, purpose, used_at, created_at (no codes)
  *   activity_log   : event, properties, created_at
  *   blocked_users  : the ids the caller blocked
  *
@@ -108,7 +108,7 @@ class ExportUserDataJob implements ShouldQueue
             // excluded.
             'otp_codes' => DB::table('otp_codes')
                 ->where('phone', $user->phone)
-                ->get(['id', 'expires_at', 'used_at', 'attempts', 'created_at'])
+                ->get(['id', 'purpose', 'expires_at', 'used_at', 'attempts', 'created_at'])
                 ->map(fn ($r): array => (array) $r)
                 ->all(),
             'activity_log' => Activity::query()

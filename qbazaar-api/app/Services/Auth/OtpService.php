@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Auth;
 
+use App\Enums\OtpPurpose;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\OtpCode;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -18,9 +20,11 @@ use Illuminate\Support\Facades\Hash;
  * Storage rules:
  *  - The 6-digit code is hashed at rest via Hash::make — only the raw value
  *    handed to the SMS channel ever leaves PHP memory.
- *  - At most one ACTIVE row per phone: issuing a new OTP soft-burns any prior
- *    `used_at IS NULL` row so a previously-sent code can't still be verified
- *    after `send-otp` is called again.
+ *  - Codes are scoped by purpose, so a code issued for one flow can never
+ *    satisfy another.
+ *  - At most one ACTIVE row per phone and purpose: issuing a new OTP
+ *    soft-burns any prior `used_at IS NULL` row so a previously-sent code
+ *    can't still be verified after `send-otp` is called again.
  *  - `attempts >= max_attempts` → row gets soft-burned and the next attempt
  *    is treated as AUTH_005 (caller must resend).
  *
@@ -33,10 +37,9 @@ class OtpService
 {
     /**
      * Issue a fresh OTP for the given phone. Returns the **raw** code so it
-     * can be handed to the Twilio/mail/log channel; the DB only stores the
-     * salted hash.
+     * can be handed to the SMS channel; the DB only stores the salted hash.
      */
-    public function issue(string $phone): OtpIssueResult
+    public function issue(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): OtpIssueResult
     {
         $length = (int) config('qbazaar.otp.length', 6);
         $ttlMinutes = (int) config('qbazaar.otp.ttl_minutes', 5);
@@ -44,7 +47,7 @@ class OtpService
 
         // Dev override (OTP_FIXED_CODE in .env) — when set, every issued OTP is
         // this exact value. The rest of the flow (hash at rest, attempts,
-        // expiry, Twilio/log/email delivery) runs unchanged so devs can exercise
+        // expiry, SMS/log delivery) runs unchanged so devs can exercise
         // the real pipeline without needing a phone in hand. Must be null in
         // production.
         $fixedCode = config('qbazaar.otp.fixed_code');
@@ -52,15 +55,12 @@ class OtpService
             ? str_pad($fixedCode, $length, '0', STR_PAD_LEFT)
             : $this->generateNumeric($length);
 
-        DB::transaction(function () use ($phone, $raw, $ttlMinutes): void {
-            // Burn the previously-active OTP — invariant: at most one active row per phone.
-            OtpCode::query()
-                ->where('phone', $phone)
-                ->whereNull('used_at')
-                ->update(['used_at' => Carbon::now()]);
+        DB::transaction(function () use ($phone, $purpose, $raw, $ttlMinutes): void {
+            $this->expireAllFor($phone, $purpose);
 
             OtpCode::query()->create([
                 'phone' => $phone,
+                'purpose' => $purpose,
                 'code_hash' => Hash::make($raw),
                 'attempts' => 0,
                 'expires_at' => Carbon::now()->addMinutes($ttlMinutes),
@@ -87,11 +87,11 @@ class OtpService
      *
      * @throws DomainException
      */
-    public function verify(string $phone, string $code): void
+    public function verify(string $phone, string $code, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): void
     {
         $maxAttempts = (int) config('qbazaar.otp.max_attempts', 3);
 
-        $row = $this->activeRowForPhone($phone);
+        $row = $this->activeRowForPhone($phone, $purpose);
 
         if ($row === null) {
             throw new DomainException(ErrorCode::AUTH_OTP_INVALID);
@@ -120,11 +120,10 @@ class OtpService
      * The currently-active OTP row for a phone (the one a verify call would
      * test against). Returns `null` if none is in flight.
      */
-    public function activeRowForPhone(string $phone): ?OtpCode
+    public function activeRowForPhone(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): ?OtpCode
     {
         /** @var OtpCode|null $row */
-        $row = OtpCode::query()
-            ->where('phone', $phone)
+        $row = $this->queryFor($phone, $purpose)
             ->whereNull('used_at')
             ->latest('created_at')
             ->first();
@@ -137,10 +136,9 @@ class OtpService
      * slate (e.g. after a successful login flow that should invalidate any
      * dangling code).
      */
-    public function expireAllFor(string $phone): void
+    public function expireAllFor(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): void
     {
-        OtpCode::query()
-            ->where('phone', $phone)
+        $this->queryFor($phone, $purpose)
             ->whereNull('used_at')
             ->update(['used_at' => Carbon::now()]);
     }
@@ -149,12 +147,21 @@ class OtpService
      * How many OTPs have been issued for this phone within the rolling
      * hour — used by the resend ceiling (5/hr by default).
      */
-    public function countLastHour(string $phone): int
+    public function countLastHour(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): int
+    {
+        return $this->queryFor($phone, $purpose)
+            ->where('created_at', '>=', Carbon::now()->subHour())
+            ->count();
+    }
+
+    /**
+     * @return Builder<OtpCode>
+     */
+    private function queryFor(string $phone, OtpPurpose $purpose): Builder
     {
         return OtpCode::query()
             ->where('phone', $phone)
-            ->where('created_at', '>=', Carbon::now()->subHour())
-            ->count();
+            ->where('purpose', $purpose);
     }
 
     /**
