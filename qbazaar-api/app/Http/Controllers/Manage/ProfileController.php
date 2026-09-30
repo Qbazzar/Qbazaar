@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,7 +32,17 @@ class ProfileController extends Controller
         $data = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'password' => ['nullable', 'confirmed', 'min:8'],
+            'password' => [
+                Rule::requiredIf($user->must_change_password),
+                'nullable',
+                'confirmed',
+                'min:' . config('qbazaar.auth.password_min_length'),
+                function (string $attribute, mixed $value, Closure $fail) use ($user): void {
+                    if (is_string($value) && Hash::check($value, $user->password)) {
+                        $fail(__('admin.auth.password_reused'));
+                    }
+                },
+            ],
         ]);
 
         $user->full_name = $data['full_name'];
@@ -39,6 +50,7 @@ class ProfileController extends Controller
 
         if (! empty($data['password'])) {
             $user->password = Hash::make($data['password']);
+            $user->must_change_password = false;
         }
 
         $user->save();

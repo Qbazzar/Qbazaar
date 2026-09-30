@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Support;
 
+use App\Actions\Support\SubmitSupportTicketAction;
 use App\Enums\SupportTicketStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
@@ -22,21 +23,12 @@ class SupportController extends Controller
     /**
      * POST /api/v1/support/tickets — anyone can submit; auth users get their tickets attached.
      */
-    public function store(MakeSupportTicketRequest $request): JsonResponse
+    public function store(MakeSupportTicketRequest $request, SubmitSupportTicketAction $submitTicket): JsonResponse
     {
-        /** @var User|null $user */
-        $user = $request->user();
-
         /** @var array{subject:string,category:string,body:string,email?:string} $payload */
         $payload = $request->validated();
 
-        $ticket = SupportTicket::query()->create([
-            'user_id' => $user?->id,
-            'email' => $user ? null : ($payload['email'] ?? null),
-            'subject' => $payload['subject'],
-            'category' => $payload['category'],
-            'body' => $payload['body'],
-        ]);
+        $ticket = $submitTicket($request->submitter(), $payload);
 
         $fresh = $ticket->fresh(['replies.author']) ?? $ticket;
 

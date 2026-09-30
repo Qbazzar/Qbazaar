@@ -23,11 +23,17 @@ use Illuminate\Support\Facades\Event;
  */
 function applicationListenersFor(string $event): array
 {
-    return collect(Event::getRawListeners()[$event] ?? [])
-        ->map(fn (mixed $listener): mixed => is_array($listener) ? implode('@', $listener) : $listener)
-        ->filter(fn (mixed $listener): bool => is_string($listener) && str_starts_with($listener, 'App\\'))
-        ->values()
-        ->all();
+    $listeners = [];
+
+    foreach (Event::getRawListeners()[$event] ?? [] as $listener) {
+        $name = is_array($listener) ? implode('@', $listener) : $listener;
+
+        if (is_string($name) && str_starts_with($name, 'App\\')) {
+            $listeners[] = $name;
+        }
+    }
+
+    return $listeners;
 }
 
 it('registers every application listener exactly once per event', function (): void {

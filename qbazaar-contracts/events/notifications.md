@@ -1,7 +1,7 @@
 # QBazaar — Notifications WebSocket Contract (Sprint 10)
 
 Broadcast adapter: **Laravel Reverb** (Pusher-compatible).
-Auth: clients call `POST /broadcasting/auth` with their Sanctum bearer.
+Auth: clients call `POST /api/v1/broadcasting/auth` with their Sanctum bearer (`Authorization: Bearer <token>`). The response is the raw Pusher `{auth}` body, not the API envelope.
 
 ## Channel
 

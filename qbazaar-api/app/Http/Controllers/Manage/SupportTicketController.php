@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Actions\Support\ReplyToTicketAsStaffAction;
 use App\Enums\SupportTicketPriority;
 use App\Enums\SupportTicketStatus;
 use App\Http\Controllers\Controller;
-use App\Models\SupportReply;
 use App\Models\SupportTicket;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class SupportTicketController extends Controller
@@ -68,26 +68,16 @@ class SupportTicketController extends Controller
         ]);
     }
 
-    public function reply(Request $request, SupportTicket $ticket): RedirectResponse
+    public function reply(Request $request, SupportTicket $ticket, ReplyToTicketAsStaffAction $replyAsStaff): RedirectResponse
     {
         $data = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
         ]);
 
-        SupportReply::create([
-            'ticket_id' => $ticket->id,
-            'author_id' => (string) auth()->id(),
-            'is_staff' => true,
-            'body' => $data['body'],
-        ]);
+        /** @var User $staff */
+        $staff = $request->user();
 
-        $patch = ['last_replied_at' => Carbon::now()];
-        if ($ticket->status === SupportTicketStatus::OPEN) {
-            $patch['status'] = SupportTicketStatus::IN_PROGRESS->value;
-        } elseif ($ticket->status === SupportTicketStatus::IN_PROGRESS) {
-            $patch['status'] = SupportTicketStatus::WAITING_USER->value;
-        }
-        $ticket->forceFill($patch)->save();
+        $replyAsStaff($ticket, $staff, $data['body']);
 
         return back()->with('status', 'تم إرسال الرد');
     }

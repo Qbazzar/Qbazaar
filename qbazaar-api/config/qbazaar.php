@@ -161,6 +161,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin panel
+    |--------------------------------------------------------------------------
+    | Failed sign-ins are counted per email + IP, so an attacker guessing a
+    | password cannot also lock the real staff member out from their network.
+    */
+    'admin' => [
+        'login_max_attempts' => 5,
+        'login_lockout_seconds' => 900,
+        'bulk_action_max' => 100,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Account lifecycle
     |--------------------------------------------------------------------------
     */
