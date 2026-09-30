@@ -1,114 +1,95 @@
 # QBazaar API — Dev Setup on Windows (Laragon)
 
-Local services needed to run the API:
+Local services the API uses:
 
-| Service | How to install | Verification |
-|---------|----------------|--------------|
-| **MySQL 8** | Bundled with Laragon — start Laragon and click "Start All". DB `qbazaar` already created. | `php artisan migrate --pretend` lists pending migrations |
-| **Memurai (Redis)** | Manual install — see below | `php artisan tinker` then `Redis::ping()` returns `+PONG` |
-| **Meilisearch** | Binary already downloaded to `c:\meilisearch\meilisearch.exe` by Sprint 0 Day 3 | `c:\meilisearch\start.bat` then open http://localhost:7700 |
-| **Mailpit** (optional) | Skip — we use `MAIL_MAILER=log` for now | Logs go to `storage/logs/laravel.log` |
+| Service | How | Check |
+|---------|-----|-------|
+| **MySQL 8** | Bundled with Laragon ("Start All"). Create a `qbazaar` database. | `php artisan migrate:status` |
+| **Redis** | Laragon's bundled `redis-server` is enough; Memurai or WSL2 Redis also work (see below). | `php artisan tinker --execute="echo \Illuminate\Support\Facades\Redis::ping();"` prints `1`/`+PONG` |
+| **Meilisearch** | A local binary, e.g. `c:\meilisearch\meilisearch.exe` (section 2). Needed for search in the app, not for the default test suite. | http://localhost:7700/health returns `{"status":"available"}` |
+| **Mail** | `MAIL_MAILER=log` in `.env.example`: mails and OTP codes go to `storage/logs/laravel.log`. | — |
+
+PHP 8.4 matches CI and production; the Laravel app itself accepts 8.2+.
 
 ---
 
-## 1. Memurai (Redis for Windows)
+## 1. Redis alternatives
 
-Memurai is a drop-in Redis-compatible server for Windows (the official Redis Windows port is abandoned).
+Laragon ships `redis-server`, and `.env.example` uses the Predis client, so no PHP extension is needed. If you'd rather not use Laragon's Redis:
 
-### Install steps
-
-1. Go to **https://www.memurai.com/get-memurai**
-2. Download the **Developer Edition** (free for development).
-3. Run the MSI installer with defaults. It registers Memurai as a Windows service that starts on boot.
-4. Verify the service is running:
-   ```powershell
-   Get-Service Memurai
-   # Status should be "Running"
-   ```
-5. Test connectivity:
-   ```bash
-   cd c:\laragon\www\QB\qbazaar-api
-   php artisan tinker --execute="echo \Illuminate\Support\Facades\Redis::ping();"
-   # Should print: +PONG
-   ```
-
-### Alternative: WSL2 Redis
-
-If you already use WSL2 and prefer it:
-```bash
-wsl --install -d Ubuntu      # if WSL2 not installed
-sudo apt update && sudo apt install -y redis-server
-sudo service redis-server start
-# In .env, REDIS_HOST=127.0.0.1 still works because WSL2 forwards localhost.
-```
+- **Memurai** (Redis-compatible Windows service): install the Developer Edition from https://www.memurai.com/get-memurai and check `Get-Service Memurai`.
+- **WSL2:** `sudo apt install -y redis-server && sudo service redis-server start`. `REDIS_HOST=127.0.0.1` still works because WSL2 forwards localhost.
 
 ---
 
 ## 2. Meilisearch
 
-Binary already downloaded by `BE-0.12` to `c:\meilisearch\meilisearch.exe`. A `start.bat` should exist that launches it.
-
-To run:
 ```bash
-c:\meilisearch\start.bat
-# OR: cd c:\meilisearch && meilisearch.exe --http-addr 0.0.0.0:7700
+c:\meilisearch\meilisearch.exe --http-addr 127.0.0.1:7700
 ```
 
-Open http://localhost:7700 → JSON status response.
+`MEILISEARCH_KEY` stays empty in development; production uses a master key (see `deploy/README.md`). After the first migration, build the index:
 
-In production, set `MEILISEARCH_KEY` in `.env` to a master key; in dev it's left empty.
+```bash
+php artisan scout:sync-index-settings
+php artisan scout:import "App\Models\Ad"
+```
+
+Indexing is queued (`SCOUT_QUEUE=true`), so a queue worker must be running for new or changed ads to reach the index.
 
 ---
 
 ## 3. Run the API
 
-Once MySQL + Redis + Meilisearch are up:
-
 ```bash
 cd c:\laragon\www\QB\qbazaar-api
-php artisan migrate                  # First time only
+composer install
+cp .env.example .env && php artisan key:generate
+php artisan migrate --seed           # admin@qbazaar.qa / password; the panel forces a new password on first login
+npm install && npm run build         # Tailwind assets for /admin and the welcome page
 php artisan serve                    # http://localhost:8000
 
 # In separate terminals as needed:
-php artisan queue:work               # Process jobs (Horizon won't run on Windows)
-php artisan reverb:start             # WebSocket server on :8080
-php artisan pail                     # Tail logs (Laravel's `tail -f`)
+php artisan queue:work --queue=default,low   # jobs: images, expiry, exports, notifications, Scout
+php artisan reverb:start                     # WebSocket server on :8080
+php artisan schedule:work                    # scheduled jobs (ad and offer expiry, …)
+php artisan pail                             # tail the logs
 ```
 
-Or use Laragon's auto-host: open `http://qbazaar-api.test` (Laragon maps the folder under `www/` automatically — though we're nested under `QB/qbazaar-api`, you may need to add it manually).
+Horizon is what runs the queues in production, but it needs the `pcntl`/`posix` extensions, so on Windows use `queue:work` as above.
 
 ---
 
-## 4. Useful URLs (local dev)
+## 4. Useful URLs (local)
 
 | URL | What |
 |-----|------|
-| `http://localhost:8000` | API root (returns Laravel welcome until we add `/api/v1/health` in Day 5) |
-| `http://localhost:8000/admin` | Filament admin panel (login required) |
-| `http://localhost:8000/horizon` | Horizon dashboard (UI works; supervisor doesn't run on Windows) |
-| `http://localhost:8000/telescope` | Telescope inspector (dev only) |
-| `http://localhost:8000/pulse` | Pulse observability dashboard |
-| `http://localhost:8000/docs` | Scribe API docs (after `php artisan scribe:generate`) |
-| `http://localhost:7700` | Meilisearch dashboard |
-| `http://localhost:4010` | Prism mock server (in `qbazaar-contracts` repo) |
+| `http://localhost:8000/api/v1/health` | Health check (JSON envelope) |
+| `http://localhost:8000/admin` | Admin panel (staff login) |
+| `http://localhost:8000/docs` | Swagger UI for `qbazaar-contracts/openapi/v1.yaml` (also `/swagger`) |
+| `http://localhost:8000/horizon` | Horizon dashboard (needs Horizon running, so Linux/WSL) |
+| `http://localhost:8000/telescope` | Telescope (local only) |
+| `http://localhost:8000/pulse` | Pulse dashboard |
+| `http://localhost:7700` | Meilisearch |
+| `http://localhost:4010` | Prism mock of the spec (`cd qbazaar-contracts && npm run mock`) |
 
 ---
 
 ## 5. Quality gates (run before pushing)
 
 ```bash
-./vendor/bin/pint              # Code style
-./vendor/bin/phpstan analyse   # Static analysis (level 8)
-./vendor/bin/pest              # Test suite
+vendor/bin/pint --test          # code style (drop --test to fix)
+vendor/bin/phpstan analyse      # static analysis (level 8)
+php vendor/bin/pest             # test suite
 ```
 
-The default suite is hermetic: `phpunit.xml` points Scout at the in-process
-`collection` driver and excludes the `meilisearch` group, so no search server is
-needed. The tests that exercise the real Meilisearch index live in that group;
+The default suite is hermetic: `phpunit.xml` uses SQLite in memory and the in-process Scout
+`collection` driver, and it excludes the `meilisearch` group, so no MySQL, Redis or search
+server is needed. The tests that exercise the real Meilisearch index live in that group;
 start Meilisearch (section 2) and run them explicitly:
 
 ```bash
-./vendor/bin/pest --group=meilisearch
+php vendor/bin/pest --group=meilisearch
 ```
 
 CI (`.github/workflows/ci.yml` at the repository root) runs all three on every

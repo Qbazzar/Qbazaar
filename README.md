@@ -1,75 +1,77 @@
 # QBazaar
 
-> Qatar's friendly classifieds marketplace — monorepo containing the Laravel API, the Next.js web client, the OpenAPI/contract spec, and the original design + planning docs.
+> A classifieds marketplace for Qatar (QAR, Arabic + English). This monorepo holds the Laravel API and admin panel, the Next.js web client, the API contract and planning docs, and the deploy files.
 
-[![Status](https://img.shields.io/badge/status-MVP%20feature--complete-success)](qbazaar-contracts/ROADMAP.md)
-[![Phase](https://img.shields.io/badge/phase-launch%20prep-yellow)](qbazaar-contracts/ROADMAP.md)
-[![Laravel](https://img.shields.io/badge/API-Laravel%2012-red)](qbazaar-api/README.md)
-[![Next.js](https://img.shields.io/badge/Web-Next.js%2016-black)](qbazaar-web/README.md)
+**Status (2026-09-30):** the MVP is live; V2 is under way. M0 (audit fixes, CI) is merged, M1 (backend gaps) is next. See [ROADMAP.md](qbazaar-contracts/ROADMAP.md).
 
----
-
-## 🗂️ Layout
+## Layout
 
 ```
 QB/
-├── qbazaar-api/         # Laravel 12 backend  (PHP 8.4 · MySQL 8 · Redis · Meilisearch · Reverb · Filament v4)
-├── qbazaar-web/         # Next.js 16 frontend (TypeScript · Tailwind 4 · shadcn/ui · TanStack Query · AR/EN i18n)
-├── qbazaar-contracts/   # OpenAPI 3 spec, error catalogue, WebSocket events, ROADMAP, MILESTONES, PLAN
-└── DOCS/                # Original architecture + backend plan + Bazzar React mockup + brand assets (reference, frozen)
+├── qbazaar-api/         Laravel 12 API (/api/v1) + custom Blade admin panel (/admin)
+│                        MySQL · Redis · Meilisearch (Scout) · Reverb · Horizon · Sanctum · Spatie
+├── qbazaar-web/         Next.js 16 web client (React 19 · TypeScript · Tailwind 4 · TanStack Query · AR/EN)
+├── qbazaar-contracts/   OpenAPI spec, error codes, WebSocket events, V2 plan, roadmap, milestones
+├── deploy/              Production deploy: scripts, systemd units, Apache includes, env templates, runbooks
+├── DOCS/                PRD (PDF), the 2026-09-30 audit, QA/design reports, original (pre-build) plans, mockup assets
+└── .github/workflows/   ci.yml (API quality gates), deploy-api.yml, deploy-web.yml
 ```
 
-## 📍 Where to look first
+Related repos: [`Qbazzar/Qbazaar-mobile`](https://github.com/Qbazzar/Qbazaar-mobile) (Expo app) and [`Qbazzar/Qbazaar-front`](https://github.com/Qbazzar/Qbazaar-front) (static prototype of the new design, the pixel reference for the web reskin).
+
+## Where to look first
 
 | Need | File |
 |------|------|
-| **Current progress, blockers, decisions log** | [qbazaar-contracts/ROADMAP.md](qbazaar-contracts/ROADMAP.md) |
-| **Per-sprint user stories + tasks** | [qbazaar-contracts/MILESTONES.md](qbazaar-contracts/MILESTONES.md) |
-| **Architectural plan + design system** | [qbazaar-contracts/PLAN.md](qbazaar-contracts/PLAN.md) |
-| **API spec** | [qbazaar-contracts/openapi/v1.yaml](qbazaar-contracts/openapi/v1.yaml) |
-| **How to run the API locally** | [qbazaar-api/DEV-SETUP.md](qbazaar-api/DEV-SETUP.md) |
-| **Design tokens / mockup pages** | [DOCS/bazzar/](DOCS/bazzar/) |
+| V2 plan and settled decisions | [qbazaar-contracts/V2-PLAN.md](qbazaar-contracts/V2-PLAN.md) |
+| What's shipped, current phase, open questions | [qbazaar-contracts/ROADMAP.md](qbazaar-contracts/ROADMAP.md) |
+| Task list by phase (IDs = GitHub issues) | [qbazaar-contracts/MILESTONES-V2.md](qbazaar-contracts/MILESTONES-V2.md) |
+| Audit findings (Arabic) | [DOCS/AUDIT-2026-09-30.md](DOCS/AUDIT-2026-09-30.md) |
+| API spec | [qbazaar-contracts/openapi/v1.yaml](qbazaar-contracts/openapi/v1.yaml) (Swagger UI at `/docs` on the API) |
+| Run the API locally (Windows/Laragon) | [qbazaar-api/DEV-SETUP.md](qbazaar-api/DEV-SETUP.md) |
+| Deploy | [deploy/README.md](deploy/README.md) |
 
-## 🚀 Quick start (after `git clone`)
+## Quick start
+
+Needs PHP 8.4 (8.2+ works for development), Composer, Node 20+, MySQL 8, Redis, and Meilisearch for search.
 
 ```bash
-# Backend
+# API + admin
 cd qbazaar-api
 composer install
 cp .env.example .env && php artisan key:generate
-php artisan migrate
-php artisan serve            # http://localhost:8000
+php artisan migrate --seed         # demo data; admin@qbazaar.qa / password (you must change it on first login)
+npm install && npm run build       # Tailwind assets for /admin
+php artisan serve                  # http://localhost:8000  (/admin, /docs, /api/v1/health)
 
-# Contract mock (separate terminal)
-cd qbazaar-contracts
-npm install
-npm run mock                 # http://localhost:4010
-
-# Frontend (separate terminal)
+# Web (separate terminal)
 cd qbazaar-web
 npm install
-npm run dev                  # http://localhost:3000
+cp .env.example .env.local         # set NEXT_PUBLIC_API_URL=http://localhost:8000
+npm run dev                        # http://localhost:3000
 ```
 
-See [qbazaar-api/DEV-SETUP.md](qbazaar-api/DEV-SETUP.md) for Memurai + Meilisearch setup on Windows.
+Queues, WebSocket, the scheduler and Meilisearch are covered in [DEV-SETUP.md](qbazaar-api/DEV-SETUP.md). The web can also run against the Prism mock (`cd qbazaar-contracts && npm install && npm run mock`, port 4010).
 
-## 📋 Status
+## Tests and CI
 
-**MVP feature-complete.** All 13 sprints landed — auth, accounts, categories &
-locations, ads + media + auto-moderation, Meilisearch search, favorites &
-recently-viewed, Reverb messaging, offers, notifications & reports, the Filament
-v4 admin panel, and CMS / help center / support tickets — on top of the QBFront
-design system, AR/EN cookie-based i18n, and a Milestone-6 SEO/PWA pass
-(sitemap, robots, OpenGraph, JSON-LD, manifest, error boundaries, analytics).
+```bash
+cd qbazaar-api
+php vendor/bin/pest                        # full suite, no external services needed
+php vendor/bin/pest --group=meilisearch    # the search tests; needs a running Meilisearch
+vendor/bin/pint --test                     # code style
+vendor/bin/phpstan analyse                 # static analysis, level 8
 
-Now in **launch prep**: DNS + SSL for the production domain and the production
-secrets (Twilio, mail, Sentry, Reverb) are the remaining blockers.
+cd qbazaar-web
+npm run typecheck && npm test              # tsc + Vitest
+```
 
-| Need | File |
-|------|------|
-| **Live progress log + decisions** | [ROADMAP.md](qbazaar-contracts/ROADMAP.md) |
-| **Per-task status (Milestones 1–7)** | [MILESTONES.md](qbazaar-contracts/MILESTONES.md) |
+CI (`.github/workflows/ci.yml`) runs Pint, PHPStan and Pest for the API on every push and pull request to `main` and `develop`. The web has no CI job yet.
 
-## 📝 License
+## Deploy
+
+`main` is the development branch. Pushing to the `production` branch deploys over SSH: `deploy-api.yml` runs CI first, `deploy-web.yml` builds on the server. Production today is a cPanel server (`qbazaar.fleeteye.de`, `api.qbazaar.fleeteye.de`); M5 moves it to a new VPS behind Cloudflare. Details in [deploy/README.md](deploy/README.md).
+
+## License
 
 Proprietary — Ahmed Jaber.
