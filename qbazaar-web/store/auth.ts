@@ -30,6 +30,8 @@ export interface AuthState {
    * has not been hydrated yet (avoids spawning a phantom user record).
    */
   setAvatarUrls: (urls: AvatarUrls) => void;
+  /** Patch the cached phone flag so phone-gated actions react immediately. */
+  setPhoneVerified: (phoneVerified: boolean) => void;
   setLoading: (isLoading: boolean) => void;
   setHydrated: (isHydrated: boolean) => void;
   clearAuth: () => void;
@@ -56,6 +58,12 @@ export const useAuthStore = create<AuthState>((set) => ({
           }
         : state,
     ),
+  setPhoneVerified: (phoneVerified) =>
+    set((state) =>
+      state.user && state.user.phone_verified !== phoneVerified
+        ? { user: { ...state.user, phone_verified: phoneVerified } }
+        : state,
+    ),
   setLoading: (isLoading) => set({ isLoading }),
   setHydrated: (isHydrated) => set({ isHydrated }),
   clearAuth: () => {
@@ -76,6 +84,10 @@ export function getAccessToken(): string | null {
 
 export function setAccessTokenNonReactive(token: string | null): void {
   useAuthStore.getState().setAccessToken(token);
+}
+
+export function setPhoneVerifiedNonReactive(phoneVerified: boolean): void {
+  useAuthStore.getState().setPhoneVerified(phoneVerified);
 }
 
 export function clearAuthNonReactive(): void {

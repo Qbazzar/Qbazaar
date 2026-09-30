@@ -17,9 +17,8 @@ import { loginSchema, type LoginInput } from '@/lib/validation/auth';
 import { ApiClientError, login } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
+import { safeReturnTo } from '@/lib/navigation/safe-return-to';
 import { FieldError } from './FieldError';
-
-const SAFE_REDIRECT = /^\/(?!\/)[^\s]*$/;
 
 export function LoginForm() {
   const router = useRouter();
@@ -41,9 +40,7 @@ export function LoginForm() {
       setHydrated(true);
       toast.success(t('auth.login.success'));
 
-      const from = search.get('from');
-      const target = from && SAFE_REDIRECT.test(from) ? from : '/';
-      router.replace(target);
+      router.replace(safeReturnTo(search.get('from')));
     } catch (err) {
       handleSubmitError(err, form);
     }
