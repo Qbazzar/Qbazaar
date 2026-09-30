@@ -1,12 +1,14 @@
 # QBazaar — نشر الباك + الفرونت على cPanel VPS (fleeteye.de)
 
+> **Status (2026-09-30):** this is the first-time setup runbook for the **current** production server (live since 2026-06-17). Day-to-day deploys and the pending post-M0 steps are in [README.md](README.md). M5 replaces this server with the new VPS (`OPS-18.x`).
+
 > خطة/runbook لنشر **الـ API و الفرونت على نفس السيرفر** (WHM/cPanel، root)،
 > الاثنين من **GitHub Actions**. القرارات المعتمدة:
 > - الفرونت: **systemd `next start` + Apache reverse proxy**
 > - التوزيع: **فرونت على `qbazaar.fleeteye.de`** + **API على `api.qbazaar.fleeteye.de`**
 > - البناء: **على السيرفر مباشرة**
 >
-> ⚠️ هذا يستبدل إعداد CloudPanel/miete.site القديم في `deploy/README.md`.
+> ⚠️ هذا يستبدل إعداد CloudPanel/miete.site القديم (لم يعد مستخدمًا).
 
 ## 0) المتغيّرات (مؤكّدة)
 
@@ -27,17 +29,17 @@
 
 ### أ. DNS + الدومينات في WHM/cPanel
 1. سجّلات A: `qbazaar.fleeteye.de` و `api.qbazaar.fleeteye.de` → IP السيرفر.
-2. في cPanel للحساب `space`:
-   - **Subdomain** `api.qbazaar.fleeteye.de` → docroot = `/home/space/qbazaar/qbazaar-api/public`.
+2. في cPanel للحساب `fleeteye`:
+   - **Subdomain** `api.qbazaar.fleeteye.de` → docroot = `/home/fleeteye/qbazaar/qbazaar-api/public`.
    - الدومين الرئيسي/addon `qbazaar.fleeteye.de` → أنشئه (الـ docroot ما رح يُستخدم مباشرة لأن Apache يعمل proxy لـ Node، بس cPanel يحتاج الـ vhost موجود عشان SSL).
 3. **SSL**: شغّل AutoSSL (WHM → Manage AutoSSL) أو Let's Encrypt للدومينين.
 
 ### ب. أدوات على السيرفر (root عبر SSH)
-4. **Node 20**: إمّا cPanel Node selector، أو nvm تحت root/`space`. ثبّت `pm2`؟ لا — اخترنا systemd. سجّل مسار `node` المطلق (مثلًا `/home/space/nodevenv/.../bin/node` أو `~/.nvm/versions/node/v20.x/bin/node`) — رح نحتاجه في وحدة systemd.
+4. **Node 20**: إمّا cPanel Node selector، أو nvm تحت root/`fleeteye`. ثبّت `pm2`؟ لا — اخترنا systemd. سجّل مسار `node` المطلق (الوحدة الحالية تستخدم `/usr/bin/node`) — رح نحتاجه في وحدة systemd.
 5. **وحدات Apache للـ proxy**: تأكد أن `mod_proxy`, `mod_proxy_http`, `mod_proxy_wstunnel`, `mod_rewrite` مفعّلة (WHM → EasyApache 4 → Apache Modules).
 5b. **امتدادات PHP 8.4 CLI**: تأكد أن `ea-php84` مثبّت و CLI فيه `pcntl` + `posix` (يحتاجهم Horizon و Reverb): `dnf install -y ea-php84-php-pcntl ea-php84-php-posix` ثم تحقّق `/opt/cpanel/ea-php84/root/usr/bin/php -m | grep -E 'pcntl|posix'`.
 6. **Redis**: عالق من بداية الجلسة — اضبط `requirepass` و `REDIS_PASSWORD` في `.env` (راجع رسالة NOAUTH).
-7. **Meilisearch**: نفّذ الـ runbook في [`deploy/README.md`](README.md#-meilisearch-on-the-whm-server) (اختياري لكنه يرجّع بحث Sprint-6).
+7. **Meilisearch**: نفّذ الخطوات في [`deploy/README.md`](README.md#meilisearch-install-once-as-root). **إلزامي**: البحث لا يعمل بدونه، ولا نستخدم driver الـ `database`.
 8. **Swap** (أمان البناء): لو رام السيرفر ≤ 2GB، أنشئ 2GB swap قبل أول `next build`:
    ```bash
    fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
@@ -45,26 +47,26 @@
    ```
 
 ### ج. مفتاح النشر + git clone
-9. أنشئ زوج مفاتيح SSH للنشر، ضع العام في `~space/.ssh/authorized_keys`.
+9. أنشئ زوج مفاتيح SSH للنشر، ضع العام في `~fleeteye/.ssh/authorized_keys`.
 10. استبدل رفع الـ zip اليدوي بـ clone:
     ```bash
-    sudo -u space -i
+    sudo -u fleeteye -i
     cd ~ && git clone https://github.com/Qbazzar/Qbazaar.git qbazaar
     cd qbazaar && git checkout production
     ```
 
 ### د. GitHub
-11. ادمج الـ 5 PRs إلى `main`، ثم أنشئ فرع `production`:
+11. أنشئ فرع `production` من `main` (مرة واحدة؛ الفرع موجود الآن):
     ```bash
     git switch -c production main && git push -u origin production
     ```
-12. Repo Secrets (Settings → Secrets → Actions): `DEPLOY_HOST` (IP)، `DEPLOY_USER=space`، `DEPLOY_PORT=22`، `DEPLOY_SSH_KEY` (المفتاح الخاص).
+12. Repo Secrets (Settings → Secrets → Actions): `DEPLOY_HOST` (IP)، `DEPLOY_USER=fleeteye`، `DEPLOY_PORT=22`، `DEPLOY_SSH_KEY` (المفتاح الخاص).
 
-### هـ. صلاحية systemctl للمستخدم `space` (عشان CI يعيد التشغيل)
+### هـ. صلاحية systemctl للمستخدم `fleeteye` (عشان CI يعيد التشغيل)
 13. drop-in في sudoers (root):
     ```bash
     cat > /etc/sudoers.d/qbazaar-deploy <<'EOF'
-    space ALL=(root) NOPASSWD: /usr/bin/systemctl restart qbazaar-web, \
+    fleeteye ALL=(root) NOPASSWD: /usr/bin/systemctl restart qbazaar-web, \
       /usr/bin/systemctl restart qbazaar-horizon, \
       /usr/bin/systemctl restart qbazaar-reverb
     EOF
@@ -73,10 +75,10 @@
 
 ---
 
-## 2) الملفات اللي رح أولّدها في الريبو (بعد موافقتك)
+## 2) الملفات الموجودة في الريبو
 
 ### أ. وحدات systemd (`deploy/systemd/`)
-- `qbazaar-web.service` — `ExecStart=<node> <repo>/qbazaar-web/node_modules/.bin/next start -p 3000`, `User=space`, `Environment=NODE_ENV=production`, `WorkingDirectory=<repo>/qbazaar-web`, `Restart=always`.
+- `qbazaar-web.service` — `ExecStart=<node> <repo>/qbazaar-web/node_modules/.bin/next start -p 3000`, `User=fleeteye`, `Environment=NODE_ENV=production`, `WorkingDirectory=<repo>/qbazaar-web`, `Restart=always`.
 - `qbazaar-horizon.service` — `php artisan horizon` (الطوابير: صور، إشعارات، انتهاء إعلانات).
 - `qbazaar-reverb.service` — `php artisan reverb:start --host=127.0.0.1 --port=8080` (الشات الفوري).
 - `qbazaar-scheduler.service` — `php artisan schedule:work` (مهام الـ scheduler: انتهاء الإعلانات والعروض). بدونه لا ينتهي أي إعلان ولا عرض.
@@ -97,7 +99,7 @@
   ProxyPassReverse /app  ws://127.0.0.1:8080/app
   ```
   (مسار التضمين على cPanel: WHM → Apache Configuration → Include Editor، أو
-  `/etc/apache2/conf.d/userdata/ssl/2_4/space/<domain>/qbazaar.conf` ثم rebuild+restart.)
+  `/etc/apache2/conf.d/userdata/ssl/2_4/fleeteye/<domain>/qbazaar.conf` ثم rebuild+restart.)
 
 ### ج. تكييف سكربتات النشر
 - `deploy/scripts/deploy-api.sh` — تحديث المسارات/الدومين/`HEALTH_URL=https://api.qbazaar.fleeteye.de/api/v1/health`، وإضافة `sudo systemctl restart qbazaar-horizon qbazaar-reverb` بعد الـ migrate/cache.
@@ -121,7 +123,7 @@
 ## 3) ترتيب التنفيذ (أول نشر)
 
 1. (أنت) القسم 1 كامل: DNS، الدومينات، SSL، Node ✅، PHP 8.4+pcntl/posix، Redis، مفتاح SSH، فرع `production`، الـ secrets، sudoers.
-2. (تم ✅) ملفات القسم 2 مولّدة على فرع `chore/cpanel-fleeteye-deploy` — تُدمج لـ `main` ثم `production`.
+2. (تم ✅) ملفات القسم 2 موجودة على `main` (PR #11).
 3. (أنت، مرّة وحدة على السيرفر — بعد الـ clone والدمج):
 
 ```bash
@@ -157,7 +159,7 @@ cd ~/qbazaar/qbazaar-api && php artisan key:generate && php artisan migrate --fo
 ---
 
 ## 4) نقاط حرجة لا تُنسى
-- **CORS**: ليس blocker — لا يوجد `config/cors.php` منشور، فاللارافيل يستخدم الافتراضي (`allowed_origins: *` على `api/*`)، والمشروع يعمل cross-origin أصلًا (Vercel→API). و`/api/v1/broadcasting/auth` مغطّى تحت `api/*` ويمر بـ Bearer token. **تشديد اختياري لاحقًا**: انشر `config/cors.php` وحصر `allowed_origins` على `https://qbazaar.fleeteye.de`.
+- **CORS**: ليس blocker — لا يوجد `config/cors.php` منشور، فاللارافيل يستخدم الافتراضي (`allowed_origins: *` على `api/*`)، والويب أصلًا على دومين غير دومين الـ API. و`/api/v1/broadcasting/auth` مغطّى تحت `api/*` ويمر بـ Bearer token. **تشديد اختياري لاحقًا**: انشر `config/cors.php` وحصر `allowed_origins` على `https://qbazaar.fleeteye.de`.
 - **Reverb عبر wss**: يتطلب `mod_proxy_wstunnel`؛ بدونه الشات يفشل صامتًا. اختبره بـ devtools → WS.
 - **ذاكرة البناء**: `next build` + MySQL/Redis/PHP-FPM معًا على رام صغير = خطر OOM. الـ swap في 1.ب.8 هو شبكة الأمان.
 - **systemd كـ `fleeteye`**: الوحدات تشتغل بمستخدم cPanel عشان صلاحيات الملفات تتطابق مع git clone؛ والـ CI يعيد التشغيل عبر sudoers المحدود.
