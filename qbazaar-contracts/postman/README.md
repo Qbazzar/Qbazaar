@@ -20,7 +20,7 @@ For OTP / password-reset / email-verify flows the env has dedicated slots (`otp_
 
 ## How it stays in sync
 
-Per [PLAN.md → Workflow Rules → After every endpoint](../PLAN.md):
+Per the [contract-first workflow](../README.md#contract-first-workflow):
 
 1. New endpoint lands in `openapi/v1.yaml` (contract-first).
 2. Backend implements + Swagger UI at `/swagger` (or `/docs`) auto-reflects it (the Blade view loads the contracts spec).

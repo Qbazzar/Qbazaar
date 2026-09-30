@@ -1,4 +1,4 @@
-# QBazaar — Notifications WebSocket Contract (Sprint 10)
+# QBazaar — Notifications WebSocket Contract
 
 Broadcast adapter: **Laravel Reverb** (Pusher-compatible).
 Auth: clients call `POST /api/v1/broadcasting/auth` with their Sanctum bearer (`Authorization: Bearer <token>`). The response is the raw Pusher `{auth}` body, not the API envelope.
@@ -52,15 +52,20 @@ sender — the same JSON is persisted in the `notifications.data` column.
 Unknown keys are forward-compatible: new notification classes may add
 fields without breaking older clients.
 
-## Categories shipped in Sprint 10
+## Categories in the code today
 
-| `data.category` | Triggered by |
-|------|------|
-| `ad.approved`           | Ad clears moderation (auto or manual). |
-| `ad.rejected`           | Auto-moderation flags an ad. |
-| `ad.expiring_soon`      | Daily job 24h before `ads.expires_at`. |
-| `ad.expired`            | Daily job after `ads.expires_at`. |
-| `account.data_export_ready` | `ExportUserDataJob` finishes. |
-| `security.new_device`   | Successful login from an unrecognised device. |
+| `data.category` | Triggered by | FCM push |
+|------|------|------|
+| `ad.pending_review`     | A seller submits an ad; sent to staff with `super_admin` or `moderator` (database only). | — |
+| `ad.approved`           | An admin approves the ad. | yes |
+| `ad.rejected`           | An admin rejects the ad (auto-moderation only flags ads for the reviewer now). | yes |
+| `ad.expiring_soon`      | Daily job, for ads expiring in the next 24 hours. | yes |
+| `ad.expired`            | Daily job after `ads.expires_at`. | yes |
+| `search.match`          | A new ad matches a saved search with alerts on. | yes |
+| `account.data_export_ready` | `ExportUserDataJob` finishes. | yes |
+| `security.new_device`   | Successful login from an unrecognised device. | — |
+| `support.reply`         | Staff reply to the user's support ticket. | yes |
+| `support.ticket_created` | A user opens a ticket; sent to staff. | — |
+| `system.announcement`   | An admin broadcast. | yes |
 
-Future categories will land here as new notification classes are added.
+FCM push only goes out when `FIREBASE_CREDENTIALS` is set and the user has a registered device token. Push for new messages and offers is not built yet (BE-14.2), and neither are `ads.new_from_followed` and `ad.price_changed` (BE-14.18).

@@ -1,110 +1,54 @@
 # QBazaar Contracts
 
-> **Source of truth** for the QBazaar API, error catalogue, WebSocket events, roadmap and planning docs.
+The API contract and the planning docs for QBazaar: the OpenAPI spec, the error catalogue, the WebSocket events, and the V2 plan, roadmap and task list.
 
-[![Sprint](https://img.shields.io/badge/sprint-0-blue)](ROADMAP.md)
-[![Status](https://img.shields.io/badge/status-Day%201%20done%20·%20Day%207%20pending-orange)](ROADMAP.md)
-[![Schema](https://img.shields.io/badge/OpenAPI-3.1-green)](openapi/v1.yaml)
+## What's here
 
----
+| File | What it answers |
+|------|-----------------|
+| [`V2-PLAN.md`](V2-PLAN.md) | What are we building in V2, and which decisions are settled? |
+| [`ROADMAP.md`](ROADMAP.md) | What is shipped today, which phase are we in, what is open? |
+| [`MILESTONES-V2.md`](MILESTONES-V2.md) | Every V2 task by phase (each ID is a GitHub issue) |
+| [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md) | What the mobile app needs that the API doesn't have yet |
+| [`openapi/v1.yaml`](openapi/v1.yaml) | The exact shape of every request and response (OpenAPI 3.1) |
+| [`error-codes.md`](error-codes.md) | What does `AUTH_005` mean, and which HTTP status goes with it? |
+| [`events/messages.yaml`](events/messages.yaml), [`events/messaging.md`](events/messaging.md), [`events/notifications.md`](events/notifications.md) | WebSocket channels, events and payloads (Reverb) |
+| [`postman/`](postman/README.md) | Postman collection + local environment |
+| [`MILESTONES.md`](MILESTONES.md), [`PLAN.md`](PLAN.md), [`plans/`](plans/), [`QA-REPORT-2026-06.md`](QA-REPORT-2026-06.md) | MVP-era history (archived; each file says what replaced it) |
 
-## 📊 Current Progress
+## Status of the spec
 
-**Sprint:** 0 — Infrastructure & Foundation
+`openapi/v1.yaml` describes the MVP API (79 paths) and matches the implementation, except that the existing `reviews` endpoints are missing (CT-13.2). None of the new V2 endpoints are in it yet; adding them, marked `x-status: planned`, is CT-13.1 and comes before any M1 endpoint is built.
 
-| Sprint Day | Status | Task IDs |
-|------------|--------|----------|
-| **Day 1** | ✅ | `CT-0.1` repo init · `CT-0.2` import PLAN/ROADMAP/MILESTONES · `CT-0.3` openapi v1 skeleton + error-codes.md + events/messages.yaml |
-| **Day 7** | ⚪ | `CT-0.4` `package.json` with Prism · `CT-0.5/6` openapi auth schemas + examples · GitHub Project + Milestones + Labels + Issues for Sprint 1 |
+The API serves this file at `GET /api/v1/openapi.yaml`, and Swagger UI renders it at `/docs` (and `/swagger`) on the Laravel app.
 
-### What's in the repo now
-
-| File | Purpose | State |
-|------|---------|-------|
-| [`openapi/v1.yaml`](openapi/v1.yaml) | The API spec | Skeleton + `/health` endpoint; auth endpoints added Day 7 |
-| [`error-codes.md`](error-codes.md) | Stable error catalogue | 48 codes across all sprints |
-| [`events/messages.yaml`](events/messages.yaml) | WebSocket events spec | Channels + payload schemas for messaging, offers, notifications |
-| [`ROADMAP.md`](ROADMAP.md) | Live status + retros | Days 1–4 closed, Day 5 in progress |
-| [`MILESTONES.md`](MILESTONES.md) | Every user story + flow + task ID | ~475 tasks across 13 sprints |
-| [`PLAN.md`](PLAN.md) | Architectural plan (snapshot) | Decisions, design system, execution protocol |
-| [`package.json`](package.json) | Prism mock + Redocly validate scripts | Scripts present; `npm install` runs Day 7 |
-
----
-
-## 🧭 How the three repos relate
-
-```
-                            ┌───────────────────┐
-                            │ qbazaar-contracts │  \xe2\x86\x90 you are here
-                            │                   │
-                            │  openapi/v1.yaml  │  source of truth
-                            │  error-codes.md   │
-                            │  events/*.yaml    │
-                            └─────────┬─────────┘
-                                      │ defines the shape
-                  ┌───────────────────┼───────────────────┐
-                  \xe2\x86\x93                                       \xe2\x86\x93
-       ┌───────────────────┐                   ┌───────────────────┐
-       │   qbazaar-api     │  serves real      │   qbazaar-web     │
-       │   Laravel 12      │  data \xe2\x86\x90\xe2\x86\x90\xe2\x86\x90\xe2\x86\x90\xe2\x86\x90\xe2\x86\x90    │   Next.js 15      │
-       │  /api/v1/*        │                   │  consumes mock    │
-       │                   │                   │  on :4010 then    │
-       │  Pest tests prove │                   │  real api on :8000│
-       │  conformance      │                   │  once endpoint    │
-       └───────────────────┘                   │  lands            │
-                                               └───────────────────┘
-```
-
----
-
-## 🚀 Quick Start
-
-### Run the Prism mock server (frontend dev)
+## Commands
 
 ```bash
 npm install
-npm run mock      # http://localhost:4010
+npm run validate   # Redocly lint of openapi/v1.yaml
+npm run mock       # Prism mock server on http://localhost:4010
+npm run proxy      # Prism proxy to http://localhost:8000 that reports contract drift
 ```
 
-`qbazaar-web` reads `NEXT_PUBLIC_API_URL` and points at the mock by default. Once a real backend endpoint exists for a given path, swap the env var to `http://localhost:8000`.
+There is no CI job for the spec today; run `npm run validate` before merging a spec change.
 
-### Validate the spec
+## Contract-first workflow
 
-```bash
-npm run validate   # Redocly lints openapi/v1.yaml
+For every new or changed endpoint:
+
+1. Edit `openapi/v1.yaml` (path, schemas, examples) and add any new error code to `error-codes.md` and `qbazaar-api/app/Exceptions/ErrorCode.php`.
+2. Commit it with the task ID, e.g. `docs(contract): add follows endpoints [CT-13.1]`.
+3. Clients can build against the Prism mock while the backend implements it.
+4. The backend is done when its Pest tests pass and the response matches the spec (`npm run proxy` helps catch drift).
+
+## How this fits the monorepo
+
+```
+qbazaar-contracts  ── defines the API ──►  qbazaar-api (Laravel, /api/v1, /admin)
+                                             ▲
+               qbazaar-web (Next.js) ────────┤  HTTPS + Reverb WebSocket
+               Qbazaar-mobile (Expo, separate repo) ┘
 ```
 
----
-
-## 🔁 Contract-First Workflow
-
-For **every new endpoint**:
-
-1. Edit `openapi/v1.yaml` (add path + schemas + examples).
-2. Commit: `docs(contract): add <name> endpoints [CT-X.Y]`.
-3. Frontend agent uses the mock — no waiting on backend.
-4. Backend agent implements until Pest tests + Scribe annotations match the spec.
-5. Integration: swap the frontend env URL → run E2E → fix any drift.
-
-This is the only way our solo dev / multi-agent workflow keeps backend and frontend in sync without blocking each other. Cf. [PLAN.md → Multi-Agent Parallel Workflow](PLAN.md).
-
----
-
-## 📚 Documentation Index
-
-| Doc | What it answers |
-|-----|----------------|
-| [PLAN.md](PLAN.md) | What decisions are locked? What's the design system? How do agents work in parallel? |
-| [ROADMAP.md](ROADMAP.md) | Where are we right now? What's blocking? What did last sprint produce? |
-| [MILESTONES.md](MILESTONES.md) | What are the user stories, flows, and per-track tasks for sprint N? |
-| [error-codes.md](error-codes.md) | What does AUTH_005 mean? Which HTTP status? |
-| [openapi/v1.yaml](openapi/v1.yaml) | What's the exact shape of every request and response? |
-| [events/messages.yaml](events/messages.yaml) | What WebSocket channels exist and what payloads do they carry? |
-
----
-
-## 🔗 Related Repositories
-
-- **[`../qbazaar-api`](../qbazaar-api)** — Laravel 12 backend implementation (Sprint 0 — Days 1–4 done, Day 5 in progress)
-- **[`../qbazaar-web`](../qbazaar-web)** — Next.js 15 frontend (Sprint 0 — Day 1 done, Day 6 pending)
-- **[`../DOCS/`](../DOCS/)** — Original architecture + backend plan + Bazzar mockup (reference only, frozen)
+See the [root README](../README.md) for setup.

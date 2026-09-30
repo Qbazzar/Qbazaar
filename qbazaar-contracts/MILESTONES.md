@@ -1,5 +1,7 @@
 # QBazaar — Milestones, User Stories, Flows & Tasks (تفصيلي)
 
+> **Archived:** the MVP task list (Sprints 0–12, done). Current tasks are in [`MILESTONES-V2.md`](MILESTONES-V2.md). The per-task status marks below were not maintained after the MVP and may be wrong.
+
 > هذا الملف هو **مصدر الحقيقة الواحد** لكل user story و flow و task في الـ MVP. كل sprint له user stories مرقمة، flows، وتاسكات backend + frontend + contract.
 >
 > **التحديث:** 2026-05-20 (Sprint 0 Day 1)
