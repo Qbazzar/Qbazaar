@@ -3,14 +3,17 @@
 declare(strict_types=1);
 
 use App\Enums\AdStatus;
+use App\Enums\Language;
 use App\Enums\PlatformSetting;
 use App\Events\Ads\AdExpired;
 use App\Events\Ads\AdExpiringSoon;
 use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Models\Ad;
 use App\Models\User;
+use App\Notifications\Ads\AdExpiringSoonNotification;
 use App\Services\Settings\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Tests\Concerns\CreatesAds;
 
@@ -119,4 +122,17 @@ it('expires every due ad even when expiry order differs from key order', functio
 
     expect(Ad::query()->where('status', AdStatus::ACTIVE->value)->count())->toBe(0);
     Event::assertDispatched(AdExpired::class, 150);
+});
+
+it('tells the seller the expiry in Qatar time and their own language', function (): void {
+    $ad = activeAdExpiringAt($this->seller, Carbon::parse('2026-10-03 21:30:00', 'UTC'));
+    $notification = new AdExpiringSoonNotification($ad);
+
+    $arabicBody = $notification->toArray($this->seller)['body'];
+
+    $this->seller->forceFill(['language' => Language::ENGLISH->value])->save();
+    $englishBody = $notification->toArray($this->seller)['body'];
+
+    expect($arabicBody)->toContain('4 أكتوبر 2026')
+        ->and($englishBody)->toContain('4 October 2026, 12:30 AM');
 });

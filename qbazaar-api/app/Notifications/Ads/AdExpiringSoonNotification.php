@@ -49,7 +49,7 @@ class AdExpiringSoonNotification extends Notification implements ShouldQueue
             ->greeting(__('messages.ad_notifications.expiring_soon.greeting', [], $locale))
             ->line(__('messages.ad_notifications.expiring_soon.line_intro', [
                 'title' => $this->ad->title,
-                'expires_at' => $this->ad->expires_at?->toDayDateTimeString() ?? '',
+                'expires_at' => $this->expiryLabel($locale),
             ], $locale))
             ->action(__('messages.ad_notifications.expiring_soon.action', [], $locale), $this->renewUrl())
             ->line(__('messages.ad_notifications.expiring_soon.line_outro', [
@@ -69,13 +69,25 @@ class AdExpiringSoonNotification extends Notification implements ShouldQueue
             'title' => __('messages.notifications.ad_expiring_soon.title', [], $locale),
             'body' => __('messages.notifications.ad_expiring_soon.body', [
                 'title' => $this->ad->title,
-                'expires_at' => $this->ad->expires_at?->toDayDateTimeString() ?? '',
+                'expires_at' => $this->expiryLabel($locale),
             ], $locale),
             'cta_url' => $this->renewUrl(),
             'icon' => 'clock',
             'ad_id' => $this->ad->id,
             'expires_at' => $this->ad->expires_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * Sellers read this in their own language and in Qatar time, not the UTC the column is stored in.
+     */
+    private function expiryLabel(string $locale): string
+    {
+        return $this->ad->expires_at
+            ?->copy()
+            ->setTimezone((string) config('qbazaar.timezone_display'))
+            ->settings(['locale' => $locale])
+            ->translatedFormat('j F Y, g:i A') ?? '';
     }
 
     private function renewUrl(): string
