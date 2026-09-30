@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { CheckCircle2Icon, Loader2Icon } from 'lucide-react';
 
@@ -17,11 +18,16 @@ import {
   verifyOtp,
 } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
+import { safeReturnTo } from '@/lib/navigation/safe-return-to';
+import { PHONE_VERIFICATION_PATH } from '@/lib/auth/phone-gate';
+import { useAuthStore } from '@/store/auth';
 import { FieldError } from './FieldError';
 import { OtpInput } from './OtpInput';
 
 const CODE_LENGTH = 6;
-const SAFE_REDIRECT = /^\/(?!\/)[^\s]*$/;
+// The API does not expose Retry-After for OTP sends, so after a rate-limit
+// response the resend button is held back for one standard cooldown.
+const RATE_LIMITED_RESEND_SECONDS = 60;
 
 /**
  * Status machine: 'editing' is the default form, 'success' shows the inline
@@ -32,11 +38,14 @@ type Status = 'editing' | 'success';
 export function VerifyOtpForm() {
   const router = useRouter();
   const search = useSearchParams();
+  const queryClient = useQueryClient();
+  const signedInUser = useAuthStore((s) => s.user);
+  const setPhoneVerified = useAuthStore((s) => s.setPhoneVerified);
 
   const phone = (search.get('phone') ?? '').trim();
   const continueParam = search.get('continue');
-  const continueTarget =
-    continueParam && SAFE_REDIRECT.test(continueParam) ? continueParam : '/';
+  const continueTarget = safeReturnTo(continueParam);
+  const resumesAction = continueParam !== null && continueTarget !== '/';
 
   const phoneIsValid = qatarPhoneRegex.test(phone);
 
@@ -68,6 +77,20 @@ export function VerifyOtpForm() {
     [],
   );
 
+  const handleSendError = useCallback((err: unknown) => {
+    if (isRateLimited(err)) {
+      setResendDeadline(Date.now() + RATE_LIMITED_RESEND_SECONDS * 1000);
+      setNow(Date.now());
+      toast.error(t('auth.phone_gate.send_limited'));
+      return;
+    }
+    const message =
+      err instanceof ApiClientError
+        ? translateMaybeKey(`auth.errors.${err.code}`) || err.message
+        : t('auth.verify_otp.send_failed');
+    toast.error(message);
+  }, []);
+
   // Auto-request the first OTP when the page loads with a valid phone.
   useEffect(() => {
     if (!phoneIsValid || initialSendDone.current) return;
@@ -77,14 +100,10 @@ export function VerifyOtpForm() {
         const data = await sendOtp({ phone });
         applyCooldowns(data.can_resend_in, data.expires_in);
       } catch (err) {
-        const message =
-          err instanceof ApiClientError
-            ? translateMaybeKey(`auth.errors.${err.code}`) || err.message
-            : t('auth.verify_otp.send_failed');
-        toast.error(message);
+        handleSendError(err);
       }
     })();
-  }, [applyCooldowns, phone, phoneIsValid]);
+  }, [applyCooldowns, handleSendError, phone, phoneIsValid]);
 
   const resendSeconds = secondsUntil(resendDeadline, now);
   const expiresSeconds = secondsUntil(expiresDeadline, now);
@@ -101,6 +120,8 @@ export function VerifyOtpForm() {
       setSubmitting(true);
       try {
         await verifyOtp({ phone, code: codeValue });
+        if (signedInUser?.phone === phone) setPhoneVerified(true);
+        void queryClient.invalidateQueries({ queryKey: ['account'] });
         setStatus('success');
         toast.success(t('auth.verify_otp.success_title'));
       } catch (err) {
@@ -112,7 +133,7 @@ export function VerifyOtpForm() {
         setSubmitting(false);
       }
     },
-    [phone, phoneIsValid],
+    [phone, phoneIsValid, queryClient, setPhoneVerified, signedInUser?.phone],
   );
 
   const onComplete = useCallback(
@@ -133,13 +154,9 @@ export function VerifyOtpForm() {
       applyCooldowns(data.can_resend_in, data.expires_in);
       toast.success(t('auth.verify_otp.sent_again'));
     } catch (err) {
-      const message =
-        err instanceof ApiClientError
-          ? translateMaybeKey(`auth.errors.${err.code}`) || err.message
-          : t('auth.verify_otp.send_failed');
-      toast.error(message);
+      handleSendError(err);
     }
-  }, [applyCooldowns, canResend, phone, phoneIsValid]);
+  }, [applyCooldowns, canResend, handleSendError, phone, phoneIsValid]);
 
   if (!phoneIsValid) {
     return (
@@ -153,12 +170,21 @@ export function VerifyOtpForm() {
           </p>
         </header>
         <div className="flex gap-2">
-          <Link
-            href="/login"
-            className={cn(buttonVariants(), 'h-11 rounded-full px-6 text-sm font-semibold')}
-          >
-            {t('auth.verify_otp.back_to_login')}
-          </Link>
+          {signedInUser ? (
+            <Link
+              href={PHONE_VERIFICATION_PATH}
+              className={cn(buttonVariants(), 'h-11 rounded-full px-6 text-sm font-semibold')}
+            >
+              {t('account.verification.title')}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className={cn(buttonVariants(), 'h-11 rounded-full px-6 text-sm font-semibold')}
+            >
+              {t('auth.verify_otp.back_to_login')}
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -183,7 +209,9 @@ export function VerifyOtpForm() {
           size="lg"
           className="h-11 w-full rounded-full text-sm font-semibold"
         >
-          {t('auth.verify_otp.continue')}
+          {resumesAction
+            ? t('auth.phone_gate.resume')
+            : t('auth.verify_otp.continue')}
         </Button>
       </div>
     );
@@ -278,6 +306,14 @@ function secondsUntil(deadline: number | null, now: number): number {
   if (deadline === null) return 0;
   const diff = Math.ceil((deadline - now) / 1000);
   return diff > 0 ? diff : 0;
+}
+
+function isRateLimited(err: unknown): boolean {
+  return (
+    err instanceof ApiClientError &&
+    (err.code === AuthErrorCode.AuthRateLimited ||
+      err.code === AuthErrorCode.RateLimited)
+  );
 }
 
 function handleVerifyError(

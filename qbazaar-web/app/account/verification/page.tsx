@@ -5,10 +5,12 @@
  *
  * Shows the four verification channels (email / phone / business / KYC) with
  * checkmark icons. Email + phone are actionable today; business + KYC are
- * placeholders for later sprints.
+ * placeholders for later sprints. Phone-gated actions land here with a
+ * `continue` path so the user returns to them after verifying.
  */
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -21,11 +23,19 @@ import {
   BadgeCheckIcon,
 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { getVerificationStatus } from '@/lib/api/account';
 import { sendEmailVerification, ApiClientError } from '@/lib/api/auth';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/auth';
+import {
+  PHONE_VERIFICATION_PATH,
+  hasVerifiablePhone,
+  verifyOtpHref,
+} from '@/lib/auth/phone-gate';
+import { safeReturnTo } from '@/lib/navigation/safe-return-to';
 import type { VerificationStatus } from '@/lib/api/types';
 
 const DEFAULT_STATUS: VerificationStatus = {
@@ -36,9 +46,23 @@ const DEFAULT_STATUS: VerificationStatus = {
 };
 
 export default function AccountVerificationPage() {
+  // useSearchParams() needs a Suspense boundary for the static build.
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <VerificationContent />
+    </Suspense>
+  );
+}
+
+function VerificationContent() {
   const router = useRouter();
+  const search = useSearchParams();
   const { user } = useAuth();
+  const setPhoneVerified = useAuthStore((s) => s.setPhoneVerified);
   const [sendingEmail, setSendingEmail] = useState(false);
+
+  const continueParam = search.get('continue');
+  const continueTarget = continueParam ? safeReturnTo(continueParam) : null;
 
   const { data: status = DEFAULT_STATUS, isLoading } = useQuery({
     queryKey: ['account', 'verification-status'],
@@ -53,6 +77,13 @@ export default function AccountVerificationPage() {
         }
       : DEFAULT_STATUS,
   });
+
+  // Verification may have happened on another device; keep the gates in sync.
+  useEffect(() => {
+    if (status.phone_verified) setPhoneVerified(true);
+  }, [setPhoneVerified, status.phone_verified]);
+
+  const phoneMissing = !hasVerifiablePhone(user?.phone);
 
   const handleSendEmail = async () => {
     setSendingEmail(true);
@@ -74,8 +105,8 @@ export default function AccountVerificationPage() {
   };
 
   const handleVerifyPhone = () => {
-    if (!user?.phone) return;
-    router.push(`/verify-otp?phone=${encodeURIComponent(user.phone)}`);
+    if (!hasVerifiablePhone(user?.phone)) return;
+    router.push(verifyOtpHref(user.phone, continueTarget ?? PHONE_VERIFICATION_PATH));
   };
 
   return (
@@ -89,13 +120,15 @@ export default function AccountVerificationPage() {
         </p>
       </header>
 
+      {continueTarget && !isLoading ? (
+        <PhoneGateBanner
+          verified={status.phone_verified}
+          continueTarget={continueTarget}
+        />
+      ) : null}
+
       {isLoading ? (
-        <div className="flex justify-center py-10" role="status">
-          <Loader2Icon
-            className="text-muted-foreground size-5 animate-spin"
-            aria-hidden
-          />
-        </div>
+        <LoadingState />
       ) : (
         <ul className="grid gap-3">
           <VerificationRow
@@ -135,7 +168,17 @@ export default function AccountVerificationPage() {
             value={user?.phone ?? ''}
             verified={status.phone_verified}
             action={
-              status.phone_verified ? null : (
+              status.phone_verified ? null : phoneMissing ? (
+                <Link
+                  href="/support/new"
+                  className={cn(
+                    buttonVariants({ variant: 'outline', size: 'sm' }),
+                    'rounded-full px-3 text-xs font-semibold',
+                  )}
+                >
+                  {t('auth.phone_gate.contact_support')}
+                </Link>
+              ) : (
                 <Button
                   type="button"
                   size="sm"
@@ -147,6 +190,14 @@ export default function AccountVerificationPage() {
               )
             }
           />
+          {!status.phone_verified && phoneMissing ? (
+            <li className="text-muted-foreground px-1 text-xs leading-relaxed">
+              <span className="text-ink-900 block font-semibold">
+                {t('auth.phone_gate.missing_phone_title')}
+              </span>
+              {t('auth.phone_gate.missing_phone_body')}
+            </li>
+          ) : null}
 
           <VerificationRow
             icon={BriefcaseIcon}
@@ -178,6 +229,54 @@ export default function AccountVerificationPage() {
         </ul>
       )}
     </section>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="flex justify-center py-10" role="status">
+      <Loader2Icon className="text-muted-foreground size-5 animate-spin" aria-hidden />
+    </div>
+  );
+}
+
+function PhoneGateBanner({
+  verified,
+  continueTarget,
+}: {
+  verified: boolean;
+  continueTarget: string;
+}) {
+  return (
+    <div
+      role="status"
+      className="bg-coral/10 flex flex-col items-start gap-3 rounded-2xl p-4 sm:flex-row sm:items-center"
+    >
+      <div className="min-w-0 flex-1 space-y-1">
+        <p className="text-ink-900 text-sm font-semibold">
+          {verified
+            ? t('auth.phone_gate.verified_title')
+            : t('auth.phone_gate.title')}
+        </p>
+        {verified ? null : (
+          <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
+            {t('auth.phone_gate.body.generic')}{' '}
+            {t('auth.phone_gate.body.returning')}
+          </p>
+        )}
+      </div>
+      {verified ? (
+        <Link
+          href={continueTarget}
+          className={cn(
+            buttonVariants({ size: 'sm' }),
+            'shrink-0 rounded-full px-4 text-xs font-semibold',
+          )}
+        >
+          {t('auth.phone_gate.resume')}
+        </Link>
+      ) : null}
+    </div>
   );
 }
 
