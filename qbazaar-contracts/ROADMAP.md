@@ -6,6 +6,26 @@
 
 QBazaar is a classifieds marketplace for Qatar (QAR, Arabic + English). The MVP (Sprints 0–12) is done. V2 connects the Expo mobile app, reskins the web on the new Figma design, adds cash orders with a commission and a seller wallet, and moves production to a new server behind Cloudflare.
 
+## Progress
+
+<!-- progress:start -->
+**Current phase:** M0 Preparation and alignment · **Overall:** 11% (18/153 tasks)
+
+```text
+M0   ███████░░░   72% (18/25)   Preparation and alignment
+M1   ░░░░░░░░░░    0% (0/57)    Closing the backend gaps
+M1b  ░░░░░░░░░░    0% (0/10)    Orders and payments
+M2   ░░░░░░░░░░    0% (0/14)    Connecting the mobile app
+M3   ░░░░░░░░░░    0% (0/10)    Web on the new design
+M4   ░░░░░░░░░░    0% (0/15)    Admin additions
+M5   ░░░░░░░░░░    0% (0/10)    Deployment on the new server
+M6   ░░░░░░░░░░    0% (0/5)     Releasing the mobile app
+M7   ░░░░░░░░░░    0% (0/7)     Electronic payment and monetization
+```
+
+_Generated from [`MILESTONES-V2.md`](https://github.com/Qbazzar/Qbazaar/blob/main/qbazaar-contracts/MILESTONES-V2.md) by `node scripts/progress.mjs`; a task counts as done when it sits in a **Done** table._
+<!-- progress:end -->
+
 ## What is shipped today
 
 Verified against the code on `main` (2026-09-30).
@@ -61,20 +81,19 @@ The V2 product decisions (2026-09-30) are in [`V2-PLAN.md §2 and §4`](V2-PLAN.
 - Every published ad needs admin approval (June 2026).
 - Search needs Meilisearch in every environment except the test suite. Never switch production to the `database` driver.
 - Deploys go from `main` to the `production` branch, never straight to the server.
+- The commission debt ceiling, the settlement deadline and the ad-expiry warning days are admin settings (AD-17.9); the warning defaults to 3 days (2026-09-30).
+- Publishing, chat and offers need a verified phone (`AUTH_003` otherwise); the web routes the user through verification and back (FE-16.10).
 
 ## Open questions for the owner
 
 - **Domain:** not decided. Blocks OPS-18.9 (Cloudflare), universal links (MB-15.13) and the final mail sender.
-- **Commission settlement policy:** the debt ceiling and settlement deadline values (BE-14.33, BE-14.39).
-- **Ad expiry warning:** the plan says 3 days before expiry; the code warns 24 hours before (`ExpireOldAdsJob`). Pick one; BE-13.8 is the place to fix it.
 - **In-app purchase rules** for paid promotion and the premium subscription on iOS/Android.
 - **OPS-13.1:** confirm the Figma token, the Firebase key and the VPS root password have been rotated.
-- **OPS-13.8:** approve the branch cleanup.
 
 ## History
 
 - **2026-05-20 → 2026-05-25:** Sprints 0–12, MVP feature-complete. Details in [`MILESTONES.md`](MILESTONES.md) (archived).
-- **2026-06:** backend correctness pass, AR/EN switch, SEO/PWA, pHash dedup, typing indicators, FCM scaffold, Meilisearch runbook, QA sweep ([`QA-REPORT-2026-06.md`](QA-REPORT-2026-06.md), [`DOCS/QA-REPORT-2026-06-21.md`](../DOCS/QA-REPORT-2026-06-21.md)). Production moved to the `fleeteye` cPanel server on 2026-06-17.
+- **2026-06:** backend correctness pass, AR/EN switch, SEO/PWA, pHash dedup, typing indicators, FCM scaffold, Meilisearch runbook, QA sweep ([`DOCS/QA-REPORT-2026-06-21.md`](../DOCS/QA-REPORT-2026-06-21.md)). Production moved to the `fleeteye` cPanel server on 2026-06-17.
 - **2026-06 → 07:** mandatory ad approval, light-only web, the custom `/admin` panel replaced Filament.
 - **2026-09-30:** V2 plan approved; audit; M0 fixes merged (#147–#153).
 

@@ -26,12 +26,12 @@
 | M1 Closing the backend gaps | 14 | 57 | 0 | 57 | Next |
 | M1b Orders and payments | 14 | 10 | 0 | 10 | After the M1 entry items below |
 | M2 Connecting the mobile app | 15 | 14 | 0 | 14 | Waits for M1 |
-| M3 Web on the new design | 16 | 9 | 0 | 9 | Can start once the M1 endpoints it needs exist |
+| M3 Web on the new design | 16 | 10 | 0 | 10 | Can start once the M1 endpoints it needs exist |
 | M4 Admin additions | 17 | 15 | 0 | 15 | Waits for M1 (AD-17.7 waits for M1b) |
 | M5 Deployment on the new server | 18 | 10 | 0 | 10 | Waits for M1–M4 and the domain |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **152** | **18** | **134** | |
+| **Total** | | **153** | **18** | **135** | |
 
 ---
 
@@ -68,7 +68,7 @@
 
 ### Still open
 
-> OPS-13.8 is pending: the merged branches (`fix/m0-*`, `docs/v2-plan`, the 2026-06 feature branches, `copilot/code-review-report`) are still on the remote, and `ci/monorepo-workflows` is now superseded by #153. OPS-13.2: every question in `V2-PLAN.md §4` has a decision except the domain.
+> OPS-13.8 is approved by the owner (2026-09-30) and pending: the merged branches (`fix/m0-*`, `docs/v2-plan`, the 2026-06 feature branches, `copilot/code-review-report`) are still on the remote, and `ci/monorepo-workflows` is now superseded by #153. OPS-13.2: every question in `V2-PLAN.md §4` has a decision except the domain.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -232,7 +232,7 @@
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
-| AD-17.9 | Settings store + SettingsService + settings.manage permission | [P0] | Fixes audit finding PRD-11 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.9 | Settings store + SettingsService + settings.manage permission; the commission debt ceiling, the settlement deadline and the ad-expiry warning days are admin-controlled settings (owner decision 2026-09-30) | [P0] | Fixes audit finding PRD-11 (DOCS/AUDIT-2026-09-30.md); each of the three values is editable in `/admin`, read through SettingsService, and defaults to the config value (expiry warning: 3 days) |
 
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
@@ -275,7 +275,7 @@
 
 **Goal:** reskin the existing Next.js app to the new Figma design, using `Qbazaar-front` as the pixel reference. The routing, data layer and API connection stay; the old QBFront styles (`styles/qbfront.css`) go away in stages.
 
-**Entry:** FE-16.1 to FE-16.3 can start now; the rest needs the matching M1 (and M1b for FE-16.8) endpoints.
+**Entry:** FE-16.1 to FE-16.3 and FE-16.10 can start now; the rest needs the matching M1 (and M1b for FE-16.8) endpoints.
 
 **Exit criteria:** every page matches its reference at 1440/744/390 in both languages · the cash order cycle works on the web · Lighthouse and axe reports attached.
 
@@ -286,6 +286,7 @@
 | FE-16.3 | Header, footer, home, categories, category page, search, product | [P0] | Matches the reference at 1440/744/390 |
 | FE-16.4 | Login, account, my ads, messages, notifications, favorites, saved searches, settings | [P0] | Matches the reference |
 | FE-16.9 | Turnstile on the web's registration and code-request pages | [P0] | The token goes with the request; clear error on failure |
+| FE-16.10 | Web phone-verification flow: route AUTH_003 and gated actions (post ad, chat, offers) to verification and back, all scenarios | [P0] | A user without a verified phone who publishes an ad, starts a chat, sends a message or makes an offer is taken to phone verification and returned to the same action; any `AUTH_003` response does the same; guests go to login first; tests for every entry point |
 | FE-16.5 | Post-an-ad flow on the new design | [P0] | Draft → preview → publish |
 | FE-16.6 | Seller profile, companies, follows | [P1] | — |
 | FE-16.8 | Orders and payments on the web: request/offer cards, checkout (cash), orders, wallet, settlements | [P0] | Same cycle as the app |

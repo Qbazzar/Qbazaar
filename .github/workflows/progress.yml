@@ -1,0 +1,38 @@
+name: Progress
+
+# Kept out of ci.yml so a stale docs block never blocks an API deploy.
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'qbazaar-contracts/MILESTONES-V2.md'
+      - 'qbazaar-contracts/ROADMAP.md'
+      - 'README.md'
+      - 'scripts/progress.mjs'
+      - '.github/workflows/progress.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'qbazaar-contracts/MILESTONES-V2.md'
+      - 'qbazaar-contracts/ROADMAP.md'
+      - 'README.md'
+      - 'scripts/progress.mjs'
+      - '.github/workflows/progress.yml'
+
+jobs:
+  check:
+    name: Progress block is up to date
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check the generated progress
+        run: node scripts/progress.mjs --check

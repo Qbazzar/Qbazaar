@@ -55,7 +55,7 @@ npm run typecheck   # tsc --noEmit
 npm test            # Vitest
 ```
 
-`npm run test:e2e` (Playwright) and `npm run deploy` (Vercel) are leftovers: Playwright isn't installed and the web no longer deploys to Vercel. There is no CI job for the web yet; run `typecheck`, `test` and `build` before merging.
+There is no CI job for the web yet; run `typecheck`, `test` and `build` before merging.
 
 ## Deploy
 

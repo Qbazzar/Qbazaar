@@ -60,6 +60,7 @@ The M0 PRs (#147–#153) need these one-time steps on the server the first time 
 3. Re-copy the API Apache include into both the `std` and `ssl` userdata dirs, then `/scripts/ensure_vhost_includes --user=fleeteye && apachectl configtest && systemctl restart httpd`; needs `mod_headers` (#150). Check `storage/app/public` for old `*.php*` or `*.html` uploads.
 4. `php artisan db:seed --class=RolesAndPermissionsSeeder --force`, then `php artisan permission:cache-reset` (#151). Migrations run in the deploy script.
 5. Rebuild the ads index: `php artisan scout:flush "App\Models\Ad" && php artisan scout:import "App\Models\Ad"` (#152).
+6. Web `.env.production`: add `NEXT_PUBLIC_APP_URL=https://qbazaar.fleeteye.de` (see `web.env.production.template`); the web deploy rebuilds with it. Without it canonical and sitemap URLs fall back to the same host.
 
 Clients must now authorise channels at `POST /api/v1/broadcasting/auth` with a Bearer token (#149); the web already does.
 
@@ -120,8 +121,5 @@ deploy/
 ├── scripts/                        deploy-api.sh, deploy-web.sh (run by the workflows)
 ├── systemd/                        horizon, reverb, scheduler, web, meilisearch units
 ├── apache/                         vhost includes for qbazaar.fleeteye.de and api.qbazaar.fleeteye.de
-├── keys/github-actions.pub         public key for the deploy user
-├── nginx/                          legacy (CloudPanel era, not used on cPanel)
-├── supervisor/                     legacy (replaced by the systemd units)
-└── vps-bootstrap.sh                legacy (self-managed Ubuntu plan, never used)
+└── keys/github-actions.pub         public key for the deploy user
 ```

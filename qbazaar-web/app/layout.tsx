@@ -9,7 +9,6 @@ import { LocaleProvider } from '@/components/i18n/LocaleProvider';
 import { dirFor } from '@/lib/i18n/locale';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { siteUrl } from '@/lib/seo';
-import { Analytics } from '@vercel/analytics/next';
 import { Providers } from './providers';
 import './globals.css';
 import '../styles/qbfront.css';
@@ -82,7 +81,6 @@ export default async function RootLayout({
             <Toaster richColors closeButton position="top-center" />
           </ThemeProvider>
         </LocaleProvider>
-        <Analytics />
       </body>
     </html>
   );
