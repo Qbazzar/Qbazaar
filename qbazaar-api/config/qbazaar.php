@@ -144,6 +144,7 @@ return [
     */
     'uploads' => [
         'max_image_size_kb' => 10_240, // 10 MB
+        'max_avatar_size_kb' => 5_120, // 5 MB
         'allowed_mime_types' => ['image/jpeg', 'image/png', 'image/webp'],
 
         // Lifetime of the signed link to an original-resolution image —
