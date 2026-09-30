@@ -70,10 +70,21 @@ it('notifies support handlers about a new ticket', function (): void {
     $moderator = staffWithRole('moderator');
     $customer = User::factory()->create();
 
-    postJson('/api/v1/support/tickets', supportTicketPayload(['email' => 'guest@example.com']))
-        ->assertCreated();
+    $ticketId = postJson('/api/v1/support/tickets', supportTicketPayload(['email' => 'guest@example.com']))
+        ->assertCreated()
+        ->json('data.id');
 
-    Notification::assertSentTo([$superAdmin, $supportAgent], SupportTicketCreatedNotification::class);
+    Notification::assertSentTo(
+        [$superAdmin, $supportAgent],
+        SupportTicketCreatedNotification::class,
+        function (SupportTicketCreatedNotification $notification, array $channels, User $notifiable) use ($ticketId): bool {
+            $payload = $notification->toArray($notifiable);
+
+            return $channels === ['database']
+                && $payload['ticket_id'] === $ticketId
+                && $payload['cta_url'] === route('admin.support.show', $ticketId);
+        },
+    );
     Notification::assertNotSentTo([$moderator, $customer], SupportTicketCreatedNotification::class);
 });
 
