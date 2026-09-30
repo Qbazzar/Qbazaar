@@ -59,7 +59,6 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__ . '/../routes/api_v1.php',
         apiPrefix: 'api/v1',
         commands: __DIR__ . '/../routes/console.php',
-        channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
         // Note: RateLimiter definitions live in AppServiceProvider::boot() because the
         // `then:` closure here only runs when routes are NOT cached. After route:cache,
@@ -68,6 +67,14 @@ return Application::configure(basePath: dirname(__DIR__))
     // Discovery is the only listener registration mechanism: a manual
     // Event::listen for a discovered listener makes it run twice.
     ->withEvents(discover: [__DIR__ . '/../app/Listeners'])
+    // Every client (web SPA + mobile) authenticates with a Sanctum Bearer
+    // token, so channel auth lives beside the API instead of behind the
+    // session guard. It deliberately skips the `api` group: Pusher/Reverb
+    // clients expect the raw `{auth}` body, not the success envelope.
+    ->withBroadcasting(
+        __DIR__ . '/../routes/channels.php',
+        ['prefix' => 'api/v1', 'middleware' => ['auth:sanctum', 'active.user', 'throttle:api']],
+    )
     ->withSchedule(function (Schedule $schedule): void {
         // Daily 02:00 Asia/Qatar — quiet local window, runs after most
         // sellers have stopped editing. The job is queued (`onQueue('low')`)
