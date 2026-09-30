@@ -135,6 +135,8 @@ return [
     'offers' => [
         'expiry_days' => 7,
         'max_active_per_ad_per_user' => 1,
+        // Default for the admin setting; each side may counter this many times.
+        'counter_rounds_per_side' => 1,
     ],
 
     /*

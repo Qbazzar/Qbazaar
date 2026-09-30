@@ -2044,6 +2044,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /api/v1/offers/{id}/counter:
+    post:
+      tags: [Offers]
+      summary: The responder answers a pending offer with a counter-offer
+      description: |
+        Marks the answered offer `countered` and returns a NEW pending offer
+        proposed by the caller, linked through `parent_offer_id`, with its
+        own chat bubble and `offer.countered` broadcast. The seller counters
+        first; each side may counter as many times as the admin setting
+        `offer_counter_rounds_per_side` allows (default 1). Requires a
+        verified phone.
+      operationId: offersCounter
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MakeOfferRequest'
+      responses:
+        '201':
+          description: Counter-offer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            VALIDATION_FAILED, OFFER_NOT_PENDING, OFFER_AD_NOT_ACTIVE,
+            OFFER_AD_ALREADY_AGREED or OFFER_COUNTER_LIMIT_REACHED (OFFER_011).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   /api/v1/offers/{id}/withdraw:
     post:
       tags: [Offers]
@@ -3996,6 +4035,19 @@ components:
         ad_id: { $ref: '#/components/schemas/ULID' }
         buyer_id: { $ref: '#/components/schemas/ULID' }
         seller_id: { $ref: '#/components/schemas/ULID' }
+        proposed_by:
+          type: string
+          enum: [buyer, seller]
+          description: The side that made this proposal; the other side responds to it.
+        parent_offer_id:
+          allOf:
+            - $ref: '#/components/schemas/ULID'
+          nullable: true
+          description: For a counter-offer, the offer it answers.
+        counter_round:
+          type: integer
+          minimum: 0
+          description: 0 for the opening offer, then +1 for each counter-offer.
         message_id:
           allOf:
             - $ref: '#/components/schemas/ULID'
@@ -4019,6 +4071,7 @@ components:
         accepted_at: { type: string, format: date-time, nullable: true }
         rejected_at: { type: string, format: date-time, nullable: true }
         withdrawn_at: { type: string, format: date-time, nullable: true }
+        countered_at: { type: string, format: date-time, nullable: true }
         created_at: { type: string, format: date-time }
         viewer_role:
           type: string
