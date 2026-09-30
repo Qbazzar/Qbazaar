@@ -94,7 +94,7 @@ class RefreshTokenService
      *        Burn every refresh token for that user and abort.
      *      - If expired → abort with AUTH_TOKEN_EXPIRED.
      *      - If the owner can no longer sign in → abort with AUTH_002.
-     *      - Otherwise mark it used and mint a new pair.
+     *      - Otherwise mark it used, retire its access token and mint a new pair.
      *
      * Throws DomainException with the right ErrorCode on every failure so the
      * global exception handler in bootstrap/app.php shapes the response.
@@ -156,6 +156,11 @@ class RefreshTokenService
 
                 $fresh->forceFill(['used_at' => Carbon::now()])->save();
 
+                // The session moves to the new access token. Leaving the old one
+                // alive would list the device twice, and revoking that stale row
+                // would not reach the refresh token that keeps the device in.
+                PersonalAccessToken::query()->whereKey($fresh->personal_access_token_id)->delete();
+
                 return [
                     'user' => $user,
                     'tokens' => $this->issue($user, $deviceFingerprint, $ip, $deviceLabel),
@@ -180,19 +185,25 @@ class RefreshTokenService
 
     /**
      * Revoke a refresh token if the caller can present it. Best-effort: silent
-     * on miss so logout doesn't leak whether a token was active.
+     * on miss so logout doesn't leak whether a token was active. Deleted rather
+     * than marked used, for the reason given on revokeSession().
      */
     public function revoke(string $presentedRaw): void
     {
         $row = $this->findCandidate($presentedRaw);
 
         if ($row !== null && ! $row->isUsed()) {
-            $row->forceFill(['used_at' => Carbon::now()])->save();
+            $row->delete();
         }
     }
 
     /**
      * End one session: the access token and every refresh token minted with it.
+     *
+     * Revoked refresh tokens are deleted rather than marked used: a used token
+     * that comes back is treated as a replay and burns every session the user
+     * has, so a signed-out device retrying its refresh would log the user out
+     * of all their other devices.
      */
     public function revokeSession(PersonalAccessToken $accessToken): void
     {
@@ -200,7 +211,7 @@ class RefreshTokenService
             RefreshToken::query()
                 ->where('personal_access_token_id', $accessToken->getKey())
                 ->whereNull('used_at')
-                ->update(['used_at' => Carbon::now()]);
+                ->delete();
 
             $accessToken->delete();
         });

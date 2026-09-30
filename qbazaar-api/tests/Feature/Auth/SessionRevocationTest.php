@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\ReportTarget;
 use App\Enums\UserStatus;
 use App\Models\RefreshToken;
+use App\Models\Report;
 use App\Models\User;
 use App\Services\Auth\RefreshTokenService;
 use App\Services\Auth\TokenPair;
@@ -67,13 +69,25 @@ it('revoking a session also burns its refresh token', function (): void {
     postJson('/api/v1/auth/refresh', ['refresh_token' => $current->refreshToken])->assertOk();
 });
 
-it('logging out burns the refresh token of the current session', function (): void {
+it('logging out burns the refresh token of the current session only', function (): void {
     $pair = issueSession($this->user);
+    $otherDevice = issueSession($this->user);
 
     postJson('/api/v1/auth/logout', [], ['Authorization' => 'Bearer ' . $pair->accessToken])
         ->assertNoContent();
 
     expectRefreshRejected($pair);
+    postJson('/api/v1/auth/refresh', ['refresh_token' => $otherDevice->refreshToken])->assertOk();
+});
+
+it('retires the previous access token when the session rotates', function (): void {
+    $pair = issueSession($this->user);
+    $previousAccessTokenId = accessTokenOf($pair)->getKey();
+
+    postJson('/api/v1/auth/refresh', ['refresh_token' => $pair->refreshToken])->assertOk();
+
+    expect(PersonalAccessToken::query()->whereKey($previousAccessTokenId)->exists())->toBeFalse()
+        ->and($this->user->tokens()->count())->toBe(1);
 });
 
 it('keeps an idle session listed while its refresh token is still valid', function (): void {
@@ -97,7 +111,7 @@ it('refuses to rotate a refresh token once the user is suspended', function (): 
     expect(RefreshToken::query()->count())->toBe(1);
 });
 
-it('burns every token when an admin suspends the user', function (): void {
+it('burns every token when an admin suspends the user', function (string $via): void {
     $pair = issueSession($this->user);
     issueSession($this->user);
 
@@ -105,9 +119,15 @@ it('burns every token when an admin suspends the user', function (): void {
     $admin = User::factory()->create();
     $admin->assignRole('super_admin');
 
-    actingAs($admin)
-        ->post("/admin/users/{$this->user->id}/suspend")
-        ->assertRedirect();
+    $uri = match ($via) {
+        'user page' => "/admin/users/{$this->user->id}/suspend",
+        'report' => '/admin/reports/' . Report::factory()->create([
+            'target_type' => ReportTarget::USER->value,
+            'target_id' => $this->user->id,
+        ])->id . '/ban-user',
+    };
+
+    actingAs($admin)->post($uri)->assertRedirect();
 
     expect($this->user->fresh()->status)->toBe(UserStatus::SUSPENDED)
         ->and($this->user->tokens()->count())->toBe(0)
@@ -115,4 +135,4 @@ it('burns every token when an admin suspends the user', function (): void {
 
     $this->user->forceFill(['status' => UserStatus::ACTIVE])->save();
     expectRefreshRejected($pair);
-});
+})->with(['user page', 'report']);
