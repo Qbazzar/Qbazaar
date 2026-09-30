@@ -19,7 +19,12 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
 ## 2. Decisions (2026-09-30)
 
 1. **The backend stays Laravel.** We complete the existing one; no rewrite in Next.js.
-2. **The first launch has no payments.** Buy Now/checkout/wallet/billing/paid promotion move to M7. Their screens stay built in the app and are switched off with a feature flag.
+2. **Orders and payments from the first launch, without an online payment gateway (updated 2026-09-30):**
+   - Payment is **cash on delivery / at handover**.
+   - The **QBazaar commission** is a percentage the admin sets in the admin settings.
+   - A **wallet** for the seller: earnings, commission owed, settlements.
+   - Withdrawals and settlements are **approved by the admin**.
+   - Everything goes through a `PaymentGateway` interface (only `CashGateway` today), so an electronic gateway can be added later without changing the system. **Stripe is excluded.**
 3. **The web is reskinned on the new design.** It keeps its structure and its connection to the API, and uses `Qbazaar-front` as the pixel reference.
 4. **Admin:** we build on the existing `/admin` panel. No Filament and no new design.
 5. **Deployment:** native on the new cPanel VPS (`srv1977263.hstgr.cloud`), no Docker. We use the runbook in `deploy/`.
@@ -49,36 +54,43 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
 - **Realtime from mobile:** needs `Broadcast::routes` under `api/v1` with `auth:sanctum` (today it's web only).
 - **Push:** the backend sends to FCM directly, so the app registers a native token (`getDevicePushTokenAsync`), not an Expo token.
 
-## 4. Open questions and their defaults
-Until the client decides otherwise, we build on the default.
+## 4. Product decisions (settled 2026-09-30)
 
-| # | Question | Default |
+| # | Question | Decision |
 |---|---|---|
-| 1 | Does an ad need approval before it's published? | **Yes**, the way the backend works now (`pending` → admin). The app shows "Under review" |
+| 1 | Does an ad need approval before it's published? | ✅ **Yes**: it stays "Under review" until the admin publishes it, and **a notification goes to the admins** for every ad waiting for review |
 | 2 | How long does an ad live? | 30 days + a warning 3 days before (`config/qbazaar.php`) |
-| 3 | Counter-offer in chat? | **Yes**, one round from each side |
-| 4 | Code on every login? | **New device only** (config switch) |
+| 3 | Counter-offer in chat? | ✅ **Yes**, one round from each side |
+| 4 | How does login work? | ✅ **Passwordless**: a code to the **email** on every login, plus an **SMS code to the phone** from a new device |
 | 5 | Languages at launch | **Arabic + English** (from the PRD) |
-| 6 | Featured companies / recommended | Companies **chosen by the admin**. Recommended = **newest + most viewed** |
-| 7 | Maximum photos per ad | **20** (the design); the current setting is 10 |
-| 8 | Seller type at sign-up | `private` / `business` (the app currently sends `commercial`, so it gets aligned) |
-| 9 | Domain | `qbazaar.qa`, to be confirmed |
+| 6 | Featured companies | ✅ **Chosen by the admin**. Recommended = newest + most viewed |
+| 7 | Maximum photos per ad | ✅ **20** |
+| 8 | Seller type at sign-up | `private` / `business` |
+| 9 | Payments | ✅ Orders + cash + admin-set commission + wallet + admin-approved withdrawals/settlements. **No electronic gateway now** (a ready interface for later) |
+| 10 | Domain | ⏳ **Not decided yet** |
+
+## 4.1 Notifications: Reverb + push together
+- **Reverb** (WebSocket) delivers events **while the app or site is open**: a new message, an offer update, the notification counter.
+- **When the app is in the background or closed**, iOS/Android cut the connection, so **push notifications via Firebase (FCM)** are required: FCM directly on Android, and via an APNs key uploaded to Firebase on iOS.
+- The same event in the backend goes out to both channels (broadcast + FCM), and push is only sent when it's needed (a user who isn't in the conversation right now).
 
 ## 5. Milestones (details in MILESTONES-V2.md)
 
 | Milestone | Sprint | Goal | Depends on |
 |---|---|---|---|
 | **M0** Preparation and alignment | 13 | Finish the mobile polish, security, one category tree, OpenAPI v1.1 | — |
-| **M1** Closing the backend gaps | 14 | Everything the app needs, except payments | M0 |
+| **M1** Closing the backend gaps | 14 | Everything the app needs | M0 |
+| **M1b** Orders and payments (no gateway) | 14 | Orders, cash, commission, wallet, settlements, promotion | M0 |
 | **M2** Connecting the mobile app | 15 | The app on the real API + realtime + push + Arabic | M1 |
 | **M3** Web on the new design | 16 | Reskin Next.js to match `Qbazaar-front` | M1 (partly) |
 | **M4** Admin additions | 17 | Companies, home sections, taxonomy, verification | M1 |
 | **M5** Deployment | 18 | Full system on the new VPS with a domain and SSL | M1–M4 |
 | **M6** Releasing the app | 19 | TestFlight / Play, then the stores | M2, M5 |
-| **M7** Payments (later phase) | 20+ | Gateway, orders, escrow, wallet, promotion, subscription | M5 + a gateway contract |
+| **M7** Electronic payment (later phase) | 20+ | Connect a gateway, Safe Pay (escrow), premium subscription, reviews | M5 + a gateway contract |
 
 ## 6. Risks
-- **Payment gateway in Qatar** (QNB or others): the contract and approvals take time, which is why it's in M7.
+- **Payment gateway in Qatar** (QNB or others): the contract and approvals take time, so the first launch is cash only with a ready gateway interface. (Stripe doesn't support Qatar as a company country, so it's excluded.)
+- **Collecting the commission on cash orders:** the seller collects the money directly, so the commission becomes a debt in their wallet. We need a settlement policy (a debt ceiling that stops new sales, and a settlement deadline).
 - **Apple/Google rules:** subscriptions and promotions for digital services may require in-app purchase.
 - **Unstable network in the development environment:** big uploads keep dropping. The deploy script sends in batches with retries.
 - **Two category trees** in the app today (browse / sell): must be unified in M0 before connecting.

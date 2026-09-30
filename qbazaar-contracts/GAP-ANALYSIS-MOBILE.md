@@ -26,9 +26,9 @@
 | App need | Status | In the API now | Task |
 |---|---|---|---|
 | Registration | 🟡 | `POST /auth/register` needs `full_name`, `phone`, `account_type=private|business`, `accepted_terms`, and a strong password | MB-15.5 (the app adapts) |
-| Login + second-factor code | 🟡 | Login returns tokens straight away, with no challenge | BE-14.11 |
+| Passwordless login (email code) + SMS from a new device | ❌ | Login with a password only, returns tokens straight away | BE-14.11, BE-14.12 |
 | Send/verify a code | ✅ | `/auth/send-otp`, `verify-otp`, `resend-otp` | — |
-| Password reset | 🟡 | By email link only | BE-14.12 |
+| Password reset | — | No longer needed (passwordless login) | — |
 | Google/Apple | ❌ | — | BE-14.13 |
 | `/me` | 🟡 | `GET /account/profile` | BE-14.14 |
 | Logout / refresh | ✅ | `/auth/logout`, `/auth/refresh` | — |
@@ -87,4 +87,4 @@
 | Register device token | ✅ | `/account/device-tokens` (native FCM) | MB-15.7 |
 
 ## Payments, wallet and billing
-Deferred to M7 by decision. Nothing exists in the API, and the app keeps these screens switched off.
+By decision (2026-09-30): **orders + cash + an admin-set commission + a wallet + settlements** from the first launch, **with no electronic gateway** (`PaymentGateway` interface + `CashGateway`). Nothing exists in the API today. The tasks: BE-14.33 → BE-14.41, AD-17.7, MB-15.11, FE-16.8.

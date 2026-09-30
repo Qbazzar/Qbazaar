@@ -43,8 +43,8 @@
 ### Auth
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
-| BE-14.11 | OTP second factor at login from a new device (behind a config switch) | `POST /auth/login` → `challenge`, `POST /auth/login/verify` | [P0] | A new device gets a `challenge_token` and no tokens until the code is right; a known device skips it |
-| BE-14.12 | Password reset by OTP (for mobile) | `POST /auth/forgot-password/otp`, `/reset-password/otp` | [P0] | Works without an email link; respects the OTP limits |
+| BE-14.11 | Passwordless login: a code to the email on every login (`/auth/email-otp/send` + `/verify`), and passwordless registration (name, email, phone, account type) | `POST /auth/email-otp/send`, `POST /auth/email-otp/verify` | [P0] | No password field; code is 6 digits, expires in 10 minutes, max 5 attempts, rate-limited; returns tokens on success |
+| BE-14.12 | SMS code to the phone when logging in from a new device (device fingerprint + `challenge_token`) | `POST /auth/device/verify` | [P0] | A new device gets no tokens until the SMS code is right; a known device skips it; a `security.new_device` notification |
 | BE-14.13 | Google + Apple login (id_token) | `POST /auth/social/{provider}` | [P1] | Verifies the token signature; links by email; creates a new user with `phone_verified=false` |
 | BE-14.14 | Alias `GET /me` → the current profile | `GET /me` | [P1] | Same shape as `/account/profile` |
 
@@ -68,6 +68,7 @@
 | BE-14.21 | New ad fields: `ad_type`, `shipping`, `postal_code`, `street`, `show_full_address` | `POST/PUT /ads` | [P0] | Migration + validation + in the Resource and in search |
 | BE-14.22 | Reserved status + toggle | `POST /ads/{id}/reserve`, `DELETE …/reserve` | [P1] | `reserved` shows on the listing; can't be reserved while a draft |
 | BE-14.23 | My ads with a status filter + stats per ad | `GET /account/ads?status=` | [P0] | views/favorites/messages counts for each ad |
+| BE-14.32 | Notify the admins about every ad waiting for review (database + email + a counter in the panel) | — | [P0] | Every admin with the moderation permission gets a notification the moment an ad is submitted |
 
 ### Settings
 | ID | Task | Endpoint | Priority | Acceptance criteria |
@@ -90,21 +91,37 @@
 |---|---|---|---|
 | OPS-14.1 | Register `schedule:run` in cron and document it in the runbook | [P0] | `ExpireOldAdsJob` and `ExpireOldOffersJob` run every day |
 
+## Sprint 14 — M1b Orders and payments (no gateway)
+
+> The decision: orders + cash on delivery/at handover + a QBazaar commission set by the admin + a wallet + admin-approved settlements. Everything goes through a `PaymentGateway` interface (only `CashGateway` today) so an electronic gateway can be added later.
+
+| ID | Task | Endpoint | Priority | Acceptance criteria |
+|---|---|---|---|---|
+| BE-14.33 | Platform settings editable from admin: commission % (general + optional per category), commission debt ceiling, settlement deadline, promotion prices | — (settings table + cache) | [P0] | Changing a value takes effect immediately on new orders; changes are logged in the activity log |
+| BE-14.34 | Purchase request ("Buy Now") inside the chat: create / edit / cancel (buyer) and accept / reject (seller), as a card message | `POST /ads/{id}/purchase-requests`, `POST /purchase-requests/{id}/accept, reject, cancel`, `PUT /purchase-requests/{id}` | [P0] | Card states match the design (pending, accepted, rejected, cancelled, paid); Reverb + push events |
+| BE-14.35 | Orders + state machine: created from an accepted request or accepted offer → `awaiting_handover` → `completed` or `cancelled` / `disputed` | `GET /account/orders`, `GET /orders/{id}` | [P0] | One active order per ad; the ad becomes `reserved` automatically; tests for every transition |
+| BE-14.36 | `PaymentGateway` interface + `CashGateway`: a cash order is completed by seller confirmation (and optionally the buyer's), with the order amount and commission frozen at creation time | `POST /orders/{id}/confirm-handover` | [P0] | Completing an order posts ledger entries; switching gateway later needs no change to orders |
+| BE-14.37 | Checkout: address, delivery or pickup, shipping fee (set by the seller on the ad), total, choosing the payment method (cash only now) | `GET /orders/{id}/checkout`, `POST /orders/{id}/checkout` | [P0] | Fees and total are calculated on the server only |
+| BE-14.38 | Wallet with a ledger (entries: sale, commission, settlement, adjustment): balance, commission debt, history | `GET /account/wallet`, `GET /account/wallet/transactions` | [P0] | The balance always equals the sum of the entries (a test); no direct edits |
+| BE-14.39 | Settlements and withdrawals: the seller pays off the commission debt (bank transfer + reference number), requests a withdrawal of a positive balance (IBAN), and the admin approves or rejects | `POST /account/wallet/settlements`, `POST /account/wallet/withdrawals`, `GET/POST /account/bank-accounts` | [P0] | A notification at every step; once the debt ceiling is exceeded the seller can't accept new orders until they settle |
+| BE-14.40 | Paid promotion (highlight / push up / premium / gallery): request + activate after payment is confirmed (bank transfer or deducted from the balance) + expiry | `GET /promotions`, `POST /ads/{id}/promotions` | [P1] | Prices come from the admin settings; a promoted ad rises in search and on the home page for the duration |
+| BE-14.41 | Order notifications (new request, accepted, rejected, handover done, commission due, settlement approved) via Reverb + FCM + email | — | [P0] | Every event reaches both parties through the right channels |
+
 ## Sprint 15 — M2 Connecting the mobile app (`Qbazaar-mobile`)
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | MB-15.1 | HTTP client: base URL from env, envelope, snake↔camel, error mapping, `Accept-Language`, `X-Client-Platform` | [P0] | Unit tests for the mappers; a 422 turns into field errors |
 | MB-15.2 | Session: tokens in `expo-secure-store`, automatic refresh, restore on launch (`/me`) | [P0] | The app remembers the user after a restart; an expired token refreshes without disturbing the user |
-| MB-15.3 | Repository switch `mock | api` from the environment | [P0] | One line in `src/repositories/index.ts` |
+| MB-15.3 | Repository switch `mock` / `api` from the environment | [P0] | One line in `src/repositories/index.ts` |
 | MB-15.4 | Catalog on the API: home, categories, category page, listing, product, search + distance | [P0] | All browse screens run on real data |
-| MB-15.5 | Real login: registration, login + OTP on a new device, password reset by OTP, Google/Apple | [P0] | Full login journeys on a device |
+| MB-15.5 | Real login: passwordless registration, login with an email code, SMS code from a new device, Google/Apple (the password fields are removed from the screens) | [P0] | Full login journeys on a device |
 | MB-15.6 | Messages and offers on the API + realtime via Reverb (`laravel-echo` + `pusher-js`) | [P0] | A new message shows up without refreshing; offers update live |
 | MB-15.7 | Push notifications: native FCM/APNs token registration + opening the right screen from a notification | [P0] | A notification opens the chat or the ad |
 | MB-15.8 | Selling on the API: drafts, 20-image upload with `expo-image-picker`, publish → "Under review" | [P0] | Real images get uploaded; publishing shows the review state |
 | MB-15.9 | Favorites, saved searches, follows, companies, seller profile on the API | [P0] | All work with the real data |
 | MB-15.10 | Settings on the API: name, photo, email, phone, password, addresses, email preferences, delete account | [P1] | Every screen saves for real |
-| MB-15.11 | Switch off the payment screens (Buy Now, checkout, wallet, billing, paid promotion) with `features.payments=false` | [P0] | No path in the app leads to them while it's switched off |
+| MB-15.11 | Connect orders and payments: purchase request and offer cards in chat, checkout (cash only; the other methods hidden until a gateway exists), orders, wallet, settlements and withdrawals, paid promotion | [P0] | Full cycle on a device: request → accept → checkout → handover confirmation → the balance and commission show in the wallet |
 | MB-15.12 | Arabic + RTL: `ar/*.json` files, mirrored arrows, language setting saved on the device and sent to the API | [P0] | Every screen works right in Arabic at 360 |
 | MB-15.13 | Deep links: `qbazaar://ad/{id}` + universal links once the domain is decided | [P1] | A shared ad link opens in the app |
 
@@ -119,6 +136,7 @@
 | FE-16.5 | Post-an-ad flow on the new design | [P0] | Draft → preview → publish |
 | FE-16.6 | Seller profile, companies, follows | [P1] | — |
 | FE-16.7 | RTL + Lighthouse (≥ 90 performance on mobile) + axe with no serious violations | [P1] | Report attached |
+| FE-16.8 | Orders and payments on the web: request/offer cards, checkout (cash), orders, wallet, settlements | [P0] | Same cycle as the app |
 
 ## Sprint 17 — M4 Admin additions (`/admin`)
 
@@ -130,6 +148,7 @@
 | AD-17.4 | Handle an offer from the panel (cancel/resolve a dispute) | [P2] | Logged in the activity log |
 | AD-17.5 | Act directly from a report (suspend the ad/ban the user from the report screen) | [P1] | One button with a confirmation |
 | AD-17.6 | Follow and message stats on the dashboard | [P2] | — |
+| AD-17.7 | Payments section in the admin panel: platform settings (commission, debt ceiling, promotion prices), orders, settlement/withdrawal queue with approve/reject, disputes, revenue report | [P0] | The admin changes the commission and it applies to the next order; approving a settlement updates the seller's wallet |
 
 ## Sprint 18 — M5 Deployment on the new server
 
@@ -154,16 +173,16 @@
 | MB-19.4 | Privacy policy, store listings (Arabic and English), screenshots | [P0] | Ready for review |
 | MB-19.5 | Submit for production review and release | [P0] | The app is on the stores |
 
-## Sprint 20+ — M7 Payments and monetization (later phase)
+## Sprint 20+ — M7 Electronic payment and monetization (later phase)
+
+> Orders, wallet, commission and settlements get built from the start (M1b). This phase adds **electronic payment** only.
 
 | ID | Task | Priority |
 |---|---|---|
-| BE-20.1 | Choose the gateway (QNB / others) + contract + test environment | [P0] |
-| BE-20.2 | Orders + state machine (paid → shipped → delivered → released) + Safe Pay escrow | [P0] |
-| BE-20.3 | Checkout + addresses + fees + invoice | [P0] |
-| BE-20.4 | Wallet, withdrawals and bank accounts + an admin approval flow | [P0] |
-| BE-20.5 | Buying promotions (highlight / push up / premium / gallery) + expiry | [P1] |
+| BE-20.1 | Choose the electronic gateway (QNB or another gateway that supports Qatar) + contract + test environment | [P0] |
+| BE-20.2 | Safe Pay: hold the amount and release it after the buyer confirms receipt, or automatically after N days (setting) + disputes and refunds | [P0] |
+| BE-20.3 | Implement the chosen gateway behind the `PaymentGateway` interface + a webhook + reconciliation | [P0] |
 | BE-20.6 | Premium subscription (bearing in mind Apple/Google in-app purchase rules) | [P2] |
 | BE-20.7 | Seller reviews after a completed order | [P2] |
-| MB-20.1 | Turn on the payment screens in the app and connect them | [P0] |
-| FE-20.1 | Payment screens on the web | [P0] |
+| MB-20.1 | Turn on electronic payment methods in the app | [P0] |
+| FE-20.1 | Turn on electronic payment methods on the web | [P0] |
