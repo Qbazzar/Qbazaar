@@ -7,7 +7,21 @@
 
 ---
 
-## 🎯 الحالة الحالية
+## 🚀 V2 (from 2026-09-30)
+
+The project moved to a new phase: **connecting the mobile app (Expo) + putting the web on the new design + deploying on a new server**. The plan and decisions are in [`V2-PLAN.md`](V2-PLAN.md), the tasks in [`MILESTONES-V2.md`](MILESTONES-V2.md) (Sprint 13+), and the gaps in [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md).
+
+| Item | Value |
+|-------|---------|
+| **Active Milestone** | **M0 — Preparation and alignment (Sprint 13)** |
+| **Key decisions** | Laravel stays · launch without payments (payments = M7) · reskin the web on the new design · deploy natively on the new cPanel VPS (`srv1977263.hstgr.cloud`) |
+| **Mobile repo** | https://github.com/Qbazzar/Qbazaar-mobile (about 45 screens on mock data) |
+| **Design reference** | https://github.com/Qbazzar/Qbazaar-front (static prototype of the new Figma) |
+| **Blockers** | Realtime from mobile needs `broadcasting/auth` for Bearer (BE-14.1) · the domain isn't decided |
+
+> The section below is the state of the first phase (MVP), kept for history.
+
+## 🎯 الحالة الحالية (MVP — 2026-06)
 
 | البند | القيمة |
 |-------|---------|
