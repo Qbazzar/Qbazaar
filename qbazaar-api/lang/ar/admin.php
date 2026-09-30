@@ -299,6 +299,11 @@ return [
         'used' => 'مستعمل',
     ],
 
+    'support_ticket_created' => [
+        'title' => 'تذكرة دعم جديدة',
+        'body' => ':subject',
+    ],
+
     'ad_review' => [
         'title' => 'إعلان جديد بانتظار المراجعة',
         'body' => ':title:hint',

@@ -23,6 +23,15 @@ return [
         ],
     ],
 
+    'support_notifications' => [
+        'reply' => [
+            'subject' => 'رد جديد على تذكرة الدعم',
+            'greeting' => 'مرحباً،',
+            'line_intro' => 'ردّ فريق الدعم على تذكرتك ":subject":',
+            'action' => 'عرض التذكرة',
+        ],
+    ],
+
     'ad_notifications' => [
         'approved' => [
             'subject' => 'إعلانك أصبح نشطاً',
@@ -84,6 +93,10 @@ return [
         'data_export_ready' => [
             'title' => 'تصدير بياناتك جاهز',
             'body' => 'اضغط لتنزيل ملف تصدير بياناتك الشخصية.',
+        ],
+        'support_reply' => [
+            'title' => 'رد فريق الدعم على تذكرتك',
+            'body' => 'ردّ فريق الدعم على ":subject".',
         ],
         'security_alert' => [
             'title' => 'تسجيل دخول جديد',

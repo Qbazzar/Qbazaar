@@ -4,7 +4,7 @@
 # Clients: Laravel Echo + pusher-js (Next.js) and pusher_channels_flutter (Flutter, future).
 #
 # Channel naming:
-#   - Private channels require auth via POST /broadcasting/auth (Sanctum bearer)
+#   - Private channels require auth via POST /api/v1/broadcasting/auth (Sanctum bearer)
 #   - Format: <type>.<id> — e.g. `conversation.01HM...`, `user.01HM...`
 #
 # Event names use dot notation: `<domain>.<action>` — e.g. `message.sent`.

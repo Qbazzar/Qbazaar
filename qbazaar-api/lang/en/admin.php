@@ -358,6 +358,11 @@ return [
         'used' => 'Used',
     ],
 
+    'support_ticket_created' => [
+        'title' => 'New support ticket',
+        'body' => ':subject',
+    ],
+
     'ad_review' => [
         'title' => 'New ad awaiting review',
         'body' => ':title:hint',
