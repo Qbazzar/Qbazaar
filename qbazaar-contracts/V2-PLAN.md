@@ -30,6 +30,7 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
 5. **Deployment:** native on the new cPanel VPS (`srv1977263.hstgr.cloud`), no Docker. We use the runbook in `deploy/`.
 6. **Domain:** not decided yet. We work on the server name, and the domain must be settled before the M5 milestone ends.
 7. **Contract first:** every new endpoint goes into OpenAPI v1.1 before it's implemented.
+8. **Business limits are admin settings (owner decision 2026-09-30):** the commission debt ceiling, the settlement deadline and the number of days before expiry that an ad owner is warned are edited by the admin in the `/admin` settings (AD-17.9), not hard-coded. The config values are only the defaults; the expiry warning defaults to **3 days**.
 
 ## 3. Architecture
 
@@ -59,7 +60,7 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
 | # | Question | Decision |
 |---|---|---|
 | 1 | Does an ad need approval before it's published? | ✅ **Yes**: it stays "Under review" until the admin publishes it, and **a notification goes to the admins** for every ad waiting for review |
-| 2 | How long does an ad live? | 30 days + a warning 3 days before (`config/qbazaar.php`) |
+| 2 | How long does an ad live? | 30 days + a warning 3 days before; the warning days are an admin setting (default 3, AD-17.9) |
 | 3 | Counter-offer in chat? | ✅ **Yes**, one round from each side |
 | 4 | How does login work? | ✅ **Passwordless**: a code to the **email** on every login, plus an **SMS code to the phone** from a new device |
 | 5 | Languages at launch | **Arabic + English** (from the PRD) |
@@ -68,6 +69,7 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
 | 8 | Seller type at sign-up | `private` / `business` |
 | 9 | Payments | ✅ Orders + cash + admin-set commission + wallet + admin-approved withdrawals/settlements. **No electronic gateway now** (a ready interface for later) |
 | 10 | Domain | ⏳ **Not decided yet** |
+| 11 | Commission debt ceiling and settlement deadline | ✅ **Admin settings** (AD-17.9, used by BE-14.33 and BE-14.39); the admin sets and changes the values |
 
 ## 4.1 Notifications: Reverb + push together
 - **Reverb** (WebSocket) delivers events **while the app or site is open**: a new message, an offer update, the notification counter.
