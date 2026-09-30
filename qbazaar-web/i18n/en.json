@@ -189,6 +189,23 @@
       "RATE_LIMIT_EXCEEDED": "Too many attempts, try again later",
       "network": "Could not reach the server",
       "unknown": "An unexpected error occurred"
+    },
+    "phone_gate": {
+      "title": "Verify your phone to continue",
+      "body": {
+        "generic": "For everyone's safety, publishing ads, messaging sellers and making offers require a verified phone number.",
+        "post_ad": "Verify your phone number to publish ads. It only takes a minute and you'll come right back here.",
+        "messaging": "Verify your phone number to send messages and offers in this conversation.",
+        "returning": "Once your phone is verified we'll take you back to where you left off."
+      },
+      "cta": "Verify my phone",
+      "toast": "Please verify your phone number first",
+      "missing_phone_title": "No phone number on your account",
+      "missing_phone_body": "We couldn't find a valid Qatari phone number on your account. Contact support to add one, then verify it here.",
+      "contact_support": "Contact support",
+      "resume": "Continue where you left off",
+      "verified_title": "Your phone is verified",
+      "send_limited": "You requested too many codes. Use the last code you received or try again in a minute."
     }
   },
   "account": {

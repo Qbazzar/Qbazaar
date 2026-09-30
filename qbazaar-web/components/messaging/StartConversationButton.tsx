@@ -4,8 +4,8 @@
  * "Start a conversation with the seller" CTA used on the ad detail page.
  *
  * Three states:
- *  1. Signed-out user → routes to `/login?from=...` so they come back after
- *     auth and can retry.
+ *  1. Signed-out user → routes to `/login?from=...`; a signed-in user without
+ *     a verified phone → routes to phone verification. Both come back here.
  *  2. Ad owner → renders a non-actionable badge instead.
  *  3. Anyone else → calls `useStartConversationMutation` and routes to the
  *     inbox with `?c={id}` set.
@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useStartConversationMutation } from '@/lib/queries/messaging';
 import { useAuth } from '@/hooks/useAuth';
+import { usePhoneVerificationGate } from '@/hooks/usePhoneVerificationGate';
+import { isPhoneNotVerifiedError } from '@/lib/auth/phone-gate';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import type { Ad } from '@/lib/api/types';
 
@@ -27,8 +29,9 @@ interface Props {
 export function StartConversationButton({ ad }: Props) {
   const router = useRouter();
   const { user, isAuthenticated, isHydrated } = useAuth();
+  const { status: gateStatus, ensureVerifiedPhone } = usePhoneVerificationGate();
   const startMutation = useStartConversationMutation();
-  const [signedOutClicked, setSignedOutClicked] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   // Sold ad — no contact action; surface the sold state instead (shown to
   // everyone, including the owner).
@@ -50,16 +53,15 @@ export function StartConversationButton({ ad }: Props) {
   }
 
   const handleClick = async () => {
-    if (!isAuthenticated) {
-      setSignedOutClicked(true);
-      const from = encodeURIComponent(`/ads/${ad.id}`);
-      router.push(`/login?from=${from}`);
+    if (!ensureVerifiedPhone(`/ads/${ad.id}`)) {
+      setRedirecting(true);
       return;
     }
     try {
       const conversation = await startMutation.mutateAsync(ad.id);
       router.push(`/account/messages?c=${conversation.id}`);
     } catch (err) {
+      if (isPhoneNotVerifiedError(err)) return;
       const fallback = t('messaging.errors.send_failed', 'تعذّر بدء المحادثة');
       const message =
         err && typeof err === 'object' && 'messageKey' in err
@@ -69,7 +71,8 @@ export function StartConversationButton({ ad }: Props) {
     }
   };
 
-  const pending = startMutation.isPending || signedOutClicked;
+  const pending =
+    startMutation.isPending || redirecting || gateStatus === 'loading';
 
   return (
     <Button

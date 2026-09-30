@@ -6,6 +6,9 @@
  *           failing requests don't stampede the refresh endpoint), then retry
  *           the original request with the new token. A second 401 (or a failed
  *           refresh) hard-clears the store and redirects to `/login`.
+ *           A 403 AUTH_003 (phone not verified) sends the user to phone
+ *           verification with a return path; the error still reaches the
+ *           caller so it can stop its own flow.
  */
 import type {
   AxiosError,
@@ -18,7 +21,15 @@ import {
   clearAuthNonReactive,
   getAccessToken,
   setAccessTokenNonReactive,
+  setPhoneVerifiedNonReactive,
 } from '@/store/auth';
+import {
+  isPhoneNotVerifiedError,
+  isPhoneVerificationPath,
+  phoneVerificationHref,
+} from '@/lib/auth/phone-gate';
+import { currentLocationPath } from '@/lib/navigation/safe-return-to';
+import { navigateClient } from '@/lib/navigation/client-navigator';
 
 type RetriableConfig = InternalAxiosRequestConfig & {
   _retried?: boolean;
@@ -72,6 +83,13 @@ function redirectToLogin(): void {
   }
 }
 
+function redirectToPhoneVerification(): void {
+  if (typeof window === 'undefined') return;
+  // Concurrent gated requests must not stack several navigations.
+  if (isPhoneVerificationPath(window.location.pathname)) return;
+  navigateClient(phoneVerificationHref(currentLocationPath()));
+}
+
 export function installAuthInterceptors(): void {
   if (installed) return;
   installed = true;
@@ -92,6 +110,13 @@ export function installAuthInterceptors(): void {
     async (error: AxiosError) => {
       const original = error.config as RetriableConfig | undefined;
       const status = error.response?.status;
+
+      if (status === 403 && isPhoneNotVerifiedError(error)) {
+        // The cached user may be stale (e.g. verification revoked elsewhere).
+        setPhoneVerifiedNonReactive(false);
+        redirectToPhoneVerification();
+        return Promise.reject(error);
+      }
 
       // Only intercept genuine 401s on protected endpoints we haven't already retried.
       if (

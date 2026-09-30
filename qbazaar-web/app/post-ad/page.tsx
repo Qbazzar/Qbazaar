@@ -13,6 +13,7 @@ import { Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { PostAdWizard } from '@/components/ads/PostAdWizard';
+import { PhoneVerificationNotice } from '@/components/auth/PhoneVerificationNotice';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { t } from '@/lib/i18n/messages';
 
@@ -54,7 +55,11 @@ export default function PostAdPage() {
           </p>
         </div>
 
-        <PostAdWizard />
+        {user.phone_verified ? (
+          <PostAdWizard />
+        ) : (
+          <PhoneVerificationNotice context="post_ad" />
+        )}
       </div>
     </main>
   );

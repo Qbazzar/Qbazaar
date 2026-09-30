@@ -14,6 +14,8 @@
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
+import { loginHref } from '@/lib/auth/phone-gate';
+import { currentLocationPath } from '@/lib/navigation/safe-return-to';
 
 export interface UseRequireAuthResult {
   user: ReturnType<typeof useAuthStore.getState>['user'];
@@ -34,8 +36,7 @@ export function useRequireAuth(): UseRequireAuthResult {
     // every time they refresh the page.
     if (!isHydrated) return;
     if (!isAuthenticated) {
-      const from = encodeURIComponent(pathname || '/');
-      router.replace(`/login?from=${from}`);
+      router.replace(loginHref(currentLocationPath()));
     }
   }, [isAuthenticated, isHydrated, pathname, router]);
 

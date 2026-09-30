@@ -4,6 +4,7 @@ import {
   clearAuthNonReactive,
   getAccessToken,
   setAccessTokenNonReactive,
+  setPhoneVerifiedNonReactive,
   useAuthStore,
 } from '@/store/auth';
 
@@ -54,5 +55,19 @@ describe('auth store', () => {
   it('setHydrated toggles the hydration flag', () => {
     useAuthStore.getState().setHydrated(true);
     expect(useAuthStore.getState().isHydrated).toBe(true);
+  });
+
+  it('setPhoneVerified patches the cached user so gates open immediately', () => {
+    useAuthStore.setState({ user: { ...fakeUser, phone_verified: false } });
+
+    setPhoneVerifiedNonReactive(true);
+
+    expect(useAuthStore.getState().user?.phone_verified).toBe(true);
+    expect(useAuthStore.getState().user?.id).toBe('u1');
+  });
+
+  it('setPhoneVerified is a no-op without a signed-in user', () => {
+    setPhoneVerifiedNonReactive(true);
+    expect(useAuthStore.getState().user).toBeNull();
   });
 });
