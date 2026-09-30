@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\Events\Users\UserStatusChanged;
 use App\Models\User;
 use BackedEnum;
 
@@ -64,6 +65,8 @@ class UserObserver
 
         if ($user->wasChanged('status')) {
             $this->logFieldChange($user, 'status_changed', 'status', 'Status changed');
+
+            UserStatusChanged::dispatch($user, $user->getOriginal('status'));
         }
 
         if ($user->wasChanged('password')) {

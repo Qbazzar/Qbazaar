@@ -27,6 +27,7 @@ enum AdStatus: string
             [self::ACTIVE, self::SOLD],
             [self::ACTIVE, self::EXPIRED],
             [self::ACTIVE, self::BLOCKED] => true,
+            [self::ACTIVE, self::PENDING] => true,   // live edit re-review
             [self::EXPIRED, self::ACTIVE] => true,   // renew
             [self::REJECTED, self::PENDING] => true, // edit & resubmit
             default => false,

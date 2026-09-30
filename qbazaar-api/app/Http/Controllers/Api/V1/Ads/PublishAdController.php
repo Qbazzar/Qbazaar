@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Ads;
 
-use App\Actions\Ads\ModerateAdAction;
-use App\Events\Ads\AdSubmittedForReview;
+use App\Actions\Ads\SubmitAdForReviewAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
@@ -31,7 +30,7 @@ use Illuminate\Http\JsonResponse;
 class PublishAdController extends Controller
 {
     public function __construct(
-        private readonly ModerateAdAction $moderate,
+        private readonly SubmitAdForReviewAction $submitForReview,
     ) {}
 
     /**
@@ -49,12 +48,7 @@ class PublishAdController extends Controller
 
         $this->authorize('publish', $ad);
 
-        // Run moderation for triage hints only — the ad goes to manual review
-        // regardless, so a "clean" result no longer auto-publishes.
-        $result = ($this->moderate)($ad);
-
-        $ad->holdForReview();
-        AdSubmittedForReview::dispatch($ad, $result);
+        ($this->submitForReview)($ad);
 
         $ad->load(['user', 'category', 'location', 'media']);
 

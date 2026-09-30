@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Ads;
 
-use App\Enums\AdStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
@@ -57,6 +56,7 @@ class FeaturedAdsController extends Controller
 
         $ads = Ad::query()
             ->whereIn('id', $featuredIds)
+            ->publiclyListed()
             ->with(['category', 'location', 'media'])
             ->orderByDesc('published_at')
             ->orderBy('id')
@@ -79,7 +79,7 @@ class FeaturedAdsController extends Controller
     {
         /** @var list<string> $ids */
         $ids = Ad::query()
-            ->where('status', AdStatus::ACTIVE->value)
+            ->publiclyListed()
             ->where('featured', true)
             ->orderByDesc('published_at')
             ->orderBy('id')

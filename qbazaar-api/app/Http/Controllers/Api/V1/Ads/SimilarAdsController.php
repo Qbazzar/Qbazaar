@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Ads;
 
-use App\Enums\AdStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
@@ -71,6 +70,7 @@ class SimilarAdsController extends Controller
 
         $ads = Ad::query()
             ->whereIn('id', $similarIds)
+            ->publiclyListed()
             ->with(['category', 'location', 'media'])
             ->orderByDesc('published_at')
             ->get();
@@ -97,7 +97,7 @@ class SimilarAdsController extends Controller
     {
         /** @var list<string> $ids */
         $ids = Ad::query()
-            ->where('status', AdStatus::ACTIVE->value)
+            ->publiclyListed()
             ->where('category_id', $ad->category_id)
             ->whereKeyNot($ad->id)
             ->orderByDesc('published_at')

@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Data\Account\PrivacySettings;
 use App\Enums\AdStatus;
 use App\Enums\OfferStatus;
+use App\Enums\UserStatus;
 use App\Events\Offers\OfferCreated;
 use App\Models\Conversation;
 use App\Models\Offer;
@@ -100,6 +102,32 @@ it('refuses offers on non-active ads', function (): void {
         'amount' => 100,
     ])->assertStatus(422)
         ->assertJson(fn ($json) => $json->where('error.code', 'OFFER_007')->etc());
+});
+
+it('refuses offers when the seller is not active', function (UserStatus $status): void {
+    $this->seller->forceFill(['status' => $status])->save();
+
+    Sanctum::actingAs($this->buyer, ['*']);
+
+    postJson('/api/v1/conversations/' . $this->conversation->id . '/offers', [
+        'amount' => 100,
+    ])->assertStatus(422)
+        ->assertJsonPath('error.code', 'OFFER_007');
+
+    expect(Offer::query()->count())->toBe(0);
+})->with([UserStatus::SUSPENDED, UserStatus::DEACTIVATED]);
+
+it('refuses offers when the seller has turned chat off', function (): void {
+    $this->seller->forceFill(['privacy_settings' => new PrivacySettings(allow_chat: false)])->save();
+
+    Sanctum::actingAs($this->buyer, ['*']);
+
+    postJson('/api/v1/conversations/' . $this->conversation->id . '/offers', [
+        'amount' => 100,
+    ])->assertStatus(403)
+        ->assertJsonPath('error.code', 'MSG_008');
+
+    expect(Offer::query()->count())->toBe(0);
 });
 
 it('returns 404 for non-participants to avoid oracle leak', function (): void {

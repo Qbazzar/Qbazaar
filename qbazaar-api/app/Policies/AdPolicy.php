@@ -24,17 +24,18 @@ use App\Models\User;
 class AdPolicy
 {
     /**
-     * Public view rule. Anonymous callers can see ACTIVE / SOLD ads;
-     * everything else (drafts, pending moderation, expired) is private
-     * to the owner.
+     * Public view rule. Anonymous callers can see ACTIVE / SOLD ads of an
+     * active seller; everything else (drafts, pending moderation, expired,
+     * ads of a suspended seller) is private to the owner.
      */
     public function view(?User $user, Ad $ad): bool
     {
-        if (in_array($ad->status, [AdStatus::ACTIVE, AdStatus::SOLD], true)) {
+        if ($user !== null && $user->id === $ad->user_id) {
             return true;
         }
 
-        return $user !== null && $user->id === $ad->user_id;
+        return in_array($ad->status, [AdStatus::ACTIVE, AdStatus::SOLD], true)
+            && $ad->hasActiveSeller();
     }
 
     /**
@@ -79,6 +80,8 @@ class AdPolicy
     /**
      * Image-management rule (upload / delete / reorder). Sellers can manage
      * images while the ad is still mutable — terminal-state ads are frozen.
+     * EXPIRED is frozen too: renewing flips it straight back to ACTIVE, so
+     * images added while expired would go live without review.
      */
     public function manageImages(User $user, Ad $ad): bool
     {
@@ -88,6 +91,7 @@ class AdPolicy
 
         return ! in_array($ad->status, [
             AdStatus::SOLD,
+            AdStatus::EXPIRED,
             AdStatus::BLOCKED,
             AdStatus::REJECTED,
         ], true);

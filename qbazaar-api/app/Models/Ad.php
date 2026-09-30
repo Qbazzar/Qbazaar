@@ -8,6 +8,7 @@ use App\Enums\AdStatus;
 use App\Enums\Condition;
 use App\Enums\OfferStatus;
 use App\Enums\PriceType;
+use App\Enums\UserStatus;
 use App\Events\Ads\AdRejected;
 use App\Http\Resources\Api\V1\Media\MediaResource;
 use Database\Factories\AdFactory;
@@ -182,6 +183,21 @@ class Ad extends Model implements HasMedia
     }
 
     /**
+     * Active ads whose seller is active too — what public listings may show.
+     * A suspended or deactivated seller keeps their ads' status untouched so
+     * reactivation restores them as they were.
+     *
+     * @param Builder<Ad> $query
+     * @return Builder<Ad>
+     */
+    public function scopePubliclyListed(Builder $query): Builder
+    {
+        return $query
+            ->active()
+            ->whereHas('user', fn (Builder $seller) => $seller->where('status', UserStatus::ACTIVE->value));
+    }
+
+    /**
      * Restrict to ads owned by a given user. We accept the model to keep
      * call sites self-documenting (`->forUser($user)`) and to guarantee
      * we never accept a raw string ID by accident.
@@ -304,13 +320,28 @@ class Ad extends Model implements HasMedia
     }
 
     /**
-     * Gate by status so DRAFT / PENDING / SOLD / EXPIRED rows never appear
-     * in search results. Scout's save observer is the single sync path: it
-     * indexes the ad when this turns true and removes it when it turns false.
+     * Gate by status so DRAFT / PENDING / SOLD / EXPIRED rows — and ads of a
+     * suspended or deactivated seller — never appear in search results.
+     * Scout's save observer is the single sync path: it indexes the ad when
+     * this turns true and removes it when it turns false.
      */
     public function shouldBeSearchable(): bool
     {
-        return $this->status === AdStatus::ACTIVE;
+        return $this->isPubliclyListed();
+    }
+
+    /** Instance counterpart of {@see scopePubliclyListed()}. */
+    public function isPubliclyListed(): bool
+    {
+        return $this->status === AdStatus::ACTIVE && $this->hasActiveSeller();
+    }
+
+    public function hasActiveSeller(): bool
+    {
+        /** @var User|null $seller */
+        $seller = $this->user;
+
+        return $seller?->status === UserStatus::ACTIVE;
     }
 
     /**
@@ -319,7 +350,7 @@ class Ad extends Model implements HasMedia
      */
     protected function makeAllSearchableUsing(Builder $query): Builder
     {
-        return $query->with(['category', 'location']);
+        return $query->with(['user', 'category', 'location']);
     }
 
     /**

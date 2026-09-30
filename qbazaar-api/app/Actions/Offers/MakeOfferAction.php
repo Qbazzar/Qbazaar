@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Actions\Offers;
 
-use App\Enums\AdStatus;
 use App\Enums\MessageType;
 use App\Enums\OfferStatus;
 use App\Events\Messaging\MessageSent;
@@ -35,7 +34,9 @@ use Illuminate\Support\Str;
  *
  * Domain invariants enforced (each throws a stable ErrorCode):
  *   - OFFER_OWN_AD          : buyer can't offer on their own ad.
- *   - OFFER_AD_NOT_ACTIVE   : refuses non-ACTIVE ads (draft/sold/expired/...).
+ *   - OFFER_AD_NOT_ACTIVE   : refuses non-ACTIVE ads (draft/sold/expired/...)
+ *                             and ads of a suspended or deactivated seller.
+ *   - MSG_CHAT_DISABLED     : the seller has turned chat off.
  *   - MSG_BLOCKED           : same block-check used by messaging — refuse
  *                             when either side has blocked the other.
  *   - OFFER_ACTIVE_EXISTS   : one open offer per (buyer, ad).
@@ -59,8 +60,12 @@ class MakeOfferAction
             throw new DomainException(ErrorCode::OFFER_OWN_AD);
         }
 
-        if ($ad->status !== AdStatus::ACTIVE) {
+        if (! $ad->isPubliclyListed()) {
             throw new DomainException(ErrorCode::OFFER_AD_NOT_ACTIVE);
+        }
+
+        if (! $seller->privacySettings()->allow_chat) {
+            throw new DomainException(ErrorCode::MSG_CHAT_DISABLED);
         }
 
         if ($buyer->hasBlocked($seller) || $seller->hasBlocked($buyer)) {
