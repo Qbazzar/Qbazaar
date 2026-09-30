@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * Centralises every operation on the refresh-token table.
@@ -67,6 +68,7 @@ class RefreshTokenService
         $token->id = $rowId;
         $token->forceFill([
             'user_id' => $user->id,
+            'personal_access_token_id' => $newAccessToken->accessToken->getKey(),
             'token_hash' => Hash::make($rawRefresh),
             'device_fingerprint' => $deviceFingerprint,
             'expires_at' => Carbon::now()->addDays($refreshTtlDays),
@@ -91,6 +93,7 @@ class RefreshTokenService
      *      - If the matched row is already `used_at` set → REPLAY DETECTED.
      *        Burn every refresh token for that user and abort.
      *      - If expired → abort with AUTH_TOKEN_EXPIRED.
+     *      - If the owner can no longer sign in → abort with AUTH_002.
      *      - Otherwise mark it used and mint a new pair.
      *
      * Throws DomainException with the right ErrorCode on every failure so the
@@ -133,7 +136,14 @@ class RefreshTokenService
                 $this->fail(ErrorCode::AUTH_TOKEN_EXPIRED);
             }
 
-            return DB::transaction(function () use ($candidate, $deviceFingerprint, $ip, $deviceLabel): array {
+            /** @var User $user */
+            $user = $candidate->user()->firstOrFail();
+
+            if (! $user->status->canLogin()) {
+                $this->fail(ErrorCode::AUTH_ACCOUNT_SUSPENDED);
+            }
+
+            return DB::transaction(function () use ($candidate, $user, $deviceFingerprint, $ip, $deviceLabel): array {
                 /** @var RefreshToken $fresh */
                 $fresh = RefreshToken::query()->lockForUpdate()->findOrFail($candidate->id);
 
@@ -145,9 +155,6 @@ class RefreshTokenService
                 }
 
                 $fresh->forceFill(['used_at' => Carbon::now()])->save();
-
-                /** @var User $user */
-                $user = $fresh->user()->firstOrFail();
 
                 return [
                     'user' => $user,
@@ -182,6 +189,33 @@ class RefreshTokenService
         if ($row !== null && ! $row->isUsed()) {
             $row->forceFill(['used_at' => Carbon::now()])->save();
         }
+    }
+
+    /**
+     * End one session: the access token and every refresh token minted with it.
+     */
+    public function revokeSession(PersonalAccessToken $accessToken): void
+    {
+        DB::transaction(function () use ($accessToken): void {
+            RefreshToken::query()
+                ->where('personal_access_token_id', $accessToken->getKey())
+                ->whereNull('used_at')
+                ->update(['used_at' => Carbon::now()]);
+
+            $accessToken->delete();
+        });
+    }
+
+    /**
+     * Sign the user out everywhere: burns every refresh token and deletes
+     * every access token.
+     */
+    public function revokeAllSessions(User $user): void
+    {
+        DB::transaction(function () use ($user): void {
+            $this->burnAllForUser($user);
+            $user->tokens()->delete();
+        });
     }
 
     /**

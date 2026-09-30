@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $id
  * @property string $user_id
+ * @property int|null $personal_access_token_id
  * @property string $token_hash
  * @property string|null $device_fingerprint
  * @property Carbon $expires_at
@@ -28,6 +29,7 @@ class RefreshToken extends Model
      */
     protected $fillable = [
         'user_id',
+        'personal_access_token_id',
         'token_hash',
         'device_fingerprint',
         'expires_at',
