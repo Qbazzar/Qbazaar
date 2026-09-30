@@ -4,6 +4,28 @@
 
 **Status (2026-09-30):** the MVP is live; V2 is under way. M0 (audit fixes, CI) is merged, M1 (backend gaps) is next. See [ROADMAP.md](qbazaar-contracts/ROADMAP.md).
 
+## Progress
+
+<!-- progress:start -->
+**Current phase:** M0 Preparation and alignment · **Overall:** 11% (18/153 tasks)
+
+```text
+M0   ███████░░░   72% (18/25)   Preparation and alignment
+M1   ░░░░░░░░░░    0% (0/57)    Closing the backend gaps
+M1b  ░░░░░░░░░░    0% (0/10)    Orders and payments
+M2   ░░░░░░░░░░    0% (0/14)    Connecting the mobile app
+M3   ░░░░░░░░░░    0% (0/10)    Web on the new design
+M4   ░░░░░░░░░░    0% (0/15)    Admin additions
+M5   ░░░░░░░░░░    0% (0/10)    Deployment on the new server
+M6   ░░░░░░░░░░    0% (0/5)     Releasing the mobile app
+M7   ░░░░░░░░░░    0% (0/7)     Electronic payment and monetization
+```
+
+_Generated from [`MILESTONES-V2.md`](https://github.com/Qbazzar/Qbazaar/blob/main/qbazaar-contracts/MILESTONES-V2.md) by `node scripts/progress.mjs`; a task counts as done when it sits in a **Done** table._
+<!-- progress:end -->
+
+After moving tasks in `MILESTONES-V2.md`, run `node scripts/progress.mjs` to refresh this block, the one in the roadmap and the milestone Status table (`--check` only reports whether they are stale; CI runs it).
+
 ## Layout
 
 ```
@@ -14,7 +36,8 @@ QB/
 ├── qbazaar-contracts/   OpenAPI spec, error codes, WebSocket events, V2 plan, roadmap, milestones
 ├── deploy/              Production deploy: scripts, systemd units, Apache includes, env templates, runbooks
 ├── DOCS/                PRD (PDF), the 2026-09-30 audit, the 2026-06-21 QA report, original (pre-build) plans, mockup assets
-└── .github/workflows/   ci.yml (API quality gates), deploy-api.yml, deploy-web.yml
+├── scripts/             progress.mjs (the progress block above)
+└── .github/workflows/   ci.yml (API quality gates), progress.yml, deploy-api.yml, deploy-web.yml
 ```
 
 Related repos: [`Qbazzar/Qbazaar-mobile`](https://github.com/Qbazzar/Qbazaar-mobile) (Expo app) and [`Qbazzar/Qbazaar-front`](https://github.com/Qbazzar/Qbazaar-front) (static prototype of the new design, the pixel reference for the web reskin).
@@ -66,7 +89,7 @@ cd qbazaar-web
 npm run typecheck && npm test              # tsc + Vitest
 ```
 
-CI (`.github/workflows/ci.yml`) runs Pint, PHPStan and Pest for the API on every push and pull request to `main` and `develop`. The web has no CI job yet.
+CI (`.github/workflows/ci.yml`) runs Pint, PHPStan and Pest for the API on every push and pull request to `main` and `develop`. `progress.yml` fails when the progress block is stale. The web has no CI job yet.
 
 ## Deploy
 
