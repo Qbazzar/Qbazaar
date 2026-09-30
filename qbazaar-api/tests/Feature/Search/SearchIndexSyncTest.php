@@ -7,6 +7,7 @@ use App\Models\Ad;
 use App\Models\User;
 use App\Services\Ads\AdModerationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Laravel\Scout\Jobs\MakeSearchable;
@@ -52,4 +53,18 @@ it('queues exactly one removal job when an ad is sold', function (): void {
 
     Queue::assertPushed(RemoveFromSearch::class, 1);
     Queue::assertNotPushed(MakeSearchable::class);
+});
+
+it('does not queue the removal job until the surrounding transaction commits', function (): void {
+    $ad = Ad::factory()->active()->create(['user_id' => $this->user->id]);
+
+    Queue::fake([MakeSearchable::class, RemoveFromSearch::class]);
+
+    DB::transaction(function () use ($ad): void {
+        $ad->markSold();
+
+        Queue::assertNotPushed(RemoveFromSearch::class);
+    });
+
+    Queue::assertPushed(RemoveFromSearch::class, 1);
 });
