@@ -14,7 +14,7 @@ use function Pest\Laravel\postJson;
 use Tests\Concerns\CreatesAds;
 use Tests\Concerns\InteractsWithMeilisearch;
 
-uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class);
+uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class)->group('meilisearch');
 
 beforeEach(function (): void {
     $this->seedReferenceData();

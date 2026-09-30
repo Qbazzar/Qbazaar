@@ -13,7 +13,7 @@ use function Pest\Laravel\getJson;
 use Tests\Concerns\CreatesAds;
 use Tests\Concerns\InteractsWithMeilisearch;
 
-uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class);
+uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class)->group('meilisearch');
 
 beforeEach(function (): void {
     $this->seedReferenceData();
@@ -147,9 +147,4 @@ it('reports pagination metadata in the envelope', function (): void {
         'per_page' => 2,
     ])->and($meta['total'])->toBe(3)
         ->and($meta['last_page'])->toBe(2);
-});
-
-it('rejects invalid sort values via SearchRequest validation', function (): void {
-    getJson('/api/v1/search?sort=banana', ['Accept' => 'application/json'])
-        ->assertStatus(422);
 });

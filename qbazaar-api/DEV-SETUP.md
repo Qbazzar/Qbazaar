@@ -102,4 +102,13 @@ Or use Laragon's auto-host: open `http://qbazaar-api.test` (Laragon maps the fol
 ./vendor/bin/pest              # Test suite
 ```
 
+The default suite is hermetic: `phpunit.xml` points Scout at the in-process
+`collection` driver and excludes the `meilisearch` group, so no search server is
+needed. The tests that exercise the real Meilisearch index live in that group;
+start Meilisearch (section 2) and run them explicitly:
+
+```bash
+./vendor/bin/pest --group=meilisearch
+```
+
 CI runs all three on every push (see `.github/workflows/ci.yml`).
