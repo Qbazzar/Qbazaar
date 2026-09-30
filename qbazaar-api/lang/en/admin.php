@@ -147,6 +147,7 @@ return [
             'rejected' => 'Rejected',
             'withdrawn' => 'Withdrawn',
             'expired' => 'Expired',
+            'countered' => 'Countered',
         ],
     ],
 
@@ -468,6 +469,7 @@ return [
         'groups' => [
             'commission' => 'Commission',
             'ads' => 'Ads',
+            'offers' => 'Offers',
         ],
         'fields' => [
             'commission_debt_ceiling' => [
@@ -484,6 +486,11 @@ return [
                 'label' => 'Expiry warning lead time',
                 'help' => 'How many days before an ad expires its seller is reminded to renew. Sent once per ad.',
                 'unit' => 'days',
+            ],
+            'offer_counter_rounds_per_side' => [
+                'label' => 'Counter-offer rounds',
+                'help' => 'How many times each side (seller first, then buyer) may answer with a counter-offer in one negotiation. Zero turns counter-offers off.',
+                'unit' => 'rounds',
             ],
         ],
     ],

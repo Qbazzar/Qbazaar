@@ -41,12 +41,12 @@ it('flips pending offers past expires_at to EXPIRED and dispatches OfferExpired'
     $fresh = Offer::factory()->pending()->create([
         'conversation_id' => $this->conversation->id,
         'ad_id' => $this->ad->id,
-        'buyer_id' => $this->buyer->id,
+        'buyer_id' => User::factory()->create()->id,
         'seller_id' => $this->seller->id,
         'expires_at' => now()->addDays(3),
     ]);
 
-    (new ExpireOldOffersJob)->handle();
+    app()->call([new ExpireOldOffersJob, 'handle']);
 
     expect($stale->fresh()->status)->toBe(OfferStatus::EXPIRED)
         ->and($fresh->fresh()->status)->toBe(OfferStatus::PENDING);
@@ -69,7 +69,7 @@ it('leaves already-terminal offers untouched', function (): void {
         'expires_at' => now()->subDay(),
     ]);
 
-    (new ExpireOldOffersJob)->handle();
+    app()->call([new ExpireOldOffersJob, 'handle']);
 
     expect($accepted->fresh()->status)->toBe(OfferStatus::ACCEPTED);
 
@@ -80,17 +80,19 @@ it('expires every due offer even when expiry order differs from key order', func
     Event::fake([OfferExpired::class]);
 
     // Later rows expire earlier: the old orderBy(expires_at) + chunkById walk skipped these.
-    foreach (range(1, 150) as $position) {
+    foreach (User::factory()->count(150)->create()->values() as $index => $buyer) {
+        $position = $index + 1;
+
         Offer::factory()->pending()->create([
             'conversation_id' => $this->conversation->id,
             'ad_id' => $this->ad->id,
-            'buyer_id' => $this->buyer->id,
+            'buyer_id' => $buyer->id,
             'seller_id' => $this->seller->id,
             'expires_at' => now()->subMinutes($position),
         ]);
     }
 
-    (new ExpireOldOffersJob)->handle();
+    app()->call([new ExpireOldOffersJob, 'handle']);
 
     expect(Offer::query()->where('status', OfferStatus::PENDING->value)->count())->toBe(0);
     Event::assertDispatched(OfferExpired::class, 150);

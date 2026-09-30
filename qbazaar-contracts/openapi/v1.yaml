@@ -1934,7 +1934,9 @@ paths:
       description: |
         Creates a pending offer plus a `type=offer` chat message that
         introduces it in the transcript. The buyer can only have ONE
-        pending offer per ad (OFFER_ACTIVE_EXISTS otherwise).
+        open offer per ad, counting a counter-offer awaiting their answer
+        (OFFER_ACTIVE_EXISTS otherwise). The ad must be publicly listed and
+        no offer on it may have been accepted yet.
       operationId: offersStore
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -1961,8 +1963,9 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
           description: |
-            VALIDATION_FAILED, OFFER_OWN_AD, OFFER_AD_NOT_ACTIVE, or
-            OFFER_ACTIVE_EXISTS — see error-codes.md.
+            VALIDATION_FAILED, OFFER_OWN_AD, OFFER_AD_NOT_ACTIVE,
+            OFFER_AD_ALREADY_AGREED (OFFER_010) or OFFER_ACTIVE_EXISTS —
+            see error-codes.md.
           content:
             application/json:
               schema:
@@ -1986,11 +1989,14 @@ paths:
   /api/v1/offers/{id}/accept:
     post:
       tags: [Offers]
-      summary: Seller accepts a pending offer
+      summary: The responder accepts a pending offer
       description: |
-        Flips status to `accepted`, sibling pending offers from the same
-        buyer/ad pair get withdrawn (defence-in-depth), drops an inline
-        "Offer accepted" system message in the chat.
+        Only the side that did not propose the offer may accept it (the
+        seller for a buyer offer, the buyer for a seller counter-offer).
+        Flips status to `accepted`, expires every other open offer on the
+        same ad (each buyer gets `offer.expired`) and drops an inline
+        "Offer accepted" system message in the chat. Runs under a lock on
+        the ad and the offer, so one ad never gets two accepted offers.
       operationId: offersAccept
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -2005,7 +2011,10 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
-          description: OFFER_NOT_PENDING — offer is already terminal or expired
+          description: |
+            OFFER_NOT_PENDING — offer is already terminal or expired;
+            OFFER_AD_NOT_ACTIVE — the ad is no longer publicly listed;
+            OFFER_AD_ALREADY_AGREED — another offer on the ad was accepted.
           content:
             application/json:
               schema:
@@ -2014,7 +2023,7 @@ paths:
   /api/v1/offers/{id}/reject:
     post:
       tags: [Offers]
-      summary: Seller rejects a pending offer
+      summary: The responder rejects a pending offer
       operationId: offersReject
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -2038,7 +2047,7 @@ paths:
   /api/v1/offers/{id}/withdraw:
     post:
       tags: [Offers]
-      summary: Buyer withdraws their own pending offer
+      summary: The proposer withdraws their own pending offer
       operationId: offersWithdraw
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -3958,10 +3967,15 @@ components:
     # ─── Offers (Sprint 9) ─────────────────────────────────────────
     OfferStatus:
       type: string
-      enum: [pending, accepted, rejected, withdrawn, expired]
+      enum: [pending, accepted, rejected, withdrawn, expired, countered]
       description: |
         Lifecycle state. `pending` is the only non-terminal value; every
-        other state freezes the row permanently.
+        other state freezes the row permanently. `expired` means the
+        platform closed the offer: its window passed, the ad was sold,
+        expired, blocked or deleted, or another offer on the ad was
+        accepted. `countered` means the responder answered with a
+        counter-offer, returned as a new offer whose `parent_offer_id`
+        points here.
 
     Offer:
       type: object
