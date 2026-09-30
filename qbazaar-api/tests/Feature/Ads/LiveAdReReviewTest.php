@@ -145,3 +145,17 @@ it('does not re-submit a draft when images are added', function (): void {
     expect($draft->fresh()->status)->toBe(AdStatus::DRAFT);
     Event::assertNotDispatched(AdSubmittedForReview::class);
 });
+
+it('refuses new images on an expired ad, which renewing would publish unreviewed', function (): void {
+    Storage::fake('public');
+    Storage::fake('local');
+    Bus::fake();
+
+    $expired = $this->makeAd($this->seller, ['status' => AdStatus::EXPIRED->value]);
+
+    postJson("/api/v1/ads/{$expired->id}/images", [
+        'images' => [UploadedFile::fake()->image('new.jpg', 800, 600)],
+    ])->assertForbidden();
+
+    expect($expired->fresh()->getMedia('images'))->toBeEmpty();
+});

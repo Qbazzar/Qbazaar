@@ -80,6 +80,8 @@ class AdPolicy
     /**
      * Image-management rule (upload / delete / reorder). Sellers can manage
      * images while the ad is still mutable — terminal-state ads are frozen.
+     * EXPIRED is frozen too: renewing flips it straight back to ACTIVE, so
+     * images added while expired would go live without review.
      */
     public function manageImages(User $user, Ad $ad): bool
     {
@@ -89,6 +91,7 @@ class AdPolicy
 
         return ! in_array($ad->status, [
             AdStatus::SOLD,
+            AdStatus::EXPIRED,
             AdStatus::BLOCKED,
             AdStatus::REJECTED,
         ], true);
