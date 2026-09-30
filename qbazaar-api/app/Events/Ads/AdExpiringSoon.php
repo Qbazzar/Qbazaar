@@ -9,12 +9,9 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Fired by the daily expiry job ~24h before an ad's `expires_at`. Drives the
- * "your ad is about to expire — renew now" notification.
- *
- * We do not (yet) dedupe — sellers may receive duplicate warnings if the job
- * runs more than once a day. A follow-up sprint will introduce
- * `ads.expiring_notified_at` to suppress repeats.
+ * Fired once per expiry by the daily expiry job when an ad enters the
+ * admin-set warning window. Drives the "your ad is about to expire — renew
+ * now" notification.
  */
 class AdExpiringSoon
 {

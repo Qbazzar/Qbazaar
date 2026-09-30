@@ -59,6 +59,9 @@
                         ['route' => 'admin.notifications.index', 'label' => 'الإشعارات', 'match' => 'admin.notifications.*', 'icon' => 'bell', 'permission' => 'users.view'],
                         ['route' => 'admin.activity.index', 'label' => 'سجل النشاط', 'match' => 'admin.activity.*', 'icon' => 'activity', 'permission' => 'activity.view'],
                     ],
+                    __('admin.navigation_groups.system') => [
+                        ['route' => 'admin.settings.edit', 'label' => __('admin.navigation.settings'), 'match' => 'admin.settings.*', 'icon' => 'adjustments', 'permission' => 'settings.manage'],
+                    ],
                 ])
                 @foreach ($groups as $groupLabel => $items)
                     @php($items = array_filter($items, fn (array $item): bool => ! isset($item['permission']) || auth()->user()->can($item['permission'])))

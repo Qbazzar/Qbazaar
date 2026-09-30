@@ -86,6 +86,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // CMS (Sprint 12 pre-wire so admins are ready when those resources land)
         'pages.manage',
         'articles.manage',
+
+        // Platform settings (commission policy, ad lifecycle)
+        'settings.manage',
     ];
 
     /**

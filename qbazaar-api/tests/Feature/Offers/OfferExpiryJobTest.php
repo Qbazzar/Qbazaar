@@ -75,3 +75,23 @@ it('leaves already-terminal offers untouched', function (): void {
 
     Event::assertNotDispatched(OfferExpired::class);
 });
+
+it('expires every due offer even when expiry order differs from key order', function (): void {
+    Event::fake([OfferExpired::class]);
+
+    // Later rows expire earlier: the old orderBy(expires_at) + chunkById walk skipped these.
+    foreach (range(1, 150) as $position) {
+        Offer::factory()->pending()->create([
+            'conversation_id' => $this->conversation->id,
+            'ad_id' => $this->ad->id,
+            'buyer_id' => $this->buyer->id,
+            'seller_id' => $this->seller->id,
+            'expires_at' => now()->subMinutes($position),
+        ]);
+    }
+
+    (new ExpireOldOffersJob)->handle();
+
+    expect(Offer::query()->where('status', OfferStatus::PENDING->value)->count())->toBe(0);
+    Event::assertDispatched(OfferExpired::class, 150);
+});
