@@ -89,6 +89,7 @@ requested locale.
 | `MSG_005` | You are not a participant of this conversation | 403 |
 | `MSG_006` | Cannot start a conversation about your own ad | 422 |
 | `MSG_007` | Message not found (e.g. invalid `before` cursor) | 404 |
+| `MSG_008` | The seller does not accept chat messages or offers | 403 |
 
 ## Offers (Sprint 9)
 

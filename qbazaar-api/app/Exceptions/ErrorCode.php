@@ -74,6 +74,7 @@ enum ErrorCode: string
     case MSG_NOT_PARTICIPANT = 'MSG_005';
     case MSG_CONVERSATION_OWN_AD = 'MSG_006';
     case MSG_NOT_FOUND = 'MSG_007';
+    case MSG_CHAT_DISABLED = 'MSG_008';
 
     // ── Offers (Sprint 9) ───────────────────────────────────────────
     case OFFER_NOT_FOUND = 'OFFER_001';
@@ -167,6 +168,7 @@ enum ErrorCode: string
             self::AD_EDIT_FORBIDDEN,
             self::MSG_BLOCKED,
             self::MSG_NOT_PARTICIPANT,
+            self::MSG_CHAT_DISABLED,
             self::OFFER_NOT_SELLER,
             self::OFFER_FORBIDDEN,
             self::NOTIF_FORBIDDEN,

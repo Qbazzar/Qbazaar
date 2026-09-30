@@ -46,7 +46,7 @@ class AdController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Ad::query()
-            ->active()
+            ->publiclyListed()
             ->with(['category', 'location', 'media']);
 
         if (($categoryId = $request->query('category_id')) !== null && is_string($categoryId)) {

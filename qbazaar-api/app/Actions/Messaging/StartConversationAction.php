@@ -20,6 +20,10 @@ use App\Models\User;
  *  - MSG_BLOCKED (403): refuse when either side has blocked the other
  *    (we re-check this on send too, but failing fast here prevents
  *    creating a row only to dead-end on the first message).
+ *  - AD_NOT_ACTIVE (422): a new conversation needs a live ad from an
+ *    active seller. An existing thread is still returned so the buyer keeps
+ *    access to its history after the ad is sold or hidden.
+ *  - MSG_CHAT_DISABLED (403): the seller has turned chat off.
  *
  * Caller receives the conversation with `ad.user` eager-loaded so the
  * response resource doesn't need a follow-up query.
@@ -58,6 +62,14 @@ class StartConversationAction
             $existing->load(['ad.user', 'ad.media', 'buyer', 'seller']);
 
             return ['conversation' => $existing, 'created' => false];
+        }
+
+        if (! $ad->isPubliclyListed()) {
+            throw new DomainException(ErrorCode::AD_NOT_ACTIVE);
+        }
+
+        if (! $seller->privacySettings()->allow_chat) {
+            throw new DomainException(ErrorCode::MSG_CHAT_DISABLED);
         }
 
         $conversation = Conversation::query()->create([

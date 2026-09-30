@@ -194,6 +194,9 @@ return [
             'found' => 'Message not found.',
             'participant' => 'You are not a participant of this conversation.',
         ],
+        'chat' => [
+            'disabled' => 'This seller does not accept messages.',
+        ],
     ],
 
     'report' => [

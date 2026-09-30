@@ -23,6 +23,6 @@ class IndexAdInSearch
 {
     public function handle(AdPublished|AdApproved $event): void
     {
-        $event->ad->searchable();
+        $event->ad->syncSearchIndex();
     }
 }
