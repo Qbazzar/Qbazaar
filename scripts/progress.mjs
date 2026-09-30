@@ -25,14 +25,17 @@ const SUBSECTION_HEADING = /^### (.+)$/;
 
 function parsePhases(markdown) {
   const phases = [];
+  const seenIds = new Set();
   let phase = null;
   let inDoneTable = false;
 
   for (const line of markdown.split(/\r?\n/)) {
-    const phaseMatch = line.match(PHASE_HEADING);
-    if (phaseMatch) {
-      phase = { id: phaseMatch[1], title: stripParenthetical(phaseMatch[2]), total: 0, done: 0 };
-      phases.push(phase);
+    if (line.startsWith('## ')) {
+      const phaseMatch = line.match(PHASE_HEADING);
+      phase = phaseMatch
+        ? { id: phaseMatch[1], title: stripParenthetical(phaseMatch[2]), total: 0, done: 0 }
+        : null;
+      if (phase) phases.push(phase);
       inDoneTable = false;
       continue;
     }
@@ -43,10 +46,17 @@ function parsePhases(markdown) {
       continue;
     }
 
-    if (phase && TASK_ROW.test(line)) {
-      phase.total += 1;
-      if (inDoneTable) phase.done += 1;
-    }
+    const taskMatch = line.match(TASK_ROW);
+    if (!taskMatch) continue;
+
+    // A task outside a phase or listed twice would silently skew the percentages.
+    const id = taskMatch[1];
+    if (!phase) throw new Error(`MILESTONES-V2.md: ${id} is not under a "## Sprint N — Mx" heading`);
+    if (seenIds.has(id)) throw new Error(`MILESTONES-V2.md: ${id} is listed more than once`);
+    seenIds.add(id);
+
+    phase.total += 1;
+    if (inDoneTable) phase.done += 1;
   }
 
   return phases;
