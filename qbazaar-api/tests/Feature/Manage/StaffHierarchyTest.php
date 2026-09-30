@@ -72,6 +72,28 @@ it('refuses role changes on another super admin', function (): void {
     expect($peer->fresh()->hasRole('super_admin'))->toBeTrue();
 });
 
+it('refuses granting a role above the actor rank', function (): void {
+    $customer = userWithRole();
+    $moderator = userWithRole('moderator');
+    $moderator->givePermissionTo('roles.manage');
+    actingAs($moderator);
+
+    $this->post("/admin/users/{$customer->id}/roles", ['roles' => ['super_admin']])->assertForbidden();
+
+    expect($customer->fresh()->hasRole('super_admin'))->toBeFalse();
+});
+
+it('lets staff grant roles up to their own rank', function (): void {
+    $customer = userWithRole();
+    $moderator = userWithRole('moderator');
+    $moderator->givePermissionTo('roles.manage');
+    actingAs($moderator);
+
+    $this->post("/admin/users/{$customer->id}/roles", ['roles' => ['support']])->assertRedirect();
+
+    expect($customer->fresh()->hasRole('support'))->toBeTrue();
+});
+
 it('refuses banning a higher-ranked account through a report', function (): void {
     $superAdmin = userWithRole('super_admin');
     $report = Report::factory()->create([

@@ -139,7 +139,10 @@ class UserController extends Controller
             'roles.*' => ['string', 'in:' . implode(',', $available)],
         ]);
 
-        $user->syncRoles($data['roles'] ?? []);
+        $roles = $data['roles'] ?? [];
+        $this->hierarchy->ensureCanGrantRoles($request->user(), $roles);
+
+        $user->syncRoles($roles);
 
         return back()->with('status', 'تم تحديث أدوار المستخدم.');
     }
