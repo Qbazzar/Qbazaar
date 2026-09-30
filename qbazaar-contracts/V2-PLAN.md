@@ -1,13 +1,13 @@
 # QBazaar V2: completing the system and connecting the mobile app, the web and the backend
 
-> **Date:** 2026-09-30 · **Status:** approved as a direction; the tasks are in [`MILESTONES-V2.md`](MILESTONES-V2.md) and the gaps in [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
+> **Date:** 2026-09-30 · **Status:** approved as a direction; the tasks are in [`MILESTONES-V2.md`](MILESTONES-V2.md), progress in [`ROADMAP.md`](ROADMAP.md) and the gaps in [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md). M0's audit fixes are merged (#147–#153).
 
 ## 1. Where things stand now
 
 | Part | Place | State |
 |---|---|---|
 | Requirements document | `DOCS/QBazaar_Full_Page_Specs_Backend_PRD_SRS.pdf` | 31 pages: pages, user stories, endpoints. Qatar only, QAR, Arabic + English |
-| Backend | `qbazaar-api` | Laravel 12 · 96 routes under `/api/v1` · Sanctum + refresh tokens · Reverb · Meilisearch · FCM · Twilio · 330 Pest tests |
+| Backend | `qbazaar-api` | Laravel 12 · about 100 routes under `/api/v1` · Sanctum + refresh tokens · Reverb · Meilisearch · FCM · Twilio · 400+ Pest tests |
 | Admin panel | `qbazaar-api` → `/admin` | Custom Blade, 17 resources (ads, users, reports, categories, locations, pages, support…) |
 | Web | `qbazaar-web` | Next.js 16, connected to the API, but on the **old design** |
 | Contract | `qbazaar-contracts/openapi/v1.yaml` | 79 paths, matching the implementation (except reviews) |
@@ -51,7 +51,7 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
   - keeps tokens in `expo-secure-store` and refreshes them automatically.
 
   The switch is in `src/repositories/index.ts`.
-- **Realtime from mobile:** needs `Broadcast::routes` under `api/v1` with `auth:sanctum` (today it's web only).
+- **Realtime from mobile:** channel auth is at `POST /api/v1/broadcasting/auth` with the Bearer token (done in M0, BE-13.2 / #149).
 - **Push:** the backend sends to FCM directly, so the app registers a native token (`getDevicePushTokenAsync`), not an Expo token.
 
 ## 4. Product decisions (settled 2026-09-30)
@@ -102,5 +102,5 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
 - **Collecting the commission on cash orders:** the seller collects the money directly, so the commission becomes a debt in their wallet. We need a settlement policy (a debt ceiling that stops new sales, and a settlement deadline).
 - **Apple/Google rules:** subscriptions and promotions for digital services may require in-app purchase.
 - **Unstable network in the development environment:** big uploads keep dropping. The deploy script sends in batches with retries.
-- **Two category trees** in the app today (browse / sell): must be unified in M0 before connecting.
-- **Leaked secrets:** a Firebase key lies loose in `Downloads`, and a Figma token is in local settings. Both must be rotated in M0.
+- **Two category trees** in the app today (browse / sell): must be unified in M0 before connecting (MB-13.2).
+- **Leaked secrets:** a Firebase key lies loose in `Downloads`, and a Figma token is in local settings. Both must be rotated in M0 (OPS-13.1, still open).
