@@ -111,4 +111,6 @@ start Meilisearch (section 2) and run them explicitly:
 ./vendor/bin/pest --group=meilisearch
 ```
 
-CI runs all three on every push (see `.github/workflows/ci.yml`).
+CI (`.github/workflows/ci.yml` at the repository root) runs all three on every
+push and pull request to `main`/`develop`. The API deploy workflow runs the same
+CI first and only deploys when it passes.
