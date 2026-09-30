@@ -15,7 +15,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Seeds the staff RBAC layer used by the Filament admin panel.
+ * Seeds the staff RBAC layer enforced on every /admin route.
  *
  * Two-step bootstrap:
  *   1. Permissions + Roles get created idempotently. We use firstOrCreate so
@@ -49,6 +49,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'users.ban',
         'users.delete',
         'users.impersonate',
+        'roles.manage',
 
         // Ads
         'ads.view',
@@ -56,7 +57,9 @@ class RolesAndPermissionsSeeder extends Seeder
         'ads.delete',
         'ads.approve',
         'ads.reject',
+        'ads.suspend',
         'ads.feature',
+        'offers.view',
 
         // Taxonomy
         'categories.manage',
@@ -65,6 +68,14 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reports / moderation queue
         'reports.view',
         'reports.action',
+
+        // Support desk and private conversations
+        'support.view',
+        'support.reply',
+        'conversations.view',
+
+        // Audit trail
+        'activity.view',
 
         // Broadcast notifications
         'notifications.broadcast',
@@ -91,17 +102,22 @@ class RolesAndPermissionsSeeder extends Seeder
         'ads.update',
         'ads.approve',
         'ads.reject',
+        'ads.suspend',
         'ads.feature',
+        'offers.view',
         'categories.manage',
         'locations.manage',
         'reports.view',
         'reports.action',
+        'support.view',
+        'support.reply',
+        'conversations.view',
         'notifications.broadcast',
         'moderation-rules.manage',
     ];
 
     /**
-     * Support role — read-only with a single write surface (broadcast).
+     * Support role — read-only plus the support desk and broadcasts.
      * Designed for first-line customer support; cannot moderate ads or ban.
      *
      * @var list<string>
@@ -110,6 +126,8 @@ class RolesAndPermissionsSeeder extends Seeder
         'users.view',
         'ads.view',
         'reports.view',
+        'support.view',
+        'support.reply',
         'notifications.broadcast',
     ];
 
@@ -147,8 +165,8 @@ class RolesAndPermissionsSeeder extends Seeder
      *
      * We look up by the well-known seeded email first so re-seeds remain
      * idempotent. If the row is missing (fresh install), we create it with
-     * a deterministic dev password — operators are expected to rotate it
-     * immediately in production.
+     * a deterministic dev password and flag it, so the admin panel only
+     * opens the profile page until that password is replaced.
      */
     private function ensureSuperAdminUser(): void
     {
@@ -168,6 +186,10 @@ class RolesAndPermissionsSeeder extends Seeder
                 'phone_verified' => true,
             ],
         );
+
+        if ($admin->wasRecentlyCreated) {
+            $admin->forceFill(['must_change_password' => true])->save();
+        }
 
         if (! $admin->hasRole('super_admin')) {
             $admin->assignRole('super_admin');

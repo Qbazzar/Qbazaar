@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Actions\Admin\LoginStaffAction;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
  * Session authentication for the custom /manage panel. Uses the stateful web
  * guard (cookie session) — distinct from the Sanctum token guard the public
- * API uses. Only staff roles are allowed past the login gate.
+ * API uses. Only active staff are allowed past the login gate.
  */
 class AuthController extends Controller
 {
@@ -27,30 +27,14 @@ class AuthController extends Controller
         return view('admin.login');
     }
 
-    public function login(Request $request): RedirectResponse
+    public function login(Request $request, LoginStaffAction $loginStaff): RedirectResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
-        }
-
-        $user = Auth::user();
-
-        if ($user === null || ! $user->hasAnyRole(['super_admin', 'moderator', 'support'])) {
-            Auth::logout();
-
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
-        }
-
-        $request->session()->regenerate();
+        $loginStaff->execute($request, $credentials['email'], $credentials['password'], $request->boolean('remember'));
 
         return redirect()->intended(route('admin.dashboard'));
     }

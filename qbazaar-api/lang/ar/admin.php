@@ -9,6 +9,12 @@ declare(strict_types=1);
 */
 
 return [
+    'auth' => [
+        'account_inactive' => 'هذا الحساب غير نشط. تواصل مع أحد المسؤولين.',
+        'password_change_required' => 'اختر كلمة مرور جديدة قبل المتابعة.',
+        'password_reused' => 'يجب أن تختلف كلمة المرور الجديدة عن الحالية.',
+    ],
+
     'dashboard' => [
         'title' => 'لوحة التحكم',
     ],

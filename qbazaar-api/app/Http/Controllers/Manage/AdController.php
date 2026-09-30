@@ -15,6 +15,7 @@ use App\Rules\NoMarkup;
 use App\Services\Ads\AdModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\View\View;
@@ -174,11 +175,15 @@ class AdController extends Controller
     public function bulkDestroy(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'ids' => ['required', 'array'],
-            'ids.*' => ['integer'],
+            'ids' => ['required', 'array', 'max:' . config('qbazaar.admin.bulk_action_max')],
+            'ids.*' => ['required', 'string', 'ulid'],
         ]);
 
-        $count = Ad::whereIn('id', $data['ids'])->delete();
+        // A mass query delete skips model events, leaving the ads searchable and
+        // unlogged; deleting each model matches the single-delete path.
+        $ads = Ad::query()->whereIn('id', $data['ids'])->get();
+        DB::transaction(fn () => $ads->each->delete());
+        $count = $ads->count();
 
         return back()->with('status', "تم حذف {$count} إعلاناً.");
     }
