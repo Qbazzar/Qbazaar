@@ -49,6 +49,10 @@ class AdSearchService
         // any future bug that lets a non-active ad slip into the index.
         $filter = $this->composeFilter($params);
 
+        if (! $this->usesMeilisearch()) {
+            return $this->emptyResult($perPage, $page);
+        }
+
         try {
             $builder = Ad::search($query, function ($meilisearch, string $q, array $options) use ($filter, $sort, $perPage, $page): mixed {
                 $options['filter'] = $filter;
@@ -91,10 +95,7 @@ class AdSearchService
                 'query' => $query,
             ]);
 
-            return [
-                'paginator' => $this->emptyPaginator($perPage, $page),
-                'facets' => $this->extractFacets([]),
-            ];
+            return $this->emptyResult($perPage, $page);
         }
     }
 
@@ -108,7 +109,7 @@ class AdSearchService
     public function suggest(string $query): array
     {
         $query = trim($query);
-        if ($query === '') {
+        if ($query === '' || ! $this->usesMeilisearch()) {
             return [];
         }
 
@@ -167,16 +168,36 @@ class AdSearchService
     }
 
     /**
-     * @return LengthAwarePaginator<int, Ad>
+     * The search callbacks speak the Meilisearch SDK; any other Scout engine
+     * hands them an Eloquent builder instead and they would throw a TypeError.
      */
-    private function emptyPaginator(int $perPage, int $page): LengthAwarePaginator
+    private function usesMeilisearch(): bool
     {
-        return new LengthAwarePaginator(
-            items: [],
-            total: 0,
-            perPage: $perPage,
-            currentPage: $page,
-        );
+        if (config('scout.driver') === 'meilisearch') {
+            return true;
+        }
+
+        Log::warning('Ad search requires the meilisearch Scout driver, returning no results', [
+            'driver' => config('scout.driver'),
+        ]);
+
+        return false;
+    }
+
+    /**
+     * @return array{paginator: LengthAwarePaginator<int, Ad>, facets: array<string, mixed>}
+     */
+    private function emptyResult(int $perPage, int $page): array
+    {
+        return [
+            'paginator' => new LengthAwarePaginator(
+                items: [],
+                total: 0,
+                perPage: $perPage,
+                currentPage: $page,
+            ),
+            'facets' => $this->extractFacets([]),
+        ];
     }
 
     /**

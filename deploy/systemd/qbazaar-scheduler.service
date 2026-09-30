@@ -1,0 +1,25 @@
+# QBazaar scheduler — systemd unit
+# Runs the Laravel scheduler (ads/offers expiry sweeps, see bootstrap/app.php).
+# `schedule:work` starts a fresh `schedule:run` every minute, so deploys are
+# picked up without a restart.
+# Install (as root):
+#   cp deploy/systemd/qbazaar-scheduler.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now qbazaar-scheduler
+#
+# Use either this unit or the cron entry in CPANEL-FLEETEYE-RUNBOOK.md, never
+# both: two schedulers would dispatch every task twice.
+[Unit]
+Description=QBazaar scheduler
+After=network.target redis.service mysqld.service
+
+[Service]
+Type=simple
+User=fleeteye
+Group=fleeteye
+WorkingDirectory=/home/fleeteye/qbazaar/qbazaar-api
+ExecStart=/opt/cpanel/ea-php84/root/usr/bin/php /home/fleeteye/qbazaar/qbazaar-api/artisan schedule:work
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

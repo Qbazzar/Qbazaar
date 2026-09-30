@@ -214,10 +214,6 @@ class Ad extends Model implements HasMedia
      * Publish a draft and transition straight to ACTIVE.
      *
      * Used after auto-moderation clears the ad (see PublishAdController).
-     * Calls `searchable()` explicitly so the ad is pushed to Meilisearch
-     * the moment it transitions to ACTIVE — `shouldBeSearchable()` would
-     * otherwise rely on the next ::save() to trigger Scout's observer, and
-     * that lag is observable to the seller's "did my ad go live yet" flow.
      */
     public function publish(): void
     {
@@ -228,8 +224,6 @@ class Ad extends Model implements HasMedia
             'published_at' => now(),
             'expires_at' => now()->addDays($lifetimeDays),
         ])->save();
-
-        $this->searchable();
     }
 
     /**
@@ -246,48 +240,31 @@ class Ad extends Model implements HasMedia
             'published_at' => null,
             'expires_at' => null,
         ])->save();
-
-        // Defensive: a PENDING ad must never appear in search even if a
-        // previous publish leaked it through. Scout's shouldBeSearchable()
-        // would handle this on save, but we call it explicitly for the same
-        // reason as publish().
-        $this->unsearchable();
     }
 
     /**
-     * Mark a previously expired ad as EXPIRED + drop it from search.
+     * Mark a previously expired ad as EXPIRED.
      * Invoked by the daily expiry job; kept on the model so the rule lives
      * with the other lifecycle transitions.
      */
     public function markExpired(): void
     {
         $this->forceFill(['status' => AdStatus::EXPIRED])->save();
-
-        $this->unsearchable();
     }
 
     /**
      * Mark the ad as sold. Only ACTIVE and EXPIRED ads can be sold —
      * enforced by AdPolicy::markSold().
-     *
-     * Sold ads must drop out of search results immediately; we force the
-     * unindex rather than waiting for `shouldBeSearchable()` to win the
-     * next save cycle.
      */
     public function markSold(): void
     {
         $this->forceFill(['status' => AdStatus::SOLD])->save();
-
-        $this->unsearchable();
     }
 
     /**
      * Extend expiry by another lifetime window. If the ad has already
      * expired, flip it back to ACTIVE in the same call so the seller
      * doesn't need a separate "republish" step.
-     *
-     * Re-indexes the ad when it flips back to ACTIVE so renewed listings
-     * reappear in search without waiting for a re-save.
      */
     public function renew(): void
     {
@@ -305,10 +282,6 @@ class Ad extends Model implements HasMedia
                 ? AdStatus::ACTIVE
                 : $this->status,
         ])->save();
-
-        if ($wasExpired) {
-            $this->searchable();
-        }
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -332,13 +305,21 @@ class Ad extends Model implements HasMedia
 
     /**
      * Gate by status so DRAFT / PENDING / SOLD / EXPIRED rows never appear
-     * in search results. Scout consults this on every observer-driven sync;
-     * we also call `searchable()` / `unsearchable()` explicitly in the
-     * lifecycle methods above to avoid relying on a follow-up save.
+     * in search results. Scout's save observer is the single sync path: it
+     * indexes the ad when this turns true and removes it when it turns false.
      */
     public function shouldBeSearchable(): bool
     {
         return $this->status === AdStatus::ACTIVE;
+    }
+
+    /**
+     * @param Builder<Ad> $query
+     * @return Builder<Ad>
+     */
+    protected function makeAllSearchableUsing(Builder $query): Builder
+    {
+        return $query->with(['category', 'location']);
     }
 
     /**
@@ -360,8 +341,7 @@ class Ad extends Model implements HasMedia
 
         // The belongsTo accessors are typed non-null, but Eloquent returns null
         // for an orphaned/missing foreign key. Pin them as nullable so indexing
-        // (and the database-driver search, which runs toSearchableArray on every
-        // row) degrades to null instead of throwing "property slug on null".
+        // and scout:import degrade to null instead of throwing "property slug on null".
         /** @var Category|null $category */
         $category = $this->category;
         /** @var Location|null $location */

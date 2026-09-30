@@ -11,9 +11,8 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Fired after a draft successfully clears auto-moderation and transitions to
  * ACTIVE. Listeners drive:
- *  - Meilisearch indexing (IndexAdInSearch)
  *  - Approval notification to the owner (SendAdNotifications)
- *  - Saved-search match crawl (future)
+ *  - Saved-search alerts (NotifySavedSearchMatches)
  *
  * Not broadcast — this is an internal pub/sub event, not a real-time push.
  */

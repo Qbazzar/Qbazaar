@@ -64,6 +64,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // `then:` closure here only runs when routes are NOT cached. After route:cache,
         // throttle middleware would crash with "Rate limiter [api] is not defined".
     )
+    // Discovery is the only listener registration mechanism: a manual
+    // Event::listen for a discovered listener makes it run twice.
+    ->withEvents(discover: [__DIR__ . '/../app/Listeners'])
     ->withSchedule(function (Schedule $schedule): void {
         // Daily 02:00 Asia/Qatar — quiet local window, runs after most
         // sellers have stopped editing. The job is queued (`onQueue('low')`)

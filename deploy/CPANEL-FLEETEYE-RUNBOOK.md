@@ -79,6 +79,7 @@
 - `qbazaar-web.service` — `ExecStart=<node> <repo>/qbazaar-web/node_modules/.bin/next start -p 3000`, `User=space`, `Environment=NODE_ENV=production`, `WorkingDirectory=<repo>/qbazaar-web`, `Restart=always`.
 - `qbazaar-horizon.service` — `php artisan horizon` (الطوابير: صور، إشعارات، انتهاء إعلانات).
 - `qbazaar-reverb.service` — `php artisan reverb:start --host=127.0.0.1 --port=8080` (الشات الفوري).
+- `qbazaar-scheduler.service` — `php artisan schedule:work` (مهام الـ scheduler: انتهاء الإعلانات والعروض). بدونه لا ينتهي أي إعلان ولا عرض.
 
 ### ب. تضمينات Apache (`deploy/apache/`)
 - **الفرونت** `qbazaar.fleeteye.de` (proxy لـ Node):
@@ -127,7 +128,7 @@
 # --- root: systemd ---
 cp ~fleeteye/qbazaar/deploy/systemd/qbazaar-*.service /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now qbazaar-horizon qbazaar-reverb qbazaar-web
+systemctl enable --now qbazaar-horizon qbazaar-reverb qbazaar-scheduler qbazaar-web
 
 # --- root: Apache includes (انظر التعليقات داخل كل ملف للمسار الدقيق) ---
 #   انسخ deploy/apache/*.include.conf إلى userdata/ssl/2_4/fleeteye/<domain>/
@@ -140,6 +141,15 @@ cp ~/qbazaar/deploy/web.env.production.template ~/qbazaar/qbazaar-web/.env.produ
 cd ~/qbazaar/qbazaar-api && php artisan key:generate && php artisan migrate --force
 # توليد REVERB_APP_KEY/SECRET: php artisan reverb:install (أو عبّيهم يدويًا، ووحّد APP_KEY مع الفرونت)
 ```
+
+**بديل الـ scheduler عبر cron** (إذا ما بدك وحدة systemd). استخدم واحد منهم فقط، لأن اثنين يشغّلوا كل مهمة مرتين:
+
+```bash
+# crontab -e  (كمستخدم fleeteye)
+* * * * * cd /home/fleeteye/qbazaar/qbazaar-api && /opt/cpanel/ea-php84/root/usr/bin/php artisan schedule:run >> /dev/null 2>&1
+```
+
+تحقّق إن الـ scheduler شغّال: `php artisan schedule:list` يعرض `ads.expire-old` و `offers.expire-old` مع موعد التشغيل الجاي، و `systemctl status qbazaar-scheduler` يكون `active (running)`.
 
 4. ادفع commit على `production` (أو `workflow_dispatch`) → Actions يبني وينشر تلقائيًا.
 5. تحقّق: `curl https://api.qbazaar.fleeteye.de/api/v1/health` = 200 · `https://qbazaar.fleeteye.de/` يفتح · الشات الفوري عبر wss (devtools → WS).
