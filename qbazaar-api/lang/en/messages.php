@@ -35,6 +35,15 @@ return [
         ],
     ],
 
+    'support_notifications' => [
+        'reply' => [
+            'subject' => 'New reply to your support ticket',
+            'greeting' => 'Hello,',
+            'line_intro' => 'Our support team replied to your ticket ":subject":',
+            'action' => 'View ticket',
+        ],
+    ],
+
     'ad_notifications' => [
         'approved' => [
             'subject' => 'Your ad is now live',
@@ -106,6 +115,10 @@ return [
         'data_export_ready' => [
             'title' => 'Your data export is ready',
             'body' => 'Tap to download your personal data export.',
+        ],
+        'support_reply' => [
+            'title' => 'Support replied to your ticket',
+            'body' => 'Our support team replied to ":subject".',
         ],
         'security_alert' => [
             'title' => 'New sign-in detected',
