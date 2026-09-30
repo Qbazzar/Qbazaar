@@ -6,9 +6,13 @@ use App\Enums\AdStatus;
 use App\Enums\UserStatus;
 use App\Models\Ad;
 use App\Models\User;
+use App\Services\Ads\AdModerationService;
 use App\Services\Users\SellerListingsVisibilityService;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Scout\EngineManager;
+use Laravel\Scout\Engines\Engine;
 use Mockery\MockInterface;
 
 use function Pest\Laravel\actingAs;
@@ -37,6 +41,20 @@ function suspendSeller(User $admin, User $seller): void
 {
     actingAs($admin)->post("/admin/users/{$seller->id}/suspend")->assertRedirect();
     app('auth')->forgetGuards();
+}
+
+function spySearchEngine(): MockInterface
+{
+    $engine = Mockery::spy(Engine::class);
+    app(EngineManager::class)->extend('spy', fn () => $engine);
+    config(['scout.driver' => 'spy']);
+
+    return $engine;
+}
+
+function containsAd(Ad $ad): Closure
+{
+    return fn (Collection $models): bool => $models->contains(fn (Ad $model): bool => $model->is($ad));
 }
 
 function activateSeller(User $admin, User $seller): void
@@ -135,4 +153,29 @@ it('drops a suspended seller\'s ads from search results', function (): void {
     suspendSeller($this->admin, $this->seller);
 
     expect($searchIds())->not->toContain($this->ad->id);
+});
+
+it('removes the seller\'s live ads from the search engine on suspension and pushes them back on activation', function (): void {
+    $engine = spySearchEngine();
+
+    suspendSeller($this->admin, $this->seller);
+
+    $engine->shouldHaveReceived('delete')->withArgs(containsAd($this->ad));
+    $engine->shouldNotHaveReceived('update');
+
+    activateSeller($this->admin, $this->seller);
+
+    $engine->shouldHaveReceived('update')->withArgs(containsAd($this->ad));
+});
+
+it('keeps an approved ad of a suspended seller out of the search engine', function (): void {
+    $pending = $this->makeAd($this->seller, ['status' => AdStatus::PENDING->value]);
+    $this->seller->forceFill(['status' => UserStatus::SUSPENDED])->save();
+
+    $engine = spySearchEngine();
+
+    app(AdModerationService::class)->approve($pending->fresh());
+
+    expect($pending->fresh()->status)->toBe(AdStatus::ACTIVE);
+    $engine->shouldNotHaveReceived('update');
 });
