@@ -19,7 +19,7 @@ import {
 } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { safeReturnTo } from '@/lib/navigation/safe-return-to';
-import { PHONE_VERIFICATION_PATH } from '@/lib/auth/phone-gate';
+import { PHONE_VERIFICATION_PATH, isPhoneVerificationPath } from '@/lib/auth/phone-gate';
 import { useAuthStore } from '@/store/auth';
 import { FieldError } from './FieldError';
 import { OtpInput } from './OtpInput';
@@ -43,9 +43,9 @@ export function VerifyOtpForm() {
   const setPhoneVerified = useAuthStore((s) => s.setPhoneVerified);
 
   const phone = (search.get('phone') ?? '').trim();
-  const continueParam = search.get('continue');
-  const continueTarget = safeReturnTo(continueParam);
-  const resumesAction = continueParam !== null && continueTarget !== '/';
+  const continueTarget = safeReturnTo(search.get('continue'));
+  const resumesAction =
+    continueTarget !== '/' && !isPhoneVerificationPath(continueTarget);
 
   const phoneIsValid = qatarPhoneRegex.test(phone);
 

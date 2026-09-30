@@ -64,9 +64,18 @@ function VerificationContent() {
   const continueParam = search.get('continue');
   const continueTarget = continueParam ? safeReturnTo(continueParam) : null;
 
-  const { data: status = DEFAULT_STATUS, isLoading } = useQuery({
+  const {
+    data: status = DEFAULT_STATUS,
+    isLoading,
+    isFetchedAfterMount,
+    isPlaceholderData,
+    isSuccess,
+  } = useQuery({
     queryKey: ['account', 'verification-status'],
     queryFn: getVerificationStatus,
+    // A phone-gate redirect usually means the cached flag is stale, so the
+    // server answer is always fetched instead of trusting the query cache.
+    refetchOnMount: 'always',
     // Seed with what we know from the auth store so the page paints instantly.
     placeholderData: user
       ? {
@@ -78,10 +87,13 @@ function VerificationContent() {
       : DEFAULT_STATUS,
   });
 
-  // Verification may have happened on another device; keep the gates in sync.
+  // The server is the source of truth: the phone may have been verified on
+  // another device, or un-verified since the session started.
+  const serverPhoneVerified =
+    isSuccess && isFetchedAfterMount && !isPlaceholderData ? status.phone_verified : null;
   useEffect(() => {
-    if (status.phone_verified) setPhoneVerified(true);
-  }, [setPhoneVerified, status.phone_verified]);
+    if (serverPhoneVerified !== null) setPhoneVerified(serverPhoneVerified);
+  }, [setPhoneVerified, serverPhoneVerified]);
 
   const phoneMissing = !hasVerifiablePhone(user?.phone);
 
