@@ -17,6 +17,12 @@ declare(strict_types=1);
 */
 
 return [
+    'auth' => [
+        'account_inactive' => 'This account is not active. Contact an administrator.',
+        'password_change_required' => 'Choose a new password before continuing.',
+        'password_reused' => 'The new password must differ from the current one.',
+    ],
+
     'dashboard' => [
         'title' => 'Dashboard',
     ],

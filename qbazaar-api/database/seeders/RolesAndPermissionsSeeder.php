@@ -165,8 +165,8 @@ class RolesAndPermissionsSeeder extends Seeder
      *
      * We look up by the well-known seeded email first so re-seeds remain
      * idempotent. If the row is missing (fresh install), we create it with
-     * a deterministic dev password — operators are expected to rotate it
-     * immediately in production.
+     * a deterministic dev password and flag it, so the admin panel only
+     * opens the profile page until that password is replaced.
      */
     private function ensureSuperAdminUser(): void
     {
@@ -186,6 +186,10 @@ class RolesAndPermissionsSeeder extends Seeder
                 'phone_verified' => true,
             ],
         );
+
+        if ($admin->wasRecentlyCreated) {
+            $admin->forceFill(['must_change_password' => true])->save();
+        }
 
         if (! $admin->hasRole('super_admin')) {
             $admin->assignRole('super_admin');

@@ -90,6 +90,7 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     {
         return [
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
             'email_verified' => 'boolean',
             'phone_verified' => 'boolean',
             'last_login_at' => 'datetime',
