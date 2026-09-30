@@ -12,6 +12,7 @@ use App\Http\Requests\Api\V1\Ads\UploadImagesRequest;
 use App\Http\Resources\Api\V1\Media\MediaResource;
 use App\Jobs\ProcessAdImagesJob;
 use App\Models\Ad;
+use App\Services\Media\UploadedFileNamer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -37,7 +38,7 @@ class AdImageController extends Controller
      *
      * @throws DomainException
      */
-    public function store(UploadImagesRequest $request, string $adId): JsonResponse
+    public function store(UploadImagesRequest $request, UploadedFileNamer $fileNamer, string $adId): JsonResponse
     {
         $ad = $this->findAdOrFail($adId);
         $this->authorize('manage-images', $ad);
@@ -48,7 +49,7 @@ class AdImageController extends Controller
         $created = [];
         foreach ($files as $file) {
             $media = $ad->addMedia($file->getPathname())
-                ->usingFileName($file->getClientOriginalName())
+                ->usingFileName($fileNamer->nameFor($file))
                 ->toMediaCollection('images');
 
             $created[] = $media;

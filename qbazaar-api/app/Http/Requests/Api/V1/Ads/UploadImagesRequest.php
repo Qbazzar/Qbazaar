@@ -19,9 +19,8 @@ use Illuminate\Validation\Validator;
  *  - jpg/jpeg/png/webp only
  *  - existing + new image count must stay ≤ 10 (config: `qbazaar.ads.max_images`)
  *
- * Per-file MIME enforcement uses the `mimes:` rule which leans on the real
- * uploaded MIME type, not the filename — magic-bytes verification stays in
- * the Sprint 4 uploads pipeline (which we'll layer on top later).
+ * The MIME allowlist (`qbazaar.uploads.allowed_mime_types`) is checked
+ * against the sniffed content type, never the client-supplied filename.
  */
 class UploadImagesRequest extends FormRequest
 {
@@ -42,8 +41,8 @@ class UploadImagesRequest extends FormRequest
             'images.*' => [
                 'file',
                 'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:10240', // 10 MB in kB
+                'mimetypes:' . implode(',', config('qbazaar.uploads.allowed_mime_types')),
+                'max:' . (int) config('qbazaar.uploads.max_image_size_kb'),
             ],
         ];
     }

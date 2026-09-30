@@ -7,6 +7,7 @@ namespace App\Http\Requests\Api\V1\Ads;
 use App\Enums\Condition;
 use App\Enums\PriceType;
 use App\Models\Category;
+use App\Rules\NoMarkup;
 use App\Services\Ads\CustomFieldsValidator;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -62,8 +63,8 @@ class CreateAdRequest extends FormRequest
             'location_id' => ['required', 'ulid', 'exists:locations,id'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-            'title' => ['required', 'string', 'min:5', 'max:120'],
-            'description' => ['required', 'string', 'min:20', 'max:5000'],
+            'title' => ['required', 'string', 'min:5', 'max:120', new NoMarkup],
+            'description' => ['required', 'string', 'min:20', 'max:5000', new NoMarkup],
             'price' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
             'price_type' => ['required', Rule::in([
                 PriceType::FIXED->value,
