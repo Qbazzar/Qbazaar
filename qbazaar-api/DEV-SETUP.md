@@ -102,4 +102,15 @@ Or use Laragon's auto-host: open `http://qbazaar-api.test` (Laragon maps the fol
 ./vendor/bin/pest              # Test suite
 ```
 
-CI runs all three on every push (see `.github/workflows/ci.yml`).
+The default suite is hermetic: `phpunit.xml` points Scout at the in-process
+`collection` driver and excludes the `meilisearch` group, so no search server is
+needed. The tests that exercise the real Meilisearch index live in that group;
+start Meilisearch (section 2) and run them explicitly:
+
+```bash
+./vendor/bin/pest --group=meilisearch
+```
+
+CI (`.github/workflows/ci.yml` at the repository root) runs all three on every
+push and pull request to `main`/`develop`. The API deploy workflow runs the same
+CI first and only deploys when it passes.

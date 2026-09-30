@@ -22,6 +22,15 @@ use Throwable;
  */
 trait InteractsWithMeilisearch
 {
+    /**
+     * phpunit.xml defaults Scout to the collection driver so the main suite
+     * stays hermetic; tests using this trait need the real engine.
+     */
+    protected function setUpInteractsWithMeilisearch(): void
+    {
+        config(['scout.driver' => 'meilisearch']);
+    }
+
     protected function meilisearchClient(): Client
     {
         /** @var Client $client */
