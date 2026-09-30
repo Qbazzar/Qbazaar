@@ -8,6 +8,7 @@ use App\Actions\Users\SuspendUserAction;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Admin\StaffHierarchy;
 use App\Services\Auth\RefreshTokenService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct(private readonly StaffHierarchy $hierarchy) {}
+
     public function index(Request $request): View
     {
         $status = $request->string('status')->toString();
@@ -55,35 +58,44 @@ class UserController extends Controller
         ]);
     }
 
-    public function show(User $user): View
+    public function show(Request $request, User $user): View
     {
         $user->load('roles');
         $user->loadCount('ads');
 
+        $canManageUser = $this->hierarchy->canManage($request->user(), $user);
+
         return view('admin.users.show', [
             'user' => $user,
             'roles' => Role::orderBy('name')->get(),
-            'canManageRoles' => auth()->user()?->hasRole('super_admin') === true,
+            'canManageUser' => $canManageUser,
+            'canManageRoles' => $canManageUser && $request->user()->can('roles.manage'),
         ]);
     }
 
-    public function suspend(User $user, SuspendUserAction $suspendUser): RedirectResponse
+    public function suspend(Request $request, User $user, SuspendUserAction $suspendUser): RedirectResponse
     {
+        $this->hierarchy->ensureCanManage($request->user(), $user);
+
         $suspendUser->execute($user);
 
         return back()->with('status', 'تم إيقاف المستخدم.');
     }
 
-    public function activate(User $user): RedirectResponse
+    public function activate(Request $request, User $user): RedirectResponse
     {
+        $this->hierarchy->ensureCanManage($request->user(), $user);
+
         $user->forceFill(['status' => UserStatus::ACTIVE])->save();
 
         return back()->with('status', 'تم تفعيل المستخدم.');
     }
 
     /** Email the user a password-reset link (self-service recovery on their behalf). */
-    public function sendPasswordReset(User $user): RedirectResponse
+    public function sendPasswordReset(Request $request, User $user): RedirectResponse
     {
+        $this->hierarchy->ensureCanManage($request->user(), $user);
+
         Password::broker()->sendResetLink(['email' => $user->email]);
 
         return back()->with('status', 'تم إرسال رابط إعادة تعيين كلمة المرور للمستخدم.');
@@ -93,15 +105,13 @@ class UserController extends Controller
      * Impersonate a user: mint a real token pair for them and hand it to the
      * Next.js web app so the admin browses the marketplace as that user.
      *
-     * super_admin only. Staff accounts can't be impersonated (avoids privilege
-     * confusion). Tokens ride in the URL *fragment* (never sent to servers or
-     * logs); the web /impersonate page consumes and clears them immediately.
+     * Staff accounts can't be impersonated (avoids privilege confusion). Tokens
+     * ride in the URL *fragment* (never sent to servers or logs); the web
+     * /impersonate page consumes and clears them immediately.
      */
     public function impersonate(Request $request, User $user, RefreshTokenService $tokens): RedirectResponse
     {
-        abort_unless(auth()->user()?->hasRole('super_admin') === true, 403);
-
-        if ($user->hasAnyRole(['super_admin', 'moderator', 'support'])) {
+        if ($user->isStaff()) {
             return back()->with('error', 'لا يمكن انتحال هوية عضو من فريق الإدارة.');
         }
 
@@ -117,16 +127,10 @@ class UserController extends Controller
         return redirect()->away("{$webUrl}/impersonate#{$fragment}");
     }
 
-    /**
-     * Sync a user's roles from the checkbox list.
-     *
-     * Guarded to super_admin only — mirrors the Filament UserResource, where the
-     * roles section is visible solely to super_admin so lower-privilege staff
-     * cannot escalate anyone's access (including their own).
-     */
+    /** Sync a user's roles from the checkbox list. */
     public function updateRoles(Request $request, User $user): RedirectResponse
     {
-        abort_unless(auth()->user()?->hasRole('super_admin') === true, 403);
+        $this->hierarchy->ensureCanManage($request->user(), $user);
 
         $available = Role::pluck('name')->all();
 

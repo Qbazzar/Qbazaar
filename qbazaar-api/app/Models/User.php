@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Data\Account\PrivacySettings;
 use App\Enums\AccountType;
 use App\Enums\Language;
+use App\Enums\StaffRole;
 use App\Enums\UserStatus;
 use App\Models\Pivot\UserBlock;
 use App\Notifications\EmailVerificationNotification;
@@ -120,6 +121,11 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     public function privacySettings(): PrivacySettings
     {
         return $this->privacy_settings ?? PrivacySettings::defaults();
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->hasAnyRole(StaffRole::names());
     }
 
     /* ──────────────────────────────────────────────────────────────────

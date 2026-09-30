@@ -22,6 +22,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Middleware\PermissionMiddleware;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -98,6 +99,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'phone.verified' => EnsurePhoneVerified::class,
             'idempotent' => Idempotent::class,
             'staff' => EnsureStaff::class,
+            'permission' => PermissionMiddleware::class,
         ]);
 
         // API group — every /api/v1/* request runs through these in order

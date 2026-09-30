@@ -29,45 +29,43 @@
                 </button>
             </div>
             <nav class="flex-1 space-y-4 overflow-y-auto p-4">
-                @php($isSuperAdmin = (bool) auth()->user()?->hasRole('super_admin'))
                 @php($groups = [
                     'عام' => [
                         ['route' => 'admin.dashboard', 'label' => 'لوحة القيادة', 'match' => 'admin.dashboard', 'icon' => 'dashboard'],
                     ],
                     'الإشراف' => [
-                        ['route' => 'admin.ads.index', 'label' => 'الإعلانات', 'match' => 'admin.ads.*', 'icon' => 'tag'],
-                        ['route' => 'admin.reports.index', 'label' => 'البلاغات', 'match' => 'admin.reports.*', 'icon' => 'flag'],
-                        ['route' => 'admin.moderation-rules.index', 'label' => 'قواعد الإشراف', 'match' => 'admin.moderation-rules.*', 'icon' => 'shield'],
+                        ['route' => 'admin.ads.index', 'label' => 'الإعلانات', 'match' => 'admin.ads.*', 'icon' => 'tag', 'permission' => 'ads.view'],
+                        ['route' => 'admin.reports.index', 'label' => 'البلاغات', 'match' => 'admin.reports.*', 'icon' => 'flag', 'permission' => 'reports.view'],
+                        ['route' => 'admin.moderation-rules.index', 'label' => 'قواعد الإشراف', 'match' => 'admin.moderation-rules.*', 'icon' => 'shield', 'permission' => 'moderation-rules.manage'],
                     ],
                     'المستخدمون' => [
-                        ['route' => 'admin.users.index', 'label' => 'المستخدمون', 'match' => 'admin.users.*', 'icon' => 'users'],
-                        ['route' => 'admin.roles.index', 'label' => 'الأدوار', 'match' => 'admin.roles.*', 'icon' => 'key', 'super' => true],
+                        ['route' => 'admin.users.index', 'label' => 'المستخدمون', 'match' => 'admin.users.*', 'icon' => 'users', 'permission' => 'users.view'],
+                        ['route' => 'admin.roles.index', 'label' => 'الأدوار', 'match' => 'admin.roles.*', 'icon' => 'key', 'permission' => 'roles.manage'],
                     ],
                     'التواصل' => [
-                        ['route' => 'admin.conversations.index', 'label' => 'المحادثات', 'match' => 'admin.conversations.*', 'icon' => 'chat'],
-                        ['route' => 'admin.support.index', 'label' => 'الدعم الفني', 'match' => 'admin.support.*', 'icon' => 'lifebuoy'],
-                        ['route' => 'admin.offers.index', 'label' => 'العروض', 'match' => 'admin.offers.*', 'icon' => 'banknotes'],
+                        ['route' => 'admin.conversations.index', 'label' => 'المحادثات', 'match' => 'admin.conversations.*', 'icon' => 'chat', 'permission' => 'conversations.view'],
+                        ['route' => 'admin.support.index', 'label' => 'الدعم الفني', 'match' => 'admin.support.*', 'icon' => 'lifebuoy', 'permission' => 'support.view'],
+                        ['route' => 'admin.offers.index', 'label' => 'العروض', 'match' => 'admin.offers.*', 'icon' => 'banknotes', 'permission' => 'offers.view'],
                     ],
                     'المحتوى' => [
-                        ['route' => 'admin.categories.index', 'label' => 'التصنيفات', 'match' => 'admin.categories.*', 'icon' => 'folder'],
-                        ['route' => 'admin.locations.index', 'label' => 'المواقع', 'match' => 'admin.locations.*', 'icon' => 'map-pin'],
-                        ['route' => 'admin.pages.index', 'label' => 'الصفحات', 'match' => 'admin.pages.*', 'icon' => 'document'],
-                        ['route' => 'admin.help-categories.index', 'label' => 'أقسام المساعدة', 'match' => 'admin.help-categories.*', 'icon' => 'help'],
-                        ['route' => 'admin.help-articles.index', 'label' => 'مقالات المساعدة', 'match' => 'admin.help-articles.*', 'icon' => 'document'],
+                        ['route' => 'admin.categories.index', 'label' => 'التصنيفات', 'match' => 'admin.categories.*', 'icon' => 'folder', 'permission' => 'categories.manage'],
+                        ['route' => 'admin.locations.index', 'label' => 'المواقع', 'match' => 'admin.locations.*', 'icon' => 'map-pin', 'permission' => 'locations.manage'],
+                        ['route' => 'admin.pages.index', 'label' => 'الصفحات', 'match' => 'admin.pages.*', 'icon' => 'document', 'permission' => 'pages.manage'],
+                        ['route' => 'admin.help-categories.index', 'label' => 'أقسام المساعدة', 'match' => 'admin.help-categories.*', 'icon' => 'help', 'permission' => 'articles.manage'],
+                        ['route' => 'admin.help-articles.index', 'label' => 'مقالات المساعدة', 'match' => 'admin.help-articles.*', 'icon' => 'document', 'permission' => 'articles.manage'],
                     ],
                     'المراقبة' => [
-                        ['route' => 'admin.saved-searches.index', 'label' => 'عمليات البحث المحفوظة', 'match' => 'admin.saved-searches.*', 'icon' => 'bookmark'],
-                        ['route' => 'admin.notifications.index', 'label' => 'الإشعارات', 'match' => 'admin.notifications.*', 'icon' => 'bell'],
-                        ['route' => 'admin.activity.index', 'label' => 'سجل النشاط', 'match' => 'admin.activity.*', 'icon' => 'activity'],
+                        ['route' => 'admin.saved-searches.index', 'label' => 'عمليات البحث المحفوظة', 'match' => 'admin.saved-searches.*', 'icon' => 'bookmark', 'permission' => 'users.view'],
+                        ['route' => 'admin.notifications.index', 'label' => 'الإشعارات', 'match' => 'admin.notifications.*', 'icon' => 'bell', 'permission' => 'users.view'],
+                        ['route' => 'admin.activity.index', 'label' => 'سجل النشاط', 'match' => 'admin.activity.*', 'icon' => 'activity', 'permission' => 'activity.view'],
                     ],
                 ])
                 @foreach ($groups as $groupLabel => $items)
+                    @php($items = array_filter($items, fn (array $item): bool => ! isset($item['permission']) || auth()->user()->can($item['permission'])))
+                    @continue($items === [])
                     <div>
                         <div class="px-4 pb-1 text-[11px] font-bold uppercase tracking-wide text-ink-300">{{ $groupLabel }}</div>
                         @foreach ($items as $item)
-                            @if (($item['super'] ?? false) && ! $isSuperAdmin)
-                                @continue
-                            @endif
                             @php($active = request()->routeIs($item['match']))
                             <a href="{{ route($item['route']) }}"
                                class="flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-semibold transition

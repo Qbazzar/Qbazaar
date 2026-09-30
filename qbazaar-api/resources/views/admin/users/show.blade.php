@@ -92,10 +92,12 @@
         </div>
 
         {{-- Actions --}}
+        @if ($canManageUser)
         <div class="space-y-6">
             <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
                 <div class="mb-4 text-sm font-semibold text-ink-500">إجراءات الإشراف</div>
                 <div class="space-y-3">
+                    @can('users.ban')
                     @if ($user->status === \App\Enums\UserStatus::SUSPENDED)
                         <form method="POST" action="{{ route('admin.users.activate', $user) }}">
                             @csrf
@@ -111,7 +113,9 @@
                             </button>
                         </form>
                     @endif
+                    @endcan
 
+                    @can('users.update')
                     <form method="POST" action="{{ route('admin.users.reset-password', $user) }}"
                           onsubmit="return confirm('إرسال رابط إعادة تعيين كلمة المرور إلى بريد المستخدم؟')">
                         @csrf
@@ -119,8 +123,9 @@
                             <x-admin.icon name="key" class="size-[18px]" /> إرسال رابط تعيين كلمة المرور
                         </button>
                     </form>
+                    @endcan
 
-                    @if (auth()->user()?->hasRole('super_admin') && ! $user->hasAnyRole(['super_admin', 'moderator', 'support']))
+                    @if (auth()->user()->can('users.impersonate') && ! $user->isStaff())
                         <form method="POST" action="{{ route('admin.users.impersonate', $user) }}"
                               onsubmit="return confirm('فتح الموقع كأنك هذا المستخدم في تبويب جديد؟')" target="_blank">
                             @csrf
@@ -132,5 +137,6 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 @endsection
