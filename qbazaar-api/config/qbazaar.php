@@ -182,6 +182,9 @@ return [
         'login_max_attempts' => 5,
         'login_lockout_seconds' => 900,
         'bulk_action_max' => 100,
+        'impersonation_ttl_minutes' => 20,
+        'impersonation_reason_min_length' => 10,
+        'impersonation_reason_max_length' => 500,
     ],
 
     /*

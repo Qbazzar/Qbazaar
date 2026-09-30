@@ -22,6 +22,7 @@ use App\Http\Controllers\Manage\SavedSearchController;
 use App\Http\Controllers\Manage\SettingController;
 use App\Http\Controllers\Manage\SupportTicketController;
 use App\Http\Controllers\Manage\UserController;
+use App\Http\Middleware\AuditAdminMutations;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -34,14 +35,15 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 | Session (web guard) auth, gated to staff roles by the `staff` middleware.
 | Every screen and action also requires its Spatie permission; the catalogue
-| lives in RolesAndPermissionsSeeder.
+| lives in RolesAndPermissionsSeeder. Every successful mutation is written
+| to the admin audit log.
 */
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->name('login.attempt');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::middleware('staff')->group(function () {
+    Route::middleware(['staff', AuditAdminMutations::class])->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         // Signed-in staff manage their own account.

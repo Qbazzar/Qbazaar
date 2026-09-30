@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * Impersonation landing — consumes the token pair handed off by the admin
- * panel (/manage) in the URL *fragment*, logs the browser in as the target
- * user, and drops them on the account page.
+ * Impersonation landing: consumes the short-lived access token handed off by
+ * the admin panel in the URL *fragment* (never sent to the server or logged),
+ * signs the browser in as the target user and opens the account page.
  *
- * The fragment (never sent to the server or logged) carries `access`,
- * `refresh` and `name`. We mirror AuthBootstrap's wiring: persist the refresh
- * cookie, set the in-memory access token, fetch the profile, then setAuth.
+ * No refresh token is issued for impersonation, so any refresh cookie left
+ * from the admin's own session is cleared: the borrowed session ends when the
+ * access token expires or the page is reloaded.
  */
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -32,7 +32,7 @@ export default function ImpersonatePage() {
     // Wipe the fragment immediately so the tokens don't linger in history.
     window.history.replaceState(null, '', '/impersonate');
 
-    if (!access || !refresh) {
+    if (!access) {
       setError(true);
       return;
     }
@@ -41,13 +41,7 @@ export default function ImpersonatePage() {
 
     (async () => {
       try {
-        // Persist the refresh token as the HTTP-only cookie (same route the
-        // normal login flow uses) so token refresh keeps working afterwards.
-        await axios.post(
-          '/api/auth/session',
-          { refresh_token: refresh },
-          { withCredentials: true, headers: { 'Content-Type': 'application/json' } },
-        );
+        await axios.delete('/api/auth/session', { withCredentials: true });
 
         setAccessTokenNonReactive(access);
         const user = await getAccountProfile();
