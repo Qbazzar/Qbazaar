@@ -289,7 +289,7 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
         ->name('api.v1.ads.destroy');
 
     Route::post('/ads/{id}/publish', PublishAdController::class)
-        ->middleware(['throttle:publish', 'idempotent'])
+        ->middleware(['phone.verified', 'throttle:publish', 'idempotent'])
         ->name('api.v1.ads.publish');
 
     Route::post('/ads/{id}/mark-sold', MarkSoldController::class)
@@ -383,6 +383,7 @@ Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
 //     POST   /conversations/{id}/read             — mark all read
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/conversations', [ConversationController::class, 'store'])
+        ->middleware('phone.verified')
         ->name('api.v1.conversations.store');
 
     Route::get('/conversations', [ConversationController::class, 'index'])
@@ -398,7 +399,7 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
         ->name('api.v1.conversations.messages.index');
 
     Route::post('/conversations/{id}/messages', [MessageController::class, 'store'])
-        ->middleware('throttle:messages')
+        ->middleware(['phone.verified', 'throttle:messages'])
         ->name('api.v1.conversations.messages.store');
 
     Route::post('/conversations/{id}/read', [ConversationController::class, 'markRead'])
@@ -414,6 +415,7 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 //     POST   /offers/{id}/withdraw            — buyer withdraws (PENDING only)
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/conversations/{id}/offers', [OfferController::class, 'store'])
+        ->middleware('phone.verified')
         ->name('api.v1.conversations.offers.store');
 
     Route::get('/conversations/{id}/offers', [OfferController::class, 'index'])

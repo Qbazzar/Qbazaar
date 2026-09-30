@@ -16,6 +16,7 @@ declare(strict_types=1);
 return [
     'validation' => [
         'failed' => 'The given data was invalid.',
+        'no_markup' => 'The :attribute may not contain < or > characters.',
     ],
 
     'rate' => [

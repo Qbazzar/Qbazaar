@@ -8,6 +8,7 @@ use App\Enums\Condition;
 use App\Enums\PriceType;
 use App\Models\Ad;
 use App\Models\Category;
+use App\Rules\NoMarkup;
 use App\Services\Ads\CustomFieldsValidator;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -51,8 +52,8 @@ class UpdateAdRequest extends FormRequest
             'location_id' => ['sometimes', 'ulid', 'exists:locations,id'],
             'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
-            'title' => ['sometimes', 'string', 'min:5', 'max:120'],
-            'description' => ['sometimes', 'string', 'min:20', 'max:5000'],
+            'title' => ['sometimes', 'string', 'min:5', 'max:120', new NoMarkup],
+            'description' => ['sometimes', 'string', 'min:20', 'max:5000', new NoMarkup],
             'price' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999'],
             'price_type' => ['sometimes', Rule::in([
                 PriceType::FIXED->value,

@@ -1,0 +1,14 @@
+# Served through the public/storage symlink. Uploads are data, never code:
+# refuse anything a handler could execute or a browser could render as a page,
+# even if a PHP handler is configured for the parent docroot.
+# SetHandler beats the multi-extension AddHandler cPanel writes into the
+# docroot .htaccess, which would otherwise run "x.php.jpg".
+SetHandler None
+
+<FilesMatch "(?i)\.(php[0-9]*|phtml|phar|phps|html?|shtml|svgz?)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

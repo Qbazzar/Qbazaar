@@ -8,7 +8,9 @@ use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Account\SessionResource;
+use App\Models\RefreshToken;
 use App\Models\User;
+use App\Services\Auth\RefreshTokenService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,10 +23,11 @@ use Laravel\Sanctum\PersonalAccessToken;
 class SessionsController extends Controller
 {
     /**
-     * List the user's active Sanctum sessions.
+     * List the user's active sessions.
      *
-     * "Active" = expires_at is in the future (or null). Expired tokens are
-     * automatically excluded so the client only sees what it can still use.
+     * A session is active while its access token is unexpired or a refresh
+     * token issued with it can still be rotated: an idle device keeps its
+     * session for the refresh-token lifetime and must stay revocable.
      * The session row matching the currently-authenticated token is flagged
      * with `is_current=true` so the UI can show a "this device" badge.
      *
@@ -47,7 +50,14 @@ class SessionsController extends Controller
         /** @var Collection<int, PersonalAccessToken> $tokens */
         $tokens = $user->tokens()
             ->where(function ($query): void {
-                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now())
+                    ->orWhereExists(
+                        RefreshToken::query()
+                            ->whereColumn('refresh_tokens.personal_access_token_id', 'personal_access_tokens.id')
+                            ->whereNull('used_at')
+                            ->where('refresh_tokens.expires_at', '>', now()),
+                    );
             })
             ->orderByDesc('last_used_at')
             ->orderByDesc('created_at')
@@ -63,7 +73,7 @@ class SessionsController extends Controller
     }
 
     /**
-     * Revoke a single Sanctum session by id.
+     * Revoke a single session by id: its access token and refresh token.
      *
      * Trying to revoke a session that doesn't belong to the caller returns
      * USER_001 (NotFound) to avoid leaking other users' token ids.
@@ -74,7 +84,7 @@ class SessionsController extends Controller
      *
      * @throws DomainException
      */
-    public function destroy(Request $request, string $id): Response
+    public function destroy(Request $request, string $id, RefreshTokenService $refreshTokens): Response
     {
         /** @var User $user */
         $user = $request->user();
@@ -88,7 +98,7 @@ class SessionsController extends Controller
             throw new DomainException(ErrorCode::USER_NOT_FOUND);
         }
 
-        $token->delete();
+        $refreshTokens->revokeSession($token);
 
         return response()->noContent();
     }

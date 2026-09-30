@@ -18,9 +18,9 @@ class LogoutController extends Controller
     /**
      * Log out the current session
      *
-     * Revokes the current bearer token. If the client also sends a
-     * `refresh_token` body field, we mark that one as used so it cannot be
-     * rotated again. Returns 204.
+     * Revokes the current bearer token together with the refresh token issued
+     * alongside it. A `refresh_token` body field, if sent, is revoked as well.
+     * Returns 204.
      *
      * @authenticated
      *
@@ -33,7 +33,7 @@ class LogoutController extends Controller
         $token = $request->user()?->currentAccessToken();
 
         if ($token instanceof PersonalAccessToken) {
-            $token->delete();
+            $refreshTokens->revokeSession($token);
         }
 
         $presentedRefresh = $request->input('refresh_token');

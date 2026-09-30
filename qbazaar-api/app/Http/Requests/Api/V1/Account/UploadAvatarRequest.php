@@ -37,8 +37,8 @@ class UploadAvatarRequest extends FormRequest
                 'required',
                 'file',
                 'image',
-                'max:5120', // 5 MB in kB
-                'mimetypes:image/jpeg,image/png,image/webp',
+                'max:' . (int) config('qbazaar.uploads.max_avatar_size_kb'),
+                'mimetypes:' . implode(',', config('qbazaar.uploads.allowed_mime_types')),
             ],
         ];
     }

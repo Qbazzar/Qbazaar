@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\OtpPurpose;
 use App\Models\OtpCode;
 use App\Models\User;
 use App\Notifications\Channels\TwilioSmsChannel;
@@ -49,6 +50,25 @@ it('routes the notification to the matching user when one exists', function (): 
     postJson('/api/v1/auth/send-otp', ['phone' => '+97455123456'])->assertStatus(202);
 
     Notification::assertSentTo($user, OtpNotification::class);
+});
+
+it('delivers the OTP by SMS only, never to the account email', function (): void {
+    $user = User::factory()->create(['phone' => '+97455123456', 'email' => 'owner@example.com']);
+
+    postJson('/api/v1/auth/send-otp', ['phone' => '+97455123456'])->assertStatus(202);
+
+    Notification::assertSentTo(
+        $user,
+        OtpNotification::class,
+        fn (OtpNotification $notification, array $channels): bool => $channels === [TwilioSmsChannel::class],
+    );
+});
+
+it('stores the OTP with the phone-verification purpose', function (): void {
+    postJson('/api/v1/auth/send-otp', ['phone' => '+97455123456'])->assertStatus(202);
+
+    expect(OtpCode::query()->where('phone', '+97455123456')->sole()->purpose)
+        ->toBe(OtpPurpose::PHONE_VERIFICATION);
 });
 
 it('routes the notification to the phone when no user owns it', function (): void {

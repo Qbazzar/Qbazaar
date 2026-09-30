@@ -14,11 +14,11 @@ use function Pest\Laravel\postJson;
 use Tests\Concerns\CreatesAds;
 use Tests\Concerns\InteractsWithMeilisearch;
 
-uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class);
+uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class)->group('meilisearch');
 
 beforeEach(function (): void {
     $this->seedReferenceData();
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->phoneVerified()->create();
     Sanctum::actingAs($this->user, ['*']);
     $this->flushAdsIndex();
 });

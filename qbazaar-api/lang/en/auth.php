@@ -33,13 +33,6 @@ return [
         'sms' => [
             'body' => 'Your QBazaar verification code is :code. It expires in :minutes minutes.',
         ],
-        'mail' => [
-            'subject' => 'Your QBazaar verification code',
-            'greeting' => 'Hello!',
-            'line_code' => 'Your verification code is: :code',
-            'line_expires' => 'This code will expire in :minutes minutes.',
-            'line_ignore' => 'If you did not request this code, you can ignore this email.',
-        ],
     ],
 
     'password_reset' => [

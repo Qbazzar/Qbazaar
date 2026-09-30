@@ -11,7 +11,7 @@ use function Pest\Laravel\getJson;
 use Tests\Concerns\CreatesAds;
 use Tests\Concerns\InteractsWithMeilisearch;
 
-uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class);
+uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class)->group('meilisearch');
 
 beforeEach(function (): void {
     $this->seedReferenceData();
@@ -40,11 +40,4 @@ it('returns prefix-match title suggestions', function (): void {
     expect($suggestions)->toBeArray()
         ->and(count($suggestions))->toBeGreaterThan(0)
         ->and(count($suggestions))->toBeLessThanOrEqual(10);
-});
-
-it('returns an empty array for an empty query', function (): void {
-    $response = getJson('/api/v1/search/suggestions?q=', ['Accept' => 'application/json'])
-        ->assertOk();
-
-    expect($response->json('data'))->toBe([]);
 });

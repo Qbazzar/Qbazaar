@@ -4,18 +4,6 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Events\Ads\AdApproved;
-use App\Events\Ads\AdExpired;
-use App\Events\Ads\AdExpiringSoon;
-use App\Events\Ads\AdPublished;
-use App\Events\Ads\AdRejected;
-use App\Events\Ads\AdRenewed;
-use App\Listeners\Ads\IndexAdInSearch;
-use App\Listeners\Ads\RemoveAdFromSearch;
-use App\Listeners\Ads\SendAdNotifications;
-use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
-use App\Listeners\Notifications\PruneStaleDeviceTokens;
-use App\Listeners\Search\NotifySavedSearchMatches;
 use App\Models\Ad;
 use App\Models\User;
 use App\Observers\AdObserver;
@@ -23,9 +11,6 @@ use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Notifications\Events\NotificationFailed;
-use Illuminate\Notifications\Events\NotificationSent;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -68,40 +53,5 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('publish', fn (Request $r) => Limit::perDay((int) config('qbazaar.ads.daily_publish_limit_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('messages', fn (Request $r) => Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
-
-        // Laravel 12 prefers event discovery, but explicit listener bindings
-        // keep the routing readable and survive `package:discover` cache
-        // invalidation. The two-way fan-out (index/search + notifications)
-        // is concentrated here so future events plug in by appending lines.
-        Event::listen(AdPublished::class, [IndexAdInSearch::class, 'handle']);
-        Event::listen(AdApproved::class, [IndexAdInSearch::class, 'handle']);
-
-        Event::listen(AdRejected::class, [RemoveAdFromSearch::class, 'handle']);
-        Event::listen(AdExpired::class, [RemoveAdFromSearch::class, 'handle']);
-
-        Event::listen(AdPublished::class, [SendAdNotifications::class, 'handle']);
-        Event::listen(AdApproved::class, [SendAdNotifications::class, 'handle']);
-        Event::listen(AdRejected::class, [SendAdNotifications::class, 'handle']);
-        Event::listen(AdExpiringSoon::class, [SendAdNotifications::class, 'handle']);
-        Event::listen(AdExpired::class, [SendAdNotifications::class, 'handle']);
-        Event::listen(AdRenewed::class, [SendAdNotifications::class, 'handle']);
-
-        // Saved-search alerts: a newly-live ad notifies matching searchers.
-        Event::listen(AdPublished::class, [NotifySavedSearchMatches::class, 'handle']);
-        Event::listen(AdApproved::class, [NotifySavedSearchMatches::class, 'handle']);
-
-        // NOTE: AdSubmittedForReview → NotifyAdminsOfPendingAd is intentionally
-        // NOT registered here. That listener's handle() is single-typed, so
-        // Laravel 11 auto-discovers it from app/Listeners; registering it again
-        // would fire the admin notification twice. (The listeners above use
-        // union-typed handles, which auto-discovery skips — hence manual.)
-
-        // Bridges Laravel's NotificationSent -> our own NotificationCreated
-        // broadcast (database channel only). See the listener for details.
-        Event::listen(NotificationSent::class, [BroadcastDatabaseNotificationCreated::class, 'handle']);
-
-        // FCM reports dead registration tokens via NotificationFailed —
-        // prune them so future pushes stop fanning out to gone devices.
-        Event::listen(NotificationFailed::class, [PruneStaleDeviceTokens::class, 'handle']);
     }
 }

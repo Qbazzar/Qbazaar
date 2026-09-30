@@ -45,6 +45,13 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function phoneVerified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'phone_verified' => true,
+        ]);
+    }
+
     public function business(): static
     {
         return $this->state(fn (array $attributes) => [

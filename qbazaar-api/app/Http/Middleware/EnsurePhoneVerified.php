@@ -23,10 +23,6 @@ use Symfony\Component\HttpFoundation\Response;
  *  - Some endpoints need only the active check (e.g. settings), and we don't
  *    want to drag the phone-verified gate into them. Splitting keeps the
  *    middleware list opt-in per route.
- *
- * Wave-2 note: no Sprint-1 route applies this middleware. It exists because
- * Sprint 2 ad-posting and offers will gate on it; we want the contract +
- * tests in place now so the wire-up later is a one-line route change.
  */
 class EnsurePhoneVerified
 {

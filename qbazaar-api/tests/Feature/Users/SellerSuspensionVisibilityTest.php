@@ -9,10 +9,10 @@ use App\Models\User;
 use App\Services\Ads\AdModerationService;
 use App\Services\Users\SellerListingsVisibilityService;
 use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Scout\EngineManager;
-use Laravel\Scout\Engines\Engine;
+use Illuminate\Support\Facades\Queue;
+use Laravel\Scout\Jobs\MakeSearchable;
+use Laravel\Scout\Jobs\RemoveFromSearch;
 use Mockery\MockInterface;
 
 use function Pest\Laravel\actingAs;
@@ -43,18 +43,11 @@ function suspendSeller(User $admin, User $seller): void
     app('auth')->forgetGuards();
 }
 
-function spySearchEngine(): MockInterface
+function carriesAd(Ad $ad): Closure
 {
-    $engine = Mockery::spy(Engine::class);
-    app(EngineManager::class)->extend('spy', fn () => $engine);
-    config(['scout.driver' => 'spy']);
-
-    return $engine;
-}
-
-function containsAd(Ad $ad): Closure
-{
-    return fn (Collection $models): bool => $models->contains(fn (Ad $model): bool => $model->is($ad));
+    return fn (MakeSearchable|RemoveFromSearch $job): bool => $job->models->contains(
+        fn (Ad $model): bool => $model->getKey() === $ad->getKey(),
+    );
 }
 
 function activateSeller(User $admin, User $seller): void
@@ -155,27 +148,27 @@ it('drops a suspended seller\'s ads from search results', function (): void {
     expect($searchIds())->not->toContain($this->ad->id);
 });
 
-it('removes the seller\'s live ads from the search engine on suspension and pushes them back on activation', function (): void {
-    $engine = spySearchEngine();
+it('removes the seller\'s live ads from the search index on suspension and re-indexes them on activation', function (): void {
+    Queue::fake([MakeSearchable::class, RemoveFromSearch::class]);
 
     suspendSeller($this->admin, $this->seller);
 
-    $engine->shouldHaveReceived('delete')->withArgs(containsAd($this->ad));
-    $engine->shouldNotHaveReceived('update');
+    Queue::assertPushed(RemoveFromSearch::class, carriesAd($this->ad));
+    Queue::assertNotPushed(MakeSearchable::class);
 
     activateSeller($this->admin, $this->seller);
 
-    $engine->shouldHaveReceived('update')->withArgs(containsAd($this->ad));
+    Queue::assertPushed(MakeSearchable::class, carriesAd($this->ad));
 });
 
-it('keeps an approved ad of a suspended seller out of the search engine', function (): void {
+it('keeps an approved ad of a suspended seller out of the search index', function (): void {
     $pending = $this->makeAd($this->seller, ['status' => AdStatus::PENDING->value]);
     $this->seller->forceFill(['status' => UserStatus::SUSPENDED])->save();
 
-    $engine = spySearchEngine();
+    Queue::fake([MakeSearchable::class, RemoveFromSearch::class]);
 
     app(AdModerationService::class)->approve($pending->fresh());
 
     expect($pending->fresh()->status)->toBe(AdStatus::ACTIVE);
-    $engine->shouldNotHaveReceived('update');
+    Queue::assertNotPushed(MakeSearchable::class);
 });

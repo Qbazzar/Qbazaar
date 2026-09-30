@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Events\Ads\AdApproved;
+use App\Events\Ads\AdExpired;
+use App\Events\Ads\AdExpiringSoon;
+use App\Events\Ads\AdPublished;
+use App\Events\Ads\AdRejected;
+use App\Events\Ads\AdRenewed;
+use App\Events\Ads\AdSubmittedForReview;
+use App\Listeners\Ads\NotifyAdminsOfPendingAd;
+use App\Listeners\Ads\SendAdNotifications;
+use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
+use App\Listeners\Notifications\PruneStaleDeviceTokens;
+use App\Listeners\Search\NotifySavedSearchMatches;
+use Illuminate\Notifications\Events\NotificationFailed;
+use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Support\Facades\Event;
+
+/**
+ * @return list<string> application listeners as "Class@method", duplicates kept
+ */
+function applicationListenersFor(string $event): array
+{
+    return collect(Event::getRawListeners()[$event] ?? [])
+        ->map(fn (mixed $listener): mixed => is_array($listener) ? implode('@', $listener) : $listener)
+        ->filter(fn (mixed $listener): bool => is_string($listener) && str_starts_with($listener, 'App\\'))
+        ->values()
+        ->all();
+}
+
+it('registers every application listener exactly once per event', function (): void {
+    foreach (array_keys(Event::getRawListeners()) as $event) {
+        $listeners = applicationListenersFor($event);
+
+        expect($listeners)->toBe(array_values(array_unique($listeners)), "Duplicate listener for {$event}");
+    }
+});
+
+it('wires each event to its listeners', function (string $event, array $listeners): void {
+    $expected = array_map(fn (string $listener): string => "{$listener}@handle", $listeners);
+
+    expect(applicationListenersFor($event))->toEqualCanonicalizing($expected);
+})->with([
+    'AdPublished' => [AdPublished::class, [SendAdNotifications::class, NotifySavedSearchMatches::class]],
+    'AdApproved' => [AdApproved::class, [SendAdNotifications::class, NotifySavedSearchMatches::class]],
+    'AdRejected' => [AdRejected::class, [SendAdNotifications::class]],
+    'AdExpired' => [AdExpired::class, [SendAdNotifications::class]],
+    'AdExpiringSoon' => [AdExpiringSoon::class, [SendAdNotifications::class]],
+    'AdRenewed' => [AdRenewed::class, [SendAdNotifications::class]],
+    'AdSubmittedForReview' => [AdSubmittedForReview::class, [NotifyAdminsOfPendingAd::class]],
+    'NotificationSent' => [NotificationSent::class, [BroadcastDatabaseNotificationCreated::class]],
+    'NotificationFailed' => [NotificationFailed::class, [PruneStaleDeviceTokens::class]],
+]);

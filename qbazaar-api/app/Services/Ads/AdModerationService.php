@@ -22,8 +22,8 @@ class AdModerationService
 {
     /**
      * Approve a pending ad: ACTIVE via the publish() lifecycle + AdApproved so
-     * notification and search-index listeners run — identical to a public
-     * approval on purpose, admin approvals must be indistinguishable downstream.
+     * notification listeners run — identical to a public approval on purpose,
+     * admin approvals must be indistinguishable downstream.
      */
     public function approve(Ad $ad): void
     {
@@ -43,8 +43,6 @@ class AdModerationService
             'expires_at' => null,
         ])->save();
 
-        $ad->unsearchable();
-
         AdRejected::dispatch($ad, ModerationResult::rejected(['admin_manual'], ['admin_notes' => $notes]));
     }
 
@@ -52,7 +50,6 @@ class AdModerationService
     public function suspend(Ad $ad): void
     {
         $ad->forceFill(['status' => AdStatus::BLOCKED])->save();
-        $ad->unsearchable();
     }
 
     /** Lift a suspension (BLOCKED → ACTIVE) and re-index it. */

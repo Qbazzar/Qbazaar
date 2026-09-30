@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Account;
 
 use App\Models\User;
+use App\Services\Media\UploadedFileNamer;
 use Illuminate\Http\UploadedFile;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -23,24 +24,16 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class UploadAvatarAction
 {
+    public function __construct(
+        private readonly UploadedFileNamer $fileNamer,
+    ) {}
+
     public function execute(User $user, UploadedFile $file): Media
     {
         $user->clearMediaCollection('avatar');
 
         return $user->addMedia($file)
-            ->usingFileName($this->safeFilename($file))
+            ->usingFileName($this->fileNamer->nameFor($file))
             ->toMediaCollection('avatar');
-    }
-
-    /**
-     * MediaLibrary already sanitises filenames; we additionally lower-case
-     * and strip whitespace so the on-disk path is predictable across
-     * platforms (case-sensitive S3 / case-insensitive local FS).
-     */
-    private function safeFilename(UploadedFile $file): string
-    {
-        $extension = strtolower($file->getClientOriginalExtension()) ?: 'jpg';
-
-        return 'avatar-' . time() . '.' . $extension;
     }
 }
