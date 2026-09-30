@@ -15,8 +15,8 @@ uses(RefreshDatabase::class, CreatesAds::class);
 
 beforeEach(function (): void {
     $this->seedReferenceData();
-    $this->seller = User::factory()->create();
-    $this->buyer = User::factory()->create();
+    $this->seller = User::factory()->phoneVerified()->create();
+    $this->buyer = User::factory()->phoneVerified()->create();
     $this->ad = $this->makeAd($this->seller);
 });
 

@@ -25,8 +25,7 @@ class OtpController extends Controller
     /**
      * Send an OTP to a phone
      *
-     * Issues a fresh 6-digit code and dispatches it via SMS (and email, when
-     * a matching user exists). Returns 202.
+     * Issues a fresh 6-digit code and dispatches it via SMS only. Returns 202.
      *
      * @unauthenticated
      *

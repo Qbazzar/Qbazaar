@@ -54,6 +54,9 @@ it('also invalidates a supplied refresh token', function (): void {
         ['Authorization' => 'Bearer ' . $accessToken],
     )->assertNoContent();
 
-    expect(RefreshToken::query()->where('user_id', $user->id)->whereNotNull('used_at')->count())
-        ->toBe(1);
+    expect(RefreshToken::query()->where('user_id', $user->id)->exists())->toBeFalse();
+
+    postJson('/api/v1/auth/refresh', ['refresh_token' => $tokens->refreshToken])
+        ->assertUnauthorized()
+        ->assertJsonPath('error.code', 'AUTH_010');
 });

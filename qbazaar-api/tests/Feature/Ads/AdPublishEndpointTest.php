@@ -17,7 +17,7 @@ uses(RefreshDatabase::class, CreatesAds::class);
 
 beforeEach(function (): void {
     $this->seedReferenceData();
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->phoneVerified()->create();
 });
 
 it('submits a draft for review (pending) and keeps it off the public feed', function (): void {
@@ -45,7 +45,7 @@ it('submits a draft for review (pending) and keeps it off the public feed', func
 
 it('notifies reviewers via the panel bell when an ad is submitted', function (): void {
     Role::findOrCreate('super_admin', 'web');
-    $reviewer = User::factory()->create();
+    $reviewer = User::factory()->phoneVerified()->create();
     $reviewer->assignRole('super_admin');
 
     Sanctum::actingAs($this->user, ['*']);
@@ -58,7 +58,7 @@ it('notifies reviewers via the panel bell when an ad is submitted', function ():
 });
 
 it('refuses to publish someone else\'s draft', function (): void {
-    $intruder = User::factory()->create();
+    $intruder = User::factory()->phoneVerified()->create();
     Sanctum::actingAs($intruder, ['*']);
 
     $ad = $this->makeAd($this->user, ['status' => AdStatus::DRAFT->value]);

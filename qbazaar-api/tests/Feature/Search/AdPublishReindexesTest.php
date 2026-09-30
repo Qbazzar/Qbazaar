@@ -18,7 +18,7 @@ uses(RefreshDatabase::class, CreatesAds::class, InteractsWithMeilisearch::class)
 
 beforeEach(function (): void {
     $this->seedReferenceData();
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->phoneVerified()->create();
     Sanctum::actingAs($this->user, ['*']);
     $this->flushAdsIndex();
 });

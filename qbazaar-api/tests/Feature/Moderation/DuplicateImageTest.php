@@ -28,8 +28,8 @@ beforeEach(function (): void {
     // Wrap factory creation in withoutSyncingToSearch so the Ad observer
     // never pushes documents to Meilisearch from fixture setup.
     Ad::withoutSyncingToSearch(function (): void {
-        $this->seller = User::factory()->create();
-        $this->otherSeller = User::factory()->create();
+        $this->seller = User::factory()->phoneVerified()->create();
+        $this->otherSeller = User::factory()->phoneVerified()->create();
     });
 
     Sanctum::actingAs($this->seller, ['*']);

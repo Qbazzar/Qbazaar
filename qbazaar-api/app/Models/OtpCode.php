@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\OtpPurpose;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -11,6 +12,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $id
  * @property string $phone
+ * @property OtpPurpose $purpose
  * @property string $code_hash
  * @property int $attempts
  * @property Carbon $expires_at
@@ -29,6 +31,7 @@ class OtpCode extends Model
      */
     protected $fillable = [
         'phone',
+        'purpose',
         'code_hash',
         'attempts',
         'expires_at',
@@ -41,6 +44,7 @@ class OtpCode extends Model
     protected function casts(): array
     {
         return [
+            'purpose' => OtpPurpose::class,
             'attempts' => 'integer',
             'expires_at' => 'datetime',
             'used_at' => 'datetime',

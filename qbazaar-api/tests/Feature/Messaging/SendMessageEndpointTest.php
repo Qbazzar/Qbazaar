@@ -16,8 +16,8 @@ uses(RefreshDatabase::class, CreatesAds::class);
 
 beforeEach(function (): void {
     $this->seedReferenceData();
-    $this->seller = User::factory()->create();
-    $this->buyer = User::factory()->create();
+    $this->seller = User::factory()->phoneVerified()->create();
+    $this->buyer = User::factory()->phoneVerified()->create();
     $this->ad = $this->makeAd($this->seller);
     $this->conversation = Conversation::query()->create([
         'ad_id' => $this->ad->id,
@@ -59,7 +59,7 @@ it('refuses sends when the other party is blocked', function (): void {
 });
 
 it('returns 404 for non-participants to avoid oracle leak', function (): void {
-    $stranger = User::factory()->create();
+    $stranger = User::factory()->phoneVerified()->create();
     Sanctum::actingAs($stranger, ['*']);
 
     postJson('/api/v1/conversations/' . $this->conversation->id . '/messages', [

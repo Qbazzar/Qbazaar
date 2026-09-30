@@ -20,13 +20,6 @@ return [
         'sms' => [
             'body' => 'رمز التحقق الخاص بك في QBazaar هو :code. ينتهي خلال :minutes دقائق.',
         ],
-        'mail' => [
-            'subject' => 'رمز التحقق الخاص بك في QBazaar',
-            'greeting' => 'مرحبًا!',
-            'line_code' => 'رمز التحقق الخاص بك هو: :code',
-            'line_expires' => 'ينتهي هذا الرمز خلال :minutes دقائق.',
-            'line_ignore' => 'إذا لم تطلب هذا الرمز فيمكنك تجاهل هذه الرسالة.',
-        ],
     ],
 
     'password_reset' => [

@@ -86,10 +86,8 @@ class SendOtpAction
 
     private function dispatchNotification(string $phone, OtpIssueResult $result): void
     {
-        // If there's a registered user behind this phone, use the User as the
-        // notifiable so we can also email the code (helpful for dev mode) and
-        // pick the right locale. Otherwise route to the phone as an anonymous
-        // notifiable.
+        // A registered owner only changes the SMS locale; delivery always goes
+        // to the phone number itself.
         /** @var User|null $user */
         $user = User::query()->where('phone', $phone)->first();
 

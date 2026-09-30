@@ -17,7 +17,7 @@ uses(RefreshDatabase::class, CreatesAds::class);
 
 beforeEach(function (): void {
     $this->seedReferenceData();
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->phoneVerified()->create();
     Sanctum::actingAs($this->user, ['*']);
 });
 

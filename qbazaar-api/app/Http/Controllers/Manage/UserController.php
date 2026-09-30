@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Actions\Users\SuspendUserAction;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -66,9 +67,9 @@ class UserController extends Controller
         ]);
     }
 
-    public function suspend(User $user): RedirectResponse
+    public function suspend(User $user, SuspendUserAction $suspendUser): RedirectResponse
     {
-        $user->forceFill(['status' => UserStatus::SUSPENDED])->save();
+        $suspendUser->execute($user);
 
         return back()->with('status', 'تم إيقاف المستخدم.');
     }

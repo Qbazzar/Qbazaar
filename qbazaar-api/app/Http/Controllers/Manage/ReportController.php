@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Actions\Users\SuspendUserAction;
 use App\Enums\AdStatus;
 use App\Enums\ReportCategory;
 use App\Enums\ReportStatus;
@@ -126,13 +127,13 @@ class ReportController extends Controller
     }
 
     /** Suspend the reported user, then mark the report actioned. */
-    public function banUser(Report $report): RedirectResponse
+    public function banUser(Report $report, SuspendUserAction $suspendUser): RedirectResponse
     {
         abort_unless($report->target_type === ReportTarget::USER, 404);
 
         $user = User::find($report->target_id);
         if ($user !== null && $user->status !== UserStatus::SUSPENDED) {
-            $user->forceFill(['status' => UserStatus::SUSPENDED])->save();
+            $suspendUser->execute($user);
         }
 
         $this->transition($report, ReportStatus::ACTIONED, 'تم إيقاف المستخدم المُبلَّغ عنه.');
