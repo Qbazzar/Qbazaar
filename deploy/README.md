@@ -120,8 +120,5 @@ deploy/
 ├── scripts/                        deploy-api.sh, deploy-web.sh (run by the workflows)
 ├── systemd/                        horizon, reverb, scheduler, web, meilisearch units
 ├── apache/                         vhost includes for qbazaar.fleeteye.de and api.qbazaar.fleeteye.de
-├── keys/github-actions.pub         public key for the deploy user
-├── nginx/                          legacy (CloudPanel era, not used on cPanel)
-├── supervisor/                     legacy (replaced by the systemd units)
-└── vps-bootstrap.sh                legacy (self-managed Ubuntu plan, never used)
+└── keys/github-actions.pub         public key for the deploy user
 ```
