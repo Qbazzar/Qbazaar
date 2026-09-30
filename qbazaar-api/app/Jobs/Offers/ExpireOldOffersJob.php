@@ -9,7 +9,6 @@ use App\Events\Offers\OfferExpired;
 use App\Models\Offer;
 use DateTimeInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
@@ -20,8 +19,8 @@ use Illuminate\Foundation\Queue\Queueable;
  * expect the same payload shape as the manual reject/withdraw paths.
  *
  * Cohort is small (one day's worth of stale offers) so readability beats
- * raw throughput here. The chunkById(100) bound just guards against a
- * pathological backlog if the job hasn't run for several days.
+ * raw throughput here. Walking by primary key alone (lazyById) keeps a
+ * backlog from being skipped, which an extra ORDER BY would cause.
  *
  * Scheduled daily at 02:30 Asia/Qatar in bootstrap/app.php — runs after
  * ExpireOldAdsJob (02:00) so the ad-status invariants the job depends on
@@ -45,23 +44,21 @@ class ExpireOldOffersJob implements ShouldQueue
 
     private function expirePastDueOffers(DateTimeInterface $now): void
     {
-        Offer::query()
+        $offers = Offer::query()
             ->where('status', OfferStatus::PENDING->value)
             ->where('expires_at', '<=', $now)
-            ->orderBy('expires_at')
-            ->chunkById(100, function (Collection $offers) use ($now): void {
-                /** @var Collection<int, Offer> $offers */
-                foreach ($offers as $offer) {
-                    $offer->forceFill([
-                        'status' => OfferStatus::EXPIRED->value,
-                        'updated_at' => $now,
-                    ])->save();
+            ->lazyById(100);
 
-                    // Notify the BUYER on their user channel — the seller
-                    // is the party who left the offer sitting, so the
-                    // buyer benefits most from the realtime nudge.
-                    OfferExpired::dispatch($offer->fresh() ?? $offer, $offer->buyer_id);
-                }
-            });
+        foreach ($offers as $offer) {
+            $offer->forceFill([
+                'status' => OfferStatus::EXPIRED->value,
+                'updated_at' => $now,
+            ])->save();
+
+            // Notify the BUYER on their user channel — the seller
+            // is the party who left the offer sitting, so the
+            // buyer benefits most from the realtime nudge.
+            OfferExpired::dispatch($offer->fresh() ?? $offer, $offer->buyer_id);
+        }
     }
 }
