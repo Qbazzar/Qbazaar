@@ -10,8 +10,8 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Fired when the daily ExpireOldAdsJob flips an ACTIVE ad past `expires_at`
- * into EXPIRED. Listeners drop the ad from Meilisearch (RemoveAdFromSearch)
- * and email the owner with a one-click renewal CTA (SendAdNotifications).
+ * into EXPIRED. The owner gets an email with a one-click renewal CTA
+ * (SendAdNotifications).
  */
 class AdExpired
 {

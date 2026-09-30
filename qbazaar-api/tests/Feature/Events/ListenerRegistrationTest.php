@@ -9,9 +9,7 @@ use App\Events\Ads\AdPublished;
 use App\Events\Ads\AdRejected;
 use App\Events\Ads\AdRenewed;
 use App\Events\Ads\AdSubmittedForReview;
-use App\Listeners\Ads\IndexAdInSearch;
 use App\Listeners\Ads\NotifyAdminsOfPendingAd;
-use App\Listeners\Ads\RemoveAdFromSearch;
 use App\Listeners\Ads\SendAdNotifications;
 use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
 use App\Listeners\Notifications\PruneStaleDeviceTokens;
@@ -45,10 +43,10 @@ it('wires each event to its listeners', function (string $event, array $listener
 
     expect(applicationListenersFor($event))->toEqualCanonicalizing($expected);
 })->with([
-    'AdPublished' => [AdPublished::class, [IndexAdInSearch::class, SendAdNotifications::class, NotifySavedSearchMatches::class]],
-    'AdApproved' => [AdApproved::class, [IndexAdInSearch::class, SendAdNotifications::class, NotifySavedSearchMatches::class]],
-    'AdRejected' => [AdRejected::class, [RemoveAdFromSearch::class, SendAdNotifications::class]],
-    'AdExpired' => [AdExpired::class, [RemoveAdFromSearch::class, SendAdNotifications::class]],
+    'AdPublished' => [AdPublished::class, [SendAdNotifications::class, NotifySavedSearchMatches::class]],
+    'AdApproved' => [AdApproved::class, [SendAdNotifications::class, NotifySavedSearchMatches::class]],
+    'AdRejected' => [AdRejected::class, [SendAdNotifications::class]],
+    'AdExpired' => [AdExpired::class, [SendAdNotifications::class]],
     'AdExpiringSoon' => [AdExpiringSoon::class, [SendAdNotifications::class]],
     'AdRenewed' => [AdRenewed::class, [SendAdNotifications::class]],
     'AdSubmittedForReview' => [AdSubmittedForReview::class, [NotifyAdminsOfPendingAd::class]],
