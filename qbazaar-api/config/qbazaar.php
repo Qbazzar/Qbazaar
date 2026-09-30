@@ -139,6 +139,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Commission
+    |--------------------------------------------------------------------------
+    | Defaults only: the live values are admin-editable platform settings
+    | (see App\Enums\PlatformSetting) and fall back to these until saved.
+    */
+    'commission' => [
+        'debt_ceiling' => '500.00',
+        'settlement_deadline_days' => 14,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Uploads
     |--------------------------------------------------------------------------
     */

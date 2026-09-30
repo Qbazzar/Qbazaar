@@ -28,6 +28,7 @@ return [
     ],
 
     'navigation' => [
+        'settings' => 'Settings',
         'users' => 'Users',
         'ads' => 'Ads',
         'taxonomy' => 'Taxonomy',
@@ -51,6 +52,7 @@ return [
     ],
 
     'navigation_groups' => [
+        'system' => 'System',
         'marketplace' => 'Marketplace',
         'communications' => 'Communications',
         'moderation' => 'Moderation',
@@ -456,6 +458,34 @@ return [
         'target' => 'Target',
         'roles' => 'Roles',
         'permissions' => 'Permissions',
+    ],
+
+    'settings' => [
+        'title' => 'Platform settings',
+        'intro' => 'Changes apply immediately across the platform and are recorded in the activity log.',
+        'save' => 'Save settings',
+        'saved' => 'Settings saved.',
+        'groups' => [
+            'commission' => 'Commission',
+            'ads' => 'Ads',
+        ],
+        'fields' => [
+            'commission_debt_ceiling' => [
+                'label' => 'Commission debt ceiling',
+                'help' => "When a seller's unpaid commission reaches this amount, new sales are blocked until they settle.",
+                'unit' => 'QAR',
+            ],
+            'settlement_deadline_days' => [
+                'label' => 'Settlement deadline',
+                'help' => 'How many days a seller has to settle commission debt.',
+                'unit' => 'days',
+            ],
+            'ad_expiry_warning_days' => [
+                'label' => 'Expiry warning lead time',
+                'help' => 'How many days before an ad expires its seller is reminded to renew. Sent once per ad.',
+                'unit' => 'days',
+            ],
+        ],
     ],
 
     'locales' => [

@@ -70,6 +70,8 @@ dataset('admin actions', [
     'saved searches' => ['get', '/admin/saved-searches', ['super_admin', 'moderator', 'support']],
     'notifications' => ['get', '/admin/notifications', ['super_admin', 'moderator', 'support']],
     'activity log' => ['get', '/admin/activity', ['super_admin']],
+    'platform settings' => ['get', '/admin/settings', ['super_admin']],
+    'update platform settings' => ['put', '/admin/settings', ['super_admin']],
 ]);
 
 it('enforces the seeded permissions for every staff role', function (string $role, string $method, string $uri, array $allowed): void {
@@ -125,7 +127,8 @@ it('hides navigation links the staff member cannot open', function (): void {
         ->assertSee(route('admin.support.index'), false)
         ->assertDontSee(route('admin.roles.index'), false)
         ->assertDontSee(route('admin.pages.index'), false)
-        ->assertDontSee(route('admin.conversations.index'), false);
+        ->assertDontSee(route('admin.conversations.index'), false)
+        ->assertDontSee(route('admin.settings.edit'), false);
 });
 
 it('does not let support delete an ad', function (): void {

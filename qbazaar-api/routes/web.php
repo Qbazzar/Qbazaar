@@ -19,6 +19,7 @@ use App\Http\Controllers\Manage\ProfileController;
 use App\Http\Controllers\Manage\ReportController;
 use App\Http\Controllers\Manage\RoleController;
 use App\Http\Controllers\Manage\SavedSearchController;
+use App\Http\Controllers\Manage\SettingController;
 use App\Http\Controllers\Manage\SupportTicketController;
 use App\Http\Controllers\Manage\UserController;
 use Illuminate\Support\Facades\Route;
@@ -177,6 +178,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('permission:conversations.view')->group(function () {
             Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
             Route::get('conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
+        });
+
+        // Platform settings
+        Route::middleware('permission:settings.manage')->group(function () {
+            Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
+            Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
         });
 
         // Read-only surfaces
