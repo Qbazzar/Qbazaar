@@ -20,12 +20,37 @@
 | OPS-13.1 | Security: revoke the Figma token; move and rotate the Firebase key; change the VPS root password and disable password SSH | [P0] | No secrets outside `.env`; SSH by key only |
 | OPS-13.2 | Settle the open questions in `V2-PLAN.md §4` with the client | [P0] | Every question has a written decision |
 
+### Audit fixes — must land before any new work (from [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md))
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| SEC-13.1 | Escape JSON-LD + reject markup in ad title/description + </script> regression test | [P0] | Fixes audit finding SEC-02 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.2 | Server-generated upload filenames; FilesMatch instead of AddHandler; disable PHP in /storage | [P0] | Fixes audit finding SEC-01 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.3 | Enforce Spatie permissions per admin route + no actions on higher/equal staff + role tests | [P0] | Fixes audit finding SEC-03, ADM-01, ADM-02 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.4 | Admin login throttle + status check in login/EnsureStaff + force change of seeded password | [P0] | Fixes audit finding ADM-03, ADM-02 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.5 | Re-moderation on edit/image add of ACTIVE ads | [P0] | Fixes audit finding SEC-06, F2 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.6 | Phone OTP via SMS only + purpose/channel column + apply phone.verified | [P0] | Fixes audit finding SEC-04, F6 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.7 | Link refresh tokens to sessions; revoke both; status check in rotate; burn on suspend | [P0] | Fixes audit finding SEC-05, F4 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.8 | Suspending a user hides their ads; block chat/offers on inactive seller/ad or allow_chat=false | [P0] | Fixes audit finding ADM-06, F7, PRD-06 (DOCS/AUDIT-2026-09-30.md) |
+| OPS-13.3 | Horizon consumes default+low + queue coverage test | [P0] | Fixes audit finding RT-1 (DOCS/AUDIT-2026-09-30.md) |
+| OPS-13.4 | Scheduler systemd unit (promote OPS-14.1) | [P0] | Fixes audit finding RT-2 (DOCS/AUDIT-2026-09-30.md) |
+| OPS-13.5 | SCOUT_DRIVER=meilisearch default, drop database rollback, driver guard + null-safe toSearchableArray | [P0] | Fixes audit finding RT-4, PERF-01 (DOCS/AUDIT-2026-09-30.md) |
+| OPS-13.6 | SCOUT_QUEUE=true + after_commit, remove double sync | [P1] | Fixes audit finding RT-3, PERF-07 (DOCS/AUDIT-2026-09-30.md) |
+| OPS-13.7 | Merge ci/monorepo-workflows; deploy-api depends on CI | [P0] | Fixes audit finding RT-5 (DOCS/AUDIT-2026-09-30.md) |
+| OPS-13.8 | Branch cleanup (delete merged, merge docs/v2-plan, drop stale) | [P2] | Fixes audit finding الفروع (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.1 | Remove double listener registration + listener count test | [P0] | Fixes audit finding F1 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.2 | Promote BE-14.1: broadcasting auth under api/v1 with auth:sanctum | [P0] | Fixes audit finding F3 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.3 | Fix support ticket guard + reply/new-ticket notifications + tests | [P0] | Fixes audit finding F8, PRD-12 (DOCS/AUDIT-2026-09-30.md) |
+| QA-13.1 | Hermetic tests: SCOUT_DRIVER=collection + meilisearch group | [P0] | Fixes audit finding ARCH-02, F18, RT-8 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.8 | Fix admin ads bulk delete (ULID) via model delete | [P1] | Fixes audit finding ARCH-04, ADM-05 (DOCS/AUDIT-2026-09-30.md) |
+
 ## Sprint 14 — M1 Closing the backend gaps (no payments)
 
 ### Realtime and push
+> Channel authorization for Bearer clients moved up to M0 as BE-13.2.
+
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
-| BE-14.1 | Channel authorization for Bearer clients | `POST /api/v1/broadcasting/auth` | [P0] | A Sanctum token subscribes to `user.{id}` and `conversation.{id}`; a test covers a denied channel |
 | BE-14.2 | FCM push for a new message and for offer events | — | [P0] | Offline recipient gets a push; no push to the sender; test with a fake FCM |
 
 ### Catalog and search
@@ -92,10 +117,34 @@
 | BE-14.42 | Store ad images, avatars and chat images on Cloudflare R2 (an S3 disk with the R2 endpoint) through Spatie Media Library, with the thumbnails there too, a script to move existing images, and short-lived signed links for the original images | — (config + `FILESYSTEM_DISK`/`MEDIA_DISK`) | [P0] | A new upload lands in R2 and is served from it; the old images move over with no broken links; storage settings come from `.env` only; a test with a fake disk |
 | BE-14.43 | Cloudflare Turnstile on registration and requesting a code (email and phone): server-side token verification, an on/off switch, bypass in testing | `POST /auth/register`, `/auth/email-otp/send`, `/auth/send-otp` | [P0] | A request without a valid token is rejected with a clear error code; the Turnstile secret is in `.env` only; tests with a fake verifier |
 
-### Operations fixes
+### Audit fixes (before M1b)
+
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
-| OPS-14.1 | Register `schedule:run` in cron and document it in the runbook | [P0] | `ExpireOldAdsJob` and `ExpireOldOffersJob` run every day |
+| SEC-13.9 | Admin audit logger with correct causer; short-lived reasoned impersonation | [P0] | Fixes audit finding SEC-09, ADM-04, ARCH-08 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.10 | Rate limits: conversations/offers, OTP by IP+phone, per-identifier login limiter | [P0] | Fixes audit finding SEC-07 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.11 | Sanitize CMS/help HTML on write + DOMPurify | [P1] | Fixes audit finding SEC-08 (DOCS/AUDIT-2026-09-30.md) |
+| SEC-13.12 | Hardening: scope Gate::before, fillable cleanup, OTP_FIXED_CODE guard, view cap, CORS, hide swagger | [P2] | Fixes audit finding SEC-12, SEC-13 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.4 | Locked OfferTransitionService, ad-status check, close competing offers, unique pending offer | [P0] | Fixes audit finding SEC-10, F5, ARCH-09 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.5 | Account deletion via Eloquent + grace check + daily sweep + handle() test | [P1] | Fixes audit finding SEC-11, PERF-09, F9 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.6 | AdLifecycleService: guarded transitions, remove status from fillable, min_images/daily limit, publish no-op, idempotency lock | [P1] | Fixes audit finding ARCH-05, ADM-07, F12, F13 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.7 | Queued image conversions, max_images=20, locked count, body size alignment | [P1] | Fixes audit finding RT-7, PERF-03 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.8 | Fix expiry chunkById + ads(status,expires_at) index + expiring_notified_at | [P1] | Fixes audit finding PERF-05, F11 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.9 | Scheduled pruning (sanctum, refresh/otp, activitylog, guest recents) | [P1] | Fixes audit finding RT-6, PERF-13, F17 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.10 | Hierarchical category/location filtering + leaf/active validation | [P1] | Fixes audit finding PERF-11, PRD-07 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.11 | Remove N+1 (category tree, inbox, primary media) + preventLazyLoading | [P1] | Fixes audit finding PERF-04, PERF-06, PERF-12 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.12 | Cache invalidation (per-slug fields/filters, featured/similar status filter) | [P2] | Fixes audit finding PERF-10, ARCH-10 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.13 | Saved-search matcher fix + alerts_enabled + PUT | [P1] | Fixes audit finding F10, PRD-08 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.14 | Notification preferences GET/PUT checked in via() | [P1] | Fixes audit finding PRD-08 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.15 | Apply moderation rules to chat messages | [P1] | Fixes audit finding PRD-10 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.16 | LocaleMiddleware uses sanctum user + real HTTP test | [P2] | Fixes audit finding ARCH-07 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.17 | NOT_FOUND/FORBIDDEN error codes + config-driven validation limits | [P2] | Fixes audit finding ARCH-11, ARCH-12 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.18 | Browser-openable data export link + complete export | [P2] | Fixes audit finding F15 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.19 | Small fixes: reviews withTrashed, queued reset/verify mails, ReportCreated listener | [P2] | Fixes audit finding PERF-15, PERF-16, F16 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.20 | My Ads status filter, full summary, accepted_terms on publish | [P2] | Fixes audit finding PRD-15, PRD-14 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.21 | Async pHash duplicate detection + persisted moderation result | [P2] | Fixes audit finding PERF-02 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.22 | Missing indexes (ads(status,price), notifications created_at, users last_login_at) | [P2] | Fixes audit finding PERF-14 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.23 | Layering refactor: Review/Support actions, UserModerationService, resources | [P2] | Fixes audit finding ARCH-06 (DOCS/AUDIT-2026-09-30.md) |
 
 ## Sprint 14 — M1b Orders and payments (no gateway)
 
@@ -112,6 +161,12 @@
 | BE-14.39 | Settlements and withdrawals: the seller pays off the commission debt (bank transfer + reference number), requests a withdrawal of a positive balance (IBAN), and the admin approves or rejects | `POST /account/wallet/settlements`, `POST /account/wallet/withdrawals`, `GET/POST /account/bank-accounts` | [P0] | A notification at every step; once the debt ceiling is exceeded the seller can't accept new orders until they settle |
 | BE-14.40 | Paid promotion (highlight / push up / premium / gallery): request + activate after payment is confirmed (bank transfer or deducted from the balance) + expiry | `GET /promotions`, `POST /ads/{id}/promotions` | [P1] | Prices come from the admin settings; a promoted ad rises in search and on the home page for the duration |
 | BE-14.41 | Order notifications (new request, accepted, rejected, handover done, commission due, settlement approved) via Reverb + FCM + email | — | [P0] | Every event reaches both parties through the right channels |
+
+### Audit prerequisite
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| AD-17.9 | Settings store + SettingsService + settings.manage permission | [P0] | Fixes audit finding PRD-11 (DOCS/AUDIT-2026-09-30.md) |
 
 ## Sprint 15 — M2 Connecting the mobile app (`Qbazaar-mobile`)
 
@@ -157,6 +212,19 @@
 | AD-17.5 | Act directly from a report (suspend the ad/ban the user from the report screen) | [P1] | One button with a confirmation |
 | AD-17.6 | Follow and message stats on the dashboard | [P2] | — |
 | AD-17.7 | Payments section in the admin panel: platform settings (commission, debt ceiling, promotion prices), orders, settlement/withdrawal queue with approve/reject, disputes, revenue report | [P0] | The admin changes the commission and it applies to the next order; approving a settlement updates the seller's wallet |
+
+### Audit fixes
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| AD-17.10 | Staff notification bell/inbox + FIFO moderation queue with SLA + bulk approve/reject | [P1] | Fixes audit finding ADM-08 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.11 | conversations.view permission with reason, logging, pagination | [P1] | Fixes audit finding ADM-09 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.12 | Safe category/location delete (usage check or deactivate) | [P1] | Fixes audit finding ADM-10 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.13 | Mandatory sanction reasons + AdSuspended/UserSuspended notifications | [P1] | Fixes audit finding ADM-11 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.14 | Staff 2FA | [P1] | Fixes audit finding ADM-03 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.15 | Broadcast composer, permission matrix editor, route-protect /admin/roles | [P2] | Fixes audit finding ADM-12 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.16 | Admin i18n flash strings, remove Filament comments, mutation tests | [P2] | Fixes audit finding ARCH-13 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.17 | Business applications and verification flow | [P1] | Fixes audit finding PRD-11 (DOCS/AUDIT-2026-09-30.md) |
 
 ## Sprint 18 — M5 Deployment on the new server
 
