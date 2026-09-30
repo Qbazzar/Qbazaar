@@ -70,7 +70,7 @@ php artisan serve                  # http://localhost:8000  (/admin, /docs, /api
 # Web (separate terminal)
 cd qbazaar-web
 npm install
-cp .env.example .env.local         # set NEXT_PUBLIC_API_URL=http://localhost:8000
+cp .env.example .env.local         # points at the API on http://localhost:8000
 npm run dev                        # http://localhost:3000
 ```
 
