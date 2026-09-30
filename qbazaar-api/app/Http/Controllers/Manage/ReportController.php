@@ -16,6 +16,7 @@ use App\Models\Report;
 use App\Models\User;
 use App\Services\Admin\StaffHierarchy;
 use App\Services\Ads\AdModerationService;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -129,7 +130,8 @@ class ReportController extends Controller
 
     /** Suspend the reported user, then mark the report actioned. */
     public function banUser(
-        Request $request,
+        #[CurrentUser]
+        User $actor,
         Report $report,
         StaffHierarchy $hierarchy,
         SuspendUserAction $suspendUser,
@@ -138,7 +140,7 @@ class ReportController extends Controller
 
         $user = User::find($report->target_id);
         if ($user !== null) {
-            $hierarchy->ensureCanManage($request->user(), $user);
+            $hierarchy->ensureCanManage($actor, $user);
 
             if ($user->status !== UserStatus::SUSPENDED) {
                 $suspendUser->execute($user);

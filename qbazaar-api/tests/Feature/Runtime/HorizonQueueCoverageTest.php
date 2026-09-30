@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\File;
 /**
  * Jobs pushed onto a queue that no Horizon supervisor consumes sit in Redis
  * forever without failing, so this guards the gap statically.
+ *
+ * @return list<string>
  */
 function queuesDeclaredInApp(): array
 {
@@ -25,6 +27,9 @@ function queuesDeclaredInApp(): array
     return array_values(array_unique($queues));
 }
 
+/**
+ * @return list<string>
+ */
 function queuesConsumedByHorizon(string $environment): array
 {
     $supervisors = array_replace_recursive(
@@ -32,12 +37,19 @@ function queuesConsumedByHorizon(string $environment): array
         config("horizon.environments.{$environment}", []),
     );
 
-    return collect($supervisors)
-        ->filter(fn (array $supervisor): bool => ($supervisor['connection'] ?? 'redis') === 'redis')
-        ->flatMap(fn (array $supervisor): array => (array) ($supervisor['queue'] ?? []))
-        ->unique()
-        ->values()
-        ->all();
+    $queues = [];
+
+    foreach ($supervisors as $supervisor) {
+        if (($supervisor['connection'] ?? 'redis') !== 'redis') {
+            continue;
+        }
+
+        foreach ((array) ($supervisor['queue'] ?? []) as $queue) {
+            $queues[] = (string) $queue;
+        }
+    }
+
+    return array_values(array_unique($queues));
 }
 
 it('finds the queues the application dispatches onto', function (): void {

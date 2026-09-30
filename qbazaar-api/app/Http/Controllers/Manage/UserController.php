@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Admin\StaffHierarchy;
 use App\Services\Auth\RefreshTokenService;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -58,33 +59,33 @@ class UserController extends Controller
         ]);
     }
 
-    public function show(Request $request, User $user): View
+    public function show(#[CurrentUser] User $actor, User $user): View
     {
         $user->load('roles');
         $user->loadCount('ads');
 
-        $canManageUser = $this->hierarchy->canManage($request->user(), $user);
+        $canManageUser = $this->hierarchy->canManage($actor, $user);
 
         return view('admin.users.show', [
             'user' => $user,
             'roles' => Role::orderBy('name')->get(),
             'canManageUser' => $canManageUser,
-            'canManageRoles' => $canManageUser && $request->user()->can('roles.manage'),
+            'canManageRoles' => $canManageUser && $actor->can('roles.manage'),
         ]);
     }
 
-    public function suspend(Request $request, User $user, SuspendUserAction $suspendUser): RedirectResponse
+    public function suspend(#[CurrentUser] User $actor, User $user, SuspendUserAction $suspendUser): RedirectResponse
     {
-        $this->hierarchy->ensureCanManage($request->user(), $user);
+        $this->hierarchy->ensureCanManage($actor, $user);
 
         $suspendUser->execute($user);
 
         return back()->with('status', 'تم إيقاف المستخدم.');
     }
 
-    public function activate(Request $request, User $user): RedirectResponse
+    public function activate(#[CurrentUser] User $actor, User $user): RedirectResponse
     {
-        $this->hierarchy->ensureCanManage($request->user(), $user);
+        $this->hierarchy->ensureCanManage($actor, $user);
 
         $user->forceFill(['status' => UserStatus::ACTIVE])->save();
 
@@ -92,9 +93,9 @@ class UserController extends Controller
     }
 
     /** Email the user a password-reset link (self-service recovery on their behalf). */
-    public function sendPasswordReset(Request $request, User $user): RedirectResponse
+    public function sendPasswordReset(#[CurrentUser] User $actor, User $user): RedirectResponse
     {
-        $this->hierarchy->ensureCanManage($request->user(), $user);
+        $this->hierarchy->ensureCanManage($actor, $user);
 
         Password::broker()->sendResetLink(['email' => $user->email]);
 
@@ -128,9 +129,9 @@ class UserController extends Controller
     }
 
     /** Sync a user's roles from the checkbox list. */
-    public function updateRoles(Request $request, User $user): RedirectResponse
+    public function updateRoles(Request $request, #[CurrentUser] User $actor, User $user): RedirectResponse
     {
-        $this->hierarchy->ensureCanManage($request->user(), $user);
+        $this->hierarchy->ensureCanManage($actor, $user);
 
         $available = Role::pluck('name')->all();
 
@@ -140,7 +141,7 @@ class UserController extends Controller
         ]);
 
         $roles = $data['roles'] ?? [];
-        $this->hierarchy->ensureCanGrantRoles($request->user(), $roles);
+        $this->hierarchy->ensureCanGrantRoles($actor, $roles);
 
         $user->syncRoles($roles);
 

@@ -6,11 +6,13 @@ namespace App\Actions\Admin;
 
 use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use LogicException;
 
 /**
  * Signs a staff member into the admin panel's session guard. Non-staff and
@@ -28,7 +30,12 @@ class LoginStaffAction
 
         $this->ensureNotLockedOut($request, $throttleKey);
 
-        $authenticated = Auth::guard('web')->attemptWhen(
+        $guard = Auth::guard('web');
+        if (! $guard instanceof SessionGuard) {
+            throw new LogicException('Staff login requires the session-based web guard.');
+        }
+
+        $authenticated = $guard->attemptWhen(
             ['email' => Str::lower($email), 'password' => $password],
             fn (User $user): bool => $user->isStaff() && $user->status->canLogin(),
             $remember,
