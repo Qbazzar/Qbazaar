@@ -5,7 +5,8 @@ field for i18n lookup; the `message` is a human-readable fallback in the
 requested locale.
 
 > Format: `<DOMAIN>_<NUMBER>` — e.g. `AUTH_001`, `AD_005`.
-> Domain prefixes are 3-letter codes; numbers are zero-padded to 3 digits.
+> Domain prefixes are short upper-case words (`AUTH`, `AD`, `UPLOAD`, …); numbers are zero-padded to 3 digits.
+> The code-side list is `qbazaar-api/app/Exceptions/ErrorCode.php` (codes + default HTTP status); keep this file in step with it.
 
 ## Cross-cutting
 
@@ -53,7 +54,7 @@ requested locale.
 |------|---------|------|
 | `UPLOAD_001` | File too large (> 10MB) | 413 |
 | `UPLOAD_002` | Unsupported MIME type | 422 |
-| `UPLOAD_003` | Max images per ad reached (10) | 422 |
+| `UPLOAD_003` | Max images per ad reached (`qbazaar.ads.max_images`: 10 today, 20 planned in BE-14.20) | 422 |
 | `UPLOAD_004` | File magic bytes mismatch declared MIME | 422 |
 
 ## Ads (Sprint 5)
@@ -70,6 +71,8 @@ requested locale.
 | `AD_008` | Cannot perform offers on your own ad | 422 |
 | `AD_009` | Ad images required (min 1) | 422 |
 | `AD_010` | Custom fields for category did not validate | 422 |
+| `AD_011` | Ad cannot be published in its current state | 422 |
+| `AD_012` | Image not found for this ad | 404 |
 
 ## Search (Sprint 6)
 
@@ -77,6 +80,8 @@ requested locale.
 |------|---------|------|
 | `SEARCH_001` | Search index temporarily unavailable | 503 |
 | `SEARCH_002` | Saved search not found | 404 |
+| `SEARCH_003` | Invalid search parameters | 422 |
+| `SEARCH_004` | Saved-search limit per user reached | 422 |
 
 ## Messaging (Sprint 8)
 
@@ -127,7 +132,18 @@ requested locale.
 |------|---------|------|
 | `CMS_001` | Page not found | 404 |
 | `HELP_001` | Article not found | 404 |
+| `HELP_002` | Help category not found | 404 |
 | `TICKET_001` | Support ticket not found | 404 |
+| `TICKET_002` | Not allowed to act on this ticket | 403 |
+| `TICKET_003` | Invalid ticket status change | 422 |
+
+## Reviews
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `REVIEW_001` | Not eligible: a review needs a completed deal (accepted offer) on the ad | 403 |
+| `REVIEW_002` | This ad has already been reviewed by you | 422 |
+| `REVIEW_003` | Cannot review your own ad | 422 |
 
 ---
 

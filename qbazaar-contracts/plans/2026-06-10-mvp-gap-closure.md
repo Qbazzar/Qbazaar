@@ -1,5 +1,7 @@
 # MVP Gap Closure Implementation Plan
 
+> **Completed (June 2026):** all four branches were merged into `main`. Kept for history; current work is in [`../MILESTONES-V2.md`](../MILESTONES-V2.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Close the 4 remaining MVP gaps: pHash image dedup + signed original URLs, typing indicators, FCM push scaffold, Meilisearch production install + QA sweep report.

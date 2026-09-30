@@ -1,5 +1,7 @@
 # QBazaar — خطة العمل التنفيذية (Solo Dev Edition)
 
+> **Superseded** by [`V2-PLAN.md`](V2-PLAN.md) (plan and decisions) and [`ROADMAP.md`](ROADMAP.md) (current state). Kept as the MVP-era plan. Its stack (Laravel 13, Next.js 15, Flutter, Filament, Scribe) is not what was built: see the ROADMAP.
+
 ## Context
 
 **QBazaar** منصة marketplace قطرية على ستاك Laravel 13 (API) + Next.js 15 (Web) + Flutter (Phase 2). الوثائق المعمارية موجودة في [DOCS/](DOCS/) وفيها:

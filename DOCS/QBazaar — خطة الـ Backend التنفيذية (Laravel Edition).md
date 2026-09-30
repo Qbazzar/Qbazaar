@@ -4,6 +4,8 @@ title: QBazaar — خطة الـ Backend التنفيذية (Laravel Edition)
 ---
 
 # QBazaar — خطة الـ Backend التنفيذية (Laravel Edition)
+
+> **Historical (pre-build design input).** Superseded by [`V2-PLAN.md`](../qbazaar-contracts/V2-PLAN.md) and [`MILESTONES-V2.md`](../qbazaar-contracts/MILESTONES-V2.md). What was built differs: Laravel 12 (not 13), a custom `/admin` panel (not Filament v5), and Swagger UI instead of Scribe.
 ### دليل العمل التفصيلي للمطور | مبني على Laravel 13 + Filament v5
 
 > **الأساس:** المخرجات المطلوبة لكل صفحة (القسم 9 من الـ PRD):

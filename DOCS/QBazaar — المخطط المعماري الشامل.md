@@ -4,6 +4,8 @@ title: QBazaar — المخطط المعماري الشامل
 ---
 
 # QBazaar — المخطط المعماري الشامل
+
+> **Historical (pre-build design input).** Superseded by [`V2-PLAN.md`](../qbazaar-contracts/V2-PLAN.md) and [`ROADMAP.md`](../qbazaar-contracts/ROADMAP.md). What was built differs: Laravel 12 (not 13), a custom `/admin` panel (not Filament), MySQL without Docker, and an Expo app instead of Flutter.
 ### Laravel 13 (API) + Next.js 15 (Web) + Flutter 3.x (Mobile)
 
 > **هذا الملف يحدد كيف تتحدث الأطراف الثلاثة مع بعضها، والقرارات الحرجة قبل البدء.**

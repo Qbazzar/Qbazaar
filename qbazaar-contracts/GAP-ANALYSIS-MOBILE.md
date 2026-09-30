@@ -2,6 +2,7 @@
 
 > Compares what the app `Qbazaar-mobile` needs (from `src/repositories/*`) with what exists in `qbazaar-api` (96 routes under `/api/v1`, verified with `php artisan route:list --path=api/v1` on 2026-09-30).
 > ✅ exists · 🟡 partial (difference in shape or params) · ❌ missing. The task that fixes each item is in the last column (see `MILESTONES-V2.md`).
+> Updated after the M0 merges (#147–#153): Bearer channel auth now exists, and publish, chat and offers require a verified phone (`AUTH_003` otherwise).
 
 ## API conventions the app has to adapt to
 - **Success envelope:** `{ success, data, meta? }`, JSON in **snake_case**, IDs are **ULID**, dates ISO-8601, money `price` + `currency` + `price_formatted`.
@@ -41,7 +42,7 @@
 | Delete conversations | ❌ | — | BE-14.16 |
 | Offers: create / accept / reject / withdraw | ✅ | `/conversations/{id}/offers`, `/offers/{id}/…` (expire after 7 days) | — |
 | Counter-offer | ❌ | — | BE-14.17 |
-| Realtime from mobile | 🟡 **blocker** | `broadcasting/auth` on web only | BE-14.1 |
+| Realtime from mobile | ✅ | `POST /api/v1/broadcasting/auth` with the Bearer token (merged in #149) | BE-13.2 (was BE-14.1) |
 | Push for message/offer | ❌ | FCM is used only for ads, search and the system | BE-14.2 |
 | Notifications + filter by type | 🟡 | `/account/notifications?unread=1` only | BE-14.18 |
 
@@ -61,7 +62,7 @@
 | Reserve | ❌ | — (`mark-sold` and `renew` exist) | BE-14.22 |
 | My ads + status filter + stats | 🟡 | `GET /account/ads` with no filter | BE-14.23 |
 | Cities | ✅ | `GET /locations/qatar` | — |
-| Paid promotion | ❌ (deferred) | — | M7 |
+| Paid promotion | ❌ | — | BE-14.40 (M1b) |
 
 ## Settings
 | App need | Status | In the API now | Task |

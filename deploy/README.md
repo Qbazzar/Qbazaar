@@ -1,169 +1,77 @@
 # QBazaar — Production Deploy
 
-> **⚠️ Hosting moved (2026-06):** production now lives on the **WHM/cPanel server**
-> at `qbazaar.taqat.space` (`/home/space/public_html/qbazaar`, root via WHM,
-> AlmaLinux 9). The CloudPanel/Miete sections below predate the move and are kept
-> for reference until the runbooks are fully migrated. New-server runbooks so far:
-> [Meilisearch](#-meilisearch-on-the-whm-server-qbazaartaqatspace) below.
+> **Production today:** one WHM/cPanel server, cPanel user `fleeteye`, repo clone at `/home/fleeteye/qbazaar`.
+> Web: `https://qbazaar.fleeteye.de` · API + admin: `https://api.qbazaar.fleeteye.de`.
+> **Next:** M5 moves everything to the new cPanel VPS (`srv1977263.hstgr.cloud`) behind Cloudflare, once the domain is decided (tasks `OPS-18.x` in [MILESTONES-V2.md](../qbazaar-contracts/MILESTONES-V2.md)). The earlier hosts (CloudPanel `miete.site`, then `qbazaar.taqat.space`) are gone.
 
-This deploys the Laravel API to the **Miete VPS** under the existing
-CloudPanel-managed site `www.miete.site`.
+First-time server setup is in [CPANEL-FLEETEYE-RUNBOOK.md](CPANEL-FLEETEYE-RUNBOOK.md) (Arabic). This file covers the day-to-day flow.
 
-- VPS: `147.79.115.44`
-- SSH user (deploy tenant): `qb-user`
-- Repo clone on VPS: `/home/qb-user/qbazaar` (this monorepo)
-- Webroot: `/home/qb-user/htdocs/www.miete.site` → symlink to `qbazaar-api/public`
-- Public URL: `https://www.miete.site/api/v1/...`
+## Branches and workflows
 
-> **Note:** the original plan used a self-managed Ubuntu with the `sanad` user
-> and a separate `api.qbazzar.miete.site` subdomain. The VPS we got is
-> CloudPanel-managed (no sudo, panel-managed nginx + php-fpm), so we deploy
-> directly into the existing `www.miete.site` tenant. The
-> `vps-bootstrap.sh` and `nginx/*.conf` files here are kept for reference but
-> aren't used by this deploy.
+| Branch | Purpose |
+|--------|---------|
+| `main` | Development. CI (`.github/workflows/ci.yml`: Pint + PHPStan + Pest for the API) runs on every push and PR. |
+| `production` | What is live. A push here deploys. |
 
----
+Promote with `git switch production && git merge --ff-only main && git push origin production`, or run a deploy workflow by hand (`workflow_dispatch`).
 
-## 🌿 Branch model
+| Workflow | Runs when | Does |
+|----------|-----------|------|
+| `deploy-api.yml` | Push to `production` touching `qbazaar-api/**`, `deploy/**` or the workflow | Runs `ci.yml` first; if it passes, SSH → `deploy/scripts/deploy-api.sh` |
+| `deploy-web.yml` | Push to `production` touching `qbazaar-web/**`, `deploy/**` or the workflow | SSH → `deploy/scripts/deploy-web.sh` (no CI gate: the web has no CI job yet) |
 
-| Branch | Purpose | Triggers |
-|--------|---------|----------|
-| `main` | Dev — every feature commit lands here first | CI runs Pint + PHPStan + tests + Next.js build |
-| `production` | What's live on the VPS | Push → GitHub Actions auto-deploys |
+Changes that only touch `qbazaar-contracts/`, `DOCS/` or the READMEs don't deploy.
 
-Promote with `git switch production && git merge main && git push origin production`.
+**Repository secrets** (`Settings → Secrets and variables → Actions`): `DEPLOY_HOST`, `DEPLOY_USER` (`fleeteye`), `DEPLOY_PORT`, `DEPLOY_SSH_KEY`. `deploy-api.yml` also accepts `DEPLOY_PASSWORD` as a bootstrap fallback; remove it once key auth works.
 
----
+## What the deploy scripts do
 
-## 🚀 First deploy (one-time bootstrap)
+**`deploy-api.sh`:** reset the clone to `origin/production` → maintenance mode → `composer install --no-dev` → `npm install && npm run build` (Tailwind assets for `/admin`) → `migrate --force` → rebuild config/route/view/event caches → `storage:link` if missing → restart `qbazaar-horizon` and `qbazaar-reverb` → leave maintenance mode → health probe on `/api/v1/health` (fails the deploy if not 200).
 
-The very first deploy is run from your dev box via
-`.deploy-keys/bootstrap_qbuser.py` (paramiko). It:
+**`deploy-web.sh`:** reset to `origin/production` → `npm ci` → `next build` → restart `qbazaar-web` → probe `http://127.0.0.1:3000/`.
 
-1. Logs into `qb-user@147.79.115.44` with the panel password
-2. Installs our deploy SSH public key into `~/.ssh/authorized_keys` so future
-   runs use key auth
-3. Clones the repo to `~/qbazaar`, checks out `production`
-4. Uploads `deploy/.env.production.local` to `~/qbazaar/qbazaar-api/.env`
-5. Runs `composer install --no-dev`, `key:generate`, `migrate --force`
-6. Symlinks `~/htdocs/www.miete.site` → `~/qbazaar/qbazaar-api/public`
-7. Rebuilds config/route/view caches
-8. Smoke-tests `https://www.miete.site/api/v1/health`
+Both scripts put the `ea-php84` CLI first on `PATH`. The `fleeteye` user may restart only `qbazaar-web`, `qbazaar-horizon` and `qbazaar-reverb` through a sudoers drop-in.
 
-### Run it
+## Services on the server
 
-```powershell
-# 1) Copy the env template and fill in __FILL_ME__ for DB/Twilio/Mail/Meilisearch:
-Copy-Item deploy\env.production.template deploy\.env.production.local
-# Edit deploy\.env.production.local in your editor
+| Unit (`deploy/systemd/`) | Runs |
+|--------------------------|------|
+| `qbazaar-horizon.service` | `artisan horizon` (queues `default` and `low`) |
+| `qbazaar-reverb.service` | `artisan reverb:start` on `127.0.0.1:8080`, proxied as `wss://api…/app` |
+| `qbazaar-scheduler.service` | `artisan schedule:work` (ad and offer expiry, etc.). Use it **or** the cron entry in the runbook, never both. |
+| `qbazaar-web.service` | `next start -p 3000`, proxied by Apache |
+| `meilisearch.service` | Meilisearch on `127.0.0.1:7700` (section below) |
 
-# 2) Run the bootstrap (PowerShell)
-$env:VPS_HOST = '147.79.115.44'
-$env:VPS_USER = 'qb-user'
-$env:VPS_PASS = '<panel password>'
-$env:DEPLOY_PUBKEY_PATH = '.deploy-keys\qbazaar_deploy.pub'
-python .deploy-keys\bootstrap_qbuser.py
-```
+Apache includes for both vhosts are in `deploy/apache/` (install steps are in each file's header). The API include pins PHP for the vhost, serves `/storage` as static files only, and proxies the Reverb WebSocket.
 
-After it completes successfully, **rotate the qb-user panel password** —
-it was shared once in chat for bootstrap and should never be used again.
+## Environment files
 
----
+- API: copy `env.production.template` to `qbazaar-api/.env` on the server and fill every `__FILL_ME__`. Search must stay on `SCOUT_DRIVER=meilisearch` with `SCOUT_QUEUE=true`.
+- Web: copy `web.env.production.template` to `qbazaar-web/.env.production`. `NEXT_PUBLIC_*` values are compiled in, so a change needs a web deploy, not just a restart.
 
-## 🤖 Auto-deploy (GitHub Actions)
+Both files are gitignored and survive the `git reset --hard` the scripts do.
 
-After the first deploy, subsequent deploys are automatic:
+## Pending production steps after M0
 
-| Workflow | Triggers when | Does |
-|----------|---------------|------|
-| `deploy-api.yml` | Push to `production` AND `qbazaar-api/**` changed | SSH → `deploy/scripts/deploy-api.sh` on the VPS |
+The M0 PRs (#147–#153) need these one-time steps on the server the first time they reach `production`:
 
-A push that only touches `qbazaar-contracts/` or docs **doesn't trigger a deploy** (path filters).
+1. `.env`: `SCOUT_DRIVER=meilisearch`, `SCOUT_QUEUE=true`, then `php artisan config:cache` (#147).
+2. Install the scheduler unit (`cp deploy/systemd/qbazaar-scheduler.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now qbazaar-scheduler`) or the cron entry, and restart Horizon so it picks up the `low` queue (#147).
+3. Re-copy the API Apache include into both the `std` and `ssl` userdata dirs, then `/scripts/ensure_vhost_includes --user=fleeteye && apachectl configtest && systemctl restart httpd`; needs `mod_headers` (#150). Check `storage/app/public` for old `*.php*` or `*.html` uploads.
+4. `php artisan db:seed --class=RolesAndPermissionsSeeder --force`, then `php artisan permission:cache-reset` (#151). Migrations run in the deploy script.
+5. Rebuild the ads index: `php artisan scout:flush "App\Models\Ad" && php artisan scout:import "App\Models\Ad"` (#152).
 
-### Required GitHub Secrets
+Clients must now authorise channels at `POST /api/v1/broadcasting/auth` with a Bearer token (#149); the web already does.
 
-Add in **`Settings → Secrets and variables → Actions`** for `Qbazzar/Qbazaar`:
-
-| Secret | Value |
-|--------|-------|
-| `DEPLOY_HOST` | `147.79.115.44` |
-| `DEPLOY_USER` | `qb-user` |
-| `DEPLOY_PORT` | `22` |
-| `DEPLOY_SSH_KEY` | full contents of `.deploy-keys/qbazaar_deploy` (private key) |
-
-`DEPLOY_PASSWORD` is also accepted by the workflow as a fallback during bootstrap, but **remove it after key auth is confirmed working** so the password isn't ambient in CI.
-
----
-
-## 🔐 The deploy SSH keypair
-
-The private key lives at `.deploy-keys/qbazaar_deploy` (gitignored). The public
-key at `.deploy-keys/qbazaar_deploy.pub` is added to `qb-user`'s
-`authorized_keys` by the bootstrap script.
-
-To re-fetch the private key locally for the GitHub Secret:
-
-```powershell
-Get-Content .\.deploy-keys\qbazaar_deploy
-```
-
----
-
-## Manual deploy (if Actions is down)
-
-After the SSH key is authorized you can run the deploy script directly:
+## Meilisearch (install once, as root)
 
 ```bash
-ssh -i .deploy-keys/qbazaar_deploy qb-user@147.79.115.44 \
-    "cd ~/qbazaar && git pull && bash deploy/scripts/deploy-api.sh"
-```
-
----
-
-## Folder layout
-
-```
-deploy/
-├── README.md                                ← you are here
-├── env.production.template                  ← copy → .env.production.local, fill, deploy
-├── .env.production.local                    ← gitignored, holds real secrets
-├── scripts/
-│   └── deploy-api.sh                        ← run by GitHub Actions on the VPS
-├── keys/
-│   └── github-actions.pub                   ← public key for CI
-├── nginx/                                   ← reference only; CloudPanel owns nginx
-│   ├── api.qbazzar.miete.site.conf
-│   └── qbazzar.miete.site.conf
-├── supervisor/                              ← reference only; queue/reverb workers
-│   ├── qbazaar-queue.conf
-│   └── qbazaar-reverb.conf
-└── vps-bootstrap.sh                         ← legacy, for self-managed Ubuntu only
-```
-
----
-
-## Frontend deploy
-
-Next.js is **not** deployed to this VPS — it lives on Vercel
-(`qbazaar-web` repo, auto-deploys from `main`). Only the API runs on the VPS.
-
----
-
-## 🔎 Meilisearch on the WHM server (qbazaar.taqat.space)
-
-Search requires Meilisearch: the search endpoints use Meili filters, facets
-and ranking, which the Scout `database`/`collection` drivers cannot serve.
-
-### Install (as root, once)
-
-```bash
-# 1) Binary + dedicated system user
 curl -L https://install.meilisearch.com | sh
 mv ./meilisearch /usr/local/bin/
 useradd -r -s /sbin/nologin meilisearch
 mkdir -p /var/lib/meilisearch && chown meilisearch: /var/lib/meilisearch
 
-# 2) Config — loopback only, master key REQUIRED (shared server)
+# Loopback only, master key required (shared server)
 MASTER_KEY=$(openssl rand -hex 32)
 cat > /etc/meilisearch.toml <<TOML
 env = "production"
@@ -172,36 +80,48 @@ db_path = "/var/lib/meilisearch"
 http_addr = "127.0.0.1:7700"
 TOML
 chmod 600 /etc/meilisearch.toml
-echo "SAVE THIS for the app .env -> MEILISEARCH_KEY=${MASTER_KEY}"
+echo "MEILISEARCH_KEY=${MASTER_KEY}"   # goes into qbazaar-api/.env
 
-# 3) Service (unit file lives in this repo: deploy/systemd/meilisearch.service)
-cp /home/space/public_html/qbazaar/deploy/systemd/meilisearch.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable --now meilisearch
-curl -s http://127.0.0.1:7700/health   # → {"status":"available"}
+cp /home/fleeteye/qbazaar/deploy/systemd/meilisearch.service /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now meilisearch
+curl -s http://127.0.0.1:7700/health   # {"status":"available"}
 ```
 
-### Point the app at it (as the site user, NOT root)
+Then, as `fleeteye`:
 
 ```bash
-cd /home/space/public_html/qbazaar/qbazaar-api
-# .env:
-#   SCOUT_DRIVER=meilisearch
-#   MEILISEARCH_HOST=http://127.0.0.1:7700
-#   MEILISEARCH_KEY=<master key from above>
-php artisan config:clear && php artisan config:cache
+cd ~/qbazaar/qbazaar-api
+# .env: SCOUT_DRIVER=meilisearch, SCOUT_QUEUE=true, MEILISEARCH_HOST=http://127.0.0.1:7700, MEILISEARCH_KEY=<key>
+php artisan config:cache
 php artisan scout:sync-index-settings
 php artisan scout:import "App\Models\Ad"
-php artisan queue:restart
 ```
 
-### Verify
+Check with a typo, which only Meilisearch tolerates: `curl -s 'https://api.qbazaar.fleeteye.de/api/v1/search?q=iphnoe' | head -c 400`.
+
+If Meilisearch goes down, keep the driver and restart the service: search returns empty results meanwhile, and `scout:import` rebuilds the index at any time. Do not switch to the `database` driver.
+
+## Manual deploy (if Actions is down)
 
 ```bash
-# Typo tolerance proves Meili (the database driver can't do this):
-curl -s 'https://qbazaar.taqat.space/api/v1/search?q=iphnoe' | head -c 400
+ssh fleeteye@<server> "cd ~/qbazaar && bash deploy/scripts/deploy-api.sh"   # or deploy-web.sh
 ```
 
-If Meilisearch goes down, keep `SCOUT_DRIVER=meilisearch` and restart it:
-search degrades to empty results meanwhile, and the index can be rebuilt any
-time with `scout:import`. Do not switch the driver to `database`.
+The scripts fetch and reset to `origin/production` themselves.
+
+## Folder layout
+
+```
+deploy/
+├── README.md                       this file
+├── CPANEL-FLEETEYE-RUNBOOK.md      first-time setup of the current cPanel server (Arabic)
+├── env.production.template         API .env template
+├── web.env.production.template     web .env.production template
+├── scripts/                        deploy-api.sh, deploy-web.sh (run by the workflows)
+├── systemd/                        horizon, reverb, scheduler, web, meilisearch units
+├── apache/                         vhost includes for qbazaar.fleeteye.de and api.qbazaar.fleeteye.de
+├── keys/github-actions.pub         public key for the deploy user
+├── nginx/                          legacy (CloudPanel era, not used on cPanel)
+├── supervisor/                     legacy (replaced by the systemd units)
+└── vps-bootstrap.sh                legacy (self-managed Ubuntu plan, never used)
+```

@@ -1,5 +1,7 @@
 # QBazaar — QA Sweep Report (2026-06-10)
 
+> **Historical snapshot.** Superseded by the live QA run in [`DOCS/QA-REPORT-2026-06-21.md`](../DOCS/QA-REPORT-2026-06-21.md) and the audit in [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md). The `qbazaar.taqat.space` host named below is no longer production.
+
 > Covers the automatable portion of the MILESTONES QA checklist (QA-1..QA-12)
 > plus the dependency-audit fixes applied on `docs/qa-sweep-report`.
 > Status legend: ✅ done · 🟡 partial (evidence below) · ⏸️ needs the deployed app · 👤 needs a human session.

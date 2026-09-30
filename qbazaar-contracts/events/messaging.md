@@ -1,4 +1,4 @@
-# QBazaar — Messaging WebSocket Contract (Sprint 8 Wave A)
+# QBazaar — Messaging WebSocket Contract
 
 Broadcast adapter: **Laravel Reverb** (Pusher-compatible).
 Auth: clients call `POST /api/v1/broadcasting/auth` with their Sanctum bearer (`Authorization: Bearer <token>`). The response is the raw Pusher `{auth}` body, not the API envelope.
@@ -157,6 +157,16 @@ when a pending offer's `expires_at` has passed.
 
 - Channels: `private-conversation.{conversationId}` + `private-user.{buyerId}`.
 - Payload: `status` = `expired`.
+
+## Client events (whispers)
+
+### `typing`
+
+Sent by a client, not the server: `channel.whisper('typing', { user_id })` on
+`private-conversation.{conversationId}`. Reverb relays it to the other
+participant without touching the API. The web client throttles outgoing
+whispers to one every 2 seconds and hides the indicator 3 seconds after the
+last one (`qbazaar-web/lib/echo/useTypingIndicator.ts`).
 
 ## Client behaviour notes
 
