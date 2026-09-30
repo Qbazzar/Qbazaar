@@ -57,6 +57,17 @@ it('restricts the settings page to settings.manage', function (string $role): vo
     expect(Setting::query()->count())->toBe(0);
 })->with(['moderator', 'support']);
 
+it('opens the settings page to any staff member granted settings.manage', function (): void {
+    $moderator = User::factory()->create();
+    $moderator->assignRole('moderator');
+    $moderator->givePermissionTo('settings.manage');
+
+    actingAs($moderator)->get('/admin/settings')->assertOk();
+    actingAs($moderator)->put('/admin/settings', validSettingsPayload())->assertRedirect('/admin/settings');
+
+    expect(app(SettingsService::class)->integer(PlatformSetting::AD_EXPIRY_WARNING_DAYS))->toBe(5);
+});
+
 it('saves the settings and records who changed what', function (): void {
     actingAs($this->admin)
         ->put('/admin/settings', validSettingsPayload())
