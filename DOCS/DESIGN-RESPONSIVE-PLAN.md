@@ -1,5 +1,7 @@
 # QBazaar — خطة إصلاحات التصميم والريسبونسيف
 
+> **Superseded** by the M3 web reskin (`FE-16.x` in [`MILESTONES-V2.md`](../qbazaar-contracts/MILESTONES-V2.md)), which replaces `qbfront.css`. Batches A–C of this plan landed on 2026-06-21; the rest won't be done on the old design.
+
 تدقيق شامل لكل صفحات الموقع (عام + حساب/مصادقة) على الموبايل (~375px) والتابلت (~768px) + جودة التصميم. مرتّبة بالأولوية. معظم الإصلاحات في `qbazaar-web/styles/qbfront.css` (CSS) أو أصناف Tailwind بالمكوّنات.
 
 النمط الجذري المتكرر: **breakpoints الـCSS الحالية (1100/900/760/540px) لا تحاذي مقاسات التابلت الفعلية (768px)** → شبكات كثيرة الأعمدة تنضغط في نطاق 760–1100px. الحل العام: إضافة نقطة 768px.
