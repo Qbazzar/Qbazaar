@@ -44,6 +44,7 @@ import {
   useUpdateAdMutation,
 } from '@/lib/queries/ads';
 import { usePostAdStore, type PostAdStep } from '@/store/post-ad';
+import { isPhoneNotVerifiedError } from '@/lib/auth/phone-gate';
 import { findCategoryBySlug } from '@/store/categories';
 import { findLocationBySlug } from '@/store/locations';
 import { localized, getLocale } from '@/lib/i18n/locale';
@@ -256,6 +257,9 @@ export function PostAdWizard({ mode = 'create', ad }: PostAdWizardProps = {}) {
         router.push(`/ads/${updated.id}`);
       }
     } catch (err) {
+      // The API client already routes to phone verification; the draft stays
+      // in the store so the user resumes here afterwards.
+      if (isPhoneNotVerifiedError(err)) return;
       toast.error(
         (err as { message?: string })?.message ??
           t(

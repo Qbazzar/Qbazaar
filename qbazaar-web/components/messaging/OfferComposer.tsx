@@ -33,6 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { FieldError } from '@/components/auth/FieldError';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { useMakeOfferMutation } from '@/lib/queries/offers';
+import { AuthErrorCode } from '@/lib/api/types';
 import { ApiClientError } from '@/lib/api/auth';
 
 const NOTE_MAX = 280;
@@ -92,6 +93,10 @@ export function OfferComposer({ conversationId }: Props) {
           }
           // Friendly toasts for the well-known offer error codes.
           switch (err.code) {
+            case AuthErrorCode.PhoneNotVerified:
+              // The API client already routes to phone verification.
+              handleClose(false);
+              return;
             case 'OFFER_ACTIVE_EXISTS':
               toast.error(
                 t(

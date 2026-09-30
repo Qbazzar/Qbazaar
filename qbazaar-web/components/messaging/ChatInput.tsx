@@ -18,6 +18,9 @@ import { t } from '@/lib/i18n/messages';
 import { toast } from 'sonner';
 import { translateMaybeKey } from '@/lib/i18n/messages';
 import { OfferComposer } from './OfferComposer';
+import { PhoneVerificationNotice } from '@/components/auth/PhoneVerificationNotice';
+import { useAuth } from '@/hooks/useAuth';
+import { isPhoneNotVerifiedError } from '@/lib/auth/phone-gate';
 
 interface Props {
   conversationId: string;
@@ -34,6 +37,7 @@ export function ChatInput({ conversationId, viewerRole, onTyping }: Props) {
   const [body, setBody] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const mutation = useSendMessageMutation();
+  const { user } = useAuth();
 
   // Auto-grow the textarea up to MAX_ROWS lines, then enable internal scroll.
   const resize = useCallback(() => {
@@ -55,16 +59,21 @@ export function ChatInput({ conversationId, viewerRole, onTyping }: Props) {
     try {
       await mutation.mutateAsync({ conversationId, body: trimmed });
     } catch (err) {
+      // Restore the user's draft so they don't lose what they typed.
+      setBody(trimmed);
+      if (isPhoneNotVerifiedError(err)) return;
       const fallback = t('messaging.errors.send_failed', 'تعذّر إرسال الرسالة');
       const message =
         err && typeof err === 'object' && 'messageKey' in err
           ? translateMaybeKey((err as { messageKey?: string }).messageKey) || fallback
           : fallback;
       toast.error(message);
-      // Restore the user's draft so they don't lose what they typed.
-      setBody(trimmed);
     }
   };
+
+  if (user && !user.phone_verified) {
+    return <PhoneVerificationNotice context="messaging" compact />;
+  }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
