@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'validation' => [
         'failed' => 'البيانات المُدخلة غير صحيحة.',
+        'no_markup' => 'لا يمكن أن يحتوي الحقل :attribute على الرمزين < أو >.',
     ],
 
     'rate' => [

@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
+use App\Rules\NoMarkup;
 use App\Services\Ads\AdModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,8 +75,8 @@ class AdController extends Controller
     public function update(Request $request, Ad $ad): RedirectResponse
     {
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
+            'title' => ['required', 'string', 'max:255', new NoMarkup],
+            'description' => ['required', 'string', new NoMarkup],
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'location_id' => ['required', Rule::exists('locations', 'id')],
             'price' => ['nullable', 'numeric', 'min:0'],
