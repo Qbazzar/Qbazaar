@@ -14,7 +14,7 @@ The API contract and the planning docs for QBazaar: the OpenAPI spec, the error 
 | [`error-codes.md`](error-codes.md) | What does `AUTH_005` mean, and which HTTP status goes with it? |
 | [`events/messages.yaml`](events/messages.yaml), [`events/messaging.md`](events/messaging.md), [`events/notifications.md`](events/notifications.md) | WebSocket channels, events and payloads (Reverb) |
 | [`postman/`](postman/README.md) | Postman collection + local environment |
-| [`MILESTONES.md`](MILESTONES.md), [`PLAN.md`](PLAN.md), [`plans/`](plans/), [`QA-REPORT-2026-06.md`](QA-REPORT-2026-06.md) | MVP-era history (archived; each file says what replaced it) |
+| [`MILESTONES.md`](MILESTONES.md) | MVP task list (archived) |
 
 ## Status of the spec
 

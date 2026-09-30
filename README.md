@@ -13,7 +13,7 @@ QB/
 ├── qbazaar-web/         Next.js 16 web client (React 19 · TypeScript · Tailwind 4 · TanStack Query · AR/EN)
 ├── qbazaar-contracts/   OpenAPI spec, error codes, WebSocket events, V2 plan, roadmap, milestones
 ├── deploy/              Production deploy: scripts, systemd units, Apache includes, env templates, runbooks
-├── DOCS/                PRD (PDF), the 2026-09-30 audit, QA/design reports, original (pre-build) plans, mockup assets
+├── DOCS/                PRD (PDF), the 2026-09-30 audit, the 2026-06-21 QA report, original (pre-build) plans, mockup assets
 └── .github/workflows/   ci.yml (API quality gates), deploy-api.yml, deploy-web.yml
 ```
 

@@ -74,7 +74,7 @@ The V2 product decisions (2026-09-30) are in [`V2-PLAN.md §2 and §4`](V2-PLAN.
 ## History
 
 - **2026-05-20 → 2026-05-25:** Sprints 0–12, MVP feature-complete. Details in [`MILESTONES.md`](MILESTONES.md) (archived).
-- **2026-06:** backend correctness pass, AR/EN switch, SEO/PWA, pHash dedup, typing indicators, FCM scaffold, Meilisearch runbook, QA sweep ([`QA-REPORT-2026-06.md`](QA-REPORT-2026-06.md), [`DOCS/QA-REPORT-2026-06-21.md`](../DOCS/QA-REPORT-2026-06-21.md)). Production moved to the `fleeteye` cPanel server on 2026-06-17.
+- **2026-06:** backend correctness pass, AR/EN switch, SEO/PWA, pHash dedup, typing indicators, FCM scaffold, Meilisearch runbook, QA sweep ([`DOCS/QA-REPORT-2026-06-21.md`](../DOCS/QA-REPORT-2026-06-21.md)). Production moved to the `fleeteye` cPanel server on 2026-06-17.
 - **2026-06 → 07:** mandatory ad approval, light-only web, the custom `/admin` panel replaced Filament.
 - **2026-09-30:** V2 plan approved; audit; M0 fixes merged (#147–#153).
 

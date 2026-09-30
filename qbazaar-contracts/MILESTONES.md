@@ -5,7 +5,7 @@
 > هذا الملف هو **مصدر الحقيقة الواحد** لكل user story و flow و task في الـ MVP. كل sprint له user stories مرقمة، flows، وتاسكات backend + frontend + contract.
 >
 > **التحديث:** 2026-05-20 (Sprint 0 Day 1)
-> **مراجع:** `PLAN.md`، `ROADMAP.md`، `DOCS/QBazaar — خطة الـ Backend التنفيذية`، `DOCS/QBazaar — المخطط المعماري الشامل`
+> **مراجع:** `ROADMAP.md`، `DOCS/QBazaar — خطة الـ Backend التنفيذية`، `DOCS/QBazaar — المخطط المعماري الشامل`
 
 ---
 
