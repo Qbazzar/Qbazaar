@@ -74,6 +74,15 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
 - **When the app is in the background or closed**, iOS/Android cut the connection, so **push notifications via Firebase (FCM)** are required: FCM directly on Android, and via an APNs key uploaded to Firebase on iOS.
 - The same event in the backend goes out to both channels (broadcast + FCM), and push is only sent when it's needed (a user who isn't in the conversation right now).
 
+## 4.2 Cloudflare (decision 2026-09-30)
+| Use | What it gives us | When | Tasks |
+|---|---|---|---|
+| **R2** to store ad images (up to 20 per ad), avatars and chat images | No viewing/egress fees, doesn't fill the server's disk (99GB), fast delivery | M1 (backend completion) | BE-14.42, OPS-18.10 |
+| **Turnstile** on registration and code requests | Protection from bots and from the cost of SMS spam, especially now that login is passwordless | M1 + connecting the app and the web | BE-14.43, MB-15.14, FE-16.9 |
+| **DNS + proxy + WAF + SSL + caching** | Protection from attacks, hiding the server's address, speed | M5 (deployment), after the domain is decided | OPS-18.9 |
+
+> Note: the Cloudflare registrar doesn't sell `.qa` domains. The domain is bought from a Qatari registrar and its DNS is moved to Cloudflare.
+
 ## 5. Milestones (details in MILESTONES-V2.md)
 
 | Milestone | Sprint | Goal | Depends on |

@@ -86,6 +86,12 @@
 | BE-14.30 | Business seller profile: about, legal info, contact, hours, cover image + `is_following` | `GET /users/{id}/public-profile`, `PUT /account/business-profile` | [P1] | Fields editable by the owner only; shown per privacy settings |
 | BE-14.31 | Toggle for saved-search alerts | `PATCH /account/saved-searches/{id}` | [P1] | Alerts stop when it's `false` |
 
+### Cloudflare (storage and bot protection)
+| ID | Task | Endpoint | Priority | Acceptance criteria |
+|---|---|---|---|---|
+| BE-14.42 | Store ad images, avatars and chat images on Cloudflare R2 (an S3 disk with the R2 endpoint) through Spatie Media Library, with the thumbnails there too, a script to move existing images, and short-lived signed links for the original images | — (config + `FILESYSTEM_DISK`/`MEDIA_DISK`) | [P0] | A new upload lands in R2 and is served from it; the old images move over with no broken links; storage settings come from `.env` only; a test with a fake disk |
+| BE-14.43 | Cloudflare Turnstile on registration and requesting a code (email and phone): server-side token verification, an on/off switch, bypass in testing | `POST /auth/register`, `/auth/email-otp/send`, `/auth/send-otp` | [P0] | A request without a valid token is rejected with a clear error code; the Turnstile secret is in `.env` only; tests with a fake verifier |
+
 ### Operations fixes
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -124,6 +130,7 @@
 | MB-15.11 | Connect orders and payments: purchase request and offer cards in chat, checkout (cash only; the other methods hidden until a gateway exists), orders, wallet, settlements and withdrawals, paid promotion | [P0] | Full cycle on a device: request → accept → checkout → handover confirmation → the balance and commission show in the wallet |
 | MB-15.12 | Arabic + RTL: `ar/*.json` files, mirrored arrows, language setting saved on the device and sent to the API | [P0] | Every screen works right in Arabic at 360 |
 | MB-15.13 | Deep links: `qbazaar://ad/{id}` + universal links once the domain is decided | [P1] | A shared ad link opens in the app |
+| MB-15.14 | Turnstile in the app's registration and code-request screens (inside a small WebView) and send the token with the request | [P0] | Registration and code requests work with protection on; the widget is invisible to a normal user |
 
 ## Sprint 16 — M3 Web on the new design (`qbazaar-web`)
 
@@ -137,6 +144,7 @@
 | FE-16.6 | Seller profile, companies, follows | [P1] | — |
 | FE-16.7 | RTL + Lighthouse (≥ 90 performance on mobile) + axe with no serious violations | [P1] | Report attached |
 | FE-16.8 | Orders and payments on the web: request/offer cards, checkout (cash), orders, wallet, settlements | [P0] | Same cycle as the app |
+| FE-16.9 | Turnstile on the web's registration and code-request pages | [P0] | The token goes with the request; clear error on failure |
 
 ## Sprint 17 — M4 Admin additions (`/admin`)
 
@@ -162,6 +170,8 @@
 | OPS-18.6 | Point `deploy-api.yml` at the new server + unify the paths in `deploy/` | [P0] | A push to `production` deploys automatically |
 | OPS-18.7 | Daily database + media backups + a restore test | [P0] | A successful restore on a copy |
 | OPS-18.8 | Health checks + Sentry + uptime alerts | [P1] | An alert arrives when it goes down |
+| OPS-18.9 | Move the domain to Cloudflare: DNS + proxy + SSL "Full (strict)" with an Origin Certificate + WAF and rate-limiting rules + caching static files + a custom domain for R2 images (`cdn.`) + WebSocket for Reverb + the server firewall only accepts Cloudflare IPs + real visitor IPs in Laravel (`TrustProxies`) | [P0] | The site and API go through Cloudflare; the server's IP address doesn't answer directly; the chat works; images come from `cdn.` |
+| OPS-18.10 | Cloudflare R2: create the bucket and access keys, and set the CORS rules for uploading | [P0] | The keys are in the production `.env` only |
 
 ## Sprint 19 — M6 Releasing the mobile app
 
