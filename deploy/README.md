@@ -151,10 +151,8 @@ Next.js is **not** deployed to this VPS — it lives on Vercel
 
 ## 🔎 Meilisearch on the WHM server (qbazaar.taqat.space)
 
-Production search currently runs on the Scout `database` driver (commit
-`a0280e9`) because the old host had no Meilisearch. The WHM server gives us
-root, so we run real Meilisearch and restore the Sprint-6 search experience
-(typo tolerance + ranking).
+Search requires Meilisearch: the search endpoints use Meili filters, facets
+and ranking, which the Scout `database`/`collection` drivers cannot serve.
 
 ### Install (as root, once)
 
@@ -204,5 +202,6 @@ php artisan queue:restart
 curl -s 'https://qbazaar.taqat.space/api/v1/search?q=iphnoe' | head -c 400
 ```
 
-Rollback: set `SCOUT_DRIVER=database`, `config:cache` — no data loss (Meili
-index rebuilds any time via `scout:import`).
+If Meilisearch goes down, keep `SCOUT_DRIVER=meilisearch` and restart it:
+search degrades to empty results meanwhile, and the index can be rebuilt any
+time with `scout:import`. Do not switch the driver to `database`.

@@ -360,8 +360,7 @@ class Ad extends Model implements HasMedia
 
         // The belongsTo accessors are typed non-null, but Eloquent returns null
         // for an orphaned/missing foreign key. Pin them as nullable so indexing
-        // (and the database-driver search, which runs toSearchableArray on every
-        // row) degrades to null instead of throwing "property slug on null".
+        // and scout:import degrade to null instead of throwing "property slug on null".
         /** @var Category|null $category */
         $category = $this->category;
         /** @var Location|null $location */
