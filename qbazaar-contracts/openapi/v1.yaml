@@ -1806,6 +1806,75 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: FAV_LIMIT_REACHED (only when the toggle adds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    put:
+      tags: [Favorites]
+      summary: Add the ad to the caller's favourites (idempotent)
+      description: Repeating the call is a no-op and returns the same state; the count only moves once.
+      operationId: favoritesAdd
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Favourited, with the ad's favourites count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteToggleEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: AD_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: FAV_LIMIT_REACHED (`qbazaar.favorites.max_per_user`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [Favorites]
+      summary: Remove the ad from the caller's favourites (idempotent)
+      description: Removing an ad that is not favourited succeeds with `favorited=false`.
+      operationId: favoritesRemove
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Not favourited, with the ad's favourites count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteToggleEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: AD_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/favorites/ids:
+    get:
+      tags: [Favorites]
+      summary: Ids of every ad the caller favourited, newest first
+      description: Lets clients mark hearts on any ad list without a lookup per ad. Capped at `qbazaar.favorites.max_per_user`.
+      operationId: favoritesIds
+      responses:
+        '200':
+          description: Favourited ad ids
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteIdsEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /api/v1/account/favorites:
     get:
@@ -4176,6 +4245,19 @@ components:
         - type: object
           properties:
             data: { $ref: '#/components/schemas/FavoriteToggleResponse' }
+
+    FavoriteIdsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items: { $ref: '#/components/schemas/ULID' }
 
     FavoritedAdSummary:
       allOf:

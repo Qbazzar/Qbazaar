@@ -164,6 +164,12 @@ return [
         ],
     ],
 
+    'fav' => [
+        'limit' => [
+            'reached' => 'You have reached the maximum number of favourites. Remove some to add new ones.',
+        ],
+    ],
+
     'offer' => [
         'not' => [
             'found' => 'Offer not found.',

@@ -68,6 +68,9 @@ enum ErrorCode: string
     case SEARCH_INVALID_PARAMS = 'SEARCH_003';
     case SEARCH_SAVED_LIMIT = 'SEARCH_004';
 
+    // ── Favorites ───────────────────────────────────────────────────
+    case FAV_LIMIT_REACHED = 'FAV_001';
+
     // ── Messaging (Sprint 8) ────────────────────────────────────────
     case MSG_BLOCKED = 'MSG_001';
     case MSG_RATE_LIMITED = 'MSG_002';
@@ -161,6 +164,7 @@ enum ErrorCode: string
             self::NOTIF_DEVICE_TOKEN_INVALID,
             self::SEARCH_INVALID_PARAMS,
             self::SEARCH_SAVED_LIMIT,
+            self::FAV_LIMIT_REACHED,
             self::REVIEW_ALREADY_EXISTS,
             self::REVIEW_OWN_AD,
             self::TICKET_INVALID_TRANSITION => 422,

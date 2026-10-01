@@ -362,7 +362,10 @@ Route::prefix('account/saved-searches')
 // ── Sprint 7 — Favorites & Recently Viewed ──────────────────────────────────
 //   Authenticated:
 //     POST   /ads/{id}/favorite           — toggle favourite (returns state + count)
+//     PUT    /ads/{id}/favorite           — idempotent add
+//     DELETE /ads/{id}/favorite           — idempotent remove
 //     GET    /account/favorites           — paginated list of caller's favourites
+//     GET    /account/favorites/ids       — every favourited ad id (capped)
 //     GET    /account/recently-viewed     — paginated history (auth-only)
 //     DELETE /account/recently-viewed     — clear caller's history
 //   Public-ish:
@@ -371,8 +374,17 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
     Route::post('/ads/{id}/favorite', [FavoriteController::class, 'toggle'])
         ->name('api.v1.ads.favorite.toggle');
 
+    Route::put('/ads/{id}/favorite', [FavoriteController::class, 'add'])
+        ->name('api.v1.ads.favorite.add');
+
+    Route::delete('/ads/{id}/favorite', [FavoriteController::class, 'remove'])
+        ->name('api.v1.ads.favorite.remove');
+
     Route::get('/account/favorites', [FavoriteController::class, 'index'])
         ->name('api.v1.account.favorites.index');
+
+    Route::get('/account/favorites/ids', [FavoriteController::class, 'ids'])
+        ->name('api.v1.account.favorites.ids');
 
     Route::get('/account/recently-viewed', [RecentViewController::class, 'index'])
         ->name('api.v1.account.recently-viewed.index');
