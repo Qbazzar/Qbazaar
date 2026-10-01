@@ -6,6 +6,7 @@ namespace App\Services\Media;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Spatie\MediaLibrary\MediaCollections\Filesystem;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
@@ -65,6 +66,18 @@ class MediaStorage
         return $media->hasGeneratedConversion($conversion)
             ? $media->getUrl($conversion)
             : $this->signedOriginalUrl($media);
+    }
+
+    /**
+     * Writes a reworked local copy back as the original. On a local disk the
+     * path from withLocalCopy() already is the original, so only remote
+     * disks need an upload.
+     */
+    public function storeOriginal(Media $media, string $localPath): void
+    {
+        if (! $this->isLocal($media)) {
+            app(Filesystem::class)->copyToMediaLibrary($localPath, $media, null, $media->file_name);
+        }
     }
 
     /**

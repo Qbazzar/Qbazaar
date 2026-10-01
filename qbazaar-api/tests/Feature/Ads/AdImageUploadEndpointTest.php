@@ -130,18 +130,44 @@ it('refuses an upload while another upload to the same ad holds the lock', funct
     expect($ad->media()->count())->toBe(0);
 });
 
-it('renders the thumbnail during the upload and queues the larger sizes', function (): void {
+it('stores the files without rendering any size during the upload', function (): void {
     Sanctum::actingAs($this->seller, ['*']);
     $ad = $this->makeAd($this->seller, ['status' => AdStatus::DRAFT->value]);
 
     postJson("/api/v1/ads/{$ad->id}/images", [
         'images' => [UploadedFile::fake()->image('a.jpg', 1200, 900)],
-    ])->assertCreated();
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.images.0.sizes.thumbnail', fn (string $url): bool => str_contains($url, '/original?'));
 
     $media = $ad->getFirstMedia('images');
 
-    expect($media->hasGeneratedConversion('thumbnail'))->toBeTrue()
+    expect($media->hasGeneratedConversion('thumbnail'))->toBeFalse()
         ->and($media->hasGeneratedConversion('large'))->toBeFalse();
 
     Bus::assertDispatched(PerformConversionsJob::class);
+});
+
+it('limits upload requests per user with the uploads limiter', function (): void {
+    config(['qbazaar.uploads.requests_per_minute' => 2]);
+    Sanctum::actingAs($this->seller, ['*']);
+    $ad = $this->makeAd($this->seller, ['status' => AdStatus::DRAFT->value]);
+
+    foreach ([201, 201, 429] as $expectedStatus) {
+        postJson("/api/v1/ads/{$ad->id}/images", [
+            'images' => [UploadedFile::fake()->image('a.jpg', 40, 40)],
+        ])->assertStatus($expectedStatus);
+    }
+});
+
+it('rejects an image above the configured size limit', function (): void {
+    config(['qbazaar.uploads.max_image_size_kb' => 100]);
+    Sanctum::actingAs($this->seller, ['*']);
+    $ad = $this->makeAd($this->seller, ['status' => AdStatus::DRAFT->value]);
+
+    postJson("/api/v1/ads/{$ad->id}/images", [
+        'images' => [UploadedFile::fake()->image('big.jpg', 40, 40)->size(101)],
+    ])->assertStatus(422);
+
+    expect($ad->media()->count())->toBe(0);
 });

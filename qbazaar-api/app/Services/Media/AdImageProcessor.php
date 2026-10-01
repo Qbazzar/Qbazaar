@@ -7,14 +7,16 @@ namespace App\Services\Media;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
- * The queued half of an ad photo upload: records the image's dimensions,
- * BlurHash and perceptual hash on the media row. Safe to repeat — a failed
- * hash never overwrites a valid one.
+ * The queued half of an ad photo upload: bounds the stored original
+ * ({@see OriginalImageDownscaler}), then records the image's dimensions,
+ * BlurHash and perceptual hash on the media row. Safe to repeat — a shrunk
+ * original is left alone and a failed hash never overwrites a valid one.
  */
 class AdImageProcessor
 {
     public function __construct(
         private readonly MediaStorage $storage,
+        private readonly OriginalImageDownscaler $downscaler,
         private readonly BlurHashGeneratorService $blurHasher,
         private readonly PerceptualHashService $perceptualHasher,
     ) {}
@@ -25,6 +27,7 @@ class AdImageProcessor
     public function process(Media $media): bool
     {
         $found = $this->storage->withLocalCopy($media, function (string $path) use ($media): bool {
+            $this->boundOriginal($media, $path);
             $this->recordMetadata($media, $path);
 
             return true;
@@ -37,6 +40,18 @@ class AdImageProcessor
         $media->save();
 
         return true;
+    }
+
+    private function boundOriginal(Media $media, string $path): void
+    {
+        $extension = strtolower(pathinfo($media->file_name, PATHINFO_EXTENSION));
+
+        if (! $this->downscaler->shrink($path, $extension)) {
+            return;
+        }
+
+        $this->storage->storeOriginal($media, $path);
+        $media->size = (int) filesize($path);
     }
 
     private function recordMetadata(Media $media, string $path): void

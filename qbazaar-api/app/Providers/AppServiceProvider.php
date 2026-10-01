@@ -90,6 +90,7 @@ class AppServiceProvider extends ServiceProvider
         ]);
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('publish', fn (Request $r) => Limit::perMinute((int) config('qbazaar.ads.publish_attempts_per_minute_per_user'))->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('uploads', fn (Request $r) => Limit::perMinute((int) config('qbazaar.uploads.requests_per_minute'))->by('uploads:' . (optional($r->user())->id ?: $r->ip())));
         RateLimiter::for('drafts', fn (Request $r) => Limit::perHour((int) config('qbazaar.ads.drafts_per_hour_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('messages', fn (Request $r) => [
             Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()),

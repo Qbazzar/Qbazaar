@@ -282,7 +282,7 @@ Route::prefix('uploads')
     ->name('api.v1.uploads.')
     ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
     ->group(function (): void {
-        Route::post('/avatar', AvatarUploadController::class)->name('avatar');
+        Route::post('/avatar', AvatarUploadController::class)->middleware('throttle:uploads')->name('avatar');
         Route::delete('/avatar', RemoveAvatarController::class)->name('avatar.destroy');
     });
 
@@ -393,7 +393,7 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
         ->name('api.v1.ads.reviews.store');
 
     Route::post('/ads/{ad}/images', [AdImageController::class, 'store'])
-        ->middleware('throttle:api')
+        ->middleware(['throttle:api', 'throttle:uploads'])
         ->name('api.v1.ads.images.store');
 
     Route::post('/ads/{ad}/images/reorder', [AdImageController::class, 'reorder'])

@@ -28,7 +28,9 @@ class AttachAdImagesAction
 {
     private const LOCK_SECONDS = 120;
 
-    private const LOCK_WAIT_SECONDS = 15;
+    // A concurrent upload for the same ad finishes in about a second now that
+    // no conversion runs in the request; waiting longer only ties up a worker.
+    private const LOCK_WAIT_SECONDS = 3;
 
     public function __construct(
         private readonly SettingsService $settings,

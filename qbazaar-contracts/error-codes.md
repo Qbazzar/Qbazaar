@@ -72,7 +72,7 @@ requested locale.
 
 | Code | Meaning | HTTP |
 |------|---------|------|
-| `UPLOAD_001` | File too large (> 10MB) | 413 |
+| `UPLOAD_001` | File too large (> `qbazaar.uploads.max_image_size_kb`, 5MB by default) | 413 |
 | `UPLOAD_002` | Unsupported MIME type | 422 |
 | `UPLOAD_003` | Max images per ad reached (platform setting `ad_max_images`, default 20) | 422 |
 | `UPLOAD_004` | File magic bytes mismatch declared MIME | 422 |

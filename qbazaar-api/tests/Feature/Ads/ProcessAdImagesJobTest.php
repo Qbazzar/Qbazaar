@@ -101,3 +101,27 @@ it('completes without throwing when the media file is missing and leaves phash n
 
     expect($fresh->phash)->toBeNull();
 });
+
+it('downscales an original above the configured longest side and records the new size', function (): void {
+    config(['qbazaar.uploads.original_max_side_px' => 16]);
+
+    /** @var Ad $ad */
+    $ad = Ad::withoutSyncingToSearch(fn () => $this->makeAd($this->seller));
+
+    /** @var Media $media */
+    $media = $ad->addMedia(makeTempPng('downscale_test_'))
+        ->usingFileName('test.png')
+        ->toMediaCollection('images');
+
+    (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(app(AdImageProcessor::class));
+
+    $fresh = $media->fresh();
+    assert($fresh !== null);
+    $stored = getimagesize($fresh->getPath());
+
+    expect($stored)->not->toBeFalse()
+        ->and([$stored[0], $stored[1]])->toBe([16, 16])
+        ->and($fresh->size)->toBe(filesize($fresh->getPath()))
+        ->and($fresh->getCustomProperty('width'))->toBe(16)
+        ->and($fresh->phash)->toMatch('/^[0-9a-f]{16}$/');
+});
