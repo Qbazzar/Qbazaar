@@ -23,7 +23,7 @@
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
 | M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
-| M1 Closing the backend gaps | 14 | 57 | 0 | 57 | Next |
+| M1 Closing the backend gaps | 14 | 57 | 21 | 36 | Batch 1 merged (#160–#164); batch 2 next |
 | M1b Orders and payments | 14 | 10 | 1 | 9 | Settings store done (#156); the rest after the M1 entry items below |
 | M2 Connecting the mobile app | 15 | 14 | 0 | 14 | Waits for M1 |
 | M3 Web on the new design | 16 | 10 | 1 | 9 | Phone-verification flow done (#157); the rest once the M1 endpoints it needs exist |
@@ -31,7 +31,7 @@
 | M5 Deployment on the new server | 18 | 10 | 0 | 10 | Waits for M1–M4 and the domain |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **153** | **20** | **133** | |
+| **Total** | | **153** | **41** | **112** | |
 
 ---
 
@@ -88,7 +88,9 @@
 
 **Exit criteria:** every [P0] below is done and in OpenAPI · the M1 rows in `GAP-ANALYSIS-MOBILE.md` are ✅ · new uploads land on R2 · Turnstile protects registration and code requests.
 
-### Security hardening
+### Done (merged 2026-10-01)
+
+> Status: ✅ done. #160 → BE-13.4, BE-14.17, BE-14.2, BE-13.15 · #161 → BE-14.43 · #162 → BE-14.20, BE-13.7, BE-13.6, BE-13.8, BE-14.23, BE-13.20 · #163 → SEC-13.9, SEC-13.10, SEC-13.11, SEC-13.12 · #164 → BE-14.3, BE-14.4, BE-14.5, BE-13.10, BE-13.11, BE-14.7. BE-14.42 (R2) is merged in #161 but stays open until it is tested against a real bucket.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -96,6 +98,29 @@
 | SEC-13.10 | Rate limits: conversations/offers, OTP by IP+phone, per-identifier login limiter | [P0] | Fixes audit finding SEC-07 (DOCS/AUDIT-2026-09-30.md) |
 | SEC-13.11 | Sanitize CMS/help HTML on write + DOMPurify | [P1] | Fixes audit finding SEC-08 (DOCS/AUDIT-2026-09-30.md) |
 | SEC-13.12 | Hardening: scope Gate::before, fillable cleanup, OTP_FIXED_CODE guard, view cap, CORS, hide swagger | [P2] | Fixes audit finding SEC-12, SEC-13 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.10 | Hierarchical category/location filtering + leaf/active validation | [P1] | Fixes audit finding PERF-11, PRD-07 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.11 | Remove N+1 (category tree, inbox, primary media) + preventLazyLoading | [P1] | Fixes audit finding PERF-04, PERF-06, PERF-12 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.6 | AdLifecycleService: guarded transitions, remove status from fillable, min_images/daily limit, publish no-op, idempotency lock | [P1] | Fixes audit finding ARCH-05, ADM-07, F12, F13 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.7 | Queued image conversions, max_images=20, locked count, body size alignment | [P1] | Fixes audit finding RT-7, PERF-03 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.8 | Fix expiry chunkById + ads(status,expires_at) index + expiring_notified_at | [P1] | Fixes audit finding PERF-05, F11 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.20 | My Ads status filter, full summary, accepted_terms on publish | [P2] | Fixes audit finding PRD-15, PRD-14 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.4 | Locked OfferTransitionService, ad-status check, close competing offers, unique pending offer | [P0] | Fixes audit finding SEC-10, F5, ARCH-09 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.15 | Apply moderation rules to chat messages | [P1] | Fixes audit finding PRD-10 (DOCS/AUDIT-2026-09-30.md) |
+
+| ID | Task | Endpoint | Priority | Acceptance criteria |
+|---|---|---|---|---|
+| BE-14.43 | Cloudflare Turnstile on registration and requesting a code (email and phone): server-side token verification, an on/off switch, bypass in testing | `POST /auth/register`, `/auth/email-otp/send`, `/auth/send-otp` | [P0] | A request without a valid token is rejected with a clear error code; the Turnstile secret is in `.env` only; tests with a fake verifier |
+| BE-14.3 | Real `ads_count` / `today_count` for categories (counter + parent rollup) | `/categories/tree` | [P0] | Counts match the active ads, including children; cached and invalidated on publish/expiry |
+| BE-14.4 | Category page with a section per child | `GET /categories/{slug}` | [P0] | `{category, parent, sub_category_count, sections[{category, ads[≤6]}]}` |
+| BE-14.5 | Searching a category includes all its descendants | `/search`, `/ads` | [P0] | An ad in a grandchild category shows up when searching the grandparent |
+| BE-14.7 | Home in one request | `GET /home` | [P0] | categories, recommended, featured_sellers, best_selling, places; cached for 5 minutes |
+| BE-14.20 | Raise the image limit to 20 + separate the draft limiter from the publish limiter | config + `throttle:drafts` | [P0] | 20 images accepted; creating a draft doesn't count against publishing |
+| BE-14.23 | My ads with a status filter + stats per ad | `GET /account/ads?status=` | [P0] | views/favorites/messages counts for each ad |
+| BE-14.2 | FCM push for a new message and for offer events | — | [P0] | Offline recipient gets a push; no push to the sender; test with a fake FCM |
+| BE-14.17 | Counter-offer (one round from each side) | `POST /offers/{id}/counter` | [P1] | A new `countered` state; `offer.countered` event; a limit on the number of rounds |
+
+### Security hardening
+
 
 ### Auth (passwordless)
 
@@ -113,7 +138,6 @@
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
 | BE-14.42 | Store ad images, avatars and chat images on Cloudflare R2 (an S3 disk with the R2 endpoint) through Spatie Media Library, with the thumbnails there too, a script to move existing images, and short-lived signed links for the original images | — (config + `FILESYSTEM_DISK`/`MEDIA_DISK`) | [P0] | A new upload lands in R2 and is served from it; the old images move over with no broken links; storage settings come from `.env` only; a test with a fake disk |
-| BE-14.43 | Cloudflare Turnstile on registration and requesting a code (email and phone): server-side token verification, an on/off switch, bypass in testing | `POST /auth/register`, `/auth/email-otp/send`, `/auth/send-otp` | [P0] | A request without a valid token is rejected with a clear error code; the Turnstile secret is in `.env` only; tests with a fake verifier |
 
 ### Catalog and search
 
@@ -121,19 +145,13 @@
 
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
-| BE-14.3 | Real `ads_count` / `today_count` for categories (counter + parent rollup) | `/categories/tree` | [P0] | Counts match the active ads, including children; cached and invalidated on publish/expiry |
-| BE-14.4 | Category page with a section per child | `GET /categories/{slug}` | [P0] | `{category, parent, sub_category_count, sections[{category, ads[≤6]}]}` |
-| BE-14.5 | Searching a category includes all its descendants | `/search`, `/ads` | [P0] | An ad in a grandchild category shows up when searching the grandparent |
 | BE-14.6 | Fetch ads by list | `GET /ads?ids=` | [P1] | Preserves order; ignores inactive ads |
-| BE-14.7 | Home in one request | `GET /home` | [P0] | categories, recommended, featured_sellers, best_selling, places; cached for 5 minutes |
 | BE-14.8 | `is_favorited` on the ad (optional token) | `/ads/{id}`, lists | [P1] | true/false for the logged-in user, false for guests |
 | BE-14.9 | Distance search: `_geo` in Meilisearch + `lat,lng,radius_km` | `GET /search` | [P0] | Results within the radius, sorted by distance when requested |
 | BE-14.10 | `most_viewed` sort (index `views_count`) | `GET /search` | [P1] | Correct sort; works together with the filters |
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
-| BE-13.10 | Hierarchical category/location filtering + leaf/active validation | [P1] | Fixes audit finding PERF-11, PRD-07 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.11 | Remove N+1 (category tree, inbox, primary media) + preventLazyLoading | [P1] | Fixes audit finding PERF-04, PERF-06, PERF-12 (DOCS/AUDIT-2026-09-30.md) |
 | BE-13.12 | Cache invalidation (per-slug fields/filters, featured/similar status filter) | [P2] | Fixes audit finding PERF-10, ARCH-10 (DOCS/AUDIT-2026-09-30.md) |
 | BE-13.22 | Missing indexes (ads(status,price), notifications created_at, users last_login_at) | [P2] | Fixes audit finding PERF-14 (DOCS/AUDIT-2026-09-30.md) |
 
@@ -143,35 +161,23 @@
 
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
-| BE-14.20 | Raise the image limit to 20 + separate the draft limiter from the publish limiter | config + `throttle:drafts` | [P0] | 20 images accepted; creating a draft doesn't count against publishing |
 | BE-14.21 | New ad fields: `ad_type`, `shipping`, `postal_code`, `street`, `show_full_address` | `POST/PUT /ads` | [P0] | Migration + validation + in the Resource and in search |
 | BE-14.22 | Reserved status + toggle | `POST /ads/{id}/reserve`, `DELETE …/reserve` | [P1] | `reserved` shows on the listing; can't be reserved while a draft |
-| BE-14.23 | My ads with a status filter + stats per ad | `GET /account/ads?status=` | [P0] | views/favorites/messages counts for each ad |
 | BE-14.32 | Notify the admins about every ad waiting for review (database + email + a counter in the panel) | — | [P0] | Every admin with the moderation permission gets a notification the moment an ad is submitted |
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
-| BE-13.6 | AdLifecycleService: guarded transitions, remove status from fillable, min_images/daily limit, publish no-op, idempotency lock | [P1] | Fixes audit finding ARCH-05, ADM-07, F12, F13 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.7 | Queued image conversions, max_images=20, locked count, body size alignment | [P1] | Fixes audit finding RT-7, PERF-03 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.8 | Fix expiry chunkById + ads(status,expires_at) index + expiring_notified_at | [P1] | Fixes audit finding PERF-05, F11 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.20 | My Ads status filter, full summary, accepted_terms on publish | [P2] | Fixes audit finding PRD-15, PRD-14 (DOCS/AUDIT-2026-09-30.md) |
 | BE-13.21 | Async pHash duplicate detection + persisted moderation result | [P2] | Fixes audit finding PERF-02 (DOCS/AUDIT-2026-09-30.md) |
 
 ### Messages, offers, notifications and push
 
 > BE-13.4 must land before M1b: orders are created from accepted offers. Channel authorization for Bearer clients is done (BE-13.2, #149).
 
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| BE-13.4 | Locked OfferTransitionService, ad-status check, close competing offers, unique pending offer | [P0] | Fixes audit finding SEC-10, F5, ARCH-09 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.15 | Apply moderation rules to chat messages | [P1] | Fixes audit finding PRD-10 (DOCS/AUDIT-2026-09-30.md) |
 
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
-| BE-14.2 | FCM push for a new message and for offer events | — | [P0] | Offline recipient gets a push; no push to the sender; test with a fake FCM |
 | BE-14.15 | Image attachments in messages (`type=image`, media) | `POST /conversations/{id}/messages` multipart | [P0] | Image ≤ 10MB; the message comes back with a `media` URL; `message.sent` is broadcast |
 | BE-14.16 | Hide conversations in bulk (per user) | `DELETE /conversations` `{ids}` | [P1] | Hidden only for the requester; reappears on a new message |
-| BE-14.17 | Counter-offer (one round from each side) | `POST /offers/{id}/counter` | [P1] | A new `countered` state; `offer.countered` event; a limit on the number of rounds |
 | BE-14.18 | New notification types (`ads.new_from_followed`, `ad.price_changed`) + filter `?category=` | `/account/notifications` | [P1] | A price drop on a favorited ad notifies whoever favorited it |
 
 ### Favorites and saved searches
