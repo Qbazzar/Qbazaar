@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\QueueName;
 use App\Jobs\Ads\ModerateAdJob;
 use App\Models\Ad;
 use App\Services\Media\AdImageProcessor;
@@ -28,12 +29,14 @@ class ProcessAdImagesJob implements ShouldQueue
 {
     use Queueable;
 
+    // Recomputing the hashes and re-shrinking the original yield the same
+    // result, so a retry is harmless.
     public int $tries = 3;
 
     /** @var list<int> */
     public array $backoff = [10, 60];
 
-    public int $timeout = 80;
+    public int $timeout = 180;
 
     /**
      * @param list<string> $mediaIds
@@ -41,7 +44,7 @@ class ProcessAdImagesJob implements ShouldQueue
     public function __construct(
         public readonly array $mediaIds,
     ) {
-        $this->onQueue(ModerateAdJob::QUEUE);
+        $this->onQueue(QueueName::MEDIA);
         $this->afterCommit();
     }
 

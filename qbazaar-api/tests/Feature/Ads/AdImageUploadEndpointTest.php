@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\AdStatus;
 use App\Enums\PlatformSetting;
 use App\Jobs\Ads\ModerateAdJob;
+use App\Jobs\Media\PerformConversionsJob;
 use App\Jobs\ProcessAdImagesJob;
 use App\Models\User;
 use App\Services\Settings\SettingsService;
@@ -18,7 +19,6 @@ use Laravel\Sanctum\Sanctum;
 
 use function Pest\Laravel\postJson;
 
-use Spatie\MediaLibrary\Conversions\Jobs\PerformConversionsJob;
 use Tests\Concerns\CreatesAds;
 
 uses(RefreshDatabase::class, CreatesAds::class);
@@ -145,7 +145,7 @@ it('stores the files without rendering any size during the upload', function ():
     expect($media->hasGeneratedConversion('thumbnail'))->toBeFalse()
         ->and($media->hasGeneratedConversion('large'))->toBeFalse();
 
-    Bus::assertDispatched(PerformConversionsJob::class);
+    Bus::assertDispatched(PerformConversionsJob::class, fn (PerformConversionsJob $job): bool => $job->queue === 'media');
 });
 
 it('limits upload requests per user with the uploads limiter', function (): void {

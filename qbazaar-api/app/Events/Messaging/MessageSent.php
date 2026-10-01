@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Events\Messaging;
 
 use App\Enums\MessageType;
+use App\Events\Concerns\BroadcastsOnRealtimeQueue;
 use App\Http\Resources\Api\V1\Messaging\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -35,7 +36,7 @@ use Illuminate\Support\Traits\Localizable;
  */
 class MessageSent implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, Localizable, SerializesModels;
+    use BroadcastsOnRealtimeQueue, Dispatchable, InteractsWithSockets, Localizable, SerializesModels;
 
     public string $otherUserId;
 

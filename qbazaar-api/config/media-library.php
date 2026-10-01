@@ -2,19 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Enums\QueueName;
+use App\Jobs\Media\PerformConversionsJob;
+use Spatie\MediaLibrary\ResponsiveImages\Jobs\GenerateResponsiveImagesJob;
+
 /*
-|--------------------------------------------------------------------------
-| Media library overrides
-|--------------------------------------------------------------------------
-| Merged over the package defaults (vendor/spatie/laravel-medialibrary/
-| config/media-library.php), so only the keys we change live here.
+| Only the keys QBazaar changes; MediaLibrary merges its own defaults for
+| everything else (see vendor/spatie/laravel-medialibrary/config).
 */
-
 return [
+    'queue_name' => env('MEDIA_QUEUE') ?: QueueName::MEDIA->value,
 
-    // The `media` queue (Horizon supervisor-media) keeps image work away from
-    // chat and notifications even when MEDIA_QUEUE is missing from .env.
-    'queue_name' => env('MEDIA_QUEUE', 'media'),
+    'jobs' => [
+        'perform_conversions' => PerformConversionsJob::class,
+        'generate_responsive_images' => GenerateResponsiveImagesJob::class,
+    ],
 
     'remote' => [
         // Conversion paths are server-generated and never rewritten, so the
@@ -24,5 +26,4 @@ return [
             'CacheControl' => 'public, max-age=31536000, immutable',
         ],
     ],
-
 ];

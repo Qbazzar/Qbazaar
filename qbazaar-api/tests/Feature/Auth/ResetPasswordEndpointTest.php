@@ -8,7 +8,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -18,7 +17,6 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Cache::flush();
-    RateLimiter::clear('auth|127.0.0.1');
 
     $this->user = User::factory()->create([
         'email' => 'reset@example.qa',

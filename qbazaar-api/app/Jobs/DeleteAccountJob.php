@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\QueueName;
 use App\Models\User;
 use App\Services\Account\AccountEraser;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,10 +30,14 @@ class DeleteAccountJob implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [180, 900];
 
+    // Shorter than the overlap lock below, which must outlive a run but expire
+    // before the first retry.
+    public int $timeout = 100;
+
     public function __construct(
         public readonly string $userId,
     ) {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     /**

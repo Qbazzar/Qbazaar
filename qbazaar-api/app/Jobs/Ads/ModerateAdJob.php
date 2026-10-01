@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs\Ads;
 
 use App\Actions\Ads\ModeratePendingAdAction;
+use App\Enums\QueueName;
 use App\Jobs\ProcessAdImagesJob;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,8 +25,6 @@ class ModerateAdJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
     use Queueable;
 
-    public const QUEUE = 'media';
-
     public int $tries = 3;
 
     /** @var list<int> */
@@ -38,7 +37,7 @@ class ModerateAdJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
     public function __construct(
         public readonly string $adId,
     ) {
-        $this->onQueue(self::QUEUE);
+        $this->onQueue(QueueName::MEDIA);
         $this->afterCommit();
     }
 
