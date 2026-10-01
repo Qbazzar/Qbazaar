@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Listeners\Ads;
 
+use App\Enums\AdStatus;
 use App\Enums\UserStatus;
 use App\Events\Ads\AdSubmittedForReview;
 use App\Models\User;
 use App\Notifications\Ads\AdPendingReviewNotification;
+use App\Services\Admin\StaffDirectory;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 
@@ -19,7 +20,8 @@ use Illuminate\Support\Facades\Notification;
  * on the staff lookup or the fan-out.
  *
  * Reviewers are found by permission, not role name, so a custom role that is
- * granted `ads.approve` is notified too.
+ * granted `ads.approve` is notified too. An ad already reviewed by the time
+ * the job runs needs no alert.
  */
 class NotifyAdminsOfPendingAd implements ShouldQueue
 {
@@ -29,33 +31,33 @@ class NotifyAdminsOfPendingAd implements ShouldQueue
 
     public string $queue = 'default';
 
+    public function __construct(
+        private readonly StaffDirectory $staff,
+    ) {}
+
     public function handle(AdSubmittedForReview $event): void
     {
+        if ($event->ad->status !== AdStatus::PENDING) {
+            return;
+        }
+
+        $reviewerIds = $this->staff->idsWithPermission(self::REVIEW_PERMISSION);
+
+        if ($reviewerIds === []) {
+            return;
+        }
+
         $notification = new AdPendingReviewNotification(
             $event->ad,
             flagged: ! $event->result->clean,
             flags: $event->result->flags,
         );
 
-        $this->reviewers()->chunkById(self::CHUNK_SIZE, function (Collection $reviewers) use ($notification): void {
-            Notification::send($reviewers, $notification);
-        });
-    }
-
-    /**
-     * whereHas rather than Spatie's `permission()` scope, which throws when
-     * the permission has not been seeded yet.
-     *
-     * @return Builder<User>
-     */
-    private function reviewers(): Builder
-    {
-        $hasPermission = static fn (Builder $permissions) => $permissions->where('name', self::REVIEW_PERMISSION);
-
-        return User::query()
+        User::query()
+            ->whereIn('id', $reviewerIds)
             ->where('status', UserStatus::ACTIVE->value)
-            ->where(static fn (Builder $query) => $query
-                ->whereHas('roles.permissions', $hasPermission)
-                ->orWhereHas('permissions', $hasPermission));
+            ->chunkById(self::CHUNK_SIZE, function (Collection $reviewers) use ($notification): void {
+                Notification::send($reviewers, $notification);
+            });
     }
 }

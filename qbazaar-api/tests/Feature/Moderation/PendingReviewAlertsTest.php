@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
 use App\Enums\UserStatus;
+use App\Events\Ads\AdSubmittedForReview;
+use App\Listeners\Ads\NotifyAdminsOfPendingAd;
 use App\Models\User;
 use App\Notifications\Ads\AdPendingReviewNotification;
+use App\Services\Admin\StaffDirectory;
 use App\Services\Ads\AdLifecycleService;
 use App\Services\Ads\PendingReviewCounter;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -54,6 +58,30 @@ it('notifies every active reviewer in the panel and by email when an ad is submi
     }
 
     Notification::assertNotSentTo([$support, $suspendedModerator, $this->seller], AdPendingReviewNotification::class);
+});
+
+it('finds reviewers through roles and direct grants, once each', function (): void {
+    $moderator = User::factory()->create()->assignRole('moderator');
+    $direct = User::factory()->create()->givePermissionTo('ads.approve');
+    $both = User::factory()->create()->assignRole('moderator')->givePermissionTo('ads.approve');
+    $support = User::factory()->create()->assignRole('support');
+    $customer = User::factory()->create();
+
+    $ids = app(StaffDirectory::class)->idsWithPermission('ads.approve');
+
+    expect($ids)->toContain($moderator->id, $direct->id, $both->id)
+        ->not->toContain($support->id, $customer->id)
+        ->and(array_count_values($ids)[$both->id])->toBe(1);
+});
+
+it('skips the alert when the ad was reviewed before the queued listener ran', function (): void {
+    Notification::fake();
+    User::factory()->create()->assignRole('moderator');
+    $ad = $this->makeAd($this->seller, ['status' => AdStatus::ACTIVE->value]);
+
+    app(NotifyAdminsOfPendingAd::class)->handle(new AdSubmittedForReview($ad, ModerationResult::clean()));
+
+    Notification::assertNothingSent();
 });
 
 it('queues the email on the low queue and links to the admin review page', function (): void {
