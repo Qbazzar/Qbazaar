@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class CatalogCache
 {
+    public const HOME_FEED_KEY = 'home.feed';
+
     public const MAIN_CATEGORIES_KEY = 'categories.main';
 
     public function __construct(
@@ -34,5 +36,6 @@ class CatalogCache
     public function listingsChanged(): void
     {
         $this->counts->flush();
+        Cache::forget(self::HOME_FEED_KEY);
     }
 }

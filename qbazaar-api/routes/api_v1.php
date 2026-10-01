@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Cms\PageController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Help\HelpController;
+use App\Http\Controllers\Api\V1\Home\HomeController;
 use App\Http\Controllers\Api\V1\Media\MediaOriginalController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
@@ -230,6 +231,10 @@ Route::prefix('categories')
         Route::get('{slug}/fields', [CategoryController::class, 'fields'])->name('fields');
         Route::get('{slug}', [CategoryController::class, 'show'])->name('show');
     });
+
+Route::get('/home', HomeController::class)
+    ->middleware('throttle:api')
+    ->name('api.v1.home');
 
 Route::prefix('locations')
     ->name('api.v1.locations.')

@@ -104,12 +104,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Catalog — category counters and category pages
+    | Catalog — category pages and the home feed
     |--------------------------------------------------------------------------
     */
     'catalog' => [
         'counts_cache_seconds' => 600,
         'category_section_ads' => 6,
+    ],
+
+    'home' => [
+        'cache_seconds' => 300,
+        'recommended_limit' => 12,
+        'recommended_window_days' => 30,
+        'best_selling_limit' => 12,
+        'featured_sellers_limit' => 10,
     ],
 
     /*

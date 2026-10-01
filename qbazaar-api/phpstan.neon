@@ -37,6 +37,7 @@ parameters:
     - tests/Feature/Reports/*
     - tests/Feature/Manage/*
     - tests/Feature/Support/*
+    - tests/Feature/Home/*
     - tests/Concerns/*
     - bootstrap/cache/*
     - storage/*
