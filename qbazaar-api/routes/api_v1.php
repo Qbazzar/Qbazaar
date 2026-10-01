@@ -108,7 +108,7 @@ Route::get('/openapi.yaml', function (): Response {
 //   Wave 2: OTP (send/verify/resend), password reset, email verification
 Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
     Route::post('/register', RegisterController::class)
-        ->middleware('throttle:auth')
+        ->middleware(['throttle:auth', 'turnstile'])
         ->name('register');
 
     Route::post('/login', LoginController::class)
@@ -125,7 +125,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
 
     // OTP — phone verification (Wave 2)
     Route::post('/send-otp', [OtpController::class, 'send'])
-        ->middleware('throttle:otp')
+        ->middleware(['throttle:otp', 'turnstile'])
         ->name('send-otp');
 
     Route::post('/verify-otp', [OtpController::class, 'verify'])
@@ -133,7 +133,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->name('verify-otp');
 
     Route::post('/resend-otp', [OtpController::class, 'resend'])
-        ->middleware('throttle:otp')
+        ->middleware(['throttle:otp', 'turnstile'])
         ->name('resend-otp');
 
     // Password reset (Wave 2)

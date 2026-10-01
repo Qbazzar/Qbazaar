@@ -93,6 +93,8 @@ paths:
       summary: Register a new account
       operationId: authRegister
       security: []
+      parameters:
+        - $ref: '#/components/parameters/TurnstileToken'
       requestBody:
         required: true
         content:
@@ -139,7 +141,14 @@ paths:
                         token_type: Bearer
                         expires_in: 900
         '422':
-          $ref: '#/components/responses/ValidationError'
+          description: Validation failed (`VALIDATION_FAILED`) or the Turnstile check failed (`TURNSTILE_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                turnstile_failed:
+                  $ref: '#/components/examples/TurnstileFailed'
         '429':
           $ref: '#/components/responses/RateLimited'
 
@@ -249,6 +258,8 @@ paths:
       summary: Send a 6-digit OTP to the user's phone via Twilio
       operationId: authSendOtp
       security: []
+      parameters:
+        - $ref: '#/components/parameters/TurnstileToken'
       requestBody:
         required: true
         content:
@@ -274,6 +285,8 @@ paths:
                       sent_to: '+97455123456'
                       expires_in: 300
                       can_resend_in: 60
+        '422':
+          $ref: '#/components/responses/TurnstileFailed'
         '429':
           $ref: '#/components/responses/RateLimited'
 
@@ -332,6 +345,8 @@ paths:
       summary: Resend the OTP after the cooldown window
       operationId: authResendOtp
       security: []
+      parameters:
+        - $ref: '#/components/parameters/TurnstileToken'
       requestBody:
         required: true
         content:
@@ -345,6 +360,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OtpSendResponseEnvelope'
+        '422':
+          $ref: '#/components/responses/TurnstileFailed'
         '429':
           $ref: '#/components/responses/RateLimited'
 
@@ -1389,6 +1406,35 @@ paths:
         '204': { description: Image removed }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/media/{media}/original:
+    get:
+      tags: [Ads]
+      summary: Download the original-resolution ad image
+      description: |
+        Only reachable through the signed link in `Media.url`; the `expires`
+        and `signature` query parameters are part of that link. When media is
+        stored locally the file is streamed directly. When it is stored on
+        Cloudflare R2 (`MEDIA_DISK=r2`) the response is a 302 to a presigned R2
+        URL that is valid for a few minutes (`qbazaar.uploads.original_redirect_ttl_minutes`).
+      operationId: mediaOriginal
+      security: []
+      parameters:
+        - { name: media, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - { name: expires, in: query, required: true, schema: { type: integer } }
+        - { name: signature, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The original image (local storage)
+          content:
+            image/*:
+              schema: { type: string, format: binary }
+        '302':
+          description: Redirect to a short-lived presigned URL (R2 storage)
+          headers:
+            Location: { schema: { type: string, format: uri } }
+        '403': { description: Signature invalid or expired }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /api/v1/account/ads:
@@ -3556,7 +3602,8 @@ components:
             Temporary signed URL for the original-resolution file
             (GET /media/{media}/original). Expires after 24h by default —
             do not persist it; re-fetch the resource for a fresh link.
-            The `sizes.*` conversion URLs remain permanent public URLs.
+            The `sizes.*` conversion URLs remain permanent public URLs
+            (served from the R2 public domain when `MEDIA_DISK=r2`).
         sizes: { $ref: '#/components/schemas/MediaSizes' }
         blurhash: { type: string, nullable: true }
         width: { type: integer, nullable: true }
@@ -4599,7 +4646,39 @@ components:
             data:
               $ref: '#/components/schemas/SupportReply'
 
+  parameters:
+    TurnstileToken:
+      name: X-Turnstile-Token
+      in: header
+      required: false
+      description: |
+        Cloudflare Turnstile token from the widget. Required whenever the
+        server runs with `TURNSTILE_ENABLED=true`; a token is single-use, so
+        fetch a new one for every request.
+      schema: { type: string, maxLength: 2048 }
+
+  examples:
+    TurnstileFailed:
+      value:
+        success: false
+        error:
+          code: TURNSTILE_001
+          message_key: errors.turnstile.failed
+          message: The security check failed. Please try again.
+          details: null
+          request_id: req_abc123
+
   responses:
+    TurnstileFailed:
+      description: The Turnstile check failed (`TURNSTILE_001`)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            turnstile_failed:
+              $ref: '#/components/examples/TurnstileFailed'
+
     Unauthorized:
       description: Missing or invalid authentication token
       content:

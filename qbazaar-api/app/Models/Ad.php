@@ -430,7 +430,8 @@ class Ad extends Model implements HasMedia
         // No singleFile() — ads carry up to 10 images. The count cap is
         // enforced in UploadImagesRequest, not here, so a future bulk
         // import can opt out without changing the model contract.
-        $this->addMediaCollection('images');
+        $this->addMediaCollection('images')
+            ->storeConversionsOnDisk((string) config('qbazaar.uploads.public_disk'));
     }
 
     public function registerMediaConversions(?Media $media = null): void

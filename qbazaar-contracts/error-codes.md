@@ -31,6 +31,12 @@ requested locale.
 | `AUTH_009` | Token expired | 401 |
 | `AUTH_010` | Token invalid (malformed / revoked) | 401 |
 
+## Bot protection (Cloudflare Turnstile)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `TURNSTILE_001` | Turnstile check failed: the `X-Turnstile-Token` header is missing, invalid, expired or already used. Get a fresh token from the widget and retry. Only returned while `TURNSTILE_ENABLED=true`. | 422 |
+
 ## Users (Sprint 2)
 
 | Code | Meaning | HTTP |

@@ -7,6 +7,7 @@ namespace App\Http\Resources\Api\V1\Messaging;
 use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Services\Media\MediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -46,9 +47,7 @@ class ConversationListResource extends JsonResource
                 'id' => $ad->id,
                 'title' => $ad->title,
                 'thumb_url' => $primary instanceof Media
-                    ? ($primary->hasGeneratedConversion('thumbnail')
-                        ? $primary->getUrl('thumbnail')
-                        : $primary->getUrl())
+                    ? app(MediaStorage::class)->conversionUrl($primary, 'thumbnail')
                     : null,
             ],
             'other_participant' => $other === null ? null : [

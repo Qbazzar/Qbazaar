@@ -38,14 +38,15 @@
             </div>
 
             @php($images = $ad->getMedia('images'))
+            @php($mediaStorage = app(\App\Services\Media\MediaStorage::class))
             @if ($images->isNotEmpty())
                 <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
                     <div class="mb-3 text-sm font-semibold text-ink-500">الصور ({{ $images->count() }})</div>
                     <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
                         @foreach ($images as $image)
-                            <a href="{{ $image->getUrl() }}" target="_blank"
+                            <a href="{{ $mediaStorage->signedOriginalUrl($image) }}" target="_blank"
                                class="block aspect-square overflow-hidden rounded-xl border border-ink-200">
-                                <img src="{{ $image->getUrl() }}" alt="" class="h-full w-full object-cover">
+                                <img src="{{ $mediaStorage->conversionUrl($image, 'medium') }}" alt="" class="h-full w-full object-cover">
                             </a>
                         @endforeach
                     </div>

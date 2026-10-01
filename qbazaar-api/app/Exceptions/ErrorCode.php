@@ -28,6 +28,7 @@ enum ErrorCode: string
     case AUTH_PHONE_EXISTS = 'AUTH_008';
     case AUTH_TOKEN_EXPIRED = 'AUTH_009';
     case AUTH_TOKEN_INVALID = 'AUTH_010';
+    case TURNSTILE_FAILED = 'TURNSTILE_001';
 
     // ── Users (Sprint 2) ────────────────────────────────────────────
     case USER_NOT_FOUND = 'USER_001';
@@ -131,6 +132,7 @@ enum ErrorCode: string
             self::AUTH_OTP_INVALID,
             self::AUTH_EMAIL_EXISTS,
             self::AUTH_PHONE_EXISTS,
+            self::TURNSTILE_FAILED,
             self::USER_PASSWORD_CURRENT_REQUIRED,
             self::USER_DEACTIVATION_PASSWORD_REQUIRED,
             self::USER_BLOCK_SELF_FORBIDDEN,

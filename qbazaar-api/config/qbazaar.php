@@ -169,6 +169,15 @@ return [
         // originals are served via an expiring signed route so they can't
         // be hotlinked permanently (conversions stay public).
         'original_url_ttl_hours' => 24,
+
+        // Originals live on MEDIA_DISK (see config/media-library.php). Files
+        // that are linked permanently — conversions and avatars — go to
+        // MEDIA_PUBLIC_DISK, which defaults to the same disk.
+        'public_disk' => env('MEDIA_PUBLIC_DISK', env('MEDIA_DISK', 'public')),
+
+        // On a remote disk the signed original route redirects to a presigned
+        // URL valid for this long.
+        'original_redirect_ttl_minutes' => 5,
         'image_conversions' => [
             'thumbnail' => ['width' => 200, 'height' => 200],
             'medium' => ['width' => 640],
