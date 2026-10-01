@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Ads;
 
 use App\Enums\AdStatus;
+use App\Events\Ads\AdPriceDropped;
 use App\Models\Ad;
 use App\Services\Ads\AdLifecycleService;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,8 @@ class UpdateAdAction
             /** @var Ad $locked */
             $locked = Ad::query()->lockForUpdate()->findOrFail($ad->getKey());
 
+            $previousPrice = $locked->price;
+
             $locked->fill($attributes);
 
             $needsReview = $locked->status === AdStatus::ACTIVE
@@ -47,9 +50,17 @@ class UpdateAdAction
 
             if ($needsReview) {
                 $this->lifecycle->submitForReview($locked);
+            } elseif ($locked->status === AdStatus::ACTIVE && $this->isPriceDrop($previousPrice, $locked->price)) {
+                $newPrice = (string) $locked->price;
+                DB::afterCommit(fn () => AdPriceDropped::dispatch($locked, (string) $previousPrice, $newPrice));
             }
 
             return $locked;
         });
+    }
+
+    private function isPriceDrop(?string $previous, ?string $current): bool
+    {
+        return $previous !== null && $current !== null && (float) $current < (float) $previous;
     }
 }

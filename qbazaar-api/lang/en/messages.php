@@ -155,5 +155,13 @@ return [
             'greeting' => 'Hello,',
             'footer' => 'Thanks for being a part of QBazaar.',
         ],
+        'ad_price_changed' => [
+            'title' => 'Price drop on a favourite',
+            'body' => '":title" is now :price :currency (was :previous).',
+        ],
+        'ad_new_from_followed' => [
+            'title' => 'New ad from :name',
+            'body' => ':name just posted ":title".',
+        ],
     ],
 ];

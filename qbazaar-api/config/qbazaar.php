@@ -149,6 +149,14 @@ return [
         'max_per_user' => 1000,
     ],
 
+    // Fan-out alerts (price drops, new ads from followed sellers, saved
+    // searches): users per queued chunk, and how long a user stays marked
+    // as alerted for one event so retries and repeated events stay silent.
+    'notifications' => [
+        'fan_out_chunk' => 500,
+        'alert_dedupe_hours' => 72,
+    ],
+
     'recently_viewed' => [
         'cap_per_user' => 50,
         'cleanup_interval_hours' => 24,

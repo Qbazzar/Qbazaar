@@ -2511,6 +2511,17 @@ paths:
           required: false
           description: When `1`, returns only unread notifications.
         - in: query
+          name: category
+          schema:
+            type: string
+            maxLength: 64
+            pattern: '^[a-z_]+(\.[a-z_]+)*$'
+          required: false
+          description: |
+            A full category (`ad.price_changed`) or a group prefix (`ad`
+            returns every `ad.*`; `ads` returns `ads.new_from_followed`).
+            See qbazaar-contracts/events/notifications.md for the list.
+        - in: query
           name: page
           schema: { type: integer, minimum: 1 }
       responses:
@@ -4763,7 +4774,10 @@ components:
         category:
           type: string
           nullable: true
-          description: Short discriminator surfaced from the notification's data payload (e.g. ad.approved, account.data_export_ready).
+          description: |
+            Short discriminator surfaced from the notification's data payload
+            (e.g. ad.approved, account.data_export_ready, ad.price_changed,
+            ads.new_from_followed). Filterable with `?category=`.
           example: ad.approved
         title:
           type: string

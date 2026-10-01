@@ -8,15 +8,19 @@ use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
+use App\Notifications\Channels\CategorizedDatabaseChannel;
 use App\Observers\AdListingCacheObserver;
 use App\Observers\AdObserver;
 use App\Observers\AdOffersObserver;
 use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
+use App\Services\Users\NoSellerFollowers;
+use App\Services\Users\SellerFollowers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Channels\DatabaseChannel;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,6 +35,11 @@ class AppServiceProvider extends ServiceProvider
         // a singleton avoids re-parsing the banned-words array on every
         // publish call within a single worker process.
         $this->app->singleton(ModerationRulesService::class);
+
+        $this->app->bind(DatabaseChannel::class, CategorizedDatabaseChannel::class);
+
+        // Follows land with BE-14.28, which binds the real directory here.
+        $this->app->bind(SellerFollowers::class, NoSellerFollowers::class);
 
         // Telescope is installed as a dev dependency, so its classes only
         // exist when composer ran without --no-dev. Guard the registration so
