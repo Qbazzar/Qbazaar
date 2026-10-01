@@ -114,6 +114,10 @@ enum ErrorCode: string
     case TICKET_FORBIDDEN = 'TICKET_002';
     case TICKET_INVALID_TRANSITION = 'TICKET_003';
 
+    // ── Saved addresses ────────────────────────────────────────────────────
+    case ADDRESS_NOT_FOUND = 'ADDRESS_001';
+    case ADDRESS_LIMIT_REACHED = 'ADDRESS_002';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -163,7 +167,8 @@ enum ErrorCode: string
             self::SEARCH_SAVED_LIMIT,
             self::REVIEW_ALREADY_EXISTS,
             self::REVIEW_OWN_AD,
-            self::TICKET_INVALID_TRANSITION => 422,
+            self::TICKET_INVALID_TRANSITION,
+            self::ADDRESS_LIMIT_REACHED => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,
@@ -195,7 +200,8 @@ enum ErrorCode: string
             self::CMS_PAGE_NOT_FOUND,
             self::HELP_ARTICLE_NOT_FOUND,
             self::HELP_CATEGORY_NOT_FOUND,
-            self::TICKET_NOT_FOUND => 404,
+            self::TICKET_NOT_FOUND,
+            self::ADDRESS_NOT_FOUND => 404,
 
             self::AUTH_OTP_EXPIRED,
             self::AD_EXPIRED,

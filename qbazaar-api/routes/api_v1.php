@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
+use App\Http\Controllers\Api\V1\Account\AddressController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
@@ -189,6 +190,11 @@ Route::prefix('account')
         Route::put('/privacy-settings', [PrivacySettingsController::class, 'update'])->name('privacy.update');
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
+
+        Route::get('/addresses', [AddressController::class, 'index'])->name('addresses.index');
+        Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
+        Route::patch('/addresses/{id}', [AddressController::class, 'update'])->name('addresses.update');
+        Route::delete('/addresses/{id}', [AddressController::class, 'destroy'])->name('addresses.destroy');
 
         // Web-push device tokens (FCM). DELETE takes the token in the body —
         // FCM tokens are too long (and too sensitive) to put in the URL.

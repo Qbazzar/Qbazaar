@@ -247,6 +247,7 @@ return [
     'account' => [
         'deletion_grace_period_days' => 30,
         'data_export_link_ttl_hours' => 48,
+        'max_addresses' => 10,
     ],
 
     /*

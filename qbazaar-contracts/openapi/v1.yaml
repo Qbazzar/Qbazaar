@@ -716,6 +716,119 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v1/account/addresses:
+    get:
+      tags: [Account]
+      summary: List saved delivery addresses, the default first
+      description: Bounded by the 10-address limit, so the list is not paginated.
+      operationId: accountAddressesIndex
+      responses:
+        '200':
+          description: Addresses returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAddressListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Account]
+      summary: Save a new delivery address
+      description: |
+        At most 10 addresses per user (`ADDRESS_002`). The first address is
+        always the default; `is_default: true` moves the default to the new one.
+      operationId: accountAddressesStore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSavedAddressRequest'
+            examples:
+              valid:
+                value:
+                  label: Home
+                  full_name: Ahmed Al-Ali
+                  phone: '+97455123456'
+                  street: Al Sadd Street
+                  house_number: '12'
+                  supplement: Flat 4
+                  city: Doha
+                  is_default: true
+      responses:
+        '201':
+          description: Address saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAddressEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation failed or the address limit is reached (`ADDRESS_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/addresses/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ULID'
+    patch:
+      tags: [Account]
+      summary: Change any subset of a saved address
+      description: |
+        `is_default: true` makes this the only default. `is_default: false`
+        on the current default is ignored: there is always exactly one default.
+      operationId: accountAddressesUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSavedAddressRequest'
+            examples:
+              make_default:
+                value:
+                  is_default: true
+      responses:
+        '200':
+          description: Address updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAddressEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Not one of the caller's addresses (`ADDRESS_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Account]
+      summary: Delete a saved address
+      description: Deleting the default makes the newest remaining address the default.
+      operationId: accountAddressesDestroy
+      responses:
+        '204':
+          description: Address deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Not one of the caller's addresses (`ADDRESS_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   # ──────────────────────────────────────────────────────────────────────────
   # Account lifecycle (Sprint 2 — Wave 2)
   # ──────────────────────────────────────────────────────────────────────────
@@ -3269,6 +3382,101 @@ components:
         language:
           type: string
           enum: [ar, en]
+
+    SavedAddress:
+      type: object
+      required: [id, label, full_name, phone, street, house_number, supplement, city, postal_code, location_id, is_default, created_at, updated_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/ULID'
+        label:
+          type: [string, 'null']
+          maxLength: 50
+        full_name:
+          type: string
+        phone:
+          type: [string, 'null']
+          description: E.164
+        street:
+          type: string
+        house_number:
+          type: string
+        supplement:
+          type: [string, 'null']
+          description: Floor, flat or landmark
+        city:
+          type: string
+        postal_code:
+          type: [string, 'null']
+        location_id:
+          type: [string, 'null']
+          description: Optional zone id from `/locations/qatar`
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UpdateSavedAddressRequest:
+      type: object
+      properties:
+        label:
+          type: [string, 'null']
+          maxLength: 50
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 80
+        phone:
+          type: [string, 'null']
+          pattern: '^\+[1-9]\d{6,14}$'
+        street:
+          type: string
+          maxLength: 120
+        house_number:
+          type: string
+          maxLength: 20
+        supplement:
+          type: [string, 'null']
+          maxLength: 120
+        city:
+          type: string
+          maxLength: 80
+        postal_code:
+          type: [string, 'null']
+          maxLength: 20
+        location_id:
+          type: [string, 'null']
+        is_default:
+          type: boolean
+
+    CreateSavedAddressRequest:
+      allOf:
+        - $ref: '#/components/schemas/UpdateSavedAddressRequest'
+        - type: object
+          required: [full_name, street, house_number, city]
+
+    SavedAddressEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SavedAddress'
+
+    SavedAddressListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 10
+              items:
+                $ref: '#/components/schemas/SavedAddress'
 
     PatchProfileRequest:
       type: object

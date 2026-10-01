@@ -299,4 +299,13 @@ return [
             ],
         ],
     ],
+
+    'address' => [
+        'not' => [
+            'found' => 'Address not found.',
+        ],
+        'limit' => [
+            'reached' => 'You have reached the maximum number of saved addresses.',
+        ],
+    ],
 ];

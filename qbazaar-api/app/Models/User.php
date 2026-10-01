@@ -143,6 +143,12 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
      *  calls to resolve where a push should go.
      * ──────────────────────────────────────────────────────────────────*/
 
+    /** @return HasMany<UserAddress, $this> */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
     /** @return HasMany<DeviceToken, $this> */
     public function deviceTokens(): HasMany
     {

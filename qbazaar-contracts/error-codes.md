@@ -154,6 +154,13 @@ requested locale.
 | `REVIEW_002` | This ad has already been reviewed by you | 422 |
 | `REVIEW_003` | Cannot review your own ad | 422 |
 
+## Saved addresses
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `ADDRESS_001` | Address not found (or owned by someone else) | 404 |
+| `ADDRESS_002` | The saved-address limit (`qbazaar.account.max_addresses`, 10) is reached | 422 |
+
 ---
 
 ## Guidelines
