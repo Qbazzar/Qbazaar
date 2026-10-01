@@ -230,6 +230,11 @@ Route::middleware(['signed', 'auth:sanctum', 'active.user'])
     ->get('/account/data-export/{id}', [DataExportController::class, 'download'])
     ->name('api.v1.account.data-export.download');
 
+// Alias of GET /account/profile for clients that expect the common /me path.
+Route::get('/me', [ProfileController::class, 'show'])
+    ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
+    ->name('api.v1.me');
+
 // Uploads (Sprint 2 Wave 2 ships avatar; Sprint 4 will add the ad-image
 // pipeline alongside).
 Route::prefix('uploads')
