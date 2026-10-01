@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\V1\Search;
 
+use App\Enums\AdSort;
 use App\Enums\Condition;
 use App\Enums\PriceType;
 use App\Models\Category;
@@ -29,7 +30,10 @@ use Illuminate\Validation\Rule;
  * @queryParam price_max number Optional maximum price.
  * @queryParam condition string Optional `new|like_new|used`.
  * @queryParam price_type string Optional `fixed|negotiable|free|contact`.
- * @queryParam sort string `latest|oldest|price_asc|price_desc`. Defaults to `latest`.
+ * @queryParam sort string `latest|oldest|price_asc|price_desc|most_viewed|distance`. Defaults to `latest`.
+ * @queryParam lat number Reference latitude for radius filtering / distance sort.
+ * @queryParam lng number Reference longitude for radius filtering / distance sort.
+ * @queryParam radius_km number Optional radius around lat/lng, capped by config.
  * @queryParam page int Default 1.
  * @queryParam per_page int Default 20, max 50.
  */
@@ -100,7 +104,11 @@ class SearchRequest extends FormRequest
                 PriceType::FREE->value,
                 PriceType::CONTACT->value,
             ])],
-            'sort' => ['nullable', Rule::in(['latest', 'oldest', 'price_asc', 'price_desc'])],
+            'sort' => ['nullable', Rule::enum(AdSort::class)],
+            // Distance search: a point plus an optional radius; sort=distance needs the point.
+            'lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:lng,radius_km', 'required_if:sort,distance'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:lat,radius_km', 'required_if:sort,distance'],
+            'radius_km' => ['nullable', 'numeric', 'min:0.1', 'max:' . (int) config('qbazaar.search.geo_max_radius_km')],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
             // Category-specific filters: custom_fields[make]=Toyota or

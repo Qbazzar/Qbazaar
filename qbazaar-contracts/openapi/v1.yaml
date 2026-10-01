@@ -1003,7 +1003,7 @@ paths:
         child or any of its descendants. Inactive categories, and categories
         under an inactive ancestor, return 404.
       operationId: categoriesShow
-      security: []
+      security: [{}, {bearerAuth: []}]
       parameters:
         - name: slug
           in: path
@@ -1031,9 +1031,10 @@ paths:
       description: |
         The payload is the same for every visitor. It is cached for
         `qbazaar.home.cache_seconds` (5 minutes) and flushed early when
-        listings or the taxonomy change.
+        listings or the taxonomy change. With a Bearer token, `is_favorited`
+        on the ad cards reflects the caller's favourites.
       operationId: homeShow
-      security: []
+      security: [{}, {bearerAuth: []}]
       responses:
         '200':
           description: Home feed
@@ -1135,14 +1136,30 @@ paths:
   /api/v1/ads:
     get:
       tags: [Ads]
-      summary: Public feed of active ads
+      summary: Public feed of active ads, or a lookup of specific ads
+      description: |
+        With `ids`, returns those ads in the given order on a single page and
+        ignores the other filters, the sort and the page. Ids that are unknown,
+        not active or belong to a suspended seller are skipped, so `meta.total`
+        can be lower than the number of ids sent. At most
+        `qbazaar.search.ids_lookup_max` (50) distinct ids; more is a 422.
+
+        An optional Bearer token sets `is_favorited` on each ad; guests get false.
       operationId: adsIndex
-      security: []
+      security: [{}, {bearerAuth: []}]
       parameters:
+        - name: ids
+          in: query
+          description: Comma-separated ad ids (`ids=a,b,c`); `ids[]=a&ids[]=b` also works. Duplicates are dropped.
+          schema: { type: string, example: '01HM3XQV0AAAAAAAAAAAAAAAAA,01HM3XQV0BBBBBBBBBBBBBBBBB' }
         - { name: category_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the category and all its descendants. }
         - { name: location_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the location and all places under it. }
+        - { name: price_min, in: query, schema: { type: number, minimum: 0 } }
+        - { name: price_max, in: query, schema: { type: number, minimum: 0 }, description: Must not be below `price_min`. }
+        - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed], default: latest } }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
       responses:
+        '422': { $ref: '#/components/responses/ValidationError' }
         '200':
           description: Paginated list of active ads
           content:
@@ -1196,8 +1213,9 @@ paths:
     get:
       tags: [Ads]
       summary: Get ad detail
+      description: An optional Bearer token lets the owner see their own non-public ad and sets `is_favorited`.
       operationId: adsShow
-      security: []
+      security: [{}, {bearerAuth: []}]
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
       responses:
@@ -1340,10 +1358,12 @@ paths:
       summary: Featured ads feed (admin-curated)
       description: >
         Up to 12 active ads flagged `featured = true` in the database, ordered
-        by latest published. Cached for 5 minutes; the response shape mirrors
-        the public feed (`AdSummary[]`).
+        by latest published. The id list is cached for up to 5 minutes and
+        dropped as soon as an ad is (un)featured or enters or leaves the
+        listings; ads are re-checked for public visibility on every request.
+        The response shape mirrors the public feed (`AdSummary[]`).
       operationId: adsFeatured
-      security: []
+      security: [{}, {bearerAuth: []}]
       responses:
         '200':
           description: Featured ads
@@ -1358,10 +1378,12 @@ paths:
       summary: Similar ads — same category, latest first
       description: >
         Returns up to 12 active ads in the same category as `{id}`, ordered
-        by latest published, excluding the source ad. Cached for 5 minutes
-        per ad-id.
+        by latest published, excluding the source ad. The id list is cached for
+        5 minutes per ad-id; ads are re-checked for public visibility on every
+        request. `{id}` follows the detail-page visibility rule: an ad the
+        caller may not view (someone else's draft, a pending ad) is a 404.
       operationId: adsSimilar
-      security: []
+      security: [{}, {bearerAuth: []}]
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
       responses:
@@ -1574,8 +1596,15 @@ paths:
     get:
       tags: [Search]
       summary: Keyword + filter search backed by Meilisearch
+      description: |
+        Distance search: `lat` + `lng` set the reference point; `radius_km`
+        keeps ads within that radius and `sort=distance` orders them nearest
+        first. An ad is placed at its own pin, or at its location's centre when
+        it has none; ads with neither never match a radius.
+
+        An optional Bearer token sets `is_favorited` on each ad; guests get false.
       operationId: searchIndex
-      security: []
+      security: [{}, {bearerAuth: []}]
       parameters:
         - { name: q, in: query, schema: { type: string, maxLength: 200 }, description: Optional keyword. Empty for filter-only search. }
         - { name: category_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the category and all its descendants (Meili `category_path`). }
@@ -1586,7 +1615,10 @@ paths:
         - { name: price_max, in: query, schema: { type: number, minimum: 0 } }
         - { name: condition, in: query, schema: { $ref: '#/components/schemas/Condition' } }
         - { name: price_type, in: query, schema: { $ref: '#/components/schemas/PriceType' } }
-        - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc], default: latest } }
+        - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed, distance], default: latest }, description: '`distance` requires `lat` and `lng`.' }
+        - { name: lat, in: query, schema: { type: number, minimum: -90, maximum: 90 }, description: 'Required with `lng`, `radius_km` or `sort=distance`.' }
+        - { name: lng, in: query, schema: { type: number, minimum: -180, maximum: 180 }, description: 'Required with `lat`, `radius_km` or `sort=distance`.' }
+        - { name: radius_km, in: query, schema: { type: number, minimum: 0.1, maximum: 100 }, description: 'Radius around `lat`/`lng`, capped by `qbazaar.search.geo_max_radius_km`.' }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
       responses:
@@ -1894,7 +1926,7 @@ paths:
       tags: [Users]
       summary: Public list of a user's active ads (stub until Sprint 5)
       operationId: usersAds
-      security: []
+      security: [{}, {bearerAuth: []}]
       parameters:
         - name: user
           in: path
@@ -3863,6 +3895,9 @@ components:
         location_slug: { type: string, nullable: true }
         views_count: { type: integer }
         favorites_count: { type: integer }
+        is_favorited:
+          type: boolean
+          description: Whether the caller (identified by an optional Bearer token) saved this ad. Always false for guests.
         conversations_count:
           type: integer
           description: Conversations opened on the ad. Only present on `GET /api/v1/account/ads`.
@@ -3891,6 +3926,9 @@ components:
           nullable: true
         views_count: { type: integer }
         favorites_count: { type: integer }
+        is_favorited:
+          type: boolean
+          description: Whether the caller (identified by an optional Bearer token) saved this ad. Always false for guests.
         category_slug: { type: string, nullable: true }
         location_slug: { type: string, nullable: true }
         images:

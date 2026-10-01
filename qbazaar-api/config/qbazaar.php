@@ -115,6 +115,11 @@ return [
         'suggestions_max' => 8,
         'saved_search_max_per_user' => 20,
         'saved_search_check_interval_minutes' => 60,
+        // GET /ads?ids= — favourites synced from another device, recently viewed on the web.
+        'ids_lookup_max' => 50,
+        'geo_max_radius_km' => 100,
+        // View counters change on every visit, so they reach the index in batches instead of per view.
+        'views_sync_minutes' => 15,
     ],
 
     /*

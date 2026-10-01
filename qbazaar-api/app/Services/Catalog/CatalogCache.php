@@ -18,11 +18,14 @@ class CatalogCache
 
     public const LOCATION_TREE_KEY = 'locations.qatar';
 
+    public const FEATURED_ADS_KEY = 'ads.featured.v1';
+
     public function __construct(
         private readonly CategoryHierarchy $categories,
         private readonly LocationHierarchy $locations,
         private readonly CategoryTree $tree,
         private readonly CategoryAdCounts $counts,
+        private readonly CategorySchema $schema,
     ) {}
 
     public function taxonomyChanged(): void
@@ -30,6 +33,7 @@ class CatalogCache
         $this->categories->flush();
         $this->locations->flush();
         $this->tree->flush();
+        $this->schema->flush();
         Cache::forget(self::MAIN_CATEGORIES_KEY);
         Cache::forget(self::LOCATION_TREE_KEY);
 
@@ -40,5 +44,6 @@ class CatalogCache
     {
         $this->counts->flush();
         Cache::forget(self::HOME_FEED_KEY);
+        Cache::forget(self::FEATURED_ADS_KEY);
     }
 }
