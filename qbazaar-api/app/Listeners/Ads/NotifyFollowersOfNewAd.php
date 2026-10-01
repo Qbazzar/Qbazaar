@@ -19,6 +19,12 @@ class NotifyFollowersOfNewAd implements ShouldQueue
 {
     public string $queue = 'low';
 
+    // Recipients are claimed once per event, so a retry only reaches the ones not alerted yet.
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [10, 60, 300];
+
     public function __construct(
         private readonly SellerFollowers $followers,
         private readonly AdAudienceNotifier $notifier,

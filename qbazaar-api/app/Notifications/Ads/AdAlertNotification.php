@@ -22,6 +22,11 @@ abstract class AdAlertNotification extends Notification implements ShouldQueue
 {
     use Queueable, SendsFcmPush;
 
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [10, 60, 300];
+
     public function __construct(public readonly Ad $ad)
     {
         $this->onQueue('low');

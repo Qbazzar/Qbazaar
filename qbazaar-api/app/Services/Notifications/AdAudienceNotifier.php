@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification as NotificationSender;
 
 /**
  * Sends an ad alert to one chunk of candidate users.
@@ -28,7 +29,15 @@ class AdAudienceNotifier
      */
     public function notify(Ad $ad, array $userIds, Notification $notification, string $scope): int
     {
-        return $this->notifyEach($ad, array_fill_keys($userIds, $notification), $scope);
+        if ($userIds === []) {
+            return 0;
+        }
+
+        $recipients = $this->claimedRecipients($ad, $userIds, $scope);
+
+        NotificationSender::send($recipients, $notification);
+
+        return $recipients->count();
     }
 
     /**
@@ -41,14 +50,24 @@ class AdAudienceNotifier
             return 0;
         }
 
-        $recipients = $this->eligibleUsers($ad, array_map('strval', array_keys($notificationsByUserId)))
-            ->filter(fn (User $user): bool => $this->claim($scope, $user->id));
+        $recipients = $this->claimedRecipients($ad, array_map('strval', array_keys($notificationsByUserId)), $scope);
 
         foreach ($recipients as $user) {
             $user->notify($notificationsByUserId[$user->id]);
         }
 
         return $recipients->count();
+    }
+
+    /**
+     * @param list<string> $userIds
+     * @return Collection<int, User>
+     */
+    private function claimedRecipients(Ad $ad, array $userIds, string $scope): Collection
+    {
+        return $this->eligibleUsers($ad, $userIds)
+            ->filter(fn (User $user): bool => $this->claim($scope, $user->id))
+            ->values();
     }
 
     /**
