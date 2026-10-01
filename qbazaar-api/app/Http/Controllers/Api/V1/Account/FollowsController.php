@@ -9,6 +9,7 @@ use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Users\FollowListCollection;
+use App\Models\Follow;
 use App\Models\User;
 use App\Services\Users\FollowQueries;
 use Illuminate\Http\Request;
@@ -35,8 +36,7 @@ class FollowsController extends Controller
         $me = $this->me($request);
         $page = $this->queries->followersOf($me);
 
-        /** @var list<string> $followerIds */
-        $followerIds = $page->getCollection()->pluck('follower_id')->all();
+        $followerIds = array_values(array_map(static fn (Follow $follow): string => $follow->follower_id, $page->items()));
 
         return new FollowListCollection($page, 'follower', $this->queries->followedAmong($me, $followerIds));
     }
@@ -50,10 +50,9 @@ class FollowsController extends Controller
     {
         $page = $this->queries->followingOf($this->me($request));
 
-        /** @var array<string, true> $all */
-        $all = $page->getCollection()->mapWithKeys(static fn ($follow): array => [$follow->followed_id => true])->all();
+        $followedIds = array_map(static fn (Follow $follow): string => $follow->followed_id, $page->items());
 
-        return new FollowListCollection($page, 'followed', $all);
+        return new FollowListCollection($page, 'followed', array_fill_keys($followedIds, true));
     }
 
     /**

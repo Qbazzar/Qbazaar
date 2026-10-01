@@ -46,12 +46,15 @@ class FollowQueries
             return [];
         }
 
-        return Follow::query()
-            ->where('follower_id', $viewer->id)
-            ->whereIn('followed_id', $userIds)
-            ->pluck('followed_id')
-            ->mapWithKeys(static fn (string $id): array => [$id => true])
-            ->all();
+        $followed = [];
+
+        foreach (Follow::query()->where('follower_id', $viewer->id)->whereIn('followed_id', $userIds)->pluck('followed_id') as $id) {
+            if (is_string($id)) {
+                $followed[$id] = true;
+            }
+        }
+
+        return $followed;
     }
 
     public function isFollowing(?User $viewer, User $target): bool

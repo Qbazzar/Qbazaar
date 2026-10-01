@@ -35,10 +35,15 @@ class FollowListCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection
-            ->map(fn (Follow $follow): array => $this->row($follow))
-            ->values()
-            ->all();
+        $rows = [];
+
+        foreach ($this->collection ?? [] as $follow) {
+            if ($follow instanceof Follow) {
+                $rows[] = $this->row($follow);
+            }
+        }
+
+        return $rows;
     }
 
     /**
