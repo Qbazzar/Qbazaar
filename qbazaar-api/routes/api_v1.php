@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
+use App\Http\Middleware\EnsureApiDocsEnabled;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -97,7 +98,7 @@ Route::get('/openapi.yaml', function (): Response {
         'Content-Type' => 'application/yaml; charset=utf-8',
         'Cache-Control' => 'public, max-age=60',
     ]);
-})->name('api.v1.openapi');
+})->middleware(EnsureApiDocsEnabled::class)->name('api.v1.openapi');
 
 // ────────────────────────────────────────────────────────────────────────────
 // Sprint endpoints land here, one Route group per domain.
@@ -129,7 +130,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->name('send-otp');
 
     Route::post('/verify-otp', [OtpController::class, 'verify'])
-        ->middleware('throttle:otp')
+        ->middleware('throttle:otp-verify')
         ->name('verify-otp');
 
     Route::post('/resend-otp', [OtpController::class, 'resend'])
@@ -381,9 +382,9 @@ Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
 //     GET    /conversations/{id}/messages         — cursor transcript
 //     POST   /conversations/{id}/messages         — append + broadcast
 //     POST   /conversations/{id}/read             — mark all read
-Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
     Route::post('/conversations', [ConversationController::class, 'store'])
-        ->middleware('phone.verified')
+        ->middleware(['phone.verified', 'throttle:conversations'])
         ->name('api.v1.conversations.store');
 
     Route::get('/conversations', [ConversationController::class, 'index'])
@@ -414,9 +415,9 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 //     POST   /offers/{id}/reject              — responder rejects (PENDING only)
 //     POST   /offers/{id}/withdraw            — proposer withdraws (PENDING only)
 //     POST   /offers/{id}/counter             — responder counters (PENDING only)
-Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
     Route::post('/conversations/{id}/offers', [OfferController::class, 'store'])
-        ->middleware('phone.verified')
+        ->middleware(['phone.verified', 'throttle:offers'])
         ->name('api.v1.conversations.offers.store');
 
     Route::get('/conversations/{id}/offers', [OfferController::class, 'index'])
@@ -432,7 +433,7 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
         ->name('api.v1.offers.withdraw');
 
     Route::post('/offers/{id}/counter', [OfferController::class, 'counter'])
-        ->middleware('phone.verified')
+        ->middleware(['phone.verified', 'throttle:offers'])
         ->name('api.v1.offers.counter');
 });
 

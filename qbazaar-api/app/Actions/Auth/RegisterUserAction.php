@@ -45,7 +45,7 @@ class RegisterUserAction
     {
         /** @var array{user: User, tokens: TokenPair} $result */
         $result = DB::transaction(function () use ($data, $deviceFingerprint, $ip, $deviceLabel) {
-            $user = User::query()->create([
+            $user = User::query()->forceCreate([
                 'full_name' => $data['full_name'],
                 'email' => strtolower($data['email']),
                 'phone' => $data['phone'],

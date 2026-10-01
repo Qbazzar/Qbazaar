@@ -10,6 +10,7 @@ use App\Exceptions\ErrorCode;
 use App\Models\User;
 use App\Notifications\SecurityAlertNotification;
 use App\Services\Auth\DeviceFingerprintService;
+use App\Services\Auth\LoginAttemptLimiter;
 use App\Services\Auth\RefreshTokenService;
 use App\Services\Auth\TokenPair;
 use Illuminate\Support\Carbon;
@@ -34,6 +35,7 @@ class LoginUserAction
     public function __construct(
         private readonly RefreshTokenService $refreshTokens,
         private readonly DeviceFingerprintService $fingerprintService,
+        private readonly LoginAttemptLimiter $loginAttempts,
     ) {}
 
     /**
@@ -48,11 +50,17 @@ class LoginUserAction
         ?string $deviceLabel = null,
         ?string $ip = null,
     ): array {
+        $this->loginAttempts->ensureNotLockedOut($identifier);
+
         $user = $this->lookup($identifier);
 
         if ($user === null || ! Hash::check($password, $user->password)) {
+            $this->loginAttempts->recordFailure($identifier);
+
             throw new DomainException(ErrorCode::AUTH_INVALID_CREDENTIALS);
         }
+
+        $this->loginAttempts->clear($identifier);
 
         if ($user->status === UserStatus::SUSPENDED) {
             throw new DomainException(ErrorCode::AUTH_ACCOUNT_SUSPENDED);

@@ -461,6 +461,13 @@ return [
         'permissions' => 'Permissions',
     ],
 
+    'impersonation' => [
+        'reason' => 'Impersonation reason',
+        'reason_hint' => 'The reason is kept in the audit log. The session ends after :minutes minutes.',
+        'submit' => 'Browse as this user',
+        'staff_refused' => 'Staff members cannot be impersonated.',
+    ],
+
     'settings' => [
         'title' => 'Platform settings',
         'intro' => 'Changes apply immediately across the platform and are recorded in the activity log.',

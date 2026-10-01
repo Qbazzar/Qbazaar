@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Owns the OTP lifecycle (issue / verify / expire / count) so controllers and
@@ -45,13 +46,8 @@ class OtpService
         $ttlMinutes = (int) config('qbazaar.otp.ttl_minutes', 5);
         $cooldownSeconds = (int) config('qbazaar.otp.resend_cooldown_seconds', 60);
 
-        // Dev override (OTP_FIXED_CODE in .env) — when set, every issued OTP is
-        // this exact value. The rest of the flow (hash at rest, attempts,
-        // expiry, SMS/log delivery) runs unchanged so devs can exercise
-        // the real pipeline without needing a phone in hand. Must be null in
-        // production.
-        $fixedCode = config('qbazaar.otp.fixed_code');
-        $raw = is_string($fixedCode) && $fixedCode !== ''
+        $fixedCode = $this->fixedCode();
+        $raw = $fixedCode !== null
             ? str_pad($fixedCode, $length, '0', STR_PAD_LEFT)
             : $this->generateNumeric($length);
 
@@ -172,5 +168,28 @@ class OtpService
         $max = (10 ** $length) - 1;
 
         return str_pad((string) random_int(0, $max), $length, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Dev override (OTP_FIXED_CODE): every issued OTP gets this value while
+     * the rest of the flow (hash at rest, attempts, expiry, delivery) runs
+     * unchanged. Production ignores it, since a known code would let anyone
+     * verify any phone.
+     */
+    private function fixedCode(): ?string
+    {
+        $fixedCode = config('qbazaar.otp.fixed_code');
+
+        if (! is_string($fixedCode) || $fixedCode === '') {
+            return null;
+        }
+
+        if (app()->isProduction()) {
+            Log::critical('OTP_FIXED_CODE is set in production and was ignored; unset it.');
+
+            return null;
+        }
+
+        return $fixedCode;
     }
 }

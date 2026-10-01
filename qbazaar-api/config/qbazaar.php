@@ -26,6 +26,12 @@ return [
     */
     'web_url' => env('WEB_URL', env('APP_URL', 'http://localhost')),
 
+    // Swagger UI (/swagger, /docs) and /api/v1/openapi.yaml. Off in
+    // production unless API_DOCS_ENABLED=true.
+    'api_docs_enabled' => in_array(env('API_DOCS_ENABLED'), [null, ''], true)
+        ? env('APP_ENV', 'production') !== 'production'
+        : (bool) env('API_DOCS_ENABLED'),
+
     /*
     |--------------------------------------------------------------------------
     | Locale & Currency
@@ -63,6 +69,10 @@ return [
         'max_attempts' => 3,
         'resend_cooldown_seconds' => 60,
         'max_per_hour' => 5,
+        'max_per_minute' => 3,
+        'max_per_day_per_phone' => 10,
+        'max_per_day_per_ip' => 30,
+        'verify_max_per_minute' => 5,
 
         // Dev override: when set, OtpService::issue() short-circuits the random
         // generator and emits this exact code (still goes through Twilio/log/email
@@ -129,6 +139,8 @@ return [
     'messaging' => [
         'max_message_length' => 5_000,
         'rate_limit_per_minute' => 30,
+        'new_conversations_per_minute' => 10,
+        'new_conversations_per_day' => 50,
         'auto_archive_inactive_days' => 90,
         // Skip the push when the recipient has an app open on Reverb.
         'push_skip_online_recipients' => (bool) env('CHAT_PUSH_SKIP_ONLINE', true),
@@ -144,6 +156,8 @@ return [
     'offers' => [
         'expiry_days' => 7,
         'max_active_per_ad_per_user' => 1,
+        'max_per_minute' => 10,
+        'max_per_day' => 50,
         // Default for the admin setting; each side may counter this many times.
         'counter_rounds_per_side' => 1,
     ],
@@ -202,6 +216,9 @@ return [
         'login_max_attempts' => 5,
         'login_lockout_seconds' => 900,
         'bulk_action_max' => 100,
+        'impersonation_ttl_minutes' => 20,
+        'impersonation_reason_min_length' => 10,
+        'impersonation_reason_max_length' => 500,
     ],
 
     /*

@@ -203,7 +203,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
         '429':
-          $ref: '#/components/responses/RateLimited'
+          description: |
+            RATE_LIMIT_EXCEEDED — too many attempts from this IP; AUTH_006 —
+            this identifier is locked after repeated failed sign-ins
+            (`details.retry_after` holds the seconds left), whatever the IP.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/auth/logout:
     post:
@@ -256,6 +263,9 @@ paths:
     post:
       tags: [Auth]
       summary: Send a 6-digit OTP to the user's phone via Twilio
+      description: |
+        Rate limited per IP + phone per minute, and per phone and per IP per
+        day (shared with resend-otp); the limits live in `qbazaar.otp`.
       operationId: authSendOtp
       security: []
       parameters:
@@ -338,6 +348,8 @@ paths:
                       request_id: req_abc123
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/auth/resend-otp:
     post:
@@ -1704,7 +1716,8 @@ paths:
       summary: Record an ad view (authenticated user OR anonymous session)
       description: |
         Tracks a view and increments `ads.views_count`. Throttled to one
-        recorded view per (viewer, ad) per hour. Authenticated users are
+        recorded view per (viewer, ad) per hour; `views_count` also grows at
+        most once per (IP, ad) per hour. Authenticated users are
         identified via their bearer token; anonymous clients pass a
         stable identifier in the `X-Session-Id` header. Calls without
         either identity are accepted and silently no-op.
@@ -1896,6 +1909,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
     get:
       tags: [Conversations]
       summary: Paginated inbox, most recent first
@@ -2066,6 +2081,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
     get:
       tags: [Offers]
       summary: List offers in this conversation (newest first)
@@ -4432,7 +4449,7 @@ components:
           example: Terms of Service
         body:
           type: string
-          description: Markdown body of the page (rendered client-side).
+          description: HTML body of the page, sanitized to a formatting allowlist on write (no scripts, event handlers or unsafe URLs).
         meta_description:
           type: [string, 'null']
           description: SEO meta description; null when unset.
@@ -4531,7 +4548,7 @@ components:
           type: string
         body:
           type: string
-          description: Markdown body (rendered client-side).
+          description: HTML body, sanitized to a formatting allowlist on write (no scripts, event handlers or unsafe URLs).
         excerpt:
           type: [string, 'null']
         views_count:

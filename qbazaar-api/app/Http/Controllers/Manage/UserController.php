@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Actions\Admin\ImpersonateUserAction;
+use App\Actions\Admin\SyncUserRolesAction;
 use App\Actions\Users\SuspendUserAction;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Manage\ImpersonateUserRequest;
+use App\Http\Requests\Manage\UpdateUserRolesRequest;
 use App\Models\User;
 use App\Services\Admin\StaffHierarchy;
-use App\Services\Auth\RefreshTokenService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -103,47 +106,42 @@ class UserController extends Controller
     }
 
     /**
-     * Impersonate a user: mint a real token pair for them and hand it to the
-     * Next.js web app so the admin browses the marketplace as that user.
-     *
-     * Staff accounts can't be impersonated (avoids privilege confusion). Tokens
-     * ride in the URL *fragment* (never sent to servers or logs); the web
-     * /impersonate page consumes and clears them immediately.
+     * Hands the web app a short-lived access token in the URL fragment, which
+     * is never sent to servers or written to logs; the web /impersonate page
+     * consumes and clears it. Staff accounts can't be impersonated to avoid
+     * privilege confusion.
      */
-    public function impersonate(Request $request, User $user, RefreshTokenService $tokens): RedirectResponse
-    {
+    public function impersonate(
+        ImpersonateUserRequest $request,
+        #[CurrentUser]
+        User $actor,
+        User $user,
+        ImpersonateUserAction $impersonateUser,
+    ): RedirectResponse {
         if ($user->isStaff()) {
-            return back()->with('error', 'لا يمكن انتحال هوية عضو من فريق الإدارة.');
+            return back()->with('error', __('admin.impersonation.staff_refused'));
         }
 
-        $pair = $tokens->issue($user, null, $request->ip(), 'impersonation');
+        $token = $impersonateUser->execute($actor, $user, (string) $request->validated('reason'), $request->ip());
 
         $webUrl = rtrim((string) config('qbazaar.web_url', config('app.url')), '/');
         $fragment = http_build_query([
-            'access' => $pair->accessToken,
-            'refresh' => $pair->refreshToken,
+            'access' => $token->plainTextToken,
+            'expires_in' => (int) config('qbazaar.admin.impersonation_ttl_minutes') * 60,
             'name' => $user->full_name,
         ]);
 
         return redirect()->away("{$webUrl}/impersonate#{$fragment}");
     }
 
-    /** Sync a user's roles from the checkbox list. */
-    public function updateRoles(Request $request, #[CurrentUser] User $actor, User $user): RedirectResponse
-    {
-        $this->hierarchy->ensureCanManage($actor, $user);
-
-        $available = Role::pluck('name')->all();
-
-        $data = $request->validate([
-            'roles' => ['array'],
-            'roles.*' => ['string', 'in:' . implode(',', $available)],
-        ]);
-
-        $roles = $data['roles'] ?? [];
-        $this->hierarchy->ensureCanGrantRoles($actor, $roles);
-
-        $user->syncRoles($roles);
+    public function updateRoles(
+        UpdateUserRolesRequest $request,
+        #[CurrentUser]
+        User $actor,
+        User $user,
+        SyncUserRolesAction $syncRoles,
+    ): RedirectResponse {
+        $syncRoles->execute($actor, $user, $request->roles());
 
         return back()->with('status', 'تم تحديث أدوار المستخدم.');
     }
