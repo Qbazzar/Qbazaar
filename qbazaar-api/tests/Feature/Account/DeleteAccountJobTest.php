@@ -17,6 +17,7 @@ use App\Services\Account\AccountEraser;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Scout\EngineManager;
@@ -107,11 +108,15 @@ it('does nothing for an account that is already gone', function (): void {
     (new DeleteAccountJob('01HZZZZZZZZZZZZZZZZZZZZZZZ'))->handle(app(AccountEraser::class));
 })->throwsNoExceptions();
 
-it('runs on the low queue without overlapping for the same user', function (): void {
+it('runs on the low queue without overlapping, and the lock expires before the first retry', function (): void {
     $job = new DeleteAccountJob('01HZZZZZZZZZZZZZZZZZZZZZZZ');
+    $middleware = $job->middleware();
 
     expect($job->queue)->toBe('low')
-        ->and($job->middleware())->toHaveCount(1);
+        ->and($middleware)->toHaveCount(1)
+        ->and($middleware[0])->toBeInstanceOf(WithoutOverlapping::class)
+        ->and($middleware[0]->expiresAfter)->toBeGreaterThan((int) config('horizon.defaults.supervisor-1.timeout'))
+        ->and($middleware[0]->expiresAfter)->toBeLessThan($job->backoff[0]);
 });
 
 it('sweeps only the accounts whose grace period is over', function (): void {

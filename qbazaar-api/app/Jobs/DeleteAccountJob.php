@@ -27,7 +27,7 @@ class DeleteAccountJob implements ShouldQueue
     public int $tries = 3;
 
     /** @var list<int> */
-    public array $backoff = [60, 600];
+    public array $backoff = [180, 900];
 
     public function __construct(
         public readonly string $userId,
@@ -40,7 +40,9 @@ class DeleteAccountJob implements ShouldQueue
      */
     public function middleware(): array
     {
-        return [(new WithoutOverlapping($this->userId))->dontRelease()->expireAfter(3600)];
+        // A worker killed at its timeout never releases the lock, so it has to
+        // expire before the first retry, or that retry is dropped as an overlap.
+        return [(new WithoutOverlapping($this->userId))->dontRelease()->expireAfter(120)];
     }
 
     public function handle(AccountEraser $eraser): void
