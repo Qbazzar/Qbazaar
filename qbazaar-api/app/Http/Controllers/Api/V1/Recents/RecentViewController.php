@@ -12,6 +12,7 @@ use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
 use App\Models\RecentView;
 use App\Models\User;
+use App\Services\Ads\ViewerFavorites;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -72,7 +73,7 @@ class RecentViewController extends Controller
      *
      * @authenticated
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ViewerFavorites $favorites): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
@@ -82,6 +83,8 @@ class RecentViewController extends Controller
             ->with(['ad.category', 'ad.location', 'ad.primaryImage'])
             ->orderByDesc('viewed_at')
             ->paginate(self::PER_PAGE);
+
+        $favorites->mark($user, $paginator->getCollection()->pluck('ad')->filter());
 
         $items = [];
         foreach ($paginator->items() as $row) {

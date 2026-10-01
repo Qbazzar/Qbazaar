@@ -47,6 +47,8 @@ class AdSummaryResource extends JsonResource
             'status' => $this->status->value,
             'views_count' => (int) $this->views_count,
             'favorites_count' => (int) $this->favorites_count,
+            // Set by ViewerFavorites for a signed-in viewer; guests always get false.
+            'is_favorited' => (bool) $this->resource->getAttribute('is_favorited'),
             'conversations_count' => $this->whenCounted('conversations'),
             'primary_image' => $primary instanceof Media
                 ? (new MediaResource($primary))->toArray($request)

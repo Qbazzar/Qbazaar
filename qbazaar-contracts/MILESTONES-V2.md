@@ -23,15 +23,15 @@
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
 | M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
-| M1 Closing the backend gaps | 14 | 58 | 21 | 37 | Batch 1 merged (#160–#164); batch 2 next |
+| M1 Closing the backend gaps | 14 | 73 | 21 | 52 | Batch 1 merged (#160–#164); batch 2 next |
 | M1b Orders and payments | 14 | 10 | 1 | 9 | Settings store done (#156); the rest after the M1 entry items below |
-| M2 Connecting the mobile app | 15 | 14 | 0 | 14 | Waits for M1 |
-| M3 Web on the new design | 16 | 10 | 1 | 9 | Phone-verification flow done (#157); the rest once the M1 endpoints it needs exist |
+| M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
+| M3 Web on the new design | 16 | 11 | 1 | 10 | Phone-verification flow done (#157); the rest once the M1 endpoints it needs exist |
 | M4 Admin additions | 17 | 15 | 0 | 15 | Waits for M1 (AD-17.7 waits for M1b) |
-| M5 Deployment on the new server | 18 | 10 | 0 | 10 | Waits for M1–M4 and the domain |
+| M5 Deployment on the new server | 18 | 18 | 0 | 18 | Waits for M1–M4 and the domain |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **154** | **41** | **113** | |
+| **Total** | | **179** | **41** | **138** | |
 
 ---
 
@@ -229,6 +229,28 @@
 | BE-13.19 | Small fixes: reviews withTrashed, queued reset/verify mails, ReportCreated listener | [P2] | Fixes audit finding PERF-15, PERF-16, F16 (DOCS/AUDIT-2026-09-30.md) |
 | BE-13.23 | Layering refactor: Review/Support actions, UserModerationService, resources | [P2] | Fixes audit finding ARCH-06 (DOCS/AUDIT-2026-09-30.md) |
 
+### Performance and load (from [`DOCS/PERF-AUDIT-2026-10-01.md`](../DOCS/PERF-AUDIT-2026-10-01.md))
+
+> Owner rule (2026-10-01): every change accounts for indexes, queues, the service layer, caching and behaviour under load. BE-13.24 supersedes BE-13.21; BE-13.31 extends BE-13.22.
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| BE-13.24 | Async ad moderation + pHash duplicate detection in a ModerateAdJob chained after ProcessAdImagesJob, compared in SQL (BIT_COUNT on an integer phash) | [P0] | Fixes PERF2-01: publishing never scans all images or holds row locks while moderating; duplicate detection still works; tests |
+| BE-13.25 | Catalog cache warmer (home feed, category/place counts) on the scheduler + stale-while-revalidate reads; no per-ad-event invalidation | [P0] | Fixes PERF2-02: no rebuild stampede; counts at most ~2 minutes stale; supporting indexes added |
+| BE-13.26 | Refresh tokens hashed with HMAC-SHA256 (lazy migration from bcrypt) + token-keyed /refresh limiter + rate limiters not keyed by IP alone (TrustProxies-aware) | [P0] | Fixes PERF2-03/04: refresh costs no bcrypt; users behind CGNAT/Cloudflare are not locked out; old tokens keep working |
+| BE-13.27 | Queue topology: realtime, notifications, search, media, low queues; per-job tries/backoff/timeout; broadcasts and Scout on their queues; after_commit; Horizon supervisors per queue | [P0] | Fixes PERF2-06: image work cannot delay chat; transient failures retry; a test asserts every queue used is consumed |
+| BE-13.28 | Image pipeline: thumbnail generated on the queue (or Imagick), dedicated uploads limiter, short lock wait, originals downscaled on the queue, lower max image size | [P1] | Fixes PERF2-05: an upload request does no heavy image work; stored originals are bounded |
+| BE-13.29 | Saved-search matching on indexed filter columns with an SQL prefilter, hourly digest, ShouldBeUnique | [P1] | Fixes PERF2-07: approving an ad does not scan every saved search in PHP |
+| BE-13.30 | Chat inbox at scale: denormalized unread counters or a participants table, inbox query without OR, badge updates over Reverb | [P1] | Inbox and unread badge use indexed queries only; tests |
+| BE-13.31 | Public feed: stored seller_active flag, cursor/simple pagination, the full index migration from the perf audit | [P1] | Feed queries use indexes (EXPLAIN noted in the PR); no COUNT(*) on hot paths |
+| BE-13.32 | Throttle Sanctum last_used_at writes to at most once per 5 minutes | [P1] | No write per authenticated request |
+| BE-13.33 | Search: one rawSearch for hits + facets, throttle:search, no N+1 in toSearchableArray, searchIndexShouldBeUpdated, leaner index settings | [P1] | One Meilisearch call per search request; reindex cost reduced |
+| BE-13.34 | CDN-friendly media URLs: public conversions on `cdn.` with immutable cache headers; signed originals only on ad detail with hour-bucketed expiry | [P1] | Image URLs are cacheable by Cloudflare; originals stay private |
+| BE-13.35 | Forgot-password and verification mails queued + per-email limiter (Turnstile is added by BE-14.11's PR) | [P0] | Reset/verify requests return fast and cannot be used to flood one inbox |
+| BE-13.36 | Buffer ad view counts in Redis with a 1-minute flush; cap recently-viewed writes; guest history on the client | [P2] | No row write per ad view |
+| BE-13.37 | Expiry sweeps as hourly chunked batches with ShouldBeUnique | [P2] | Sweeps never overlap or run as one huge transaction |
+| BE-13.38 | Small perf fixes: stored seller ads_count, public ad-detail cache, scoped ModerationRulesService, no double JSON decode in the response wrapper, StartConversation race, one activity-log row per ad change | [P2] | Each item covered by a test or a benchmark note in the PR |
+
 ## Sprint 14 — M1b Orders and payments (no gateway)
 
 **Goal:** orders from the first launch without an online gateway: cash on delivery or at handover, a QBazaar commission set by the admin, a seller wallet, and admin-approved settlements and withdrawals. Everything goes through a `PaymentGateway` interface (only `CashGateway` today) so an electronic gateway can be added in M7 without touching orders. Stripe is excluded.
@@ -283,6 +305,7 @@
 | MB-15.11 | Connect orders and payments: purchase request and offer cards in chat, checkout (cash only; the other methods hidden until a gateway exists), orders, wallet, settlements and withdrawals, paid promotion | [P0] | Full cycle on a device: request → accept → checkout → handover confirmation → the balance and commission show in the wallet |
 | MB-15.12 | Arabic + RTL: `ar/*.json` files, mirrored arrows, language setting saved on the device and sent to the API | [P0] | Every screen works right in Arabic at 360 |
 | MB-15.13 | Deep links: `qbazaar://ad/{id}` + universal links once the domain is decided | [P1] | A shared ad link opens in the app |
+| MB-15.15 | Resize and compress photos on the device before upload (long side 2048px, quality ~0.8) | [P1] | A 12MP photo uploads as well under 1MB; EXIF orientation kept, location stripped |
 
 ## Sprint 16 — M3 Web on the new design (`qbazaar-web`)
 
@@ -313,6 +336,7 @@
 | FE-16.6 | Seller profile, companies, follows | [P1] | — |
 | FE-16.8 | Orders and payments on the web: request/offer cards, checkout (cash), orders, wallet, settlements | [P0] | Same cycle as the app |
 | FE-16.7 | RTL + Lighthouse (≥ 90 performance on mobile) + axe with no serious violations | [P1] | Report attached |
+| FE-16.11 | Resize and compress photos in the browser before upload (long side 2048px, quality ~0.8) | [P1] | Large photos upload small and fast; orientation kept, metadata stripped |
 
 ## Sprint 17 — M4 Admin additions (`/admin`)
 
@@ -389,6 +413,14 @@
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | OPS-18.10 | Cloudflare R2: create the bucket and access keys, and set the CORS rules for uploading | [P0] | The keys are in the production `.env` only |
+| OPS-18.11 | PHP-FPM pool tuning + OPcache/realpath cache + FPM reload in the deploy script + slowlog | [P0] | Pool sized to the server's RAM; documented in deploy/; a deploy reloads FPM |
+| OPS-18.12 | Two Redis roles: queue (noeviction + AOF) and cache (LRU), phpredis instead of predis | [P0] | Cache pressure can never evict queued jobs |
+| OPS-18.13 | MySQL tuning + slow query log + a weekly query digest | [P1] | Settings documented; slow queries reviewed weekly |
+| OPS-18.14 | Reverb capacity: LimitNOFILE, a proxy that does not hold one Apache worker per socket (event MPM or ws. through Cloudflare), published reverb config | [P0] | Thousands of concurrent sockets in a load test |
+| OPS-18.15 | Meilisearch resource limits (indexing memory/threads) + daily snapshots | [P1] | Indexing cannot starve the web server; restore tested once |
+| OPS-18.16 | Pulse on Redis ingest with sampling, or disabled in production | [P1] | Monitoring adds no per-request DB writes |
+| OPS-18.17 | k6 load test on staging (100k ads, 1M media) and a capacity baseline before launch | [P0] | Report with p95 latencies and the breaking point for search, feed, chat and upload |
+| OPS-18.18 | Cloudflare cache rules for `cdn.` + rate-limit rules for expensive endpoints | [P1] | Image cache hit ratio reported; abusive bursts stopped at the edge |
 | OPS-18.9 | Move the domain to Cloudflare: DNS + proxy + SSL "Full (strict)" with an Origin Certificate + WAF and rate-limiting rules + caching static files + a custom domain for R2 images (`cdn.`) + WebSocket for Reverb + the server firewall only accepts Cloudflare IPs + real visitor IPs in Laravel (`TrustProxies`) | [P0] | The site and API go through Cloudflare; the server's IP address doesn't answer directly; the chat works; images come from `cdn.` |
 
 ## Sprint 19 — M6 Releasing the mobile app

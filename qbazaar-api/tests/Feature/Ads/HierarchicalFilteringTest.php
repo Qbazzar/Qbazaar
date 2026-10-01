@@ -6,7 +6,7 @@ use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
-use App\Services\Search\AdSearchService;
+use App\Services\Search\AdSearchCriteria;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\getJson;
@@ -66,9 +66,7 @@ it('indexes the category and location ancestry for search', function (): void {
 });
 
 it('filters search by ancestry so a grandparent matches its grandchildren', function (): void {
-    $composeFilter = new ReflectionMethod(AdSearchService::class, 'composeFilter');
-
-    $filter = $composeFilter->invoke(app(AdSearchService::class), [
+    $filter = (new AdSearchCriteria)->filter([
         'category_id' => $this->vehicles->id,
         'location_id' => '01JABCDEFGHJKMNPQRSTVWXYZ0',
     ]);

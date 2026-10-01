@@ -163,11 +163,14 @@ return [
                     // Declaring the parent makes every custom_fields.<key>
                     // filterable (make/year/bedrooms/…) without listing each.
                     'custom_fields',
+                    '_geo',
                 ],
                 'sortableAttributes' => [
                     'published_at',
                     'price',
                     'created_at_ts',
+                    'views_count',
+                    '_geo',
                 ],
                 'searchableAttributes' => [
                     'title',

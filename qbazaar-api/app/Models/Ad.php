@@ -338,7 +338,7 @@ class Ad extends Model implements HasMedia
         /** @var Location|null $location */
         $location = $this->location;
 
-        return [
+        $document = [
             'id' => $this->id,
             'title' => $this->title,
             'description' => Str::limit((string) $this->description, 500, ''),
@@ -356,11 +356,38 @@ class Ad extends Model implements HasMedia
             'published_at' => $this->published_at?->getTimestamp(),
             'created_at_ts' => $this->created_at instanceof Carbon ? $this->created_at->getTimestamp() : null,
             'has_images' => $hasImages,
+            'views_count' => (int) $this->views_count,
             // Category-specific attributes, indexed as a nested object so the
             // search can filter `custom_fields.year >= 2015` etc. Numeric-looking
             // strings are cast to real numbers so range filters compare correctly.
             'custom_fields' => $this->customFieldsForSearch(),
         ];
+
+        // Meilisearch rejects a malformed _geo, so ads with no known position leave it out entirely.
+        $geo = $this->geoPoint($location);
+        if ($geo !== null) {
+            $document['_geo'] = $geo;
+        }
+
+        return $document;
+    }
+
+    /**
+     * The ad's own pin, or the centre of its location when the seller did not drop one.
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    private function geoPoint(?Location $location): ?array
+    {
+        if ($this->latitude !== null && $this->longitude !== null) {
+            return ['lat' => (float) $this->latitude, 'lng' => (float) $this->longitude];
+        }
+
+        if ($location?->lat !== null && $location->lng !== null) {
+            return ['lat' => (float) $location->lat, 'lng' => (float) $location->lng];
+        }
+
+        return null;
     }
 
     /**
