@@ -132,17 +132,24 @@ class UserDataExporter
      */
     private function rows(Builder $query, string $key = 'id', array $json = []): LazyCollection
     {
-        return $query->lazyById(self::CHUNK, $key)->map(function (object $row) use ($json): array {
-            $row = (array) $row;
+        return $query->lazyById(self::CHUNK, $key)->map(fn (object $row): array => $this->decode($row, $json));
+    }
 
-            foreach ($json as $column) {
-                if (is_string($row[$column] ?? null)) {
-                    $row[$column] = json_decode($row[$column], true);
-                }
+    /**
+     * @param list<string> $json
+     * @return array<string, mixed>
+     */
+    private function decode(object $row, array $json): array
+    {
+        $values = get_object_vars($row);
+
+        foreach ($json as $column) {
+            if (is_string($values[$column] ?? null)) {
+                $values[$column] = json_decode($values[$column], true);
             }
+        }
 
-            return $row;
-        });
+        return $values;
     }
 
     /**

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Notifications\Ads;
 
-use App\Enums\NotificationTopic;
 use App\Data\Moderation\ModerationResult;
 use App\Enums\Language;
+use App\Enums\NotificationTopic;
 use App\Models\Ad;
 use App\Models\User;
 use App\Notifications\Concerns\RespectsNotificationPreferences;

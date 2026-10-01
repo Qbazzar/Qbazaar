@@ -48,7 +48,7 @@ class DataExport extends Model
     }
 
     /**
-     * @return Builder<DataExport>
+     * @return Builder<static>
      */
     public function prunable(): Builder
     {

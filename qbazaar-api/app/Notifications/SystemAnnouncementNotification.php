@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
-use App\Enums\NotificationTopic;
 use App\Enums\Language;
+use App\Enums\NotificationTopic;
 use App\Models\User;
 use App\Notifications\Concerns\RespectsNotificationPreferences;
 use App\Notifications\Concerns\SendsFcmPush;

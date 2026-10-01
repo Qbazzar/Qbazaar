@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Enums\DataExportStatus;
 use App\Models\DataExport;
+use App\Models\User;
 use App\Notifications\DataExportReadyNotification;
 use App\Services\Account\UserDataExporter;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -39,13 +40,14 @@ class ExportUserDataJob implements ShouldQueue
     public function handle(UserDataExporter $exporter): void
     {
         $export = DataExport::query()->with('user')->find($this->exportId);
+        $user = $export?->user;
 
-        if ($export === null || $export->user === null || $export->status === DataExportStatus::READY) {
+        if ($export === null || $user === null || $export->status === DataExportStatus::READY) {
             return;
         }
 
         $path = "exports/{$export->id}.json";
-        $this->writeFile($exporter, $export, $path);
+        $this->writeFile($exporter, $user, $export->id, $path);
 
         $hours = (int) config('qbazaar.account.data_export_link_ttl_hours');
         $expiresAt = Carbon::now()->addHours($hours);
@@ -56,13 +58,13 @@ class ExportUserDataJob implements ShouldQueue
             'expires_at' => $expiresAt,
         ])->save();
 
-        $export->user->notify(new DataExportReadyNotification(
+        $user->notify(new DataExportReadyNotification(
             downloadUrl: URL::temporarySignedRoute('api.v1.account.data-export.download', $expiresAt, ['id' => $export->id]),
             expiresInHours: $hours,
         ));
     }
 
-    private function writeFile(UserDataExporter $exporter, DataExport $export, string $path): void
+    private function writeFile(UserDataExporter $exporter, User $user, string $exportId, string $path): void
     {
         $stream = fopen('php://temp', 'w+b');
 
@@ -71,11 +73,11 @@ class ExportUserDataJob implements ShouldQueue
         }
 
         try {
-            $exporter->write($stream, $export->user, $export->id);
+            $exporter->write($stream, $user, $exportId);
             rewind($stream);
 
             if (! Storage::disk(DataExport::DISK)->writeStream($path, $stream)) {
-                throw new RuntimeException("Could not store the data export {$export->id}.");
+                throw new RuntimeException("Could not store the data export {$exportId}.");
             }
         } finally {
             fclose($stream);

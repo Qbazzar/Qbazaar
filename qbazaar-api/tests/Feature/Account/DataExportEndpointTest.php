@@ -17,10 +17,11 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\Sanctum;
-use Tests\Concerns\CreatesAds;
 
 use function Pest\Laravel\get;
 use function Pest\Laravel\postJson;
+
+use Tests\Concerns\CreatesAds;
 
 uses(RefreshDatabase::class, CreatesAds::class);
 
