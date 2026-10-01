@@ -88,6 +88,11 @@ Clients must now authorise channels at `POST /api/v1/broadcasting/auth` with a B
 3. Deploy as usual; `deploy-api.sh` rebuilds the config cache and restarts Horizon, which starts the new supervisors. Jobs already waiting on `default` or `low` are still consumed.
 4. Check `/horizon` shows six supervisors and no long waits.
 
+## Auth limits, proxies and refresh tokens (BE-13.26)
+
+- Rate limits are keyed by account, refresh token or inbox, with a looser per-IP ceiling (`qbazaar.auth.rate_limits`, `qbazaar.api`). Their client IP comes from `config/trustedproxy.php`, which trusts Cloudflare's published ranges by default; leave `TRUSTED_PROXIES` empty behind Cloudflare, or list your own proxy. Only `X-Forwarded-For` and `X-Forwarded-Proto` are read. Re-check the list against https://www.cloudflare.com/ips/ when moving to Cloudflare (OPS-18.9).
+- Refresh tokens are now HMAC-SHA256 digests keyed by `APP_KEY`. Existing bcrypt rows still work and are replaced on their next refresh, so nothing has to be migrated. If `APP_KEY` is ever rotated, put the old key in `APP_PREVIOUS_KEYS` or every device is signed out.
+
 ## Meilisearch (install once, as root)
 
 ```bash

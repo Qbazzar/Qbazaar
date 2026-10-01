@@ -15,6 +15,7 @@ use App\Observers\AdOffersObserver;
 use App\Observers\AdReviewQueueObserver;
 use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
+use App\Services\Auth\AuthRateLimiters;
 use App\Services\Moderation\ModerationRulesService;
 use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
@@ -67,7 +68,7 @@ class AppServiceProvider extends ServiceProvider
         // closure) so they survive route:cache — Laravel skips that closure when
         // routes come from cache, and the throttle middleware would crash with
         // "Rate limiter [api] is not defined" in production.
-        RateLimiter::for('auth', fn (Request $r) => Limit::perMinute(5)->by($r->ip()));
+        AuthRateLimiters::register();
         // Every send costs an SMS: cap each phone and each IP per day so
         // rotating either one alone cannot pump messages.
         RateLimiter::for('otp', fn (Request $r) => [
@@ -94,7 +95,9 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perDay((int) config('qbazaar.messaging.images_per_day'))->by('chat-images-day:' . (optional($r->user())->id ?: $r->ip())),
             ] : []),
         ]);
-        RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('api', fn (Request $r) => $r->user() !== null
+            ? Limit::perMinute((int) config('qbazaar.api.requests_per_minute'))->by('api-user:' . $r->user()->getAuthIdentifier())
+            : Limit::perMinute((int) config('qbazaar.api.guest_requests_per_minute'))->by('api-guest:' . $r->ip()));
         // Each hit sends an email or SMS.
         RateLimiter::for('contact-change', fn (Request $r) => Limit::perHour((int) config('qbazaar.account.contact_change_attempts_per_hour'))
             ->by('contact-change:' . (optional($r->user())->id ?: $r->ip())));

@@ -7,7 +7,6 @@ use App\Notifications\PasswordResetNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\RateLimiter;
 
 use function Pest\Laravel\postJson;
 
@@ -15,7 +14,6 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Cache::flush();
-    RateLimiter::clear('auth|127.0.0.1');
     Notification::fake();
 });
 

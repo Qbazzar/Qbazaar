@@ -139,6 +139,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'turnstile' => VerifyTurnstile::class,
         ]);
 
+        // Proxies come from config/trustedproxy.php. Forwarded Host and Port are
+        // not trusted: Cloudflare passes a client's own values through.
+        $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO);
+
         // API group — every /api/v1/* request runs through these in order
         $middleware->api(prepend: [
             TrackClient::class,

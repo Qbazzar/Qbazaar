@@ -137,7 +137,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->name('logout');
 
     Route::post('/refresh', RefreshTokenController::class)
-        ->middleware('throttle:auth')
+        ->middleware('throttle:refresh')
         ->name('refresh');
 
     // OTP — phone verification (Wave 2)

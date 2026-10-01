@@ -281,6 +281,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: |
+            Too many refreshes of this token, or from this address
+            (`RATE_LIMIT_EXCEEDED`). Limited per token, so many devices behind
+            one carrier address are not locked out together.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/auth/send-otp:
     post:

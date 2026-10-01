@@ -75,6 +75,20 @@ return [
             'jwks_cache_minutes' => 360,
             'clock_leeway_seconds' => 60,
         ],
+
+        // Keyed by account, token or inbox; the per-IP ceilings are loose
+        // because carrier NAT puts many users behind one address.
+        'rate_limits' => [
+            'attempts_per_minute' => 5,
+            'attempts_per_minute_per_ip' => 30,
+            'refresh_per_minute_per_token' => 5,
+            'refresh_per_minute_per_ip' => 120,
+        ],
+    ],
+
+    'api' => [
+        'requests_per_minute' => 120,
+        'guest_requests_per_minute' => 300,
     ],
 
     /*
