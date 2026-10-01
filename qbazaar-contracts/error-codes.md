@@ -161,6 +161,12 @@ requested locale.
 | `ADDRESS_001` | Address not found (or owned by someone else) | 404 |
 | `ADDRESS_002` | The saved-address limit (`qbazaar.account.max_addresses`, 10) is reached | 422 |
 
+## Data export
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `EXPORT_001` | The export download link was already used, has expired, or the export is not ready | 410 |
+
 ---
 
 ## Guidelines

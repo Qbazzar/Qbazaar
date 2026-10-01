@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Enums\DataExportStatus;
 use App\Enums\UserStatus;
 use App\Jobs\DeleteAccountJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
 use App\Models\Ad;
 use App\Models\Conversation;
+use App\Models\DataExport;
 use App\Models\Message;
 use App\Models\Offer;
 use App\Models\User;
@@ -64,6 +66,9 @@ it('erases a due account with its ads, images, search documents, offers and chat
     Offer::factory()->create(['conversation_id' => $buyingChat->id, 'ad_id' => $otherAd->id, 'buyer_id' => $user->id, 'seller_id' => $other->id]);
     UserAddress::factory()->for($user)->create();
     $user->createToken('device');
+    $export = new DataExport;
+    $export->forceFill(['user_id' => $user->id, 'status' => DataExportStatus::READY, 'path' => 'exports/old.json'])->save();
+    Storage::disk('local')->put('exports/old.json', '{}');
 
     runDeleteJob($user);
 
@@ -73,6 +78,7 @@ it('erases a due account with its ads, images, search documents, offers and chat
         ->and(Offer::query()->count())->toBe(0)
         ->and(Conversation::query()->count())->toBe(0)
         ->and(UserAddress::query()->count())->toBe(0)
+        ->and(Storage::disk('local')->exists('exports/old.json'))->toBeFalse()
         ->and(Ad::query()->whereKey($otherAd->id)->exists())->toBeTrue()
         ->and(User::query()->whereKey($other->id)->exists())->toBeTrue();
 

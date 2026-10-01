@@ -215,12 +215,9 @@ Route::prefix('account')
             ->name('data-export-request');
     });
 
-// Signed download URL for a previously-generated data export.
-// Kept outside the `account` group so `signed` is the only auth check we
-// need on a one-shot link emailed to the user. We still require an
-// authenticated user via `auth:sanctum` on top of the signature so a
-// leaked URL alone is not enough.
-Route::middleware(['signed', 'auth:sanctum', 'active.user'])
+// Emailed download link for a data export. It opens in a browser, so the
+// signature is the credential (no bearer); the link expires and works once.
+Route::middleware(['signed', 'throttle:api'])
     ->get('/account/data-export/{id}', [DataExportController::class, 'download'])
     ->name('api.v1.account.data-export.download');
 

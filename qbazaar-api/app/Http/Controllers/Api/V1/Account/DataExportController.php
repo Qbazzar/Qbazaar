@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Account;
 
-use App\Exceptions\DomainException;
-use App\Exceptions\ErrorCode;
+use App\Actions\Account\ClaimDataExportDownloadAction;
+use App\Actions\Account\RequestDataExportAction;
 use App\Http\Controllers\Controller;
-use App\Jobs\ExportUserDataJob;
+use App\Models\DataExport;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * @group Account
@@ -23,12 +20,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class DataExportController extends Controller
 {
     /**
-     * Queue a GDPR-style data export for the signed-in user.
-     *
-     * We throttle to one export per user per 24h via Cache::lock so a
-     * stampede of clicks can't fill the queue (and the user's mailbox).
-     * On success the job is dispatched to the `low` queue and the user
-     * gets a 202 with the request metadata.
+     * Queue a personal-data export for the signed-in user (one per 24 hours).
+     * The user gets an email with a single-use download link when it is ready.
      *
      * @authenticated
      *
@@ -41,68 +34,39 @@ class DataExportController extends Controller
      *   }
      * }
      */
-    public function request(Request $request): JsonResponse
+    public function request(Request $request, RequestDataExportAction $action): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
 
         $this->authorize('exportData', $user);
 
-        // The lock doubles as the rate-limit window: hold it for 24h so a
-        // second request inside the window short-circuits. The block-less
-        // form (->get() with no callback) lets us inspect ownership and
-        // respond cleanly instead of throwing LockTimeoutException.
-        $lock = Cache::lock('account:data-export:' . $user->id, 24 * 3600);
-
-        if (! $lock->get()) {
-            throw new DomainException(
-                ErrorCode::RATE_LIMIT_EXCEEDED,
-                __('errors.rate.limit.exceeded'),
-            );
-        }
-
-        $exportId = $user->id . '-' . Carbon::now()->format('YmdHis') . '-' . Str::random(8);
-        $requestedAt = Carbon::now();
-
-        ExportUserDataJob::dispatch($user->id, $exportId);
+        $export = $action->execute($user);
 
         return response()->json([
-            'requested_at' => $requestedAt->toIso8601String(),
+            'requested_at' => $export->created_at->toIso8601String(),
             'eta_minutes' => 5,
-            'status' => 'queued',
+            'status' => $export->status->value,
         ], 202);
     }
 
     /**
-     * Stream a previously-generated export to the requester.
+     * Download an export from the emailed link. The signed URL is the only
+     * credential, so it opens in a browser without a bearer token; it works
+     * once and the file is deleted after it is sent.
      *
-     * The route is signed (TTL = 48h) and additionally requires:
-     *  - a Sanctum bearer for the owner,
-     *  - the export id to start with `{user->id}-` so an attacker who
-     *    somehow leaks another user's signed URL still can't download it.
-     *
-     * @authenticated
+     * @unauthenticated
      */
-    public function download(Request $request, string $id): StreamedResponse
+    public function download(string $id, ClaimDataExportDownloadAction $action): BinaryFileResponse
     {
-        /** @var User $user */
-        $user = $request->user();
+        $export = $action->execute($id);
 
-        $this->authorize('exportData', $user);
-
-        if (! str_starts_with($id, $user->id . '-')) {
-            throw new DomainException(ErrorCode::USER_NOT_FOUND);
-        }
-
-        $path = "exports/{$id}.json";
-        $disk = Storage::disk('local');
-
-        if (! $disk->exists($path)) {
-            throw new DomainException(ErrorCode::USER_NOT_FOUND);
-        }
-
-        return $disk->download($path, "qbazaar-data-export-{$id}.json", [
-            'Content-Type' => 'application/json',
-        ]);
+        return response()
+            ->download(
+                Storage::disk(DataExport::DISK)->path((string) $export->path),
+                "qbazaar-data-export-{$export->id}.json",
+                ['Content-Type' => 'application/json', 'Cache-Control' => 'no-store'],
+            )
+            ->deleteFileAfterSend();
     }
 }

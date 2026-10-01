@@ -300,6 +300,14 @@ return [
         ],
     ],
 
+    'data' => [
+        'export' => [
+            'link' => [
+                'expired' => 'This download link has already been used or has expired. Request a new export from your account.',
+            ],
+        ],
+    ],
+
     'address' => [
         'not' => [
             'found' => 'Address not found.',

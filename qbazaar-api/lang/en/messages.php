@@ -30,7 +30,7 @@ return [
             'greeting' => 'Hello,',
             'line_intro' => 'Your personal data export is ready for download.',
             'action' => 'Download my data',
-            'line_expires' => 'This link will expire in :hours hours for your security.',
+            'line_expires' => 'This link works once and expires in :hours hours.',
             'line_ignore' => 'If you did not request this export, please contact our support team immediately.',
         ],
     ],

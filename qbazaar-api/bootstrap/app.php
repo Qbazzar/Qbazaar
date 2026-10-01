@@ -15,6 +15,7 @@ use App\Http\Middleware\VerifyTurnstile;
 use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
+use App\Models\DataExport;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
@@ -100,6 +101,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('03:00')
             ->timezone('Asia/Qatar')
             ->name('accounts.sweep-deletions')
+            ->withoutOverlapping();
+
+        $schedule->command('model:prune', ['--model' => [DataExport::class]])
+            ->dailyAt('03:15')
+            ->timezone('Asia/Qatar')
+            ->name('accounts.prune-data-exports')
             ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {

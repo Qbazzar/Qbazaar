@@ -118,6 +118,9 @@ enum ErrorCode: string
     case ADDRESS_NOT_FOUND = 'ADDRESS_001';
     case ADDRESS_LIMIT_REACHED = 'ADDRESS_002';
 
+    // ── Data export ────────────────────────────────────────────────────────
+    case DATA_EXPORT_LINK_EXPIRED = 'EXPORT_001';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -205,7 +208,8 @@ enum ErrorCode: string
 
             self::AUTH_OTP_EXPIRED,
             self::AD_EXPIRED,
-            self::OFFER_EXPIRED => 410,
+            self::OFFER_EXPIRED,
+            self::DATA_EXPORT_LINK_EXPIRED => 410,
 
             self::UPLOAD_TOO_LARGE => 413,
 

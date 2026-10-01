@@ -925,9 +925,12 @@ paths:
       tags: [Account]
       summary: Request a GDPR-style export of the caller's personal data
       description: |
-        Throttled to 1 export per user per 24h via Redis lock. Dispatches
-        `ExportUserDataJob` to the `low` queue; the user receives an email
-        with a signed download link (TTL 48h) when the export finishes.
+        Throttled to 1 export per user per 24h. Dispatches `ExportUserDataJob`
+        to the `low` queue; when the export is ready the user receives an
+        email with a signed, single-use download link (TTL 48h) that opens in
+        a browser. The export contains the profile, preferences, addresses,
+        ads, sent messages, offers made and received, favorites, saved
+        searches, reviews written, blocked users, sessions and activity.
       operationId: accountDataExportRequest
       responses:
         '202':
@@ -956,11 +959,13 @@ paths:
   /api/v1/account/data-export/{id}:
     get:
       tags: [Account]
-      summary: Download a previously-generated data export
+      summary: Download a data export from the emailed link
       description: |
-        Requires a signed URL (TTL 48h) plus a Sanctum bearer for the owner.
-        The export id must start with the caller's user-id prefix.
+        The signed URL is the only credential: no bearer token, so the link
+        opens in a browser. It works once and expires after 48h; the file is
+        deleted after it is sent.
       operationId: accountDataExportDownload
+      security: []
       parameters:
         - name: id
           in: path
@@ -979,18 +984,26 @@ paths:
             type: string
       responses:
         '200':
-          description: JSON file streamed
+          description: JSON file sent as an attachment
           content:
             application/json:
               schema:
                 type: string
                 format: binary
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+          description: Missing, invalid or expired signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '410':
+          description: Link already used, export expired or not ready (`EXPORT_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/account/deactivate:
     post:

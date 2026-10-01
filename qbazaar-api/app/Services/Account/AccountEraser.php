@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Account;
 
 use App\Models\Ad;
+use App\Models\DataExport;
 use App\Models\Offer;
 use App\Models\OtpCode;
 use App\Models\User;
@@ -38,6 +39,8 @@ class AccountEraser
             ->each(fn (Ad $ad) => $ad->forceDelete());
 
         $user->clearMediaCollection('avatar');
+
+        DataExport::query()->where('user_id', $user->id)->each(fn (DataExport $export) => $export->deleteFile());
 
         DB::transaction(function () use ($user): void {
             OtpCode::query()->where('phone', $user->phone)->delete();
