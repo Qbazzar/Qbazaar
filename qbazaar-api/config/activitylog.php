@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Spatie\Activitylog\Actions\CleanActivityLogAction;
+use App\Actions\Admin\ChunkedCleanActivityLogAction;
 use Spatie\Activitylog\Actions\LogActivityAction;
 use Spatie\Activitylog\Models\Activity;
 
@@ -17,7 +17,7 @@ return [
      * When the clean command is executed, all recording activities older than
      * the number of days specified here will be deleted.
      */
-    'clean_after_days' => 365,
+    'clean_after_days' => (int) env('ACTIVITY_LOG_RETENTION_DAYS', 365),
 
     /*
      * If no log name is passed to the activity() helper
@@ -70,6 +70,6 @@ return [
      */
     'actions' => [
         'log_activity' => LogActivityAction::class,
-        'clean_log' => CleanActivityLogAction::class,
+        'clean_log' => ChunkedCleanActivityLogAction::class,
     ],
 ];

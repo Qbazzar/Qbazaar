@@ -32,7 +32,7 @@ class UpdateProfileRequest extends FormRequest
         $presence = $this->isMethod('PATCH') ? 'sometimes' : 'required';
 
         return [
-            'full_name' => [$presence, 'string', 'min:3', 'max:80'],
+            'full_name' => [$presence, 'string', 'min:' . (int) config('qbazaar.auth.full_name_min_length'), 'max:' . (int) config('qbazaar.auth.full_name_max_length')],
             'language' => [$presence, 'string', new Enum(Language::class)],
         ];
     }
