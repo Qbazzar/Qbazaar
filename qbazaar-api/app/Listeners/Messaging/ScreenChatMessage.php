@@ -11,7 +11,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 
 /**
  * Runs auto-moderation on user-written chat messages off the send path,
- * so screening never delays or blocks delivery.
+ * so screening never delays or blocks delivery. Offer bubbles are screened
+ * too because they carry the proposer's free-text note.
  */
 class ScreenChatMessage implements ShouldQueue
 {
@@ -21,7 +22,7 @@ class ScreenChatMessage implements ShouldQueue
 
     public function handle(MessageSent $event): void
     {
-        if ($event->message->type !== MessageType::TEXT) {
+        if ($event->message->type === MessageType::SYSTEM) {
             return;
         }
 

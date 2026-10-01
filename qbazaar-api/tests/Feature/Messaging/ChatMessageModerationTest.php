@@ -12,6 +12,7 @@ use App\Events\Messaging\MessageSent;
 use App\Events\Reports\ReportCreated;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Offer;
 use App\Models\Report;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -81,7 +82,20 @@ it('does not report ordinary negotiation, including a phone number', function ()
     expect(Report::query()->count())->toBe(0);
 });
 
-it('does not screen offer and system bubbles', function (): void {
+it('screens the note of an offer bubble', function (): void {
+    Sanctum::actingAs($this->buyer, ['*']);
+
+    $offerId = postJson("/api/v1/conversations/{$this->conversation->id}/offers", [
+        'amount' => 900,
+        'note' => 'Pay me in Bitcoin',
+    ])->assertCreated()->json('data.id');
+
+    expect(Report::query()->sole())
+        ->target_id->toBe(Offer::query()->findOrFail($offerId)->message_id)
+        ->category->toBe(ReportCategory::FRAUD);
+});
+
+it('does not screen system bubbles', function (): void {
     $message = Message::query()->create([
         'conversation_id' => $this->conversation->id,
         'sender_id' => $this->buyer->id,
