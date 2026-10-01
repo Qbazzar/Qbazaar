@@ -70,7 +70,7 @@ class MessageController extends Controller
             // Eager-load `offer` too: offer messages carry the offer card the
             // seller acts on. Without it MessageResource serialised offer=null
             // and the buyer's offer never rendered (seller couldn't accept).
-            ->with(['sender', 'offer'])
+            ->with(['sender', 'offer', 'media'])
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 

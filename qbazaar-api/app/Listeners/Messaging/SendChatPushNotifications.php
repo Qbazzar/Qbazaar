@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Listeners\Messaging;
 
-use App\Enums\MessageType;
 use App\Events\Messaging\MessageSent;
 use App\Events\Offers\OfferAccepted;
 use App\Events\Offers\OfferCountered;
@@ -52,7 +51,7 @@ class SendChatPushNotifications implements ShouldQueue
     {
         $message = $event->message;
 
-        if ($message->type !== MessageType::TEXT || $message->sender_id === $event->recipient->id) {
+        if (! $message->type->isUserWritten() || $message->sender_id === $event->recipient->id) {
             return;
         }
 

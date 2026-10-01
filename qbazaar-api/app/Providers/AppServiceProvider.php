@@ -77,7 +77,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('publish', fn (Request $r) => Limit::perMinute((int) config('qbazaar.ads.publish_attempts_per_minute_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('drafts', fn (Request $r) => Limit::perHour((int) config('qbazaar.ads.drafts_per_hour_per_user'))->by(optional($r->user())->id ?: $r->ip()));
-        RateLimiter::for('messages', fn (Request $r) => Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('messages', fn (Request $r) => [
+            Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()),
+            ...($r->hasFile('image') ? [
+                Limit::perMinute((int) config('qbazaar.messaging.images_per_minute'))->by('chat-images:' . (optional($r->user())->id ?: $r->ip())),
+                Limit::perDay((int) config('qbazaar.messaging.images_per_day'))->by('chat-images-day:' . (optional($r->user())->id ?: $r->ip())),
+            ] : []),
+        ]);
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
     }
 

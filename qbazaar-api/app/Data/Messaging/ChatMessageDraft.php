@@ -6,6 +6,7 @@ namespace App\Data\Messaging;
 
 use App\Enums\ChatMessageKey;
 use App\Enums\MessageType;
+use Illuminate\Http\UploadedFile;
 
 /**
  * A chat message about to be written. System and offer bubbles carry a
@@ -22,11 +23,26 @@ final readonly class ChatMessageDraft
         public string $body = '',
         public ?ChatMessageKey $key = null,
         public array $params = [],
+        public ?UploadedFile $image = null,
     ) {}
 
     public static function text(string $body): self
     {
         return new self(MessageType::TEXT, $body);
+    }
+
+    public static function image(UploadedFile $image, ?string $caption): self
+    {
+        return new self(MessageType::IMAGE, $caption ?? '', image: $image);
+    }
+
+    /**
+     * The inbox shows "Photo" in the reader's language for a photo sent
+     * without a caption.
+     */
+    public function previewKey(): ?ChatMessageKey
+    {
+        return $this->type === MessageType::IMAGE && $this->body === '' ? ChatMessageKey::IMAGE : $this->key;
     }
 
     /**

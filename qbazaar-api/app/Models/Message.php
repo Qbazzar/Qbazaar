@@ -13,6 +13,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Individual chat line inside a conversation.
@@ -37,10 +41,14 @@ use Illuminate\Support\Carbon;
  * @property User $sender
  * @property Offer|null $offer
  */
-class Message extends Model
+class Message extends Model implements HasMedia
 {
     /** @use HasFactory<MessageFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, InteractsWithMedia;
+
+    public const IMAGE_COLLECTION = 'chat_image';
+
+    public const IMAGE_PREVIEW = 'preview';
 
     protected $table = 'messages';
 
@@ -99,6 +107,29 @@ class Message extends Model
     public function offer(): HasOne
     {
         return $this->hasOne(Offer::class, 'message_id');
+    }
+
+    /**
+     * Chat photos stay on the private media disk: clients only ever get
+     * expiring signed links, never a permanent public URL.
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(self::IMAGE_COLLECTION)->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion(self::IMAGE_PREVIEW)
+            ->queued()
+            ->performOnCollections(self::IMAGE_COLLECTION)
+            ->fit(Fit::Contain, 1280, 1280)
+            ->format('webp');
+    }
+
+    public function image(): ?Media
+    {
+        return $this->type === MessageType::IMAGE ? $this->getFirstMedia(self::IMAGE_COLLECTION) : null;
     }
 
     /**

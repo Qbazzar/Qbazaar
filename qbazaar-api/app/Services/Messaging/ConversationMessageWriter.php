@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Services\Messaging;
 
 use App\Data\Messaging\ChatMessageDraft;
+use App\Enums\ChatMessageKey;
 use App\Enums\Language;
 use App\Events\Messaging\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Services\Media\UploadedFileNamer;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -20,7 +23,10 @@ use Illuminate\Support\Str;
  */
 class ConversationMessageWriter
 {
-    public function __construct(private readonly ChatMessageRenderer $renderer) {}
+    public function __construct(
+        private readonly ChatMessageRenderer $renderer,
+        private readonly UploadedFileNamer $fileNamer,
+    ) {}
 
     public function append(Conversation $conversation, User $author, ChatMessageDraft $draft): Message
     {
@@ -33,16 +39,24 @@ class ConversationMessageWriter
             $created = Message::query()->create([
                 'conversation_id' => $conversation->id,
                 'sender_id' => $author->id,
-                'body' => $this->storedBody($draft),
+                'body' => $this->english($draft->key, $draft),
                 'type' => $draft->type,
                 'message_key' => $draft->key?->value,
-                'params' => $draft->key !== null && $draft->params !== [] ? $draft->params : null,
+                'params' => $this->storedParams($draft),
             ]);
+
+            // Stored before the conversation row is touched, so the upload
+            // never holds that row's lock.
+            if ($draft->image instanceof UploadedFile) {
+                $this->attachImage($created, $draft->image);
+            }
+
+            $previewKey = $draft->previewKey();
 
             $conversation->forceFill([
                 'last_message_at' => $created->created_at,
-                'last_message_preview' => Str::limit($created->body, ChatMessageRenderer::PREVIEW_LENGTH),
-                'last_message_key' => $created->message_key,
+                'last_message_preview' => Str::limit($this->english($previewKey, $draft), ChatMessageRenderer::PREVIEW_LENGTH),
+                'last_message_key' => $previewKey?->value,
                 'last_message_params' => $created->params,
             ])->save();
 
@@ -59,15 +73,32 @@ class ConversationMessageWriter
     }
 
     /**
-     * Keyed bubbles also keep an English rendering in `body`, so staff
-     * screens, moderation and clients that predate keys still read them.
+     * Keyed bubbles also keep an English rendering, so staff screens,
+     * moderation and clients that predate keys still read them.
      */
-    private function storedBody(ChatMessageDraft $draft): string
+    private function english(?ChatMessageKey $key, ChatMessageDraft $draft): string
     {
-        if ($draft->key === null) {
+        if ($key === null) {
             return $draft->body;
         }
 
-        return $this->renderer->render($draft->key->value, $draft->params, $draft->body, Language::ENGLISH->value);
+        return $this->renderer->render($key->value, $draft->params, $draft->body, Language::ENGLISH->value);
+    }
+
+    /**
+     * @return array<string, scalar|null>|null
+     */
+    private function storedParams(ChatMessageDraft $draft): ?array
+    {
+        return $draft->key !== null && $draft->params !== [] ? $draft->params : null;
+    }
+
+    private function attachImage(Message $message, UploadedFile $image): void
+    {
+        $message->addMedia($image)
+            ->usingFileName($this->fileNamer->nameFor($image))
+            ->toMediaCollection(Message::IMAGE_COLLECTION);
+
+        $message->load('media');
     }
 }

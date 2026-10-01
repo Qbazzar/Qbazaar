@@ -169,6 +169,9 @@ return [
         'push_skip_online_recipients' => (bool) env('CHAT_PUSH_SKIP_ONLINE', true),
         // File a report for staff when a message matches the moderation rules.
         'auto_report_flagged_messages' => (bool) env('CHAT_AUTO_REPORT_FLAGGED', true),
+        // Photos cost storage and bandwidth, so they get a tighter budget than text.
+        'images_per_minute' => 10,
+        'images_per_day' => 200,
     ],
 
     /*

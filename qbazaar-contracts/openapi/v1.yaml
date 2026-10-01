@@ -1563,6 +1563,35 @@ paths:
         '403': { description: Signature invalid or expired }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/v1/media/{media}/conversions/{conversion}:
+    get:
+      tags: [Messages]
+      summary: Download the downsized preview of a chat photo
+      description: |
+        Only reachable through the signed link in `ChatImage.url`. Chat photos
+        and their previews stay on the private disk; on R2 the response is a
+        302 to a presigned URL valid for a few minutes. The original of a chat
+        photo is served by `/media/{media}/original` (`ChatImage.original_url`).
+      operationId: mediaConversion
+      security: []
+      parameters:
+        - { name: media, in: path, required: true, schema: { type: integer } }
+        - { name: conversion, in: path, required: true, schema: { type: string, enum: [preview] } }
+        - { name: expires, in: query, required: true, schema: { type: integer } }
+        - { name: signature, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The preview image (local storage)
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        '302':
+          description: Redirect to a short-lived presigned URL (R2 storage)
+          headers:
+            Location: { schema: { type: string, format: uri } }
+        '403': { description: Signature invalid or expired }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /api/v1/account/ads:
     get:
       tags: [Ads]
@@ -2073,7 +2102,11 @@ paths:
     post:
       tags: [Messages]
       summary: Append a message to a conversation
-      description: Rate-limited via the `messages` throttle (per-user per-minute).
+      description: |
+        Text as JSON, or a photo as multipart (`type=image`). Rate-limited via
+        the `messages` throttle (per-user per-minute); photos also count
+        against `qbazaar.messaging.images_per_minute` / `images_per_day`.
+        `message.sent` is broadcast after commit with the same payload.
       operationId: messagesStore
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -2083,6 +2116,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SendMessageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SendImageMessageRequest'
       responses:
         '201':
           description: Message created and broadcast
@@ -4162,9 +4198,10 @@ components:
     # ───── Messaging (Sprint 8 Wave A) ─────
     MessageType:
       type: string
-      enum: [text, offer, system]
+      enum: [text, image, offer, system]
       description: |
-        - `text` — plain user chat. Wave A only emits this value.
+        - `text` — plain user chat.
+        - `image` — a photo (`media`) with an optional caption in `body`.
         - `offer` — inline offer card (Sprint 9).
         - `system` — moderation / read-receipt placeholder (Sprint 9).
 
@@ -4271,6 +4308,11 @@ components:
             id: { $ref: '#/components/schemas/ULID' }
             full_name: { type: string }
             avatar_thumb: { type: string, format: uri, nullable: true }
+        media:
+          allOf:
+            - $ref: '#/components/schemas/ChatImage'
+          nullable: true
+          description: Only present when `type === "image"`.
         offer:
           allOf:
             - $ref: '#/components/schemas/Offer'
@@ -4286,14 +4328,48 @@ components:
       properties:
         ad_id: { $ref: '#/components/schemas/ULID' }
 
+    ChatImage:
+      type: object
+      required: [id, url, original_url, mime_type, size_bytes]
+      properties:
+        id: { type: integer }
+        url:
+          type: string
+          format: uri
+          description: |
+            Expiring signed link (`qbazaar.uploads.original_url_ttl_hours`) to
+            the downsized preview (max 1280px, webp), or to the original while
+            the preview is still being generated. Do not persist it.
+        original_url:
+          type: string
+          format: uri
+          description: Expiring signed link to the original upload.
+        mime_type: { type: string, enum: [image/jpeg, image/png, image/webp] }
+        size_bytes: { type: integer, minimum: 0 }
+
     SendMessageRequest:
       type: object
       required: [body]
       properties:
         body: { type: string, minLength: 1, maxLength: 5000 }
         type:
-          $ref: '#/components/schemas/MessageType'
-          # Wave A only accepts `text`.
+          type: string
+          enum: [text]
+          default: text
+
+    SendImageMessageRequest:
+      type: object
+      required: [type, image]
+      properties:
+        type: { type: string, enum: [image] }
+        image:
+          type: string
+          format: binary
+          description: JPEG, PNG or WebP (sniffed content), at most 10 MB. Stored under a server-generated name.
+        body:
+          type: string
+          maxLength: 5000
+          description: Optional caption.
 
     UnreadCountResponse:
       type: object

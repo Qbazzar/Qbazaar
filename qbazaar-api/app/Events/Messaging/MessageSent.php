@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Events\Messaging;
 
+use App\Enums\MessageType;
 use App\Http\Resources\Api\V1\Messaging\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -74,7 +75,7 @@ class MessageSent implements ShouldBroadcast
             // MessageResource only needs a Request to satisfy its signature.
             $request = Request::create('/internal/broadcast', 'GET');
 
-            $this->message->loadMissing('sender');
+            $this->message->loadMissing($this->message->type === MessageType::IMAGE ? ['sender', 'media'] : ['sender']);
 
             return [
                 'message' => (new MessageResource($this->message))->toArray($request),
