@@ -28,3 +28,4 @@ Thumbs.db
 /storage/telescope
 /.scribe
 storage/phpstan-tmp/
+/storage/media-library

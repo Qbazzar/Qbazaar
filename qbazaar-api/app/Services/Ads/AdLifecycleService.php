@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Ads;
 
-use App\Actions\Ads\ModerateAdAction;
 use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
 use App\Events\Ads\AdApproved;
@@ -25,13 +24,10 @@ use Illuminate\Support\Facades\DB;
  */
 class AdLifecycleService
 {
-    public function __construct(
-        private readonly ModerateAdAction $moderate,
-    ) {}
-
     /**
-     * Park the ad in PENDING for manual review. Auto-moderation only produces
-     * triage hints for the reviewer. An ad already waiting is left untouched
+     * Park the ad in PENDING for manual review. The auto-moderation hints are
+     * cleared here and filled in on the queue (ModerateAdJob), so no checks
+     * run while the row is locked. An ad already waiting is left untouched
      * so a repeated publish does not notify the reviewers again.
      */
     public function submitForReview(Ad $ad): Ad
@@ -41,16 +37,14 @@ class AdLifecycleService
                 return null;
             }
 
-            $result = ($this->moderate)($locked);
-
             $this->apply($locked, AdStatus::PENDING, [
                 'published_at' => null,
                 'expires_at' => null,
                 'submitted_at' => now(),
-                'moderation_result' => $result,
+                'moderation_result' => null,
             ]);
 
-            return fn () => AdSubmittedForReview::dispatch($locked, $result);
+            return fn () => AdSubmittedForReview::dispatch($locked);
         }, allowSameStatus: true);
     }
 

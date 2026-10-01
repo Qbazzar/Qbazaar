@@ -5,7 +5,10 @@ declare(strict_types=1);
 use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
 use App\Models\Ad;
+use App\Models\Category;
 use App\Models\User;
+use App\Services\Catalog\CategoryHierarchy;
+use App\Services\Media\PerceptualHashService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -33,6 +36,9 @@ beforeEach(function (): void {
 
     Sanctum::actingAs($this->seller, ['*']);
 
+    // Both sides share a category: the check only compares ads under the same root category.
+    $this->categoryId = Category::query()->whereNotNull('parent_id')->value('id');
+
     /**
      * Draft owned by $this->seller with text that passes every text rule,
      * so the only moderation signal under test is the image hash.
@@ -40,17 +46,20 @@ beforeEach(function (): void {
     $this->makeCleanDraft = function (): Ad {
         return Ad::withoutSyncingToSearch(fn (): Ad => $this->makeAd($this->seller, [
             'status' => AdStatus::DRAFT->value,
+            'category_id' => $this->categoryId,
             'title' => 'Comfy reading chair for the living room',
             'description' => 'Very comfortable reading chair in excellent condition. Wood frame and cotton upholstery. Pick up from West Bay.',
         ]));
     };
 
     /** ACTIVE fixture ad (valid published_at/expires_at) carrying one hashed image. */
-    $this->makeActiveAdWithPhash = function (User $owner, string $phash): Ad {
+    $this->makeActiveAdWithPhash = function (User $owner, string $phash, array $overrides = []): Ad {
         $ad = Ad::withoutSyncingToSearch(fn (): Ad => $this->makeAd($owner, [
             'status' => AdStatus::ACTIVE->value,
+            'category_id' => $this->categoryId,
             'published_at' => now()->subDay(),
             'expires_at' => now()->addDays(30),
+            ...$overrides,
         ]));
 
         attachImageWithPhash($ad, $phash);
@@ -98,7 +107,10 @@ function attachImageWithPhash(Ad $ad, ?string $phash): Media
         ->toMediaCollection('images');
 
     if ($phash !== null) {
-        $media->forceFill(['phash' => $phash])->save();
+        $media->forceFill([
+            'phash' => $phash,
+            'phash_int' => app(PerceptualHashService::class)->toInteger($phash),
+        ])->save();
     }
 
     return $media;
@@ -106,7 +118,7 @@ function attachImageWithPhash(Ad $ad, ?string $phash): Media
 
 /**
  * Publish the draft and return the moderation result stored on it. The sync
- * test queue runs DetectDuplicateImagesJob inside the request.
+ * test queue runs ModerateAdJob inside the request.
  */
 function publishAndReadModerationResult(Ad $draft): ModerationResult
 {
@@ -183,3 +195,41 @@ it('does not flag duplicate_image when another seller has an active ad with a ma
 
     expect(publishAndReadModerationResult($draft)->clean)->toBeTrue();
 });
+
+it('flags a near-duplicate whose hash has the top bit set', function (): void {
+    $existing = ($this->makeActiveAdWithPhash)($this->otherSeller, 'ffffffffffffff00');
+
+    $draft = ($this->makeCleanDraft)();
+    attachImageWithPhash($draft, 'ffffffffffffffff');
+
+    expect(publishAndReadModerationResult($draft)->details['duplicate_image'])->toBe(['duplicate_ad_ids' => [$existing->id]]);
+});
+
+it('ignores matches published before the comparison window', function (): void {
+    ($this->makeActiveAdWithPhash)($this->otherSeller, 'a1b2c3d4e5f60718', [
+        'published_at' => now()->subDays((int) config('moderation.duplicate_images.window_days') + 1),
+    ]);
+
+    $draft = ($this->makeCleanDraft)();
+    attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
+
+    expect(publishAndReadModerationResult($draft)->clean)->toBeTrue();
+});
+
+it('compares only within the same root category unless configured otherwise', function (bool $sameRootOnly, bool $flagged): void {
+    config(['moderation.duplicate_images.same_root_category' => $sameRootOnly]);
+    $ownRoot = app(CategoryHierarchy::class)->pathTo($this->categoryId)[0];
+    $otherLeaf = Category::query()->whereNotNull('parent_id')->get()
+        ->first(fn (Category $category): bool => app(CategoryHierarchy::class)->pathTo($category->id)[0] !== $ownRoot);
+    assert($otherLeaf instanceof Category);
+
+    ($this->makeActiveAdWithPhash)($this->otherSeller, 'a1b2c3d4e5f60718', ['category_id' => $otherLeaf->id]);
+
+    $draft = ($this->makeCleanDraft)();
+    attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
+
+    expect(publishAndReadModerationResult($draft)->clean)->toBe(! $flagged);
+})->with([
+    'same root only' => [true, false],
+    'any category' => [false, true],
+]);

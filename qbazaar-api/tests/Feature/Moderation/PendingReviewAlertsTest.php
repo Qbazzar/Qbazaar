@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
 use App\Enums\UserStatus;
-use App\Events\Ads\AdSubmittedForReview;
+use App\Events\Ads\AdModerated;
 use App\Listeners\Ads\NotifyAdminsOfPendingAd;
 use App\Models\User;
 use App\Notifications\Ads\AdPendingReviewNotification;
@@ -79,7 +79,7 @@ it('skips the alert when the ad was reviewed before the queued listener ran', fu
     User::factory()->create()->assignRole('moderator');
     $ad = $this->makeAd($this->seller, ['status' => AdStatus::ACTIVE->value]);
 
-    app(NotifyAdminsOfPendingAd::class)->handle(new AdSubmittedForReview($ad, ModerationResult::clean()));
+    app(NotifyAdminsOfPendingAd::class)->handle(new AdModerated($ad, ModerationResult::clean()));
 
     Notification::assertNothingSent();
 });

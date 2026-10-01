@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\AdStatus;
-use App\Events\Ads\AdSubmittedForReview;
+use App\Events\Ads\AdModerated;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -22,10 +22,10 @@ beforeEach(function (): void {
 });
 
 // Publish now always parks the ad in PENDING for manual review; assert the
-// external-link rule fired via the AdSubmittedForReview ModerationResult.
+// external-link rule fired via the AdModerated ModerationResult.
 
 it('flags an ad whose description contains an external https link', function (): void {
-    Event::fake([AdSubmittedForReview::class]);
+    Event::fake([AdModerated::class]);
 
     $ad = $this->makePublishableDraft($this->user, [
         'status' => AdStatus::DRAFT->value,
@@ -38,13 +38,13 @@ it('flags an ad whose description contains an external https link', function ():
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
     Event::assertDispatched(
-        AdSubmittedForReview::class,
-        fn (AdSubmittedForReview $e): bool => in_array('external_link', $e->result->flags, true),
+        AdModerated::class,
+        fn (AdModerated $e): bool => in_array('external_link', $e->result->flags, true),
     );
 });
 
 it('flags an ad whose description contains a bare www link', function (): void {
-    Event::fake([AdSubmittedForReview::class]);
+    Event::fake([AdModerated::class]);
 
     $ad = $this->makePublishableDraft($this->user, [
         'status' => AdStatus::DRAFT->value,
@@ -57,7 +57,7 @@ it('flags an ad whose description contains a bare www link', function (): void {
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
     Event::assertDispatched(
-        AdSubmittedForReview::class,
-        fn (AdSubmittedForReview $e): bool => in_array('external_link', $e->result->flags, true),
+        AdModerated::class,
+        fn (AdModerated $e): bool => in_array('external_link', $e->result->flags, true),
     );
 });

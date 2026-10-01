@@ -114,4 +114,19 @@ return [
     'phone_regex' => '/(?:\+?974|00974)[\s\-]?\d{4}[\s\-]?\d{4}|\+\d{1,3}[\s\-]?\d{6,}|\b\d{8,}\b/u',
     'external_link_regex' => '/(?:https?:\/\/|\bwww\.)[^\s,]+/iu',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Duplicate images
+    |--------------------------------------------------------------------------
+    | Bounds for the queued near-duplicate image check. It compares the ad's
+    | images with other sellers' ads published in the last `window_days`,
+    | within the same top-level category unless `same_root_category` is off.
+    | The distance threshold is qbazaar.moderation.phash_distance_threshold.
+    */
+    'duplicate_images' => [
+        'window_days' => (int) env('MODERATION_DUPLICATE_WINDOW_DAYS', 90),
+        'same_root_category' => (bool) env('MODERATION_DUPLICATE_SAME_ROOT_CATEGORY', true),
+        'max_matches' => 10,
+    ],
+
 ];
