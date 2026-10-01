@@ -11,6 +11,7 @@ use App\Jobs\ExportUserDataJob;
 use App\Models\DataExport;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 /**
  * Records a data export request and queues the job that builds it.
@@ -24,14 +25,23 @@ class RequestDataExportAction
 
     public function execute(User $user): DataExport
     {
-        if (! Cache::lock('account:data-export:' . $user->id, self::WINDOW_SECONDS)->get()) {
+        $lock = Cache::lock('account:data-export:' . $user->id, self::WINDOW_SECONDS);
+
+        if (! $lock->get()) {
             throw new DomainException(ErrorCode::RATE_LIMIT_EXCEEDED, __('errors.rate.limit.exceeded'));
         }
 
-        $export = new DataExport;
-        $export->user_id = $user->id;
-        $export->status = DataExportStatus::QUEUED;
-        $export->save();
+        try {
+            $export = new DataExport;
+            $export->user_id = $user->id;
+            $export->status = DataExportStatus::QUEUED;
+            $export->save();
+        } catch (Throwable $exception) {
+            // Nothing was queued, so the user must be able to try again now.
+            $lock->release();
+
+            throw $exception;
+        }
 
         ExportUserDataJob::dispatch($export->id)->afterCommit();
 

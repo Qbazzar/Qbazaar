@@ -86,6 +86,21 @@ it('rejects unauthenticated requests', function (): void {
     postJson('/api/v1/account/data-export-request')->assertStatus(401);
 });
 
+it('lets the user retry at once when recording the request failed', function (): void {
+    Bus::fake();
+    Sanctum::actingAs($this->user, ['*']);
+
+    DataExport::creating(function (): never {
+        throw new RuntimeException('database unavailable');
+    });
+    postJson('/api/v1/account/data-export-request')->assertStatus(500);
+
+    DataExport::flushEventListeners();
+    postJson('/api/v1/account/data-export-request')->assertStatus(202);
+
+    Bus::assertDispatchedTimes(ExportUserDataJob::class, 1);
+});
+
 it('builds an export with ads, messages and offers, and emails a browser link', function (): void {
     Notification::fake();
     $this->seedReferenceData();
