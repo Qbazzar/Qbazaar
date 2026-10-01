@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1\Media;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Media\MediaResource;
+use App\Models\Message;
 use App\Services\Media\MediaStorage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,7 +33,7 @@ class MediaOriginalController extends Controller
 {
     public function __invoke(Media $media, MediaStorage $storage): Response
     {
-        abort_unless($media->collection_name === 'images', 404);
+        abort_unless(in_array($media->collection_name, ['images', Message::IMAGE_COLLECTION], true), 404);
 
         if (! $storage->isLocal($media)) {
             return redirect()->away($storage->presignedOriginalUrl($media));

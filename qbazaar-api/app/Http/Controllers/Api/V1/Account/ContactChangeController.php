@@ -114,7 +114,7 @@ class ContactChangeController extends Controller
         $result = $action->execute($user, (string) $request->validated('phone'), (string) $request->validated('reauth_code'));
 
         return response()->json([
-            'sent_to' => $result->phone,
+            'sent_to' => $result->recipient,
             'expires_in' => $result->expiresIn,
             'can_resend_in' => $result->canResendIn,
         ], Response::HTTP_ACCEPTED);

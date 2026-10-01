@@ -56,7 +56,12 @@ events:
           required: [id, last_message_preview, last_message_at, unread_count]
           properties:
             id: { type: string }
-            last_message_preview: { type: string, nullable: true }
+            last_message_preview:
+              type: string
+              nullable: true
+              description: Rendered in the recipient's language; re-render from the key on the sender's side.
+            last_message_key: { $ref: '../openapi/v1.yaml#/components/schemas/ChatMessageKey' }
+            last_message_params: { $ref: '../openapi/v1.yaml#/components/schemas/ChatMessageParams' }
             last_message_at: { type: string, format: date-time, nullable: true }
             unread_count:
               type: integer

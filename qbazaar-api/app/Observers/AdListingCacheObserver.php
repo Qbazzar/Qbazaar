@@ -16,7 +16,7 @@ use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
  */
 class AdListingCacheObserver implements ShouldHandleEventsAfterCommit
 {
-    private const LISTING_ATTRIBUTES = ['status', 'category_id', 'location_id', 'published_at', 'featured'];
+    private const LISTING_ATTRIBUTES = ['status', 'category_id', 'location_id', 'published_at', 'featured', 'reserved_at'];
 
     public function __construct(private readonly CatalogCache $cache) {}
 

@@ -63,6 +63,27 @@ return [
             'expired' => 'The token has expired.',
             'invalid' => 'The token is invalid.',
         ],
+        'registration' => [
+            'required' => 'No account uses this email yet. Send your name, phone and account type to create one.',
+        ],
+        'device' => [
+            'challenge' => [
+                'invalid' => 'The device verification has expired. Please sign in again.',
+            ],
+        ],
+        'social' => [
+            'token' => [
+                'invalid' => 'The sign-in token could not be verified.',
+            ],
+            'provider' => [
+                'unavailable' => 'This sign-in method is not available right now.',
+            ],
+        ],
+        'password' => [
+            'login' => [
+                'disabled' => 'Password sign-in is turned off. Sign in with an email code instead.',
+            ],
+        ],
     ],
 
     'turnstile' => [
@@ -161,6 +182,12 @@ return [
             'not' => [
                 'found' => 'Saved search not found.',
             ],
+        ],
+    ],
+
+    'fav' => [
+        'limit' => [
+            'reached' => 'You have reached the maximum number of favourites. Remove some to add new ones.',
         ],
     ],
 
@@ -327,6 +354,19 @@ return [
         ],
         'limit' => [
             'reached' => 'You have reached the maximum number of saved addresses.',
+        ],
+    ],
+
+    'follow' => [
+        'self' => [
+            'forbidden' => 'You cannot follow yourself.',
+        ],
+        'blocked' => 'You cannot follow this user.',
+    ],
+
+    'business' => [
+        'account' => [
+            'required' => 'This is only available to business accounts.',
         ],
     ],
 ];

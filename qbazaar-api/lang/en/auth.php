@@ -35,6 +35,16 @@ return [
         ],
     ],
 
+    'email_code' => [
+        'mail' => [
+            'subject' => ':code is your QBazaar code',
+            'greeting' => 'Hello!',
+            'line_code' => 'Your QBazaar sign-in code is :code.',
+            'line_expires' => 'It expires in :minutes minutes. Never share it with anyone.',
+            'line_ignore' => 'If you did not ask for this code, you can ignore this email.',
+        ],
+    ],
+
     'password_reset' => [
         'mail' => [
             'subject' => 'Reset your QBazaar password',

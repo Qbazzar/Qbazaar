@@ -8,7 +8,10 @@ use App\Models\Ad;
 use App\Models\Message;
 use App\Models\User;
 use App\Notifications\Ads\AdApprovedNotification;
+use App\Notifications\Ads\AdPriceDroppedNotification;
+use App\Notifications\Ads\NewAdFromFollowedSellerNotification;
 use App\Notifications\Messaging\NewMessagePushNotification;
+use App\Notifications\Search\SavedSearchMatchNotification;
 use App\Notifications\SystemAnnouncementNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -139,4 +142,32 @@ it('skips the device-token lookup for a chat push the user muted', function (): 
 
     expect($channels)->toBe([])
         ->and(DB::getQueryLog())->toBe([]);
+});
+
+it('keeps ad alerts in the inbox but drops their push when watched-ad alerts are muted', function (): void {
+    config()->set('firebase.projects.' . config('firebase.default', 'app') . '.credentials', '{"type":"service_account"}');
+    $this->user->deviceTokens()->create(['token' => str_repeat('a', 40), 'platform' => 'web']);
+
+    $notifications = [
+        new AdPriceDroppedNotification(new Ad, '100.00', '80.00'),
+        new NewAdFromFollowedSellerNotification(new Ad),
+        new SavedSearchMatchNotification(new Ad, 'Bikes'),
+    ];
+
+    foreach ($notifications as $notification) {
+        expect($notification->via($this->user))->toBe(['database', FcmChannel::class]);
+    }
+
+    $this->user->forceFill([
+        'notification_preferences' => NotificationPreferences::defaults()->with(push: ['saved_search_alerts' => false]),
+    ])->save();
+    $muted = $this->user->fresh();
+
+    DB::enableQueryLog();
+
+    foreach ($notifications as $notification) {
+        expect($notification->via($muted))->toBe(['database']);
+    }
+
+    expect(DB::getQueryLog())->toBe([]);
 });

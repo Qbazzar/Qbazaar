@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Offers;
 
-use App\Enums\MessageType;
+use App\Data\Messaging\ChatMessageDraft;
+use App\Enums\ChatMessageKey;
 use App\Enums\OfferStatus;
 use App\Events\Offers\OfferRejected;
 use App\Exceptions\DomainException;
@@ -34,7 +35,7 @@ class RejectOfferAction
         return $this->transitions->withLockedOffer($offer, function (Offer $offer) use ($actor): Offer {
             $this->transitions->moveTo($offer, OfferStatus::REJECTED);
 
-            $this->messages->append($offer->conversation, $actor, 'Offer rejected', MessageType::SYSTEM);
+            $this->messages->append($offer->conversation, $actor, ChatMessageDraft::system(ChatMessageKey::OFFER_REJECTED));
 
             DB::afterCommit(fn () => OfferRejected::dispatch($offer, $offer->proposerId()));
 

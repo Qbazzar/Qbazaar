@@ -154,5 +154,13 @@ return [
             'greeting' => 'مرحباً،',
             'footer' => 'شكراً لكونك جزءاً من كيوبازار.',
         ],
+        'ad_price_changed' => [
+            'title' => 'انخفض سعر إعلان في مفضلتك',
+            'body' => 'صار سعر ":title" :price :currency (كان :previous).',
+        ],
+        'ad_new_from_followed' => [
+            'title' => 'إعلان جديد من :name',
+            'body' => 'نشر :name إعلاناً جديداً ":title".',
+        ],
     ],
 ];

@@ -17,6 +17,8 @@ use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
 use App\Models\DataExport;
+use App\Models\OtpCode;
+use App\Models\TrustedDevice;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
@@ -113,6 +115,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('03:15')
             ->timezone('Asia/Qatar')
             ->name('accounts.prune-data-exports')
+            ->withoutOverlapping();
+
+        $schedule->command('model:prune', ['--model' => [OtpCode::class, TrustedDevice::class]])
+            ->dailyAt('03:00')
+            ->timezone('Asia/Qatar')
+            ->name('auth.prune')
             ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {

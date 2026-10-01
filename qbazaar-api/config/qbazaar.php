@@ -56,6 +56,25 @@ return [
         'refresh_token_ttl_days' => 30,
         'max_login_attempts' => 5,
         'login_lockout_minutes' => 15,
+
+        // Password sign-in stays on while the clients move to email codes;
+        // turning it off makes /auth/login and /auth/register answer AUTH_014.
+        'password_login_enabled' => (bool) env('AUTH_PASSWORD_LOGIN_ENABLED', true),
+
+        // A device the user has not proven yet gets an SMS challenge instead
+        // of tokens. Off by default until real SMS delivery is configured,
+        // since without it nobody could finish the challenge. Never on under
+        // APP_ENV=testing; tests that cover it turn it on.
+        'new_device_check' => [
+            'enabled' => (bool) env('AUTH_NEW_DEVICE_CHECK_ENABLED', false) && env('APP_ENV') !== 'testing',
+            'challenge_ttl_minutes' => 10,
+            'trusted_device_days' => 180,
+        ],
+
+        'social' => [
+            'jwks_cache_minutes' => 360,
+            'clock_leeway_seconds' => 60,
+        ],
     ],
 
     /*
@@ -73,6 +92,14 @@ return [
         'max_per_day_per_phone' => 10,
         'max_per_day_per_ip' => 30,
         'verify_max_per_minute' => 5,
+
+        // Per-purpose overrides of ttl_minutes / max_attempts above.
+        'purposes' => [
+            'email_sign_in' => [
+                'ttl_minutes' => 10,
+                'max_attempts' => 5,
+            ],
+        ],
 
         // Dev override: when set, OtpService::issue() short-circuits the random
         // generator and emits this exact code (still goes through Twilio/log/email
@@ -102,6 +129,8 @@ return [
         'description_min_length' => 20,
         'description_max_length' => 3000,
         'price_max' => 99_999_999,
+        'postal_code_max_length' => 10,
+        'street_max_length' => 255,
         'view_throttle_per_user_per_minute' => 60,
     ],
 
@@ -113,7 +142,7 @@ return [
     'search' => [
         'results_per_page' => 20,
         'suggestions_max' => 8,
-        'saved_search_max_per_user' => 20,
+        'saved_search_max_per_user' => 10,
         'saved_search_check_interval_minutes' => 60,
         // GET /ads?ids= — favourites synced from another device, recently viewed on the web.
         'ids_lookup_max' => 50,
@@ -142,11 +171,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Social — follows, companies directory, business profiles
+    |--------------------------------------------------------------------------
+    */
+    'social' => [
+        'follows_per_page' => 20,
+        'follows_per_minute' => 30,
+        'follows_per_day' => 500,
+        'companies_per_page' => 20,
+        'business_about_max_length' => 2000,
+        'max_cover_size_kb' => 5_120,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Favorites & Recently Viewed
     |--------------------------------------------------------------------------
     */
     'favorites' => [
         'max_per_user' => 1000,
+    ],
+
+    // Fan-out alerts (price drops, new ads from followed sellers, saved
+    // searches): users per queued chunk, and how long a user stays marked
+    // as alerted for one event so retries and repeated events stay silent.
+    'notifications' => [
+        'fan_out_chunk' => 500,
+        'alert_dedupe_hours' => 72,
     ],
 
     'recently_viewed' => [
@@ -169,6 +220,13 @@ return [
         'push_skip_online_recipients' => (bool) env('CHAT_PUSH_SKIP_ONLINE', true),
         // File a report for staff when a message matches the moderation rules.
         'auto_report_flagged_messages' => (bool) env('CHAT_AUTO_REPORT_FLAGGED', true),
+        // Photos cost storage and bandwidth, so they get a tighter budget than text.
+        'images_per_minute' => 10,
+        'images_per_day' => 200,
+        'bulk_hide_max' => 100,
+        // A small file can still decode to a huge bitmap; this keeps the
+        // queued preview conversion within worker memory.
+        'image_max_side_px' => 8192,
     ],
 
     /*
@@ -242,6 +300,7 @@ return [
         'impersonation_ttl_minutes' => 20,
         'impersonation_reason_min_length' => 10,
         'impersonation_reason_max_length' => 500,
+        'pending_review_count_cache_seconds' => 300,
     ],
 
     /*

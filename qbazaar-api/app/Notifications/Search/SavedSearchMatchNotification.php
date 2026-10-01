@@ -4,16 +4,8 @@ declare(strict_types=1);
 
 namespace App\Notifications\Search;
 
-use App\Enums\Language;
-use App\Enums\NotificationTopic;
 use App\Models\Ad;
-use App\Models\User;
-use App\Notifications\Concerns\RespectsNotificationPreferences;
-use App\Notifications\Concerns\SendsFcmPush;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
-use NotificationChannels\Fcm\FcmChannel;
+use App\Notifications\Ads\AdAlertNotification;
 
 /**
  * "A new ad matches your saved search" — sent to a saved-search owner when a
@@ -23,67 +15,30 @@ use NotificationChannels\Fcm\FcmChannel;
  * skip email here: alerts can be frequent and a bell badge + push is the right
  * weight for "there's something new to look at".
  */
-class SavedSearchMatchNotification extends Notification implements ShouldQueue
+class SavedSearchMatchNotification extends AdAlertNotification
 {
-    use Queueable, RespectsNotificationPreferences, SendsFcmPush;
-
     public function __construct(
-        public readonly Ad $ad,
+        Ad $ad,
         public readonly string $savedSearchName,
-    ) {}
-
-    /**
-     * @return array<int, string>
-     */
-    public function via(mixed $notifiable): array
-    {
-        $channels = $notifiable instanceof User ? ['database'] : [];
-
-        if ($this->fcmEnabledFor($notifiable)) {
-            $channels[] = FcmChannel::class;
-        }
-
-        return $this->withoutMutedChannels($notifiable, $channels);
+    ) {
+        parent::__construct($ad);
     }
 
-    protected function topic(): NotificationTopic
+    protected function category(): string
     {
-        return NotificationTopic::SAVED_SEARCH_ALERTS;
+        return 'search.match';
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(mixed $notifiable): array
+    protected function title(string $locale): string
     {
-        $locale = $this->resolveLocale($notifiable);
-
-        return [
-            'category' => 'search.match',
-            'title' => (string) __('messages.notifications.saved_search_match.title', [], $locale),
-            'body' => (string) __('messages.notifications.saved_search_match.body', [
-                'title' => $this->ad->title,
-                'search' => $this->savedSearchName,
-            ], $locale),
-            'cta_url' => $this->adUrl(),
-            'icon' => 'bell-ring',
-            'ad_id' => $this->ad->id,
-        ];
+        return (string) __('messages.notifications.saved_search_match.title', [], $locale);
     }
 
-    private function adUrl(): string
+    protected function body(string $locale): string
     {
-        return rtrim((string) config('qbazaar.web_url', config('app.url')), '/') . '/ads/' . $this->ad->id;
-    }
-
-    private function resolveLocale(mixed $notifiable): string
-    {
-        if ($notifiable instanceof User) {
-            return $notifiable->language instanceof Language
-                ? $notifiable->language->value
-                : (string) config('qbazaar.default_language', 'ar');
-        }
-
-        return (string) config('qbazaar.default_language', 'ar');
+        return (string) __('messages.notifications.saved_search_match.body', [
+            'title' => $this->ad->title,
+            'search' => $this->savedSearchName,
+        ], $locale);
     }
 }

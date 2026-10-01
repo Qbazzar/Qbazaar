@@ -55,7 +55,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cloudflare Turnstile (bot protection on register and OTP sends)
+    | Cloudflare Turnstile (bot protection on public email / SMS senders)
     |--------------------------------------------------------------------------
     |
     | Never enforced under APP_ENV=testing so the suite needs no tokens;
@@ -66,6 +66,23 @@ return [
         'secret' => env('TURNSTILE_SECRET_KEY'),
         'verify_url' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
         'timeout_seconds' => 5,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google / Apple sign-in (id_token audiences)
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated OAuth client ids whose id_tokens we accept: the web,
+    | iOS and Android client ids for Google; the bundle id and Services ID
+    | for Apple. An empty list turns that provider off (AUTH_015).
+    */
+    'google' => [
+        'client_ids' => env('GOOGLE_CLIENT_IDS', ''),
+    ],
+
+    'apple' => [
+        'client_ids' => env('APPLE_CLIENT_IDS', ''),
     ],
 
 ];

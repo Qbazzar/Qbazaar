@@ -8,9 +8,11 @@ use App\Models\Conversation;
 use App\Models\DataExport;
 use App\Models\Message;
 use App\Models\Offer;
+use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Notifications\DataExportReadyNotification;
 use App\Services\Account\UserDataExporter;
+use App\Services\Users\FollowGraph;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
@@ -112,6 +114,9 @@ it('builds an export with ads, messages and offers, and emails a browser link', 
     Message::factory()->create(['conversation_id' => $chat->id, 'sender_id' => $this->user->id, 'body' => 'Is it available?']);
     Message::factory()->create(['conversation_id' => $chat->id, 'sender_id' => $other->id, 'body' => 'Not yours']);
     $made = Offer::factory()->create(['conversation_id' => $chat->id, 'ad_id' => $otherAd->id, 'buyer_id' => $this->user->id, 'seller_id' => $other->id]);
+    $chat->forceFill(['buyer_hidden_at' => now()])->save();
+    app(FollowGraph::class)->link($this->user, $other);
+    TrustedDevice::query()->create(['user_id' => $this->user->id, 'device_hash' => str_repeat('b', 64), 'label' => 'Laptop', 'last_used_at' => now()]);
 
     $export = new DataExport;
     $export->forceFill(['user_id' => $this->user->id, 'status' => DataExportStatus::QUEUED])->save();
@@ -130,7 +135,14 @@ it('builds an export with ads, messages and offers, and emails a browser link', 
         ->and(array_column($data['messages_sent'], 'body'))->toBe(['Is it available?'])
         ->and(array_column($data['offers_made'], 'id'))->toBe([$made->id])
         ->and($data['offers_received'])->toBe([])
-        ->and($data)->toHaveKeys(['addresses', 'favorites', 'saved_searches', 'reviews_written', 'blocked_users', 'sessions', 'activity_log']);
+        ->and(array_column($data['following'], 'followed_id'))->toBe([$other->id])
+        ->and(array_column($data['hidden_conversations'], 'id'))->toBe([$chat->id])
+        ->and(array_column($data['trusted_devices'], 'label'))->toBe(['Laptop'])
+        ->and($data['trusted_devices'][0])->not->toHaveKey('device_hash')
+        ->and($data)->toHaveKeys([
+            'addresses', 'favorites', 'saved_searches', 'reviews_written', 'blocked_users', 'sessions', 'activity_log',
+            'business_profile', 'followers', 'social_accounts', 'one_time_codes',
+        ]);
 
     Notification::assertSentTo(
         $this->user,

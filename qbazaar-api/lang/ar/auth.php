@@ -22,6 +22,16 @@ return [
         ],
     ],
 
+    'email_code' => [
+        'mail' => [
+            'subject' => ':code هو رمزك في QBazaar',
+            'greeting' => 'مرحبًا!',
+            'line_code' => 'رمز الدخول إلى QBazaar هو :code.',
+            'line_expires' => 'تنتهي صلاحيته خلال :minutes دقائق. لا تشاركه مع أي أحد.',
+            'line_ignore' => 'إذا لم تطلب هذا الرمز، يمكنك تجاهل هذه الرسالة.',
+        ],
+    ],
+
     'password_reset' => [
         'mail' => [
             'subject' => 'إعادة تعيين كلمة مرور حسابك في QBazaar',

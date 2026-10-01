@@ -21,10 +21,13 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
@@ -37,13 +40,16 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $full_name
  * @property string $email
  * @property string $phone
- * @property string $password
+ * @property string|null $password
  * @property AccountType $account_type
  * @property UserStatus $status
  * @property bool $email_verified
  * @property bool $phone_verified
  * @property numeric-string $rating_avg
  * @property int $rating_count
+ * @property int $followers_count
+ * @property int $following_count
+ * @property BusinessProfile|null $businessProfile
  * @property Language $language
  * @property string|null $avatar_url
  * @property PrivacySettings|null $privacy_settings
@@ -58,6 +64,8 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUlids, InteractsWithMedia, Notifiable, SoftDeletes;
+
+    public const BUSINESS_COVER_COLLECTION = 'business_cover';
 
     /**
      * Status, verification flags and lifecycle timestamps are left out on
@@ -103,6 +111,8 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
             'notification_preferences' => AsNotificationPreferences::class,
             'rating_avg' => 'decimal:2',
             'rating_count' => 'integer',
+            'followers_count' => 'integer',
+            'following_count' => 'integer',
         ];
     }
 
@@ -144,6 +154,17 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         return $this->status === UserStatus::PENDING_DELETION
             && $this->deletion_requested_at !== null
             && $this->deletion_requested_at->lessThanOrEqualTo(self::deletionCutoff());
+    }
+
+    public function isBusiness(): bool
+    {
+        return $this->account_type === AccountType::BUSINESS;
+    }
+
+    /** @return HasOne<BusinessProfile, $this> */
+    public function businessProfile(): HasOne
+    {
+        return $this->hasOne(BusinessProfile::class);
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -220,6 +241,46 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         return $this->blockedUsers()->where('blocked_id', $other->id)->exists();
     }
 
+    /**
+     * Accounts created through an email code or Google / Apple have no
+     * password until the owner sets one through the reset flow.
+     */
+    public function passwordMatches(string $plain): bool
+    {
+        return $this->password !== null && Hash::check($plain, $this->password);
+    }
+
+    /**
+     * Whether either user has blocked the other; both lookups hit the pivot's
+     * primary key. With $lock, inside a transaction, a concurrent block of the
+     * pair waits until that transaction ends. first() rather than exists()
+     * keeps the lock on the outer select, where MySQL applies it.
+     */
+    public function isBlockedEitherWay(User $other, bool $lock = false): bool
+    {
+        return DB::table('user_blocks')
+            ->where(fn ($query) => $query->where('blocker_id', $this->id)->where('blocked_id', $other->id))
+            ->orWhere(fn ($query) => $query->where('blocker_id', $other->id)->where('blocked_id', $this->id))
+            ->when($lock, fn ($query) => $query->sharedLock())
+            ->first(['blocker_id']) !== null;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     *  Follows — the counts are denormalised on users by FollowGraph.
+     * ──────────────────────────────────────────────────────────────────*/
+
+    /** @return HasMany<Follow, $this> */
+    public function followings(): HasMany
+    {
+        return $this->hasMany(Follow::class, 'follower_id');
+    }
+
+    /** @return HasMany<Follow, $this> */
+    public function followerLinks(): HasMany
+    {
+        return $this->hasMany(Follow::class, 'followed_id');
+    }
+
     /* ──────────────────────────────────────────────────────────────────
      *  Password reset — wire Laravel's Password broker to our localised
      *  notification instead of the default English one.
@@ -275,6 +336,10 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         $this->addMediaCollection('avatar')
             ->useDisk((string) config('qbazaar.uploads.public_disk'))
             ->singleFile();
+
+        $this->addMediaCollection(self::BUSINESS_COVER_COLLECTION)
+            ->useDisk((string) config('qbazaar.uploads.public_disk'))
+            ->singleFile();
     }
 
     public function registerMediaConversions(?Media $media = null): void
@@ -288,6 +353,26 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
             ->nonQueued()
             ->performOnCollections('avatar')
             ->fit(Fit::Crop, 480, 480);
+
+        $this->addMediaConversion('cover')
+            ->queued()
+            ->performOnCollections(self::BUSINESS_COVER_COLLECTION)
+            ->fit(Fit::Crop, 1200, 400);
+    }
+
+    /**
+     * Business cover banner; the original is served until the queued crop exists.
+     * Reads the loaded media relation when the caller eager-loaded it.
+     */
+    public function businessCoverUrl(): ?string
+    {
+        $media = $this->getFirstMedia(self::BUSINESS_COVER_COLLECTION);
+
+        if ($media === null) {
+            return null;
+        }
+
+        return $media->hasGeneratedConversion('cover') ? $media->getUrl('cover') : $media->getUrl();
     }
 
     /**

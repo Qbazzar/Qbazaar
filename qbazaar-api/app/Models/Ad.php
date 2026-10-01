@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Data\Moderation\ModerationResult;
+use App\Enums\AdShipping;
 use App\Enums\AdStatus;
+use App\Enums\AdType;
 use App\Enums\Condition;
 use App\Enums\OfferStatus;
 use App\Enums\PriceType;
@@ -47,6 +50,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property PriceType $price_type
  * @property string $currency
  * @property Condition|null $condition
+ * @property AdType $ad_type
+ * @property AdShipping $shipping
+ * @property string|null $postal_code
+ * @property string|null $street
+ * @property bool $show_full_address
  * @property AdStatus $status
  * @property array<string, mixed>|null $custom_fields
  * @property int $views_count
@@ -55,6 +63,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Carbon|null $expires_at
  * @property Carbon|null $expiring_notified_at
  * @property Carbon|null $submitted_at
+ * @property Carbon|null $reserved_at
+ * @property ModerationResult|null $moderation_result
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
@@ -75,6 +85,17 @@ class Ad extends Model implements HasMedia
     protected $keyType = 'string';
 
     /**
+     * Mirrors the column defaults so a freshly created ad serialises without a refresh.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'ad_type' => 'offering',
+        'shipping' => 'pickup_only',
+        'show_full_address' => false,
+    ];
+
+    /**
      * @var list<string>
      */
     protected $fillable = [
@@ -89,6 +110,11 @@ class Ad extends Model implements HasMedia
         'price_type',
         'currency',
         'condition',
+        'ad_type',
+        'shipping',
+        'postal_code',
+        'street',
+        'show_full_address',
         'custom_fields',
         'views_count',
         'favorites_count',
@@ -106,6 +132,9 @@ class Ad extends Model implements HasMedia
             'status' => AdStatus::class,
             'price_type' => PriceType::class,
             'condition' => Condition::class,
+            'ad_type' => AdType::class,
+            'shipping' => AdShipping::class,
+            'show_full_address' => 'boolean',
             'custom_fields' => 'array',
             'views_count' => 'integer',
             'favorites_count' => 'integer',
@@ -113,6 +142,8 @@ class Ad extends Model implements HasMedia
             'expires_at' => 'datetime',
             'expiring_notified_at' => 'datetime',
             'submitted_at' => 'datetime',
+            'reserved_at' => 'datetime',
+            'moderation_result' => ModerationResult::class,
             'price' => 'decimal:2',
             'featured' => 'boolean',
         ];
@@ -279,6 +310,11 @@ class Ad extends Model implements HasMedia
         return $this->isPubliclyListed();
     }
 
+    public function isReserved(): bool
+    {
+        return $this->reserved_at !== null;
+    }
+
     /** Instance counterpart of {@see scopePubliclyListed()}. */
     public function isPubliclyListed(): bool
     {
@@ -352,7 +388,11 @@ class Ad extends Model implements HasMedia
             'price' => $this->price !== null ? (float) $this->price : null,
             'price_type' => $this->price_type->value,
             'condition' => $this->condition?->value,
+            'ad_type' => $this->ad_type->value,
+            'shipping' => $this->shipping->value,
+            'postal_code' => $this->postal_code,
             'status' => $this->status->value,
+            'is_reserved' => $this->isReserved(),
             'published_at' => $this->published_at?->getTimestamp(),
             'created_at_ts' => $this->created_at instanceof Carbon ? $this->created_at->getTimestamp() : null,
             'has_images' => $hasImages,

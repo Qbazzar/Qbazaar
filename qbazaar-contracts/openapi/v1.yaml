@@ -90,11 +90,17 @@ paths:
   /api/v1/auth/register:
     post:
       tags: [Auth]
-      summary: Register a new account
+      summary: Register a new account with a password
+      description: |
+        Password sign-up, kept while clients move to the email-code flow
+        (`/auth/email-otp/verify` signs up without a password). Turned off by
+        `AUTH_PASSWORD_LOGIN_ENABLED=false` (403 `AUTH_014`). The device the
+        account is created on becomes trusted.
       operationId: authRegister
       security: []
       parameters:
         - $ref: '#/components/parameters/TurnstileToken'
+        - $ref: '#/components/parameters/DeviceId'
       requestBody:
         required: true
         content:
@@ -149,6 +155,12 @@ paths:
               examples:
                 turnstile_failed:
                   $ref: '#/components/examples/TurnstileFailed'
+        '403':
+          description: Password sign-up is turned off (`AUTH_014`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
         '429':
           $ref: '#/components/responses/RateLimited'
 
@@ -156,8 +168,15 @@ paths:
     post:
       tags: [Auth]
       summary: Sign in with email or phone + password
+      description: |
+        Kept while clients move to email codes; turned off by
+        `AUTH_PASSWORD_LOGIN_ENABLED=false` (403 `AUTH_014`). A device that is
+        not trusted yet gets 202 with a new-device challenge instead of tokens;
+        finish it at `POST /api/v1/auth/device/verify`.
       operationId: authLogin
       security: []
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
       requestBody:
         required: true
         content:
@@ -196,8 +215,10 @@ paths:
                       message: Invalid credentials
                       details: null
                       request_id: req_abc123
+        '202':
+          $ref: '#/components/responses/DeviceChallenge'
         '403':
-          description: Account suspended
+          description: Account suspended (`AUTH_002`) or password sign-in turned off (`AUTH_014`)
           content:
             application/json:
               schema:
@@ -229,6 +250,8 @@ paths:
       summary: Exchange a refresh token for a new access + rotated refresh token
       operationId: authRefresh
       security: []
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
       requestBody:
         required: true
         content:
@@ -383,6 +406,8 @@ paths:
       summary: Send a password-reset link to the user's email
       operationId: authForgotPassword
       security: []
+      parameters:
+        - $ref: '#/components/parameters/TurnstileToken'
       requestBody:
         required: true
         content:
@@ -406,6 +431,17 @@ paths:
                     success: true
                     data:
                       message_key: messages.auth.reset_link_sent
+        '422':
+          description: Validation failed (`VALIDATION_FAILED`) or the Turnstile check failed (`TURNSTILE_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                turnstile_failed:
+                  $ref: '#/components/examples/TurnstileFailed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/auth/reset-password:
     post:
@@ -485,6 +521,301 @@ paths:
   # ──────────────────────────────────────────────────────────────────────────
   # Account (Sprint 2 — Wave 1)
   # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/auth/email-otp/send:
+    post:
+      tags: [Auth]
+      summary: Email a 6-digit sign-in code (passwordless sign-in and sign-up)
+      description: |
+        Answers 202 for any address, registered or not, so it cannot be used
+        to discover accounts. The code expires in 10 minutes and allows 5
+        attempts. Per address: 60 s cooldown and 5 sends an hour; the route
+        limits per IP + address per minute and per address / per IP per day
+        are shared with the SMS code endpoints (`qbazaar.otp`).
+      operationId: authEmailOtpSend
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TurnstileToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailCodeSendRequest'
+            examples:
+              valid:
+                value:
+                  email: ahmed@example.qa
+      responses:
+        '202':
+          description: Code queued for delivery
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSendResponseEnvelope'
+              examples:
+                queued:
+                  value:
+                    success: true
+                    data:
+                      sent_to: ahmed@example.qa
+                      expires_in: 600
+                      can_resend_in: 60
+        '422':
+          description: Validation failed (`VALIDATION_FAILED`) or the Turnstile check failed (`TURNSTILE_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                turnstile_failed:
+                  $ref: '#/components/examples/TurnstileFailed'
+        '429':
+          description: '`AUTH_006` inside the cooldown or over the hourly ceiling for this address, or `RATE_LIMIT_EXCEEDED`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/auth/email-otp/verify:
+    post:
+      tags: [Auth]
+      summary: Verify the email code and sign in, or sign up
+      description: |
+        - Account exists: 200 with tokens (or 202 when the device is new).
+          The email becomes verified. If it was not verified before, the
+          account's password, sessions and trusted devices are dropped first,
+          since whoever registered the address may not have owned it.
+        - No account and no sign-up details: 422 `AUTH_011`, returned only
+          after the code checks out. The code is **not** spent, so repeat this
+          call with the same code plus `full_name`, `phone`, `account_type`,
+          `accepted_terms` (and optional `language`).
+        - No account, sign-up details sent: 201 with tokens. The account has
+          no password, `email_verified=true`, `phone_verified=false`, and the
+          device is trusted.
+      operationId: authEmailOtpVerify
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailCodeVerifyRequest'
+            examples:
+              signIn:
+                value:
+                  email: ahmed@example.qa
+                  code: '482915'
+              signUp:
+                value:
+                  email: ahmed@example.qa
+                  code: '482915'
+                  full_name: أحمد العلي
+                  phone: '+97455123456'
+                  account_type: private
+                  language: ar
+                  accepted_terms: true
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '201':
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '202':
+          $ref: '#/components/responses/DeviceChallenge'
+        '403':
+          description: Account suspended (`AUTH_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '410':
+          description: Code expired (`AUTH_004`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: |
+            `AUTH_005` wrong code (or attempts used up), `AUTH_011` sign-up
+            details needed (`details.email`), `AUTH_007` / `AUTH_008` when a
+            parallel sign-up took the email or phone first, or
+            `VALIDATION_FAILED`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                registration_required:
+                  value:
+                    success: false
+                    error:
+                      code: AUTH_011
+                      message_key: errors.auth.registration.required
+                      message: No account uses this email yet. Send your name, phone and account type to create one.
+                      details:
+                        email: ahmed@example.qa
+                      request_id: req_abc123
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/auth/device/verify:
+    post:
+      tags: [Auth]
+      summary: Finish a sign-in from a new device with the SMS code
+      description: |
+        Completes any sign-in that answered 202 (password, email code,
+        Google, Apple). The SMS code proves the account's phone, so
+        `phone_verified` becomes true; the device becomes trusted and the
+        user gets a `security.new_device` notification. The challenge lives
+        10 minutes; the SMS code allows 3 attempts.
+      operationId: authDeviceVerify
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceVerifyRequest'
+      responses:
+        '200':
+          description: Device trusted, signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '401':
+          description: Unknown, expired or already used `challenge_token` (`AUTH_012`); sign in again
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Account suspended (`AUTH_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '410':
+          description: SMS code expired (`AUTH_004`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Wrong SMS code (`AUTH_005`) or `VALIDATION_FAILED`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/auth/social/{provider}:
+    post:
+      tags: [Auth]
+      summary: Sign in or sign up with a Google / Apple id_token
+      description: |
+        The id_token is verified against the provider's published keys
+        (signature, issuer, audience = one of our client ids, expiry) and must
+        carry a verified email. A known provider account signs in; otherwise
+        an account with the same email is linked (if that account's email was
+        not verified yet, its password, sessions and trusted devices are
+        dropped first). A new person gets 422
+        `AUTH_011` (with `details.email` and, from Google, `details.full_name`)
+        and repeats the call with the sign-up details; the new account has no
+        password and `phone_verified=false`. Unknown devices get 202.
+      operationId: authSocialSignIn
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, apple]
+        - $ref: '#/components/parameters/DeviceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocialSignInRequest'
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '201':
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponseEnvelope'
+        '202':
+          $ref: '#/components/responses/DeviceChallenge'
+        '401':
+          description: The id_token failed verification (`AUTH_013`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Account suspended (`AUTH_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Unsupported provider
+        '422':
+          description: |
+            Sign-up details needed (`AUTH_011`), `AUTH_008` when a parallel
+            sign-up took the phone first, or `VALIDATION_FAILED`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          description: Provider not configured on the server, or its keys are unreachable (`AUTH_015`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/me:
+    get:
+      tags: [Account]
+      summary: The signed-in user's profile (alias of GET /api/v1/account/profile)
+      operationId: me
+      responses:
+        '200':
+          description: Profile returned, same body as `/account/profile`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Account is not active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   /api/v1/account/summary:
     get:
       tags: [Account]
@@ -1149,6 +1480,179 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/followers:
+    get:
+      tags: [Account]
+      summary: People who follow the caller, newest first
+      description: Cursor-paginated (`config qbazaar.social.follows_per_page`, 20). Accounts that are not active are left out.
+      operationId: accountFollowers
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A page of followers; `is_following` tells whether the caller follows them back
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/account/business-profile:
+    get:
+      tags: [Account]
+      summary: The caller's business profile (business accounts only)
+      operationId: accountBusinessProfileShow
+      responses:
+        '200':
+          description: Full profile including contact details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    put:
+      tags: [Account]
+      summary: Create or update the caller's business profile
+      description: Only the fields sent change; `null` clears a field. Each save is written to the activity log.
+      operationId: accountBusinessProfileUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessProfileRequest'
+      responses:
+        '200':
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/account/business-profile/cover:
+    post:
+      tags: [Account]
+      summary: Upload or replace the business cover banner
+      description: >
+        Multipart field `cover` (jpeg/png/webp, at most 5 MB). The 1200x400
+        crop is produced on the queue; `cover_url` points at the original
+        until it exists.
+      operationId: accountBusinessCoverUpload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cover]
+              properties:
+                cover:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Profile with the new `cover_url`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Account]
+      summary: Remove the business cover banner
+      operationId: accountBusinessCoverDelete
+      responses:
+        '200':
+          description: Profile with `cover_url` null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/followers/{user}:
+    delete:
+      tags: [Account]
+      summary: Remove a follower (idempotent, no block)
+      operationId: accountRemoveFollower
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '204':
+          description: The user no longer follows the caller
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/following:
+    get:
+      tags: [Account]
+      summary: Accounts the caller follows, newest first
+      description: Cursor-paginated like `/account/followers`.
+      operationId: accountFollowing
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A page of followed accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Account lifecycle (Sprint 2 — Wave 2)
@@ -1917,6 +2421,53 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/v1/ads/{id}/reserve:
+    post:
+      tags: [Ads]
+      summary: Reserve a live ad for a buyer (seller only)
+      description: >
+        The ad stays `active` and keeps showing in listings and search with
+        `is_reserved: true`. Idempotent: reserving again keeps the first
+        `reserved_at`. The reservation is released automatically when the ad
+        leaves `active` (sold, expired, blocked, back to review).
+      operationId: adsReserve
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Ad reserved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: The ad is not `active`, e.g. still a draft (`AD_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+    delete:
+      tags: [Ads]
+      summary: Release the reservation (seller only, idempotent)
+      operationId: adsRelease
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Reservation released
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   /api/v1/ads/{ad}/images:
     post:
       tags: [Ads]
@@ -2049,6 +2600,35 @@ paths:
         '403': { description: Signature invalid or expired }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/v1/media/{media}/conversions/{conversion}:
+    get:
+      tags: [Messages]
+      summary: Download the downsized preview of a chat photo
+      description: |
+        Only reachable through the signed link in `ChatImage.url`. Chat photos
+        and their previews stay on the private disk; on R2 the response is a
+        302 to a presigned URL valid for a few minutes. The original of a chat
+        photo is served by `/media/{media}/original` (`ChatImage.original_url`).
+      operationId: mediaConversion
+      security: []
+      parameters:
+        - { name: media, in: path, required: true, schema: { type: integer } }
+        - { name: conversion, in: path, required: true, schema: { type: string, enum: [preview] } }
+        - { name: expires, in: query, required: true, schema: { type: integer } }
+        - { name: signature, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The preview image (local storage)
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        '302':
+          description: Redirect to a short-lived presigned URL (R2 storage)
+          headers:
+            Location: { schema: { type: string, format: uri } }
+        '403': { description: Signature invalid or expired }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /api/v1/account/ads:
     get:
       tags: [Ads]
@@ -2101,6 +2681,8 @@ paths:
         - { name: price_max, in: query, schema: { type: number, minimum: 0 } }
         - { name: condition, in: query, schema: { $ref: '#/components/schemas/Condition' } }
         - { name: price_type, in: query, schema: { $ref: '#/components/schemas/PriceType' } }
+        - { name: ad_type, in: query, schema: { $ref: '#/components/schemas/AdType' } }
+        - { name: shipping, in: query, schema: { $ref: '#/components/schemas/AdShipping' } }
         - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed, distance], default: latest }, description: '`distance` requires `lat` and `lng`.' }
         - { name: lat, in: query, schema: { type: number, minimum: -90, maximum: 90 }, description: 'Required with `lng`, `radius_km` or `sort=distance`.' }
         - { name: lng, in: query, schema: { type: number, minimum: -180, maximum: 180 }, description: 'Required with `lat`, `radius_km` or `sort=distance`.' }
@@ -2218,6 +2800,61 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/account/saved-searches/{id}:
+    put:
+      tags: [Search]
+      summary: Replace the name and filters of one of the caller's saved searches
+      operationId: savedSearchesUpdate
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveSearchRequest'
+      responses:
+        '200':
+          description: Saved search updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearchEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: SEARCH_SAVED_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422': { $ref: '#/components/responses/ValidationError' }
+    patch:
+      tags: [Search]
+      summary: Switch alerts on or off, or rename
+      description: '`alerts_enabled: false` stops new-ad alerts for this search right away.'
+      operationId: savedSearchesPatch
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchSavedSearchRequest'
+      responses:
+        '200':
+          description: Saved search updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearchEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: SEARCH_SAVED_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422': { $ref: '#/components/responses/ValidationError' }
     delete:
       tags: [Search]
       summary: Remove one of the caller's saved searches
@@ -2263,6 +2900,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: FAV_LIMIT_REACHED (only when the toggle adds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    put:
+      tags: [Favorites]
+      summary: Add the ad to the caller's favourites (idempotent)
+      description: |
+        Repeating the call is a no-op and returns the same state; the count only moves once.
+        Only publicly listed ads can be added; drafts, pending, sold, expired and blocked ads answer AD_NOT_FOUND.
+      operationId: favoritesAdd
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Favourited, with the ad's favourites count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteToggleEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: AD_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: FAV_LIMIT_REACHED (`qbazaar.favorites.max_per_user`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [Favorites]
+      summary: Remove the ad from the caller's favourites (idempotent)
+      description: Removing an ad that is not favourited succeeds with `favorited=false`. Works for ads in any status, including deleted ones.
+      operationId: favoritesRemove
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Not favourited, with the ad's favourites count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteToggleEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: AD_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/favorites/ids:
+    get:
+      tags: [Favorites]
+      summary: Ids of every ad the caller favourited, newest first
+      description: Lets clients mark hearts on any ad list without a lookup per ad. Capped at `qbazaar.favorites.max_per_user`.
+      operationId: favoritesIds
+      responses:
+        '200':
+          description: Favourited ad ids
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteIdsEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /api/v1/account/favorites:
     get:
@@ -2385,6 +3093,77 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v1/users/{user}/follow:
+    post:
+      tags: [Users]
+      summary: Follow a user (idempotent)
+      description: >
+        Updates the follower and following counts atomically. Rate limited
+        per user (`throttle:follows`: 30 per minute, 500 per day).
+      operationId: usersFollow
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '200':
+          description: Following
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: One of the two users has blocked the other (`FOLLOW_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Unknown or inactive user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Cannot follow yourself (`FOLLOW_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+    delete:
+      tags: [Users]
+      summary: Unfollow a user (idempotent)
+      operationId: usersUnfollow
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '200':
+          description: Not following
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown or inactive user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
   /api/v1/users/{user}/public-profile:
     get:
       tags: [Users]
@@ -2434,6 +3213,31 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /api/v1/companies:
+    get:
+      tags: [Users]
+      summary: Directory of active business accounts, most followed first
+      description: >
+        Public. Send the Bearer token to get `is_following` for the caller;
+        guests always get false. `q` matches the business name or the account
+        name.
+      operationId: companiesIndex
+      security: []
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        '200':
+          description: A page of companies (20 per page)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyListEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Messaging (Sprint 8 Wave A)
@@ -2495,6 +3299,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedConversationListEnvelope'
         '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Conversations]
+      summary: Hide conversations from the caller's inbox
+      description: |
+        Hidden for the caller only — the other participant still sees the
+        thread. The next message in a hidden thread brings it back. Hidden
+        threads also leave the unread badge. Ids the caller does not take
+        part in are ignored (no existence oracle), so `hidden` may be lower
+        than the number of ids sent.
+      operationId: conversationsHide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HideConversationsRequest'
+      responses:
+        '200':
+          description: Number of conversations hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HideConversationsEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /api/v1/conversations/unread-count:
     get:
@@ -2559,7 +3388,11 @@ paths:
     post:
       tags: [Messages]
       summary: Append a message to a conversation
-      description: Rate-limited via the `messages` throttle (per-user per-minute).
+      description: |
+        Text as JSON, or a photo as multipart (`type=image`). Rate-limited via
+        the `messages` throttle (per-user per-minute); photos also count
+        against `qbazaar.messaging.images_per_minute` / `images_per_day`.
+        `message.sent` is broadcast after commit with the same payload.
       operationId: messagesStore
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -2569,6 +3402,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SendMessageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SendImageMessageRequest'
       responses:
         '201':
           description: Message created and broadcast
@@ -2866,6 +3702,17 @@ paths:
             enum: [0, 1]
           required: false
           description: When `1`, returns only unread notifications.
+        - in: query
+          name: category
+          schema:
+            type: string
+            maxLength: 64
+            pattern: '^[a-z_]+(\.[a-z_]+)*$'
+          required: false
+          description: |
+            A full category (`ad.price_changed`) or a group prefix (`ad`
+            returns every `ad.*`; `ads` returns `ads.new_from_followed`).
+            See qbazaar-contracts/events/notifications.md for the list.
         - in: query
           name: page
           schema: { type: integer, minimum: 1 }
@@ -3197,6 +4044,8 @@ paths:
       security:
         - bearerAuth: []
         - {}
+      parameters:
+        - $ref: '#/components/parameters/TurnstileToken'
       requestBody:
         required: true
         content:
@@ -3224,7 +4073,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SupportTicketEnvelope'
-        '422': { $ref: '#/components/responses/ValidationError' }
+        '422':
+          description: Validation failed (`VALIDATION_FAILED`) or the Turnstile check failed (`TURNSTILE_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
         '429': { $ref: '#/components/responses/RateLimited' }
 
   /api/v1/account/support/tickets:
@@ -3621,6 +4475,106 @@ components:
           type: string
           minLength: 8
 
+    EmailCodeSendRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+
+    RegistrationDetails:
+      type: object
+      description: |
+        Sign-up fields for the email-code and Google / Apple flows. Send them
+        only after the server answered `AUTH_011`; sending any one of them
+        makes `full_name`, `phone`, `account_type` and `accepted_terms`
+        required.
+      properties:
+        full_name:
+          type: string
+          minLength: 3
+          maxLength: 80
+        phone:
+          type: string
+          pattern: '^\+974[0-9]{8}$'
+          example: '+97455123456'
+        account_type:
+          type: string
+          enum: [private, business]
+        language:
+          type: string
+          enum: [ar, en]
+        accepted_terms:
+          type: boolean
+          enum: [true]
+
+    EmailCodeVerifyRequest:
+      allOf:
+        - type: object
+          required: [email, code]
+          properties:
+            email:
+              type: string
+              format: email
+            code:
+              type: string
+              pattern: '^[0-9]{6}$'
+              example: '482915'
+        - $ref: '#/components/schemas/RegistrationDetails'
+
+    SocialSignInRequest:
+      allOf:
+        - type: object
+          required: [id_token]
+          properties:
+            id_token:
+              type: string
+              maxLength: 8192
+              description: OpenID Connect id_token from the Google / Apple SDK
+        - $ref: '#/components/schemas/RegistrationDetails'
+
+    DeviceVerifyRequest:
+      type: object
+      required: [challenge_token, code]
+      properties:
+        challenge_token:
+          type: string
+          minLength: 64
+          maxLength: 64
+        code:
+          type: string
+          pattern: '^[0-9]{6}$'
+          example: '482915'
+
+    DeviceChallengeEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [device_verification_required, challenge_token, sent_to, expires_in, can_resend_in]
+              properties:
+                device_verification_required:
+                  type: boolean
+                  enum: [true]
+                challenge_token:
+                  type: string
+                  description: Opaque and single use; send it to /auth/device/verify with the SMS code
+                sent_to:
+                  type: string
+                  description: The account phone, masked
+                  example: '+974*****456'
+                expires_in:
+                  type: integer
+                  example: 300
+                can_resend_in:
+                  type: integer
+                  description: Seconds before signing in again can send a new SMS
+                  example: 60
+
     AuthResponseEnvelope:
       allOf:
         - $ref: '#/components/schemas/SuccessEnvelope'
@@ -3769,7 +4723,7 @@ components:
           description: Your ad was approved, rejected, is expiring or expired
         saved_search_alerts:
           type: boolean
-          description: New ads matching a saved search
+          description: Alerts about ads you watch — new ads matching a saved search or from a seller you follow, and price drops on your favorites (push only; the in-app inbox always records them)
         newsletters:
           type: boolean
           description: News and announcements from QBazaar
@@ -4160,6 +5114,20 @@ components:
         ads_count:
           type: integer
           example: 0
+        followers_count:
+          type: integer
+          example: 12
+        following_count:
+          type: integer
+          example: 3
+        is_following:
+          type: boolean
+          description: Whether the caller (optional Bearer token) follows this user; false for guests and for yourself.
+        business_profile:
+          description: Business details for `business` accounts, null for private ones. Contact phone and email are null unless the owner's privacy settings show them.
+          oneOf:
+            - $ref: '#/components/schemas/BusinessProfile'
+            - type: 'null'
 
     PublicProfileEnvelope:
       allOf:
@@ -4168,6 +5136,133 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/PublicProfile'
+
+    OpeningHours:
+      type: object
+      required: [day, closed]
+      properties:
+        day: { type: string, enum: [sat, sun, mon, tue, wed, thu, fri] }
+        closed: { type: boolean }
+        open: { type: [string, 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$', example: '09:00', description: Required unless `closed`. }
+        close: { type: [string, 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$', example: '22:00', description: Required unless `closed`; may be earlier than `open` for hours past midnight. }
+
+    BusinessProfile:
+      type: object
+      properties:
+        business_name: { type: [string, 'null'], maxLength: 120 }
+        about: { type: [string, 'null'], maxLength: 2000 }
+        legal_name: { type: [string, 'null'], maxLength: 160 }
+        commercial_registration_number: { type: [string, 'null'], maxLength: 40 }
+        contact_phone: { type: [string, 'null'], example: '+97455123456' }
+        contact_email: { type: [string, 'null'], format: email }
+        website: { type: [string, 'null'], format: uri }
+        address: { type: [string, 'null'], maxLength: 255 }
+        opening_hours:
+          type: array
+          maxItems: 7
+          items: { $ref: '#/components/schemas/OpeningHours' }
+        cover_url: { type: [string, 'null'], format: uri }
+        updated_at: { type: [string, 'null'], format: date-time }
+
+    BusinessProfileEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/BusinessProfile'
+
+    UpdateBusinessProfileRequest:
+      type: object
+      properties:
+        business_name: { type: [string, 'null'], maxLength: 120 }
+        about: { type: [string, 'null'], maxLength: 2000 }
+        legal_name: { type: [string, 'null'], maxLength: 160 }
+        commercial_registration_number: { type: [string, 'null'], maxLength: 40, pattern: '^[0-9A-Za-z/-]+$' }
+        contact_phone: { type: [string, 'null'], pattern: '^\+974[0-9]{8}$' }
+        contact_email: { type: [string, 'null'], format: email, maxLength: 255 }
+        website: { type: [string, 'null'], format: uri, maxLength: 255 }
+        address: { type: [string, 'null'], maxLength: 255 }
+        opening_hours:
+          type: [array, 'null']
+          maxItems: 7
+          description: One entry per weekday at most.
+          items:
+            type: object
+            required: [day]
+            properties:
+              day: { type: string, enum: [sat, sun, mon, tue, wed, thu, fri] }
+              closed: { type: boolean, default: false }
+              open: { type: string, example: '09:00' }
+              close: { type: string, example: '22:00' }
+
+    Company:
+      type: object
+      required: [id, business_name, followers_count, active_ads_count, is_following]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        business_name: { type: string, description: The business profile name, or the account name when none is set. }
+        about: { type: [string, 'null'], description: First 160 characters of the business description. }
+        avatar_url: { type: [string, 'null'], format: uri }
+        cover_url: { type: [string, 'null'], format: uri }
+        followers_count: { type: integer }
+        active_ads_count: { type: integer }
+        rating_avg: { type: number, example: 4.6 }
+        rating_count: { type: integer }
+        is_following: { type: boolean }
+        joined_at: { type: string, format: date-time }
+
+    CompanyListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Company'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    FollowState:
+      type: object
+      required: [following, user_id, followers_count]
+      properties:
+        following: { type: boolean }
+        user_id: { $ref: '#/components/schemas/ULID' }
+        followers_count: { type: integer, example: 13 }
+
+    FollowStateEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/FollowState'
+
+    FollowListItem:
+      type: object
+      required: [id, full_name, account_type, followers_count, is_following]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        full_name: { type: string }
+        avatar_url: { type: [string, 'null'], format: uri }
+        account_type: { type: string, enum: [private, business] }
+        followers_count: { type: integer }
+        is_following: { type: boolean, description: Whether the caller follows this user. }
+        followed_at: { type: string, format: date-time }
+
+    FollowListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/FollowListItem'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
 
     # ── Reference data (Sprint 3) ────────────────────────────────────
     LocalizedString:
@@ -4497,6 +5592,15 @@ components:
       type: string
       enum: [new, like_new, used]
 
+    AdType:
+      type: string
+      enum: [offering, wanted]
+      description: '`offering` sells an item, `wanted` looks for one ("Looking for").'
+
+    AdShipping:
+      type: string
+      enum: [pickup_only, delivery]
+
     MediaSize:
       type: object
       properties:
@@ -4545,6 +5649,9 @@ components:
         price_type: { $ref: '#/components/schemas/PriceType' }
         currency: { type: string, example: QAR }
         status: { $ref: '#/components/schemas/AdStatus' }
+        is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
+        ad_type: { $ref: '#/components/schemas/AdType' }
+        shipping: { $ref: '#/components/schemas/AdShipping' }
         primary_image: { $ref: '#/components/schemas/Media', nullable: true }
         category_slug: { type: string, nullable: true }
         location_slug: { type: string, nullable: true }
@@ -4574,7 +5681,17 @@ components:
         price_type: { $ref: '#/components/schemas/PriceType' }
         currency: { type: string, example: QAR }
         condition: { $ref: '#/components/schemas/Condition', nullable: true }
+        ad_type: { $ref: '#/components/schemas/AdType' }
+        shipping: { $ref: '#/components/schemas/AdShipping' }
+        postal_code: { type: string, nullable: true, maxLength: 10 }
+        street:
+          type: string
+          nullable: true
+          description: Always null for other viewers unless `show_full_address` is true; the seller always sees it.
+        show_full_address: { type: boolean }
         status: { $ref: '#/components/schemas/AdStatus' }
+        is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
+        reserved_at: { type: string, format: date-time, nullable: true }
         custom_fields:
           type: object
           additionalProperties: true
@@ -4607,6 +5724,11 @@ components:
         price: { type: number, nullable: true, minimum: 0, maximum: 9999999 }
         price_type: { $ref: '#/components/schemas/PriceType' }
         condition: { $ref: '#/components/schemas/Condition', nullable: true }
+        ad_type: { allOf: [{ $ref: '#/components/schemas/AdType' }], default: offering }
+        shipping: { allOf: [{ $ref: '#/components/schemas/AdShipping' }], default: pickup_only }
+        postal_code: { type: string, nullable: true, maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
+        street: { type: string, nullable: true, maxLength: 255 }
+        show_full_address: { type: boolean, description: 'Show the street to everyone. Default false: only the postal code and city are public.' }
         custom_fields:
           type: object
           additionalProperties: true
@@ -4624,6 +5746,11 @@ components:
           allOf: [{ $ref: '#/components/schemas/ULID' }]
           description: Same rule as on create (active leaf); resubmitting the ad's current category is always accepted.
         location_id: { $ref: '#/components/schemas/ULID' }
+        ad_type: { $ref: '#/components/schemas/AdType' }
+        shipping: { $ref: '#/components/schemas/AdShipping' }
+        postal_code: { type: string, nullable: true, maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
+        street: { type: string, nullable: true, maxLength: 255 }
+        show_full_address: { type: boolean, description: 'Show the street to everyone. Default false: only the postal code and city are public.' }
         custom_fields:
           type: object
           additionalProperties: true
@@ -4716,24 +5843,57 @@ components:
 
     SavedSearch:
       type: object
-      required: [id, name, query_params, created_at]
+      required: [id, name, query_params, alerts_enabled, created_at, updated_at]
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         name: { type: string, minLength: 1, maxLength: 60 }
         query_params:
           type: object
           additionalProperties: true
-          description: Opaque envelope replayed verbatim against `/search`.
+          description: Envelope replayed verbatim against `/search`.
+        alerts_enabled:
+          type: boolean
+          description: When true, a newly live ad matching the filters sends a `search.match` notification (once per ad per user).
         created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    SavedSearchQueryParams:
+      type: object
+      additionalProperties: true
+      description: |
+        The `/search` inputs. Unknown keys are kept and replayed. Alerts
+        match with the same meaning as `/search`: a parent category or
+        location includes its descendants, a price range never matches an
+        ad without a price, every word of `q` must appear in the title or
+        description, and `custom_fields` takes `{key: value}` for equality
+        (case-insensitive) or `{key: {min, max}}` for a range. A category or
+        location that does not exist matches nothing.
+      properties:
+        q: { type: [string, 'null'], maxLength: 200 }
+        category_id: { $ref: '#/components/schemas/ULID' }
+        category_slug: { type: [string, 'null'], maxLength: 120 }
+        location_id: { $ref: '#/components/schemas/ULID' }
+        location_slug: { type: [string, 'null'], maxLength: 120 }
+        price_min: { type: [number, 'null'], minimum: 0 }
+        price_max: { type: [number, 'null'], minimum: 0 }
+        condition: { $ref: '#/components/schemas/Condition' }
+        price_type: { $ref: '#/components/schemas/PriceType' }
+        custom_fields: { type: [object, 'null'], additionalProperties: true }
 
     SaveSearchRequest:
       type: object
       required: [name, query_params]
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
-        query_params:
-          type: object
-          additionalProperties: true
+        query_params: { $ref: '#/components/schemas/SavedSearchQueryParams' }
+        alerts_enabled: { type: boolean, default: true }
+
+    PatchSavedSearchRequest:
+      type: object
+      minProperties: 1
+      properties:
+        alerts_enabled: { type: boolean }
+        name: { type: string, minLength: 1, maxLength: 60 }
 
     SavedSearchEnvelope:
       allOf:
@@ -4770,6 +5930,19 @@ components:
         - type: object
           properties:
             data: { $ref: '#/components/schemas/FavoriteToggleResponse' }
+
+    FavoriteIdsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items: { $ref: '#/components/schemas/ULID' }
 
     FavoritedAdSummary:
       allOf:
@@ -4817,11 +5990,27 @@ components:
     # ───── Messaging (Sprint 8 Wave A) ─────
     MessageType:
       type: string
-      enum: [text, offer, system]
+      enum: [text, image, offer, system]
       description: |
-        - `text` — plain user chat. Wave A only emits this value.
+        - `text` — plain user chat.
+        - `image` — a photo (`media`) with an optional caption in `body`.
         - `offer` — inline offer card (Sprint 9).
         - `system` — moderation / read-receipt placeholder (Sprint 9).
+
+    ChatMessageKey:
+      type: [string, 'null']
+      enum: [offer.made, offer.countered, offer.accepted, offer.rejected, offer.withdrawn, image, null]
+      description: |
+        Set on bubbles the server writes (offer and system messages; `image`
+        only on an inbox preview of a photo without caption). `body` is
+        already rendered in the reader's language (`Accept-Language`,
+        `?lang=` or the user's language); clients may instead render the
+        key from their own bundle with `params`. Null for user-written text.
+
+    ChatMessageParams:
+      type: [object, 'null']
+      additionalProperties: true
+      description: 'Placeholders of the key, for example `{"amount": "150.00", "currency": "QAR", "note": "Cash today"}`.'
 
     Conversation:
       type: object
@@ -4840,6 +6029,9 @@ components:
           type: string
           nullable: true
           maxLength: 160
+          description: Rendered in the reader's language when the last message is a keyed bubble.
+        last_message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        last_message_params: { $ref: '#/components/schemas/ChatMessageParams' }
         last_message_at:
           type: string
           format: date-time
@@ -4872,6 +6064,8 @@ components:
             full_name: { type: string }
             avatar_thumb: { type: string, format: uri, nullable: true }
         last_message_preview: { type: string, nullable: true, maxLength: 160 }
+        last_message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        last_message_params: { $ref: '#/components/schemas/ChatMessageParams' }
         last_message_at: { type: string, format: date-time, nullable: true }
         unread_count: { type: integer, minimum: 0 }
         created_at: { type: string, format: date-time }
@@ -4883,7 +6077,12 @@ components:
         id: { $ref: '#/components/schemas/ULID' }
         conversation_id: { $ref: '#/components/schemas/ULID' }
         sender_id: { $ref: '#/components/schemas/ULID' }
-        body: { type: string, minLength: 1, maxLength: 5000 }
+        body:
+          type: string
+          maxLength: 5000
+          description: User text as written, or a keyed bubble rendered in the reader's language.
+        message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        params: { $ref: '#/components/schemas/ChatMessageParams' }
         type: { $ref: '#/components/schemas/MessageType' }
         read_at:
           type: string
@@ -4899,6 +6098,11 @@ components:
             id: { $ref: '#/components/schemas/ULID' }
             full_name: { type: string }
             avatar_thumb: { type: string, format: uri, nullable: true }
+        media:
+          oneOf:
+            - $ref: '#/components/schemas/ChatImage'
+            - type: 'null'
+          description: Only present when `type === "image"`.
         offer:
           allOf:
             - $ref: '#/components/schemas/Offer'
@@ -4914,14 +6118,70 @@ components:
       properties:
         ad_id: { $ref: '#/components/schemas/ULID' }
 
+    ChatImage:
+      type: object
+      required: [id, url, original_url, mime_type, size_bytes]
+      properties:
+        id: { type: integer }
+        url:
+          type: string
+          format: uri
+          description: |
+            Expiring signed link (`qbazaar.uploads.original_url_ttl_hours`) to
+            the downsized preview (max 1280px, webp), or to the original while
+            the preview is still being generated. Do not persist it.
+        original_url:
+          type: string
+          format: uri
+          description: Expiring signed link to the original upload.
+        mime_type: { type: string, enum: [image/jpeg, image/png, image/webp] }
+        size_bytes: { type: integer, minimum: 0 }
+
     SendMessageRequest:
       type: object
       required: [body]
       properties:
         body: { type: string, minLength: 1, maxLength: 5000 }
         type:
-          $ref: '#/components/schemas/MessageType'
-          # Wave A only accepts `text`.
+          type: string
+          enum: [text]
+          default: text
+
+    SendImageMessageRequest:
+      type: object
+      required: [type, image]
+      properties:
+        type: { type: string, enum: [image] }
+        image:
+          type: string
+          format: binary
+          description: JPEG, PNG or WebP (sniffed content), at most 10 MB and 8192 px on either side (`qbazaar.messaging.image_max_side_px`). Stored under a server-generated name.
+        body:
+          type: string
+          maxLength: 5000
+          description: Optional caption.
+
+    HideConversationsRequest:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/ULID' }
+
+    HideConversationsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [hidden]
+              properties:
+                hidden: { type: integer, minimum: 0 }
 
     UnreadCountResponse:
       type: object
@@ -5186,7 +6446,10 @@ components:
         category:
           type: string
           nullable: true
-          description: Short discriminator surfaced from the notification's data payload (e.g. ad.approved, account.data_export_ready).
+          description: |
+            Short discriminator surfaced from the notification's data payload
+            (e.g. ad.approved, account.data_export_ready, ad.price_changed,
+            ads.new_from_followed). Filterable with `?category=`.
           example: ad.approved
         title:
           type: string
@@ -5586,6 +6849,17 @@ components:
               $ref: '#/components/schemas/SupportReply'
 
   parameters:
+    DeviceId:
+      name: X-Device-Id
+      in: header
+      required: false
+      description: |
+        Stable random id the app generates once per install and keeps in
+        secure storage (16-128 chars of `A-Z a-z 0-9 . _ : -`). Only its hash
+        is stored. Without it the server falls back to a platform + browser +
+        IP fingerprint, which changes with the network and triggers the
+        new-device check more often.
+      schema: { type: string, minLength: 16, maxLength: 128 }
     TurnstileToken:
       name: X-Turnstile-Token
       in: header
@@ -5608,6 +6882,16 @@ components:
           request_id: req_abc123
 
   responses:
+    DeviceChallenge:
+      description: |
+        The sign-in is valid but the device is not trusted yet. An SMS code
+        went to the account phone; no tokens are issued until
+        `POST /api/v1/auth/device/verify` succeeds. Signing in again inside
+        the SMS cooldown answers 429 `AUTH_006`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DeviceChallengeEnvelope'
     TurnstileFailed:
       description: The Turnstile check failed (`TURNSTILE_001`)
       content:

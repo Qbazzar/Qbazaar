@@ -7,27 +7,30 @@ namespace App\Actions\Auth;
 use App\Enums\AccountType;
 use App\Enums\Language;
 use App\Enums\UserStatus;
+use App\Exceptions\DomainException;
+use App\Exceptions\ErrorCode;
 use App\Models\User;
 use App\Notifications\WelcomeNotification;
+use App\Services\Auth\DeviceContext;
 use App\Services\Auth\RefreshTokenService;
 use App\Services\Auth\TokenPair;
+use App\Services\Auth\TrustedDeviceService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Creates a brand-new user + issues the initial access/refresh token pair.
+ * Creates a user, trusts the device they signed up from and issues the first
+ * token pair. Used by password registration, the email-code flow and
+ * Google / Apple sign-up; the latter two prove the email and set no password.
  *
- * Wrapped in a DB transaction so a failure halfway through (e.g. token table
- * write) doesn't leave an orphaned half-created user.
- *
- * Side effects (post-commit):
- *  - WelcomeNotification — fired after the transaction commits via the
- *    notification's queue/mailer; even if it fails, the user row + tokens are
- *    already durable, so register stays idempotent from the client's view.
+ * The welcome notification goes out after the commit so a flaky mail driver
+ * cannot roll back the sign-up.
  */
 class RegisterUserAction
 {
     public function __construct(
         private readonly RefreshTokenService $refreshTokens,
+        private readonly TrustedDeviceService $trustedDevices,
     ) {}
 
     /**
@@ -35,35 +38,45 @@ class RegisterUserAction
      *     full_name: string,
      *     email: string,
      *     phone: string,
-     *     password: string,
-     *     account_type: string,
+     *     password?: string|null,
+     *     account_type?: string,
      *     language?: string,
      * }  $data
      * @return array{user: User, tokens: TokenPair}
+     *
+     * @throws DomainException AUTH_007 / AUTH_008 when a concurrent sign-up took the email or phone first
      */
-    public function execute(array $data, ?string $deviceFingerprint = null, ?string $ip = null, ?string $deviceLabel = null): array
+    public function execute(array $data, DeviceContext $device, bool $emailVerified = false): array
     {
-        /** @var array{user: User, tokens: TokenPair} $result */
-        $result = DB::transaction(function () use ($data, $deviceFingerprint, $ip, $deviceLabel) {
-            $user = User::query()->forceCreate([
-                'full_name' => $data['full_name'],
-                'email' => strtolower($data['email']),
-                'phone' => $data['phone'],
-                'password' => $data['password'], // hashed via $casts
-                'account_type' => $data['account_type'] ?? AccountType::PRIVATE_INDIVIDUAL->value,
-                'status' => UserStatus::ACTIVE->value,
-                'email_verified' => false,
-                'phone_verified' => false,
-                'language' => $data['language'] ?? Language::ARABIC->value,
-            ]);
+        $email = strtolower($data['email']);
 
-            $tokens = $this->refreshTokens->issue($user, $deviceFingerprint, $ip, $deviceLabel);
+        try {
+            /** @var array{user: User, tokens: TokenPair} $result */
+            $result = DB::transaction(function () use ($data, $email, $device, $emailVerified): array {
+                $user = User::query()->forceCreate([
+                    'full_name' => $data['full_name'],
+                    'email' => $email,
+                    'phone' => $data['phone'],
+                    'password' => $data['password'] ?? null, // hashed via $casts
+                    'account_type' => $data['account_type'] ?? AccountType::PRIVATE_INDIVIDUAL->value,
+                    'status' => UserStatus::ACTIVE->value,
+                    'email_verified' => $emailVerified,
+                    'phone_verified' => false,
+                    'language' => $data['language'] ?? Language::ARABIC->value,
+                ]);
 
-            return ['user' => $user, 'tokens' => $tokens];
-        });
+                $this->trustedDevices->trust($user, $device);
 
-        // Dispatched outside the DB transaction so a flaky mail driver can't
-        // roll back the user creation.
+                $tokens = $this->refreshTokens->issue($user, $device->hash, $device->ip, $device->label);
+
+                return ['user' => $user, 'tokens' => $tokens];
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw new DomainException(User::query()->where('email', $email)->exists()
+                ? ErrorCode::AUTH_EMAIL_EXISTS
+                : ErrorCode::AUTH_PHONE_EXISTS);
+        }
+
         $result['user']->notify(new WelcomeNotification);
 
         return $result;

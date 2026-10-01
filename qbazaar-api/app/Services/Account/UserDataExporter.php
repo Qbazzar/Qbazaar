@@ -77,13 +77,27 @@ class UserDataExporter
 
         yield 'ads' => $this->rows(
             DB::table('ads')->where('user_id', $user->id)
-                ->select(['id', 'title', 'description', 'price', 'price_type', 'currency', 'condition', 'status', 'custom_fields', 'views_count', 'favorites_count', 'published_at', 'expires_at', 'created_at', 'updated_at', 'deleted_at']),
+                ->select([
+                    'id', 'title', 'description', 'price', 'price_type', 'currency', 'condition', 'ad_type', 'shipping',
+                    'postal_code', 'street', 'show_full_address', 'status', 'custom_fields', 'views_count', 'favorites_count',
+                    'published_at', 'reserved_at', 'expires_at', 'created_at', 'updated_at', 'deleted_at',
+                ]),
             json: ['custom_fields'],
         );
 
         yield 'messages_sent' => $this->rows(
             DB::table('messages')->where('sender_id', $user->id)
-                ->select(['id', 'conversation_id', 'type', 'body', 'read_at', 'created_at']),
+                ->select(['id', 'conversation_id', 'type', 'body', 'message_key', 'params', 'read_at', 'created_at']),
+            json: ['params'],
+        );
+
+        yield 'hidden_conversations' => $this->rows(
+            DB::table('conversations')
+                ->where(fn (Builder $query) => $query
+                    ->where(fn (Builder $buyer) => $buyer->where('buyer_id', $user->id)->whereNotNull('buyer_hidden_at'))
+                    ->orWhere(fn (Builder $seller) => $seller->where('seller_id', $user->id)->whereNotNull('seller_hidden_at')))
+                ->select(['id', 'ad_id'])
+                ->selectRaw('case when buyer_id = ? then buyer_hidden_at else seller_hidden_at end as hidden_at', [$user->id]),
         );
 
         $offerColumns = ['id', 'ad_id', 'conversation_id', 'amount', 'currency', 'note', 'status', 'created_at', 'updated_at'];
@@ -95,8 +109,27 @@ class UserDataExporter
         );
 
         yield 'saved_searches' => $this->rows(
-            DB::table('saved_searches')->where('user_id', $user->id)->select(['id', 'name', 'query_params', 'created_at']),
+            DB::table('saved_searches')->where('user_id', $user->id)
+                ->select(['id', 'name', 'query_params', 'alerts_enabled', 'category_id', 'location_id', 'condition', 'price_type', 'price_min', 'price_max', 'created_at']),
             json: ['query_params'],
+        );
+
+        yield 'business_profile' => $this->rows(
+            DB::table('business_profiles')->where('user_id', $user->id)
+                ->select([
+                    'user_id', 'business_name', 'about', 'legal_name', 'commercial_registration_number', 'contact_phone',
+                    'contact_email', 'website', 'address', 'opening_hours', 'created_at', 'updated_at',
+                ]),
+            key: 'user_id',
+            json: ['opening_hours'],
+        );
+
+        yield 'following' => $this->rows(
+            DB::table('follows')->where('follower_id', $user->id)->select(['id', 'followed_id', 'created_at']),
+        );
+
+        yield 'followers' => $this->rows(
+            DB::table('follows')->where('followed_id', $user->id)->select(['id', 'follower_id', 'created_at']),
         );
 
         yield 'reviews_written' => $this->rows(
@@ -112,6 +145,22 @@ class UserDataExporter
         yield 'sessions' => $this->rows(
             DB::table('refresh_tokens')->where('user_id', $user->id)
                 ->select(['id', 'device_fingerprint', 'expires_at', 'used_at', 'created_at']),
+        );
+
+        yield 'trusted_devices' => $this->rows(
+            DB::table('trusted_devices')->where('user_id', $user->id)
+                ->select(['id', 'label', 'last_ip', 'last_used_at', 'created_at']),
+        );
+
+        yield 'social_accounts' => $this->rows(
+            DB::table('social_accounts')->where('user_id', $user->id)->select(['id', 'provider', 'email', 'created_at']),
+        );
+
+        // Codes are keyed by recipient rather than user, so this covers the
+        // current phone and email; the code hashes stay out.
+        yield 'one_time_codes' => $this->rows(
+            DB::table('otp_codes')->whereIn('recipient', [$user->phone, $user->email])
+                ->select(['id', 'purpose', 'expires_at', 'used_at', 'attempts', 'created_at']),
         );
 
         yield 'activity_log' => $this->rows(

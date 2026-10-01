@@ -4,49 +4,60 @@ declare(strict_types=1);
 
 namespace App\Listeners\Ads;
 
+use App\Enums\AdStatus;
+use App\Enums\UserStatus;
 use App\Events\Ads\AdSubmittedForReview;
 use App\Models\User;
 use App\Notifications\Ads\AdPendingReviewNotification;
-use Illuminate\Support\Collection;
+use App\Services\Admin\StaffDirectory;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Sends a database notification to every reviewer whenever a seller submits an
- * ad for review, so the /manage notifications bell surfaces the queue.
+ * Tells every active staff member who can approve ads that one is waiting,
+ * in the panel bell and by email. Queued so the publish request never waits
+ * on the staff lookup or the fan-out.
  *
- * Reviewers are users holding `super_admin` or `moderator` — the same roles
- * that gate the panel's approve/reject actions. `support` is excluded: it can
- * read the panel but does not action the moderation queue.
+ * Reviewers are found by permission, not role name, so a custom role that is
+ * granted `ads.approve` is notified too. An ad already reviewed by the time
+ * the job runs needs no alert.
  */
-class NotifyAdminsOfPendingAd
+class NotifyAdminsOfPendingAd implements ShouldQueue
 {
+    public const REVIEW_PERMISSION = 'ads.approve';
+
+    private const CHUNK_SIZE = 100;
+
+    public string $queue = 'default';
+
+    public function __construct(
+        private readonly StaffDirectory $staff,
+    ) {}
+
     public function handle(AdSubmittedForReview $event): void
     {
-        $reviewers = $this->reviewers();
-
-        if ($reviewers->isEmpty()) {
+        if ($event->ad->status !== AdStatus::PENDING) {
             return;
         }
 
-        Notification::send(
-            $reviewers,
-            new AdPendingReviewNotification(
-                $event->ad,
-                flagged: ! $event->result->clean,
-                flags: $event->result->flags,
-            ),
-        );
-    }
+        $reviewerIds = $this->staff->idsWithPermission(self::REVIEW_PERMISSION);
 
-    /**
-     * @return Collection<int, User>
-     */
-    private function reviewers(): Collection
-    {
-        // whereHas (not the `role()` scope) so a missing role never throws
-        // RoleDoesNotExist and 500s the publish request — it just yields none.
-        return User::query()
-            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['super_admin', 'moderator']))
-            ->get();
+        if ($reviewerIds === []) {
+            return;
+        }
+
+        $notification = new AdPendingReviewNotification(
+            $event->ad,
+            flagged: ! $event->result->clean,
+            flags: $event->result->flags,
+        );
+
+        User::query()
+            ->whereIn('id', $reviewerIds)
+            ->where('status', UserStatus::ACTIVE->value)
+            ->chunkById(self::CHUNK_SIZE, function (Collection $reviewers) use ($notification): void {
+                Notification::send($reviewers, $notification);
+            });
     }
 }

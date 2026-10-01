@@ -8,7 +8,6 @@ use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\User;
 use App\Services\Auth\RefreshTokenService;
-use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
@@ -37,7 +36,7 @@ class UpdatePasswordAction
      */
     public function execute(User $user, string $currentPassword, string $newPassword, ?PersonalAccessToken $currentToken = null): void
     {
-        if (! Hash::check($currentPassword, $user->password)) {
+        if (! $user->passwordMatches($currentPassword)) {
             throw new DomainException(ErrorCode::USER_PASSWORD_CURRENT_REQUIRED);
         }
 

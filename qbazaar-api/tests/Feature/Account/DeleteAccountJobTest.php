@@ -3,17 +3,24 @@
 declare(strict_types=1);
 
 use App\Enums\DataExportStatus;
+use App\Enums\OtpPurpose;
 use App\Enums\UserStatus;
 use App\Jobs\DeleteAccountJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
 use App\Models\Ad;
+use App\Models\BusinessProfile;
 use App\Models\Conversation;
 use App\Models\DataExport;
+use App\Models\Favorite;
+use App\Models\Follow;
 use App\Models\Message;
 use App\Models\Offer;
+use App\Models\OtpCode;
+use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Services\Account\AccountEraser;
+use App\Services\Users\FollowGraph;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -86,6 +93,43 @@ it('erases a due account with its ads, images, search documents, offers and chat
     $engine->shouldHaveReceived('delete')->withArgs(
         fn ($models): bool => $models->contains(fn ($model): bool => $model->getKey() === $ad->id),
     );
+});
+
+it('removes follows, favorites, codes, devices and the business profile, lowering the other side counters', function (): void {
+    $user = userPendingDeletionFor(31);
+    $seller = User::factory()->create();
+    $fan = User::factory()->create();
+    $graph = app(FollowGraph::class);
+    $graph->link($user, $seller);
+    $graph->link($fan, $user);
+
+    $sellerAd = $this->makeAd($seller, ['status' => 'active']);
+    Favorite::query()->create(['user_id' => $user->id, 'ad_id' => $sellerAd->id, 'created_at' => now()]);
+    $sellerAd->forceFill(['favorites_count' => 1])->save();
+
+    foreach ([$user->phone, $user->email] as $recipient) {
+        OtpCode::query()->create([
+            'recipient' => $recipient,
+            'purpose' => OtpPurpose::PHONE_VERIFICATION,
+            'code_hash' => 'x',
+            'expires_at' => now()->addMinutes(5),
+        ]);
+    }
+    TrustedDevice::query()->create(['user_id' => $user->id, 'device_hash' => str_repeat('a', 64), 'last_used_at' => now()]);
+    $user->businessProfile()->create(['business_name' => 'Shop']);
+    $hidden = Conversation::factory()->create(['ad_id' => $sellerAd->id, 'buyer_id' => $user->id, 'seller_id' => $seller->id, 'buyer_hidden_at' => now()]);
+
+    runDeleteJob($user);
+
+    expect(Follow::query()->count())->toBe(0)
+        ->and($seller->fresh()->followers_count)->toBe(0)
+        ->and($fan->fresh()->following_count)->toBe(0)
+        ->and(Favorite::query()->count())->toBe(0)
+        ->and($sellerAd->fresh()->favorites_count)->toBe(0)
+        ->and(OtpCode::query()->count())->toBe(0)
+        ->and(TrustedDevice::query()->count())->toBe(0)
+        ->and(BusinessProfile::query()->count())->toBe(0)
+        ->and(Conversation::query()->whereKey($hidden->id)->exists())->toBeFalse();
 });
 
 it('leaves an account alone while its grace period is still running', function (): void {

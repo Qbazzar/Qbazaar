@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Offers;
 
-use App\Enums\MessageType;
+use App\Enums\ChatMessageKey;
 use App\Enums\OfferParty;
 use App\Enums\OfferStatus;
 use App\Events\Offers\OfferCreated;
@@ -75,8 +75,7 @@ class MakeOfferAction
         $message = $this->messages->append(
             $conversation,
             $buyer,
-            $this->formatter->body($amount, $note),
-            MessageType::OFFER,
+            $this->formatter->bubble(ChatMessageKey::OFFER_MADE, $amount, $note),
         );
 
         /** @var Offer $offer */

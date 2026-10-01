@@ -188,7 +188,7 @@ it('changes the phone after the OTP sent to the new number', function (): void {
         ->assertJsonPath('data.sent_to', '+97455000002');
 
     Notification::assertSentOnDemand(OtpNotification::class, fn (OtpNotification $notification): bool => $notification->phone === '+97455000002');
-    expect(OtpCode::query()->where('phone', '+97455000002')->value('purpose'))->toBe(OtpPurpose::PHONE_CHANGE);
+    expect(OtpCode::query()->where('recipient', '+97455000002')->value('purpose'))->toBe(OtpPurpose::PHONE_CHANGE);
 
     postJson('/api/v1/account/phone/verify', ['code' => '111111'])
         ->assertStatus(422)
@@ -218,7 +218,7 @@ it('refuses a phone that already belongs to another account', function (): void 
 
 it('does not let a phone verification code confirm a phone change', function (): void {
     postJson('/api/v1/account/phone', ['phone' => '+97455000002', 'reauth_code' => reauthCode($this->user)])->assertStatus(202);
-    OtpCode::query()->where('phone', '+97455000002')->update(['purpose' => OtpPurpose::PHONE_VERIFICATION->value]);
+    OtpCode::query()->where('recipient', '+97455000002')->update(['purpose' => OtpPurpose::PHONE_VERIFICATION->value]);
 
     postJson('/api/v1/account/phone/verify', ['code' => '654321'])->assertStatus(422);
 

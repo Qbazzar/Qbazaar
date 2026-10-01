@@ -54,7 +54,7 @@ class OtpController extends Controller
 
         return response()->json(
             [
-                'sent_to' => $result->phone,
+                'sent_to' => $result->recipient,
                 'expires_in' => $result->expiresIn,
                 'can_resend_in' => $result->canResendIn,
             ],
@@ -132,7 +132,7 @@ class OtpController extends Controller
 
         return response()->json(
             [
-                'sent_to' => $result->phone,
+                'sent_to' => $result->recipient,
                 'expires_in' => $result->expiresIn,
                 'can_resend_in' => $result->canResendIn,
             ],

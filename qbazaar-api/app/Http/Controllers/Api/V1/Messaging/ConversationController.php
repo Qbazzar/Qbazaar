@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Messaging;
 
+use App\Actions\Messaging\HideConversationsAction;
 use App\Actions\Messaging\MarkConversationReadAction;
 use App\Actions\Messaging\StartConversationAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Messaging\HideConversationsRequest;
 use App\Http\Requests\Api\V1\Messaging\StartConversationRequest;
 use App\Http\Resources\Api\V1\Messaging\ConversationListResource;
 use App\Http\Resources\Api\V1\Messaging\ConversationResource;
@@ -79,13 +81,27 @@ class ConversationController extends Controller
         $user = $request->user();
 
         $paginator = Conversation::query()
-            ->forUser($user)
+            ->visibleTo($user)
             ->orderedForInbox()
             ->with(['ad.primaryImage', 'buyer.media', 'seller.media'])
             ->withUnreadCountFor($user)
             ->paginate(self::PER_PAGE);
 
         return ConversationListResource::collection($paginator);
+    }
+
+    /**
+     * DELETE /api/v1/conversations — hide conversations from the caller's
+     * inbox only; a new message brings a thread back.
+     *
+     * @authenticated
+     */
+    public function destroy(HideConversationsRequest $request, HideConversationsAction $hideConversations): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json(['hidden' => $hideConversations->execute($user, $request->conversationIds())]);
     }
 
     /**

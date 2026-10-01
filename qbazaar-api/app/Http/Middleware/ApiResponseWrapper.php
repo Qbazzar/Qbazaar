@@ -97,9 +97,11 @@ class ApiResponseWrapper
             'per_page' => $meta['per_page'] ?? null,
             'total' => $meta['total'] ?? null,
             'last_page' => $meta['last_page'] ?? null,
-            'has_more' => isset($meta['current_page'], $meta['last_page'])
-                ? ($meta['current_page'] < $meta['last_page'])
-                : null,
+            'has_more' => match (true) {
+                isset($meta['current_page'], $meta['last_page']) => $meta['current_page'] < $meta['last_page'],
+                array_key_exists('next_cursor', $meta) => $meta['next_cursor'] !== null,
+                default => null,
+            },
             'next_cursor' => $meta['next_cursor'] ?? null,
             'prev_cursor' => $meta['prev_cursor'] ?? null,
         ];

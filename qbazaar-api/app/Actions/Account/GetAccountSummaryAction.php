@@ -42,7 +42,7 @@ class GetAccountSummaryAction
             'my_ads' => array_sum($adsByStatus) - $drafts,
             'drafts' => $drafts,
             'ads_by_status' => $adsByStatus,
-            'conversations' => Conversation::query()->forUser($user)->count(),
+            'conversations' => Conversation::query()->visibleTo($user)->count(),
             'unread_messages' => Message::query()->unreadFor($user)->count(),
             'unread_notifications' => $user->unreadNotifications()->count(),
             'favorites' => Favorite::query()->where('user_id', $user->id)->count(),

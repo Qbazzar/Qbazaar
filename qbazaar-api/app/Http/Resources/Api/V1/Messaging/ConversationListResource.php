@@ -8,6 +8,7 @@ use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\User;
 use App\Services\Media\MediaStorage;
+use App\Services\Messaging\ChatMessageRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -55,7 +56,9 @@ class ConversationListResource extends JsonResource
                 'full_name' => $other->full_name,
                 'avatar_thumb' => $other->avatarThumbUrl(),
             ],
-            'last_message_preview' => $this->last_message_preview,
+            'last_message_preview' => app(ChatMessageRenderer::class)->preview($this->resource),
+            'last_message_key' => $this->last_message_key,
+            'last_message_params' => $this->last_message_params,
             'last_message_at' => $this->last_message_at?->toIso8601String(),
             'unread_count' => $this->unreadCount($caller),
             'created_at' => $this->created_at->toIso8601String(),

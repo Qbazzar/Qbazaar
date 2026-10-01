@@ -7,8 +7,11 @@ namespace App\Http\Resources\Api\V1\Messaging;
 use App\Enums\MessageType;
 use App\Http\Resources\Api\V1\Offers\OfferResource;
 use App\Models\Message;
+use App\Services\Media\MediaStorage;
+use App\Services\Messaging\ChatMessageRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Single chat-line payload — used by transcript responses + the
@@ -42,7 +45,9 @@ class MessageResource extends JsonResource
             'id' => $this->id,
             'conversation_id' => $this->conversation_id,
             'sender_id' => $this->sender_id,
-            'body' => $this->body,
+            'body' => app(ChatMessageRenderer::class)->render($this->message_key, $this->params, $this->body),
+            'message_key' => $this->message_key,
+            'params' => $this->params,
             'type' => $this->type->value,
             'read_at' => $this->read_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
@@ -53,6 +58,11 @@ class MessageResource extends JsonResource
                 'avatar_thumb_url' => $sender->avatarThumbUrl(),
             ],
         ];
+
+        if ($this->type === MessageType::IMAGE && $this->resource->relationLoaded('media')) {
+            $image = $this->resource->image();
+            $payload['media'] = $image === null ? null : $this->imagePayload($image);
+        }
 
         // Only attach the offer envelope when the message actually is an
         // offer AND the relation was eager-loaded. Both gates matter:
@@ -66,5 +76,24 @@ class MessageResource extends JsonResource
         }
 
         return $payload;
+    }
+
+    /**
+     * Both links expire; `url` is the downsized preview once the queued
+     * conversion finished, the original until then.
+     *
+     * @return array<string, mixed>
+     */
+    private function imagePayload(Media $image): array
+    {
+        $storage = app(MediaStorage::class);
+
+        return [
+            'id' => $image->getKey(),
+            'url' => $storage->signedConversionUrl($image, Message::IMAGE_PREVIEW),
+            'original_url' => $storage->signedOriginalUrl($image),
+            'mime_type' => $image->mime_type,
+            'size_bytes' => (int) $image->size,
+        ];
     }
 }

@@ -62,7 +62,7 @@ it('returns AUTH_004 (410) when the OTP has expired', function (): void {
     $phone = '+97455123456';
 
     OtpCode::query()->create([
-        'phone' => $phone,
+        'recipient' => $phone,
         'code_hash' => Hash::make('482915'),
         'attempts' => 0,
         'expires_at' => Carbon::now()->subMinute(),
@@ -101,7 +101,7 @@ it('burns the row after max attempts and refuses further tries with AUTH_005', f
 
     // Row should now be burnt: a subsequent attempt with the (notionally-correct)
     // code still fails because the row is used_at.
-    expect(OtpCode::query()->where('phone', '+97455123456')->whereNull('used_at')->count())->toBe(0);
+    expect(OtpCode::query()->where('recipient', '+97455123456')->whereNull('used_at')->count())->toBe(0);
 
     postJson('/api/v1/auth/verify-otp', ['phone' => '+97455123456', 'code' => '000000'])
         ->assertStatus(422)

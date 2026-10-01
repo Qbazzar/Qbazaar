@@ -63,17 +63,12 @@ class RegisterController extends Controller
      *   }
      * }
      */
-    public function __invoke(RegisterRequest $request, RegisterUserAction $action, DeviceFingerprintService $fingerprints): JsonResponse
+    public function __invoke(RegisterRequest $request, RegisterUserAction $action, DeviceFingerprintService $devices): JsonResponse
     {
         /** @var array{full_name:string,email:string,phone:string,password:string,account_type:string,language?:string} $validated */
         $validated = $request->validated();
 
-        $result = $action->execute(
-            $validated,
-            $fingerprints->fingerprintFromRequest($request),
-            (string) $request->ip(),
-            $fingerprints->labelFromRequest($request),
-        );
+        $result = $action->execute($validated, $devices->contextFromRequest($request));
 
         return response()->json(
             (new AuthResponseResource($result['user'], $result['tokens']))->toArray(),

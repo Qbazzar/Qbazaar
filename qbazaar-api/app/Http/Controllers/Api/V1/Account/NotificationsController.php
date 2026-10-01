@@ -7,8 +7,10 @@ namespace App\Http\Controllers\Api\V1\Account;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Account\ListNotificationsRequest;
 use App\Http\Resources\Api\V1\Notifications\NotificationResource;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -35,22 +37,25 @@ class NotificationsController extends Controller
     /**
      * GET /api/v1/account/notifications
      *
-     * Paginated 20/page, newest first. `?unread=1` filters to unread only.
+     * Paginated 20/page, newest first. `?unread=1` filters to unread only,
+     * `?category=` to one category or a whole group of them.
      *
      * @authenticated
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(ListNotificationsRequest $request): AnonymousResourceCollection
     {
         /** @var User $user */
         $user = $request->user();
 
-        $query = $user->notifications();
-
-        if ($request->boolean('unread')) {
-            $query->whereNull('read_at');
-        }
-
-        $paginator = $query->paginate(self::PER_PAGE);
+        $paginator = $user->notifications()->getQuery()
+            ->when($request->boolean('unread'), fn (Builder $query) => $query->whereNull('read_at'))
+            ->when($request->category(), fn (Builder $query, string $category) => $query->where(
+                // `ad` matches `ad` itself and every `ad.*`. The prefix LIKE
+                // stays an index range; `_` is escaped so it is not a wildcard.
+                fn (Builder $match) => $match->where('category', $category)
+                    ->orWhereRaw("category LIKE ? ESCAPE '!'", [str_replace('_', '!_', $category) . '.%']),
+            ))
+            ->paginate(self::PER_PAGE);
 
         return NotificationResource::collection($paginator);
     }

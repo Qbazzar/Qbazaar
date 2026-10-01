@@ -41,7 +41,7 @@ it('returns 202 with expiry metadata for a valid Qatari phone', function (): voi
                 ->etc(),
         );
 
-    expect(OtpCode::query()->where('phone', '+97455123456')->count())->toBe(1);
+    expect(OtpCode::query()->where('recipient', '+97455123456')->count())->toBe(1);
 });
 
 it('routes the notification to the matching user when one exists', function (): void {
@@ -67,7 +67,7 @@ it('delivers the OTP by SMS only, never to the account email', function (): void
 it('stores the OTP with the phone-verification purpose', function (): void {
     postJson('/api/v1/auth/send-otp', ['phone' => '+97455123456'])->assertStatus(202);
 
-    expect(OtpCode::query()->where('phone', '+97455123456')->sole()->purpose)
+    expect(OtpCode::query()->where('recipient', '+97455123456')->sole()->purpose)
         ->toBe(OtpPurpose::PHONE_VERIFICATION);
 });
 
@@ -119,7 +119,7 @@ it('rejects after the per-phone hourly ceiling is reached', function (): void {
     // Backfill 5 fresh OTPs (within the hour) — this matches max_per_hour.
     for ($i = 0; $i < 5; $i++) {
         OtpCode::query()->create([
-            'phone' => $phone,
+            'recipient' => $phone,
             'code_hash' => bcrypt('123456'),
             'attempts' => 0,
             'expires_at' => Carbon::now()->addMinutes(5),

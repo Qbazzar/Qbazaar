@@ -31,6 +31,11 @@ requested locale.
 | `AUTH_008` | Phone already exists | 422 |
 | `AUTH_009` | Token expired | 401 |
 | `AUTH_010` | Token invalid (malformed / revoked) | 401 |
+| `AUTH_011` | Registration details required: the email code (or Google/Apple token) is valid but no account exists yet. Resend with `full_name`, `phone`, `account_type`, `accepted_terms`. `details` carries `email` (and `full_name` when the provider shared it) | 422 |
+| `AUTH_012` | New-device `challenge_token` is unknown or expired — sign in again to get a new one | 401 |
+| `AUTH_013` | Google / Apple `id_token` failed verification (signature, issuer, audience, expiry or unverified email) | 401 |
+| `AUTH_014` | Password sign-in is turned off (`AUTH_PASSWORD_LOGIN_ENABLED=false`) — use the email code | 403 |
+| `AUTH_015` | That social provider is not configured on the server, or its key endpoint is unreachable | 503 |
 
 ## Bot protection (Cloudflare Turnstile)
 
@@ -47,6 +52,14 @@ requested locale.
 | `USER_003` | Cannot block yourself | 422 |
 | `USER_004` | Password change requires current password | 422 |
 | `USER_005` | Account deactivation requires password confirmation | 422 |
+
+## Social (follows, business profiles)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `FOLLOW_001` | Cannot follow yourself | 422 |
+| `FOLLOW_002` | Cannot follow: one of the two users has blocked the other | 403 |
+| `BIZ_001` | Only business accounts can have a business profile | 403 |
 
 ## Categories & Locations (Sprint 3)
 
@@ -89,6 +102,12 @@ requested locale.
 | `SEARCH_002` | Saved search not found | 404 |
 | `SEARCH_003` | Invalid search parameters | 422 |
 | `SEARCH_004` | Saved-search limit per user reached | 422 |
+
+## Favorites
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `FAV_001` | Favourites limit per user reached (`qbazaar.favorites.max_per_user`) | 422 |
 
 ## Messaging (Sprint 8)
 

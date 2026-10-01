@@ -65,6 +65,12 @@ Fired when `POST /conversations/{id}/messages` succeeds (after DB commit).
 }
 ```
 
+Offer and system bubbles also carry `message_key` + `params` (for
+example `offer.accepted`). `message.body` and
+`conversation.last_message_preview` are rendered in the recipient's
+language, so the sender's own devices listening on the conversation
+channel should render the key from their bundle instead.
+
 `conversation.unread_count` is computed relative to the recipient, NOT
 the sender. The same event uses two channels because the
 conversation-channel `unread_count` would be ambiguous when both

@@ -22,7 +22,9 @@ class SavedSearchResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'query_params' => $this->query_params,
+            'alerts_enabled' => $this->alerts_enabled,
             'created_at' => $this->created_at->toIso8601String(),
+            'updated_at' => $this->updated_at->toIso8601String(),
         ];
     }
 }
