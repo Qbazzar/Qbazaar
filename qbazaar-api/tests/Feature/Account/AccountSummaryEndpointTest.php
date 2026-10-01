@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Enums\AdStatus;
 use App\Models\Conversation;
 use App\Models\Favorite;
+use App\Models\Message;
+use App\Models\SavedSearch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -59,11 +61,18 @@ it('counts the caller ads, drafts, conversations, unread notifications and favou
         'buyer_id' => $this->user->id,
         'seller_id' => $otherSeller->id,
     ]);
-    Conversation::query()->create([
+    $incoming = Conversation::query()->create([
         'ad_id' => $ownAd->id,
         'buyer_id' => $otherBuyer->id,
         'seller_id' => $this->user->id,
     ]);
+
+    // Unread messages: two from the buyer; the caller's own reply and a read one don't count.
+    Message::factory()->count(2)->create(['conversation_id' => $incoming->id, 'sender_id' => $otherBuyer->id]);
+    Message::factory()->create(['conversation_id' => $incoming->id, 'sender_id' => $otherBuyer->id, 'read_at' => now()]);
+    Message::factory()->create(['conversation_id' => $incoming->id, 'sender_id' => $this->user->id]);
+
+    SavedSearch::query()->create(['user_id' => $this->user->id, 'name' => 'Phones', 'query_params' => ['q' => 'phone']]);
 
     // Notifications: 2 unread + 1 read.
     insertSummaryNotification($this->user, null);
@@ -82,7 +91,18 @@ it('counts the caller ads, drafts, conversations, unread notifications and favou
         ->assertJsonPath('data.drafts', 1)
         ->assertJsonPath('data.conversations', 2)
         ->assertJsonPath('data.unread_notifications', 2)
-        ->assertJsonPath('data.favorites', 1);
+        ->assertJsonPath('data.favorites', 1)
+        ->assertJsonPath('data.unread_messages', 2)
+        ->assertJsonPath('data.saved_searches', 1)
+        ->assertJsonPath('data.ads_by_status', [
+            'draft' => 1,
+            'pending' => 0,
+            'active' => 3,
+            'rejected' => 0,
+            'sold' => 1,
+            'expired' => 0,
+            'blocked' => 0,
+        ]);
 });
 
 it('returns zeroed counters for a brand-new account', function (): void {
@@ -92,7 +112,10 @@ it('returns zeroed counters for a brand-new account', function (): void {
         ->assertJsonPath('data.drafts', 0)
         ->assertJsonPath('data.conversations', 0)
         ->assertJsonPath('data.unread_notifications', 0)
-        ->assertJsonPath('data.favorites', 0);
+        ->assertJsonPath('data.favorites', 0)
+        ->assertJsonPath('data.unread_messages', 0)
+        ->assertJsonPath('data.saved_searches', 0)
+        ->assertJsonPath('data.ads_by_status.active', 0);
 });
 
 it('rejects unauthenticated callers', function (): void {

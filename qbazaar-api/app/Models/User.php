@@ -245,7 +245,11 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
      * ──────────────────────────────────────────────────────────────────*/
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('avatar')->singleFile();
+        // Avatars are public profile pictures, so the original may be linked
+        // permanently and lives on the public disk with its conversions.
+        $this->addMediaCollection('avatar')
+            ->useDisk((string) config('qbazaar.uploads.public_disk'))
+            ->singleFile();
     }
 
     public function registerMediaConversions(?Media $media = null): void

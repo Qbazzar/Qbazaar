@@ -15,7 +15,7 @@ use App\Models\Ad;
 use App\Models\Report;
 use App\Models\User;
 use App\Services\Admin\StaffHierarchy;
-use App\Services\Ads\AdModerationService;
+use App\Services\Ads\AdLifecycleService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -114,13 +114,13 @@ class ReportController extends Controller
     }
 
     /** Suspend the reported ad, then mark the report actioned. */
-    public function suspendAd(Report $report, AdModerationService $moderation): RedirectResponse
+    public function suspendAd(Report $report, AdLifecycleService $lifecycle): RedirectResponse
     {
         abort_unless($report->target_type === ReportTarget::AD, 404);
 
         $ad = Ad::find($report->target_id);
         if ($ad !== null && $ad->status === AdStatus::ACTIVE) {
-            $moderation->suspend($ad);
+            $lifecycle->block($ad);
         }
 
         $this->transition($report, ReportStatus::ACTIONED, 'تم إيقاف الإعلان المُبلَّغ عنه.');

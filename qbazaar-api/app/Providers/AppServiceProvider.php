@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Ad;
 use App\Models\User;
 use App\Observers\AdObserver;
+use App\Observers\AdOffersObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -42,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
     {
         User::observe(UserObserver::class);
         Ad::observe(AdObserver::class);
+        Ad::observe(AdOffersObserver::class);
 
         // Rate limiters MUST be registered here (not in the withRouting `then:`
         // closure) so they survive route:cache — Laravel skips that closure when
@@ -65,7 +67,8 @@ class AppServiceProvider extends ServiceProvider
             Limit::perDay((int) config('qbazaar.offers.max_per_day'))->by('offers-day:' . (optional($r->user())->id ?: $r->ip())),
         ]);
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
-        RateLimiter::for('publish', fn (Request $r) => Limit::perDay((int) config('qbazaar.ads.daily_publish_limit_per_user'))->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('publish', fn (Request $r) => Limit::perMinute((int) config('qbazaar.ads.publish_attempts_per_minute_per_user'))->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('drafts', fn (Request $r) => Limit::perHour((int) config('qbazaar.ads.drafts_per_hour_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('messages', fn (Request $r) => Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
     }

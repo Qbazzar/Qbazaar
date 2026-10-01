@@ -108,6 +108,9 @@ Fired when `POST /conversations/{id}/offers` succeeds (Sprint 9).
     "ad_id": "01HMxx...",
     "buyer_id": "01HMxx...",
     "seller_id": "01HMxx...",
+    "proposed_by": "buyer",
+    "parent_offer_id": null,
+    "counter_round": 0,
     "message_id": "01HMxx...",
     "amount": "1500.00",
     "currency": "QAR",
@@ -117,6 +120,7 @@ Fired when `POST /conversations/{id}/offers` succeeds (Sprint 9).
     "accepted_at": null,
     "rejected_at": null,
     "withdrawn_at": null,
+    "countered_at": null,
     "created_at": "2026-05-25T09:00:00+00:00",
     "viewer_role": null
   },
@@ -128,11 +132,15 @@ Fired when `POST /conversations/{id}/offers` succeeds (Sprint 9).
 from their own session (`buyer` if user.id === offer.buyer_id, otherwise
 `seller`).
 
+The `private-user` channel of every offer event below belongs to the other
+side of the action: the proposer for accept/reject, the responder for
+withdraw and counter, and the buyer for expiry.
+
 ### `offer.accepted`
 
 Fired after `POST /offers/{id}/accept` commits.
 
-- Channels: `private-conversation.{conversationId}` + `private-user.{buyerId}`.
+- Channels: `private-conversation.{conversationId}` + `private-user.{proposerId}`.
 - Payload: identical shape to `offer.created`; `status` flips to `accepted`,
   `accepted_at` populated.
 
@@ -140,23 +148,35 @@ Fired after `POST /offers/{id}/accept` commits.
 
 Fired after `POST /offers/{id}/reject` commits.
 
-- Channels: `private-conversation.{conversationId}` + `private-user.{buyerId}`.
+- Channels: `private-conversation.{conversationId}` + `private-user.{proposerId}`.
 - Payload: `status` = `rejected`, `rejected_at` populated.
 
 ### `offer.withdrawn`
 
 Fired after `POST /offers/{id}/withdraw` commits.
 
-- Channels: `private-conversation.{conversationId}` + `private-user.{sellerId}`.
+- Channels: `private-conversation.{conversationId}` + `private-user.{responderId}`.
 - Payload: `status` = `withdrawn`, `withdrawn_at` populated.
 
 ### `offer.expired`
 
-Server-side only — dispatched by `ExpireOldOffersJob` (daily 02:30 Asia/Qatar)
-when a pending offer's `expires_at` has passed.
+Server-side only. Dispatched by `ExpireOldOffersJob` (daily 02:30 Asia/Qatar)
+when a pending offer's `expires_at` has passed, and whenever the platform
+closes an open offer: the ad was sold, expired, blocked or deleted, or another
+offer on the same ad was accepted.
 
 - Channels: `private-conversation.{conversationId}` + `private-user.{buyerId}`.
 - Payload: `status` = `expired`.
+
+### `offer.countered`
+
+Fired after `POST /offers/{id}/counter` commits.
+
+- Channels: `private-conversation.{conversationId}` + `private-user.{proposerId of the answered offer}`.
+- Payload: the NEW counter-offer (`status` = `pending`, `proposed_by` = the
+  countering side, `parent_offer_id` = the answered offer, `counter_round`
+  one higher). The answered offer is now `countered`; refetch it or mark it
+  locally from `parent_offer_id`.
 
 ## Client events (whispers)
 

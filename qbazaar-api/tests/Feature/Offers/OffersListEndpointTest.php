@@ -28,7 +28,7 @@ beforeEach(function (): void {
 });
 
 it('lists offers newest first for participants', function (): void {
-    Offer::factory()->create([
+    Offer::factory()->rejected()->create([
         'conversation_id' => $this->conversation->id,
         'ad_id' => $this->ad->id,
         'buyer_id' => $this->buyer->id,

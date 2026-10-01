@@ -109,7 +109,7 @@ Route::get('/openapi.yaml', function (): Response {
 //   Wave 2: OTP (send/verify/resend), password reset, email verification
 Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
     Route::post('/register', RegisterController::class)
-        ->middleware('throttle:auth')
+        ->middleware(['throttle:auth', 'turnstile'])
         ->name('register');
 
     Route::post('/login', LoginController::class)
@@ -126,7 +126,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
 
     // OTP — phone verification (Wave 2)
     Route::post('/send-otp', [OtpController::class, 'send'])
-        ->middleware('throttle:otp')
+        ->middleware(['throttle:otp', 'turnstile'])
         ->name('send-otp');
 
     Route::post('/verify-otp', [OtpController::class, 'verify'])
@@ -134,7 +134,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->name('verify-otp');
 
     Route::post('/resend-otp', [OtpController::class, 'resend'])
-        ->middleware('throttle:otp')
+        ->middleware(['throttle:otp', 'turnstile'])
         ->name('resend-otp');
 
     // Password reset (Wave 2)
@@ -244,16 +244,16 @@ Route::prefix('locations')
 //     GET    /ads/{id}          — single ad detail (public visibility rules)
 //     GET    /media/{media}/original   — original image (signed, expiring)
 //   Authenticated:
-//     POST   /ads               — create draft
+//     POST   /ads               — create draft (throttle:drafts)
 //     PUT    /ads/{id}          — owner update
 //     DELETE /ads/{id}          — owner soft-delete
-//     POST   /ads/{id}/publish  — draft → active (throttle:publish)
+//     POST   /ads/{id}/publish  — submit for review → pending (throttle:publish)
 //     POST   /ads/{id}/mark-sold
 //     POST   /ads/{id}/renew
 //     POST   /ads/{ad}/images          — multipart image upload
 //     POST   /ads/{ad}/images/reorder
 //     DELETE /media/{media}            — remove a single image
-//     GET    /account/ads              — caller's own ads (every status)
+//     GET    /account/ads              — caller's own ads (optional ?status=)
 Route::prefix('ads')
     ->name('api.v1.ads.')
     ->middleware('throttle:api')
@@ -278,7 +278,7 @@ Route::get('/media/{media}/original', MediaOriginalController::class)
 
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/ads', [AdController::class, 'store'])
-        ->middleware('throttle:publish')
+        ->middleware('throttle:drafts')
         ->name('api.v1.ads.store');
 
     Route::put('/ads/{id}', [AdController::class, 'update'])
@@ -411,9 +411,10 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
 //   Authenticated:
 //     POST   /conversations/{id}/offers       — buyer creates an offer
 //     GET    /conversations/{id}/offers       — list offers in this thread
-//     POST   /offers/{id}/accept              — seller accepts (PENDING only)
-//     POST   /offers/{id}/reject              — seller rejects (PENDING only)
-//     POST   /offers/{id}/withdraw            — buyer withdraws (PENDING only)
+//     POST   /offers/{id}/accept              — responder accepts (PENDING only)
+//     POST   /offers/{id}/reject              — responder rejects (PENDING only)
+//     POST   /offers/{id}/withdraw            — proposer withdraws (PENDING only)
+//     POST   /offers/{id}/counter             — responder counters (PENDING only)
 Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
     Route::post('/conversations/{id}/offers', [OfferController::class, 'store'])
         ->middleware(['phone.verified', 'throttle:offers'])
@@ -430,6 +431,10 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
 
     Route::post('/offers/{id}/withdraw', [OfferController::class, 'withdraw'])
         ->name('api.v1.offers.withdraw');
+
+    Route::post('/offers/{id}/counter', [OfferController::class, 'counter'])
+        ->middleware(['phone.verified', 'throttle:offers'])
+        ->name('api.v1.offers.counter');
 });
 
 // ── Sprint 10 — Notifications inbox ─────────────────────────────────────────

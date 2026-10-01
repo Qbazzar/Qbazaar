@@ -30,6 +30,9 @@ function validSettingsPayload(array $overrides = []): array
         'commission_debt_ceiling' => '750.50',
         'settlement_deadline_days' => 21,
         'ad_expiry_warning_days' => 5,
+        'ad_max_images' => 20,
+        'ad_daily_publish_limit' => 10,
+        'offer_counter_rounds_per_side' => 1,
         ...$overrides,
     ];
 }
@@ -118,6 +121,11 @@ it('rejects out-of-range values', function (string $field, mixed $value): void {
     'warning zero' => ['ad_expiry_warning_days', 0],
     'warning above 30' => ['ad_expiry_warning_days', 31],
     'warning missing' => ['ad_expiry_warning_days', null],
+    'images zero' => ['ad_max_images', 0],
+    'images above 20' => ['ad_max_images', 21],
+    'daily limit zero' => ['ad_daily_publish_limit', 0],
+    'counter rounds negative' => ['offer_counter_rounds_per_side', -1],
+    'counter rounds above 5' => ['offer_counter_rounds_per_side', 6],
 ]);
 
 it('serves reads from the cache and refreshes it after a write', function (): void {

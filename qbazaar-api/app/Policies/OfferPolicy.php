@@ -9,42 +9,39 @@ use App\Models\Offer;
 use App\Models\User;
 
 /**
- * Authorization rules for the offer lifecycle endpoints.
- *
- * The richer "is the offer still mutable?" + ad-status checks live in
- * the actions themselves (with dedicated ErrorCodes — OFFER_NOT_PENDING,
- * etc). The policy here only enforces participant rules so the
- * AuthorizationException renderer can surface a plain 403 FORBIDDEN for
- * out-of-band callers (e.g. someone trying to accept an offer that's
- * not theirs to act on).
+ * Participant rules for the offer lifecycle endpoints: the responder may
+ * accept, reject or counter, the proposer may withdraw. Mutability and
+ * ad-status checks live in the actions, which run them under a lock.
  */
 class OfferPolicy
 {
     public function view(User $user, Offer $offer): bool
     {
-        return $this->isParticipant($user, $offer);
+        return $user->id === $offer->buyer_id || $user->id === $offer->seller_id;
     }
 
     public function accept(User $user, Offer $offer): bool
     {
-        return $user->id === $offer->seller_id
-            && $offer->status === OfferStatus::PENDING;
+        return $this->isOpenFor($user, $offer->responderId(), $offer);
     }
 
     public function reject(User $user, Offer $offer): bool
     {
-        return $user->id === $offer->seller_id
-            && $offer->status === OfferStatus::PENDING;
+        return $this->isOpenFor($user, $offer->responderId(), $offer);
+    }
+
+    public function counter(User $user, Offer $offer): bool
+    {
+        return $this->isOpenFor($user, $offer->responderId(), $offer);
     }
 
     public function withdraw(User $user, Offer $offer): bool
     {
-        return $user->id === $offer->buyer_id
-            && $offer->status === OfferStatus::PENDING;
+        return $this->isOpenFor($user, $offer->proposerId(), $offer);
     }
 
-    private function isParticipant(User $user, Offer $offer): bool
+    private function isOpenFor(User $user, string $allowedUserId, Offer $offer): bool
     {
-        return $user->id === $offer->buyer_id || $user->id === $offer->seller_id;
+        return $user->id === $allowedUserId && $offer->status === OfferStatus::PENDING;
     }
 }

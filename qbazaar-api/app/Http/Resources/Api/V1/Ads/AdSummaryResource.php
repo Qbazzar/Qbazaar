@@ -19,6 +19,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *    the ad has none. Lists never show galleries.
  *  - `location_slug` / `category_slug` are emitted so clients can build
  *    breadcrumb / filter chips without a separate lookup.
+ *  - `conversations_count` is present only where the query counted it
+ *    (the seller's own list), as the "messages" stat of each card.
  *  - `price_formatted` carries the localised display string ("1,200 ر.ق")
  *    while `price` keeps the numeric value for client-side sorting.
  *
@@ -45,6 +47,7 @@ class AdSummaryResource extends JsonResource
             'status' => $this->status->value,
             'views_count' => (int) $this->views_count,
             'favorites_count' => (int) $this->favorites_count,
+            'conversations_count' => $this->whenCounted('conversations'),
             'primary_image' => $primary instanceof Media
                 ? (new MediaResource($primary))->toArray($request)
                 : null,
@@ -57,6 +60,7 @@ class AdSummaryResource extends JsonResource
                 fn (): ?string => $this->resource->location?->slug,
             ),
             'published_at' => $this->published_at?->toIso8601String(),
+            'expires_at' => $this->expires_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

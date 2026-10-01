@@ -15,20 +15,21 @@ enum AdStatus: string
     case BLOCKED = 'blocked';
 
     /**
-     * Whether this status is allowed to transition into $next.
-     * Centralises the lifecycle rules used by AdPublisher / AdRenew /
-     * AdMarkSold / moderation actions.
+     * Whether this status is allowed to transition into $next. Enforced by
+     * AdLifecycleService for every status change.
      */
     public function canTransitionTo(self $next): bool
     {
         return match ([$this, $next]) {
-            [self::DRAFT, self::PENDING], [self::DRAFT, self::ACTIVE] => true,
+            [self::DRAFT, self::PENDING] => true,
             [self::PENDING, self::ACTIVE], [self::PENDING, self::REJECTED] => true,
             [self::ACTIVE, self::SOLD],
             [self::ACTIVE, self::EXPIRED],
             [self::ACTIVE, self::BLOCKED] => true,
             [self::ACTIVE, self::PENDING] => true,   // live edit re-review
             [self::EXPIRED, self::ACTIVE] => true,   // renew
+            [self::EXPIRED, self::SOLD] => true,
+            [self::BLOCKED, self::ACTIVE] => true,   // admin lifts a suspension
             [self::REJECTED, self::PENDING] => true, // edit & resubmit
             default => false,
         };

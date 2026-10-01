@@ -237,7 +237,7 @@ class DemoDataSeeder extends Seeder
                     ? PriceType::CONTACT
                     : ($i % 7 === 0 ? PriceType::NEGOTIABLE : PriceType::FIXED);
 
-                $ad = Ad::query()->create([
+                $ad = Ad::query()->forceCreate([
                     'user_id' => $owner->id,
                     'category_id' => $category->id,
                     'location_id' => $location->id,

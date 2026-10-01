@@ -87,11 +87,16 @@ return [
     |--------------------------------------------------------------------------
     */
     'ads' => [
-        'max_images' => 10,
+        // max_images and daily_publish_limit_per_user are defaults for the
+        // admin-editable platform settings of the same meaning.
+        'max_images' => 20,
+        'max_images_per_upload' => 10,
         'min_images' => 1,
         'lifetime_days' => 30,
         'expiry_warning_days_before' => 3,
         'daily_publish_limit_per_user' => 10,
+        'drafts_per_hour_per_user' => 30,
+        'publish_attempts_per_minute_per_user' => 10,
         'title_min_length' => 5,
         'title_max_length' => 100,
         'description_min_length' => 20,
@@ -137,6 +142,10 @@ return [
         'new_conversations_per_minute' => 10,
         'new_conversations_per_day' => 50,
         'auto_archive_inactive_days' => 90,
+        // Skip the push when the recipient has an app open on Reverb.
+        'push_skip_online_recipients' => (bool) env('CHAT_PUSH_SKIP_ONLINE', true),
+        // File a report for staff when a message matches the moderation rules.
+        'auto_report_flagged_messages' => (bool) env('CHAT_AUTO_REPORT_FLAGGED', true),
     ],
 
     /*
@@ -149,6 +158,8 @@ return [
         'max_active_per_ad_per_user' => 1,
         'max_per_minute' => 10,
         'max_per_day' => 50,
+        // Default for the admin setting; each side may counter this many times.
+        'counter_rounds_per_side' => 1,
     ],
 
     /*
@@ -177,6 +188,15 @@ return [
         // originals are served via an expiring signed route so they can't
         // be hotlinked permanently (conversions stay public).
         'original_url_ttl_hours' => 24,
+
+        // Originals live on MEDIA_DISK (see config/media-library.php). Files
+        // that are linked permanently — conversions and avatars — go to
+        // MEDIA_PUBLIC_DISK, which defaults to the same disk.
+        'public_disk' => env('MEDIA_PUBLIC_DISK', env('MEDIA_DISK', 'public')),
+
+        // On a remote disk the signed original route redirects to a presigned
+        // URL valid for this long.
+        'original_redirect_ttl_minutes' => 5,
         'image_conversions' => [
             'thumbnail' => ['width' => 200, 'height' => 200],
             'medium' => ['width' => 640],

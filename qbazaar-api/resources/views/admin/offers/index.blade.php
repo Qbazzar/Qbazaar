@@ -10,6 +10,7 @@
         'rejected' => 'bg-red-50 text-red-700',
         'withdrawn' => 'bg-cream-200 text-ink-500',
         'expired' => 'bg-cream-200 text-ink-500',
+        'countered' => 'bg-sky-50 text-sky-700',
     ];
     $offerStatusLabels = [
         'pending' => 'قيد الانتظار',
@@ -17,6 +18,7 @@
         'rejected' => 'مرفوض',
         'withdrawn' => 'مسحوب',
         'expired' => 'منتهٍ',
+        'countered' => 'عرض مضاد',
     ];
 @endphp
 

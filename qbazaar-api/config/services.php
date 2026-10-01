@@ -53,4 +53,19 @@ return [
         'from' => env('TWILIO_FROM'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cloudflare Turnstile (bot protection on register and OTP sends)
+    |--------------------------------------------------------------------------
+    |
+    | Never enforced under APP_ENV=testing so the suite needs no tokens;
+    | tests that cover the check turn it on explicitly with a fake verifier.
+    */
+    'turnstile' => [
+        'enabled' => (bool) env('TURNSTILE_ENABLED', false) && env('APP_ENV') !== 'testing',
+        'secret' => env('TURNSTILE_SECRET_KEY'),
+        'verify_url' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        'timeout_seconds' => 5,
+    ],
+
 ];

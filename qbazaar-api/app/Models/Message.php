@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\MessageType;
 use Database\Factories\MessageFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -93,5 +94,20 @@ class Message extends Model
     public function offer(): HasOne
     {
         return $this->hasOne(Offer::class, 'message_id');
+    }
+
+    /**
+     * Messages sent to $user that they have not read yet, across all of
+     * their conversations.
+     *
+     * @param Builder<Message> $query
+     * @return Builder<Message>
+     */
+    public function scopeUnreadFor(Builder $query, User $user): Builder
+    {
+        return $query
+            ->whereIn('conversation_id', Conversation::query()->forUser($user)->select('id'))
+            ->where('sender_id', '!=', $user->id)
+            ->whereNull('read_at');
     }
 }
