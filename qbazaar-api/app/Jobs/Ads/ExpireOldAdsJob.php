@@ -38,7 +38,7 @@ class ExpireOldAdsJob implements ShouldBeUnique, ShouldQueue
     /** @var list<int> */
     public array $backoff = [60, 300];
 
-    public int $timeout = 120;
+    public int $timeout = 60;
 
     public int $uniqueFor = 3600;
 
