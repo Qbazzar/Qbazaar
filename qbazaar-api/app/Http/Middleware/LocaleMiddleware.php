@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Resolves the request locale from (in order):
  *   1. ?lang=ar|en query param (explicit override, useful for testing)
- *   2. Authenticated user's `language` column
+ *   2. Authenticated user's `language` column (session or bearer token)
  *   3. Accept-Language header (first match against supported list)
  *   4. config('qbazaar.default_language')
  *
@@ -42,10 +42,12 @@ class LocaleMiddleware
             return $request->query('lang');
         }
 
-        // 2. Authenticated user preference. The `language` column is cast to the
-        //    Language enum, so normalise to its string value before matching —
-        //    a strict in_array() of an enum against ['ar','en'] never hits.
-        $user = $request->user();
+        // 2. Authenticated user preference. This middleware runs before the
+        //    route's auth:sanctum, so the default guard has not resolved the
+        //    bearer token yet; the sanctum guard checks the session and then
+        //    the token. The `language` column is cast to the Language enum,
+        //    so normalise to its string value before matching.
+        $user = $request->user('sanctum');
         if ($user !== null) {
             $language = $user->language;
             $value = $language instanceof Language ? $language->value : $language;
