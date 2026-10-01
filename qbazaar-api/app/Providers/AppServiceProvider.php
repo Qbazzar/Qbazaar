@@ -71,11 +71,11 @@ class AppServiceProvider extends ServiceProvider
         // Every send costs an SMS: cap each phone and each IP per day so
         // rotating either one alone cannot pump messages.
         RateLimiter::for('otp', fn (Request $r) => [
-            Limit::perMinute((int) config('qbazaar.otp.max_per_minute'))->by('otp:' . $r->ip() . '|' . self::phoneKey($r)),
-            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_phone'))->by('otp-phone:' . self::phoneKey($r)),
+            Limit::perMinute((int) config('qbazaar.otp.max_per_minute'))->by('otp:' . $r->ip() . '|' . self::recipientKey($r)),
+            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_phone'))->by('otp-phone:' . self::recipientKey($r)),
             Limit::perDay((int) config('qbazaar.otp.max_per_day_per_ip'))->by('otp-ip:' . $r->ip()),
         ]);
-        RateLimiter::for('otp-verify', fn (Request $r) => Limit::perMinute((int) config('qbazaar.otp.verify_max_per_minute'))->by('otp-verify:' . $r->ip() . '|' . self::phoneKey($r)));
+        RateLimiter::for('otp-verify', fn (Request $r) => Limit::perMinute((int) config('qbazaar.otp.verify_max_per_minute'))->by('otp-verify:' . $r->ip() . '|' . self::recipientKey($r)));
         RateLimiter::for('conversations', fn (Request $r) => [
             Limit::perMinute((int) config('qbazaar.messaging.new_conversations_per_minute'))->by('conversations:' . (optional($r->user())->id ?: $r->ip())),
             Limit::perDay((int) config('qbazaar.messaging.new_conversations_per_day'))->by('conversations-day:' . (optional($r->user())->id ?: $r->ip())),
@@ -102,11 +102,18 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Limiters run before validation, so a non-string phone must still yield
-     * a key instead of an array-to-string error.
+     * The phone (SMS codes) or email (email codes) a code goes to. Limiters
+     * run before validation, so a non-string value must still yield a key
+     * instead of an array-to-string error.
      */
-    private static function phoneKey(Request $request): string
+    private static function recipientKey(Request $request): string
     {
+        $email = $request->input('email');
+
+        if (is_string($email) && $email !== '') {
+            return mb_strtolower(trim($email));
+        }
+
         $phone = $request->input('phone');
 
         return is_string($phone) ? $phone : '';

@@ -25,6 +25,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
@@ -37,7 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $full_name
  * @property string $email
  * @property string $phone
- * @property string $password
+ * @property string|null $password
  * @property AccountType $account_type
  * @property UserStatus $status
  * @property bool $email_verified
@@ -213,6 +214,15 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     public function hasBlocked(User $other): bool
     {
         return $this->blockedUsers()->where('blocked_id', $other->id)->exists();
+    }
+
+    /**
+     * Accounts created through an email code or Google / Apple have no
+     * password until the owner sets one through the reset flow.
+     */
+    public function passwordMatches(string $plain): bool
+    {
+        return $this->password !== null && Hash::check($plain, $this->password);
     }
 
     /**

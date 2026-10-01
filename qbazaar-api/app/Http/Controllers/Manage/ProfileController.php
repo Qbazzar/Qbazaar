@@ -38,7 +38,7 @@ class ProfileController extends Controller
                 'confirmed',
                 'min:' . config('qbazaar.auth.password_min_length'),
                 function (string $attribute, mixed $value, Closure $fail) use ($user): void {
-                    if (is_string($value) && Hash::check($value, $user->password)) {
+                    if (is_string($value) && $user->passwordMatches($value)) {
                         $fail(__('admin.auth.password_reused'));
                     }
                 },

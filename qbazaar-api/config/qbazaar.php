@@ -56,6 +56,25 @@ return [
         'refresh_token_ttl_days' => 30,
         'max_login_attempts' => 5,
         'login_lockout_minutes' => 15,
+
+        // Password sign-in stays on while the clients move to email codes;
+        // turning it off makes /auth/login and /auth/register answer AUTH_014.
+        'password_login_enabled' => (bool) env('AUTH_PASSWORD_LOGIN_ENABLED', true),
+
+        // A device the user has not proven yet gets an SMS challenge instead
+        // of tokens. Off by default until real SMS delivery is configured,
+        // since without it nobody could finish the challenge. Never on under
+        // APP_ENV=testing; tests that cover it turn it on.
+        'new_device_check' => [
+            'enabled' => (bool) env('AUTH_NEW_DEVICE_CHECK_ENABLED', false) && env('APP_ENV') !== 'testing',
+            'challenge_ttl_minutes' => 10,
+            'trusted_device_days' => 180,
+        ],
+
+        'social' => [
+            'jwks_cache_minutes' => 360,
+            'clock_leeway_seconds' => 60,
+        ],
     ],
 
     /*
@@ -73,6 +92,14 @@ return [
         'max_per_day_per_phone' => 10,
         'max_per_day_per_ip' => 30,
         'verify_max_per_minute' => 5,
+
+        // Per-purpose overrides of ttl_minutes / max_attempts above.
+        'purposes' => [
+            'email_sign_in' => [
+                'ttl_minutes' => 10,
+                'max_attempts' => 5,
+            ],
+        ],
 
         // Dev override: when set, OtpService::issue() short-circuits the random
         // generator and emits this exact code (still goes through Twilio/log/email

@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\V1\Ads\PublishAdController;
 use App\Http\Controllers\Api\V1\Ads\RenewAdController;
 use App\Http\Controllers\Api\V1\Ads\ReserveAdController;
 use App\Http\Controllers\Api\V1\Ads\SimilarAdsController;
+use App\Http\Controllers\Api\V1\Auth\DeviceVerificationController;
+use App\Http\Controllers\Api\V1\Auth\EmailCodeController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
@@ -31,6 +33,7 @@ use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
+use App\Http\Controllers\Api\V1\Auth\SocialSignInController;
 use App\Http\Controllers\Api\V1\Cms\PageController;
 use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
@@ -55,6 +58,7 @@ use App\Http\Controllers\Api\V1\Users\FollowController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
 use App\Http\Middleware\EnsureApiDocsEnabled;
+use App\Http\Middleware\EnsurePasswordLoginEnabled;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -116,11 +120,11 @@ Route::get('/openapi.yaml', function (): Response {
 //   Wave 2: OTP (send/verify/resend), password reset, email verification
 Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
     Route::post('/register', RegisterController::class)
-        ->middleware(['throttle:auth', 'turnstile'])
+        ->middleware(['throttle:auth', 'turnstile', EnsurePasswordLoginEnabled::class])
         ->name('register');
 
     Route::post('/login', LoginController::class)
-        ->middleware('throttle:auth')
+        ->middleware(['throttle:auth', EnsurePasswordLoginEnabled::class])
         ->name('login');
 
     Route::post('/logout', LogoutController::class)
@@ -146,7 +150,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
 
     // Password reset (Wave 2)
     Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])
-        ->middleware('throttle:auth')
+        ->middleware(['throttle:auth', 'turnstile'])
         ->name('forgot-password');
 
     Route::post('/reset-password', [PasswordResetController::class, 'reset'])
@@ -168,6 +172,23 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
     Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware('signed')
         ->name('verify-email');
+
+    // Passwordless sign-in / sign-up, new-device check, Google + Apple (M1)
+    Route::post('/email-otp/send', [EmailCodeController::class, 'send'])
+        ->middleware(['throttle:otp', 'turnstile'])
+        ->name('email-otp.send');
+
+    Route::post('/email-otp/verify', [EmailCodeController::class, 'verify'])
+        ->middleware('throttle:otp-verify')
+        ->name('email-otp.verify');
+
+    Route::post('/device/verify', DeviceVerificationController::class)
+        ->middleware('throttle:otp-verify')
+        ->name('device.verify');
+
+    Route::post('/social/{provider}', SocialSignInController::class)
+        ->middleware('throttle:auth')
+        ->name('social');
 });
 
 // ── Sprint 2 — Account & Users ──────────────────────────────────────────────
@@ -223,6 +244,11 @@ Route::prefix('account')
 Route::middleware(['signed', 'auth:sanctum', 'active.user'])
     ->get('/account/data-export/{id}', [DataExportController::class, 'download'])
     ->name('api.v1.account.data-export.download');
+
+// Alias of GET /account/profile for clients that expect the common /me path.
+Route::get('/me', [ProfileController::class, 'show'])
+    ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
+    ->name('api.v1.me');
 
 // Uploads (Sprint 2 Wave 2 ships avatar; Sprint 4 will add the ad-image
 // pipeline alongside).
@@ -563,7 +589,7 @@ Route::prefix('help')->name('api.v1.help.')->middleware('throttle:api')->group(f
 // under /account/support/* manage the caller's tickets + replies. Admin
 // staff workflow lives in Filament (Sprint 11 admin panel).
 Route::post('/support/tickets', [SupportController::class, 'store'])
-    ->middleware('throttle:api')
+    ->middleware(['throttle:api', 'turnstile'])
     ->name('api.v1.support.tickets.store');
 
 Route::prefix('account/support/tickets')

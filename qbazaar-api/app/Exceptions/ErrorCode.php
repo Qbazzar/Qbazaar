@@ -29,6 +29,11 @@ enum ErrorCode: string
     case AUTH_PHONE_EXISTS = 'AUTH_008';
     case AUTH_TOKEN_EXPIRED = 'AUTH_009';
     case AUTH_TOKEN_INVALID = 'AUTH_010';
+    case AUTH_REGISTRATION_REQUIRED = 'AUTH_011';
+    case AUTH_DEVICE_CHALLENGE_INVALID = 'AUTH_012';
+    case AUTH_SOCIAL_TOKEN_INVALID = 'AUTH_013';
+    case AUTH_PASSWORD_LOGIN_DISABLED = 'AUTH_014';
+    case AUTH_SOCIAL_PROVIDER_UNAVAILABLE = 'AUTH_015';
     case TURNSTILE_FAILED = 'TURNSTILE_001';
 
     // ── Users (Sprint 2) ────────────────────────────────────────────
@@ -141,6 +146,7 @@ enum ErrorCode: string
             self::AUTH_OTP_INVALID,
             self::AUTH_EMAIL_EXISTS,
             self::AUTH_PHONE_EXISTS,
+            self::AUTH_REGISTRATION_REQUIRED,
             self::TURNSTILE_FAILED,
             self::USER_PASSWORD_CURRENT_REQUIRED,
             self::USER_DEACTIVATION_PASSWORD_REQUIRED,
@@ -177,10 +183,13 @@ enum ErrorCode: string
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,
-            self::AUTH_TOKEN_INVALID => 401,
+            self::AUTH_TOKEN_INVALID,
+            self::AUTH_DEVICE_CHALLENGE_INVALID,
+            self::AUTH_SOCIAL_TOKEN_INVALID => 401,
 
             self::AUTH_ACCOUNT_SUSPENDED,
             self::AUTH_PHONE_NOT_VERIFIED,
+            self::AUTH_PASSWORD_LOGIN_DISABLED,
             self::USER_BLOCK_ADMIN_FORBIDDEN,
             self::FOLLOW_BLOCKED,
             self::BUSINESS_ACCOUNT_REQUIRED,
@@ -223,7 +232,8 @@ enum ErrorCode: string
 
             self::REQUEST_IN_PROGRESS => 409,
 
-            self::SEARCH_INDEX_UNAVAILABLE => 503,
+            self::SEARCH_INDEX_UNAVAILABLE,
+            self::AUTH_SOCIAL_PROVIDER_UNAVAILABLE => 503,
 
             self::SERVER_ERROR => 500,
         };

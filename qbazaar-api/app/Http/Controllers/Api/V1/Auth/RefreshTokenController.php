@@ -53,11 +53,13 @@ class RefreshTokenController extends Controller
      */
     public function __invoke(RefreshRequest $request, RefreshTokenService $service, DeviceFingerprintService $fingerprints): JsonResponse
     {
+        $device = $fingerprints->contextFromRequest($request);
+
         $result = $service->rotate(
             presentedRaw: (string) $request->validated('refresh_token'),
-            deviceFingerprint: $fingerprints->fingerprintFromRequest($request),
-            ip: (string) $request->ip(),
-            deviceLabel: $fingerprints->labelFromRequest($request),
+            deviceFingerprint: $device->hash,
+            ip: $device->ip,
+            deviceLabel: $device->label,
         );
 
         return response()->json(

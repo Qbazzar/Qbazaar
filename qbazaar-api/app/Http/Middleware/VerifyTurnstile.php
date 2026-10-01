@@ -12,7 +12,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Guards endpoints that trigger an SMS or email (register, OTP sends)
+ * Guards public endpoints that trigger an SMS or email (register, codes,
+ * forgot-password, guest support tickets)
  * with a Cloudflare Turnstile token sent in the X-Turnstile-Token header.
  * Apply after the throttle middleware so rejected bots still count against
  * the rate limit without costing a siteverify call.

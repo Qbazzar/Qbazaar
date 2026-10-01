@@ -19,31 +19,26 @@ use Illuminate\Support\Facades\Log;
  * actions stay thin and the OTP rules live in one place.
  *
  * Storage rules:
+ *  - The recipient is a phone or an email address, depending on the purpose.
  *  - The 6-digit code is hashed at rest via Hash::make — only the raw value
- *    handed to the SMS channel ever leaves PHP memory.
+ *    handed to the delivery channel ever leaves PHP memory.
  *  - Codes are scoped by purpose, so a code issued for one flow can never
- *    satisfy another.
- *  - At most one ACTIVE row per phone and purpose: issuing a new OTP
- *    soft-burns any prior `used_at IS NULL` row so a previously-sent code
- *    can't still be verified after `send-otp` is called again.
+ *    satisfy another. Each purpose has its own expiry and attempt budget.
+ *  - At most one ACTIVE row per recipient and purpose: issuing a new code
+ *    soft-burns any prior `used_at IS NULL` row.
  *  - `attempts >= max_attempts` → row gets soft-burned and the next attempt
  *    is treated as AUTH_005 (caller must resend).
- *
- * Throttling rules (Cache locks are enforced in the resend-otp action — we
- * just expose `countLastHour()` so it can be checked cheaply):
- *  - 60s cooldown between sends (resend lock — caller-owned).
- *  - 5 sends per rolling hour per phone.
  */
 class OtpService
 {
     /**
-     * Issue a fresh OTP for the given phone. Returns the **raw** code so it
-     * can be handed to the SMS channel; the DB only stores the salted hash.
+     * Issue a fresh code. Returns the **raw** code so it can be handed to the
+     * delivery channel; the DB only stores the salted hash.
      */
-    public function issue(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): OtpIssueResult
+    public function issue(string $recipient, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): OtpIssueResult
     {
         $length = (int) config('qbazaar.otp.length', 6);
-        $ttlMinutes = (int) config('qbazaar.otp.ttl_minutes', 5);
+        $ttlMinutes = $purpose->ttlMinutes();
         $cooldownSeconds = (int) config('qbazaar.otp.resend_cooldown_seconds', 60);
 
         $fixedCode = $this->fixedCode();
@@ -51,11 +46,11 @@ class OtpService
             ? str_pad($fixedCode, $length, '0', STR_PAD_LEFT)
             : $this->generateNumeric($length);
 
-        DB::transaction(function () use ($phone, $purpose, $raw, $ttlMinutes): void {
-            $this->expireAllFor($phone, $purpose);
+        DB::transaction(function () use ($recipient, $purpose, $raw, $ttlMinutes): void {
+            $this->expireAllFor($recipient, $purpose);
 
             OtpCode::query()->create([
-                'phone' => $phone,
+                'recipient' => $recipient,
                 'purpose' => $purpose,
                 'code_hash' => Hash::make($raw),
                 'attempts' => 0,
@@ -65,7 +60,7 @@ class OtpService
         });
 
         return new OtpIssueResult(
-            phone: $phone,
+            recipient: $recipient,
             rawCode: $raw,
             expiresIn: $ttlMinutes * 60,
             canResendIn: $cooldownSeconds,
@@ -73,53 +68,73 @@ class OtpService
     }
 
     /**
-     * Verify a presented code against the active OTP for the phone.
+     * Verify a presented code against the active code for the recipient.
      *
-     *  - Active row missing → AUTH_005 (caller can't tell expired vs never-sent;
-     *    we keep the same code to avoid enumeration).
-     *  - Row expired → AUTH_004 (the row exists but its window has closed).
-     *  - Wrong code, but attempts left → increment attempts, throw AUTH_005.
-     *  - Wrong code AND attempts now == max → burn the row, throw AUTH_005.
+     *  - Active row missing → AUTH_005 (expired vs never-sent stays ambiguous
+     *    to avoid enumeration).
+     *  - Row expired → AUTH_004.
+     *  - Wrong code → attempts + 1 (row burnt once the budget is spent), AUTH_005.
+     *  - Right code → consumed, unless $consume is false (the caller only
+     *    needs to know the code is right and will come back with it).
+     *
+     * The row is locked so two concurrent requests cannot both spend the same
+     * code or race past the attempt budget.
      *
      * @throws DomainException
      */
-    public function verify(string $phone, string $code, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): void
-    {
-        $maxAttempts = (int) config('qbazaar.otp.max_attempts', 3);
+    public function verify(
+        string $recipient,
+        string $code,
+        OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION,
+        bool $consume = true,
+    ): void {
+        $failure = DB::transaction(function () use ($recipient, $code, $purpose, $consume): ?ErrorCode {
+            /** @var OtpCode|null $row */
+            $row = $this->queryFor($recipient, $purpose)
+                ->whereNull('used_at')
+                ->latest('created_at')
+                ->lockForUpdate()
+                ->first();
 
-        $row = $this->activeRowForPhone($phone, $purpose);
+            if ($row === null) {
+                return ErrorCode::AUTH_OTP_INVALID;
+            }
 
-        if ($row === null) {
-            throw new DomainException(ErrorCode::AUTH_OTP_INVALID);
+            if ($row->isExpired()) {
+                return ErrorCode::AUTH_OTP_EXPIRED;
+            }
+
+            if (Hash::check($code, $row->code_hash)) {
+                if ($consume) {
+                    $row->forceFill(['used_at' => Carbon::now()])->save();
+                }
+
+                return null;
+            }
+
+            $attempts = $row->attempts + 1;
+
+            $row->forceFill([
+                'attempts' => $attempts,
+                'used_at' => $attempts >= $purpose->maxAttempts() ? Carbon::now() : null,
+            ])->save();
+
+            return ErrorCode::AUTH_OTP_INVALID;
+        });
+
+        if ($failure !== null) {
+            throw new DomainException($failure);
         }
-
-        if ($row->isExpired()) {
-            throw new DomainException(ErrorCode::AUTH_OTP_EXPIRED);
-        }
-
-        if (Hash::check($code, $row->code_hash)) {
-            $row->forceFill(['used_at' => Carbon::now()])->save();
-
-            return;
-        }
-
-        $row->forceFill(['attempts' => $row->attempts + 1])->save();
-
-        if ($row->attempts >= $maxAttempts) {
-            $row->forceFill(['used_at' => Carbon::now()])->save();
-        }
-
-        throw new DomainException(ErrorCode::AUTH_OTP_INVALID);
     }
 
     /**
-     * The currently-active OTP row for a phone (the one a verify call would
-     * test against). Returns `null` if none is in flight.
+     * The currently-active code row for a recipient (the one a verify call
+     * would test against). Returns `null` if none is in flight.
      */
-    public function activeRowForPhone(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): ?OtpCode
+    public function activeRowFor(string $recipient, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): ?OtpCode
     {
         /** @var OtpCode|null $row */
-        $row = $this->queryFor($phone, $purpose)
+        $row = $this->queryFor($recipient, $purpose)
             ->whereNull('used_at')
             ->latest('created_at')
             ->first();
@@ -128,24 +143,22 @@ class OtpService
     }
 
     /**
-     * Soft-burn every active OTP for the phone — used when we want a clean
-     * slate (e.g. after a successful login flow that should invalidate any
-     * dangling code).
+     * Soft-burn every active code for the recipient.
      */
-    public function expireAllFor(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): void
+    public function expireAllFor(string $recipient, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): void
     {
-        $this->queryFor($phone, $purpose)
+        $this->queryFor($recipient, $purpose)
             ->whereNull('used_at')
             ->update(['used_at' => Carbon::now()]);
     }
 
     /**
-     * How many OTPs have been issued for this phone within the rolling
-     * hour — used by the resend ceiling (5/hr by default).
+     * How many codes have been issued for this recipient within the rolling
+     * hour — used by the hourly send ceiling.
      */
-    public function countLastHour(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): int
+    public function countLastHour(string $recipient, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): int
     {
-        return $this->queryFor($phone, $purpose)
+        return $this->queryFor($recipient, $purpose)
             ->where('created_at', '>=', Carbon::now()->subHour())
             ->count();
     }
@@ -153,10 +166,10 @@ class OtpService
     /**
      * @return Builder<OtpCode>
      */
-    private function queryFor(string $phone, OtpPurpose $purpose): Builder
+    private function queryFor(string $recipient, OtpPurpose $purpose): Builder
     {
         return OtpCode::query()
-            ->where('phone', $phone)
+            ->where('recipient', $recipient)
             ->where('purpose', $purpose);
     }
 
@@ -171,10 +184,10 @@ class OtpService
     }
 
     /**
-     * Dev override (OTP_FIXED_CODE): every issued OTP gets this value while
+     * Dev override (OTP_FIXED_CODE): every issued code gets this value while
      * the rest of the flow (hash at rest, attempts, expiry, delivery) runs
      * unchanged. Production ignores it, since a known code would let anyone
-     * verify any phone.
+     * verify any phone or email.
      */
     private function fixedCode(): ?string
     {

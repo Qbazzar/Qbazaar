@@ -63,6 +63,27 @@ return [
             'expired' => 'The token has expired.',
             'invalid' => 'The token is invalid.',
         ],
+        'registration' => [
+            'required' => 'No account uses this email yet. Send your name, phone and account type to create one.',
+        ],
+        'device' => [
+            'challenge' => [
+                'invalid' => 'The device verification has expired. Please sign in again.',
+            ],
+        ],
+        'social' => [
+            'token' => [
+                'invalid' => 'The sign-in token could not be verified.',
+            ],
+            'provider' => [
+                'unavailable' => 'This sign-in method is not available right now.',
+            ],
+        ],
+        'password' => [
+            'login' => [
+                'disabled' => 'Password sign-in is turned off. Sign in with an email code instead.',
+            ],
+        ],
     ],
 
     'turnstile' => [

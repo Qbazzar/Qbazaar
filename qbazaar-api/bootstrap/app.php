@@ -15,6 +15,8 @@ use App\Http\Middleware\VerifyTurnstile;
 use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
+use App\Models\OtpCode;
+use App\Models\TrustedDevice;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
@@ -99,6 +101,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new SyncAdViewCountsJob)
             ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.search.views_sync_minutes'))))
             ->name('search.sync-view-counts')
+            ->withoutOverlapping();
+
+        $schedule->command('model:prune', ['--model' => [OtpCode::class, TrustedDevice::class]])
+            ->dailyAt('03:00')
+            ->timezone('Asia/Qatar')
+            ->name('auth.prune')
             ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {

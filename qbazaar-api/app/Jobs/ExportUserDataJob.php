@@ -27,6 +27,8 @@ use Spatie\Activitylog\Models\Activity;
  *   user           : the public profile + privacy settings
  *   refresh_tokens : id, device fingerprint, created_at, expires_at (no hashes)
  *   otp_codes      : id, purpose, used_at, created_at (no codes)
+ *   trusted_devices: label, last ip, last used / first trusted (no hashes)
+ *   social_accounts: linked Google / Apple accounts
  *   activity_log   : event, properties, created_at
  *   blocked_users  : the ids the caller blocked
  *
@@ -103,12 +105,22 @@ class ExportUserDataJob implements ShouldQueue
                 ->get(['id', 'device_fingerprint', 'expires_at', 'used_at', 'created_at'])
                 ->map(fn ($r): array => (array) $r)
                 ->all(),
-            // OTP rows are keyed by phone, not user_id — fetch what we have
-            // for the user's current number; the hashed code is intentionally
-            // excluded.
+            // OTP rows are keyed by recipient, not user_id — fetch what we
+            // have for the user's current phone and email; the hashed code is
+            // intentionally excluded.
             'otp_codes' => DB::table('otp_codes')
-                ->where('phone', $user->phone)
+                ->whereIn('recipient', [$user->phone, $user->email])
                 ->get(['id', 'purpose', 'expires_at', 'used_at', 'attempts', 'created_at'])
+                ->map(fn ($r): array => (array) $r)
+                ->all(),
+            'trusted_devices' => DB::table('trusted_devices')
+                ->where('user_id', $user->id)
+                ->get(['label', 'last_ip', 'last_used_at', 'created_at'])
+                ->map(fn ($r): array => (array) $r)
+                ->all(),
+            'social_accounts' => DB::table('social_accounts')
+                ->where('user_id', $user->id)
+                ->get(['provider', 'email', 'created_at'])
                 ->map(fn ($r): array => (array) $r)
                 ->all(),
             'activity_log' => Activity::query()
