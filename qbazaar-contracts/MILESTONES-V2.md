@@ -23,7 +23,7 @@
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
 | M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
-| M1 Closing the backend gaps | 14 | 73 | 21 | 52 | Batch 1 merged (#160–#164); batch 2 next |
+| M1 Closing the backend gaps | 14 | 73 | 51 | 22 | Batches 1–2 merged (#160–#164, #193–#197); performance batch next |
 | M1b Orders and payments | 14 | 10 | 1 | 9 | Settings store done (#156); the rest after the M1 entry items below |
 | M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
 | M3 Web on the new design | 16 | 11 | 1 | 10 | Phone-verification flow done (#157); the rest once the M1 endpoints it needs exist |
@@ -31,7 +31,7 @@
 | M5 Deployment on the new server | 18 | 18 | 0 | 18 | Waits for M1–M4 and the domain |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **179** | **41** | **138** | |
+| **Total** | | **179** | **71** | **108** | |
 
 ---
 
@@ -88,7 +88,47 @@
 
 **Exit criteria:** every [P0] below is done and in OpenAPI · the M1 rows in `GAP-ANALYSIS-MOBILE.md` are ✅ · new uploads land on R2 · Turnstile protects registration and code requests.
 
-### Done (merged 2026-10-01)
+### Done — batch 2 (merged 2026-10-01)
+
+> Status: ✅ done. #193 → BE-14.6, BE-14.8, BE-14.9, BE-14.10, BE-13.12, BE-13.22 · #194 → BE-14.11, BE-14.14 · #195 → BE-14.28, BE-14.29, BE-14.30, BE-14.21, BE-14.22, BE-14.32, BE-13.21 · #196 → BE-14.24, BE-14.25, BE-14.26, BE-14.27, BE-13.5, BE-13.14, BE-13.16, BE-13.18 · #197 → BE-14.15, BE-14.16, BE-14.18, BE-14.44, BE-14.19, BE-14.31, BE-13.13. BE-14.12 and BE-14.13 are merged in #194 behind config and stay open until the SMS provider and Google/Apple credentials exist.
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| BE-13.12 | Cache invalidation (per-slug fields/filters, featured/similar status filter) | [P2] | Fixes audit finding PERF-10, ARCH-10 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.22 | Missing indexes (ads(status,price), notifications created_at, users last_login_at) | [P2] | Fixes audit finding PERF-14 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.21 | Async pHash duplicate detection + persisted moderation result | [P2] | Fixes audit finding PERF-02 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.13 | Saved-search matcher fix + alerts_enabled + PUT | [P1] | Fixes audit finding F10, PRD-08 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.5 | Account deletion via Eloquent + grace check + daily sweep + handle() test | [P1] | Fixes audit finding SEC-11, PERF-09, F9 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.14 | Notification preferences GET/PUT checked in via() | [P1] | Fixes audit finding PRD-08 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.16 | LocaleMiddleware uses sanctum user + real HTTP test | [P2] | Fixes audit finding ARCH-07 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.18 | Browser-openable data export link + complete export | [P2] | Fixes audit finding F15 (DOCS/AUDIT-2026-09-30.md) |
+
+| ID | Task | Endpoint | Priority | Acceptance criteria |
+|---|---|---|---|---|
+| BE-14.11 | Passwordless login: a code to the email on every login (`/auth/email-otp/send` + `/verify`), and passwordless registration (name, email, phone, account type) | `POST /auth/email-otp/send`, `POST /auth/email-otp/verify` | [P0] | No password field; code is 6 digits, expires in 10 minutes, max 5 attempts, rate-limited; returns tokens on success |
+| BE-14.14 | Alias `GET /me` → the current profile | `GET /me` | [P1] | Same shape as `/account/profile` |
+| BE-14.6 | Fetch ads by list | `GET /ads?ids=` | [P1] | Preserves order; ignores inactive ads |
+| BE-14.8 | `is_favorited` on the ad (optional token) | `/ads/{id}`, lists | [P1] | true/false for the logged-in user, false for guests |
+| BE-14.9 | Distance search: `_geo` in Meilisearch + `lat,lng,radius_km` | `GET /search` | [P0] | Results within the radius, sorted by distance when requested |
+| BE-14.10 | `most_viewed` sort (index `views_count`) | `GET /search` | [P1] | Correct sort; works together with the filters |
+| BE-14.21 | New ad fields: `ad_type`, `shipping`, `postal_code`, `street`, `show_full_address` | `POST/PUT /ads` | [P0] | Migration + validation + in the Resource and in search |
+| BE-14.22 | Reserved status + toggle | `POST /ads/{id}/reserve`, `DELETE …/reserve` | [P1] | `reserved` shows on the listing; can't be reserved while a draft |
+| BE-14.32 | Notify the admins about every ad waiting for review (database + email + a counter in the panel) | — | [P0] | Every admin with the moderation permission gets a notification the moment an ad is submitted |
+| BE-14.15 | Image attachments in messages (`type=image`, media) | `POST /conversations/{id}/messages` multipart | [P0] | Image ≤ 10MB; the message comes back with a `media` URL; `message.sent` is broadcast |
+| BE-14.16 | Hide conversations in bulk (per user) | `DELETE /conversations` `{ids}` | [P1] | Hidden only for the requester; reappears on a new message |
+| BE-14.18 | New notification types (`ads.new_from_followed`, `ad.price_changed`) + filter `?category=` | `/account/notifications` | [P1] | A price drop on a favorited ad notifies whoever favorited it |
+| BE-14.44 | Translatable chat system bubbles: store `message_key` + `params` instead of English text (offer accepted/rejected/countered/withdrawn/expired, offer amount), render in the viewer's language, backfill existing rows | `GET /conversations/{id}/messages` | [P1] | Arabic and English clients see system bubbles in their own language; old messages are migrated; Reverb payload carries the key + params |
+| BE-14.19 | IDs list + idempotent add and remove | `GET /account/favorites/ids`, `PUT`/`DELETE /ads/{id}/favorite` | [P0] | Repeating add or remove doesn't fail; the old toggle stays working |
+| BE-14.31 | Toggle for saved-search alerts | `PATCH /account/saved-searches/{id}` | [P1] | Alerts stop when it's `false` |
+| BE-14.24 | Partial profile update + delete the avatar | `PATCH /account/profile`, `DELETE /uploads/avatar` | [P0] | Editing the name alone works |
+| BE-14.25 | Change email / phone with the password + verification | `POST /account/email`, `POST /account/phone` | [P1] | Email: link to the new address + notice to the old one. Phone: OTP |
+| BE-14.26 | Saved addresses (table + CRUD) | `/account/addresses` | [P1] | Max 10; one default |
+| BE-14.27 | Email preferences | `GET/PATCH /account/email-preferences` | [P1] | Respected when sending emails |
+| BE-14.28 | Follows (table + follow/unfollow + lists + counts + remove a follower) | `/users/{id}/follow`, `/account/followers`, `/account/following` | [P0] | Can't follow yourself; blocking removes the follow in both directions |
+| BE-14.29 | Companies directory (business accounts) with search and pagination | `GET /companies` | [P0] | Only `business` accounts that are active |
+| BE-14.30 | Business seller profile: about, legal info, contact, hours, cover image + `is_following` | `GET /users/{id}/public-profile`, `PUT /account/business-profile` | [P1] | Fields editable by the owner only; shown per privacy settings |
+
+### Done — batch 1 (merged 2026-10-01)
 
 > Status: ✅ done. #160 → BE-13.4, BE-14.17, BE-14.2, BE-13.15 · #161 → BE-14.43 · #162 → BE-14.20, BE-13.7, BE-13.6, BE-13.8, BE-14.23, BE-13.20 · #163 → SEC-13.9, SEC-13.10, SEC-13.11, SEC-13.12 · #164 → BE-14.3, BE-14.4, BE-14.5, BE-13.10, BE-13.11, BE-14.7. BE-14.42 (R2) is merged in #161 but stays open until it is tested against a real bucket.
 
@@ -126,10 +166,8 @@
 
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
-| BE-14.11 | Passwordless login: a code to the email on every login (`/auth/email-otp/send` + `/verify`), and passwordless registration (name, email, phone, account type) | `POST /auth/email-otp/send`, `POST /auth/email-otp/verify` | [P0] | No password field; code is 6 digits, expires in 10 minutes, max 5 attempts, rate-limited; returns tokens on success |
 | BE-14.12 | SMS code to the phone when logging in from a new device (device fingerprint + `challenge_token`) | `POST /auth/device/verify` | [P0] | A new device gets no tokens until the SMS code is right; a known device skips it; a `security.new_device` notification |
 | BE-14.13 | Google + Apple login (id_token) | `POST /auth/social/{provider}` | [P1] | Verifies the token signature; links by email; creates a new user with `phone_verified=false` |
-| BE-14.14 | Alias `GET /me` → the current profile | `GET /me` | [P1] | Same shape as `/account/profile` |
 
 ### Cloudflare (storage and bot protection)
 
@@ -143,82 +181,34 @@
 
 > Pairs: BE-13.10 with BE-14.5 (both are hierarchical category filtering), BE-13.11 with BE-14.3.
 
-| ID | Task | Endpoint | Priority | Acceptance criteria |
-|---|---|---|---|---|
-| BE-14.6 | Fetch ads by list | `GET /ads?ids=` | [P1] | Preserves order; ignores inactive ads |
-| BE-14.8 | `is_favorited` on the ad (optional token) | `/ads/{id}`, lists | [P1] | true/false for the logged-in user, false for guests |
-| BE-14.9 | Distance search: `_geo` in Meilisearch + `lat,lng,radius_km` | `GET /search` | [P0] | Results within the radius, sorted by distance when requested |
-| BE-14.10 | `most_viewed` sort (index `views_count`) | `GET /search` | [P1] | Correct sort; works together with the filters |
 
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| BE-13.12 | Cache invalidation (per-slug fields/filters, featured/similar status filter) | [P2] | Fixes audit finding PERF-10, ARCH-10 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.22 | Missing indexes (ads(status,price), notifications created_at, users last_login_at) | [P2] | Fixes audit finding PERF-14 (DOCS/AUDIT-2026-09-30.md) |
 
 ### Selling, my ads and moderation
 
 > Pairs: BE-13.7 with BE-14.20 (both raise the image limit to 20; today it is 10), BE-13.20 with BE-14.23 (My Ads status filter). The admin notification in BE-14.32 already exists as a database notification (`NotifyAdminsOfPendingAd`); email and the panel counter are what's left.
 
-| ID | Task | Endpoint | Priority | Acceptance criteria |
-|---|---|---|---|---|
-| BE-14.21 | New ad fields: `ad_type`, `shipping`, `postal_code`, `street`, `show_full_address` | `POST/PUT /ads` | [P0] | Migration + validation + in the Resource and in search |
-| BE-14.22 | Reserved status + toggle | `POST /ads/{id}/reserve`, `DELETE …/reserve` | [P1] | `reserved` shows on the listing; can't be reserved while a draft |
-| BE-14.32 | Notify the admins about every ad waiting for review (database + email + a counter in the panel) | — | [P0] | Every admin with the moderation permission gets a notification the moment an ad is submitted |
 
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| BE-13.21 | Async pHash duplicate detection + persisted moderation result | [P2] | Fixes audit finding PERF-02 (DOCS/AUDIT-2026-09-30.md) |
 
 ### Messages, offers, notifications and push
 
 > BE-13.4 must land before M1b: orders are created from accepted offers. Channel authorization for Bearer clients is done (BE-13.2, #149).
 
 
-| ID | Task | Endpoint | Priority | Acceptance criteria |
-|---|---|---|---|---|
-| BE-14.15 | Image attachments in messages (`type=image`, media) | `POST /conversations/{id}/messages` multipart | [P0] | Image ≤ 10MB; the message comes back with a `media` URL; `message.sent` is broadcast |
-| BE-14.16 | Hide conversations in bulk (per user) | `DELETE /conversations` `{ids}` | [P1] | Hidden only for the requester; reappears on a new message |
-| BE-14.18 | New notification types (`ads.new_from_followed`, `ad.price_changed`) + filter `?category=` | `/account/notifications` | [P1] | A price drop on a favorited ad notifies whoever favorited it |
-| BE-14.44 | Translatable chat system bubbles: store `message_key` + `params` instead of English text (offer accepted/rejected/countered/withdrawn/expired, offer amount), render in the viewer's language, backfill existing rows | `GET /conversations/{id}/messages` | [P1] | Arabic and English clients see system bubbles in their own language; old messages are migrated; Reverb payload carries the key + params |
 
 ### Favorites and saved searches
 
 > Pair: BE-13.13 with BE-14.31 (both add the saved-search alert switch).
 
-| ID | Task | Endpoint | Priority | Acceptance criteria |
-|---|---|---|---|---|
-| BE-14.19 | IDs list + idempotent add and remove | `GET /account/favorites/ids`, `PUT`/`DELETE /ads/{id}/favorite` | [P0] | Repeating add or remove doesn't fail; the old toggle stays working |
-| BE-14.31 | Toggle for saved-search alerts | `PATCH /account/saved-searches/{id}` | [P1] | Alerts stop when it's `false` |
 
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| BE-13.13 | Saved-search matcher fix + alerts_enabled + PUT | [P1] | Fixes audit finding F10, PRD-08 (DOCS/AUDIT-2026-09-30.md) |
 
 ### Account and settings
 
 > Pair: BE-13.14 with BE-14.27 (notification and email preferences share one settings store).
 
-| ID | Task | Endpoint | Priority | Acceptance criteria |
-|---|---|---|---|---|
-| BE-14.24 | Partial profile update + delete the avatar | `PATCH /account/profile`, `DELETE /uploads/avatar` | [P0] | Editing the name alone works |
-| BE-14.25 | Change email / phone with the password + verification | `POST /account/email`, `POST /account/phone` | [P1] | Email: link to the new address + notice to the old one. Phone: OTP |
-| BE-14.26 | Saved addresses (table + CRUD) | `/account/addresses` | [P1] | Max 10; one default |
-| BE-14.27 | Email preferences | `GET/PATCH /account/email-preferences` | [P1] | Respected when sending emails |
 
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| BE-13.5 | Account deletion via Eloquent + grace check + daily sweep + handle() test | [P1] | Fixes audit finding SEC-11, PERF-09, F9 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.14 | Notification preferences GET/PUT checked in via() | [P1] | Fixes audit finding PRD-08 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.16 | LocaleMiddleware uses sanctum user + real HTTP test | [P2] | Fixes audit finding ARCH-07 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.18 | Browser-openable data export link + complete export | [P2] | Fixes audit finding F15 (DOCS/AUDIT-2026-09-30.md) |
 
 ### Social: follows, companies, business profiles
 
-| ID | Task | Endpoint | Priority | Acceptance criteria |
-|---|---|---|---|---|
-| BE-14.28 | Follows (table + follow/unfollow + lists + counts + remove a follower) | `/users/{id}/follow`, `/account/followers`, `/account/following` | [P0] | Can't follow yourself; blocking removes the follow in both directions |
-| BE-14.29 | Companies directory (business accounts) with search and pagination | `GET /companies` | [P0] | Only `business` accounts that are active |
-| BE-14.30 | Business seller profile: about, legal info, contact, hours, cover image + `is_following` | `GET /users/{id}/public-profile`, `PUT /account/business-profile` | [P1] | Fields editable by the owner only; shown per privacy settings |
 
 ### Platform upkeep
 
