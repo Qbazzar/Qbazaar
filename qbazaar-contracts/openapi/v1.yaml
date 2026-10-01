@@ -2141,6 +2141,10 @@ paths:
         can be lower than the number of ids sent. At most
         `qbazaar.search.ids_lookup_max` (50) distinct ids; more is a 422.
 
+        Without `ids`, `meta.total` (and so `meta.last_page`) is shared per
+        filter set for `qbazaar.ads.feed_total_cache_seconds` (60 seconds), so
+        it can trail the listings by that long; the page items are always live.
+
         An optional Bearer token sets `is_favorited` on each ad; guests get false.
       operationId: adsIndex
       security: [{}, {bearerAuth: []}]
@@ -2154,7 +2158,7 @@ paths:
         - { name: price_min, in: query, schema: { type: number, minimum: 0 } }
         - { name: price_max, in: query, schema: { type: number, minimum: 0 }, description: Must not be below `price_min`. }
         - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed], default: latest } }
-        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: page, in: query, description: "At most `qbazaar.ads.feed_max_page` (250); deeper pages are a 422, narrow the filters or use search instead.", schema: { type: integer, minimum: 1, maximum: 250, default: 1 } }
       responses:
         '422': { $ref: '#/components/responses/ValidationError' }
         '200':
@@ -3202,6 +3206,7 @@ paths:
     get:
       tags: [Users]
       summary: Public list of a user's active ads (stub until Sprint 5)
+      description: '`meta.total` is the seller''s stored count of active ads.'
       operationId: usersAds
       security: [{}, {bearerAuth: []}]
       parameters:

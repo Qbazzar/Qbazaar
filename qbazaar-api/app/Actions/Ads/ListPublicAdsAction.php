@@ -7,11 +7,14 @@ namespace App\Actions\Ads;
 use App\Data\Catalog\AdFeedFilters;
 use App\Enums\AdSort;
 use App\Models\Ad;
+use App\Services\Catalog\CategoryAdCounts;
 use App\Services\Catalog\CategoryHierarchy;
+use App\Services\Catalog\LocationAdCounts;
 use App\Services\Catalog\LocationHierarchy;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator as Paginator;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * The public ad feed (`GET /ads`) and the "fetch these ads" lookup
@@ -26,6 +29,8 @@ class ListPublicAdsAction
     public function __construct(
         private readonly CategoryHierarchy $categories,
         private readonly LocationHierarchy $locations,
+        private readonly CategoryAdCounts $categoryCounts,
+        private readonly LocationAdCounts $locationCounts,
     ) {}
 
     /**
@@ -42,9 +47,11 @@ class ListPublicAdsAction
             ->when($filters->priceMin !== null, fn (Builder $q) => $q->where('price', '>=', $filters->priceMin))
             ->when($filters->priceMax !== null, fn (Builder $q) => $q->where('price', '<=', $filters->priceMax));
 
+        $total = fn (): int => $this->total($query, $filters);
+
         $this->applySort($query, $filters->sort);
 
-        return $query->paginate(self::PER_PAGE)->withQueryString();
+        return $query->paginate(self::PER_PAGE, total: $total)->withQueryString();
     }
 
     /**
@@ -73,6 +80,52 @@ class ListPublicAdsAction
             currentPage: 1,
             options: ['path' => Paginator::resolveCurrentPath()],
         );
+    }
+
+    /**
+     * The page total without a COUNT per request. The common filters (none,
+     * one category, one place) read the counters the catalog warmer keeps;
+     * other combinations count once and share the result per filter set for
+     * a short while. The sort does not change the total and is not in the key.
+     *
+     * @param Builder<Ad> $query
+     */
+    private function total(Builder $query, AdFeedFilters $filters): int
+    {
+        if ($filters->priceMin === null && $filters->priceMax === null) {
+            $warmed = match (true) {
+                $filters->categoryId === null && $filters->locationId === null => array_sum(array_column($this->categoryCounts->all(), 'own_count')),
+                $filters->locationId === null => $this->categoryCounts->for((string) $filters->categoryId)['ads_count'],
+                $filters->categoryId === null => $this->locationCounts->for((string) $filters->locationId)['ads_count'],
+                default => null,
+            };
+
+            // paginate() skips loading a page whose total is zero, so a zero
+            // that may predate a first listing is checked by counting.
+            if ($warmed !== null && $warmed > 0) {
+                return $warmed;
+            }
+        }
+
+        return $this->countedTotal($query, $filters);
+    }
+
+    /**
+     * @param Builder<Ad> $query
+     */
+    private function countedTotal(Builder $query, AdFeedFilters $filters): int
+    {
+        $fresh = (int) config('qbazaar.ads.feed_total_cache_seconds');
+        $key = 'ads.feed.total.v1.' . sha1(implode('|', [
+            $filters->categoryId, $filters->locationId, $filters->priceMin, $filters->priceMax,
+        ]));
+
+        $count = fn (): int => $query->toBase()->getCountForPagination();
+        $shared = (int) Cache::flexible($key, [$fresh, $fresh * 5], $count);
+
+        // A shared zero is recounted: it is cheap on an empty index range and
+        // keeps a first listing from hiding behind an empty page.
+        return $shared > 0 ? $shared : $count();
     }
 
     /**

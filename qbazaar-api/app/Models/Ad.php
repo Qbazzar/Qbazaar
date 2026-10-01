@@ -71,6 +71,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Location $location
  * @property Media|null $primaryImage
  * @property bool $featured
+ * @property bool $seller_active
  */
 class Ad extends Model implements HasMedia
 {
@@ -144,7 +145,17 @@ class Ad extends Model implements HasMedia
             'moderation_result' => ModerationResult::class,
             'price' => 'decimal:2',
             'featured' => 'boolean',
+            'seller_active' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Mirrors the seller's status at creation; SellerListingsVisibilityService
+        // keeps it in step afterwards.
+        static::creating(function (Ad $ad): void {
+            $ad->seller_active ??= User::query()->whereKey($ad->user_id)->value('status') === UserStatus::ACTIVE;
+        });
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -218,7 +229,8 @@ class Ad extends Model implements HasMedia
     /**
      * Active ads whose seller is active too — what public listings may show.
      * A suspended or deactivated seller keeps their ads' status untouched so
-     * reactivation restores them as they were.
+     * reactivation restores them as they were. The seller's status is read
+     * from the stored `seller_active` flag, so listings need no users join.
      *
      * @param Builder<Ad> $query
      * @return Builder<Ad>
@@ -227,7 +239,7 @@ class Ad extends Model implements HasMedia
     {
         return $query
             ->active()
-            ->whereHas('user', fn (Builder $seller) => $seller->where('status', UserStatus::ACTIVE->value));
+            ->where('seller_active', true);
     }
 
     /**
@@ -297,10 +309,7 @@ class Ad extends Model implements HasMedia
 
     public function hasActiveSeller(): bool
     {
-        /** @var User|null $seller */
-        $seller = $this->user;
-
-        return $seller?->status === UserStatus::ACTIVE;
+        return $this->seller_active;
     }
 
     /**

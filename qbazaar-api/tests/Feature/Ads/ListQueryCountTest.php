@@ -47,6 +47,8 @@ function adWithImages(User $seller, int $images): Ad
 it('lists ads with a constant number of queries and the first image only', function (): void {
     $seller = User::factory()->create();
     $first = adWithImages($seller, 3);
+    // The first request also builds the shared page total; measure the steady state.
+    getJson('/api/v1/ads')->assertOk();
 
     $fewAds = queriesDuring(fn () => getJson('/api/v1/ads')->assertOk());
 

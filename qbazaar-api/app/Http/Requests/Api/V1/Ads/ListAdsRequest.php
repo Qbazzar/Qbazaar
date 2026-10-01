@@ -57,7 +57,7 @@ class ListAdsRequest extends FormRequest
             'price_min' => ['nullable', 'numeric', 'min:0'],
             'price_max' => ['nullable', 'numeric', 'min:0'],
             'sort' => ['nullable', Rule::in(AdSort::feedValues())],
-            'page' => ['nullable', 'integer', 'min:1'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:' . (int) config('qbazaar.ads.feed_max_page')],
         ];
     }
 

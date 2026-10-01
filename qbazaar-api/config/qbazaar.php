@@ -135,6 +135,11 @@ return [
         // Public ad detail served to visitors other than the seller; saves to the
         // ad or its images drop the entry, so this only bounds seller/counter staleness.
         'detail_cache_seconds' => 60,
+        // GET /ads page totals are shared per filter set for this long.
+        'feed_total_cache_seconds' => 60,
+        // GET /ads is offset-paginated; deeper pages cost a scan of every row
+        // before them, so browsing stops here and filters or search take over.
+        'feed_max_page' => 250,
     ],
 
     /*
