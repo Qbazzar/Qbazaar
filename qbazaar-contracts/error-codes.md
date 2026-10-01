@@ -31,6 +31,11 @@ requested locale.
 | `AUTH_008` | Phone already exists | 422 |
 | `AUTH_009` | Token expired | 401 |
 | `AUTH_010` | Token invalid (malformed / revoked) | 401 |
+| `AUTH_011` | Registration details required: the email code (or Google/Apple token) is valid but no account exists yet. Resend with `full_name`, `phone`, `account_type`, `accepted_terms`. `details` carries `email` (and `full_name` when the provider shared it) | 422 |
+| `AUTH_012` | New-device `challenge_token` is unknown or expired — sign in again to get a new one | 401 |
+| `AUTH_013` | Google / Apple `id_token` failed verification (signature, issuer, audience, expiry or unverified email) | 401 |
+| `AUTH_014` | Password sign-in is turned off (`AUTH_PASSWORD_LOGIN_ENABLED=false`) — use the email code | 403 |
+| `AUTH_015` | That social provider is not configured on the server, or its key endpoint is unreachable | 503 |
 
 ## Bot protection (Cloudflare Turnstile)
 
