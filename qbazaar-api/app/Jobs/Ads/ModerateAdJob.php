@@ -9,6 +9,7 @@ use App\Jobs\ProcessAdImagesJob;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Throwable;
 
 /**
  * Auto-moderates an ad waiting for review, off the publish request.
@@ -49,5 +50,10 @@ class ModerateAdJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
     public function handle(ModeratePendingAdAction $moderate): void
     {
         $moderate($this->adId);
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        app(ModeratePendingAdAction::class)->alertWithoutHints($this->adId);
     }
 }

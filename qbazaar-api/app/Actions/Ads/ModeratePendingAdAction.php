@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Ads;
 
+use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
 use App\Events\Ads\AdModerated;
 use App\Models\Ad;
@@ -51,6 +52,19 @@ class ModeratePendingAdAction
                 DB::afterCommit(static fn () => AdModerated::dispatch($locked, $result));
             }
         });
+    }
+
+    /**
+     * Last resort once every attempt failed: the reviewers still learn the ad
+     * is waiting, without hints, unless an earlier run already told them.
+     */
+    public function alertWithoutHints(string $adId): void
+    {
+        $ad = Ad::query()->find($adId);
+
+        if ($ad?->status === AdStatus::PENDING && $ad->moderation_result === null) {
+            AdModerated::dispatch($ad, ModerationResult::clean());
+        }
     }
 
     private function isSameSubmission(Ad $locked, Ad $moderated): bool

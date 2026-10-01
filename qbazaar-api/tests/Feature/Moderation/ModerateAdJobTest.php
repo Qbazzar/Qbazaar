@@ -130,3 +130,32 @@ it('is unique per ad until it starts', function (): void {
         ->and((new ModerateAdJob('x'))->tries)->toBe(3)
         ->and((new ModerateAdJob('x'))->timeout)->toBe(60);
 });
+
+it('still alerts reviewers, without hints, when every attempt failed', function (): void {
+    Event::fake([AdModerated::class]);
+    $ad = $this->makeAd($this->seller, ['status' => AdStatus::PENDING->value, 'submitted_at' => now()]);
+
+    $this->mock(DuplicateImageDetector::class)
+        ->shouldReceive('findDuplicateAdIds')
+        ->andThrow(new RuntimeException('database gone'));
+
+    expect(fn () => ModerateAdJob::dispatchSync($ad->id))->toThrow(RuntimeException::class);
+
+    Event::assertDispatchedTimes(AdModerated::class, 1);
+    Event::assertDispatched(AdModerated::class, fn (AdModerated $event): bool => $event->result->clean);
+    expect($ad->fresh()?->moderation_result)->toBeNull();
+});
+
+it('does not alert twice when a failed re-run follows a stored result', function (): void {
+    Event::fake([AdModerated::class]);
+    $ad = $this->makeAd($this->seller, ['status' => AdStatus::PENDING->value, 'submitted_at' => now()]);
+    ModerateAdJob::dispatchSync($ad->id);
+
+    $this->mock(DuplicateImageDetector::class)
+        ->shouldReceive('findDuplicateAdIds')
+        ->andThrow(new RuntimeException('database gone'));
+
+    expect(fn () => ModerateAdJob::dispatchSync($ad->id))->toThrow(RuntimeException::class);
+
+    Event::assertDispatchedTimes(AdModerated::class, 1);
+});
