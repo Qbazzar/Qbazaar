@@ -446,10 +446,9 @@ class Ad extends Model implements HasMedia
     /* ──────────────────────────────────────────────────────────────────
      *  Media — Spatie MediaLibrary integration.
      *
-     *  Only the thumbnail is rendered during the upload request so the
-     *  response can show a preview; the larger variants are queued because
-     *  an ad carries up to `qbazaar.ads.max_images` photos. MediaResource
-     *  falls back to the original URL until a variant exists.
+     *  Every size is rendered on the queue so an upload request does no
+     *  image decoding. MediaResource falls back to the signed original URL
+     *  until a variant exists.
      * ──────────────────────────────────────────────────────────────────*/
     public function registerMediaCollections(): void
     {
@@ -460,7 +459,7 @@ class Ad extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumbnail')
-            ->nonQueued()
+            ->queued()
             ->performOnCollections('images')
             ->fit(Fit::Crop, 200, 200);
 

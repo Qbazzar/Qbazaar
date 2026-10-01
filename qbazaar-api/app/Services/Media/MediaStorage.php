@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Media;
 
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Spatie\MediaLibrary\MediaCollections\Filesystem;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
@@ -27,7 +29,7 @@ class MediaStorage
     {
         return URL::temporarySignedRoute(
             'api.v1.media.original',
-            now()->addHours((int) config('qbazaar.uploads.original_url_ttl_hours')),
+            $this->signedUrlExpiry(),
             ['media' => $media->getKey()],
         );
     }
@@ -44,7 +46,7 @@ class MediaStorage
 
         return URL::temporarySignedRoute(
             'api.v1.media.conversion',
-            now()->addHours((int) config('qbazaar.uploads.original_url_ttl_hours')),
+            $this->signedUrlExpiry(),
             ['media' => $media->getKey(), 'conversion' => $conversion],
         );
     }
@@ -57,14 +59,42 @@ class MediaStorage
     }
 
     /**
-     * Falls back to the signed original while a conversion is still pending,
+     * Public conversion URL, from `qbazaar.uploads.cdn_url` when set. Falls
+     * back to the signed original while the conversion is still pending,
      * never to the raw original URL, which is unreachable on a private disk.
      */
     public function conversionUrl(Media $media, string $conversion): string
     {
-        return $media->hasGeneratedConversion($conversion)
+        if (! $media->hasGeneratedConversion($conversion)) {
+            return $this->signedOriginalUrl($media);
+        }
+
+        $cdnUrl = (string) config('qbazaar.uploads.cdn_url');
+
+        return $cdnUrl === ''
             ? $media->getUrl($conversion)
-            : $this->signedOriginalUrl($media);
+            : rtrim($cdnUrl, '/') . '/' . $media->getPathRelativeToRoot($conversion);
+    }
+
+    /**
+     * Writes a reworked local copy back as the original. On a local disk the
+     * path from withLocalCopy() already is the original, so only remote
+     * disks need an upload.
+     */
+    public function storeOriginal(Media $media, string $localPath): void
+    {
+        if (! $this->isLocal($media)) {
+            app(Filesystem::class)->copyToMediaLibrary($localPath, $media, null, $media->file_name);
+        }
+    }
+
+    /**
+     * Rounded up to the next full hour, so every response within that hour
+     * carries the same URL and browsers and the CDN can reuse it.
+     */
+    private function signedUrlExpiry(): CarbonInterface
+    {
+        return now()->startOfHour()->addHours((int) config('qbazaar.uploads.original_url_ttl_hours') + 1);
     }
 
     /**

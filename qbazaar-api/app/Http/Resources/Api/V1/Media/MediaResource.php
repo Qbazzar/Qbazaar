@@ -15,8 +15,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  *  - `url` is a temporary signed link to the original-resolution file
  *    (route api.v1.media.original); it expires after
- *    qbazaar.uploads.original_url_ttl_hours so originals can't be
- *    hotlinked permanently. Clients must not persist it.
+ *    qbazaar.uploads.original_url_ttl_hours, rounded up to the hour, so
+ *    originals can't be hotlinked permanently. Clients must not persist it.
+ *    Listings get null ({@see withoutOriginal()}): a card never shows the
+ *    original, and a payload without per-request signatures caches well.
  *  - `sizes` always carries the four conversion keys as plain public URLs.
  *    If a conversion hasn't generated yet (job lag), we fall back to the
  *    signed original URL so the frontend never sees an empty string.
@@ -28,6 +30,15 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class MediaResource extends JsonResource
 {
+    private bool $includeOriginal = true;
+
+    public function withoutOriginal(): static
+    {
+        $this->includeOriginal = false;
+
+        return $this;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -38,7 +49,7 @@ class MediaResource extends JsonResource
         return [
             'id' => $this->resource->getKey(),
             'collection' => $this->resource->collection_name,
-            'url' => $storage->signedOriginalUrl($this->resource),
+            'url' => $this->includeOriginal ? $storage->signedOriginalUrl($this->resource) : null,
             'sizes' => [
                 'thumbnail' => $storage->conversionUrl($this->resource, 'thumbnail'),
                 'medium' => $storage->conversionUrl($this->resource, 'medium'),

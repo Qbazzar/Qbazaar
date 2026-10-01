@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\AdStatus;
-use App\Events\Ads\AdSubmittedForReview;
+use App\Events\Ads\AdModerated;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -22,11 +22,11 @@ beforeEach(function (): void {
 });
 
 // Every ad now enters PENDING on publish (manual admin review), so the
-// moderation outcome rides the AdSubmittedForReview event's ModerationResult
+// moderation outcome rides the AdModerated event's ModerationResult
 // rather than the resulting status — assert the rule there.
 
 it('flags an ad in moderation when the description contains a banned word', function (): void {
-    Event::fake([AdSubmittedForReview::class]);
+    Event::fake([AdModerated::class]);
 
     $ad = $this->makePublishableDraft($this->user, [
         'status' => AdStatus::DRAFT->value,
@@ -39,14 +39,14 @@ it('flags an ad in moderation when the description contains a banned word', func
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
     Event::assertDispatched(
-        AdSubmittedForReview::class,
-        fn (AdSubmittedForReview $e): bool => ! $e->result->clean
+        AdModerated::class,
+        fn (AdModerated $e): bool => ! $e->result->clean
             && in_array('banned_words', $e->result->flags, true),
     );
 });
 
 it('passes moderation cleanly for a clean ad', function (): void {
-    Event::fake([AdSubmittedForReview::class]);
+    Event::fake([AdModerated::class]);
 
     $ad = $this->makePublishableDraft($this->user, [
         'status' => AdStatus::DRAFT->value,
@@ -59,7 +59,7 @@ it('passes moderation cleanly for a clean ad', function (): void {
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
     Event::assertDispatched(
-        AdSubmittedForReview::class,
-        fn (AdSubmittedForReview $e): bool => $e->result->clean,
+        AdModerated::class,
+        fn (AdModerated $e): bool => $e->result->clean,
     );
 });

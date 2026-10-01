@@ -81,7 +81,7 @@ it('stores ad image originals on the private disk and conversions on the public 
 });
 
 it('keeps the original behind a signed api link and the sizes on public urls', function (): void {
-    $media = ($this->addAdImage)();
+    $media = ($this->addAdImage)()->refresh();
 
     $payload = (new MediaResource($media))->toArray(request());
 
@@ -121,4 +121,17 @@ it('computes image hashes from a remote original', function (): void {
 
     expect($fresh->phash)->toMatch('/^[0-9a-f]{16}$/')
         ->and($fresh->getCustomProperty('blurhash'))->not->toBe(BlurHashGeneratorService::PLACEHOLDER);
+});
+
+it('writes a downscaled original back to the private disk', function (): void {
+    config(['qbazaar.uploads.original_max_side_px' => 16]);
+    $media = ($this->addAdImage)();
+
+    ProcessAdImagesJob::dispatchSync([(string) $media->getKey()]);
+
+    $stored = getimagesizefromstring((string) Storage::disk('r2')->get($media->getPathRelativeToRoot()));
+
+    expect($stored)->not->toBeFalse()
+        ->and([$stored[0], $stored[1]])->toBe([16, 16])
+        ->and($media->refresh()->size)->toBe(Storage::disk('r2')->size($media->getPathRelativeToRoot()));
 });

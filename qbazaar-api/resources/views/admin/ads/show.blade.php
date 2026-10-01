@@ -59,6 +59,11 @@
                         @endif
                     @endif
                 </div>
+            @elseif ($ad->status === \App\Enums\AdStatus::PENDING)
+                <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
+                    <div class="mb-3 text-sm font-semibold text-ink-500">{{ __('admin.ad_review.auto_check') }}</div>
+                    <p class="text-sm text-ink-500">{{ __('admin.ad_review.auto_check_pending') }}</p>
+                </div>
             @endif
 
             @php($images = $ad->getMedia('images'))

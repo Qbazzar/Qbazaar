@@ -18,15 +18,17 @@ use Throwable;
  * (re-encode, resize, mild compression). The config key keeps the
  * historical name `phash_distance_threshold`.
  *
- * Hash format: 16 lowercase hex chars (64 bits). Stored on `media.phash`
- * as CHAR(16) so MySQL can compute Hamming distance with
- * BIT_COUNT(CONV(a,16,10) ^ CONV(b,16,10)) without PHP signed-int issues.
+ * Hash format: 16 lowercase hex chars (64 bits), stored on `media.phash`.
+ * The same bits go to `media.phash_int` (see toInteger()) so the duplicate
+ * check can compare hashes with BIT_COUNT in SQL.
  */
 class PerceptualHashService
 {
     private const SAMPLE_W = 9;
 
     private const SAMPLE_H = 8;
+
+    private const HEX_PATTERN = '/^[0-9a-f]{16}$/';
 
     public function hash(string $path): ?string
     {
@@ -76,7 +78,7 @@ class PerceptualHashService
      */
     public function distance(string $hexA, string $hexB): int
     {
-        if (! preg_match('/^[0-9a-f]{16}$/', $hexA) || ! preg_match('/^[0-9a-f]{16}$/', $hexB)) {
+        if (! preg_match(self::HEX_PATTERN, $hexA) || ! preg_match(self::HEX_PATTERN, $hexB)) {
             throw new InvalidArgumentException('distance() expects 16-char lowercase hex hashes.');
         }
 
@@ -89,6 +91,22 @@ class PerceptualHashService
         }
 
         return $distance;
+    }
+
+    /**
+     * The hash as a signed 64-bit integer with the same bit pattern, or null
+     * for a malformed hash. Hashes with the top bit set come out negative.
+     */
+    public function toInteger(string $hex): ?int
+    {
+        if (! preg_match(self::HEX_PATTERN, $hex)) {
+            return null;
+        }
+
+        /** @var array{1: int} $unpacked */
+        $unpacked = unpack('J', (string) hex2bin($hex));
+
+        return $unpacked[1];
     }
 
     /**
