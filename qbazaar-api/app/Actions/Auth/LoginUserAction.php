@@ -4,52 +4,31 @@ declare(strict_types=1);
 
 namespace App\Actions\Auth;
 
-use App\Enums\UserStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\User;
-use App\Notifications\SecurityAlertNotification;
-use App\Services\Auth\DeviceFingerprintService;
+use App\Services\Auth\DeviceContext;
 use App\Services\Auth\LoginAttemptLimiter;
-use App\Services\Auth\RefreshTokenService;
-use App\Services\Auth\TokenPair;
-use Illuminate\Support\Carbon;
+use App\Services\Auth\SignInResult;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Authenticates a user by either email OR Qatari phone, then mints a fresh
- * access+refresh pair. Why not Auth::attempt()? Because we have a single
- * `identifier` field on the wire and Hash::check + manual lookup is cleaner
- * than building dynamic credentials arrays.
- *
- * New-device alerting:
- *   When a successful login comes from a fingerprint we haven't seen for this
- *   user before, we fire SecurityAlertNotification. The "have we seen it"
- *   lookup runs BEFORE we mint the new refresh token (otherwise the brand-new
- *   row would always make the fingerprint look "known"). We also skip the
- *   alert on a user's very first login — no previous fingerprints = nothing
- *   to compare against.
+ * Password sign-in by email OR Qatari phone, kept for existing clients while
+ * they move to email codes (the route is switched off by
+ * AUTH_PASSWORD_LOGIN_ENABLED=false).
  */
 class LoginUserAction
 {
     public function __construct(
-        private readonly RefreshTokenService $refreshTokens,
-        private readonly DeviceFingerprintService $fingerprintService,
         private readonly LoginAttemptLimiter $loginAttempts,
+        private readonly CompleteSignInAction $completeSignIn,
     ) {}
 
     /**
-     * @return array{user: User, tokens: TokenPair}
-     *
      * @throws DomainException
      */
-    public function execute(
-        string $identifier,
-        string $password,
-        ?string $deviceFingerprint = null,
-        ?string $deviceLabel = null,
-        ?string $ip = null,
-    ): array {
+    public function execute(string $identifier, string $password, DeviceContext $device): SignInResult
+    {
         $this->loginAttempts->ensureNotLockedOut($identifier);
 
         $user = $this->lookup($identifier);
@@ -62,44 +41,10 @@ class LoginUserAction
 
         $this->loginAttempts->clear($identifier);
 
-        if ($user->status === UserStatus::SUSPENDED) {
-            throw new DomainException(ErrorCode::AUTH_ACCOUNT_SUSPENDED);
-        }
-
-        // Self-reactivation path — a user who deactivated their account, or
-        // asked us to delete it but hasn't been wiped yet, gets put back to
-        // ACTIVE on successful sign-in. The queued DeleteAccountJob re-checks
-        // the status before doing anything destructive, so we don't need to
-        // cancel the job explicitly.
-        if (in_array($user->status, [UserStatus::DEACTIVATED, UserStatus::PENDING_DELETION], true)) {
-            $user->forceFill([
-                'status' => UserStatus::ACTIVE,
-                'deletion_requested_at' => null,
-            ])->save();
-        }
-
-        $isFirstLogin = $user->last_login_at === null;
-        $isNewDevice = $deviceFingerprint !== null
-            && ! $isFirstLogin
-            && ! $this->fingerprintService->isKnownForUser($user, $deviceFingerprint);
-
-        $user->forceFill(['last_login_at' => Carbon::now()])->save();
-
-        $tokens = $this->refreshTokens->issue($user, $deviceFingerprint, $ip, $deviceLabel);
-
-        if ($isNewDevice) {
-            $user->notify(new SecurityAlertNotification(
-                deviceLabel: $deviceLabel ?? 'unknown',
-                ip: $ip ?? 'unknown',
-                occurredAt: Carbon::now(),
-            ));
-        }
-
-        return ['user' => $user, 'tokens' => $tokens];
+        return $this->completeSignIn->execute($user, $device);
     }
 
     /**
-     * Resolve identifier → email or phone lookup.
      * Phone numbers must be presented in the canonical +974XXXXXXXX shape.
      */
     private function lookup(string $identifier): ?User

@@ -9,25 +9,25 @@ use App\Enums\Language;
 use App\Enums\UserStatus;
 use App\Models\User;
 use App\Notifications\WelcomeNotification;
+use App\Services\Auth\DeviceContext;
 use App\Services\Auth\RefreshTokenService;
 use App\Services\Auth\TokenPair;
+use App\Services\Auth\TrustedDeviceService;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Creates a brand-new user + issues the initial access/refresh token pair.
+ * Creates a user, trusts the device they signed up from and issues the first
+ * token pair. Used by password registration, the email-code flow and
+ * Google / Apple sign-up; the latter two prove the email and set no password.
  *
- * Wrapped in a DB transaction so a failure halfway through (e.g. token table
- * write) doesn't leave an orphaned half-created user.
- *
- * Side effects (post-commit):
- *  - WelcomeNotification — fired after the transaction commits via the
- *    notification's queue/mailer; even if it fails, the user row + tokens are
- *    already durable, so register stays idempotent from the client's view.
+ * The welcome notification goes out after the commit so a flaky mail driver
+ * cannot roll back the sign-up.
  */
 class RegisterUserAction
 {
     public function __construct(
         private readonly RefreshTokenService $refreshTokens,
+        private readonly TrustedDeviceService $trustedDevices,
     ) {}
 
     /**
@@ -35,35 +35,35 @@ class RegisterUserAction
      *     full_name: string,
      *     email: string,
      *     phone: string,
-     *     password: string,
-     *     account_type: string,
+     *     password?: string|null,
+     *     account_type?: string,
      *     language?: string,
      * }  $data
      * @return array{user: User, tokens: TokenPair}
      */
-    public function execute(array $data, ?string $deviceFingerprint = null, ?string $ip = null, ?string $deviceLabel = null): array
+    public function execute(array $data, DeviceContext $device, bool $emailVerified = false): array
     {
         /** @var array{user: User, tokens: TokenPair} $result */
-        $result = DB::transaction(function () use ($data, $deviceFingerprint, $ip, $deviceLabel) {
+        $result = DB::transaction(function () use ($data, $device, $emailVerified): array {
             $user = User::query()->forceCreate([
                 'full_name' => $data['full_name'],
                 'email' => strtolower($data['email']),
                 'phone' => $data['phone'],
-                'password' => $data['password'], // hashed via $casts
+                'password' => $data['password'] ?? null, // hashed via $casts
                 'account_type' => $data['account_type'] ?? AccountType::PRIVATE_INDIVIDUAL->value,
                 'status' => UserStatus::ACTIVE->value,
-                'email_verified' => false,
+                'email_verified' => $emailVerified,
                 'phone_verified' => false,
                 'language' => $data['language'] ?? Language::ARABIC->value,
             ]);
 
-            $tokens = $this->refreshTokens->issue($user, $deviceFingerprint, $ip, $deviceLabel);
+            $this->trustedDevices->trust($user, $device);
+
+            $tokens = $this->refreshTokens->issue($user, $device->hash, $device->ip, $device->label);
 
             return ['user' => $user, 'tokens' => $tokens];
         });
 
-        // Dispatched outside the DB transaction so a flaky mail driver can't
-        // roll back the user creation.
         $result['user']->notify(new WelcomeNotification);
 
         return $result;

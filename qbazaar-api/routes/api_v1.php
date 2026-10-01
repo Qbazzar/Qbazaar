@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\Ads\MarkSoldController;
 use App\Http\Controllers\Api\V1\Ads\PublishAdController;
 use App\Http\Controllers\Api\V1\Ads\RenewAdController;
 use App\Http\Controllers\Api\V1\Ads\SimilarAdsController;
+use App\Http\Controllers\Api\V1\Auth\DeviceVerificationController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
@@ -162,6 +163,11 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
     Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware('signed')
         ->name('verify-email');
+
+    // Passwordless sign-in / sign-up, new-device check, Google + Apple (M1)
+    Route::post('/device/verify', DeviceVerificationController::class)
+        ->middleware('throttle:otp-verify')
+        ->name('device.verify');
 });
 
 // ── Sprint 2 — Account & Users ──────────────────────────────────────────────

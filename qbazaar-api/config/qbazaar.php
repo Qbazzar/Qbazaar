@@ -56,6 +56,15 @@ return [
         'refresh_token_ttl_days' => 30,
         'max_login_attempts' => 5,
         'login_lockout_minutes' => 15,
+
+        // A device the user has not proven yet gets an SMS challenge instead
+        // of tokens. Off by default until real SMS delivery is configured,
+        // since without it nobody could finish the challenge. Never on under
+        // APP_ENV=testing; tests that cover it turn it on.
+        'new_device_check' => [
+            'enabled' => (bool) env('AUTH_NEW_DEVICE_CHECK_ENABLED', false) && env('APP_ENV') !== 'testing',
+            'challenge_ttl_minutes' => 10,
+        ],
     ],
 
     /*

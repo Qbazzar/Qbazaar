@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
- * @property string $phone
+ * @property string $recipient
  * @property OtpPurpose $purpose
  * @property string $code_hash
  * @property int $attempts
@@ -30,7 +30,7 @@ class OtpCode extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'phone',
+        'recipient',
         'purpose',
         'code_hash',
         'attempts',

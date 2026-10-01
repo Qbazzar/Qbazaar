@@ -33,7 +33,7 @@ it('returns 202 + sends a notification on first resend', function (): void {
                 ->etc(),
         );
 
-    expect(OtpCode::query()->where('phone', '+97455123456')->count())->toBe(1);
+    expect(OtpCode::query()->where('recipient', '+97455123456')->count())->toBe(1);
 
     Notification::assertSentOnDemand(OtpNotification::class);
 });
@@ -57,7 +57,7 @@ it('refuses resend after the per-phone hourly ceiling is reached', function (): 
     // Backfill 5 fresh OTPs within the rolling hour — equals the configured ceiling.
     for ($i = 0; $i < 5; $i++) {
         OtpCode::query()->create([
-            'phone' => $phone,
+            'recipient' => $phone,
             'code_hash' => bcrypt('123456'),
             'attempts' => 0,
             'expires_at' => Carbon::now()->addMinutes(5),
@@ -81,7 +81,7 @@ it('replaces the previous active OTP row when called outside the cooldown', func
 
     // Seed a live, previously-issued OTP for this phone.
     $original = OtpCode::query()->create([
-        'phone' => $phone,
+        'recipient' => $phone,
         'code_hash' => bcrypt('111111'),
         'attempts' => 0,
         'expires_at' => Carbon::now()->addMinutes(5),
@@ -97,7 +97,7 @@ it('replaces the previous active OTP row when called outside the cooldown', func
     expect($original->fresh()->used_at)->not->toBeNull();
 
     $active = OtpCode::query()
-        ->where('phone', $phone)
+        ->where('recipient', $phone)
         ->whereNull('used_at')
         ->get();
 

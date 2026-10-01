@@ -7,4 +7,15 @@ namespace App\Enums;
 enum OtpPurpose: string
 {
     case PHONE_VERIFICATION = 'phone_verification';
+    case NEW_DEVICE = 'new_device';
+
+    public function ttlMinutes(): int
+    {
+        return (int) config('qbazaar.otp.purposes.' . $this->value . '.ttl_minutes', config('qbazaar.otp.ttl_minutes'));
+    }
+
+    public function maxAttempts(): int
+    {
+        return (int) config('qbazaar.otp.purposes.' . $this->value . '.max_attempts', config('qbazaar.otp.max_attempts'));
+    }
 }
