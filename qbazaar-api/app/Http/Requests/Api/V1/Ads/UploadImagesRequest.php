@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\V1\Ads;
 
-use App\Exceptions\DomainException;
-use App\Exceptions\ErrorCode;
-use App\Models\Ad;
+use App\Enums\PlatformSetting;
+use App\Services\Settings\SettingsService;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 
 /**
  * Multipart body for `POST /api/v1/ads/{ad}/images`.
  *
- * Limits (per the product spec):
- *  - 1..10 files per request
- *  - 10 MB cap per file
- *  - jpg/jpeg/png/webp only
- *  - existing + new image count must stay ≤ 10 (config: `qbazaar.ads.max_images`)
+ * A single request carries at most `qbazaar.ads.max_images_per_upload`
+ * files so its body stays within the web server limits documented in
+ * deploy/README.md. The per-ad total (platform setting `ad_max_images`) is
+ * enforced under a lock by AttachAdImagesAction.
  *
  * The MIME allowlist (`qbazaar.uploads.allowed_mime_types`) is checked
  * against the sniffed content type, never the client-supplied filename.
@@ -32,12 +29,15 @@ class UploadImagesRequest extends FormRequest
     /**
      * @return array<string, mixed>
      */
-    public function rules(): array
+    public function rules(SettingsService $settings): array
     {
-        $max = (int) config('qbazaar.ads.max_images', 10);
+        $perRequest = min(
+            (int) config('qbazaar.ads.max_images_per_upload'),
+            $settings->integer(PlatformSetting::AD_MAX_IMAGES),
+        );
 
         return [
-            'images' => ['required', 'array', 'min:1', "max:{$max}"],
+            'images' => ['required', 'array', 'min:1', "max:{$perRequest}"],
             'images.*' => [
                 'file',
                 'image',
@@ -45,40 +45,5 @@ class UploadImagesRequest extends FormRequest
                 'max:' . (int) config('qbazaar.uploads.max_image_size_kb'),
             ],
         ];
-    }
-
-    /**
-     * Cross-field validation — enforce the total cap (existing + incoming).
-     * Implemented as an `after` callback so we read the ad from the route
-     * binding without coupling the rules() array to the database.
-     */
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator): void {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            $ad = $this->route('ad');
-            if (! $ad instanceof Ad) {
-                $ad = Ad::query()->find($this->route('ad'));
-            }
-
-            if (! $ad instanceof Ad) {
-                return; // 404 surfaces later in the controller.
-            }
-
-            $existing = $ad->getMedia('images')->count();
-            $incoming = is_array($this->file('images')) ? count((array) $this->file('images')) : 0;
-            $max = (int) config('qbazaar.ads.max_images', 10);
-
-            if (($existing + $incoming) > $max) {
-                throw new DomainException(
-                    ErrorCode::UPLOAD_MAX_IMAGES_REACHED,
-                    __('errors.ad.images.too_many', ['max' => $max]),
-                    ['existing' => $existing, 'incoming' => $incoming, 'max' => $max],
-                );
-            }
-        });
     }
 }

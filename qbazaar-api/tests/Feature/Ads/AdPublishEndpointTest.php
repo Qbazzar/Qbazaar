@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Enums\AdStatus;
 use App\Enums\PlatformSetting;
 use App\Events\Ads\AdSubmittedForReview;
+use App\Models\Category;
+use App\Models\Location;
 use App\Models\User;
 use App\Services\Settings\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -132,4 +134,26 @@ it('resubmits a rejected ad for review', function (): void {
     postJson("/api/v1/ads/{$ad->id}/publish", ['accepted_terms' => true])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
+});
+
+it('does not count draft creation against the publish limiter', function (): void {
+    Sanctum::actingAs($this->user, ['*']);
+    config(['qbazaar.ads.publish_attempts_per_minute_per_user' => 1]);
+
+    $payload = [
+        'title' => 'Wooden dining table for six',
+        'description' => 'Solid wood dining table, seats six people comfortably, minor scratches.',
+        'category_id' => Category::query()->whereNull('custom_fields')->value('id'),
+        'location_id' => Location::query()->value('id'),
+        'price' => 750,
+        'price_type' => 'fixed',
+        'condition' => 'used',
+    ];
+
+    postJson('/api/v1/ads', $payload)->assertCreated();
+    postJson('/api/v1/ads', $payload)->assertCreated();
+
+    $ad = $this->makePublishableDraft($this->user);
+
+    postJson("/api/v1/ads/{$ad->id}/publish", ['accepted_terms' => true])->assertOk();
 });

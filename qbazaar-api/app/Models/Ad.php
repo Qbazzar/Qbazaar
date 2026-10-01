@@ -340,15 +340,13 @@ class Ad extends Model implements HasMedia
     /* ──────────────────────────────────────────────────────────────────
      *  Media — Spatie MediaLibrary integration.
      *
-     *  Conversions are non-queued so the upload response can already cite
-     *  every variant. BlurHash + (future) pHash run async via
-     *  ProcessAdImagesJob because they're cheap-but-not-instant.
+     *  Only the thumbnail is rendered during the upload request so the
+     *  response can show a preview; the larger variants are queued because
+     *  an ad carries up to `qbazaar.ads.max_images` photos. MediaResource
+     *  falls back to the original URL until a variant exists.
      * ──────────────────────────────────────────────────────────────────*/
     public function registerMediaCollections(): void
     {
-        // No singleFile() — ads carry up to 10 images. The count cap is
-        // enforced in UploadImagesRequest, not here, so a future bulk
-        // import can opt out without changing the model contract.
         $this->addMediaCollection('images');
     }
 
@@ -360,17 +358,17 @@ class Ad extends Model implements HasMedia
             ->fit(Fit::Crop, 200, 200);
 
         $this->addMediaConversion('medium')
-            ->nonQueued()
+            ->queued()
             ->performOnCollections('images')
             ->fit(Fit::Contain, 640, 640);
 
         $this->addMediaConversion('large')
-            ->nonQueued()
+            ->queued()
             ->performOnCollections('images')
             ->fit(Fit::Contain, 1024, 1024);
 
         $this->addMediaConversion('original_webp')
-            ->nonQueued()
+            ->queued()
             ->performOnCollections('images')
             ->fit(Fit::Contain, 1920, 1920)
             ->format('webp');

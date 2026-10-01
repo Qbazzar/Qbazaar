@@ -77,11 +77,16 @@ return [
     |--------------------------------------------------------------------------
     */
     'ads' => [
-        'max_images' => 10,
+        // max_images and daily_publish_limit_per_user are defaults for the
+        // admin-editable platform settings of the same meaning.
+        'max_images' => 20,
+        'max_images_per_upload' => 10,
         'min_images' => 1,
         'lifetime_days' => 30,
         'expiry_warning_days_before' => 3,
         'daily_publish_limit_per_user' => 10,
+        'drafts_per_hour_per_user' => 30,
+        'publish_attempts_per_minute_per_user' => 10,
         'title_min_length' => 5,
         'title_max_length' => 100,
         'description_min_length' => 20,

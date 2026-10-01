@@ -1320,6 +1320,15 @@ paths:
     post:
       tags: [Ads]
       summary: Upload one or more images for an ad
+      description: >
+        One request carries at most `qbazaar.ads.max_images_per_upload` files
+        (10), each up to 10 MB; the ad holds at most `ad_max_images` images in
+        total (platform setting, default 20). Only the thumbnail is rendered
+        during the request; `medium`, `large`, `original_webp` and the
+        BlurHash are produced on the queue, so their URLs fall back to the
+        original until they exist. New images on an active ad send it back to
+        review. A second upload to the same ad while one is running waits
+        briefly, then gets 409 `REQUEST_IN_PROGRESS`.
       operationId: adsImagesStore
       parameters:
         - { name: ad, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -1333,19 +1342,32 @@ paths:
               properties:
                 images:
                   type: array
+                  minItems: 1
+                  maxItems: 10
                   items:
                     type: string
                     format: binary
       responses:
-        '200':
+        '201':
           description: Images uploaded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdEnvelope'
+                type: object
+                required: [images]
+                properties:
+                  images:
+                    type: array
+                    items: { $ref: '#/components/schemas/Media' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: REQUEST_IN_PROGRESS — another upload to this ad is still running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
         '413':
           description: UPLOAD_TOO_LARGE
           content:

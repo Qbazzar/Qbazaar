@@ -16,6 +16,7 @@ enum PlatformSetting: string
     case COMMISSION_DEBT_CEILING = 'commission_debt_ceiling';
     case SETTLEMENT_DEADLINE_DAYS = 'settlement_deadline_days';
     case AD_EXPIRY_WARNING_DAYS = 'ad_expiry_warning_days';
+    case AD_MAX_IMAGES = 'ad_max_images';
     case AD_DAILY_PUBLISH_LIMIT = 'ad_daily_publish_limit';
 
     public function definition(): SettingDefinition
@@ -24,6 +25,7 @@ enum PlatformSetting: string
             self::COMMISSION_DEBT_CEILING => SettingDefinition::decimal(SettingGroup::COMMISSION, 'qbazaar.commission.debt_ceiling', min: 0, max: 9_999_999_999.99),
             self::SETTLEMENT_DEADLINE_DAYS => SettingDefinition::integer(SettingGroup::COMMISSION, 'qbazaar.commission.settlement_deadline_days', min: 1, max: 90),
             self::AD_EXPIRY_WARNING_DAYS => SettingDefinition::integer(SettingGroup::ADS, 'qbazaar.ads.expiry_warning_days_before', min: 1, max: 30),
+            self::AD_MAX_IMAGES => SettingDefinition::integer(SettingGroup::ADS, 'qbazaar.ads.max_images', min: 1, max: 20),
             self::AD_DAILY_PUBLISH_LIMIT => SettingDefinition::integer(SettingGroup::ADS, 'qbazaar.ads.daily_publish_limit_per_user', min: 1, max: 100),
         };
     }

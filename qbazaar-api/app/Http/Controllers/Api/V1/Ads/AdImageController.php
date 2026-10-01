@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Ads;
 
-use App\Actions\Ads\ResubmitActiveAdAction;
+use App\Actions\Ads\AttachAdImagesAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Ads\ReorderImagesRequest;
 use App\Http\Requests\Api\V1\Ads\UploadImagesRequest;
 use App\Http\Resources\Api\V1\Media\MediaResource;
-use App\Jobs\ProcessAdImagesJob;
 use App\Models\Ad;
-use App\Services\Media\UploadedFileNamer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -24,16 +22,15 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 /**
  * Ad image management — upload, reorder, delete.
  *
- * Conversions (thumbnail/medium/large/original_webp) run synchronously at
- * upload time so the response carries every variant URL. BlurHashes are
- * generated asynchronously via {@see ProcessAdImagesJob}.
+ * Only the thumbnail is rendered during the upload; the larger variants,
+ * BlurHash and pHash are produced on the queue.
  *
  * @group Ads
  */
 class AdImageController extends Controller
 {
     /**
-     * POST /api/v1/ads/{ad}/images — attach 1..10 images to the ad.
+     * POST /api/v1/ads/{ad}/images — attach images to the ad.
      *
      * New images on an active ad send it back to pending review.
      *
@@ -41,34 +38,15 @@ class AdImageController extends Controller
      *
      * @throws DomainException
      */
-    public function store(
-        UploadImagesRequest $request,
-        UploadedFileNamer $fileNamer,
-        ResubmitActiveAdAction $resubmit,
-        string $adId,
-    ): JsonResponse {
+    public function store(UploadImagesRequest $request, AttachAdImagesAction $attachImages, string $adId): JsonResponse
+    {
         $ad = $this->findAdOrFail($adId);
         $this->authorize('manage-images', $ad);
 
-        /** @var array<int, UploadedFile> $files */
-        $files = (array) $request->file('images');
+        /** @var list<UploadedFile> $files */
+        $files = array_values((array) $request->file('images'));
 
-        $created = [];
-        foreach ($files as $file) {
-            $media = $ad->addMedia($file->getPathname())
-                ->usingFileName($fileNamer->nameFor($file))
-                ->toMediaCollection('images');
-
-            $created[] = $media;
-        }
-
-        // BlurHash + future pHash run async on the `low` queue.
-        ProcessAdImagesJob::dispatch(array_map(
-            static fn (Media $m): string => (string) $m->getKey(),
-            $created,
-        ));
-
-        $resubmit($ad);
+        $created = $attachImages($ad, $files);
 
         return response()
             ->json([

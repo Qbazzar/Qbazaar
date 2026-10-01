@@ -277,7 +277,7 @@ Route::get('/media/{media}/original', MediaOriginalController::class)
 
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/ads', [AdController::class, 'store'])
-        ->middleware('throttle:publish')
+        ->middleware('throttle:drafts')
         ->name('api.v1.ads.store');
 
     Route::put('/ads/{id}', [AdController::class, 'update'])

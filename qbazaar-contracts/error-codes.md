@@ -55,7 +55,7 @@ requested locale.
 |------|---------|------|
 | `UPLOAD_001` | File too large (> 10MB) | 413 |
 | `UPLOAD_002` | Unsupported MIME type | 422 |
-| `UPLOAD_003` | Max images per ad reached (`qbazaar.ads.max_images`: 10 today, 20 planned in BE-14.20) | 422 |
+| `UPLOAD_003` | Max images per ad reached (platform setting `ad_max_images`, default 20) | 422 |
 | `UPLOAD_004` | File magic bytes mismatch declared MIME | 422 |
 
 ## Ads (Sprint 5)
