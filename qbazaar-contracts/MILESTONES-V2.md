@@ -23,7 +23,7 @@
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
 | M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
-| M1 Closing the backend gaps | 14 | 57 | 21 | 36 | Batch 1 merged (#160–#164); batch 2 next |
+| M1 Closing the backend gaps | 14 | 58 | 21 | 37 | Batch 1 merged (#160–#164); batch 2 next |
 | M1b Orders and payments | 14 | 10 | 1 | 9 | Settings store done (#156); the rest after the M1 entry items below |
 | M2 Connecting the mobile app | 15 | 14 | 0 | 14 | Waits for M1 |
 | M3 Web on the new design | 16 | 10 | 1 | 9 | Phone-verification flow done (#157); the rest once the M1 endpoints it needs exist |
@@ -31,7 +31,7 @@
 | M5 Deployment on the new server | 18 | 10 | 0 | 10 | Waits for M1–M4 and the domain |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **153** | **41** | **112** | |
+| **Total** | | **154** | **41** | **113** | |
 
 ---
 
@@ -179,6 +179,7 @@
 | BE-14.15 | Image attachments in messages (`type=image`, media) | `POST /conversations/{id}/messages` multipart | [P0] | Image ≤ 10MB; the message comes back with a `media` URL; `message.sent` is broadcast |
 | BE-14.16 | Hide conversations in bulk (per user) | `DELETE /conversations` `{ids}` | [P1] | Hidden only for the requester; reappears on a new message |
 | BE-14.18 | New notification types (`ads.new_from_followed`, `ad.price_changed`) + filter `?category=` | `/account/notifications` | [P1] | A price drop on a favorited ad notifies whoever favorited it |
+| BE-14.44 | Translatable chat system bubbles: store `message_key` + `params` instead of English text (offer accepted/rejected/countered/withdrawn/expired, offer amount), render in the viewer's language, backfill existing rows | `GET /conversations/{id}/messages` | [P1] | Arabic and English clients see system bubbles in their own language; old messages are migrated; Reverb payload carries the key + params |
 
 ### Favorites and saved searches
 

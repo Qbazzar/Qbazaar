@@ -7,11 +7,11 @@
 ## Progress
 
 <!-- progress:start -->
-**Current phase:** M0 Preparation and alignment · **Overall:** 26% (41/153 tasks)
+**Current phase:** M0 Preparation and alignment · **Overall:** 26% (41/154 tasks)
 
 ```text
 M0   ███████░░░   72% (18/25)   Preparation and alignment
-M1   ████░░░░░░   36% (21/57)   Closing the backend gaps
+M1   ████░░░░░░   36% (21/58)   Closing the backend gaps
 M1b  █░░░░░░░░░   10% (1/10)    Orders and payments
 M2   ░░░░░░░░░░    0% (0/14)    Connecting the mobile app
 M3   █░░░░░░░░░   10% (1/10)    Web on the new design

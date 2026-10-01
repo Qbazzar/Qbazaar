@@ -70,6 +70,9 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
 | 9 | Payments | ✅ Orders + cash + admin-set commission + wallet + admin-approved withdrawals/settlements. **No electronic gateway now** (a ready interface for later) |
 | 10 | Domain | ⏳ **Not decided yet** |
 | 11 | Commission debt ceiling and settlement deadline | ✅ **Admin settings** (AD-17.9, used by BE-14.33 and BE-14.39); the admin sets and changes the values |
+| 12 | Where images are served from (2026-10-01) | ✅ **R2 behind a `cdn.` custom domain** for public images and thumbnails; originals stay private and are served through short-lived signed links (BE-14.42, OPS-18.9/18.10) |
+| 13 | Chat system messages (2026-10-01) | ✅ **Translatable**: stored as a key + params and shown in the reader's language (BE-14.44) |
+| 14 | Bot protection on email-sending endpoints (2026-10-01) | ✅ **Turnstile on every public endpoint that sends an email or SMS**, including forgot-password (extends BE-14.43) |
 
 ## 4.1 Notifications: Reverb + push together
 - **Reverb** (WebSocket) delivers events **while the app or site is open**: a new message, an offer update, the notification counter.
