@@ -104,11 +104,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Catalog — category counters
+    | Catalog — category counters and category pages
     |--------------------------------------------------------------------------
     */
     'catalog' => [
         'counts_cache_seconds' => 600,
+        'category_section_ads' => 6,
     ],
 
     /*

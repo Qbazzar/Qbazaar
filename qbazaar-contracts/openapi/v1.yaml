@@ -965,6 +965,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /api/v1/categories/{slug}:
+    get:
+      tags: [Reference]
+      summary: Category page with one section of newest ads per active child
+      description: |
+        Each section holds up to 6 of the newest listed ads filed under that
+        child or any of its descendants. Inactive categories, and categories
+        under an inactive ancestor, return 404.
+      operationId: categoriesShow
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryPageEnvelope'
+        '404':
+          description: Category not found or not visible (CAT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   /api/v1/categories/{slug}/filters:
     get:
       tags: [Reference]
@@ -3413,6 +3443,41 @@ components:
           type: integer
           description: Ads published since local midnight (Asia/Qatar), descendants included.
           example: 3
+
+    CategorySection:
+      type: object
+      required: [category, ads]
+      properties:
+        category: { $ref: '#/components/schemas/Category' }
+        ads:
+          type: array
+          maxItems: 6
+          description: Newest listed ads in this child category or any of its descendants.
+          items: { $ref: '#/components/schemas/AdSummary' }
+
+    CategoryPage:
+      type: object
+      required: [category, parent, sub_category_count, sections]
+      properties:
+        category: { $ref: '#/components/schemas/Category' }
+        parent:
+          oneOf:
+            - $ref: '#/components/schemas/Category'
+            - type: 'null'
+        sub_category_count:
+          type: integer
+          description: Active direct children; one section per child, in display order.
+          example: 4
+        sections:
+          type: array
+          items: { $ref: '#/components/schemas/CategorySection' }
+
+    CategoryPageEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/CategoryPage' }
 
     CategoryTreeEnvelope:
       allOf:

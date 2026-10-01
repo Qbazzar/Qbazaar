@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Reference;
 
+use App\Actions\Catalog\GetCategoryPageAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Reference\CategoryFieldResource;
 use App\Http\Resources\Api\V1\Reference\CategoryFilterResource;
 use App\Http\Resources\Api\V1\Reference\CategoryNodeResource;
+use App\Http\Resources\Api\V1\Reference\CategoryPageResource;
 use App\Http\Resources\Api\V1\Reference\CategoryResource;
 use App\Models\Category;
 use App\Services\Catalog\CatalogCache;
@@ -76,6 +78,20 @@ class CategoryController extends Controller
         )->all();
 
         return response()->json($data);
+    }
+
+    /**
+     * GET /api/v1/categories/{slug} — category page with a section of newest ads per child.
+     *
+     * @unauthenticated
+     *
+     * @throws DomainException
+     */
+    public function show(Request $request, string $slug, GetCategoryPageAction $getCategoryPage): JsonResponse
+    {
+        $page = $getCategoryPage->execute($slug);
+
+        return response()->json((new CategoryPageResource($page))->toArray($request));
     }
 
     /**

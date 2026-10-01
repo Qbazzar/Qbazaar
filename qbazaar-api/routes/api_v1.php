@@ -228,6 +228,7 @@ Route::prefix('categories')
         Route::get('{slug}/stats', [CategoryController::class, 'stats'])->name('stats');
         Route::get('{slug}/filters', [CategoryController::class, 'filters'])->name('filters');
         Route::get('{slug}/fields', [CategoryController::class, 'fields'])->name('fields');
+        Route::get('{slug}', [CategoryController::class, 'show'])->name('show');
     });
 
 Route::prefix('locations')
