@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\AdStatus;
+use App\Jobs\Ads\DetectDuplicateImagesJob;
 use App\Models\Ad;
 use App\Services\Media\BlurHashGeneratorService;
 use App\Services\Media\MediaStorage;
@@ -28,6 +30,8 @@ use Throwable;
  *      distance queries via BIT_COUNT(CONV(a,16,10) ^ CONV(b,16,10)).
  *   3. Touch the parent ad so cache-busting / "updated_at" consumers can
  *      see the change.
+ *   4. Re-run the duplicate-image check for ads already waiting for review,
+ *      since their hashes may land after the ad was submitted.
  *
  * Failure handling: each image is processed inside its own try-catch so
  * a single bad file never poisons the whole batch. Errors are logged and
@@ -94,10 +98,18 @@ class ProcessAdImagesJob implements ShouldQueue
             }
         }
 
-        if ($adIdsTouched !== []) {
-            Ad::query()->whereIn('id', array_keys($adIdsTouched))->update([
-                'updated_at' => now(),
-            ]);
+        if ($adIdsTouched === []) {
+            return;
         }
+
+        Ad::query()->whereIn('id', array_keys($adIdsTouched))->update([
+            'updated_at' => now(),
+        ]);
+
+        Ad::query()
+            ->whereIn('id', array_keys($adIdsTouched))
+            ->where('status', AdStatus::PENDING->value)
+            ->pluck('id')
+            ->each(static fn (string $adId) => DetectDuplicateImagesJob::dispatch($adId));
     }
 }

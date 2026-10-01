@@ -6,6 +6,7 @@ use App\Enums\AdStatus;
 use App\Events\Ads\AdSubmittedForReview;
 use App\Models\Category;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
@@ -17,7 +18,6 @@ use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\putJson;
 
-use Spatie\Permission\Models\Role;
 use Tests\Concerns\CreatesAds;
 
 uses(RefreshDatabase::class, CreatesAds::class);
@@ -76,7 +76,7 @@ it('removes the edited ad from the public feed until it is approved again', func
 });
 
 it('notifies reviewers when a live ad is edited', function (): void {
-    Role::findOrCreate('moderator', 'web');
+    $this->seed(RolesAndPermissionsSeeder::class);
     $reviewer = User::factory()->create();
     $reviewer->assignRole('moderator');
 

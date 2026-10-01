@@ -38,6 +38,11 @@ enum ErrorCode: string
     case USER_PASSWORD_CURRENT_REQUIRED = 'USER_004';
     case USER_DEACTIVATION_PASSWORD_REQUIRED = 'USER_005';
 
+    // ── Social: follows, business profiles ─────────────────────────
+    case FOLLOW_SELF_FORBIDDEN = 'FOLLOW_001';
+    case FOLLOW_BLOCKED = 'FOLLOW_002';
+    case BUSINESS_ACCOUNT_REQUIRED = 'BIZ_001';
+
     // ── Categories & Locations (Sprint 3) ───────────────────────────
     case CATEGORY_NOT_FOUND = 'CAT_001';
     case LOCATION_NOT_FOUND = 'LOC_001';
@@ -140,6 +145,7 @@ enum ErrorCode: string
             self::USER_PASSWORD_CURRENT_REQUIRED,
             self::USER_DEACTIVATION_PASSWORD_REQUIRED,
             self::USER_BLOCK_SELF_FORBIDDEN,
+            self::FOLLOW_SELF_FORBIDDEN,
             self::UPLOAD_INVALID_MIME,
             self::UPLOAD_MAX_IMAGES_REACHED,
             self::UPLOAD_MAGIC_BYTES_MISMATCH,
@@ -176,6 +182,8 @@ enum ErrorCode: string
             self::AUTH_ACCOUNT_SUSPENDED,
             self::AUTH_PHONE_NOT_VERIFIED,
             self::USER_BLOCK_ADMIN_FORBIDDEN,
+            self::FOLLOW_BLOCKED,
+            self::BUSINESS_ACCOUNT_REQUIRED,
             self::AD_EDIT_FORBIDDEN,
             self::MSG_BLOCKED,
             self::MSG_NOT_PARTICIPANT,

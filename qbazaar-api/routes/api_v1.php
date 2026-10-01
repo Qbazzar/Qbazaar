@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
+use App\Http\Controllers\Api\V1\Account\BusinessProfileController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
 use App\Http\Controllers\Api\V1\Account\DeviceTokenController;
+use App\Http\Controllers\Api\V1\Account\FollowsController;
 use App\Http\Controllers\Api\V1\Account\NotificationsController;
 use App\Http\Controllers\Api\V1\Account\PasswordController;
 use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
@@ -20,6 +22,7 @@ use App\Http\Controllers\Api\V1\Ads\FeaturedAdsController;
 use App\Http\Controllers\Api\V1\Ads\MarkSoldController;
 use App\Http\Controllers\Api\V1\Ads\PublishAdController;
 use App\Http\Controllers\Api\V1\Ads\RenewAdController;
+use App\Http\Controllers\Api\V1\Ads\ReserveAdController;
 use App\Http\Controllers\Api\V1\Ads\SimilarAdsController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -29,6 +32,7 @@ use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Cms\PageController;
+use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Help\HelpController;
 use App\Http\Controllers\Api\V1\Home\HomeController;
@@ -47,6 +51,7 @@ use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Support\SupportController;
 use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
+use App\Http\Controllers\Api\V1\Users\FollowController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
 use App\Http\Middleware\EnsureApiDocsEnabled;
@@ -189,6 +194,15 @@ Route::prefix('account')
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
 
+        Route::get('/followers', [FollowsController::class, 'followers'])->name('followers.index');
+        Route::delete('/followers/{user}', [FollowsController::class, 'removeFollower'])->name('followers.destroy');
+        Route::get('/following', [FollowsController::class, 'following'])->name('following.index');
+
+        Route::get('/business-profile', [BusinessProfileController::class, 'show'])->name('business-profile.show');
+        Route::put('/business-profile', [BusinessProfileController::class, 'update'])->name('business-profile.update');
+        Route::post('/business-profile/cover', [BusinessProfileController::class, 'uploadCover'])->name('business-profile.cover.store');
+        Route::delete('/business-profile/cover', [BusinessProfileController::class, 'removeCover'])->name('business-profile.cover.destroy');
+
         // Web-push device tokens (FCM). DELETE takes the token in the body —
         // FCM tokens are too long (and too sensitive) to put in the URL.
         Route::post('/device-tokens', [DeviceTokenController::class, 'store'])->name('device-tokens.store');
@@ -312,6 +326,14 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/ads/{id}/renew', RenewAdController::class)
         ->middleware('throttle:api')
         ->name('api.v1.ads.renew');
+
+    Route::post('/ads/{id}/reserve', [ReserveAdController::class, 'store'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.reserve');
+
+    Route::delete('/ads/{id}/reserve', [ReserveAdController::class, 'destroy'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.release');
 
     Route::post('/ads/{ad}/reviews', [ReviewController::class, 'store'])
         ->middleware('throttle:api')
@@ -511,8 +533,16 @@ Route::prefix('users')
         Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
             Route::post('/{user}/block', [BlockController::class, 'store'])->name('block.store');
             Route::delete('/{user}/block', [BlockController::class, 'destroy'])->name('block.destroy');
+
+            Route::post('/{user}/follow', [FollowController::class, 'store'])->middleware('throttle:follows')->name('follow.store');
+            Route::delete('/{user}/follow', [FollowController::class, 'destroy'])->middleware('throttle:follows')->name('follow.destroy');
         });
     });
+
+// Companies directory — active business accounts (public, optional Bearer for is_following).
+Route::get('/companies', CompanyController::class)
+    ->middleware('throttle:api')
+    ->name('api.v1.companies.index');
 
 // ── Sprint 12 — CMS Pages (public, 1h cached) ──────────────────────────────
 Route::prefix('pages')->name('api.v1.pages.')->middleware('throttle:api')->group(function (): void {

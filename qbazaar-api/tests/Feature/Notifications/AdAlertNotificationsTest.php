@@ -8,10 +8,10 @@ use App\Enums\UserStatus;
 use App\Events\Ads\AdPriceDropped;
 use App\Events\Ads\AdPublished;
 use App\Models\Favorite;
+use App\Models\Follow;
 use App\Models\User;
 use App\Notifications\Ads\AdPriceDroppedNotification;
 use App\Notifications\Ads\NewAdFromFollowedSellerNotification;
-use App\Services\Users\SellerFollowers;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -87,24 +87,23 @@ it('alerts each favouriter once per price even when the event repeats', function
     Notification::assertSentToTimes($fan, AdPriceDroppedNotification::class, 1);
 });
 
-it('fans a new ad out to the seller followers through the follower hook', function (): void {
+it('fans a new ad out to the seller followers only', function (): void {
     Notification::fake();
-    $follower = User::factory()->create();
+    config(['qbazaar.notifications.fan_out_chunk' => 1]);
 
-    app()->instance(SellerFollowers::class, new class($follower->id) implements SellerFollowers
-    {
-        public function __construct(private readonly string $followerId) {}
-
-        public function chunkFollowerIds(string $sellerId, int $chunkSize, callable $callback): void
-        {
-            $callback([$this->followerId]);
-        }
-    });
+    $followers = User::factory()->count(2)->create();
+    $stranger = User::factory()->create();
+    foreach ($followers as $follower) {
+        Follow::query()->create(['follower_id' => $follower->id, 'followed_id' => $this->seller->id, 'created_at' => now()]);
+    }
 
     AdPublished::dispatch($this->ad);
 
-    Notification::assertSentTo($follower, NewAdFromFollowedSellerNotification::class, fn ($notification): bool => $notification->toArray($follower)['category'] === 'ads.new_from_followed'
-        && $notification->toArray($follower)['seller_id'] === $this->seller->id);
+    foreach ($followers as $follower) {
+        Notification::assertSentTo($follower, NewAdFromFollowedSellerNotification::class, fn ($notification): bool => $notification->toArray($follower)['category'] === 'ads.new_from_followed'
+            && $notification->toArray($follower)['seller_id'] === $this->seller->id);
+    }
+    Notification::assertNotSentTo([$stranger, $this->seller], NewAdFromFollowedSellerNotification::class);
 });
 
 it('stores the category in its own column and filters the inbox by it', function (): void {

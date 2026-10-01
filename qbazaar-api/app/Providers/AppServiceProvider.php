@@ -12,10 +12,11 @@ use App\Notifications\Channels\CategorizedDatabaseChannel;
 use App\Observers\AdListingCacheObserver;
 use App\Observers\AdObserver;
 use App\Observers\AdOffersObserver;
+use App\Observers\AdReviewQueueObserver;
 use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
-use App\Services\Users\NoSellerFollowers;
+use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -39,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(DatabaseChannel::class, CategorizedDatabaseChannel::class);
 
         // Follows land with BE-14.28, which binds the real directory here.
-        $this->app->bind(SellerFollowers::class, NoSellerFollowers::class);
+        $this->app->bind(SellerFollowers::class, FollowTableSellerFollowers::class);
 
         // Telescope is installed as a dev dependency, so its classes only
         // exist when composer ran without --no-dev. Guard the registration so
@@ -56,7 +57,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         User::observe(UserObserver::class);
-        Ad::observe([AdObserver::class, AdOffersObserver::class, AdListingCacheObserver::class]);
+        Ad::observe([AdObserver::class, AdOffersObserver::class, AdListingCacheObserver::class, AdReviewQueueObserver::class]);
         Category::observe(TaxonomyCacheObserver::class);
         Location::observe(TaxonomyCacheObserver::class);
 
@@ -94,6 +95,10 @@ class AppServiceProvider extends ServiceProvider
             ] : []),
         ]);
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('follows', fn (Request $r) => [
+            Limit::perMinute((int) config('qbazaar.social.follows_per_minute'))->by('follows:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.social.follows_per_day'))->by('follows-day:' . (optional($r->user())->id ?: $r->ip())),
+        ]);
     }
 
     /**

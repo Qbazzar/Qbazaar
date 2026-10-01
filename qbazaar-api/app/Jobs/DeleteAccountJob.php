@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Enums\UserStatus;
 use App\Models\User;
+use App\Services\Users\FollowGraph;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +38,7 @@ class DeleteAccountJob implements ShouldQueue
         $this->onQueue('low');
     }
 
-    public function handle(): void
+    public function handle(FollowGraph $follows): void
     {
         /** @var User|null $user */
         $user = User::query()->withTrashed()->find($this->userId);
@@ -57,11 +58,15 @@ class DeleteAccountJob implements ShouldQueue
             return;
         }
 
-        DB::transaction(function () use ($user): void {
+        DB::transaction(function () use ($user, $follows): void {
             // Clear media first so MediaLibrary's row deletes the underlying
             // disk file via its own observer. Force-deleting the user
             // afterwards would orphan the files on disk.
             $user->clearMediaCollection('avatar');
+            $user->clearMediaCollection(User::BUSINESS_COVER_COLLECTION);
+
+            // The follows rows would cascade away, but the other side's counts would not.
+            $follows->detachAll($user);
 
             // Wipe stored data-export blobs for this user — the signed URLs
             // become useless after the row is gone, but the JSON files

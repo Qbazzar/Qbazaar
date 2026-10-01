@@ -6,6 +6,7 @@ namespace App\Http\Requests\Api\V1\Ads;
 
 use App\Enums\Condition;
 use App\Enums\PriceType;
+use App\Http\Requests\Api\V1\Ads\Concerns\ValidatesListingDetails;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Rules\NoMarkup;
@@ -25,6 +26,8 @@ use Illuminate\Validation\ValidationException;
  */
 class UpdateAdRequest extends FormRequest
 {
+    use ValidatesListingDetails;
+
     public function authorize(): bool
     {
         return true;
@@ -68,6 +71,7 @@ class UpdateAdRequest extends FormRequest
                 Condition::USED->value,
             ])],
             'custom_fields' => ['sometimes', 'nullable', 'array'],
+            ...$this->listingDetailsRules(),
         ];
     }
 

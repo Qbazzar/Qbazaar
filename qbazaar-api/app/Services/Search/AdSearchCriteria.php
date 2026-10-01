@@ -39,6 +39,12 @@ class AdSearchCriteria
             $clauses[] = sprintf('price_type = "%s"', $this->quote($params['price_type']));
         }
 
+        foreach (['ad_type', 'shipping'] as $field) {
+            if ($this->filled($params, $field)) {
+                $clauses[] = sprintf('%s = "%s"', $field, $this->quote($params[$field]));
+            }
+        }
+
         if (is_numeric($params['price_min'] ?? null)) {
             $clauses[] = sprintf('price >= %s', (float) $params['price_min']);
         }

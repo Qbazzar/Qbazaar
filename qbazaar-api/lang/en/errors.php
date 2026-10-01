@@ -305,4 +305,17 @@ return [
             ],
         ],
     ],
+
+    'follow' => [
+        'self' => [
+            'forbidden' => 'You cannot follow yourself.',
+        ],
+        'blocked' => 'You cannot follow this user.',
+    ],
+
+    'business' => [
+        'account' => [
+            'required' => 'This is only available to business accounts.',
+        ],
+    ],
 ];

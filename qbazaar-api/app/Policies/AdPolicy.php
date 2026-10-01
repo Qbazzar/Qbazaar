@@ -107,6 +107,15 @@ class AdPolicy
     }
 
     /**
+     * Reserve rule. Only the seller may reserve or release their ad; whether
+     * the ad is live enough to reserve is a domain rule in AdLifecycleService.
+     */
+    public function reserve(User $user, Ad $ad): bool
+    {
+        return $user->id === $ad->user_id;
+    }
+
+    /**
      * Renew rule. Owner can extend ACTIVE / EXPIRED ads' expiry window.
      */
     public function renew(User $user, Ad $ad): bool

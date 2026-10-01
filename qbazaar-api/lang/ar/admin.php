@@ -312,6 +312,16 @@ return [
         'body' => ':title:hint',
         'flagged' => ' — معلّم تلقائياً: :flags',
         'action' => 'مراجعة الإعلان',
+        'auto_check' => 'الفحص التلقائي',
+        'auto_check_clean' => 'لم يكتشف الفحص أي مشكلة.',
+        'auto_check_flags' => [
+            'banned_words' => 'كلمات محظورة',
+            'phone' => 'رقم هاتف في النص',
+            'external_link' => 'رابط خارجي',
+            'duplicate_image' => 'صورة تشبه صورة إعلان لبائع آخر',
+        ],
+        'duplicate_of' => 'الإعلانات المشابهة:',
+        'pending_badge' => 'إعلانات بانتظار المراجعة',
     ],
 
     'announcement' => [
