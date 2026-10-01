@@ -5631,12 +5631,16 @@ components:
         url:
           type: string
           format: uri
+          nullable: true
           description: |
             Temporary signed URL for the original-resolution file
-            (GET /media/{media}/original). Expires after 24h by default —
-            do not persist it; re-fetch the resource for a fresh link.
-            The `sizes.*` conversion URLs remain permanent public URLs
-            (served from the R2 public domain when `MEDIA_DISK=r2`).
+            (GET /media/{media}/original). Expires 24-25h after issue,
+            rounded up to the full hour so the URL stays the same for an
+            hour — do not persist it; re-fetch the resource for a fresh link.
+            Null in listings (`AdSummary.primary_image`): open the ad detail
+            for the original. The `sizes.*` conversion URLs remain permanent
+            public URLs, served from `MEDIA_CDN_URL` (the cdn. host) when set,
+            with `Cache-Control: public, max-age=31536000, immutable`.
         sizes: { $ref: '#/components/schemas/MediaSizes' }
         blurhash: { type: string, nullable: true }
         width: { type: integer, nullable: true }

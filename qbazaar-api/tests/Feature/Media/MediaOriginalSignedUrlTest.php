@@ -106,7 +106,7 @@ it('rejects an expired signed url with 403', function (): void {
 
     $payload = (new MediaResource($media))->toArray(request());
 
-    $this->travel((int) config('qbazaar.uploads.original_url_ttl_hours') + 1)->hours();
+    $this->travel((int) config('qbazaar.uploads.original_url_ttl_hours') + 2)->hours();
 
     $this->get($payload['url'])->assertForbidden();
 });
@@ -146,4 +146,38 @@ it('returns 404 when the original file is missing on disk', function (): void {
     Storage::disk('public')->delete($media->getPathRelativeToRoot());
 
     $this->get($payload['url'])->assertNotFound();
+});
+
+it('keeps the signed original url stable within the hour', function (): void {
+    [, $media] = ($this->makeAdWithImage)();
+    $this->travelTo(now()->startOfHour()->addMinutes(5));
+
+    $first = (new MediaResource($media))->toArray(request())['url'];
+    $this->travel(50)->minutes();
+    $second = (new MediaResource($media))->toArray(request())['url'];
+
+    parse_str((string) parse_url($first, PHP_URL_QUERY), $query);
+
+    expect($second)->toBe($first)
+        ->and((int) $query['expires'])->toBe(now()->startOfHour()->addHours((int) config('qbazaar.uploads.original_url_ttl_hours') + 1)->getTimestamp());
+});
+
+it('leaves the signed original out of listing payloads', function (): void {
+    [, $media] = ($this->makeAdWithImage)();
+
+    $payload = (new MediaResource($media))->withoutOriginal()->toArray(request());
+
+    expect($payload['url'])->toBeNull()
+        ->and($payload['sizes'])->toHaveKeys(['thumbnail', 'medium', 'large', 'original_webp']);
+});
+
+it('serves generated conversions from the configured cdn url', function (): void {
+    [, $media] = ($this->makeAdWithImage)();
+    $media->refresh();
+    config(['qbazaar.uploads.cdn_url' => 'https://cdn.example.test/storage/']);
+
+    $payload = (new MediaResource($media))->toArray(request());
+
+    expect($media->hasGeneratedConversion('medium'))->toBeTrue()
+        ->and($payload['sizes']['medium'])->toBe('https://cdn.example.test/storage/' . $media->getPathRelativeToRoot('medium'));
 });

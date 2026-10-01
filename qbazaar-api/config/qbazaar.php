@@ -274,6 +274,10 @@ return [
         // on the queue, which bounds storage and egress per ad.
         'original_max_side_px' => (int) env('UPLOAD_ORIGINAL_MAX_SIDE_PX', 2560),
 
+        // Base URL that public conversions are served from, e.g. a Cloudflare
+        // proxied cdn. host. Empty: the public disk's own URL.
+        'cdn_url' => env('MEDIA_CDN_URL'),
+
         // Lifetime of the signed link to an original-resolution image —
         // originals are served via an expiring signed route so they can't
         // be hotlinked permanently (conversions stay public).

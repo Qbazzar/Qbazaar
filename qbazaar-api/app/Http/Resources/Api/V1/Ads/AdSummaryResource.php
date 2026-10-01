@@ -54,7 +54,7 @@ class AdSummaryResource extends JsonResource
             'is_favorited' => (bool) $this->resource->getAttribute('is_favorited'),
             'conversations_count' => $this->whenCounted('conversations'),
             'primary_image' => $primary instanceof Media
-                ? (new MediaResource($primary))->toArray($request)
+                ? (new MediaResource($primary))->withoutOriginal()->toArray($request)
                 : null,
             'category_slug' => $this->whenLoaded(
                 'category',
