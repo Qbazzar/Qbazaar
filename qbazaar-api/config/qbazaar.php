@@ -125,6 +125,8 @@ return [
         'max_message_length' => 5_000,
         'rate_limit_per_minute' => 30,
         'auto_archive_inactive_days' => 90,
+        // Skip the push when the recipient has an app open on Reverb.
+        'push_skip_online_recipients' => (bool) env('CHAT_PUSH_SKIP_ONLINE', true),
     ],
 
     /*

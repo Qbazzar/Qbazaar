@@ -68,4 +68,25 @@ fields without breaking older clients.
 | `support.ticket_created` | A user opens a ticket; sent to staff. | — |
 | `system.announcement`   | An admin broadcast. | yes |
 
-FCM push only goes out when `FIREBASE_CREDENTIALS` is set and the user has a registered device token. Push for new messages and offers is not built yet (BE-14.2), and neither are `ads.new_from_followed` and `ad.price_changed` (BE-14.18).
+FCM push only goes out when `FIREBASE_CREDENTIALS` is set and the user has a registered device token. `ads.new_from_followed` and `ad.price_changed` are not built yet (BE-14.18).
+
+## Chat push (FCM only)
+
+Chat has its own unread badges, so these categories are push-only: nothing is
+stored in `notifications` and no `notification.created` is broadcast. They go
+to the other participant, never to the person who acted, and only while the
+recipient has no live Reverb connection (their `private-user.{id}` channel is
+unoccupied). Set `CHAT_PUSH_SKIP_ONLINE=false` to push regardless of presence.
+
+| `data.category` | Triggered by | Recipient |
+|------|------|------|
+| `message.new`     | A text message (`message.sent`); offer and system bubbles are skipped. `title` names the sender, `body` is the first 120 characters. | the other participant |
+| `offer.created`   | `offer.created` | the seller |
+| `offer.countered` | `offer.countered` | the side that made the countered offer |
+| `offer.accepted`  | `offer.accepted` | the proposer |
+| `offer.rejected`  | `offer.rejected` | the proposer |
+| `offer.withdrawn` | `offer.withdrawn` | the responder |
+| `offer.expired`   | `offer.expired` (timeout, ad sold or removed) | the buyer |
+
+The FCM `data` block carries `title`, `body`, `category` and `cta_url`, which
+deep-links to `/account/messages?c={conversationId}`.
