@@ -49,6 +49,7 @@ dataset('protected auth requests', [
     ]],
     'send otp' => ['/api/v1/auth/send-otp', ['phone' => '+97455123456']],
     'resend otp' => ['/api/v1/auth/resend-otp', ['phone' => '+97455123456']],
+    'send email code' => ['/api/v1/auth/email-otp/send', ['email' => 'ahmed@example.qa']],
 ]);
 
 it('rejects a request without a turnstile token', function (string $uri, array $payload): void {
@@ -90,6 +91,11 @@ it('registers when the token is valid and passes the client ip to the verifier',
 
     expect(User::query()->where('email', 'ahmed@example.qa')->exists())->toBeTrue()
         ->and($this->verifier->calls)->toBe([['token' => 'valid-token', 'ip' => '127.0.0.1']]);
+});
+
+it('sends an email sign-in code when the token is valid', function (): void {
+    postJson('/api/v1/auth/email-otp/send', ['email' => 'ahmed@example.qa'], ['X-Turnstile-Token' => 'valid-token'])
+        ->assertStatus(202);
 });
 
 it('sends an otp when the token is valid', function (): void {

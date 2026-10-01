@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\Ads\PublishAdController;
 use App\Http\Controllers\Api\V1\Ads\RenewAdController;
 use App\Http\Controllers\Api\V1\Ads\SimilarAdsController;
 use App\Http\Controllers\Api\V1\Auth\DeviceVerificationController;
+use App\Http\Controllers\Api\V1\Auth\EmailCodeController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
@@ -50,6 +51,7 @@ use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
 use App\Http\Middleware\EnsureApiDocsEnabled;
+use App\Http\Middleware\EnsurePasswordLoginEnabled;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -111,11 +113,11 @@ Route::get('/openapi.yaml', function (): Response {
 //   Wave 2: OTP (send/verify/resend), password reset, email verification
 Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
     Route::post('/register', RegisterController::class)
-        ->middleware(['throttle:auth', 'turnstile'])
+        ->middleware(['throttle:auth', 'turnstile', EnsurePasswordLoginEnabled::class])
         ->name('register');
 
     Route::post('/login', LoginController::class)
-        ->middleware('throttle:auth')
+        ->middleware(['throttle:auth', EnsurePasswordLoginEnabled::class])
         ->name('login');
 
     Route::post('/logout', LogoutController::class)
@@ -165,6 +167,14 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->name('verify-email');
 
     // Passwordless sign-in / sign-up, new-device check, Google + Apple (M1)
+    Route::post('/email-otp/send', [EmailCodeController::class, 'send'])
+        ->middleware(['throttle:otp', 'turnstile'])
+        ->name('email-otp.send');
+
+    Route::post('/email-otp/verify', [EmailCodeController::class, 'verify'])
+        ->middleware('throttle:otp-verify')
+        ->name('email-otp.verify');
+
     Route::post('/device/verify', DeviceVerificationController::class)
         ->middleware('throttle:otp-verify')
         ->name('device.verify');

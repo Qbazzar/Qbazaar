@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Services\Auth\DeviceContext;
 use App\Services\Auth\LoginAttemptLimiter;
 use App\Services\Auth\SignInResult;
-use Illuminate\Support\Facades\Hash;
 
 /**
  * Password sign-in by email OR Qatari phone, kept for existing clients while
@@ -33,7 +32,7 @@ class LoginUserAction
 
         $user = $this->lookup($identifier);
 
-        if ($user === null || ! Hash::check($password, $user->password)) {
+        if ($user === null || ! $user->passwordMatches($password)) {
             $this->loginAttempts->recordFailure($identifier);
 
             throw new DomainException(ErrorCode::AUTH_INVALID_CREDENTIALS);

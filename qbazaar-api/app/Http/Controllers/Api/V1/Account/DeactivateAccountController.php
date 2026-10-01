@@ -11,7 +11,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Account\DeactivateAccountRequest;
 use App\Models\User;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Hash;
 
 /**
  * @group Account
@@ -37,7 +36,7 @@ class DeactivateAccountController extends Controller
 
         $this->authorize('deactivate', $user);
 
-        if (! Hash::check((string) $request->validated('password'), $user->password)) {
+        if (! $user->passwordMatches((string) $request->validated('password'))) {
             throw new DomainException(ErrorCode::USER_DEACTIVATION_PASSWORD_REQUIRED);
         }
 

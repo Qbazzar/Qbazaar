@@ -11,7 +11,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Account\DeleteAccountRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
 
 /**
  * @group Account
@@ -43,7 +42,7 @@ class DeleteAccountController extends Controller
 
         $this->authorize('requestDeletion', $user);
 
-        if (! Hash::check((string) $request->validated('password'), $user->password)) {
+        if (! $user->passwordMatches((string) $request->validated('password'))) {
             throw new DomainException(ErrorCode::USER_DEACTIVATION_PASSWORD_REQUIRED);
         }
 
