@@ -2210,6 +2210,31 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/v1/companies:
+    get:
+      tags: [Users]
+      summary: Directory of active business accounts, most followed first
+      description: >
+        Public. Send the Bearer token to get `is_following` for the caller;
+        guests always get false. `q` matches the business name or the account
+        name.
+      operationId: companiesIndex
+      security: []
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        '200':
+          description: A page of companies (20 per page)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyListEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
   # ──────────────────────────────────────────────────────────────────────────
   # Messaging (Sprint 8 Wave A)
   # ──────────────────────────────────────────────────────────────────────────
@@ -3847,6 +3872,34 @@ components:
               closed: { type: boolean, default: false }
               open: { type: string, example: '09:00' }
               close: { type: string, example: '22:00' }
+
+    Company:
+      type: object
+      required: [id, business_name, followers_count, active_ads_count, is_following]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        business_name: { type: string, description: The business profile name, or the account name when none is set. }
+        about: { type: [string, 'null'], description: First 160 characters of the business description. }
+        avatar_url: { type: [string, 'null'], format: uri }
+        cover_url: { type: [string, 'null'], format: uri }
+        followers_count: { type: integer }
+        active_ads_count: { type: integer }
+        rating_avg: { type: number, example: 4.6 }
+        rating_count: { type: integer }
+        is_following: { type: boolean }
+        joined_at: { type: string, format: date-time }
+
+    CompanyListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Company'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
 
     FollowState:
       type: object

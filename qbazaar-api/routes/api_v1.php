@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Cms\PageController;
+use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Help\HelpController;
 use App\Http\Controllers\Api\V1\Home\HomeController;
@@ -511,6 +512,11 @@ Route::prefix('users')
             Route::delete('/{user}/follow', [FollowController::class, 'destroy'])->middleware('throttle:follows')->name('follow.destroy');
         });
     });
+
+// Companies directory — active business accounts (public, optional Bearer for is_following).
+Route::get('/companies', CompanyController::class)
+    ->middleware('throttle:api')
+    ->name('api.v1.companies.index');
 
 // ── Sprint 12 — CMS Pages (public, 1h cached) ──────────────────────────────
 Route::prefix('pages')->name('api.v1.pages.')->middleware('throttle:api')->group(function (): void {
