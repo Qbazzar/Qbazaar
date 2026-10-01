@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Offers;
 
-use App\Enums\MessageType;
+use App\Data\Messaging\ChatMessageDraft;
+use App\Enums\ChatMessageKey;
 use App\Enums\OfferStatus;
 use App\Events\Offers\OfferAccepted;
 use App\Exceptions\DomainException;
@@ -39,7 +40,7 @@ class AcceptOfferAction
             $this->transitions->moveTo($offer, OfferStatus::ACCEPTED);
             $this->transitions->expireOpenOffersOnAd($ad->id, exceptOfferId: $offer->id);
 
-            $this->messages->append($offer->conversation, $actor, 'Offer accepted', MessageType::SYSTEM);
+            $this->messages->append($offer->conversation, $actor, ChatMessageDraft::system(ChatMessageKey::OFFER_ACCEPTED));
 
             DB::afterCommit(fn () => OfferAccepted::dispatch($offer, $offer->proposerId()));
 

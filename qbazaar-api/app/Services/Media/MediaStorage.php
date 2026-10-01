@@ -32,6 +32,23 @@ class MediaStorage
         );
     }
 
+    /**
+     * Expiring API link to a conversion kept on a private disk, falling back
+     * to the signed original while the conversion is still queued.
+     */
+    public function signedConversionUrl(Media $media, string $conversion): string
+    {
+        if (! $media->hasGeneratedConversion($conversion)) {
+            return $this->signedOriginalUrl($media);
+        }
+
+        return URL::temporarySignedRoute(
+            'api.v1.media.conversion',
+            now()->addHours((int) config('qbazaar.uploads.original_url_ttl_hours')),
+            ['media' => $media->getKey(), 'conversion' => $conversion],
+        );
+    }
+
     public function presignedOriginalUrl(Media $media): string
     {
         return $media->getTemporaryUrl(

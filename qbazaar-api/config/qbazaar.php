@@ -115,7 +115,7 @@ return [
     'search' => [
         'results_per_page' => 20,
         'suggestions_max' => 8,
-        'saved_search_max_per_user' => 20,
+        'saved_search_max_per_user' => 10,
         'saved_search_check_interval_minutes' => 60,
         // GET /ads?ids= — favourites synced from another device, recently viewed on the web.
         'ids_lookup_max' => 50,
@@ -165,6 +165,14 @@ return [
         'max_per_user' => 1000,
     ],
 
+    // Fan-out alerts (price drops, new ads from followed sellers, saved
+    // searches): users per queued chunk, and how long a user stays marked
+    // as alerted for one event so retries and repeated events stay silent.
+    'notifications' => [
+        'fan_out_chunk' => 500,
+        'alert_dedupe_hours' => 72,
+    ],
+
     'recently_viewed' => [
         'cap_per_user' => 50,
         'cleanup_interval_hours' => 24,
@@ -185,6 +193,13 @@ return [
         'push_skip_online_recipients' => (bool) env('CHAT_PUSH_SKIP_ONLINE', true),
         // File a report for staff when a message matches the moderation rules.
         'auto_report_flagged_messages' => (bool) env('CHAT_AUTO_REPORT_FLAGGED', true),
+        // Photos cost storage and bandwidth, so they get a tighter budget than text.
+        'images_per_minute' => 10,
+        'images_per_day' => 200,
+        'bulk_hide_max' => 100,
+        // A small file can still decode to a huge bitmap; this keeps the
+        // queued preview conversion within worker memory.
+        'image_max_side_px' => 8192,
     ],
 
     /*

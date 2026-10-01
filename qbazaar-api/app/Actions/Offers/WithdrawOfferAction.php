@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Offers;
 
-use App\Enums\MessageType;
+use App\Data\Messaging\ChatMessageDraft;
+use App\Enums\ChatMessageKey;
 use App\Enums\OfferStatus;
 use App\Events\Offers\OfferWithdrawn;
 use App\Exceptions\DomainException;
@@ -34,7 +35,7 @@ class WithdrawOfferAction
         return $this->transitions->withLockedOffer($offer, function (Offer $offer) use ($actor): Offer {
             $this->transitions->moveTo($offer, OfferStatus::WITHDRAWN);
 
-            $this->messages->append($offer->conversation, $actor, 'Offer withdrawn', MessageType::SYSTEM);
+            $this->messages->append($offer->conversation, $actor, ChatMessageDraft::system(ChatMessageKey::OFFER_WITHDRAWN));
 
             DB::afterCommit(fn () => OfferWithdrawn::dispatch($offer, $offer->responderId()));
 

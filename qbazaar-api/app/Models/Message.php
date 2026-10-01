@@ -13,6 +13,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Individual chat line inside a conversation.
@@ -28,6 +32,8 @@ use Illuminate\Support\Carbon;
  * @property string $sender_id
  * @property string $body
  * @property MessageType $type
+ * @property string|null $message_key
+ * @property array<string, scalar|null>|null $params
  * @property Carbon|null $read_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -35,10 +41,14 @@ use Illuminate\Support\Carbon;
  * @property User $sender
  * @property Offer|null $offer
  */
-class Message extends Model
+class Message extends Model implements HasMedia
 {
     /** @use HasFactory<MessageFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, InteractsWithMedia;
+
+    public const IMAGE_COLLECTION = 'chat_image';
+
+    public const IMAGE_PREVIEW = 'preview';
 
     protected $table = 'messages';
 
@@ -53,6 +63,8 @@ class Message extends Model
         'sender_id',
         'body',
         'type',
+        'message_key',
+        'params',
         'read_at',
     ];
 
@@ -63,6 +75,7 @@ class Message extends Model
     {
         return [
             'type' => MessageType::class,
+            'params' => 'array',
             'read_at' => 'datetime',
         ];
     }
@@ -97,6 +110,29 @@ class Message extends Model
     }
 
     /**
+     * Chat photos stay on the private media disk: clients only ever get
+     * expiring signed links, never a permanent public URL.
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(self::IMAGE_COLLECTION)->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion(self::IMAGE_PREVIEW)
+            ->queued()
+            ->performOnCollections(self::IMAGE_COLLECTION)
+            ->fit(Fit::Contain, 1280, 1280)
+            ->format('webp');
+    }
+
+    public function image(): ?Media
+    {
+        return $this->type === MessageType::IMAGE ? $this->getFirstMedia(self::IMAGE_COLLECTION) : null;
+    }
+
+    /**
      * Messages sent to $user that they have not read yet, across all of
      * their conversations.
      *
@@ -106,7 +142,7 @@ class Message extends Model
     public function scopeUnreadFor(Builder $query, User $user): Builder
     {
         return $query
-            ->whereIn('conversation_id', Conversation::query()->forUser($user)->select('id'))
+            ->whereIn('conversation_id', Conversation::query()->visibleTo($user)->select('id'))
             ->where('sender_id', '!=', $user->id)
             ->whereNull('read_at');
     }

@@ -1783,6 +1783,35 @@ paths:
         '403': { description: Signature invalid or expired }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/v1/media/{media}/conversions/{conversion}:
+    get:
+      tags: [Messages]
+      summary: Download the downsized preview of a chat photo
+      description: |
+        Only reachable through the signed link in `ChatImage.url`. Chat photos
+        and their previews stay on the private disk; on R2 the response is a
+        302 to a presigned URL valid for a few minutes. The original of a chat
+        photo is served by `/media/{media}/original` (`ChatImage.original_url`).
+      operationId: mediaConversion
+      security: []
+      parameters:
+        - { name: media, in: path, required: true, schema: { type: integer } }
+        - { name: conversion, in: path, required: true, schema: { type: string, enum: [preview] } }
+        - { name: expires, in: query, required: true, schema: { type: integer } }
+        - { name: signature, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The preview image (local storage)
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        '302':
+          description: Redirect to a short-lived presigned URL (R2 storage)
+          headers:
+            Location: { schema: { type: string, format: uri } }
+        '403': { description: Signature invalid or expired }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /api/v1/account/ads:
     get:
       tags: [Ads]
@@ -1954,6 +1983,61 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/account/saved-searches/{id}:
+    put:
+      tags: [Search]
+      summary: Replace the name and filters of one of the caller's saved searches
+      operationId: savedSearchesUpdate
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveSearchRequest'
+      responses:
+        '200':
+          description: Saved search updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearchEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: SEARCH_SAVED_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422': { $ref: '#/components/responses/ValidationError' }
+    patch:
+      tags: [Search]
+      summary: Switch alerts on or off, or rename
+      description: '`alerts_enabled: false` stops new-ad alerts for this search right away.'
+      operationId: savedSearchesPatch
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchSavedSearchRequest'
+      responses:
+        '200':
+          description: Saved search updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearchEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: SEARCH_SAVED_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422': { $ref: '#/components/responses/ValidationError' }
     delete:
       tags: [Search]
       summary: Remove one of the caller's saved searches
@@ -1999,6 +2083,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: FAV_LIMIT_REACHED (only when the toggle adds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    put:
+      tags: [Favorites]
+      summary: Add the ad to the caller's favourites (idempotent)
+      description: |
+        Repeating the call is a no-op and returns the same state; the count only moves once.
+        Only publicly listed ads can be added; drafts, pending, sold, expired and blocked ads answer AD_NOT_FOUND.
+      operationId: favoritesAdd
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Favourited, with the ad's favourites count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteToggleEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: AD_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: FAV_LIMIT_REACHED (`qbazaar.favorites.max_per_user`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [Favorites]
+      summary: Remove the ad from the caller's favourites (idempotent)
+      description: Removing an ad that is not favourited succeeds with `favorited=false`. Works for ads in any status, including deleted ones.
+      operationId: favoritesRemove
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Not favourited, with the ad's favourites count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteToggleEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: AD_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/favorites/ids:
+    get:
+      tags: [Favorites]
+      summary: Ids of every ad the caller favourited, newest first
+      description: Lets clients mark hearts on any ad list without a lookup per ad. Capped at `qbazaar.favorites.max_per_user`.
+      operationId: favoritesIds
+      responses:
+        '200':
+          description: Favourited ad ids
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteIdsEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /api/v1/account/favorites:
     get:
@@ -2327,6 +2482,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedConversationListEnvelope'
         '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Conversations]
+      summary: Hide conversations from the caller's inbox
+      description: |
+        Hidden for the caller only — the other participant still sees the
+        thread. The next message in a hidden thread brings it back. Hidden
+        threads also leave the unread badge. Ids the caller does not take
+        part in are ignored (no existence oracle), so `hidden` may be lower
+        than the number of ids sent.
+      operationId: conversationsHide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HideConversationsRequest'
+      responses:
+        '200':
+          description: Number of conversations hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HideConversationsEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /api/v1/conversations/unread-count:
     get:
@@ -2391,7 +2571,11 @@ paths:
     post:
       tags: [Messages]
       summary: Append a message to a conversation
-      description: Rate-limited via the `messages` throttle (per-user per-minute).
+      description: |
+        Text as JSON, or a photo as multipart (`type=image`). Rate-limited via
+        the `messages` throttle (per-user per-minute); photos also count
+        against `qbazaar.messaging.images_per_minute` / `images_per_day`.
+        `message.sent` is broadcast after commit with the same payload.
       operationId: messagesStore
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -2401,6 +2585,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SendMessageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SendImageMessageRequest'
       responses:
         '201':
           description: Message created and broadcast
@@ -2698,6 +2885,17 @@ paths:
             enum: [0, 1]
           required: false
           description: When `1`, returns only unread notifications.
+        - in: query
+          name: category
+          schema:
+            type: string
+            maxLength: 64
+            pattern: '^[a-z_]+(\.[a-z_]+)*$'
+          required: false
+          description: |
+            A full category (`ad.price_changed`) or a group prefix (`ad`
+            returns every `ad.*`; `ads` returns `ads.new_from_followed`).
+            See qbazaar-contracts/events/notifications.md for the list.
         - in: query
           name: page
           schema: { type: integer, minimum: 1 }
@@ -4552,24 +4750,57 @@ components:
 
     SavedSearch:
       type: object
-      required: [id, name, query_params, created_at]
+      required: [id, name, query_params, alerts_enabled, created_at, updated_at]
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         name: { type: string, minLength: 1, maxLength: 60 }
         query_params:
           type: object
           additionalProperties: true
-          description: Opaque envelope replayed verbatim against `/search`.
+          description: Envelope replayed verbatim against `/search`.
+        alerts_enabled:
+          type: boolean
+          description: When true, a newly live ad matching the filters sends a `search.match` notification (once per ad per user).
         created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    SavedSearchQueryParams:
+      type: object
+      additionalProperties: true
+      description: |
+        The `/search` inputs. Unknown keys are kept and replayed. Alerts
+        match with the same meaning as `/search`: a parent category or
+        location includes its descendants, a price range never matches an
+        ad without a price, every word of `q` must appear in the title or
+        description, and `custom_fields` takes `{key: value}` for equality
+        (case-insensitive) or `{key: {min, max}}` for a range. A category or
+        location that does not exist matches nothing.
+      properties:
+        q: { type: [string, 'null'], maxLength: 200 }
+        category_id: { $ref: '#/components/schemas/ULID' }
+        category_slug: { type: [string, 'null'], maxLength: 120 }
+        location_id: { $ref: '#/components/schemas/ULID' }
+        location_slug: { type: [string, 'null'], maxLength: 120 }
+        price_min: { type: [number, 'null'], minimum: 0 }
+        price_max: { type: [number, 'null'], minimum: 0 }
+        condition: { $ref: '#/components/schemas/Condition' }
+        price_type: { $ref: '#/components/schemas/PriceType' }
+        custom_fields: { type: [object, 'null'], additionalProperties: true }
 
     SaveSearchRequest:
       type: object
       required: [name, query_params]
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
-        query_params:
-          type: object
-          additionalProperties: true
+        query_params: { $ref: '#/components/schemas/SavedSearchQueryParams' }
+        alerts_enabled: { type: boolean, default: true }
+
+    PatchSavedSearchRequest:
+      type: object
+      minProperties: 1
+      properties:
+        alerts_enabled: { type: boolean }
+        name: { type: string, minLength: 1, maxLength: 60 }
 
     SavedSearchEnvelope:
       allOf:
@@ -4606,6 +4837,19 @@ components:
         - type: object
           properties:
             data: { $ref: '#/components/schemas/FavoriteToggleResponse' }
+
+    FavoriteIdsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items: { $ref: '#/components/schemas/ULID' }
 
     FavoritedAdSummary:
       allOf:
@@ -4653,11 +4897,27 @@ components:
     # ───── Messaging (Sprint 8 Wave A) ─────
     MessageType:
       type: string
-      enum: [text, offer, system]
+      enum: [text, image, offer, system]
       description: |
-        - `text` — plain user chat. Wave A only emits this value.
+        - `text` — plain user chat.
+        - `image` — a photo (`media`) with an optional caption in `body`.
         - `offer` — inline offer card (Sprint 9).
         - `system` — moderation / read-receipt placeholder (Sprint 9).
+
+    ChatMessageKey:
+      type: [string, 'null']
+      enum: [offer.made, offer.countered, offer.accepted, offer.rejected, offer.withdrawn, image, null]
+      description: |
+        Set on bubbles the server writes (offer and system messages; `image`
+        only on an inbox preview of a photo without caption). `body` is
+        already rendered in the reader's language (`Accept-Language`,
+        `?lang=` or the user's language); clients may instead render the
+        key from their own bundle with `params`. Null for user-written text.
+
+    ChatMessageParams:
+      type: [object, 'null']
+      additionalProperties: true
+      description: 'Placeholders of the key, for example `{"amount": "150.00", "currency": "QAR", "note": "Cash today"}`.'
 
     Conversation:
       type: object
@@ -4676,6 +4936,9 @@ components:
           type: string
           nullable: true
           maxLength: 160
+          description: Rendered in the reader's language when the last message is a keyed bubble.
+        last_message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        last_message_params: { $ref: '#/components/schemas/ChatMessageParams' }
         last_message_at:
           type: string
           format: date-time
@@ -4708,6 +4971,8 @@ components:
             full_name: { type: string }
             avatar_thumb: { type: string, format: uri, nullable: true }
         last_message_preview: { type: string, nullable: true, maxLength: 160 }
+        last_message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        last_message_params: { $ref: '#/components/schemas/ChatMessageParams' }
         last_message_at: { type: string, format: date-time, nullable: true }
         unread_count: { type: integer, minimum: 0 }
         created_at: { type: string, format: date-time }
@@ -4719,7 +4984,12 @@ components:
         id: { $ref: '#/components/schemas/ULID' }
         conversation_id: { $ref: '#/components/schemas/ULID' }
         sender_id: { $ref: '#/components/schemas/ULID' }
-        body: { type: string, minLength: 1, maxLength: 5000 }
+        body:
+          type: string
+          maxLength: 5000
+          description: User text as written, or a keyed bubble rendered in the reader's language.
+        message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        params: { $ref: '#/components/schemas/ChatMessageParams' }
         type: { $ref: '#/components/schemas/MessageType' }
         read_at:
           type: string
@@ -4735,6 +5005,11 @@ components:
             id: { $ref: '#/components/schemas/ULID' }
             full_name: { type: string }
             avatar_thumb: { type: string, format: uri, nullable: true }
+        media:
+          oneOf:
+            - $ref: '#/components/schemas/ChatImage'
+            - type: 'null'
+          description: Only present when `type === "image"`.
         offer:
           allOf:
             - $ref: '#/components/schemas/Offer'
@@ -4750,14 +5025,70 @@ components:
       properties:
         ad_id: { $ref: '#/components/schemas/ULID' }
 
+    ChatImage:
+      type: object
+      required: [id, url, original_url, mime_type, size_bytes]
+      properties:
+        id: { type: integer }
+        url:
+          type: string
+          format: uri
+          description: |
+            Expiring signed link (`qbazaar.uploads.original_url_ttl_hours`) to
+            the downsized preview (max 1280px, webp), or to the original while
+            the preview is still being generated. Do not persist it.
+        original_url:
+          type: string
+          format: uri
+          description: Expiring signed link to the original upload.
+        mime_type: { type: string, enum: [image/jpeg, image/png, image/webp] }
+        size_bytes: { type: integer, minimum: 0 }
+
     SendMessageRequest:
       type: object
       required: [body]
       properties:
         body: { type: string, minLength: 1, maxLength: 5000 }
         type:
-          $ref: '#/components/schemas/MessageType'
-          # Wave A only accepts `text`.
+          type: string
+          enum: [text]
+          default: text
+
+    SendImageMessageRequest:
+      type: object
+      required: [type, image]
+      properties:
+        type: { type: string, enum: [image] }
+        image:
+          type: string
+          format: binary
+          description: JPEG, PNG or WebP (sniffed content), at most 10 MB and 8192 px on either side (`qbazaar.messaging.image_max_side_px`). Stored under a server-generated name.
+        body:
+          type: string
+          maxLength: 5000
+          description: Optional caption.
+
+    HideConversationsRequest:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/ULID' }
+
+    HideConversationsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [hidden]
+              properties:
+                hidden: { type: integer, minimum: 0 }
 
     UnreadCountResponse:
       type: object
@@ -5022,7 +5353,10 @@ components:
         category:
           type: string
           nullable: true
-          description: Short discriminator surfaced from the notification's data payload (e.g. ad.approved, account.data_export_ready).
+          description: |
+            Short discriminator surfaced from the notification's data payload
+            (e.g. ad.approved, account.data_export_ready, ad.price_changed,
+            ads.new_from_followed). Filterable with `?category=`.
           example: ad.approved
         title:
           type: string

@@ -67,8 +67,18 @@ fields without breaking older clients.
 | `support.reply`         | Staff reply to the user's support ticket. | yes |
 | `support.ticket_created` | A user opens a ticket; sent to staff. | — |
 | `system.announcement`   | An admin broadcast. | yes |
+| `ad.price_changed`      | The seller lowers the price of a live ad; sent to everyone who favourited it (`data.previous_price`, `data.price`, `data.currency`). | yes |
+| `ads.new_from_followed` | A followed seller's ad goes live (`data.seller_id`). Wired through `SellerFollowers`; silent until follows ship (BE-14.28). | yes |
 
-FCM push only goes out when `FIREBASE_CREDENTIALS` is set and the user has a registered device token. `ads.new_from_followed` and `ad.price_changed` are not built yet (BE-14.18).
+FCM push only goes out when `FIREBASE_CREDENTIALS` is set and the user has a registered device token.
+
+The two fan-out alerts run on the `low` queue in chunks of
+`qbazaar.notifications.fan_out_chunk` users, skip the seller, inactive
+accounts and blocks in either direction, and alert each user once per event
+(`qbazaar.notifications.alert_dedupe_hours`).
+
+`GET /account/notifications?category=` accepts a full category
+(`ad.price_changed`) or a group prefix (`ad` matches every `ad.*`).
 
 ## Chat push (FCM only)
 

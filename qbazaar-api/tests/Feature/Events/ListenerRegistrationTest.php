@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Events\Ads\AdApproved;
 use App\Events\Ads\AdExpired;
 use App\Events\Ads\AdExpiringSoon;
+use App\Events\Ads\AdPriceDropped;
 use App\Events\Ads\AdPublished;
 use App\Events\Ads\AdRejected;
 use App\Events\Ads\AdRenewed;
@@ -17,6 +18,8 @@ use App\Events\Offers\OfferExpired;
 use App\Events\Offers\OfferRejected;
 use App\Events\Offers\OfferWithdrawn;
 use App\Listeners\Ads\NotifyAdminsOfPendingAd;
+use App\Listeners\Ads\NotifyFavoritersOfPriceDrop;
+use App\Listeners\Ads\NotifyFollowersOfNewAd;
 use App\Listeners\Ads\QueueDuplicateImageCheck;
 use App\Listeners\Ads\SendAdNotifications;
 use App\Listeners\Messaging\ScreenChatMessage;
@@ -59,8 +62,9 @@ it('wires each event to its listeners', function (string $event, array $listener
 
     expect(applicationListenersFor($event))->toEqualCanonicalizing($expected);
 })->with([
-    'AdPublished' => [AdPublished::class, [SendAdNotifications::class, NotifySavedSearchMatches::class]],
-    'AdApproved' => [AdApproved::class, [SendAdNotifications::class, NotifySavedSearchMatches::class]],
+    'AdPublished' => [AdPublished::class, [SendAdNotifications::class, NotifySavedSearchMatches::class, NotifyFollowersOfNewAd::class]],
+    'AdApproved' => [AdApproved::class, [SendAdNotifications::class, NotifySavedSearchMatches::class, NotifyFollowersOfNewAd::class]],
+    'AdPriceDropped' => [AdPriceDropped::class, [NotifyFavoritersOfPriceDrop::class]],
     'AdRejected' => [AdRejected::class, [SendAdNotifications::class]],
     'AdExpired' => [AdExpired::class, [SendAdNotifications::class]],
     'AdExpiringSoon' => [AdExpiringSoon::class, [SendAdNotifications::class]],

@@ -98,6 +98,12 @@ requested locale.
 | `SEARCH_003` | Invalid search parameters | 422 |
 | `SEARCH_004` | Saved-search limit per user reached | 422 |
 
+## Favorites
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `FAV_001` | Favourites limit per user reached (`qbazaar.favorites.max_per_user`) | 422 |
+
 ## Messaging (Sprint 8)
 
 | Code | Meaning | HTTP |

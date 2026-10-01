@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Help\HelpController;
 use App\Http\Controllers\Api\V1\Home\HomeController;
+use App\Http\Controllers\Api\V1\Media\MediaConversionController;
 use App\Http\Controllers\Api\V1\Media\MediaOriginalController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
@@ -296,6 +297,11 @@ Route::get('/media/{media}/original', MediaOriginalController::class)
     ->middleware(['signed', 'throttle:api'])
     ->name('api.v1.media.original');
 
+// Downsized chat photos kept on the private disk, behind the same expiring signature.
+Route::get('/media/{media}/conversions/{conversion}', MediaConversionController::class)
+    ->middleware(['signed', 'throttle:api'])
+    ->name('api.v1.media.conversion');
+
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/ads', [AdController::class, 'store'])
         ->middleware('throttle:drafts')
@@ -357,6 +363,8 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 //   Authenticated (account group):
 //     GET    /account/saved-searches        — list (cap 10/user)
 //     POST   /account/saved-searches        — create
+//     PUT    /account/saved-searches/{id}   — replace name + filters
+//     PATCH  /account/saved-searches/{id}   — alerts_enabled / rename
 //     DELETE /account/saved-searches/{id}   — remove
 Route::prefix('search')
     ->name('api.v1.search.')
@@ -372,13 +380,18 @@ Route::prefix('account/saved-searches')
     ->group(function (): void {
         Route::get('/', [SavedSearchController::class, 'index'])->name('index');
         Route::post('/', [SavedSearchController::class, 'store'])->name('store');
+        Route::put('/{id}', [SavedSearchController::class, 'update'])->name('update');
+        Route::patch('/{id}', [SavedSearchController::class, 'patch'])->name('patch');
         Route::delete('/{id}', [SavedSearchController::class, 'destroy'])->name('destroy');
     });
 
 // ── Sprint 7 — Favorites & Recently Viewed ──────────────────────────────────
 //   Authenticated:
 //     POST   /ads/{id}/favorite           — toggle favourite (returns state + count)
+//     PUT    /ads/{id}/favorite           — idempotent add
+//     DELETE /ads/{id}/favorite           — idempotent remove
 //     GET    /account/favorites           — paginated list of caller's favourites
+//     GET    /account/favorites/ids       — every favourited ad id (capped)
 //     GET    /account/recently-viewed     — paginated history (auth-only)
 //     DELETE /account/recently-viewed     — clear caller's history
 //   Public-ish:
@@ -387,8 +400,17 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
     Route::post('/ads/{id}/favorite', [FavoriteController::class, 'toggle'])
         ->name('api.v1.ads.favorite.toggle');
 
+    Route::put('/ads/{id}/favorite', [FavoriteController::class, 'add'])
+        ->name('api.v1.ads.favorite.add');
+
+    Route::delete('/ads/{id}/favorite', [FavoriteController::class, 'remove'])
+        ->name('api.v1.ads.favorite.remove');
+
     Route::get('/account/favorites', [FavoriteController::class, 'index'])
         ->name('api.v1.account.favorites.index');
+
+    Route::get('/account/favorites/ids', [FavoriteController::class, 'ids'])
+        ->name('api.v1.account.favorites.ids');
 
     Route::get('/account/recently-viewed', [RecentViewController::class, 'index'])
         ->name('api.v1.account.recently-viewed.index');
@@ -405,6 +427,7 @@ Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
 //   Authenticated:
 //     POST   /conversations                       — start / resolve a thread
 //     GET    /conversations                       — paginated inbox
+//     DELETE /conversations                       — hide {ids} for the caller only
 //     GET    /conversations/unread-count          — header badge
 //     GET    /conversations/{id}                  — full thread
 //     GET    /conversations/{id}/messages         — cursor transcript
@@ -417,6 +440,9 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
 
     Route::get('/conversations', [ConversationController::class, 'index'])
         ->name('api.v1.conversations.index');
+
+    Route::delete('/conversations', [ConversationController::class, 'destroy'])
+        ->name('api.v1.conversations.destroy');
 
     Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount'])
         ->name('api.v1.conversations.unread-count');
