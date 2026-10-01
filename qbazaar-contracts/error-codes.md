@@ -15,6 +15,7 @@ requested locale.
 | `VALIDATION_FAILED` | Request body failed validation. `details` carries field errors. | 422 |
 | `RATE_LIMIT_EXCEEDED` | Too many requests for the current rate-limit tier. | 429 |
 | `SERVER_ERROR` | Unhandled server-side error. | 500 |
+| `REQUEST_IN_PROGRESS` | An identical request (same idempotency key, or a concurrent image upload to the same ad) is still running; retry shortly. | 409 |
 
 ## Auth (Sprint 1)
 
@@ -66,10 +67,10 @@ requested locale.
 | `AD_003` | Cannot edit ad you do not own | 403 |
 | `AD_004` | Invalid state transition for ad | 422 |
 | `AD_005` | Auto-moderation rejected the ad — see rejection_reason | 422 |
-| `AD_006` | Daily publish limit reached | 429 |
+| `AD_006` | Daily publish limit reached (platform setting `ad_daily_publish_limit`, rolling 24 h) | 429 |
 | `AD_007` | Ad expired | 410 |
 | `AD_008` | Cannot perform offers on your own ad | 422 |
-| `AD_009` | Ad images required (min 1) | 422 |
+| `AD_009` | Ad images required (`qbazaar.ads.min_images`, default 1) | 422 |
 | `AD_010` | Custom fields for category did not validate | 422 |
 | `AD_011` | Ad cannot be published in its current state | 422 |
 | `AD_012` | Image not found for this ad | 404 |

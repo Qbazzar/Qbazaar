@@ -9,6 +9,7 @@ use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Ads\AdResource;
 use App\Models\Ad;
+use App\Services\Ads\AdLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ class MarkSoldController extends Controller
      *
      * @throws DomainException
      */
-    public function __invoke(Request $request, string $id): JsonResponse
+    public function __invoke(Request $request, AdLifecycleService $lifecycle, string $id): JsonResponse
     {
         $ad = Ad::query()->find($id);
 
@@ -34,7 +35,7 @@ class MarkSoldController extends Controller
 
         $this->authorize('mark-sold', $ad);
 
-        $ad->markSold();
+        $ad = $lifecycle->markSold($ad);
         $ad->load(['user', 'category', 'location', 'media']);
 
         return response()->json((new AdResource($ad))->toArray($request));

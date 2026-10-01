@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Enums\AdStatus;
 use App\Models\Ad;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,9 +23,9 @@ beforeEach(function (): void {
 });
 
 it('makes a published ad searchable immediately', function (): void {
-    $ad = $this->makeAd($this->user, ['status' => AdStatus::DRAFT->value]);
+    $ad = $this->makePublishableDraft($this->user);
 
-    postJson("/api/v1/ads/{$ad->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$ad->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk();
 
     $this->waitForMeilisearch();

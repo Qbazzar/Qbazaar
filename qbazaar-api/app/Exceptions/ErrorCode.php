@@ -16,6 +16,7 @@ enum ErrorCode: string
     case VALIDATION_FAILED = 'VALIDATION_FAILED';
     case RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED';
     case SERVER_ERROR = 'SERVER_ERROR';
+    case REQUEST_IN_PROGRESS = 'REQUEST_IN_PROGRESS';
 
     // ── Auth (Sprint 1) ─────────────────────────────────────────────
     case AUTH_INVALID_CREDENTIALS = 'AUTH_001';
@@ -201,6 +202,8 @@ enum ErrorCode: string
             self::AD_DAILY_PUBLISH_LIMIT,
             self::MSG_RATE_LIMITED,
             self::REPORT_DUPLICATE => 429,
+
+            self::REQUEST_IN_PROGRESS => 409,
 
             self::SEARCH_INDEX_UNAVAILABLE => 503,
 

@@ -1165,18 +1165,18 @@ paths:
   /api/v1/ads/{id}/publish:
     post:
       tags: [Ads]
-      summary: Publish a draft ad (DRAFT → ACTIVE or PENDING after auto-moderation)
+      summary: Submit an ad for admin review (DRAFT or REJECTED -> PENDING)
       description: >
-        Runs the draft through auto-moderation. A clean ad moves to `active`
-        and becomes searchable; a flagged ad moves to `pending` (awaiting
-        manual review) and the owner receives a rejection notification with
-        the list of fired flags. Either way the response carries the
-        updated ad — the client inspects `data.status` to render the right
-        post-publish UI.
+        Moves the ad to `pending` and notifies the reviewers; auto-moderation
+        only adds triage hints for them. An admin approval later makes it
+        `active`. The ad needs at least `qbazaar.ads.min_images` images, and
+        a seller can submit at most `ad_daily_publish_limit` ads (platform
+        setting) in a rolling 24 hours. Publishing an ad that is already
+        `pending` returns it unchanged and does not notify the reviewers again.
         Supply an `X-Idempotency-Key` header to safely retry on network
         failure: subsequent calls with the same key replay the cached
-        response without re-running moderation or firing duplicate
-        notifications.
+        response; a call made while the first one is still running gets
+        409 `REQUEST_IN_PROGRESS`.
       operationId: adsPublish
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -1191,7 +1191,7 @@ paths:
             example: 01J9YV3P5Q7AABBCCDDEEFFGG
       responses:
         '200':
-          description: Ad published (active) or held for review (pending)
+          description: Ad held for review (pending)
           headers:
             X-Idempotent-Replay:
               description: Present and `true` when the response was served from the idempotency cache.
@@ -1202,17 +1202,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdEnvelope'
               examples:
-                published:
-                  summary: Auto-moderation cleared — ad is live
-                  value:
-                    success: true
-                    data:
-                      id: 01HM3XQV0AAAAAAAAAAAAAAAAA
-                      status: active
-                      published_at: '2026-05-24T09:00:00+00:00'
-                      expires_at: '2026-06-23T09:00:00+00:00'
-                pending_after_moderation:
-                  summary: Flagged by auto-moderation — awaiting manual review
+                pending:
+                  summary: Waiting for an admin decision
                   value:
                     success: true
                     data:
@@ -1228,8 +1219,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
         '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: REQUEST_IN_PROGRESS — the same idempotency key is still being processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
         '422':
-          description: AD_NOT_PUBLISHABLE / AD_IMAGES_REQUIRED / AD_DAILY_PUBLISH_LIMIT
+          description: >
+            VALIDATION_FAILED (`accepted_terms` missing or false) /
+            AD_004 invalid transition / AD_009 too few images
+            (`details`: `min`, `current`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: AD_006 — daily publish limit reached (`details.limit`), or too many attempts per minute
           content:
             application/json:
               schema:

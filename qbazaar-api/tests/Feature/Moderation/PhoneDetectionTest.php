@@ -27,13 +27,13 @@ beforeEach(function (): void {
 it('flags an ad whose description contains a Qatari phone number', function (): void {
     Event::fake([AdSubmittedForReview::class]);
 
-    $ad = $this->makeAd($this->user, [
+    $ad = $this->makePublishableDraft($this->user, [
         'status' => AdStatus::DRAFT->value,
         'title' => 'Bicycle in great shape — barely used',
         'description' => 'Selling my bicycle, please call me on +97455123456 anytime to arrange a viewing in Al Sadd.',
     ]);
 
-    postJson("/api/v1/ads/{$ad->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$ad->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
@@ -46,13 +46,13 @@ it('flags an ad whose description contains a Qatari phone number', function (): 
 it('flags an ad whose description contains a bare 8-digit number', function (): void {
     Event::fake([AdSubmittedForReview::class]);
 
-    $ad = $this->makeAd($this->user, [
+    $ad = $this->makePublishableDraft($this->user, [
         'status' => AdStatus::DRAFT->value,
         'title' => 'Sofa set for the living room',
         'description' => 'Beautiful sofa set in pristine condition. WhatsApp 55123456 for fast response and pickup details.',
     ]);
 
-    postJson("/api/v1/ads/{$ad->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$ad->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 

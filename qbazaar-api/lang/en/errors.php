@@ -29,6 +29,12 @@ return [
         'error' => 'An unexpected error occurred. Please try again later.',
     ],
 
+    'request' => [
+        'in' => [
+            'progress' => 'The same request is still being processed. Please try again in a moment.',
+        ],
+    ],
+
     'auth' => [
         'invalid' => [
             'credentials' => 'Invalid credentials.',
