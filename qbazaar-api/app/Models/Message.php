@@ -28,6 +28,8 @@ use Illuminate\Support\Carbon;
  * @property string $sender_id
  * @property string $body
  * @property MessageType $type
+ * @property string|null $message_key
+ * @property array<string, scalar|null>|null $params
  * @property Carbon|null $read_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -53,6 +55,8 @@ class Message extends Model
         'sender_id',
         'body',
         'type',
+        'message_key',
+        'params',
         'read_at',
     ];
 
@@ -63,6 +67,7 @@ class Message extends Model
     {
         return [
             'type' => MessageType::class,
+            'params' => 'array',
             'read_at' => 'datetime',
         ];
     }

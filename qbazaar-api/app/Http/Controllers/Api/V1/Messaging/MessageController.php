@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Messaging;
 
 use App\Actions\Messaging\SendMessageAction;
-use App\Enums\MessageType;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
@@ -137,18 +136,7 @@ class MessageController extends Controller
             throw new DomainException(ErrorCode::MSG_CONVERSATION_NOT_FOUND);
         }
 
-        /** @var array{body: string, type?: string} $validated */
-        $validated = $request->validated();
-        $type = isset($validated['type'])
-            ? MessageType::from($validated['type'])
-            : MessageType::TEXT;
-
-        $message = $this->sendAction->execute(
-            $user,
-            $conversation,
-            $validated['body'],
-            $type,
-        );
+        $message = $this->sendAction->execute($user, $conversation, $request->draft());
 
         return response()
             ->json((new MessageResource($message))->toArray($request))

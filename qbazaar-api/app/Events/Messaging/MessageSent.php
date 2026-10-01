@@ -8,12 +8,14 @@ use App\Http\Resources\Api\V1\Messaging\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Services\Messaging\ChatMessageRenderer;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Http\Request;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Traits\Localizable;
 
 /**
  * Pushed to Reverb the moment a message is persisted (after DB commit).
@@ -32,7 +34,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class MessageSent implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets, Localizable, SerializesModels;
 
     public string $otherUserId;
 
@@ -61,25 +63,30 @@ class MessageSent implements ShouldBroadcast
     }
 
     /**
+     * Rendered in the recipient's language; the sender's own devices on the
+     * conversation channel re-render from `message_key` + `params`.
+     *
      * @return array<string, mixed>
      */
     public function broadcastWith(): array
     {
-        // The MessageResource needs a Request to satisfy its signature;
-        // a synthetic one is enough — the resource doesn't read any of
-        // its properties.
-        $request = Request::create('/internal/broadcast', 'GET');
+        return $this->withLocale($this->recipient->language->value, function (): array {
+            // MessageResource only needs a Request to satisfy its signature.
+            $request = Request::create('/internal/broadcast', 'GET');
 
-        $this->message->loadMissing('sender');
+            $this->message->loadMissing('sender');
 
-        return [
-            'message' => (new MessageResource($this->message))->toArray($request),
-            'conversation' => [
-                'id' => $this->conversation->id,
-                'last_message_preview' => $this->conversation->last_message_preview,
-                'last_message_at' => $this->conversation->last_message_at?->toIso8601String(),
-                'unread_count' => $this->conversation->unreadCountFor($this->recipient),
-            ],
-        ];
+            return [
+                'message' => (new MessageResource($this->message))->toArray($request),
+                'conversation' => [
+                    'id' => $this->conversation->id,
+                    'last_message_preview' => app(ChatMessageRenderer::class)->preview($this->conversation),
+                    'last_message_key' => $this->conversation->last_message_key,
+                    'last_message_params' => $this->conversation->last_message_params,
+                    'last_message_at' => $this->conversation->last_message_at?->toIso8601String(),
+                    'unread_count' => $this->conversation->unreadCountFor($this->recipient),
+                ],
+            ];
+        });
     }
 }

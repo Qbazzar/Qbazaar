@@ -7,6 +7,7 @@ namespace App\Http\Resources\Api\V1\Messaging;
 use App\Enums\MessageType;
 use App\Http\Resources\Api\V1\Offers\OfferResource;
 use App\Models\Message;
+use App\Services\Messaging\ChatMessageRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -42,7 +43,9 @@ class MessageResource extends JsonResource
             'id' => $this->id,
             'conversation_id' => $this->conversation_id,
             'sender_id' => $this->sender_id,
-            'body' => $this->body,
+            'body' => app(ChatMessageRenderer::class)->render($this->message_key, $this->params, $this->body),
+            'message_key' => $this->message_key,
+            'params' => $this->params,
             'type' => $this->type->value,
             'read_at' => $this->read_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),

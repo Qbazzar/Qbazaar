@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\V1\Messaging;
 
+use App\Data\Messaging\ChatMessageDraft;
 use App\Enums\MessageType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -37,5 +38,10 @@ class SendMessageRequest extends FormRequest
             'body' => ['required', 'string', 'min:1', 'max:' . $max],
             'type' => ['sometimes', Rule::in([MessageType::TEXT->value])],
         ];
+    }
+
+    public function draft(): ChatMessageDraft
+    {
+        return ChatMessageDraft::text((string) $this->validated('body'));
     }
 }

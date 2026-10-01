@@ -32,6 +32,8 @@ use RuntimeException;
  * @property string $seller_id
  * @property Carbon|null $last_message_at
  * @property string|null $last_message_preview
+ * @property string|null $last_message_key
+ * @property array<string, scalar|null>|null $last_message_params
  * @property int|null $unread_count set by {@see scopeWithUnreadCountFor()}
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -58,6 +60,8 @@ class Conversation extends Model
         'seller_id',
         'last_message_at',
         'last_message_preview',
+        'last_message_key',
+        'last_message_params',
     ];
 
     /**
@@ -67,6 +71,7 @@ class Conversation extends Model
     {
         return [
             'last_message_at' => 'datetime',
+            'last_message_params' => 'array',
         ];
     }
 

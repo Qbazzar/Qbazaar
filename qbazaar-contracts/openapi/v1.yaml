@@ -4168,6 +4168,23 @@ components:
         - `offer` — inline offer card (Sprint 9).
         - `system` — moderation / read-receipt placeholder (Sprint 9).
 
+    ChatMessageKey:
+      type: string
+      nullable: true
+      enum: [offer.made, offer.countered, offer.accepted, offer.rejected, offer.withdrawn, image, null]
+      description: |
+        Set on bubbles the server writes (offer and system messages; `image`
+        only on an inbox preview of a photo without caption). `body` is
+        already rendered in the reader's language (`Accept-Language`,
+        `?lang=` or the user's language); clients may instead render the
+        key from their own bundle with `params`. Null for user-written text.
+
+    ChatMessageParams:
+      type: object
+      nullable: true
+      additionalProperties: true
+      description: Placeholders of the key, e.g. `{amount: "150.00", currency: "QAR", note: "Cash today"}`.
+
     Conversation:
       type: object
       required: [id, buyer_id, seller_id, last_message_preview, last_message_at, unread_count, created_at]
@@ -4185,6 +4202,9 @@ components:
           type: string
           nullable: true
           maxLength: 160
+          description: Rendered in the reader's language when the last message is a keyed bubble.
+        last_message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        last_message_params: { $ref: '#/components/schemas/ChatMessageParams' }
         last_message_at:
           type: string
           format: date-time
@@ -4217,6 +4237,8 @@ components:
             full_name: { type: string }
             avatar_thumb: { type: string, format: uri, nullable: true }
         last_message_preview: { type: string, nullable: true, maxLength: 160 }
+        last_message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        last_message_params: { $ref: '#/components/schemas/ChatMessageParams' }
         last_message_at: { type: string, format: date-time, nullable: true }
         unread_count: { type: integer, minimum: 0 }
         created_at: { type: string, format: date-time }
@@ -4228,7 +4250,12 @@ components:
         id: { $ref: '#/components/schemas/ULID' }
         conversation_id: { $ref: '#/components/schemas/ULID' }
         sender_id: { $ref: '#/components/schemas/ULID' }
-        body: { type: string, minLength: 1, maxLength: 5000 }
+        body:
+          type: string
+          maxLength: 5000
+          description: User text as written, or a keyed bubble rendered in the reader's language.
+        message_key: { $ref: '#/components/schemas/ChatMessageKey' }
+        params: { $ref: '#/components/schemas/ChatMessageParams' }
         type: { $ref: '#/components/schemas/MessageType' }
         read_at:
           type: string
