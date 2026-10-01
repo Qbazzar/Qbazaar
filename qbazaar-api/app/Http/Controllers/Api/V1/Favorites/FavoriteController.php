@@ -70,7 +70,7 @@ class FavoriteController extends Controller
 
         $paginator = Favorite::query()
             ->where('user_id', $user->id)
-            ->with(['ad.category', 'ad.location', 'ad.media'])
+            ->with(['ad.category', 'ad.location', 'ad.primaryImage'])
             ->orderByDesc('created_at')
             ->paginate(self::PER_PAGE);
 

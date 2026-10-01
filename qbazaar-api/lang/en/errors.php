@@ -17,6 +17,7 @@ return [
     'validation' => [
         'failed' => 'The given data was invalid.',
         'no_markup' => 'The :attribute may not contain < or > characters.',
+        'category_not_selectable' => 'Choose an active sub-category that has no further sub-categories.',
     ],
 
     'rate' => [

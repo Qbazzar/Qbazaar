@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\Ad;
+use App\Models\Category;
+use App\Models\Location;
 use App\Models\User;
+use App\Observers\AdListingCacheObserver;
 use App\Observers\AdObserver;
 use App\Observers\AdOffersObserver;
+use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -42,8 +47,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         User::observe(UserObserver::class);
-        Ad::observe(AdObserver::class);
-        Ad::observe(AdOffersObserver::class);
+        Ad::observe([AdObserver::class, AdOffersObserver::class, AdListingCacheObserver::class]);
+        Category::observe(TaxonomyCacheObserver::class);
+        Location::observe(TaxonomyCacheObserver::class);
+
+        Model::preventLazyLoading(! $this->app->isProduction());
 
         // Rate limiters MUST be registered here (not in the withRouting `then:`
         // closure) so they survive route:cache — Laravel skips that closure when

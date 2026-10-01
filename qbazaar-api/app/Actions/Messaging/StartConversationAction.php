@@ -59,7 +59,7 @@ class StartConversationAction
             ->first();
 
         if ($existing !== null) {
-            $existing->load(['ad.user', 'ad.media', 'buyer', 'seller']);
+            $existing->load(['ad.user', 'ad.primaryImage', 'buyer', 'seller']);
 
             return ['conversation' => $existing, 'created' => false];
         }
@@ -78,7 +78,7 @@ class StartConversationAction
             'seller_id' => $seller->id,
         ]);
 
-        $conversation->load(['ad.user', 'ad.media', 'buyer', 'seller']);
+        $conversation->load(['ad.user', 'ad.primaryImage', 'buyer', 'seller']);
 
         return ['conversation' => $conversation, 'created' => true];
     }

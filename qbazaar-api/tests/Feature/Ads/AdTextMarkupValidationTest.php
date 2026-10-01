@@ -28,7 +28,7 @@ beforeEach(function (): void {
 function validAdPayload(array $overrides = []): array
 {
     return array_merge([
-        'category_id' => Category::query()->inRandomOrder()->value('id'),
+        'category_id' => Category::query()->leaf()->inRandomOrder()->value('id'),
         'location_id' => Location::query()->inRandomOrder()->value('id'),
         'title' => 'Vintage camera for sale',
         'description' => 'A well-kept vintage camera with original packaging and lens.',

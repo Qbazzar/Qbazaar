@@ -924,7 +924,8 @@ paths:
                         is_active: true
                         custom_fields: null
                         custom_filters: null
-                        ads_count: 0
+                        ads_count: 12
+                        today_count: 1
                         created_at: '2026-05-23T12:00:00+00:00'
                         updated_at: '2026-05-23T12:00:00+00:00'
                         children:
@@ -938,7 +939,8 @@ paths:
                             is_active: true
                             custom_fields: []
                             custom_filters: []
-                            ads_count: 0
+                            ads_count: 12
+                            today_count: 1
                             created_at: '2026-05-23T12:00:00+00:00'
                             updated_at: '2026-05-23T12:00:00+00:00'
                             children: []
@@ -960,7 +962,8 @@ paths:
   /api/v1/categories/{slug}/stats:
     get:
       tags: [Reference]
-      summary: Ad counters for a category (stub — Sprint 5 will populate)
+      summary: Live ad counters for a category, descendants included
+      description: Cached for up to `qbazaar.catalog.counts_cache_seconds` and flushed when an ad is published, expires or changes status, category or location.
       operationId: categoriesStats
       security: []
       parameters:
@@ -981,14 +984,63 @@ paths:
                   value:
                     success: true
                     data:
-                      ads_count: 0
-                      sub_ads_count: 0
+                      ads_count: 42
+                      sub_ads_count: 40
+                      today_count: 3
         '404':
           description: Category not found (CAT_001)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/categories/{slug}:
+    get:
+      tags: [Reference]
+      summary: Category page with one section of newest ads per active child
+      description: |
+        Each section holds up to 6 of the newest listed ads filed under that
+        child or any of its descendants. Inactive categories, and categories
+        under an inactive ancestor, return 404.
+      operationId: categoriesShow
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryPageEnvelope'
+        '404':
+          description: Category not found or not visible (CAT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/home:
+    get:
+      tags: [Reference]
+      summary: Every home-screen section in one request
+      description: |
+        The payload is the same for every visitor. It is cached for
+        `qbazaar.home.cache_seconds` (5 minutes) and flushed early when
+        listings or the taxonomy change.
+      operationId: homeShow
+      security: []
+      responses:
+        '200':
+          description: Home feed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeFeedEnvelope'
 
   /api/v1/categories/{slug}/filters:
     get:
@@ -1087,8 +1139,8 @@ paths:
       operationId: adsIndex
       security: []
       parameters:
-        - { name: category_id, in: query, schema: { $ref: '#/components/schemas/ULID' } }
-        - { name: location_id, in: query, schema: { $ref: '#/components/schemas/ULID' } }
+        - { name: category_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the category and all its descendants. }
+        - { name: location_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the location and all places under it. }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
       responses:
         '200':
@@ -1526,10 +1578,10 @@ paths:
       security: []
       parameters:
         - { name: q, in: query, schema: { type: string, maxLength: 200 }, description: Optional keyword. Empty for filter-only search. }
-        - { name: category_id, in: query, schema: { $ref: '#/components/schemas/ULID' } }
-        - { name: category_slug, in: query, schema: { type: string, maxLength: 120 } }
-        - { name: location_id, in: query, schema: { $ref: '#/components/schemas/ULID' } }
-        - { name: location_slug, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: category_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the category and all its descendants (Meili `category_path`). }
+        - { name: category_slug, in: query, schema: { type: string, maxLength: 120 }, description: Resolved to `category_id`; descendants included. }
+        - { name: location_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the location and all places under it (Meili `location_path`). }
+        - { name: location_slug, in: query, schema: { type: string, maxLength: 120 }, description: Resolved to `location_id`; descendants included. }
         - { name: price_min, in: query, schema: { type: number, minimum: 0 } }
         - { name: price_max, in: query, schema: { type: number, minimum: 0 } }
         - { name: condition, in: query, schema: { $ref: '#/components/schemas/Condition' } }
@@ -3445,7 +3497,7 @@ components:
     Category:
       type: object
       required:
-        [id, parent_id, slug, name, icon, order, is_active, ads_count, created_at, updated_at]
+        [id, parent_id, slug, name, icon, order, is_active, ads_count, today_count, created_at, updated_at]
       properties:
         id:
           $ref: '#/components/schemas/ULID'
@@ -3484,7 +3536,12 @@ components:
             - type: 'null'
         ads_count:
           type: integer
-          example: 0
+          description: Publicly listed ads in this category and all its descendants.
+          example: 42
+        today_count:
+          type: integer
+          description: Of `ads_count`, the ads published since local midnight (Asia/Qatar).
+          example: 3
         created_at:
           type: string
           format: date-time
@@ -3572,14 +3629,113 @@ components:
 
     CategoryStats:
       type: object
-      required: [ads_count, sub_ads_count]
+      required: [ads_count, sub_ads_count, today_count]
       properties:
         ads_count:
           type: integer
-          example: 0
+          description: Publicly listed ads in the category and all its descendants.
+          example: 42
         sub_ads_count:
           type: integer
-          example: 0
+          description: The part of `ads_count` filed under descendant categories.
+          example: 40
+        today_count:
+          type: integer
+          description: Ads published since local midnight (Asia/Qatar), descendants included.
+          example: 3
+
+    CategorySection:
+      type: object
+      required: [category, ads]
+      properties:
+        category: { $ref: '#/components/schemas/Category' }
+        ads:
+          type: array
+          maxItems: 6
+          description: Newest listed ads in this child category or any of its descendants.
+          items: { $ref: '#/components/schemas/AdSummary' }
+
+    CategoryPage:
+      type: object
+      required: [category, parent, sub_category_count, sections]
+      properties:
+        category: { $ref: '#/components/schemas/Category' }
+        parent:
+          oneOf:
+            - $ref: '#/components/schemas/Category'
+            - type: 'null'
+        sub_category_count:
+          type: integer
+          description: Active direct children; one section per child, in display order.
+          example: 4
+        sections:
+          type: array
+          items: { $ref: '#/components/schemas/CategorySection' }
+
+    CategoryPageEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/CategoryPage' }
+
+    SellerCard:
+      type: object
+      required: [id, full_name, avatar_url, account_type, ads_count, rating_avg, rating_count]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        full_name: { type: string }
+        avatar_url: { type: [string, 'null'], format: uri }
+        account_type: { type: string, enum: [private, business] }
+        ads_count: { type: integer, description: Active ads of the seller. }
+        rating_avg: { type: number, format: float, example: 4.6 }
+        rating_count: { type: integer }
+
+    HomePlace:
+      type: object
+      required: [id, slug, name, type, lat, lng, ads_count]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        slug: { type: string, example: doha }
+        name: { $ref: '#/components/schemas/LocalizedString' }
+        type: { type: string, enum: [city, district, area] }
+        lat: { type: [number, 'null'], format: float }
+        lng: { type: [number, 'null'], format: float }
+        ads_count:
+          type: integer
+          description: Publicly listed ads in this place and all places under it.
+
+    HomeFeed:
+      type: object
+      required: [categories, recommended, featured_sellers, best_selling, places]
+      properties:
+        categories:
+          type: array
+          description: Active top-level categories with live counters.
+          items: { $ref: '#/components/schemas/Category' }
+        recommended:
+          type: array
+          description: Most viewed ads published in the last 30 days (automatic until admin curation lands).
+          items: { $ref: '#/components/schemas/AdSummary' }
+        featured_sellers:
+          type: array
+          description: Active business accounts with the most live ads.
+          items: { $ref: '#/components/schemas/SellerCard' }
+        best_selling:
+          type: array
+          description: Most favourited listed ads.
+          items: { $ref: '#/components/schemas/AdSummary' }
+        places:
+          type: array
+          description: Top-level locations in display order.
+          items: { $ref: '#/components/schemas/HomePlace' }
+
+    HomeFeedEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/HomeFeed' }
 
     CategoryTreeEnvelope:
       allOf:
@@ -3749,7 +3905,9 @@ components:
       type: object
       required: [category_id, location_id, title, description, price_type]
       properties:
-        category_id: { $ref: '#/components/schemas/ULID' }
+        category_id:
+          allOf: [{ $ref: '#/components/schemas/ULID' }]
+          description: Must be an active leaf category whose ancestors are all active; anything else is a 422 on `category_id`.
         location_id: { $ref: '#/components/schemas/ULID' }
         title: { type: string, minLength: 5, maxLength: 120 }
         description: { type: string, minLength: 20, maxLength: 5000 }
@@ -3769,7 +3927,9 @@ components:
         price: { type: number, nullable: true, minimum: 0, maximum: 9999999 }
         price_type: { $ref: '#/components/schemas/PriceType' }
         condition: { $ref: '#/components/schemas/Condition', nullable: true }
-        category_id: { $ref: '#/components/schemas/ULID' }
+        category_id:
+          allOf: [{ $ref: '#/components/schemas/ULID' }]
+          description: Same rule as on create (active leaf); resubmitting the ad's current category is always accepted.
         location_id: { $ref: '#/components/schemas/ULID' }
         custom_fields:
           type: object

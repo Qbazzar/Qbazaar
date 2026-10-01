@@ -32,6 +32,7 @@ use RuntimeException;
  * @property string $seller_id
  * @property Carbon|null $last_message_at
  * @property string|null $last_message_preview
+ * @property int|null $unread_count set by {@see scopeWithUnreadCountFor()}
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Ad $ad
@@ -164,6 +165,21 @@ class Conversation extends Model
         return $query->where(function (Builder $q) use ($user): void {
             $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id);
         });
+    }
+
+    /**
+     * Adds `unread_count` for $user in the same query, so an inbox page doesn't count per row.
+     *
+     * @param Builder<Conversation> $query
+     * @return Builder<Conversation>
+     */
+    public function scopeWithUnreadCountFor(Builder $query, User $user): Builder
+    {
+        return $query->withCount([
+            'messages as unread_count' => fn (Builder $messages) => $messages
+                ->where('sender_id', '!=', $user->id)
+                ->whereNull('read_at'),
+        ]);
     }
 
     /**

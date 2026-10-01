@@ -39,7 +39,7 @@ it('only returns active ads on the public feed', function (): void {
 it('filters by category_id when supplied', function (): void {
     // Pick two seeded categories — we don't need a factory because the
     // catalogue seeder ships >= 2 rows.
-    $categories = Category::query()->limit(2)->get();
+    $categories = Category::query()->leaf()->limit(2)->get();
 
     expect($categories)->toHaveCount(2);
 

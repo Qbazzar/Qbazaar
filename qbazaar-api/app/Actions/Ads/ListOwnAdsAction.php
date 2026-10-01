@@ -26,7 +26,7 @@ class ListOwnAdsAction
             ->forUser($seller)
             ->when($status !== null, fn ($query) => $query->where('status', $status?->value))
             ->withCount('conversations')
-            ->with(['category', 'location', 'media'])
+            ->with(['category', 'location', 'primaryImage'])
             ->orderByDesc('created_at')
             ->paginate(self::PER_PAGE)
             ->withQueryString();

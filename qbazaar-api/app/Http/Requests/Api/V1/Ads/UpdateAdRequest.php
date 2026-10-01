@@ -9,6 +9,7 @@ use App\Enums\PriceType;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Rules\NoMarkup;
+use App\Rules\SelectableCategory;
 use App\Services\Ads\CustomFieldsValidator;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -48,7 +49,7 @@ class UpdateAdRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => ['sometimes', 'ulid', 'exists:categories,id'],
+            'category_id' => ['sometimes', 'bail', 'ulid', new SelectableCategory($this->currentCategoryId())],
             'location_id' => ['sometimes', 'ulid', 'exists:locations,id'],
             'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
@@ -106,6 +107,19 @@ class UpdateAdRequest extends FormRequest
                 }
             }
         });
+    }
+
+    private function currentCategoryId(): ?string
+    {
+        $adId = $this->route('id');
+
+        if (! is_string($adId) || $adId === '') {
+            return null;
+        }
+
+        $categoryId = Ad::query()->whereKey($adId)->value('category_id');
+
+        return is_string($categoryId) ? $categoryId : null;
     }
 
     /**

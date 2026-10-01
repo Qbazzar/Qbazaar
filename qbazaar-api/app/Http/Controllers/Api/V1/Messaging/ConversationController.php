@@ -81,7 +81,8 @@ class ConversationController extends Controller
         $paginator = Conversation::query()
             ->forUser($user)
             ->orderedForInbox()
-            ->with(['ad.media', 'buyer', 'seller'])
+            ->with(['ad.primaryImage', 'buyer.media', 'seller.media'])
+            ->withUnreadCountFor($user)
             ->paginate(self::PER_PAGE);
 
         return ConversationListResource::collection($paginator);
@@ -98,7 +99,7 @@ class ConversationController extends Controller
         $conversation = $this->findOrFail($id);
         $this->authorize('view', $conversation);
 
-        $conversation->load(['ad.user', 'ad.category', 'ad.location', 'ad.media', 'buyer', 'seller']);
+        $conversation->load(['ad.user', 'ad.category', 'ad.location', 'ad.primaryImage', 'buyer', 'seller']);
 
         return response()->json((new ConversationResource($conversation))->toArray($request));
     }

@@ -89,6 +89,17 @@ class Category extends Model
     }
 
     /**
+     * Categories without children — the level ads are filed under.
+     *
+     * @param Builder<Category> $query
+     * @return Builder<Category>
+     */
+    public function scopeLeaf(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('children');
+    }
+
+    /**
      * Locale-aware accessor for the name. Falls back to English when the
      * requested locale isn't populated — every category MUST have at least
      * an English label.

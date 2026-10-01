@@ -10,16 +10,21 @@ use App\Enums\OfferStatus;
 use App\Enums\PriceType;
 use App\Enums\UserStatus;
 use App\Http\Resources\Api\V1\Media\MediaResource;
+use App\Services\Catalog\CategoryHierarchy;
+use App\Services\Catalog\LocationHierarchy;
 use Database\Factories\AdFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -56,6 +61,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property User $user
  * @property Category $category
  * @property Location $location
+ * @property Media|null $primaryImage
  * @property bool $featured
  */
 class Ad extends Model implements HasMedia
@@ -176,6 +182,19 @@ class Ad extends Model implements HasMedia
         return $this->belongsTo(Location::class);
     }
 
+    /**
+     * The cover image (lowest display order), so list views load one media row per ad instead of the gallery.
+     *
+     * @return MorphOne<Media, $this>
+     */
+    public function primaryImage(): MorphOne
+    {
+        return $this->morphOne(Media::class, 'model')->ofMany(
+            ['order_column' => 'min', 'id' => 'min'],
+            fn (Builder $query) => $query->where('collection_name', 'images'),
+        );
+    }
+
     /* ──────────────────────────────────────────────────────────────────
      *  Query scopes — used by feed / dashboard / browse endpoints.
      * ──────────────────────────────────────────────────────────────────*/
@@ -284,6 +303,17 @@ class Ad extends Model implements HasMedia
     }
 
     /**
+     * Queued Scout jobs index ads in batches, where lazy loading these relations is an N+1.
+     *
+     * @param BaseCollection<int, Ad> $models
+     * @return BaseCollection<int, Ad>
+     */
+    public function makeSearchableUsing(BaseCollection $models): BaseCollection
+    {
+        return (new EloquentCollection($models->all()))->loadMissing(['user', 'category', 'location']);
+    }
+
+    /**
      * Shape sent to Meilisearch. Kept tight on purpose:
      *  - `description` is truncated to 500 chars — search relevance peaks
      *    long before that; the extra bytes just bloat the index.
@@ -314,8 +344,10 @@ class Ad extends Model implements HasMedia
             'description' => Str::limit((string) $this->description, 500, ''),
             'category_id' => $this->category_id,
             'category_slug' => $category?->slug,
+            'category_path' => app(CategoryHierarchy::class)->pathTo($this->category_id),
             'location_id' => $this->location_id,
             'location_slug' => $location?->slug,
+            'location_path' => app(LocationHierarchy::class)->pathTo($this->location_id),
             'user_id' => $this->user_id,
             'price' => $this->price !== null ? (float) $this->price : null,
             'price_type' => $this->price_type->value,

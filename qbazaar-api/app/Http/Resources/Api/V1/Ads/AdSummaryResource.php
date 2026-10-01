@@ -16,7 +16,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * image array so payload size stays bounded as feeds grow.
  *
  *  - `primary_image` is the first image by `order_column`, or null when
- *    the ad has none. Lists never show galleries.
+ *    the ad has none. Lists never show galleries: eager-load `primaryImage`.
  *  - `location_slug` / `category_slug` are emitted so clients can build
  *    breadcrumb / filter chips without a separate lookup.
  *  - `conversations_count` is present only where the query counted it
@@ -33,8 +33,8 @@ class AdSummaryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $primary = $this->resource->relationLoaded('media')
-            ? $this->resource->getMedia('images')->sortBy('order_column')->first()
+        $primary = $this->resource->relationLoaded('primaryImage')
+            ? $this->resource->primaryImage
             : null;
 
         return [

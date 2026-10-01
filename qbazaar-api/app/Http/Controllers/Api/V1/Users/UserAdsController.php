@@ -42,7 +42,7 @@ class UserAdsController extends Controller
             ->forUser($user)
             ->active()
             ->orderedForFeed()
-            ->with(['category', 'location', 'media'])
+            ->with(['category', 'location', 'primaryImage'])
             ->paginate(self::PER_PAGE);
 
         return AdSummaryResource::collection($paginator);

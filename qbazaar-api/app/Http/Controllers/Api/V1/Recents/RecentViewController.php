@@ -79,7 +79,7 @@ class RecentViewController extends Controller
 
         $paginator = RecentView::query()
             ->where('user_id', $user->id)
-            ->with(['ad.category', 'ad.location', 'ad.media'])
+            ->with(['ad.category', 'ad.location', 'ad.primaryImage'])
             ->orderByDesc('viewed_at')
             ->paginate(self::PER_PAGE);
 

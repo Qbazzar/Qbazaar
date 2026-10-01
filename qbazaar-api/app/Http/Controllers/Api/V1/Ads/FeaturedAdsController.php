@@ -57,7 +57,7 @@ class FeaturedAdsController extends Controller
         $ads = Ad::query()
             ->whereIn('id', $featuredIds)
             ->publiclyListed()
-            ->with(['category', 'location', 'media'])
+            ->with(['category', 'location', 'primaryImage'])
             ->orderByDesc('published_at')
             ->orderBy('id')
             ->get();

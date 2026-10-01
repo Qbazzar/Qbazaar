@@ -171,7 +171,7 @@ it('does not count draft creation against the publish limiter', function (): voi
     $payload = [
         'title' => 'Wooden dining table for six',
         'description' => 'Solid wood dining table, seats six people comfortably, minor scratches.',
-        'category_id' => Category::query()->whereNull('custom_fields')->value('id'),
+        'category_id' => Category::query()->active()->leaf()->whereNull('custom_fields')->value('id'),
         'location_id' => Location::query()->value('id'),
         'price' => 750,
         'price_type' => 'fixed',

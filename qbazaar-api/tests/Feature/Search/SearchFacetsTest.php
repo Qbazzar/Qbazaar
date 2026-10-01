@@ -22,9 +22,9 @@ beforeEach(function (): void {
 
 it('returns category and location facet counts that add up to total hits', function (): void {
     /** @var Category $categoryA */
-    $categoryA = Category::query()->first();
+    $categoryA = Category::query()->leaf()->first();
     /** @var Category $categoryB */
-    $categoryB = Category::query()->skip(1)->first();
+    $categoryB = Category::query()->leaf()->skip(1)->first();
 
     Ad::factory()->count(3)->active()->create([
         'user_id' => $this->seller->id,

@@ -180,7 +180,7 @@ class AdController extends Controller
 
         // A mass query delete skips model events, leaving the ads searchable and
         // unlogged; deleting each model matches the single-delete path.
-        $ads = Ad::query()->whereIn('id', $data['ids'])->get();
+        $ads = Ad::query()->with('user')->whereIn('id', $data['ids'])->get();
         DB::transaction(fn () => $ads->each->delete());
         $count = $ads->count();
 

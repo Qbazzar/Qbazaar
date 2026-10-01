@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\Catalog\CatalogCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -16,6 +17,8 @@ use Throwable;
 
 class CategoryController extends Controller
 {
+    public function __construct(private readonly CatalogCache $catalogCache) {}
+
     public function index(Request $request): View
     {
         $search = $request->string('q')->toString();
@@ -191,12 +194,11 @@ class CategoryController extends Controller
     }
 
     /**
-     * Bust the public taxonomy caches — mirrors CategoryResource::flushCache().
+     * Bulk deletes skip model events, so the catalog caches are flushed here as well as by the observer.
      */
     private function flushCache(): void
     {
-        Cache::forget('categories.tree');
-        Cache::forget('categories.main');
+        $this->catalogCache->taxonomyChanged();
 
         try {
             Cache::tags(['categories'])->flush();

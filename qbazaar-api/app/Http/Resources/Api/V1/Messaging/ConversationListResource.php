@@ -37,8 +37,8 @@ class ConversationListResource extends JsonResource
             : null;
 
         $ad = $this->resource->ad;
-        $primary = $ad instanceof Ad && $ad->relationLoaded('media')
-            ? $ad->getMedia('images')->sortBy('order_column')->first()
+        $primary = $ad instanceof Ad && $ad->relationLoaded('primaryImage')
+            ? $ad->primaryImage
             : null;
 
         return [
@@ -57,10 +57,19 @@ class ConversationListResource extends JsonResource
             ],
             'last_message_preview' => $this->last_message_preview,
             'last_message_at' => $this->last_message_at?->toIso8601String(),
-            'unread_count' => $caller !== null
-                ? $this->resource->unreadCountFor($caller)
-                : 0,
+            'unread_count' => $this->unreadCount($caller),
             'created_at' => $this->created_at->toIso8601String(),
         ];
+    }
+
+    private function unreadCount(?User $caller): int
+    {
+        if ($caller === null) {
+            return 0;
+        }
+
+        $preloaded = $this->resource->unread_count;
+
+        return $preloaded !== null ? (int) $preloaded : $this->resource->unreadCountFor($caller);
     }
 }
