@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -45,6 +46,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $rating_count
  * @property int $followers_count
  * @property int $following_count
+ * @property BusinessProfile|null $businessProfile
  * @property Language $language
  * @property string|null $avatar_url
  * @property PrivacySettings|null $privacy_settings
@@ -58,6 +60,8 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUlids, InteractsWithMedia, Notifiable, SoftDeletes;
+
+    public const BUSINESS_COVER_COLLECTION = 'business_cover';
 
     /**
      * Status, verification flags and lifecycle timestamps are left out on
@@ -130,6 +134,17 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     public function isStaff(): bool
     {
         return $this->hasAnyRole(StaffRole::names());
+    }
+
+    public function isBusiness(): bool
+    {
+        return $this->account_type === AccountType::BUSINESS;
+    }
+
+    /** @return HasOne<BusinessProfile, $this> */
+    public function businessProfile(): HasOne
+    {
+        return $this->hasOne(BusinessProfile::class);
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -280,6 +295,10 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         $this->addMediaCollection('avatar')
             ->useDisk((string) config('qbazaar.uploads.public_disk'))
             ->singleFile();
+
+        $this->addMediaCollection(self::BUSINESS_COVER_COLLECTION)
+            ->useDisk((string) config('qbazaar.uploads.public_disk'))
+            ->singleFile();
     }
 
     public function registerMediaConversions(?Media $media = null): void
@@ -293,6 +312,26 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
             ->nonQueued()
             ->performOnCollections('avatar')
             ->fit(Fit::Crop, 480, 480);
+
+        $this->addMediaConversion('cover')
+            ->queued()
+            ->performOnCollections(self::BUSINESS_COVER_COLLECTION)
+            ->fit(Fit::Crop, 1200, 400);
+    }
+
+    /**
+     * Business cover banner; the original is served until the queued crop exists.
+     * Reads the loaded media relation when the caller eager-loaded it.
+     */
+    public function businessCoverUrl(): ?string
+    {
+        $media = $this->getFirstMedia(self::BUSINESS_COVER_COLLECTION);
+
+        if ($media === null) {
+            return null;
+        }
+
+        return $media->hasGeneratedConversion('cover') ? $media->getUrl('cover') : $media->getUrl();
     }
 
     /**

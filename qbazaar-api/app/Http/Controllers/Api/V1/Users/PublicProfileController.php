@@ -36,6 +36,10 @@ class PublicProfileController extends Controller
             throw new DomainException(ErrorCode::USER_NOT_FOUND);
         }
 
+        if ($user->isBusiness()) {
+            $user->load(['businessProfile', 'media' => fn ($media) => $media->where('collection_name', User::BUSINESS_COVER_COLLECTION)]);
+        }
+
         // Public route: the default guard is `web`, so read the optional Bearer token explicitly.
         /** @var User|null $viewer */
         $viewer = $request->user('sanctum');

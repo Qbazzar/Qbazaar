@@ -146,6 +146,8 @@ return [
         'follows_per_page' => 20,
         'follows_per_minute' => 30,
         'follows_per_day' => 500,
+        'business_about_max_length' => 2000,
+        'max_cover_size_kb' => 5_120,
     ],
 
     /*

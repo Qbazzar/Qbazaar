@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
+use App\Http\Controllers\Api\V1\Account\BusinessProfileController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
@@ -194,6 +195,11 @@ Route::prefix('account')
         Route::get('/followers', [FollowsController::class, 'followers'])->name('followers.index');
         Route::delete('/followers/{user}', [FollowsController::class, 'removeFollower'])->name('followers.destroy');
         Route::get('/following', [FollowsController::class, 'following'])->name('following.index');
+
+        Route::get('/business-profile', [BusinessProfileController::class, 'show'])->name('business-profile.show');
+        Route::put('/business-profile', [BusinessProfileController::class, 'update'])->name('business-profile.update');
+        Route::post('/business-profile/cover', [BusinessProfileController::class, 'uploadCover'])->name('business-profile.cover.store');
+        Route::delete('/business-profile/cover', [BusinessProfileController::class, 'removeCover'])->name('business-profile.cover.destroy');
 
         // Web-push device tokens (FCM). DELETE takes the token in the body —
         // FCM tokens are too long (and too sensitive) to put in the URL.

@@ -8,8 +8,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 
 /**
- * GET /users/{user}/public-profile: the public user card plus what depends
- * on who is looking.
+ * GET /users/{user}/public-profile: the public user card, the business
+ * details of a business account (null otherwise), and what depends on who
+ * is looking.
  */
 class PublicProfileResource extends PublicUserResource
 {
@@ -28,6 +29,9 @@ class PublicProfileResource extends PublicUserResource
         return [
             ...parent::toArray($request),
             'is_following' => $this->isFollowing,
+            'business_profile' => $this->resource->isBusiness()
+                ? (new BusinessProfileResource($this->resource, publicView: true))->toArray($request)
+                : null,
         ];
     }
 }

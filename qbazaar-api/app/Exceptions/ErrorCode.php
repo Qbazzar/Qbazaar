@@ -41,6 +41,7 @@ enum ErrorCode: string
     // ── Social: follows, business profiles ─────────────────────────
     case FOLLOW_SELF_FORBIDDEN = 'FOLLOW_001';
     case FOLLOW_BLOCKED = 'FOLLOW_002';
+    case BUSINESS_ACCOUNT_REQUIRED = 'BIZ_001';
 
     // ── Categories & Locations (Sprint 3) ───────────────────────────
     case CATEGORY_NOT_FOUND = 'CAT_001';
@@ -178,6 +179,7 @@ enum ErrorCode: string
             self::AUTH_PHONE_NOT_VERIFIED,
             self::USER_BLOCK_ADMIN_FORBIDDEN,
             self::FOLLOW_BLOCKED,
+            self::BUSINESS_ACCOUNT_REQUIRED,
             self::AD_EDIT_FORBIDDEN,
             self::MSG_BLOCKED,
             self::MSG_NOT_PARTICIPANT,

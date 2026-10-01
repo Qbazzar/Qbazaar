@@ -16,7 +16,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *  - `phone` is omitted unless `show_phone` is true (default true)
  *  - `email` is omitted unless `show_email` is true (default false)
  *
- * `business_name` is only populated when the account type is business.
+ * `business_name` is only populated when the account type is business; it
+ * comes from the business profile when the caller loaded it.
  * `ads_count` reflects the user's currently-active (public) listings.
  *
  * @mixin User
@@ -35,7 +36,7 @@ class PublicUserResource extends JsonResource
             'full_name' => $this->full_name,
             'avatar_url' => $this->avatar_url,
             'account_type' => $this->account_type->value,
-            'business_name' => $this->account_type === AccountType::BUSINESS ? $this->full_name : null,
+            'business_name' => $this->account_type === AccountType::BUSINESS ? $this->businessName() : null,
             'joined_at' => $this->created_at->toIso8601String(),
             'verification_badges' => [
                 'email_verified' => (bool) $this->email_verified,
@@ -58,5 +59,14 @@ class PublicUserResource extends JsonResource
         }
 
         return $payload;
+    }
+
+    private function businessName(): string
+    {
+        $profileName = $this->resource->relationLoaded('businessProfile')
+            ? $this->resource->businessProfile?->business_name
+            : null;
+
+        return $profileName ?? $this->full_name;
     }
 }

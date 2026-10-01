@@ -712,6 +712,112 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v1/account/business-profile:
+    get:
+      tags: [Account]
+      summary: The caller's business profile (business accounts only)
+      operationId: accountBusinessProfileShow
+      responses:
+        '200':
+          description: Full profile including contact details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    put:
+      tags: [Account]
+      summary: Create or update the caller's business profile
+      description: Only the fields sent change; `null` clears a field. Each save is written to the activity log.
+      operationId: accountBusinessProfileUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessProfileRequest'
+      responses:
+        '200':
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/account/business-profile/cover:
+    post:
+      tags: [Account]
+      summary: Upload or replace the business cover banner
+      description: >
+        Multipart field `cover` (jpeg/png/webp, at most 5 MB). The 1200x400
+        crop is produced on the queue; `cover_url` points at the original
+        until it exists.
+      operationId: accountBusinessCoverUpload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cover]
+              properties:
+                cover:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Profile with the new `cover_url`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Account]
+      summary: Remove the business cover banner
+      operationId: accountBusinessCoverDelete
+      responses:
+        '200':
+          description: Profile with `cover_url` null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   /api/v1/account/followers/{user}:
     delete:
       tags: [Account]
@@ -3669,6 +3775,11 @@ components:
         is_following:
           type: boolean
           description: Whether the caller (optional Bearer token) follows this user; false for guests and for yourself.
+        business_profile:
+          description: Business details for `business` accounts, null for private ones. Contact phone and email are null unless the owner's privacy settings show them.
+          oneOf:
+            - $ref: '#/components/schemas/BusinessProfile'
+            - type: 'null'
 
     PublicProfileEnvelope:
       allOf:
@@ -3677,6 +3788,65 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/PublicProfile'
+
+    OpeningHours:
+      type: object
+      required: [day, closed]
+      properties:
+        day: { type: string, enum: [sat, sun, mon, tue, wed, thu, fri] }
+        closed: { type: boolean }
+        open: { type: [string, 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$', example: '09:00', description: Required unless `closed`. }
+        close: { type: [string, 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$', example: '22:00', description: Required unless `closed`; may be earlier than `open` for hours past midnight. }
+
+    BusinessProfile:
+      type: object
+      properties:
+        business_name: { type: [string, 'null'], maxLength: 120 }
+        about: { type: [string, 'null'], maxLength: 2000 }
+        legal_name: { type: [string, 'null'], maxLength: 160 }
+        commercial_registration_number: { type: [string, 'null'], maxLength: 40 }
+        contact_phone: { type: [string, 'null'], example: '+97455123456' }
+        contact_email: { type: [string, 'null'], format: email }
+        website: { type: [string, 'null'], format: uri }
+        address: { type: [string, 'null'], maxLength: 255 }
+        opening_hours:
+          type: array
+          maxItems: 7
+          items: { $ref: '#/components/schemas/OpeningHours' }
+        cover_url: { type: [string, 'null'], format: uri }
+        updated_at: { type: [string, 'null'], format: date-time }
+
+    BusinessProfileEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/BusinessProfile'
+
+    UpdateBusinessProfileRequest:
+      type: object
+      properties:
+        business_name: { type: [string, 'null'], maxLength: 120 }
+        about: { type: [string, 'null'], maxLength: 2000 }
+        legal_name: { type: [string, 'null'], maxLength: 160 }
+        commercial_registration_number: { type: [string, 'null'], maxLength: 40, pattern: '^[0-9A-Za-z/-]+$' }
+        contact_phone: { type: [string, 'null'], pattern: '^\+974[0-9]{8}$' }
+        contact_email: { type: [string, 'null'], format: email, maxLength: 255 }
+        website: { type: [string, 'null'], format: uri, maxLength: 255 }
+        address: { type: [string, 'null'], maxLength: 255 }
+        opening_hours:
+          type: [array, 'null']
+          maxItems: 7
+          description: One entry per weekday at most.
+          items:
+            type: object
+            required: [day]
+            properties:
+              day: { type: string, enum: [sat, sun, mon, tue, wed, thu, fri] }
+              closed: { type: boolean, default: false }
+              open: { type: string, example: '09:00' }
+              close: { type: string, example: '22:00' }
 
     FollowState:
       type: object

@@ -306,4 +306,10 @@ return [
         ],
         'blocked' => 'You cannot follow this user.',
     ],
+
+    'business' => [
+        'account' => [
+            'required' => 'This is only available to business accounts.',
+        ],
+    ],
 ];
