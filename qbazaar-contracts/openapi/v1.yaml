@@ -690,6 +690,179 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v1/account/followers:
+    get:
+      tags: [Account]
+      summary: People who follow the caller, newest first
+      description: Cursor-paginated (`config qbazaar.social.follows_per_page`, 20). Accounts that are not active are left out.
+      operationId: accountFollowers
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A page of followers; `is_following` tells whether the caller follows them back
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/account/business-profile:
+    get:
+      tags: [Account]
+      summary: The caller's business profile (business accounts only)
+      operationId: accountBusinessProfileShow
+      responses:
+        '200':
+          description: Full profile including contact details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    put:
+      tags: [Account]
+      summary: Create or update the caller's business profile
+      description: Only the fields sent change; `null` clears a field. Each save is written to the activity log.
+      operationId: accountBusinessProfileUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessProfileRequest'
+      responses:
+        '200':
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/account/business-profile/cover:
+    post:
+      tags: [Account]
+      summary: Upload or replace the business cover banner
+      description: >
+        Multipart field `cover` (jpeg/png/webp, at most 5 MB). The 1200x400
+        crop is produced on the queue; `cover_url` points at the original
+        until it exists.
+      operationId: accountBusinessCoverUpload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cover]
+              properties:
+                cover:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Profile with the new `cover_url`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Account]
+      summary: Remove the business cover banner
+      operationId: accountBusinessCoverDelete
+      responses:
+        '200':
+          description: Profile with `cover_url` null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller is not a business account (`BIZ_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/followers/{user}:
+    delete:
+      tags: [Account]
+      summary: Remove a follower (idempotent, no block)
+      operationId: accountRemoveFollower
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '204':
+          description: The user no longer follows the caller
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/following:
+    get:
+      tags: [Account]
+      summary: Accounts the caller follows, newest first
+      description: Cursor-paginated like `/account/followers`.
+      operationId: accountFollowing
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A page of followed accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   # ──────────────────────────────────────────────────────────────────────────
   # Account lifecycle (Sprint 2 — Wave 2)
   # ──────────────────────────────────────────────────────────────────────────
@@ -1431,6 +1604,53 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/v1/ads/{id}/reserve:
+    post:
+      tags: [Ads]
+      summary: Reserve a live ad for a buyer (seller only)
+      description: >
+        The ad stays `active` and keeps showing in listings and search with
+        `is_reserved: true`. Idempotent: reserving again keeps the first
+        `reserved_at`. The reservation is released automatically when the ad
+        leaves `active` (sold, expired, blocked, back to review).
+      operationId: adsReserve
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Ad reserved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: The ad is not `active`, e.g. still a draft (`AD_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+    delete:
+      tags: [Ads]
+      summary: Release the reservation (seller only, idempotent)
+      operationId: adsRelease
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Reservation released
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   /api/v1/ads/{ad}/images:
     post:
       tags: [Ads]
@@ -1615,6 +1835,8 @@ paths:
         - { name: price_max, in: query, schema: { type: number, minimum: 0 } }
         - { name: condition, in: query, schema: { $ref: '#/components/schemas/Condition' } }
         - { name: price_type, in: query, schema: { $ref: '#/components/schemas/PriceType' } }
+        - { name: ad_type, in: query, schema: { $ref: '#/components/schemas/AdType' } }
+        - { name: shipping, in: query, schema: { $ref: '#/components/schemas/AdShipping' } }
         - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed, distance], default: latest }, description: '`distance` requires `lat` and `lng`.' }
         - { name: lat, in: query, schema: { type: number, minimum: -90, maximum: 90 }, description: 'Required with `lng`, `radius_km` or `sort=distance`.' }
         - { name: lng, in: query, schema: { type: number, minimum: -180, maximum: 180 }, description: 'Required with `lat`, `radius_km` or `sort=distance`.' }
@@ -1899,6 +2121,77 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v1/users/{user}/follow:
+    post:
+      tags: [Users]
+      summary: Follow a user (idempotent)
+      description: >
+        Updates the follower and following counts atomically. Rate limited
+        per user (`throttle:follows`: 30 per minute, 500 per day).
+      operationId: usersFollow
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '200':
+          description: Following
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: One of the two users has blocked the other (`FOLLOW_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Unknown or inactive user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Cannot follow yourself (`FOLLOW_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+    delete:
+      tags: [Users]
+      summary: Unfollow a user (idempotent)
+      operationId: usersUnfollow
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '200':
+          description: Not following
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown or inactive user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
   /api/v1/users/{user}/public-profile:
     get:
       tags: [Users]
@@ -1948,6 +2241,31 @@ paths:
                 $ref: '#/components/schemas/SuccessEnvelope'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /api/v1/companies:
+    get:
+      tags: [Users]
+      summary: Directory of active business accounts, most followed first
+      description: >
+        Public. Send the Bearer token to get `is_following` for the caller;
+        guests always get false. `q` matches the business name or the account
+        name.
+      operationId: companiesIndex
+      security: []
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        '200':
+          description: A page of companies (20 per page)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyListEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Messaging (Sprint 8 Wave A)
@@ -3505,6 +3823,20 @@ components:
         ads_count:
           type: integer
           example: 0
+        followers_count:
+          type: integer
+          example: 12
+        following_count:
+          type: integer
+          example: 3
+        is_following:
+          type: boolean
+          description: Whether the caller (optional Bearer token) follows this user; false for guests and for yourself.
+        business_profile:
+          description: Business details for `business` accounts, null for private ones. Contact phone and email are null unless the owner's privacy settings show them.
+          oneOf:
+            - $ref: '#/components/schemas/BusinessProfile'
+            - type: 'null'
 
     PublicProfileEnvelope:
       allOf:
@@ -3513,6 +3845,133 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/PublicProfile'
+
+    OpeningHours:
+      type: object
+      required: [day, closed]
+      properties:
+        day: { type: string, enum: [sat, sun, mon, tue, wed, thu, fri] }
+        closed: { type: boolean }
+        open: { type: [string, 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$', example: '09:00', description: Required unless `closed`. }
+        close: { type: [string, 'null'], pattern: '^[0-2][0-9]:[0-5][0-9]$', example: '22:00', description: Required unless `closed`; may be earlier than `open` for hours past midnight. }
+
+    BusinessProfile:
+      type: object
+      properties:
+        business_name: { type: [string, 'null'], maxLength: 120 }
+        about: { type: [string, 'null'], maxLength: 2000 }
+        legal_name: { type: [string, 'null'], maxLength: 160 }
+        commercial_registration_number: { type: [string, 'null'], maxLength: 40 }
+        contact_phone: { type: [string, 'null'], example: '+97455123456' }
+        contact_email: { type: [string, 'null'], format: email }
+        website: { type: [string, 'null'], format: uri }
+        address: { type: [string, 'null'], maxLength: 255 }
+        opening_hours:
+          type: array
+          maxItems: 7
+          items: { $ref: '#/components/schemas/OpeningHours' }
+        cover_url: { type: [string, 'null'], format: uri }
+        updated_at: { type: [string, 'null'], format: date-time }
+
+    BusinessProfileEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/BusinessProfile'
+
+    UpdateBusinessProfileRequest:
+      type: object
+      properties:
+        business_name: { type: [string, 'null'], maxLength: 120 }
+        about: { type: [string, 'null'], maxLength: 2000 }
+        legal_name: { type: [string, 'null'], maxLength: 160 }
+        commercial_registration_number: { type: [string, 'null'], maxLength: 40, pattern: '^[0-9A-Za-z/-]+$' }
+        contact_phone: { type: [string, 'null'], pattern: '^\+974[0-9]{8}$' }
+        contact_email: { type: [string, 'null'], format: email, maxLength: 255 }
+        website: { type: [string, 'null'], format: uri, maxLength: 255 }
+        address: { type: [string, 'null'], maxLength: 255 }
+        opening_hours:
+          type: [array, 'null']
+          maxItems: 7
+          description: One entry per weekday at most.
+          items:
+            type: object
+            required: [day]
+            properties:
+              day: { type: string, enum: [sat, sun, mon, tue, wed, thu, fri] }
+              closed: { type: boolean, default: false }
+              open: { type: string, example: '09:00' }
+              close: { type: string, example: '22:00' }
+
+    Company:
+      type: object
+      required: [id, business_name, followers_count, active_ads_count, is_following]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        business_name: { type: string, description: The business profile name, or the account name when none is set. }
+        about: { type: [string, 'null'], description: First 160 characters of the business description. }
+        avatar_url: { type: [string, 'null'], format: uri }
+        cover_url: { type: [string, 'null'], format: uri }
+        followers_count: { type: integer }
+        active_ads_count: { type: integer }
+        rating_avg: { type: number, example: 4.6 }
+        rating_count: { type: integer }
+        is_following: { type: boolean }
+        joined_at: { type: string, format: date-time }
+
+    CompanyListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Company'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    FollowState:
+      type: object
+      required: [following, user_id, followers_count]
+      properties:
+        following: { type: boolean }
+        user_id: { $ref: '#/components/schemas/ULID' }
+        followers_count: { type: integer, example: 13 }
+
+    FollowStateEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/FollowState'
+
+    FollowListItem:
+      type: object
+      required: [id, full_name, account_type, followers_count, is_following]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        full_name: { type: string }
+        avatar_url: { type: [string, 'null'], format: uri }
+        account_type: { type: string, enum: [private, business] }
+        followers_count: { type: integer }
+        is_following: { type: boolean, description: Whether the caller follows this user. }
+        followed_at: { type: string, format: date-time }
+
+    FollowListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/FollowListItem'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
 
     # ── Reference data (Sprint 3) ────────────────────────────────────
     LocalizedString:
@@ -3842,6 +4301,15 @@ components:
       type: string
       enum: [new, like_new, used]
 
+    AdType:
+      type: string
+      enum: [offering, wanted]
+      description: '`offering` sells an item, `wanted` looks for one ("Looking for").'
+
+    AdShipping:
+      type: string
+      enum: [pickup_only, delivery]
+
     MediaSize:
       type: object
       properties:
@@ -3890,6 +4358,9 @@ components:
         price_type: { $ref: '#/components/schemas/PriceType' }
         currency: { type: string, example: QAR }
         status: { $ref: '#/components/schemas/AdStatus' }
+        is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
+        ad_type: { $ref: '#/components/schemas/AdType' }
+        shipping: { $ref: '#/components/schemas/AdShipping' }
         primary_image: { $ref: '#/components/schemas/Media', nullable: true }
         category_slug: { type: string, nullable: true }
         location_slug: { type: string, nullable: true }
@@ -3919,7 +4390,17 @@ components:
         price_type: { $ref: '#/components/schemas/PriceType' }
         currency: { type: string, example: QAR }
         condition: { $ref: '#/components/schemas/Condition', nullable: true }
+        ad_type: { $ref: '#/components/schemas/AdType' }
+        shipping: { $ref: '#/components/schemas/AdShipping' }
+        postal_code: { type: string, nullable: true, maxLength: 10 }
+        street:
+          type: string
+          nullable: true
+          description: Always null for other viewers unless `show_full_address` is true; the seller always sees it.
+        show_full_address: { type: boolean }
         status: { $ref: '#/components/schemas/AdStatus' }
+        is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
+        reserved_at: { type: string, format: date-time, nullable: true }
         custom_fields:
           type: object
           additionalProperties: true
@@ -3952,6 +4433,11 @@ components:
         price: { type: number, nullable: true, minimum: 0, maximum: 9999999 }
         price_type: { $ref: '#/components/schemas/PriceType' }
         condition: { $ref: '#/components/schemas/Condition', nullable: true }
+        ad_type: { allOf: [{ $ref: '#/components/schemas/AdType' }], default: offering }
+        shipping: { allOf: [{ $ref: '#/components/schemas/AdShipping' }], default: pickup_only }
+        postal_code: { type: string, nullable: true, maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
+        street: { type: string, nullable: true, maxLength: 255 }
+        show_full_address: { type: boolean, description: 'Show the street to everyone. Default false: only the postal code and city are public.' }
         custom_fields:
           type: object
           additionalProperties: true
@@ -3969,6 +4455,11 @@ components:
           allOf: [{ $ref: '#/components/schemas/ULID' }]
           description: Same rule as on create (active leaf); resubmitting the ad's current category is always accepted.
         location_id: { $ref: '#/components/schemas/ULID' }
+        ad_type: { $ref: '#/components/schemas/AdType' }
+        shipping: { $ref: '#/components/schemas/AdShipping' }
+        postal_code: { type: string, nullable: true, maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
+        street: { type: string, nullable: true, maxLength: 255 }
+        show_full_address: { type: boolean, description: 'Show the street to everyone. Default false: only the postal code and city are public.' }
         custom_fields:
           type: object
           additionalProperties: true

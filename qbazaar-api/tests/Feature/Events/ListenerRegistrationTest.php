@@ -17,6 +17,7 @@ use App\Events\Offers\OfferExpired;
 use App\Events\Offers\OfferRejected;
 use App\Events\Offers\OfferWithdrawn;
 use App\Listeners\Ads\NotifyAdminsOfPendingAd;
+use App\Listeners\Ads\QueueDuplicateImageCheck;
 use App\Listeners\Ads\SendAdNotifications;
 use App\Listeners\Messaging\ScreenChatMessage;
 use App\Listeners\Messaging\SendChatPushNotifications;
@@ -64,7 +65,7 @@ it('wires each event to its listeners', function (string $event, array $listener
     'AdExpired' => [AdExpired::class, [SendAdNotifications::class]],
     'AdExpiringSoon' => [AdExpiringSoon::class, [SendAdNotifications::class]],
     'AdRenewed' => [AdRenewed::class, [SendAdNotifications::class]],
-    'AdSubmittedForReview' => [AdSubmittedForReview::class, [NotifyAdminsOfPendingAd::class]],
+    'AdSubmittedForReview' => [AdSubmittedForReview::class, [NotifyAdminsOfPendingAd::class, QueueDuplicateImageCheck::class]],
     'NotificationSent' => [NotificationSent::class, [BroadcastDatabaseNotificationCreated::class]],
     'NotificationFailed' => [NotificationFailed::class, [PruneStaleDeviceTokens::class]],
     'MessageSent' => [MessageSent::class, [SendChatPushNotifications::class, ScreenChatMessage::class]],

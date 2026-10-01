@@ -102,6 +102,8 @@ return [
         'description_min_length' => 20,
         'description_max_length' => 3000,
         'price_max' => 99_999_999,
+        'postal_code_max_length' => 10,
+        'street_max_length' => 255,
         'view_throttle_per_user_per_minute' => 60,
     ],
 
@@ -138,6 +140,20 @@ return [
         'recommended_window_days' => 30,
         'best_selling_limit' => 12,
         'featured_sellers_limit' => 10,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Social — follows, companies directory, business profiles
+    |--------------------------------------------------------------------------
+    */
+    'social' => [
+        'follows_per_page' => 20,
+        'follows_per_minute' => 30,
+        'follows_per_day' => 500,
+        'companies_per_page' => 20,
+        'business_about_max_length' => 2000,
+        'max_cover_size_kb' => 5_120,
     ],
 
     /*
@@ -242,6 +258,7 @@ return [
         'impersonation_ttl_minutes' => 20,
         'impersonation_reason_min_length' => 10,
         'impersonation_reason_max_length' => 500,
+        'pending_review_count_cache_seconds' => 300,
     ],
 
     /*

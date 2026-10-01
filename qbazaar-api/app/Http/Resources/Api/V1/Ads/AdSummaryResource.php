@@ -45,6 +45,9 @@ class AdSummaryResource extends JsonResource
             'price_type' => $this->price_type->value,
             'currency' => $this->currency,
             'status' => $this->status->value,
+            'is_reserved' => $this->resource->isReserved(),
+            'ad_type' => $this->ad_type->value,
+            'shipping' => $this->shipping->value,
             'views_count' => (int) $this->views_count,
             'favorites_count' => (int) $this->favorites_count,
             // Set by ViewerFavorites for a signed-in viewer; guests always get false.
