@@ -690,6 +690,73 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v1/account/followers:
+    get:
+      tags: [Account]
+      summary: People who follow the caller, newest first
+      description: Cursor-paginated (`config qbazaar.social.follows_per_page`, 20). Accounts that are not active are left out.
+      operationId: accountFollowers
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A page of followers; `is_following` tells whether the caller follows them back
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/account/followers/{user}:
+    delete:
+      tags: [Account]
+      summary: Remove a follower (idempotent, no block)
+      operationId: accountRemoveFollower
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '204':
+          description: The user no longer follows the caller
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/following:
+    get:
+      tags: [Account]
+      summary: Accounts the caller follows, newest first
+      description: Cursor-paginated like `/account/followers`.
+      operationId: accountFollowing
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A page of followed accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   # ──────────────────────────────────────────────────────────────────────────
   # Account lifecycle (Sprint 2 — Wave 2)
   # ──────────────────────────────────────────────────────────────────────────
@@ -1915,6 +1982,77 @@ paths:
           description: Unblocked (or nothing to unblock)
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/users/{user}/follow:
+    post:
+      tags: [Users]
+      summary: Follow a user (idempotent)
+      description: >
+        Updates the follower and following counts atomically. Rate limited
+        per user (`throttle:follows`: 30 per minute, 500 per day).
+      operationId: usersFollow
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '200':
+          description: Following
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: One of the two users has blocked the other (`FOLLOW_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Unknown or inactive user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Cannot follow yourself (`FOLLOW_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+    delete:
+      tags: [Users]
+      summary: Unfollow a user (idempotent)
+      operationId: usersUnfollow
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ULID'
+      responses:
+        '200':
+          description: Not following
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStateEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown or inactive user (`USER_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/users/{user}/public-profile:
     get:
@@ -3522,6 +3660,15 @@ components:
         ads_count:
           type: integer
           example: 0
+        followers_count:
+          type: integer
+          example: 12
+        following_count:
+          type: integer
+          example: 3
+        is_following:
+          type: boolean
+          description: Whether the caller (optional Bearer token) follows this user; false for guests and for yourself.
 
     PublicProfileEnvelope:
       allOf:
@@ -3530,6 +3677,46 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/PublicProfile'
+
+    FollowState:
+      type: object
+      required: [following, user_id, followers_count]
+      properties:
+        following: { type: boolean }
+        user_id: { $ref: '#/components/schemas/ULID' }
+        followers_count: { type: integer, example: 13 }
+
+    FollowStateEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/FollowState'
+
+    FollowListItem:
+      type: object
+      required: [id, full_name, account_type, followers_count, is_following]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        full_name: { type: string }
+        avatar_url: { type: [string, 'null'], format: uri }
+        account_type: { type: string, enum: [private, business] }
+        followers_count: { type: integer }
+        is_following: { type: boolean, description: Whether the caller follows this user. }
+        followed_at: { type: string, format: date-time }
+
+    FollowListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/FollowListItem'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
 
     # ── Reference data (Sprint 3) ────────────────────────────────────
     LocalizedString:

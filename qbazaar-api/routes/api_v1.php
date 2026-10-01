@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
 use App\Http\Controllers\Api\V1\Account\DeviceTokenController;
+use App\Http\Controllers\Api\V1\Account\FollowsController;
 use App\Http\Controllers\Api\V1\Account\NotificationsController;
 use App\Http\Controllers\Api\V1\Account\PasswordController;
 use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
@@ -47,6 +48,7 @@ use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Support\SupportController;
 use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
+use App\Http\Controllers\Api\V1\Users\FollowController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
 use App\Http\Middleware\EnsureApiDocsEnabled;
@@ -188,6 +190,10 @@ Route::prefix('account')
         Route::put('/privacy-settings', [PrivacySettingsController::class, 'update'])->name('privacy.update');
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
+
+        Route::get('/followers', [FollowsController::class, 'followers'])->name('followers.index');
+        Route::delete('/followers/{user}', [FollowsController::class, 'removeFollower'])->name('followers.destroy');
+        Route::get('/following', [FollowsController::class, 'following'])->name('following.index');
 
         // Web-push device tokens (FCM). DELETE takes the token in the body —
         // FCM tokens are too long (and too sensitive) to put in the URL.
@@ -494,6 +500,9 @@ Route::prefix('users')
         Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
             Route::post('/{user}/block', [BlockController::class, 'store'])->name('block.store');
             Route::delete('/{user}/block', [BlockController::class, 'destroy'])->name('block.destroy');
+
+            Route::post('/{user}/follow', [FollowController::class, 'store'])->middleware('throttle:follows')->name('follow.store');
+            Route::delete('/{user}/follow', [FollowController::class, 'destroy'])->middleware('throttle:follows')->name('follow.destroy');
         });
     });
 

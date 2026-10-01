@@ -80,6 +80,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('drafts', fn (Request $r) => Limit::perHour((int) config('qbazaar.ads.drafts_per_hour_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('messages', fn (Request $r) => Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('follows', fn (Request $r) => [
+            Limit::perMinute((int) config('qbazaar.social.follows_per_minute'))->by('follows:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.social.follows_per_day'))->by('follows-day:' . (optional($r->user())->id ?: $r->ip())),
+        ]);
     }
 
     /**

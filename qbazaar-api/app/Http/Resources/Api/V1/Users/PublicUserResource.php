@@ -45,6 +45,8 @@ class PublicUserResource extends JsonResource
             'ads_count' => $this->resource->ads()->active()->count(),
             'rating_avg' => (float) $this->rating_avg,
             'rating_count' => (int) $this->rating_count,
+            'followers_count' => (int) $this->followers_count,
+            'following_count' => (int) $this->following_count,
         ];
 
         if ($privacy->show_phone) {

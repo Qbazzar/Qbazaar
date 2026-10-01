@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
@@ -42,6 +43,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property bool $phone_verified
  * @property numeric-string $rating_avg
  * @property int $rating_count
+ * @property int $followers_count
+ * @property int $following_count
  * @property Language $language
  * @property string|null $avatar_url
  * @property PrivacySettings|null $privacy_settings
@@ -99,6 +102,8 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
             'privacy_settings' => PrivacySettings::class,
             'rating_avg' => 'decimal:2',
             'rating_count' => 'integer',
+            'followers_count' => 'integer',
+            'following_count' => 'integer',
         ];
     }
 
@@ -193,6 +198,31 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     public function hasBlocked(User $other): bool
     {
         return $this->blockedUsers()->where('blocked_id', $other->id)->exists();
+    }
+
+    /** Whether either user has blocked the other; both lookups hit the pivot's primary key. */
+    public function isBlockedEitherWay(User $other): bool
+    {
+        return DB::table('user_blocks')
+            ->where(fn ($query) => $query->where('blocker_id', $this->id)->where('blocked_id', $other->id))
+            ->orWhere(fn ($query) => $query->where('blocker_id', $other->id)->where('blocked_id', $this->id))
+            ->exists();
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+     *  Follows — the counts are denormalised on users by FollowGraph.
+     * ──────────────────────────────────────────────────────────────────*/
+
+    /** @return HasMany<Follow, $this> */
+    public function followings(): HasMany
+    {
+        return $this->hasMany(Follow::class, 'follower_id');
+    }
+
+    /** @return HasMany<Follow, $this> */
+    public function followerLinks(): HasMany
+    {
+        return $this->hasMany(Follow::class, 'followed_id');
     }
 
     /* ──────────────────────────────────────────────────────────────────
