@@ -82,7 +82,7 @@
                                 <span class="block text-xs text-ink-500">{{ \Illuminate\Support\Str::limit($report->target_id, 12) }}</span>
                             </td>
                             <td class="px-4 py-3 text-ink-700">{{ $report->category->label()['ar'] }}</td>
-                            <td class="px-4 py-3 text-ink-700">{{ $report->reporter?->full_name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-ink-700">{{ $report->reporter?->full_name ?? 'الإشراف التلقائي' }}</td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusStyles[$report->status->value] ?? 'bg-cream-200 text-ink-500' }}">
                                     {{ $statusLabels[$report->status->value] ?? $report->status->value }}
