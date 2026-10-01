@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -21,6 +23,7 @@ use Illuminate\Support\Carbon;
 class TrustedDevice extends Model
 {
     use HasUlids;
+    use MassPrunable;
 
     /**
      * @var list<string>
@@ -41,5 +44,19 @@ class TrustedDevice extends Model
         return [
             'last_used_at' => 'datetime',
         ];
+    }
+
+    /**
+     * A device unused for this long goes back through the new-device check.
+     *
+     * @return Builder<static>
+     */
+    public function prunable(): Builder
+    {
+        return static::query()->where(
+            'last_used_at',
+            '<',
+            Carbon::now()->subDays((int) config('qbazaar.auth.new_device_check.trusted_device_days')),
+        );
     }
 }

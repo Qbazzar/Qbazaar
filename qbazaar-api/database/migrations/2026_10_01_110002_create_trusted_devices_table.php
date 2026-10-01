@@ -24,6 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['user_id', 'device_hash']);
+            $table->index('last_used_at');
         });
     }
 

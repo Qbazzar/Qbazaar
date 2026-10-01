@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\OtpPurpose;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -23,6 +25,7 @@ use Illuminate\Support\Carbon;
 class OtpCode extends Model
 {
     use HasUlids;
+    use MassPrunable;
 
     protected $table = 'otp_codes';
 
@@ -49,6 +52,17 @@ class OtpCode extends Model
             'expires_at' => 'datetime',
             'used_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Spent and expired codes only matter for the hourly send ceiling, so a
+     * day of history is plenty and keeps the table small.
+     *
+     * @return Builder<static>
+     */
+    public function prunable(): Builder
+    {
+        return static::query()->where('expires_at', '<', Carbon::now()->subDay());
     }
 
     public function isExpired(): bool

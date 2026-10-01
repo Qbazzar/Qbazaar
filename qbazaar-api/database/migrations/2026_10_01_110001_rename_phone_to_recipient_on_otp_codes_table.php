@@ -23,7 +23,7 @@ return new class extends Migration
         });
 
         Schema::table('otp_codes', function (Blueprint $table) {
-            $table->index(['recipient', 'purpose', 'used_at']);
+            $table->index(['recipient', 'purpose', 'used_at', 'created_at']);
             $table->index(['recipient', 'purpose', 'created_at']);
         });
     }
@@ -32,7 +32,7 @@ return new class extends Migration
     {
         Schema::table('otp_codes', function (Blueprint $table) {
             $table->dropIndex(['recipient', 'purpose', 'created_at']);
-            $table->dropIndex(['recipient', 'purpose', 'used_at']);
+            $table->dropIndex(['recipient', 'purpose', 'used_at', 'created_at']);
         });
 
         Schema::table('otp_codes', function (Blueprint $table) {

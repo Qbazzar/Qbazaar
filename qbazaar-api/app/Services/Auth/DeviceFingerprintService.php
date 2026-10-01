@@ -30,7 +30,7 @@ class DeviceFingerprintService
         );
     }
 
-    public function fingerprintFromRequest(Request $request): string
+    private function fingerprintFromRequest(Request $request): string
     {
         $deviceId = (string) $request->header(self::HEADER);
 
@@ -52,7 +52,7 @@ class DeviceFingerprintService
      * Human-readable label for the device, derived from platform + UA.
      * Used by the sessions list and SecurityAlertNotification.
      */
-    public function labelFromRequest(Request $request): string
+    private function labelFromRequest(Request $request): string
     {
         $platform = $request->attributes->get('client_platform');
         $platform = is_string($platform) ? $platform : 'unknown';

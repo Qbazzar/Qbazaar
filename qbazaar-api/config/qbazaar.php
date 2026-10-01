@@ -68,6 +68,7 @@ return [
         'new_device_check' => [
             'enabled' => (bool) env('AUTH_NEW_DEVICE_CHECK_ENABLED', false) && env('APP_ENV') !== 'testing',
             'challenge_ttl_minutes' => 10,
+            'trusted_device_days' => 180,
         ],
 
         'social' => [
