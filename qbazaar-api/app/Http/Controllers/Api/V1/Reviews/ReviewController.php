@@ -90,9 +90,14 @@ class ReviewController extends Controller
      */
     public function index(string $userId): AnonymousResourceCollection
     {
+        // A review outlives a deleted ad or reviewer account, so both are
+        // loaded with their soft-deleted rows.
         $reviews = Review::query()
             ->where('seller_id', $userId)
-            ->with(['reviewer', 'ad'])
+            ->with([
+                'reviewer' => fn ($query) => $query->withTrashed()->select(['id', 'full_name', 'avatar_url']),
+                'ad' => fn ($query) => $query->withTrashed()->select(['id', 'title']),
+            ])
             ->latest()
             ->paginate(self::PER_PAGE);
 

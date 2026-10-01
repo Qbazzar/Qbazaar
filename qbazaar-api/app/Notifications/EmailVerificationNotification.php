@@ -8,6 +8,8 @@ use App\Enums\Language;
 use App\Models\User;
 use App\Notifications\Concerns\BuildsEmailVerificationUrl;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
 /**
@@ -17,9 +19,9 @@ use Illuminate\Notifications\Messages\MailMessage;
  * (`URL::temporarySignedRoute`) and override `toMail()` to render copy from
  * our own ar/en files and point the link at our API verification route.
  */
-class EmailVerificationNotification extends VerifyEmail
+class EmailVerificationNotification extends VerifyEmail implements ShouldQueue
 {
-    use BuildsEmailVerificationUrl;
+    use BuildsEmailVerificationUrl, Queueable;
 
     /**
      * @param object|User $notifiable

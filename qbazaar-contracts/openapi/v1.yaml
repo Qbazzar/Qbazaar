@@ -51,6 +51,8 @@ tags:
     description: Price offers attached to ads / conversations
   - name: Reports
     description: User reports on ads, users, conversations
+  - name: Reviews
+    description: Seller reviews after a closed deal
   - name: Notifications
     description: In-app, email, and push notifications
   - name: CMS Pages
@@ -3646,8 +3648,11 @@ paths:
         message. The reporter may file at most one report per (target, 7-day
         window). A self-report against the caller's own user_id is refused.
 
-        Admin-side listing and resolution lives in the Filament admin app
-        (Sprint 11) and is intentionally not exposed in this public API.
+        Admin-side listing and resolution lives in the admin panel and is
+        intentionally not exposed in this public API. Staff who can act on
+        reports get a queued bell alert; the reporter receives one
+        `report.resolved` notification when the report is first actioned or
+        dismissed.
       operationId: reportsCreate
       requestBody:
         required: true
@@ -3682,6 +3687,82 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/ads/{ad}/reviews:
+    post:
+      tags: [Reviews]
+      summary: Review the seller of an ad
+      description: |
+        A buyer may review the ad's seller once per ad, and only after a closed
+      operationId: reviewsCreate
+      parameters:
+        - in: path
+          name: ad
+          required: true
+          schema: { $ref: '#/components/schemas/ULID' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating]
+              properties:
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                comment: { type: [string, 'null'], description: 'Up to `qbazaar.reviews.comment_max_length` characters.' }
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: REVIEW_NOT_ELIGIBLE — no accepted offer on this ad
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: AD_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: REVIEW_OWN_AD / REVIEW_ALREADY_EXISTS / VALIDATION_FAILED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/users/{user}/reviews:
+    get:
+      tags: [Reviews]
+      summary: A seller's reviews
+      description: |
+        Public, newest first, 15 per page. Reviews stay listed after the ad or
+        the reviewer's account is deleted; `ad` and `reviewer` then describe
+        the deleted record.
+      operationId: reviewsIndex
+      security: []
+      parameters:
+        - in: path
+          name: user
+          required: true
+          schema: { $ref: '#/components/schemas/ULID' }
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Paginated reviews
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListEnvelope'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Notifications inbox (Sprint 10)
@@ -6430,6 +6511,46 @@ components:
           properties:
             data: { $ref: '#/components/schemas/Report' }
 
+    Review:
+      type: object
+      required: [id, rating, comment, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        reviewer:
+          type: object
+          required: [id, full_name, avatar_url]
+          properties:
+            id: { $ref: '#/components/schemas/ULID' }
+            full_name: { type: string }
+            avatar_url: { type: [string, 'null'] }
+        ad:
+          type: object
+          required: [id, title]
+          properties:
+            id: { $ref: '#/components/schemas/ULID' }
+            title: { type: string }
+
+    ReviewEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Review' }
+
+    ReviewListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Review' }
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
     # ─── Notifications (Sprint 10) ──────────────────────────────────
     Notification:
       type: object
@@ -6449,7 +6570,9 @@ components:
           description: |
             Short discriminator surfaced from the notification's data payload
             (e.g. ad.approved, account.data_export_ready, ad.price_changed,
-            ads.new_from_followed). Filterable with `?category=`.
+            ads.new_from_followed, report.resolved). Filterable with `?category=`.
+            `report.resolved` carries `report_id` and `outcome` (actioned or
+            dismissed) in `data` and never names the sanction taken.
           example: ad.approved
         title:
           type: string
