@@ -20,6 +20,7 @@ use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Services\Account\AccountEraser;
+use App\Services\Messaging\ConversationInbox;
 use App\Services\Users\FollowGraph;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -117,7 +118,8 @@ it('removes follows, favorites, codes, devices and the business profile, lowerin
     }
     TrustedDevice::query()->create(['user_id' => $user->id, 'device_hash' => str_repeat('a', 64), 'last_used_at' => now()]);
     $user->businessProfile()->create(['business_name' => 'Shop']);
-    $hidden = Conversation::factory()->create(['ad_id' => $sellerAd->id, 'buyer_id' => $user->id, 'seller_id' => $seller->id, 'buyer_hidden_at' => now()]);
+    $hidden = Conversation::factory()->create(['ad_id' => $sellerAd->id, 'buyer_id' => $user->id, 'seller_id' => $seller->id]);
+    app(ConversationInbox::class)->hide($user, [$hidden->id]);
 
     runDeleteJob($user);
 

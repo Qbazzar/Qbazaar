@@ -59,9 +59,10 @@ fields without breaking older clients.
 | `ad.pending_review`     | A seller submits an ad; sent to staff with `super_admin` or `moderator` (database only). | — |
 | `ad.approved`           | An admin approves the ad. | yes |
 | `ad.rejected`           | An admin rejects the ad (auto-moderation only flags ads for the reviewer now). | yes |
-| `ad.expiring_soon`      | Daily job, for ads expiring in the next 24 hours. | yes |
-| `ad.expired`            | Daily job after `ads.expires_at`. | yes |
-| `search.match`          | A new ad matches a saved search with alerts on. | yes |
+| `ad.expiring_soon`      | Hourly sweep, once per ad inside the `ad_expiry_warning_days` window. | yes |
+| `ad.expired`            | Hourly sweep after `ads.expires_at`. | yes |
+| `search.match`          | A new ad matches a saved search with alerts on. Every match reaches the bell; push goes out for the first match in each `qbazaar.search.saved_search_check_interval_minutes` window (60) per user. | first in window |
+| `search.digest`         | Push only: the window closed with more matches (`data.matches`); they are already in the bell. | yes (push only) |
 | `account.data_export_ready` | `ExportUserDataJob` finishes. | yes |
 | `security.new_device`   | Successful login from an unrecognised device. | — |
 | `support.reply`         | Staff reply to the user's support ticket. | yes |

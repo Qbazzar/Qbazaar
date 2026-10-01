@@ -123,6 +123,11 @@ class AdImageController extends Controller
 
         $media->delete();
 
+        // `has_images` is indexed and deleting an image does not save the ad.
+        if ($ad->shouldBeSearchable()) {
+            $ad->searchable();
+        }
+
         return response()->noContent();
     }
 

@@ -67,6 +67,11 @@ class AttachAdImagesAction
             new ModerateAdJob((string) $ad->getKey()),
         ])->dispatch();
 
+        // `has_images` is indexed and adding media does not save the ad.
+        if ($created !== [] && $ad->shouldBeSearchable()) {
+            $ad->searchable();
+        }
+
         return $created;
     }
 

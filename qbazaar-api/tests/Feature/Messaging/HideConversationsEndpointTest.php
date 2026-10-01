@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 
@@ -90,8 +91,7 @@ it('ignores ids of conversations the caller is not part of', function (): void {
         ->assertOk()
         ->assertJsonPath('data.hidden', 0);
 
-    expect($this->conversation->fresh()->buyer_hidden_at)->toBeNull()
-        ->and($this->conversation->fresh()->seller_hidden_at)->toBeNull();
+    expect(DB::table('conversation_participants')->whereNotNull('hidden_at')->exists())->toBeFalse();
 });
 
 it('validates the id list', function (array $payload): void {

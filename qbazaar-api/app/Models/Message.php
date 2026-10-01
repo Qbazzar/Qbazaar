@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\MessageType;
+use App\Services\Messaging\ConversationInbox;
 use Database\Factories\MessageFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -80,6 +80,11 @@ class Message extends Model implements HasMedia
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::created(fn (Message $message) => app(ConversationInbox::class)->messageAdded($message));
+    }
+
     /* ──────────────────────────────────────────────────────────────────
      *  Relations
      * ──────────────────────────────────────────────────────────────────*/
@@ -130,20 +135,5 @@ class Message extends Model implements HasMedia
     public function image(): ?Media
     {
         return $this->type === MessageType::IMAGE ? $this->getFirstMedia(self::IMAGE_COLLECTION) : null;
-    }
-
-    /**
-     * Messages sent to $user that they have not read yet, across all of
-     * their conversations.
-     *
-     * @param Builder<Message> $query
-     * @return Builder<Message>
-     */
-    public function scopeUnreadFor(Builder $query, User $user): Builder
-    {
-        return $query
-            ->whereIn('conversation_id', Conversation::query()->visibleTo($user)->select('id'))
-            ->where('sender_id', '!=', $user->id)
-            ->whereNull('read_at');
     }
 }

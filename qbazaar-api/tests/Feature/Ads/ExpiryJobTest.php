@@ -7,15 +7,20 @@ use App\Enums\Language;
 use App\Enums\PlatformSetting;
 use App\Events\Ads\AdExpired;
 use App\Events\Ads\AdExpiringSoon;
+use App\Jobs\Ads\ExpireAdsBatchJob;
 use App\Jobs\Ads\ExpireOldAdsJob;
+use App\Jobs\Ads\WarnExpiringAdsBatchJob;
 use App\Models\Ad;
 use App\Models\User;
 use App\Notifications\Ads\AdExpiringSoonNotification;
 use App\Services\Ads\AdLifecycleService;
 use App\Services\Settings\SettingsService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Tests\Concerns\CreatesAds;
 
 uses(RefreshDatabase::class, CreatesAds::class);
@@ -148,4 +153,59 @@ it('leaves an ad live when it was renewed after the sweep read it', function ():
 
     expect($readBySweep->fresh()->status)->toBe(AdStatus::ACTIVE);
     Event::assertNotDispatched(AdExpired::class);
+});
+
+it('queues due ads in batches instead of expiring them inside the sweep', function (): void {
+    Queue::fake();
+    config(['qbazaar.sweeps.batch_size' => 2]);
+
+    $due = collect(range(1, 5))->map(fn (int $hours): Ad => activeAdExpiringAt($this->seller, now()->subHours($hours)));
+    $warned = activeAdExpiringAt($this->seller, now()->addDay());
+    activeAdExpiringAt($this->seller, now()->addDays(10));
+
+    runExpiryJob();
+
+    Queue::assertPushed(ExpireAdsBatchJob::class, 3);
+    Queue::assertPushed(WarnExpiringAdsBatchJob::class, fn (WarnExpiringAdsBatchJob $job): bool => $job->adIds === [$warned->id]);
+
+    $queued = Queue::pushed(ExpireAdsBatchJob::class)->flatMap(fn (ExpireAdsBatchJob $job): array => $job->adIds)->sort()->values()->all();
+    expect($queued)->toBe($due->pluck('id')->sort()->values()->all())
+        ->and(Ad::query()->where('status', AdStatus::EXPIRED->value)->count())->toBe(0);
+});
+
+it('reads only ids in the sweep, with one query per batch', function (): void {
+    Queue::fake();
+    config(['qbazaar.sweeps.batch_size' => 100]);
+    foreach (range(1, 150) as $minutes) {
+        activeAdExpiringAt($this->seller, now()->subMinutes($minutes));
+    }
+
+    DB::enableQueryLog();
+    runExpiryJob();
+    $adQueries = collect(DB::getQueryLog())->pluck('query')->filter(fn (string $sql): bool => str_contains($sql, 'from "ads"'));
+
+    expect($adQueries)->toHaveCount(3)
+        ->and($adQueries->every(fn (string $sql): bool => str_starts_with($sql, 'select "id" from "ads"')))->toBeTrue();
+});
+
+it('skips ads in a batch that were renewed after the sweep queued them', function (): void {
+    Event::fake([AdExpired::class]);
+    $ad = activeAdExpiringAt($this->seller, now()->subHour());
+
+    app(AdLifecycleService::class)->renew($ad);
+    app()->call([new ExpireAdsBatchJob([$ad->id]), 'handle']);
+
+    expect($ad->fresh()->status)->toBe(AdStatus::ACTIVE);
+    Event::assertNotDispatched(AdExpired::class);
+});
+
+it('keeps one sweep queued or running at a time', function (): void {
+    expect(new ExpireOldAdsJob)->toBeInstanceOf(ShouldBeUnique::class)
+        ->and((new ExpireOldAdsJob)->uniqueFor)->toBe(3600);
+
+    Queue::fake();
+    ExpireOldAdsJob::dispatch();
+    ExpireOldAdsJob::dispatch();
+
+    Queue::assertPushed(ExpireOldAdsJob::class, 1);
 });

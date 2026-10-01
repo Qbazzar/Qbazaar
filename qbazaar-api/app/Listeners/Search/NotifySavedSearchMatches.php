@@ -12,16 +12,22 @@ use App\Models\SavedSearch;
 use App\Notifications\Search\SavedSearchMatchNotification;
 use App\Services\Notifications\AdAudienceNotifier;
 use App\Services\Search\SavedSearchMatcher;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 
 /**
  * Alerts owners of saved searches (with alerts on) that a newly live ad
- * matches. Runs on the low queue and walks the SQL pre-filtered candidates
+ * matches. Runs on the notifications queue and walks the SQL pre-filtered candidates
  * in chunks; each user is alerted once per ad, even with several matching
  * searches or when the ad is approved again after an edit.
+ *
+ * Unique per ad while queued: publishing and approving the same ad back to
+ * back queues one fan-out, not two. The lock is released when the run starts,
+ * so an approval after an edit during a run still matches the edited ad; the
+ * per-user claim in AdAudienceNotifier keeps the two runs from alerting twice.
  */
-class NotifySavedSearchMatches implements ShouldQueue
+class NotifySavedSearchMatches implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
     public string $queue = QueueName::NOTIFICATIONS->value;
 
@@ -33,10 +39,17 @@ class NotifySavedSearchMatches implements ShouldQueue
 
     public int $timeout = 120;
 
+    public int $uniqueFor = 3600;
+
     public function __construct(
         private readonly SavedSearchMatcher $matcher,
         private readonly AdAudienceNotifier $notifier,
     ) {}
+
+    public function uniqueId(AdPublished|AdApproved $event): string
+    {
+        return $event->ad->id;
+    }
 
     public function handle(AdPublished|AdApproved $event): void
     {

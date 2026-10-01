@@ -92,12 +92,13 @@ class UserDataExporter
         );
 
         yield 'hidden_conversations' => $this->rows(
-            DB::table('conversations')
-                ->where(fn (Builder $query) => $query
-                    ->where(fn (Builder $buyer) => $buyer->where('buyer_id', $user->id)->whereNotNull('buyer_hidden_at'))
-                    ->orWhere(fn (Builder $seller) => $seller->where('seller_id', $user->id)->whereNotNull('seller_hidden_at')))
-                ->select(['id', 'ad_id'])
-                ->selectRaw('case when buyer_id = ? then buyer_hidden_at else seller_hidden_at end as hidden_at', [$user->id]),
+            DB::table('conversation_participants')
+                ->join('conversations', 'conversations.id', '=', 'conversation_participants.conversation_id')
+                ->where('conversation_participants.user_id', $user->id)
+                ->whereNotNull('conversation_participants.hidden_at')
+                ->select(['conversations.id', 'conversations.ad_id', 'conversation_participants.hidden_at']),
+            key: 'conversations.id',
+            alias: 'id',
         );
 
         $offerColumns = ['id', 'ad_id', 'conversation_id', 'amount', 'currency', 'note', 'status', 'created_at', 'updated_at'];
@@ -179,9 +180,9 @@ class UserDataExporter
      * @param list<string> $json
      * @return LazyCollection<int, array<string, mixed>>
      */
-    private function rows(Builder $query, string $key = 'id', array $json = []): LazyCollection
+    private function rows(Builder $query, string $key = 'id', array $json = [], ?string $alias = null): LazyCollection
     {
-        return $query->lazyById(self::CHUNK, $key)->map(fn (object $row): array => $this->decode($row, $json));
+        return $query->lazyById(self::CHUNK, $key, $alias)->map(fn (object $row): array => $this->decode($row, $json));
     }
 
     /**

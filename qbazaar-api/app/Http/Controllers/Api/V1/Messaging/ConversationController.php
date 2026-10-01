@@ -16,8 +16,8 @@ use App\Http\Resources\Api\V1\Messaging\ConversationListResource;
 use App\Http\Resources\Api\V1\Messaging\ConversationResource;
 use App\Models\Ad;
 use App\Models\Conversation;
-use App\Models\Message;
 use App\Models\User;
+use App\Services\Messaging\ConversationInbox;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -36,6 +36,7 @@ class ConversationController extends Controller
     public function __construct(
         private readonly StartConversationAction $startAction,
         private readonly MarkConversationReadAction $markReadAction,
+        private readonly ConversationInbox $inbox,
     ) {}
 
     /**
@@ -80,11 +81,8 @@ class ConversationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $paginator = Conversation::query()
-            ->visibleTo($user)
-            ->orderedForInbox()
+        $paginator = $this->inbox->conversationsOf($user)
             ->with(['ad.primaryImage', 'buyer.media', 'seller.media'])
-            ->withUnreadCountFor($user)
             ->paginate(self::PER_PAGE);
 
         return ConversationListResource::collection($paginator);
@@ -146,9 +144,9 @@ class ConversationController extends Controller
      * GET /api/v1/conversations/unread-count — sum of unread messages
      * across every conversation the caller participates in.
      *
-     * Drives the header badge so the count must be cheap; we run a single
-     * aggregated query against `messages` joined on the caller's
-     * conversations to avoid N inbox lookups.
+     * Drives the header badge, so it sums the caller's per-conversation
+     * counters (one index range) instead of counting messages. Clients get
+     * the same total pushed as `messages.unread` and only poll as a fallback.
      *
      * @authenticated
      */
@@ -157,7 +155,7 @@ class ConversationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $total = Message::query()->unreadFor($user)->count();
+        $total = $this->inbox->unreadTotal($user->id);
 
         return response()->json(['total' => $total]);
     }

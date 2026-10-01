@@ -97,6 +97,25 @@ Fired when `POST /conversations/{id}/read` actually marks anything
 Clients should update their per-bubble "delivered" → "read" markers for
 every message in this conversation older than `read_at`.
 
+### `messages.unread`
+
+Fired whenever the chat badge total can change: a message reached the
+user, they marked a conversation read (on any device) or hid
+conversations.
+
+- Channels:
+  - `private-user.{userId}` — the user whose badge changed.
+- Payload:
+
+```json
+{ "total": 4 }
+```
+
+`total` is the same number `GET /conversations/unread-count` returns,
+read when the event is broadcast, so a burst of messages ends on the
+latest value. Set the badge from it; keep polling the endpoint only as a
+slow fallback (for example every 5 minutes, and on reconnect).
+
 ### `offer.created`
 
 Fired when `POST /conversations/{id}/offers` succeeds (Sprint 9).

@@ -2709,6 +2709,9 @@ paths:
         it has none; ads with neither never match a radius.
 
         An optional Bearer token sets `is_favorited` on each ad; guests get false.
+
+        Limited to 60 requests per minute per user (per IP for guests) by the
+        `search` rate limiter, on top of the general API limit.
       operationId: searchIndex
       security: [{}, {bearerAuth: []}]
       parameters:
@@ -2766,6 +2769,7 @@ paths:
                       price_buckets:
                         - { label: '500-1000', min: 500, max: 1000 }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '503':
           description: SEARCH_INDEX_UNAVAILABLE
           content:
@@ -3377,7 +3381,10 @@ paths:
     get:
       tags: [Conversations]
       summary: Total unread messages across every conversation
-      description: Drives the header badge — one number for the whole inbox.
+      description: |
+        Drives the header badge — one number for the whole inbox. The same
+        total is pushed as `messages.unread` on `private-user.{id}` whenever
+        it changes, so clients poll this only as a slow fallback.
       operationId: conversationsUnreadCount
       responses:
         '200':
@@ -5986,7 +5993,7 @@ components:
           description: Envelope replayed verbatim against `/search`.
         alerts_enabled:
           type: boolean
-          description: When true, a newly live ad matching the filters sends a `search.match` notification (once per ad per user).
+          description: When true, a newly live ad matching the filters sends a `search.match` notification (once per ad per user). Push is limited to the first match per user per hour; later matches only reach the bell and are summed into one `search.digest` push when the hour ends.
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 
