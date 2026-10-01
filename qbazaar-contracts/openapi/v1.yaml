@@ -4255,7 +4255,7 @@ components:
           example: Terms of Service
         body:
           type: string
-          description: Markdown body of the page (rendered client-side).
+          description: HTML body of the page, sanitized to a formatting allowlist on write (no scripts, event handlers or unsafe URLs).
         meta_description:
           type: [string, 'null']
           description: SEO meta description; null when unset.
@@ -4354,7 +4354,7 @@ components:
           type: string
         body:
           type: string
-          description: Markdown body (rendered client-side).
+          description: HTML body, sanitized to a formatting allowlist on write (no scripts, event handlers or unsafe URLs).
         excerpt:
           type: [string, 'null']
         views_count:
