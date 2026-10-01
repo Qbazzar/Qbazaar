@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Events\Offers;
 
+use App\Events\Concerns\BroadcastsOnRealtimeQueue;
 use App\Http\Resources\Api\V1\Offers\OfferResource;
 use App\Models\Offer;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -30,7 +31,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class OfferCreated implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use BroadcastsOnRealtimeQueue, Dispatchable, InteractsWithSockets, SerializesModels;
 
     public string $otherUserId;
 

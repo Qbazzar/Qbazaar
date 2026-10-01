@@ -6,6 +6,7 @@ namespace App\Jobs\Ads;
 
 use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
+use App\Enums\QueueName;
 use App\Models\Ad;
 use App\Services\Moderation\DuplicateImageDetector;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
@@ -32,10 +33,12 @@ class DetectDuplicateImagesJob implements ShouldBeUniqueUntilProcessing, ShouldQ
     /** @var list<int> */
     public array $backoff = [10, 60];
 
+    public int $timeout = 120;
+
     public function __construct(
         public readonly string $adId,
     ) {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::MEDIA);
     }
 
     public function uniqueId(): string

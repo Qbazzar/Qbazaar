@@ -27,8 +27,8 @@ beforeEach(function (): void {
     Sanctum::actingAs($this->user, ['*']);
 });
 
-it('queues search syncing and defers it until the transaction commits', function (): void {
-    expect(config('scout.queue'))->toBeTrue()
+it('queues search syncing on the search queue and defers it until the transaction commits', function (): void {
+    expect(config('scout.queue'))->toBe(['queue' => 'search'])
         ->and(config('scout.after_commit'))->toBeTrue();
 });
 
@@ -40,6 +40,7 @@ it('queues exactly one index job when an ad goes live', function (): void {
     app(AdLifecycleService::class)->approve($ad);
 
     Queue::assertPushed(MakeSearchable::class, 1);
+    Queue::assertPushedOn('search', MakeSearchable::class);
     Queue::assertNotPushed(RemoveFromSearch::class);
 });
 

@@ -66,13 +66,26 @@ return [
             'after_commit' => false,
         ],
 
+        // retry_after must exceed the longest job timeout a connection's
+        // workers run, or a slow job is started a second time while it runs.
         'redis' => [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 150),
             'block_for' => null,
-            'after_commit' => false,
+            'after_commit' => true,
+        ],
+
+        // Same Redis lists, read by the media and low supervisors whose jobs
+        // run for minutes. Jobs are still pushed through `redis`.
+        'redis-long' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => env('REDIS_QUEUE', 'default'),
+            'retry_after' => (int) env('REDIS_LONG_QUEUE_RETRY_AFTER', 1900),
+            'block_for' => null,
+            'after_commit' => true,
         ],
 
         'deferred' => [

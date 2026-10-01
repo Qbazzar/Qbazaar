@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
+use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Notifications\Channels\CategorizedDatabaseChannel;
 use App\Observers\AdDetailCacheObserver;
@@ -21,6 +22,7 @@ use App\Services\Ads\Views\AdViewCounter;
 use App\Services\Ads\Views\AdViewCountWriter;
 use App\Services\Ads\Views\DatabaseAdViewCounter;
 use App\Services\Ads\Views\RedisAdViewCounter;
+use App\Services\Auth\AuthRateLimiters;
 use App\Services\Moderation\ModerationRulesService;
 use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
@@ -30,6 +32,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\Channels\DatabaseChannel;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AppServiceProvider extends ServiceProvider
@@ -76,11 +79,13 @@ class AppServiceProvider extends ServiceProvider
 
         Model::preventLazyLoading(! $this->app->isProduction());
 
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
         // Rate limiters MUST be registered here (not in the withRouting `then:`
         // closure) so they survive route:cache — Laravel skips that closure when
         // routes come from cache, and the throttle middleware would crash with
         // "Rate limiter [api] is not defined" in production.
-        RateLimiter::for('auth', fn (Request $r) => Limit::perMinute(5)->by($r->ip()));
+        AuthRateLimiters::register();
         // Every send costs an SMS: cap each phone and each IP per day so
         // rotating either one alone cannot pump messages.
         RateLimiter::for('otp', fn (Request $r) => [
@@ -107,7 +112,9 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perDay((int) config('qbazaar.messaging.images_per_day'))->by('chat-images-day:' . (optional($r->user())->id ?: $r->ip())),
             ] : []),
         ]);
-        RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
+        RateLimiter::for('api', fn (Request $r) => $r->user() !== null
+            ? Limit::perMinute((int) config('qbazaar.api.requests_per_minute'))->by('api-user:' . $r->user()->getAuthIdentifier())
+            : Limit::perMinute((int) config('qbazaar.api.guest_requests_per_minute'))->by('api-guest:' . $r->ip()));
         // Each hit sends an email or SMS.
         RateLimiter::for('contact-change', fn (Request $r) => Limit::perHour((int) config('qbazaar.account.contact_change_attempts_per_hour'))
             ->by('contact-change:' . (optional($r->user())->id ?: $r->ip())));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs\Catalog;
 
+use App\Enums\QueueName;
 use App\Services\Catalog\CategoryAdCounts;
 use App\Services\Catalog\HomeFeedCache;
 use App\Services\Catalog\LocationAdCounts;
@@ -34,7 +35,7 @@ class WarmCatalogCacheJob implements ShouldBeUnique, ShouldQueue
 
     public function __construct()
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(CategoryAdCounts $categoryCounts, LocationAdCounts $placeCounts, HomeFeedCache $homeFeed): void

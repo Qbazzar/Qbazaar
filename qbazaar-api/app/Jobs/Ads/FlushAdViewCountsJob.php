@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs\Ads;
 
+use App\Enums\QueueName;
 use App\Services\Ads\Views\AdViewCounter;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,7 +30,7 @@ class FlushAdViewCountsJob implements ShouldBeUnique, ShouldQueue
 
     public function __construct()
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(AdViewCounter $views): void

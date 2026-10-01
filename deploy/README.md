@@ -36,11 +36,28 @@ Both scripts put the `ea-php84` CLI first on `PATH`. The `fleeteye` user may res
 
 | Unit (`deploy/systemd/`) | Runs |
 |--------------------------|------|
-| `qbazaar-horizon.service` | `artisan horizon` (queues `default` and `low`) |
+| `qbazaar-horizon.service` | `artisan horizon`, one supervisor per queue (see Queues below) |
 | `qbazaar-reverb.service` | `artisan reverb:start` on `127.0.0.1:8080`, proxied as `wss://api…/app` |
 | `qbazaar-scheduler.service` | `artisan schedule:work` (ad and offer expiry, etc.). Use it **or** the cron entry in the runbook, never both. |
 | `qbazaar-web.service` | `next start -p 3000`, proxied by Apache |
 | `meilisearch.service` | Meilisearch on `127.0.0.1:7700` (section below) |
+
+### Queues
+
+Horizon runs one supervisor per queue (`config/horizon.php`), so a backlog on one queue never delays another:
+
+| Queue | Carries | Connection | Workers (prod) | Timeout |
+|-------|---------|------------|----------------|---------|
+| `realtime` | WebSocket broadcasts, chat pushes | `redis` | 1–4 | 30 s |
+| `notifications` | mail, push, SMS, inbox notifications and their audience fan-out | `redis` | 1–3 | 120 s |
+| `default` | chat screening and other listeners | `redis` | 1–2 | 60 s |
+| `search` | Scout index writes | `redis` | 1–2 | 60 s |
+| `media` | image conversions, hashes, duplicate check | `redis-long` | 1–2 | 300 s |
+| `low` | expiry sweeps, exports, account deletion, view-count sync | `redis-long` | 1 | 1800 s |
+
+`redis-long` reads the same Redis lists as `redis` with a longer `retry_after` (`REDIS_LONG_QUEUE_RETRY_AFTER`, 1900 s), so a job is never started twice while it is still running. Both connections push only after the surrounding database transaction commits. Peak memory is about 14 workers × 128–512 MB; lower `maxProcesses` in `config/horizon.php` on a smaller box.
+
+Adding a queue means adding a supervisor; `HorizonQueueCoverageTest` fails until every queue the app dispatches onto is consumed.
 
 Apache includes for both vhosts are in `deploy/apache/` (install steps are in each file's header). The API include pins PHP for the vhost, serves `/storage` as static files only, and proxies the Reverb WebSocket.
 
@@ -63,6 +80,19 @@ The M0 PRs (#147–#153) need these one-time steps on the server the first time 
 6. Web `.env.production`: add `NEXT_PUBLIC_APP_URL=https://qbazaar.fleeteye.de` (see `web.env.production.template`); the web deploy rebuilds with it. Without it canonical and sitemap URLs fall back to the same host.
 
 Clients must now authorise channels at `POST /api/v1/broadcasting/auth` with a Bearer token (#149); the web already does.
+
+## Pending production steps after the queue split (BE-13.27)
+
+1. `.env`: add `REDIS_QUEUE_RETRY_AFTER=150` and `REDIS_LONG_QUEUE_RETRY_AFTER=1900`; if a `MEDIA_QUEUE` line names any queue other than `media`, remove it.
+2. Re-copy `deploy/systemd/qbazaar-horizon.service` (adds `TimeoutStopSec`), then `systemctl daemon-reload`.
+3. Deploy as usual; `deploy-api.sh` rebuilds the config cache and restarts Horizon, which starts the new supervisors. Jobs already waiting on `default` or `low` are still consumed.
+4. Check `/horizon` shows six supervisors and no long waits.
+
+## Auth limits, proxies and refresh tokens (BE-13.26, BE-13.32, BE-13.35)
+
+- Rate limits are keyed by account, refresh token or inbox, with a looser per-IP ceiling (`qbazaar.auth.rate_limits`, `qbazaar.api`). Their client IP comes from `config/trustedproxy.php`, which trusts Cloudflare's published ranges by default; leave `TRUSTED_PROXIES` empty behind Cloudflare, or list your own proxy. Only `X-Forwarded-For` and `X-Forwarded-Proto` are read. Re-check the list against https://www.cloudflare.com/ips/ when moving to Cloudflare (OPS-18.9).
+- Refresh tokens are now HMAC-SHA256 digests keyed by `APP_KEY`. Existing bcrypt rows still work and are replaced on their next refresh, so nothing has to be migrated. If `APP_KEY` is ever rotated, put the old key in `APP_PREVIOUS_KEYS` or every device is signed out.
+- Password-reset and verification mails go through the `notifications` queue, so Horizon must be running for them to arrive.
 
 ## Meilisearch (install once, as root)
 
@@ -125,7 +155,7 @@ After the BE-13.31 index migrations reach production, run `ANALYZE TABLE ads, me
 | | `memory_limit` | `256M` or more (the thumbnail is rendered during the request) |
 | Cloudflare / any proxy in front | max upload size | 105 MiB or more. Cloudflare Free and Pro cap a request at 100 MB, just under a worst-case batch of ten 10 MB files; if the API is proxied there, set `max_images_per_upload` to 9 |
 
-If one of the limits has to be lower, lower `max_images_per_upload` to match (`floor(post_max_size / 10 MB)`) rather than the per-file size. The larger image sizes are rendered on the `default` queue by Horizon, so it must be running for `medium`, `large` and `original_webp` to appear; until then the API serves the original.
+If one of the limits has to be lower, lower `max_images_per_upload` to match (`floor(post_max_size / 10 MB)`) rather than the per-file size. The larger image sizes are rendered on the `media` queue by Horizon, so it must be running for `medium`, `large` and `original_webp` to appear; until then the API serves the original.
 
 ## Manual deploy (if Actions is down)
 

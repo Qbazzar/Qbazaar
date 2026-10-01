@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\QueueName;
 use Illuminate\Support\Facades\File;
 
 /**
@@ -12,7 +13,12 @@ use Illuminate\Support\Facades\File;
  */
 function queuesDeclaredInApp(): array
 {
-    $queues = [(string) config('queue.connections.redis.queue')];
+    $queues = [
+        (string) config('queue.connections.redis.queue'),
+        (string) config('scout.queue.queue'),
+        (string) config('media-library.queue_name'),
+        ...array_map(fn (QueueName $queue): string => $queue->value, QueueName::cases()),
+    ];
 
     foreach (File::allFiles(app_path()) as $file) {
         preg_match_all(
@@ -28,19 +34,27 @@ function queuesDeclaredInApp(): array
 }
 
 /**
+ * @return array<string, array<string, mixed>>
+ */
+function horizonSupervisors(string $environment): array
+{
+    return array_replace_recursive(
+        config('horizon.defaults', []),
+        config("horizon.environments.{$environment}", []),
+    );
+}
+
+/**
  * @return list<string>
  */
 function queuesConsumedByHorizon(string $environment): array
 {
-    $supervisors = array_replace_recursive(
-        config('horizon.defaults', []),
-        config("horizon.environments.{$environment}", []),
-    );
-
     $queues = [];
 
-    foreach ($supervisors as $supervisor) {
-        if (($supervisor['connection'] ?? 'redis') !== 'redis') {
+    foreach (horizonSupervisors($environment) as $supervisor) {
+        $connection = $supervisor['connection'] ?? 'redis';
+
+        if (config("queue.connections.{$connection}.driver") !== 'redis') {
             continue;
         }
 
@@ -53,7 +67,7 @@ function queuesConsumedByHorizon(string $environment): array
 }
 
 it('finds the queues the application dispatches onto', function (): void {
-    expect(queuesDeclaredInApp())->toContain('default', 'low');
+    expect(queuesDeclaredInApp())->toContain('realtime', 'notifications', 'default', 'search', 'media', 'low');
 });
 
 it('consumes every queue the application dispatches onto', function (string $environment): void {
@@ -63,3 +77,30 @@ it('consumes every queue the application dispatches onto', function (string $env
         expect($consumed)->toContain($queue);
     }
 })->with(['production', 'local']);
+
+it('gives every queue its own supervisor', function (string $environment): void {
+    $owners = [];
+
+    foreach (horizonSupervisors($environment) as $name => $supervisor) {
+        foreach ((array) $supervisor['queue'] as $queue) {
+            $owners[$queue][] = $name;
+        }
+    }
+
+    foreach ($owners as $queue => $supervisors) {
+        expect($supervisors)->toHaveCount(1, "Queue [{$queue}] is read by more than one supervisor.");
+    }
+})->with(['production', 'local']);
+
+it('keeps every supervisor timeout below the retry_after of its connection', function (string $environment): void {
+    foreach (horizonSupervisors($environment) as $name => $supervisor) {
+        $retryAfter = (int) config("queue.connections.{$supervisor['connection']}.retry_after");
+
+        expect($supervisor['timeout'])->toBeLessThan($retryAfter, "Supervisor [{$name}] outlives its retry_after.");
+    }
+})->with(['production', 'local']);
+
+it('pushes jobs dispatched inside a transaction only after it commits', function (): void {
+    expect(config('queue.connections.redis.after_commit'))->toBeTrue()
+        ->and(config('queue.connections.redis-long.after_commit'))->toBeTrue();
+});

@@ -6,6 +6,7 @@ namespace App\Listeners\Messaging;
 
 use App\Actions\Reports\ReportFlaggedChatMessageAction;
 use App\Enums\MessageType;
+use App\Enums\QueueName;
 use App\Events\Messaging\MessageSent;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
@@ -16,7 +17,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
  */
 class ScreenChatMessage implements ShouldQueue
 {
-    public string $queue = 'low';
+    public string $queue = QueueName::DEFAULT->value;
+
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [5, 30, 120];
+
+    public int $timeout = 30;
 
     public function __construct(private readonly ReportFlaggedChatMessageAction $reportFlaggedMessage) {}
 

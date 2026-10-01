@@ -84,14 +84,14 @@ it('skips the alert when the ad was reviewed before the queued listener ran', fu
     Notification::assertNothingSent();
 });
 
-it('queues the email on the low queue and links to the admin review page', function (): void {
+it('queues the email on the notifications queue and links to the admin review page', function (): void {
     $ad = $this->makeAd($this->seller, ['status' => AdStatus::PENDING->value, 'title' => 'Reading chair']);
     $notification = new AdPendingReviewNotification($ad, flagged: true, flags: ['phone']);
     $reviewer = User::factory()->create();
 
     $mail = $notification->toMail($reviewer);
 
-    expect($notification->viaQueues())->toBe(['database' => 'default', 'mail' => 'low'])
+    expect($notification->viaQueues())->toMatchArray(['database' => 'notifications', 'mail' => 'notifications'])
         ->and($mail->actionUrl)->toEndWith("/admin/ads/{$ad->id}")
         ->and(implode(' ', $mail->introLines))->toContain('Reading chair')->toContain('phone');
 });

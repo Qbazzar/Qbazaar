@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications\Ads;
 
 use App\Models\Ad;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -19,7 +20,7 @@ use Illuminate\Notifications\Notification;
  */
 class AdPendingReviewNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use DeliversOnNotificationsQueue, Queueable;
 
     /**
      * @param list<string> $flags
@@ -36,14 +37,6 @@ class AdPendingReviewNotification extends Notification implements ShouldQueue
     public function via(mixed $notifiable): array
     {
         return ['database', 'mail'];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function viaQueues(): array
-    {
-        return ['database' => 'default', 'mail' => 'low'];
     }
 
     public function toMail(mixed $notifiable): MailMessage

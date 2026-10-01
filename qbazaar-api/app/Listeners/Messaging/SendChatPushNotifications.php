@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners\Messaging;
 
+use App\Enums\QueueName;
 use App\Events\Messaging\MessageSent;
 use App\Events\Offers\OfferAccepted;
 use App\Events\Offers\OfferCountered;
@@ -27,6 +28,16 @@ use Illuminate\Contracts\Queue\ShouldQueue;
  */
 class SendChatPushNotifications implements ShouldQueue
 {
+    public string $queue = QueueName::REALTIME->value;
+
+    // A chat push that arrives minutes late is noise, so retries stop early.
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [1, 5, 15];
+
+    public int $timeout = 30;
+
     public function __construct(private readonly RealtimePresence $presence) {}
 
     public function handle(

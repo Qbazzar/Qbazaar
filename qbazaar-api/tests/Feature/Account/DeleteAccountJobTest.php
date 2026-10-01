@@ -159,7 +159,7 @@ it('runs on the low queue without overlapping, and the lock expires before the f
     expect($job->queue)->toBe('low')
         ->and($middleware)->toHaveCount(1)
         ->and($middleware[0])->toBeInstanceOf(WithoutOverlapping::class)
-        ->and($middleware[0]->expiresAfter)->toBeGreaterThan((int) config('horizon.defaults.supervisor-1.timeout'))
+        ->and($middleware[0]->expiresAfter)->toBeGreaterThan($job->timeout)
         ->and($middleware[0]->expiresAfter)->toBeLessThan($job->backoff[0]);
 });
 
