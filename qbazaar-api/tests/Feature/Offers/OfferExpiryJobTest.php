@@ -5,12 +5,14 @@ declare(strict_types=1);
 use App\Enums\AdStatus;
 use App\Enums\OfferStatus;
 use App\Events\Offers\OfferExpired;
+use App\Jobs\Offers\ExpireOffersBatchJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Models\Conversation;
 use App\Models\Offer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Tests\Concerns\CreatesAds;
 
 uses(RefreshDatabase::class, CreatesAds::class);
@@ -96,4 +98,28 @@ it('expires every due offer even when expiry order differs from key order', func
 
     expect(Offer::query()->where('status', OfferStatus::PENDING->value)->count())->toBe(0);
     Event::assertDispatched(OfferExpired::class, 150);
+});
+
+it('queues due offers in batches and never overlaps itself', function (): void {
+    Queue::fake();
+    config(['qbazaar.sweeps.batch_size' => 2]);
+
+    foreach (range(1, 3) as $hours) {
+        Offer::factory()->pending()->create([
+            'conversation_id' => $this->conversation->id,
+            'ad_id' => $this->ad->id,
+            'buyer_id' => User::factory()->create()->id,
+            'seller_id' => $this->seller->id,
+            'expires_at' => now()->subHours($hours),
+        ]);
+    }
+
+    app()->call([new ExpireOldOffersJob, 'handle']);
+
+    Queue::assertPushed(ExpireOffersBatchJob::class, 2);
+    expect(Offer::query()->where('status', OfferStatus::PENDING->value)->count())->toBe(3);
+
+    ExpireOldOffersJob::dispatch();
+    ExpireOldOffersJob::dispatch();
+    Queue::assertPushed(ExpireOldOffersJob::class, 1);
 });

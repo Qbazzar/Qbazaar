@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -78,6 +79,17 @@ class Ad extends Model implements HasMedia
 {
     /** @use HasFactory<AdFactory> */
     use HasFactory, HasUlids, InteractsWithMedia, LogsActivity, Searchable, SoftDeletes;
+
+    /**
+     * Columns read by {@see toSearchableArray()} or {@see shouldBeSearchable()}.
+     *
+     * @var list<string>
+     */
+    private const SEARCHABLE_COLUMNS = [
+        'title', 'description', 'category_id', 'location_id', 'user_id', 'latitude', 'longitude',
+        'price', 'price_type', 'condition', 'ad_type', 'shipping', 'postal_code', 'status',
+        'reserved_at', 'published_at', 'views_count', 'custom_fields', 'deleted_at',
+    ];
 
     protected $table = 'ads';
 
@@ -226,6 +238,16 @@ class Ad extends Model implements HasMedia
         );
     }
 
+    /**
+     * Gallery photos only, for existence checks; {@see getMedia()} reads the gallery itself.
+     *
+     * @return MorphMany<Media, $this>
+     */
+    public function images(): MorphMany
+    {
+        return $this->morphMany(Media::class, 'model')->where('collection_name', 'images');
+    }
+
     /* ──────────────────────────────────────────────────────────────────
      *  Query scopes — used by feed / dashboard / browse endpoints.
      * ──────────────────────────────────────────────────────────────────*/
@@ -335,7 +357,7 @@ class Ad extends Model implements HasMedia
      */
     protected function makeAllSearchableUsing(Builder $query): Builder
     {
-        return $query->with(['user', 'category', 'location']);
+        return $query->with(['user', 'category', 'location'])->withExists('images as has_images_flag');
     }
 
     /**
@@ -346,7 +368,22 @@ class Ad extends Model implements HasMedia
      */
     public function makeSearchableUsing(BaseCollection $models): BaseCollection
     {
-        return (new EloquentCollection($models->all()))->loadMissing(['user', 'category', 'location']);
+        return (new EloquentCollection($models->all()))
+            ->loadMissing(['user', 'category', 'location'])
+            ->loadExists('images as has_images_flag');
+    }
+
+    /**
+     * Saves that touch none of these columns (moderation notes, expiry
+     * warnings, counters…) leave the search document as it is, so they
+     * queue no Scout job. Status and reservation are here because they
+     * decide whether the ad is listed at all.
+     */
+    public function searchIndexShouldBeUpdated(): bool
+    {
+        $insertedNow = $this->wasRecentlyCreated && $this->getChanges() === [];
+
+        return $insertedNow || $this->wasChanged(self::SEARCHABLE_COLUMNS);
     }
 
     /**
@@ -362,10 +399,6 @@ class Ad extends Model implements HasMedia
      */
     public function toSearchableArray(): array
     {
-        // Avoid loading every Media row when we only need a count — the
-        // hot path runs on every save and the underlying query is indexed.
-        $hasImages = $this->media()->where('collection_name', 'images')->exists();
-
         // The belongsTo accessors are typed non-null, but Eloquent returns null
         // for an orphaned/missing foreign key. Pin them as nullable so indexing
         // and scout:import degrade to null instead of throwing "property slug on null".
@@ -395,7 +428,7 @@ class Ad extends Model implements HasMedia
             'is_reserved' => $this->isReserved(),
             'published_at' => $this->published_at?->getTimestamp(),
             'created_at_ts' => $this->created_at instanceof Carbon ? $this->created_at->getTimestamp() : null,
-            'has_images' => $hasImages,
+            'has_images' => $this->hasImages(),
             'views_count' => (int) $this->views_count,
             // Category-specific attributes, indexed as a nested object so the
             // search can filter `custom_fields.year >= 2015` etc. Numeric-looking
@@ -410,6 +443,19 @@ class Ad extends Model implements HasMedia
         }
 
         return $document;
+    }
+
+    /**
+     * Batch indexing preloads the flag through {@see images()}; a single
+     * save falls back to one indexed EXISTS query.
+     */
+    private function hasImages(): bool
+    {
+        if (array_key_exists('has_images_flag', $this->attributes)) {
+            return (bool) $this->attributes['has_images_flag'];
+        }
+
+        return $this->images()->exists();
     }
 
     /**

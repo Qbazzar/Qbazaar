@@ -6,7 +6,6 @@ namespace App\Services\Search;
 
 use App\Models\Ad;
 use GuzzleHttp\Exception\ConnectException as GuzzleConnectException;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Meilisearch\Exceptions\CommunicationException;
@@ -27,6 +26,8 @@ class AdSearchService
 
     /** @var int */
     public const MAX_PER_PAGE = 50;
+
+    private const FACETS = ['category_slug', 'location_slug', 'condition', 'price_type'];
 
     public function __construct(private readonly AdSearchCriteria $criteria) {}
 
@@ -51,37 +52,24 @@ class AdSearchService
         }
 
         try {
-            $builder = Ad::search($query, function ($meilisearch, string $q, array $options) use ($filter, $sort, $perPage, $page): mixed {
-                $options['filter'] = $filter;
-                $options['sort'] = $sort;
-                $options['hitsPerPage'] = $perPage;
-                $options['page'] = $page;
-                $options['facets'] = ['category_slug', 'location_slug', 'condition', 'price_type'];
-
-                return $meilisearch->rawSearch($q, $options);
-            });
-
-            /** @var LengthAwarePaginator<int, Ad> $paginator */
-            $paginator = $builder->paginate($perPage, 'page', $page);
-
-            // Eager-load AFTER pagination instead of via Scout's ->query()
-            // callback. A query callback flips Scout's getTotalCount() into a
-            // path that recomputes the total from the *current page's* ids —
-            // and because our search callback pins hitsPerPage/page, that
-            // recount caps at one page, corrupting `total` and `last_page`
-            // (page 2 becomes unreachable). Loading on the paginated models
-            // keeps the Meili `totalHits` intact and still avoids N+1.
-            EloquentCollection::make($paginator->items())->load(['category', 'location', 'primaryImage']);
-
-            // Facets need a second, hits-free Meili call (Scout doesn't expose
-            // the raw response from paginate() in this version). Cheap because
-            // `hitsPerPage=0` returns no documents.
-            $raw = $this->fetchFacetDistribution($query, $filter, $sort);
-            $facets = $this->extractFacets($raw);
+            $raw = $this->rawSearch($query, [
+                'filter' => $filter,
+                'sort' => $sort,
+                'hitsPerPage' => $perPage,
+                'page' => $page,
+                'facets' => self::FACETS,
+                'attributesToRetrieve' => ['id'],
+                'attributesToHighlight' => [],
+            ]);
 
             return [
-                'paginator' => $paginator,
-                'facets' => $facets,
+                'paginator' => new LengthAwarePaginator(
+                    items: $this->hydrate($raw),
+                    total: is_int($raw['totalHits'] ?? null) ? $raw['totalHits'] : 0,
+                    perPage: $perPage,
+                    currentPage: $page,
+                ),
+                'facets' => $this->extractFacets($raw),
             ];
         } catch (CommunicationException|GuzzleConnectException $e) {
             // Meilisearch unreachable — surface an empty result set instead
@@ -111,16 +99,11 @@ class AdSearchService
         }
 
         try {
-            $builder = Ad::search($query, function ($meilisearch, string $q, array $options): mixed {
-                $options['limit'] = 10;
-                $options['attributesToRetrieve'] = ['id', 'title'];
-                $options['attributesToHighlight'] = [];
-
-                return $meilisearch->rawSearch($q, $options);
-            });
-
-            /** @var array<string, mixed> $raw */
-            $raw = $builder->raw();
+            $raw = $this->rawSearch($query, [
+                'limit' => 10,
+                'attributesToRetrieve' => ['id', 'title'],
+                'attributesToHighlight' => [],
+            ]);
         } catch (CommunicationException|GuzzleConnectException $e) {
             Log::warning('Search engine unavailable for suggestions', [
                 'error' => $e->getMessage(),
@@ -198,31 +181,39 @@ class AdSearchService
     }
 
     /**
-     * Fetch the facet distribution for a query.
+     * One Meilisearch request returns the page of ids, the total and the
+     * facet distribution together.
      *
-     * Why a second call? `paginate()` hydrates Eloquent models, but the
-     * underlying Scout engine in this version doesn't expose the raw Meili
-     * payload back to the caller. A `hitsPerPage:0`+`facets` call is the
-     * idiomatic Meilisearch pattern and cheap because no documents are
-     * returned.
-     *
-     * @param list<string> $sort
+     * @param array<string, mixed> $options
      * @return array<string, mixed>
      */
-    private function fetchFacetDistribution(string $query, string $filter, array $sort): array
+    private function rawSearch(string $query, array $options): array
     {
-        $facetBuilder = Ad::search($query, function ($meilisearch, string $q, array $options) use ($filter, $sort): mixed {
-            $options['filter'] = $filter;
-            $options['sort'] = $sort;
-            $options['hitsPerPage'] = 0;
-            $options['facets'] = ['category_slug', 'location_slug', 'condition', 'price_type'];
-
-            return $meilisearch->rawSearch($q, $options);
-        });
-
-        $raw = $facetBuilder->raw();
+        $raw = Ad::search($query, fn ($meilisearch, string $q, array $defaults): mixed => $meilisearch->rawSearch($q, [...$defaults, ...$options]))->raw();
 
         return is_array($raw) ? $raw : [];
+    }
+
+    /**
+     * Loads the hit ids in one query with what AdSummaryResource renders,
+     * keeping Meilisearch's ranking. Ads removed from the database since
+     * they were indexed are dropped.
+     *
+     * @param array<string, mixed> $raw
+     * @return list<Ad>
+     */
+    private function hydrate(array $raw): array
+    {
+        $hits = is_array($raw['hits'] ?? null) ? $raw['hits'] : [];
+        $ids = array_values(array_filter(array_column($hits, 'id'), 'is_string'));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $ads = Ad::query()->whereKey($ids)->with(['category', 'location', 'primaryImage'])->get()->keyBy('id');
+
+        return array_values(array_filter(array_map(fn (string $id): ?Ad => $ads->get($id), $ids)));
     }
 
     /**

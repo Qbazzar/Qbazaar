@@ -423,7 +423,7 @@ Route::prefix('search')
     ->name('api.v1.search.')
     ->middleware('throttle:api')
     ->group(function (): void {
-        Route::get('/', [SearchController::class, 'index'])->name('index');
+        Route::get('/', [SearchController::class, 'index'])->middleware('throttle:search')->name('index');
         Route::get('/suggestions', [SearchController::class, 'suggestions'])->name('suggestions');
     });
 

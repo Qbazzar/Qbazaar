@@ -151,6 +151,8 @@ Run the same two commands after any release that changes the `ads` index setting
 
 Distance search reads `_geo` (the ad's pin, or its location's `lat`/`lng`), so also run `scout:import` after filling in coordinates for locations. View counters reach the index through the `search.sync-view-counts` scheduled job (every `qbazaar.search.views_sync_minutes`, on the `low` queue) rather than on each view, so `sort=most_viewed` lags by up to that interval.
 
+Each `/search` request is one Meilisearch call (hits, total and facets together) and is limited to 60 per minute per user or IP (`throttle:search`). The ads index declares only the attributes the API filters, sorts or facets on and returns only `id` and `title`, so after deploying BE-13.33 run `php artisan scout:sync-index-settings` once (no reimport needed). Saves that change no indexed column no longer queue a Scout job.
+
 If Meilisearch goes down, keep the driver and restart the service: search returns empty results meanwhile, and `scout:import` rebuilds the index at any time. Do not switch to the `database` driver.
 
 ## Upload body size
@@ -173,6 +175,18 @@ The limits above still fit a 10 MB per-file override. If one of them has to be l
 All image sizes (`thumbnail` included), the BlurHash/pHash metadata, the downscale of large originals (`UPLOAD_ORIGINAL_MAX_SIDE_PX`, 2560 px) and the ad auto-moderation (`ModerateAdJob`) run on the `media` queue, consumed by the `supervisor-media` Horizon supervisor. MediaLibrary queues its conversions there too (`MEDIA_QUEUE`, `media` by default). Deploy once Horizon has drained its queues: a `DetectDuplicateImagesJob` or pending-ad alert queued by the old code fails after the switch, and that ad then misses its duplicate hint or reviewer alert (it still shows in the pending list). After deploying run `php artisan config:cache` and `php artisan horizon:terminate`. Until a size exists the API serves the signed original; until `ModerateAdJob` runs the admin ad page shows "check still running" and reviewers are not alerted yet.
 
 Public conversions are served from `MEDIA_CDN_URL` when it is set: the base URL that maps to the root of the conversions disk, e.g. `https://cdn.qbazaar.fleeteye.de/storage` for a proxied host in front of the local `public` disk, or the R2 custom domain (same value as `R2_PUBLIC_URL`) on R2. Conversion paths never change, so they are sent with `Cache-Control: public, max-age=31536000, immutable` (Apache include for `/storage/*/conversions/`, the `media-library.remote.extra_headers` override on R2). Signed original links appear on ad detail only and expire on the hour, so one URL is reused for a whole hour. Files uploaded to R2 before this release keep their old `max-age=604800` header.
+
+## Expiry sweeps
+
+`ads.expire-old` runs at minute 0 of every hour and `offers.expire-old` at minute 30. Each sweep only reads due ids and queues one batch job per `qbazaar.sweeps.batch_size` (200) rows on the `low` queue, so Horizon must be running for ads and offers to expire. The sweeps are `ShouldBeUnique` (lock held for up to an hour), which needs a cache store with atomic locks (`redis` in production). Nothing to do on deploy beyond the usual `config:cache`; `php artisan schedule:list` shows both tasks as hourly.
+
+## Saved-search alerts
+
+Each newly live ad queues one fan-out per ad (unique while queued, `notifications` queue). Candidates come from one indexed query on `saved_searches` (`saved_searches_alerts_category_location_idx`). A user gets at most one saved-search push per `qbazaar.search.saved_search_check_interval_minutes` (60); later matches in the window only reach the bell and one `search.digest` push follows when the window closes (a delayed `SendSavedSearchDigestJob` on `notifications`). The window and the pending counts live in the cache, so it must be `redis` in production. Nothing to run on deploy beyond `migrate`.
+
+## Chat inbox
+
+The inbox and the unread badge read `conversation_participants` (one row per side: hide stamp, unread counter, sort keys). The BE-13.30 migration backfills it from `conversations` and `messages` with two `INSERT … SELECT` statements and then drops `conversations.buyer_hidden_at` / `seller_hidden_at`; run it in the deploy window as usual (`migrate --force`), it holds no long locks at current volumes. Badge changes go out as `messages.unread` on `private-user.{id}` from the `realtime` queue, so Reverb and Horizon must be running for live badges; the web client keeps polling `GET /conversations/unread-count` as a fallback.
 
 ## Manual deploy (if Actions is down)
 

@@ -8,6 +8,7 @@ use App\Data\Messaging\ChatMessageDraft;
 use App\Enums\ChatMessageKey;
 use App\Enums\Language;
 use App\Events\Messaging\MessageSent;
+use App\Events\Messaging\UnreadMessagesChanged;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -58,8 +59,6 @@ class ConversationMessageWriter
                 'last_message_preview' => Str::limit($this->english($previewKey, $draft), ChatMessageRenderer::PREVIEW_LENGTH),
                 'last_message_key' => $previewKey?->value,
                 'last_message_params' => $created->params,
-                'buyer_hidden_at' => null,
-                'seller_hidden_at' => null,
             ])->save();
 
             return $created;
@@ -69,6 +68,7 @@ class ConversationMessageWriter
 
         DB::afterCommit(function () use ($message, $conversation, $recipient): void {
             MessageSent::dispatch($message, $conversation->fresh() ?? $conversation, $recipient);
+            UnreadMessagesChanged::dispatch($recipient->id);
         });
 
         return $message;

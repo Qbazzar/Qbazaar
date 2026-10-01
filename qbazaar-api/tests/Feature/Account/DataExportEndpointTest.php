@@ -12,6 +12,7 @@ use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Notifications\DataExportReadyNotification;
 use App\Services\Account\UserDataExporter;
+use App\Services\Messaging\ConversationInbox;
 use App\Services\Users\FollowGraph;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -114,7 +115,7 @@ it('builds an export with ads, messages and offers, and emails a browser link', 
     Message::factory()->create(['conversation_id' => $chat->id, 'sender_id' => $this->user->id, 'body' => 'Is it available?']);
     Message::factory()->create(['conversation_id' => $chat->id, 'sender_id' => $other->id, 'body' => 'Not yours']);
     $made = Offer::factory()->create(['conversation_id' => $chat->id, 'ad_id' => $otherAd->id, 'buyer_id' => $this->user->id, 'seller_id' => $other->id]);
-    $chat->forceFill(['buyer_hidden_at' => now()])->save();
+    app(ConversationInbox::class)->hide($this->user, [$chat->id]);
     app(FollowGraph::class)->link($this->user, $other);
     TrustedDevice::query()->create(['user_id' => $this->user->id, 'device_hash' => str_repeat('b', 64), 'label' => 'Laptop', 'last_used_at' => now()]);
 

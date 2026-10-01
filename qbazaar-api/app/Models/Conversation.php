@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Messaging\ConversationInbox;
 use Database\Factories\ConversationFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +26,9 @@ use RuntimeException;
  * so the inbox endpoint can `ORDER BY last_message_at DESC` with a single
  * index lookup. Sub-querying `messages` per-row would be O(N) on the inbox.
  *
+ * Each side's inbox state (hidden, unread counter) lives in
+ * `conversation_participants`, kept in step by {@see ConversationInbox}.
+ *
  * @property string $id
  * @property string $ad_id
  * @property string $buyer_id
@@ -34,9 +37,7 @@ use RuntimeException;
  * @property string|null $last_message_preview
  * @property string|null $last_message_key
  * @property array<string, scalar|null>|null $last_message_params
- * @property Carbon|null $buyer_hidden_at
- * @property Carbon|null $seller_hidden_at
- * @property int|null $unread_count set by {@see scopeWithUnreadCountFor()}
+ * @property int|null $unread_count set by {@see ConversationInbox::conversationsOf()}
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Ad $ad
@@ -74,9 +75,18 @@ class Conversation extends Model
         return [
             'last_message_at' => 'datetime',
             'last_message_params' => 'array',
-            'buyer_hidden_at' => 'datetime',
-            'seller_hidden_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::created(fn (Conversation $conversation) => app(ConversationInbox::class)->open($conversation));
+
+        static::updated(function (Conversation $conversation): void {
+            if ($conversation->wasChanged('last_message_at')) {
+                app(ConversationInbox::class)->resort($conversation);
+            }
+        });
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -159,78 +169,9 @@ class Conversation extends Model
         return $user->id === $this->buyer_id ? $this->seller_id : $this->buyer_id;
     }
 
-    /* ──────────────────────────────────────────────────────────────────
-     *  Query scopes
-     * ──────────────────────────────────────────────────────────────────*/
-
-    /**
-     * Conversations where $user is either buyer or seller.
-     *
-     * @param Builder<Conversation> $query
-     * @return Builder<Conversation>
-     */
-    public function scopeForUser(Builder $query, User $user): Builder
-    {
-        return $query->where(function (Builder $q) use ($user): void {
-            $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id);
-        });
-    }
-
-    /**
-     * Conversations of $user that $user has not hidden since the last message.
-     *
-     * @param Builder<Conversation> $query
-     * @return Builder<Conversation>
-     */
-    public function scopeVisibleTo(Builder $query, User $user): Builder
-    {
-        return $query->where(function (Builder $q) use ($user): void {
-            $q->where(fn (Builder $buyer) => $buyer->where('buyer_id', $user->id)->whereNull('buyer_hidden_at'))
-                ->orWhere(fn (Builder $seller) => $seller->where('seller_id', $user->id)->whereNull('seller_hidden_at'));
-        });
-    }
-
-    /**
-     * Adds `unread_count` for $user in the same query, so an inbox page doesn't count per row.
-     *
-     * @param Builder<Conversation> $query
-     * @return Builder<Conversation>
-     */
-    public function scopeWithUnreadCountFor(Builder $query, User $user): Builder
-    {
-        return $query->withCount([
-            'messages as unread_count' => fn (Builder $messages) => $messages
-                ->where('sender_id', '!=', $user->id)
-                ->whereNull('read_at'),
-        ]);
-    }
-
-    /**
-     * Inbox ordering — most recent activity first, with a created_at tie-break
-     * so brand-new (no messages yet) conversations still surface in a stable
-     * order behind the active ones.
-     *
-     * @param Builder<Conversation> $query
-     * @return Builder<Conversation>
-     */
-    public function scopeOrderedForInbox(Builder $query): Builder
-    {
-        return $query
-            ->orderByDesc('last_message_at')
-            ->orderByDesc('created_at');
-    }
-
-    /**
-     * Number of messages addressed to $user that they haven't read yet.
-     *
-     * Uses a dedicated index (conversation_id, sender_id, read_at) so the
-     * count is a quick range scan even for chatty conversations.
-     */
+    /** Unread messages addressed to $user in this conversation. */
     public function unreadCountFor(User $user): int
     {
-        return $this->messages()
-            ->where('sender_id', '!=', $user->id)
-            ->whereNull('read_at')
-            ->count();
+        return app(ConversationInbox::class)->unreadIn($this, $user);
     }
 }

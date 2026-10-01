@@ -86,23 +86,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ['prefix' => 'api/v1', 'middleware' => ['auth:sanctum', 'active.user', 'throttle:api']],
     )
     ->withSchedule(function (Schedule $schedule): void {
-        // Daily 02:00 Asia/Qatar — quiet local window, runs after most
-        // sellers have stopped editing. The job is queued (`onQueue('low')`)
-        // so the schedule loop returns immediately.
+        // Hourly, so each run only sees one hour of expiries. The sweeps
+        // queue their work in batches and are ShouldBeUnique, which is what
+        // stops overlap: withoutOverlapping() on a queued job only guards
+        // the dispatch.
         $schedule->job(new ExpireOldAdsJob)
-            ->dailyAt('02:00')
-            ->timezone('Asia/Qatar')
-            ->name('ads.expire-old')
-            ->withoutOverlapping();
+            ->hourlyAt(0)
+            ->name('ads.expire-old');
 
-        // Runs 30 minutes after the ads sweep so the ad-status invariants
-        // the offer rules depend on (offers belong to ACTIVE ads) have
-        // already settled when offers are flipped to EXPIRED.
+        // Half an hour after the ads sweep so the ad-status invariants the
+        // offer rules depend on (offers belong to ACTIVE ads) have already
+        // settled when offers are flipped to EXPIRED.
         $schedule->job(new ExpireOldOffersJob)
-            ->dailyAt('02:30')
-            ->timezone('Asia/Qatar')
-            ->name('offers.expire-old')
-            ->withoutOverlapping();
+            ->hourlyAt(30)
+            ->name('offers.expire-old');
 
         $schedule->job(new SyncAdViewCountsJob)
             ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.search.views_sync_minutes'))))
