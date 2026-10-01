@@ -26,7 +26,7 @@ class SellerCardResource extends JsonResource
             'full_name' => $this->full_name,
             'avatar_url' => $this->avatar_url,
             'account_type' => $this->account_type->value,
-            'ads_count' => (int) $this->resource->getAttribute('listed_ads_count'),
+            'ads_count' => (int) $this->active_ads_count,
             'rating_avg' => (float) $this->rating_avg,
             'rating_count' => (int) $this->rating_count,
         ];

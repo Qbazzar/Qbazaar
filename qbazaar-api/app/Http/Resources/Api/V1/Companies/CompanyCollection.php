@@ -11,8 +11,8 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Str;
 
 /**
- * A page of the companies directory. Expects `businessProfile`, the cover
- * media and `active_ads_count` loaded by CompanyDirectory.
+ * A page of the companies directory. Expects `businessProfile` and the cover
+ * media loaded by CompanyDirectory.
  */
 class CompanyCollection extends ResourceCollection
 {
@@ -59,7 +59,7 @@ class CompanyCollection extends ResourceCollection
             'avatar_url' => $company->avatar_url,
             'cover_url' => $company->businessCoverUrl(),
             'followers_count' => $company->followers_count,
-            'active_ads_count' => (int) $company->getAttribute('active_ads_count'),
+            'active_ads_count' => $company->active_ads_count,
             'rating_avg' => (float) $company->rating_avg,
             'rating_count' => $company->rating_count,
             'is_following' => isset($this->viewerFollows[$company->id]),

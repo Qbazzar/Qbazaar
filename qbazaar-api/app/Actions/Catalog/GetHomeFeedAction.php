@@ -6,7 +6,6 @@ namespace App\Actions\Catalog;
 
 use App\Data\Catalog\HomeFeed;
 use App\Enums\AccountType;
-use App\Enums\AdStatus;
 use App\Enums\UserStatus;
 use App\Models\Ad;
 use App\Models\Location;
@@ -14,7 +13,6 @@ use App\Models\User;
 use App\Services\Catalog\CategoryTree;
 use App\Services\Catalog\ListingCounter;
 use App\Services\Catalog\LocationHierarchy;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -82,14 +80,11 @@ class GetHomeFeedAction
      */
     private function featuredSellers(): Collection
     {
-        $activeAds = fn (Builder $ads): Builder => $ads->where('status', AdStatus::ACTIVE->value);
-
         return User::query()
             ->where('account_type', AccountType::BUSINESS->value)
             ->where('status', UserStatus::ACTIVE->value)
-            ->whereHas('ads', $activeAds)
-            ->withCount(['ads as listed_ads_count' => $activeAds])
-            ->orderByDesc('listed_ads_count')
+            ->where('active_ads_count', '>', 0)
+            ->orderByDesc('active_ads_count')
             ->orderBy('id')
             ->limit((int) config('qbazaar.home.featured_sellers_limit'))
             ->get();

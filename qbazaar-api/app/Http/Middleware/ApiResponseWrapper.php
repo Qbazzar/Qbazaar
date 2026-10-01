@@ -54,7 +54,7 @@ class ApiResponseWrapper
             return $response;
         }
 
-        $payload = $response->getData(true);
+        $payload = $this->payloadOf($response);
 
         // Already wrapped (success or error envelope) — leave alone.
         if (is_array($payload) && array_key_exists('success', $payload)) {
@@ -83,6 +83,18 @@ class ApiResponseWrapper
         ];
 
         return $response->setData($envelope);
+    }
+
+    /**
+     * The array a controller or resource returned is still on the response,
+     * so reading it avoids decoding the JSON that was just encoded; only
+     * other payloads (models, collections) fall back to decoding.
+     */
+    private function payloadOf(JsonResponse $response): mixed
+    {
+        $original = $response->getOriginalContent();
+
+        return is_array($original) ? $original : $response->getData(true);
     }
 
     /**

@@ -26,9 +26,9 @@ use Throwable;
  *      legacy `config/moderation.php` values so older tests + bootstrapping
  *      sequences keep working.
  *
- * The service is bound as a singleton (see AppServiceProvider) so the
- * normalised banned-word array survives across requests in a worker process.
- * That makes the cache-driven warm path effectively O(1).
+ * The service is scoped (see AppServiceProvider): the normalised lists are
+ * reused within one request or queued job and rebuilt from the cache for the
+ * next one, so admin edits reach long-running workers without a restart.
  */
 class ModerationRulesService
 {

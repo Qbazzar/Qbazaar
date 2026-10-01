@@ -2203,7 +2203,12 @@ paths:
     get:
       tags: [Ads]
       summary: Get ad detail
-      description: An optional Bearer token lets the owner see their own non-public ad and sets `is_favorited`.
+      description: |
+        An optional Bearer token lets the owner see their own non-public ad and sets `is_favorited`.
+        Visitors other than the owner share a rendering cached for up to
+        `qbazaar.ads.detail_cache_seconds` (60 seconds); any edit of the ad or
+        its images drops it at once, so only `views_count`, `favorites_count`
+        and the seller block can trail by that long.
       operationId: adsShow
       security: [{}, {bearerAuth: []}]
       parameters:

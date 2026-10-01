@@ -132,6 +132,9 @@ return [
         'postal_code_max_length' => 10,
         'street_max_length' => 255,
         'view_throttle_per_user_per_minute' => 60,
+        // Public ad detail served to visitors other than the seller; saves to the
+        // ad or its images drop the entry, so this only bounds seller/counter staleness.
+        'detail_cache_seconds' => 60,
     ],
 
     /*

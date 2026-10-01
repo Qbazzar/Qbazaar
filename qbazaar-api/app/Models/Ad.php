@@ -30,8 +30,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -77,7 +75,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class Ad extends Model implements HasMedia
 {
     /** @use HasFactory<AdFactory> */
-    use HasFactory, HasUlids, InteractsWithMedia, LogsActivity, Searchable, SoftDeletes;
+    use HasFactory, HasUlids, InteractsWithMedia, Searchable, SoftDeletes;
 
     protected $table = 'ads';
 
@@ -147,30 +145,6 @@ class Ad extends Model implements HasMedia
             'price' => 'decimal:2',
             'featured' => 'boolean',
         ];
-    }
-
-    /**
-     * Spatie activity-log configuration. We log the user-facing attributes
-     * (title / description / price / status / category / location) under the
-     * `ad` log name so admin queries scope cleanly.
-     *
-     * `logOnlyDirty()` ensures we only persist a row when one of the watched
-     * columns actually changed — avoids one log entry per touch / counter bump.
-     */
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly([
-                'title',
-                'description',
-                'price',
-                'status',
-                'category_id',
-                'location_id',
-            ])
-            ->logOnlyDirty()
-            ->useLogName('ad')
-            ->dontLogEmptyChanges();
     }
 
     /* ──────────────────────────────────────────────────────────────────
