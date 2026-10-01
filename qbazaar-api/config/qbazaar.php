@@ -85,6 +85,7 @@ return [
             'attempts_per_minute_per_ip' => 30,
             'refresh_per_minute_per_token' => 5,
             'refresh_per_minute_per_ip' => 120,
+            'email_links_per_hour' => 3,
         ],
     ],
 

@@ -27,6 +27,10 @@ final class AuthRateLimiters
             Limit::perMinute(self::limit('refresh_per_minute_per_token'))->by('refresh:' . self::refreshTokenId($request)),
             Limit::perMinute(self::limit('refresh_per_minute_per_ip'))->by('refresh-ip:' . $request->ip()),
         ]);
+
+        // Each hit mails a link, so the inbox is capped whoever asks for it.
+        RateLimiter::for('email-links', fn (Request $request): Limit => Limit::perHour(self::limit('email_links_per_hour'))
+            ->by('email-links:' . (self::inputString($request, 'email') ?: mb_strtolower((string) $request->user()?->email))));
     }
 
     private static function limit(string $key): int
