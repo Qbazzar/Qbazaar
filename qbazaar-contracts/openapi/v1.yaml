@@ -1761,6 +1761,61 @@ paths:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/account/saved-searches/{id}:
+    put:
+      tags: [Search]
+      summary: Replace the name and filters of one of the caller's saved searches
+      operationId: savedSearchesUpdate
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveSearchRequest'
+      responses:
+        '200':
+          description: Saved search updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearchEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: SEARCH_SAVED_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422': { $ref: '#/components/responses/ValidationError' }
+    patch:
+      tags: [Search]
+      summary: Switch alerts on or off, or rename
+      description: '`alerts_enabled: false` stops new-ad alerts for this search right away.'
+      operationId: savedSearchesPatch
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchSavedSearchRequest'
+      responses:
+        '200':
+          description: Saved search updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearchEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: SEARCH_SAVED_NOT_FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422': { $ref: '#/components/responses/ValidationError' }
     delete:
       tags: [Search]
       summary: Remove one of the caller's saved searches
@@ -4202,24 +4257,57 @@ components:
 
     SavedSearch:
       type: object
-      required: [id, name, query_params, created_at]
+      required: [id, name, query_params, alerts_enabled, created_at, updated_at]
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         name: { type: string, minLength: 1, maxLength: 60 }
         query_params:
           type: object
           additionalProperties: true
-          description: Opaque envelope replayed verbatim against `/search`.
+          description: Envelope replayed verbatim against `/search`.
+        alerts_enabled:
+          type: boolean
+          description: When true, a newly live ad matching the filters sends a `search.match` notification (once per ad per user).
         created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    SavedSearchQueryParams:
+      type: object
+      additionalProperties: true
+      description: |
+        The `/search` inputs. Unknown keys are kept and replayed. Alerts
+        match with the same meaning as `/search`: a parent category or
+        location includes its descendants, a price range never matches an
+        ad without a price, every word of `q` must appear in the title or
+        description, and `custom_fields` takes `{key: value}` for equality
+        (case-insensitive) or `{key: {min, max}}` for a range. A category or
+        location that does not exist matches nothing.
+      properties:
+        q: { type: [string, 'null'], maxLength: 200 }
+        category_id: { $ref: '#/components/schemas/ULID' }
+        category_slug: { type: [string, 'null'], maxLength: 120 }
+        location_id: { $ref: '#/components/schemas/ULID' }
+        location_slug: { type: [string, 'null'], maxLength: 120 }
+        price_min: { type: [number, 'null'], minimum: 0 }
+        price_max: { type: [number, 'null'], minimum: 0 }
+        condition: { $ref: '#/components/schemas/Condition' }
+        price_type: { $ref: '#/components/schemas/PriceType' }
+        custom_fields: { type: [object, 'null'], additionalProperties: true }
 
     SaveSearchRequest:
       type: object
       required: [name, query_params]
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
-        query_params:
-          type: object
-          additionalProperties: true
+        query_params: { $ref: '#/components/schemas/SavedSearchQueryParams' }
+        alerts_enabled: { type: boolean, default: true }
+
+    PatchSavedSearchRequest:
+      type: object
+      minProperties: 1
+      properties:
+        alerts_enabled: { type: boolean }
+        name: { type: string, minLength: 1, maxLength: 60 }
 
     SavedSearchEnvelope:
       allOf:
@@ -4324,8 +4412,7 @@ components:
         - `system` — moderation / read-receipt placeholder (Sprint 9).
 
     ChatMessageKey:
-      type: string
-      nullable: true
+      type: [string, 'null']
       enum: [offer.made, offer.countered, offer.accepted, offer.rejected, offer.withdrawn, image, null]
       description: |
         Set on bubbles the server writes (offer and system messages; `image`
@@ -4335,10 +4422,9 @@ components:
         key from their own bundle with `params`. Null for user-written text.
 
     ChatMessageParams:
-      type: object
-      nullable: true
+      type: [object, 'null']
       additionalProperties: true
-      description: Placeholders of the key, e.g. `{amount: "150.00", currency: "QAR", note: "Cash today"}`.
+      description: 'Placeholders of the key, for example `{"amount": "150.00", "currency": "QAR", "note": "Cash today"}`.'
 
     Conversation:
       type: object
@@ -4427,9 +4513,9 @@ components:
             full_name: { type: string }
             avatar_thumb: { type: string, format: uri, nullable: true }
         media:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/ChatImage'
-          nullable: true
+            - type: 'null'
           description: Only present when `type === "image"`.
         offer:
           allOf:

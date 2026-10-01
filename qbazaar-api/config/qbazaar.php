@@ -113,7 +113,7 @@ return [
     'search' => [
         'results_per_page' => 20,
         'suggestions_max' => 8,
-        'saved_search_max_per_user' => 20,
+        'saved_search_max_per_user' => 10,
         'saved_search_check_interval_minutes' => 60,
         // GET /ads?ids= — favourites synced from another device, recently viewed on the web.
         'ids_lookup_max' => 50,

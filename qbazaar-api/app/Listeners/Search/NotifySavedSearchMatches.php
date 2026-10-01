@@ -9,90 +9,55 @@ use App\Events\Ads\AdPublished;
 use App\Models\Ad;
 use App\Models\SavedSearch;
 use App\Notifications\Search\SavedSearchMatchNotification;
+use App\Services\Notifications\AdAudienceNotifier;
+use App\Services\Search\SavedSearchMatcher;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Collection;
 
 /**
- * Fan a freshly-published ad out to the owners of saved searches it matches.
- *
- * Queued: it scans every saved search, so it must never run inline on the
- * publish request. Saved searches are capped per user, so the total set stays
- * modest for the MVP — if it grows, move the match to an indexed/Meili pass.
- *
- * Matching is conservative: a criterion only constrains when it's present, and
- * a keyword (`q`) requires a substring hit on the title/description so a
- * keyword-only search can't match every new listing.
+ * Alerts owners of saved searches (with alerts on) that a newly live ad
+ * matches. Runs on the low queue and walks the SQL pre-filtered candidates
+ * in chunks; each user is alerted once per ad, even with several matching
+ * searches or when the ad is approved again after an edit.
  */
 class NotifySavedSearchMatches implements ShouldQueue
 {
+    public string $queue = 'low';
+
+    public function __construct(
+        private readonly SavedSearchMatcher $matcher,
+        private readonly AdAudienceNotifier $notifier,
+    ) {}
+
     public function handle(AdPublished|AdApproved $event): void
     {
-        $ad = $event->ad->loadMissing(['category', 'location']);
-        $sellerId = $ad->user_id;
+        $ad = $event->ad->loadMissing('user');
 
-        /** @var array<int, string> $notified */
-        $notified = [];
+        if (! $ad->isPubliclyListed()) {
+            return;
+        }
 
-        SavedSearch::query()
-            ->with('user')
-            ->chunkById(200, function ($searches) use ($ad, $sellerId, &$notified): void {
-                foreach ($searches as $search) {
-                    $user = $search->user;
-                    // Skip the seller (own ad) and anyone already alerted by a
-                    // different saved search this run.
-                    if ($user === null || $user->id === $sellerId) {
-                        continue;
-                    }
-                    if (in_array($user->id, $notified, true)) {
-                        continue;
-                    }
-
-                    $params = is_array($search->query_params) ? $search->query_params : [];
-                    if (! $this->matches($ad, $params)) {
-                        continue;
-                    }
-
-                    $user->notify(new SavedSearchMatchNotification($ad, (string) $search->name));
-                    $notified[] = $user->id;
-                }
+        $this->matcher->candidates($ad)
+            ->select(['id', 'user_id', 'name', 'query_params'])
+            ->chunkById((int) config('qbazaar.notifications.fan_out_chunk'), function (Collection $searches) use ($ad): void {
+                $this->notifier->notifyEach($ad, $this->notificationsFor($ad, $searches), "saved-search:{$ad->id}");
             });
     }
 
     /**
-     * @param array<string, mixed> $p
+     * @param Collection<int, SavedSearch> $searches
+     * @return array<string, SavedSearchMatchNotification>
      */
-    private function matches(Ad $ad, array $p): bool
+    private function notificationsFor(Ad $ad, Collection $searches): array
     {
-        $category = $p['category_slug'] ?? null;
-        if (is_string($category) && $category !== '' && $ad->category->slug !== $category) {
-            return false;
-        }
+        $notifications = [];
 
-        $location = $p['location_slug'] ?? null;
-        if (is_string($location) && $location !== '' && $ad->location->slug !== $location) {
-            return false;
-        }
-
-        $price = $ad->price !== null ? (float) $ad->price : null;
-        if (is_numeric($p['price_min'] ?? null) && ($price === null || $price < (float) $p['price_min'])) {
-            return false;
-        }
-        if (is_numeric($p['price_max'] ?? null) && ($price === null || $price > (float) $p['price_max'])) {
-            return false;
-        }
-
-        $condition = $p['condition'] ?? null;
-        if (is_string($condition) && $condition !== '' && $ad->condition?->value !== $condition) {
-            return false;
-        }
-
-        $q = $p['q'] ?? null;
-        if (is_string($q) && trim($q) !== '') {
-            $haystack = mb_strtolower($ad->title . ' ' . $ad->description);
-            if (! str_contains($haystack, mb_strtolower(trim($q)))) {
-                return false;
+        foreach ($searches as $search) {
+            if (! isset($notifications[$search->user_id]) && $this->matcher->matchesDetails($ad, $search->query_params)) {
+                $notifications[$search->user_id] = new SavedSearchMatchNotification($ad, $search->name);
             }
         }
 
-        return true;
+        return $notifications;
     }
 }

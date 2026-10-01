@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Search;
 
+use App\Actions\Search\SaveSearchAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Search\PatchSavedSearchRequest;
 use App\Http\Requests\Api\V1\Search\SaveSearchRequest;
 use App\Http\Resources\Api\V1\Search\SavedSearchResource;
 use App\Models\SavedSearch;
@@ -17,47 +19,37 @@ use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
- * Sprint 6 — per-user saved searches.
+ * Per-user saved searches.
  *
- * All endpoints require an authenticated, active user via the route group.
- * Ownership is implied: a user can only see / mutate rows where
- * `user_id = auth()->id()`. We never expose the column in URLs.
+ * Ownership is implied: a user only ever sees or changes rows where
+ * `user_id` is their own, and someone else's id answers 404, never 403.
  *
  * @group Search
  */
 class SavedSearchController extends Controller
 {
-    /** Hard cap per user; the spec calls for 10. */
-    private const MAX_PER_USER = 10;
+    public function __construct(private readonly SaveSearchAction $saveSearch) {}
 
     /**
-     * GET /api/v1/account/saved-searches — caller's own saved searches.
+     * GET /api/v1/account/saved-searches — the caller's saved searches,
+     * bounded by `qbazaar.search.saved_search_max_per_user`.
      *
      * @authenticated
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
         $rows = SavedSearch::query()
-            ->where('user_id', $user->id)
+            ->where('user_id', $this->caller($request)->id)
             ->orderByDesc('created_at')
+            ->limit((int) config('qbazaar.search.saved_search_max_per_user'))
             ->get();
 
-        $data = $rows
-            ->map(fn (SavedSearch $row): array => (new SavedSearchResource($row))->toArray($request))
-            ->all();
-
-        return response()->json($data);
+        return response()->json(SavedSearchResource::collection($rows)->toArray($request));
     }
 
     /**
-     * POST /api/v1/account/saved-searches — store a new saved search.
-     *
-     * Enforces the per-user cap before insert so we never persist past the
-     * limit and then have to clean up. Returns SEARCH_SAVED_LIMIT (422)
-     * once the cap is reached.
+     * POST /api/v1/account/saved-searches — SEARCH_SAVED_LIMIT (422) once
+     * the cap is reached.
      *
      * @authenticated
      *
@@ -65,35 +57,43 @@ class SavedSearchController extends Controller
      */
     public function store(SaveSearchRequest $request): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
-
-        $count = SavedSearch::query()
-            ->where('user_id', $user->id)
-            ->count();
-
-        if ($count >= self::MAX_PER_USER) {
-            throw new DomainException(ErrorCode::SEARCH_SAVED_LIMIT);
-        }
-
-        /** @var array<string, mixed> $validated */
-        $validated = $request->validated();
-
-        $row = new SavedSearch;
-        $row->fill($validated);
-        $row->user_id = $user->id;
-        $row->save();
+        $search = $this->saveSearch->create($this->caller($request), $request->savedSearch());
 
         return response()
-            ->json((new SavedSearchResource($row))->toArray($request))
+            ->json((new SavedSearchResource($search))->toArray($request))
             ->setStatusCode(SymfonyResponse::HTTP_CREATED);
     }
 
     /**
-     * DELETE /api/v1/account/saved-searches/{id} — remove one of the caller's.
+     * PUT /api/v1/account/saved-searches/{id} — replace name and filters.
      *
-     * Missing rows surface as SEARCH_SAVED_NOT_FOUND (404) so we don't leak
-     * the existence of another user's saved search via a 403 vs 404 oracle.
+     * @authenticated
+     *
+     * @throws DomainException
+     */
+    public function update(SaveSearchRequest $request, string $id): JsonResponse
+    {
+        $search = $this->saveSearch->update($this->caller($request), $id, $request->savedSearch());
+
+        return response()->json((new SavedSearchResource($search))->toArray($request));
+    }
+
+    /**
+     * PATCH /api/v1/account/saved-searches/{id} — switch alerts or rename.
+     *
+     * @authenticated
+     *
+     * @throws DomainException
+     */
+    public function patch(PatchSavedSearchRequest $request, string $id): JsonResponse
+    {
+        $search = $this->saveSearch->update($this->caller($request), $id, $request->changes());
+
+        return response()->json((new SavedSearchResource($search))->toArray($request));
+    }
+
+    /**
+     * DELETE /api/v1/account/saved-searches/{id}
      *
      * @authenticated
      *
@@ -101,21 +101,23 @@ class SavedSearchController extends Controller
      */
     public function destroy(Request $request, string $id): Response
     {
-        /** @var User $user */
-        $user = $request->user();
+        $deleted = SavedSearch::query()
+            ->where('user_id', $this->caller($request)->id)
+            ->whereKey($id)
+            ->delete();
 
-        /** @var SavedSearch|null $row */
-        $row = SavedSearch::query()
-            ->where('user_id', $user->id)
-            ->where('id', $id)
-            ->first();
-
-        if ($row === null) {
+        if ($deleted === 0) {
             throw new DomainException(ErrorCode::SEARCH_SAVED_NOT_FOUND);
         }
 
-        $row->delete();
-
         return response()->noContent();
+    }
+
+    private function caller(Request $request): User
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return $user;
     }
 }

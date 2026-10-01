@@ -341,6 +341,8 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 //   Authenticated (account group):
 //     GET    /account/saved-searches        — list (cap 10/user)
 //     POST   /account/saved-searches        — create
+//     PUT    /account/saved-searches/{id}   — replace name + filters
+//     PATCH  /account/saved-searches/{id}   — alerts_enabled / rename
 //     DELETE /account/saved-searches/{id}   — remove
 Route::prefix('search')
     ->name('api.v1.search.')
@@ -356,6 +358,8 @@ Route::prefix('account/saved-searches')
     ->group(function (): void {
         Route::get('/', [SavedSearchController::class, 'index'])->name('index');
         Route::post('/', [SavedSearchController::class, 'store'])->name('store');
+        Route::put('/{id}', [SavedSearchController::class, 'update'])->name('update');
+        Route::patch('/{id}', [SavedSearchController::class, 'patch'])->name('patch');
         Route::delete('/{id}', [SavedSearchController::class, 'destroy'])->name('destroy');
     });
 
