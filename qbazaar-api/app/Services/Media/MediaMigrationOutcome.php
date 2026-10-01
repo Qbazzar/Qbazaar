@@ -9,4 +9,5 @@ enum MediaMigrationOutcome
     case Migrated;
     case AlreadyInPlace;
     case SourceMissing;
+    case CopyFailed;
 }

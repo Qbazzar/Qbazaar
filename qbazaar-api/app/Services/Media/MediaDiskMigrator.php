@@ -42,11 +42,15 @@ class MediaDiskMigrator
         }
 
         if (! $this->copy($sourceDisk, $targetDisk, $originalPath)) {
-            return MediaMigrationOutcome::SourceMissing;
+            return MediaMigrationOutcome::CopyFailed;
         }
 
+        // Repointing with a conversion missing on the target would break its
+        // public URL, so the row stays on the source until a re-run succeeds.
         foreach ($this->derivedFiles($media, $sourceConversionsDisk) as $path) {
-            $this->copy($sourceConversionsDisk, $targetConversionsDisk, $path);
+            if (! $this->copy($sourceConversionsDisk, $targetConversionsDisk, $path)) {
+                return MediaMigrationOutcome::CopyFailed;
+            }
         }
 
         Media::query()->whereKey($media->getKey())->update([

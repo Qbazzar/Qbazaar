@@ -96,6 +96,7 @@ it('is idempotent', function (): void {
             ['Migrated', 0],
             ['Already in place', 2],
             ['Source file missing', 0],
+            ['Copy failed', 0],
         ])
         ->assertSuccessful();
 });
@@ -108,6 +109,7 @@ it('changes nothing on a dry run', function (): void {
             ['Would migrate', 2],
             ['Already in place', 0],
             ['Source file missing', 0],
+            ['Copy failed', 0],
         ])
         ->assertSuccessful();
 
@@ -132,4 +134,19 @@ it('does nothing while the configured disks are unchanged', function (): void {
 
     expect($this->adImage->fresh()?->disk)->toBe('public');
     expect(Storage::disk('r2')->allFiles())->toBe([]);
+});
+
+it('keeps a row on the old disk and fails when a conversion cannot be copied', function (): void {
+    ($this->switchToR2)();
+
+    $rejectingDisk = Mockery::mock(Storage::disk('r2_public'))->makePartial();
+    $rejectingDisk->shouldReceive('writeStream')->andReturnFalse();
+    Storage::set('r2_public', $rejectingDisk);
+
+    $this->artisan('media:migrate-storage')
+        ->expectsOutputToContain((string) $this->adImage->getKey())
+        ->assertFailed();
+
+    expect($this->adImage->fresh()?->disk)->toBe('public')
+        ->and($this->adImage->fresh()?->conversions_disk)->toBe('public');
 });

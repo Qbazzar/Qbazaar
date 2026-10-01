@@ -22,25 +22,24 @@ class MigrateMediaStorageCommand extends Command
         $dryRun = (bool) $this->option('dry-run');
         $chunkSize = max(1, (int) $this->option('chunk'));
 
-        $counts = [
-            MediaMigrationOutcome::Migrated->name => 0,
-            MediaMigrationOutcome::AlreadyInPlace->name => 0,
-            MediaMigrationOutcome::SourceMissing->name => 0,
-        ];
+        $counts = array_fill_keys(array_column(MediaMigrationOutcome::cases(), 'name'), 0);
         $missing = [];
+        $failed = [];
 
         $progress = $this->output->createProgressBar(Media::query()->count());
         $progress->start();
 
-        Media::query()->chunkById($chunkSize, function ($chunk) use ($migrator, $dryRun, &$counts, &$missing, $progress): void {
+        Media::query()->chunkById($chunkSize, function ($chunk) use ($migrator, $dryRun, &$counts, &$missing, &$failed, $progress): void {
             foreach ($chunk as $media) {
                 /** @var Media $media */
                 $outcome = $migrator->migrate($media, $dryRun);
                 $counts[$outcome->name]++;
 
-                if ($outcome === MediaMigrationOutcome::SourceMissing) {
-                    $missing[] = (string) $media->getKey();
-                }
+                match ($outcome) {
+                    MediaMigrationOutcome::SourceMissing => $missing[] = (string) $media->getKey(),
+                    MediaMigrationOutcome::CopyFailed => $failed[] = (string) $media->getKey(),
+                    default => null,
+                };
 
                 $progress->advance();
             }
@@ -55,11 +54,18 @@ class MigrateMediaStorageCommand extends Command
                 [$dryRun ? 'Would migrate' : 'Migrated', $counts[MediaMigrationOutcome::Migrated->name]],
                 ['Already in place', $counts[MediaMigrationOutcome::AlreadyInPlace->name]],
                 ['Source file missing', $counts[MediaMigrationOutcome::SourceMissing->name]],
+                ['Copy failed', $counts[MediaMigrationOutcome::CopyFailed->name]],
             ],
         );
 
         if ($missing !== []) {
             $this->warn('Media with a missing source file (left untouched): ' . implode(', ', $missing));
+        }
+
+        if ($failed !== []) {
+            $this->error('Media whose files could not be copied (left on the old disk, re-run to retry): ' . implode(', ', $failed));
+
+            return self::FAILURE;
         }
 
         return self::SUCCESS;

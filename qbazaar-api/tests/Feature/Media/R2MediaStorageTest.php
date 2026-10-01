@@ -15,6 +15,8 @@ use Tests\Concerns\CreatesAds;
 uses(RefreshDatabase::class, CreatesAds::class);
 
 beforeEach(function (): void {
+    $this->freezeTime();
+
     Storage::fake('public');
     Storage::fake('r2');
     Storage::fake('r2_public');
