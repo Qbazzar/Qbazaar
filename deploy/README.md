@@ -64,6 +64,23 @@ The M0 PRs (#147–#153) need these one-time steps on the server the first time 
 
 Clients must now authorise channels at `POST /api/v1/broadcasting/auth` with a Bearer token (#149); the web already does.
 
+## Data retention (scheduled pruning)
+
+The scheduler keeps the fast-growing tables bounded. All jobs need the scheduler unit (or the cron entry) running; nothing extra goes on Horizon.
+
+| Schedule name | Runs | Deletes |
+|---|---|---|
+| `auth.prune-access-tokens` | hourly | Sanctum access tokens more than 24 h past expiry |
+| `auth.prune-refresh-tokens` | hourly | refresh tokens more than 24 h past expiry |
+| `auth.prune` | daily 03:00 | spent OTP codes, idle trusted devices |
+| `retention.prune-history` | daily 03:30 | guest recently-viewed rows older than 30 days, notifications read more than `READ_NOTIFICATIONS_RETENTION_DAYS` (90) days ago |
+| `retention.clean-activity-log` | daily 03:45 | activity log older than `ACTIVITY_LOG_RETENTION_DAYS` (365), in batches of 1000 |
+| `retention.prune-failed-jobs` | daily 04:00 | failed jobs older than 7 days |
+| `auth.clear-password-resets` | every 15 min | expired password reset tokens |
+| `horizon.snapshot` | every 5 min | nothing; records Horizon metrics |
+
+First deploy: the migration adds the indexes these deletes use. The first runs clear the whole backlog, so on a large database run them once by hand off-peak before the scheduler does: `php artisan sanctum:prune-expired --hours=24`, `php artisan model:prune --model="App\Models\RefreshToken" --model="App\Models\RecentView" --model="App\Models\DatabaseNotification"`, `php artisan activitylog:clean --force`.
+
 ## Meilisearch (install once, as root)
 
 ```bash

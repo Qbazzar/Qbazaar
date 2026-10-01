@@ -349,4 +349,19 @@ return [
         'phash_distance_threshold' => 8, // for duplicate image detection
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Data retention — nightly pruning
+    |--------------------------------------------------------------------------
+    */
+    // Activity log retention is activitylog.clean_after_days (ACTIVITY_LOG_RETENTION_DAYS).
+    'retention' => [
+        'read_notifications_days' => (int) env('READ_NOTIFICATIONS_RETENTION_DAYS', 90),
+        'guest_recent_views_days' => 30,
+        // Kept a day past expiry so a late refresh still gets a clear "expired" answer.
+        'expired_tokens_hours' => 24,
+        'failed_jobs_hours' => 168,
+        'prune_chunk' => 1000,
+    ],
+
 ];

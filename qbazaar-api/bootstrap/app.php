@@ -16,8 +16,11 @@ use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
+use App\Models\DatabaseNotification;
 use App\Models\DataExport;
 use App\Models\OtpCode;
+use App\Models\RecentView;
+use App\Models\RefreshToken;
 use App\Models\TrustedDevice;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -122,6 +125,45 @@ return Application::configure(basePath: dirname(__DIR__))
             ->timezone('Asia/Qatar')
             ->name('auth.prune')
             ->withoutOverlapping();
+
+        // Every refresh mints a new access and refresh token, so tokens pile
+        // up fastest; pruning hourly keeps each run to an hour's worth.
+        $schedule->command('sanctum:prune-expired', ['--hours' => (int) config('qbazaar.retention.expired_tokens_hours')])
+            ->hourly()
+            ->name('auth.prune-access-tokens')
+            ->withoutOverlapping();
+
+        $schedule->command('model:prune', ['--model' => [RefreshToken::class]])
+            ->hourlyAt(5)
+            ->name('auth.prune-refresh-tokens')
+            ->withoutOverlapping();
+
+        $schedule->command('model:prune', ['--model' => [RecentView::class, DatabaseNotification::class]])
+            ->dailyAt('03:30')
+            ->timezone('Asia/Qatar')
+            ->name('retention.prune-history')
+            ->withoutOverlapping();
+
+        $schedule->command('activitylog:clean', ['--force' => true])
+            ->dailyAt('03:45')
+            ->timezone('Asia/Qatar')
+            ->name('retention.clean-activity-log')
+            ->withoutOverlapping();
+
+        $schedule->command('queue:prune-failed', ['--hours' => (int) config('qbazaar.retention.failed_jobs_hours')])
+            ->dailyAt('04:00')
+            ->timezone('Asia/Qatar')
+            ->name('retention.prune-failed-jobs')
+            ->withoutOverlapping();
+
+        $schedule->command('auth:clear-resets')
+            ->everyFifteenMinutes()
+            ->name('auth.clear-password-resets')
+            ->withoutOverlapping();
+
+        $schedule->command('horizon:snapshot')
+            ->everyFiveMinutes()
+            ->name('horizon.snapshot');
     })
     ->withMiddleware(function (Middleware $middleware): void {
         // Aliases so route files can use 'locale', 'api.wrap', 'track.client'.
