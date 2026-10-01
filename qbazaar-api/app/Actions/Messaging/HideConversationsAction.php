@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Actions\Messaging;
 
-use App\Models\Conversation;
+use App\Events\Messaging\UnreadMessagesChanged;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use App\Services\Messaging\ConversationInbox;
 
 /**
  * Hides conversations from the caller's inbox only. The other participant
@@ -16,25 +16,21 @@ use Illuminate\Support\Facades\DB;
  */
 class HideConversationsAction
 {
+    public function __construct(private readonly ConversationInbox $inbox) {}
+
     /**
      * @param list<string> $conversationIds
      * @return int number of conversations hidden
      */
     public function execute(User $user, array $conversationIds): int
     {
-        return DB::transaction(fn (): int => $this->hideAs('buyer', $user, $conversationIds)
-            + $this->hideAs('seller', $user, $conversationIds));
-    }
+        $hidden = $this->inbox->hide($user, $conversationIds);
 
-    /**
-     * @param 'buyer'|'seller' $side
-     * @param list<string> $conversationIds
-     */
-    private function hideAs(string $side, User $user, array $conversationIds): int
-    {
-        return Conversation::query()
-            ->whereKey($conversationIds)
-            ->where("{$side}_id", $user->id)
-            ->update(["{$side}_hidden_at" => now()]);
+        // Unread messages in hidden threads leave the badge.
+        if ($hidden > 0) {
+            UnreadMessagesChanged::dispatch($user->id);
+        }
+
+        return $hidden;
     }
 }

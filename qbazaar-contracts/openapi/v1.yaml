@@ -3333,7 +3333,10 @@ paths:
     get:
       tags: [Conversations]
       summary: Total unread messages across every conversation
-      description: Drives the header badge — one number for the whole inbox.
+      description: |
+        Drives the header badge — one number for the whole inbox. The same
+        total is pushed as `messages.unread` on `private-user.{id}` whenever
+        it changes, so clients poll this only as a slow fallback.
       operationId: conversationsUnreadCount
       responses:
         '200':

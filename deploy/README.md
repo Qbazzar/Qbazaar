@@ -131,6 +131,10 @@ If one of the limits has to be lower, lower `max_images_per_upload` to match (`f
 
 Each newly live ad queues one fan-out per ad (`ShouldBeUnique`, `low` queue). Candidates come from one indexed query on `saved_searches` (`saved_searches_alerts_category_location_idx`). A user gets at most one saved-search push per `qbazaar.search.saved_search_check_interval_minutes` (60); later matches in the window only reach the bell and one `search.digest` push follows when the window closes (a delayed `SendSavedSearchDigestJob` on `low`). The window and the pending counts live in the cache, so it must be `redis` in production. Nothing to run on deploy beyond `migrate`.
 
+## Chat inbox
+
+The inbox and the unread badge read `conversation_participants` (one row per side: hide stamp, unread counter, sort keys). The BE-13.30 migration backfills it from `conversations` and `messages` with two `INSERT … SELECT` statements and then drops `conversations.buyer_hidden_at` / `seller_hidden_at`; run it in the deploy window as usual (`migrate --force`), it holds no long locks at current volumes. Badge changes go out as `messages.unread` on `private-user.{id}`, so Reverb and Horizon must be running for live badges; the web client keeps polling `GET /conversations/unread-count` as a fallback.
+
 ## Manual deploy (if Actions is down)
 
 ```bash

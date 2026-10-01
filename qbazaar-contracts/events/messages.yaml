@@ -26,6 +26,7 @@ channels:
       - saved_search.match
       - message.sent          # also fan-out so the badge updates while the chat pane is closed
       - conversation.read     # the other side marked our messages as read
+      - messages.unread       # the chat badge total changed
 
   conversation:
     pattern: 'conversation.{conversationId}'
@@ -86,6 +87,23 @@ events:
         read_at:
           type: string
           format: date-time
+
+  messages.unread:
+    channels:
+      - user.{userId}                    # the user whose badge changed
+    description: |
+      The user's chat badge total: unread messages across their visible
+      conversations, the same number as GET /conversations/unread-count.
+      Sent after a message reaches them, after they mark a conversation
+      read on any device, and after they hide conversations. Clients set
+      the badge from it and poll unread-count only as a slow fallback.
+    payload:
+      type: object
+      required: [total]
+      properties:
+        total:
+          type: integer
+          minimum: 0
 
   user.typing:
     channel: conversation.{conversationId}

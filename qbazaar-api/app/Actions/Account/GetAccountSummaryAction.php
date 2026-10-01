@@ -6,11 +6,10 @@ namespace App\Actions\Account;
 
 use App\Enums\AdStatus;
 use App\Models\Ad;
-use App\Models\Conversation;
 use App\Models\Favorite;
-use App\Models\Message;
 use App\Models\SavedSearch;
 use App\Models\User;
+use App\Services\Messaging\ConversationInbox;
 
 /**
  * Counters for the account dashboard and the My Ads tabs.
@@ -20,6 +19,8 @@ use App\Models\User;
  */
 class GetAccountSummaryAction
 {
+    public function __construct(private readonly ConversationInbox $inbox) {}
+
     /**
      * @return array{
      *     my_ads: int,
@@ -42,8 +43,8 @@ class GetAccountSummaryAction
             'my_ads' => array_sum($adsByStatus) - $drafts,
             'drafts' => $drafts,
             'ads_by_status' => $adsByStatus,
-            'conversations' => Conversation::query()->visibleTo($user)->count(),
-            'unread_messages' => Message::query()->unreadFor($user)->count(),
+            'conversations' => $this->inbox->visibleCount($user->id),
+            'unread_messages' => $this->inbox->unreadTotal($user->id),
             'unread_notifications' => $user->unreadNotifications()->count(),
             'favorites' => Favorite::query()->where('user_id', $user->id)->count(),
             'saved_searches' => SavedSearch::query()->where('user_id', $user->id)->count(),
