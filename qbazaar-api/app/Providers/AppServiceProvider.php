@@ -17,6 +17,10 @@ use App\Observers\AdReviewQueueObserver;
 use App\Observers\SellerAdsCountObserver;
 use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
+use App\Services\Ads\Views\AdViewCounter;
+use App\Services\Ads\Views\AdViewCountWriter;
+use App\Services\Ads\Views\DatabaseAdViewCounter;
+use App\Services\Ads\Views\RedisAdViewCounter;
 use App\Services\Moderation\ModerationRulesService;
 use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
@@ -41,6 +45,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(ModerationRulesService::class);
 
         $this->app->bind(DatabaseChannel::class, CategorizedDatabaseChannel::class);
+
+        $this->app->bind(AdViewCounter::class, fn ($app): AdViewCounter => config('qbazaar.ads.views_buffer') === 'redis'
+            ? new RedisAdViewCounter($app->make(AdViewCountWriter::class), (string) config('qbazaar.ads.views_buffer_connection'))
+            : new DatabaseAdViewCounter);
 
         // Follows land with BE-14.28, which binds the real directory here.
         $this->app->bind(SellerFollowers::class, FollowTableSellerFollowers::class);

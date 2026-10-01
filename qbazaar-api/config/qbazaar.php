@@ -140,6 +140,13 @@ return [
         // GET /ads is offset-paginated; deeper pages cost a scan of every row
         // before them, so browsing stops here and filters or search take over.
         'feed_max_page' => 250,
+        // `redis` buffers ad views and FlushAdViewCountsJob writes them every
+        // minute; `database` writes each view (local setups without Redis).
+        'views_buffer' => env('AD_VIEWS_BUFFER', 'redis'),
+        'views_buffer_connection' => env('AD_VIEWS_REDIS_CONNECTION', 'default'),
+        // One in N history writes also trims the viewer's history to the cap.
+        'recent_views_cap' => 50,
+        'recent_views_trim_odds' => 10,
     ],
 
     /*

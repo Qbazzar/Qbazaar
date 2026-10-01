@@ -3015,6 +3015,10 @@ paths:
         identified via their bearer token; anonymous clients pass a
         stable identifier in the `X-Session-Id` header. Calls without
         either identity are accepted and silently no-op.
+
+        `views_count` is buffered and written within about a minute. Only
+        signed-in viewers get a stored history (`GET /account/recently-viewed`);
+        a guest's history stays on the client.
       operationId: recentlyViewedTrack
       security: []
       parameters:
@@ -3037,6 +3041,9 @@ paths:
     get:
       tags: [RecentlyViewed]
       summary: List the caller's recently-viewed ads, newest first
+      description: |
+        The history is trimmed to the newest 50 rows on a share of new views,
+        so it can briefly hold a few more.
       operationId: recentlyViewedIndex
       parameters:
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }

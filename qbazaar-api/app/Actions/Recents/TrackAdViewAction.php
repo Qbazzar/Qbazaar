@@ -7,35 +7,32 @@ namespace App\Actions\Recents;
 use App\Models\Ad;
 use App\Models\RecentView;
 use App\Models\User;
+use App\Services\Ads\Views\AdViewCounter;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Lottery;
 
 /**
  * Record an ad view for an authenticated user OR an anonymous client
  * identified by a stable session id.
  *
- *  - Throttled to one row per (viewer, ad) per hour via an atomic
- *    Cache::add window. Bots hammering the endpoint are turned into no-ops
- *    cheaply, before the row insert and counter increment land. We use
- *    add() rather than a lock so the throttle window is a plain, flushable
- *    cache entry — a held lock survives Cache::flush() on some stores.
- *  - Caps stored history at 50 rows per user. The cap-cleanup runs in
- *    the same transaction as the insert so a crash can never leave the
- *    history bloated. Anonymous histories are not capped here; we let
- *    the future PruneRecentViewsJob handle session-id pruning.
- *  - The denormalised `ads.views_count` is incremented once per
- *    accepted (non-throttled) view so feed cards can render the
- *    headline count without a join, and at most once per IP per ad in the
- *    same window: anonymous callers choose their own X-Session-Id, so
- *    rotating it must not inflate the count.
+ *  - Throttled to one accepted view per (viewer, ad) per hour via an atomic
+ *    Cache::add window, so repeats and bots are turned into cheap no-ops. We
+ *    use add() rather than a lock so the window is a plain, flushable cache
+ *    entry — a held lock survives Cache::flush() on some stores.
+ *  - `ads.views_count` goes up once per accepted view, and at most once per
+ *    IP per ad in the same window: anonymous callers choose their own
+ *    X-Session-Id, so rotating it must not inflate the count. The count is
+ *    buffered by {@see AdViewCounter} rather than written per view.
+ *  - Only signed-in viewers get a stored history; guests keep theirs on the
+ *    client, since the API never returned it. The history is trimmed to its
+ *    cap on a fraction of writes, so most views cost one insert.
  */
 class TrackAdViewAction
 {
-    /** History cap per authenticated user. */
-    private const MAX_ROWS_PER_USER = 50;
-
     /** Throttle window for repeat views of the same ad by the same viewer. */
     private const THROTTLE_TTL_SECONDS = 3600;
+
+    public function __construct(private readonly AdViewCounter $views) {}
 
     public function execute(Ad $ad, ?User $user, ?string $sessionId, ?string $ip = null): bool
     {
@@ -46,61 +43,53 @@ class TrackAdViewAction
             return false;
         }
 
-        $throttleKey = 'view:' . $viewerKey . ':' . $ad->id;
-
-        // Cache::add is atomic: it returns true only for the first caller
-        // within the window and false for everyone else until the entry's TTL
-        // lapses — exactly the once-per-hour semantics we want, and a plain
-        // entry that Cache::flush() / a real TTL can clear.
-        if (! Cache::add($throttleKey, true, self::THROTTLE_TTL_SECONDS)) {
-            // Within the throttle window — silent no-op.
+        if (! Cache::add('view:' . $viewerKey . ':' . $ad->id, true, self::THROTTLE_TTL_SECONDS)) {
             return false;
         }
 
-        $countsTowardViews = $ip === null || Cache::add('view-ip:' . $ip . ':' . $ad->id, true, self::THROTTLE_TTL_SECONDS);
+        if ($ip === null || Cache::add('view-ip:' . $ip . ':' . $ad->id, true, self::THROTTLE_TTL_SECONDS)) {
+            $this->views->record($ad->id);
+        }
 
-        DB::transaction(function () use ($ad, $user, $sessionId, $countsTowardViews): void {
-            RecentView::query()->create([
-                'user_id' => $user?->id,
-                'session_id' => $user === null ? $sessionId : null,
-                'ad_id' => $ad->id,
-                'viewed_at' => now(),
-            ]);
-
-            if ($countsTowardViews) {
-                Ad::query()->where('id', $ad->id)->increment('views_count');
-            }
-
-            if ($user !== null) {
-                $this->capUserHistory($user->id);
-            }
-        });
+        if ($user !== null) {
+            $this->remember($user, $ad);
+        }
 
         return true;
     }
 
-    /**
-     * Drop the oldest rows so only the most recent 50 remain for this user.
-     *
-     * The doubly-nested SELECT is required by MySQL — it can't read from
-     * the same table it's deleting from in a single statement.
-     */
-    private function capUserHistory(string $userId): void
+    private function remember(User $user, Ad $ad): void
     {
-        $keepIds = RecentView::query()
+        RecentView::query()->create([
+            'user_id' => $user->id,
+            'ad_id' => $ad->id,
+            'viewed_at' => now(),
+        ]);
+
+        Lottery::odds(1, (int) config('qbazaar.ads.recent_views_trim_odds'))
+            ->winner(fn () => $this->trimHistory($user->id))
+            ->choose();
+    }
+
+    /**
+     * Drop everything older than the newest `recent_views_cap` rows. Both
+     * statements run on recently_viewed_user_viewed_idx.
+     */
+    private function trimHistory(string $userId): void
+    {
+        $oldestKept = RecentView::query()
             ->where('user_id', $userId)
             ->orderByDesc('viewed_at')
-            ->limit(self::MAX_ROWS_PER_USER)
-            ->pluck('id')
-            ->all();
+            ->offset((int) config('qbazaar.ads.recent_views_cap') - 1)
+            ->value('viewed_at');
 
-        if (count($keepIds) < self::MAX_ROWS_PER_USER) {
+        if ($oldestKept === null) {
             return;
         }
 
         RecentView::query()
             ->where('user_id', $userId)
-            ->whereNotIn('id', $keepIds)
+            ->where('viewed_at', '<', $oldestKept)
             ->delete();
     }
 }

@@ -13,6 +13,7 @@ use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\TrackClient;
 use App\Http\Middleware\VerifyTurnstile;
 use App\Jobs\Ads\ExpireOldAdsJob;
+use App\Jobs\Ads\FlushAdViewCountsJob;
 use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
@@ -129,6 +130,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new WarmCatalogCacheJob)
             ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.catalog.warm_every_minutes'))))
             ->name('catalog.warm-cache')
+            ->withoutOverlapping();
+
+        $schedule->job(new FlushAdViewCountsJob)
+            ->everyMinute()
+            ->name('ads.flush-view-counts')
             ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {

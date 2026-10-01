@@ -106,9 +106,9 @@ Distance search reads `_geo` (the ad's pin, or its location's `lat`/`lng`), so a
 
 If Meilisearch goes down, keep the driver and restart the service: search returns empty results meanwhile, and `scout:import` rebuilds the index at any time. Do not switch to the `database` driver.
 
-## Catalog cache
+## Catalog cache and view counters
 
-Requests never rebuild the home feed or the category and place counters: the `catalog.warm-cache` job does, every `qbazaar.catalog.warm_every_minutes` (2) on the `low` queue. It needs the scheduler and Horizon running; `php artisan schedule:list` must show `catalog.warm-cache`. If the scheduler stops, the home feed and counters age until their 15-minute TTL, then the first request rebuilds them under a lock.
+Requests never rebuild the home feed or the category and place counters: the `catalog.warm-cache` job does, every `qbazaar.catalog.warm_every_minutes` (2) on the `low` queue. Ad views are buffered in Redis and `ads.flush-view-counts` writes them every minute, also on `low`. Both need the scheduler and Horizon running; `php artisan schedule:list` must show `catalog.warm-cache` and `ads.flush-view-counts`. If the scheduler stops, the home feed and counters age until their 15-minute TTL, then the first request rebuilds them under a lock; buffered views wait in `ads:views:buffer` and are written once it runs again.
 
 After the BE-13.31 index migrations reach production, run `ANALYZE TABLE ads, media, messages, offers, users, activity_log;` so MySQL picks up the new indexes.
 
