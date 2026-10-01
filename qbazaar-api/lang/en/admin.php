@@ -373,6 +373,7 @@ return [
         'action' => 'Review ad',
         'auto_check' => 'Automatic check',
         'auto_check_clean' => 'The check found no problems.',
+        'auto_check_pending' => 'The automatic check is still running. Refresh in a moment.',
         'auto_check_flags' => [
             'banned_words' => 'Banned words',
             'phone' => 'Phone number in the text',

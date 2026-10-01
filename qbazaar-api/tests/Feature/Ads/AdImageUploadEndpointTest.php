@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\AdStatus;
 use App\Enums\PlatformSetting;
+use App\Jobs\Ads\ModerateAdJob;
 use App\Jobs\ProcessAdImagesJob;
 use App\Models\User;
 use App\Services\Settings\SettingsService;
@@ -57,7 +58,7 @@ it('attaches uploaded images and dispatches the post-processing job', function (
 
     expect($ad->fresh()->getMedia('images'))->toHaveCount(2);
 
-    Bus::assertDispatched(ProcessAdImagesJob::class);
+    Bus::assertChained([ProcessAdImagesJob::class, ModerateAdJob::class]);
 });
 
 it('accepts images up to the 20-image limit across uploads', function (): void {

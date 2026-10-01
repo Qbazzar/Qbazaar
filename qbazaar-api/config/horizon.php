@@ -101,6 +101,7 @@ return [
     'waits' => [
         'redis:default' => 60,
         'redis:low' => 300,
+        'redis:media' => 600,
     ],
 
     /*
@@ -213,6 +214,21 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+
+        // Image work is CPU-bound: a small pool at low priority, kept apart
+        // so a burst of uploads cannot hold up the default queue.
+        'supervisor-media' => [
+            'connection' => 'redis',
+            'queue' => ['media'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 500,
+            'memory' => 512,
+            'tries' => 3,
+            'timeout' => 85,
+            'nice' => 10,
+        ],
     ],
 
     'environments' => [
@@ -221,6 +237,9 @@ return [
                 'maxProcesses' => 10,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
+            ],
+            'supervisor-media' => [
+                'maxProcesses' => 2,
             ],
         ],
 

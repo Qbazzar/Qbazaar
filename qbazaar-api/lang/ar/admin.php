@@ -314,6 +314,7 @@ return [
         'action' => 'مراجعة الإعلان',
         'auto_check' => 'الفحص التلقائي',
         'auto_check_clean' => 'لم يكتشف الفحص أي مشكلة.',
+        'auto_check_pending' => 'الفحص التلقائي قيد التشغيل، حدّث الصفحة بعد قليل.',
         'auto_check_flags' => [
             'banned_words' => 'كلمات محظورة',
             'phone' => 'رقم هاتف في النص',

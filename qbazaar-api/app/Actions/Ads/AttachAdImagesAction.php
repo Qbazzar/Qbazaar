@@ -7,12 +7,14 @@ namespace App\Actions\Ads;
 use App\Enums\PlatformSetting;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
+use App\Jobs\Ads\ModerateAdJob;
 use App\Jobs\ProcessAdImagesJob;
 use App\Models\Ad;
 use App\Services\Media\UploadedFileNamer;
 use App\Services\Settings\SettingsService;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -51,12 +53,17 @@ class AttachAdImagesAction
             throw new DomainException(ErrorCode::REQUEST_IN_PROGRESS);
         }
 
-        ProcessAdImagesJob::dispatch(array_map(
-            static fn (Media $media): string => (string) $media->getKey(),
-            $created,
-        ));
-
         ($this->resubmit)($ad);
+
+        // Resubmitted first, so the moderation run at the end of the chain
+        // finds the ad pending and compares the freshly computed hashes.
+        Bus::chain([
+            new ProcessAdImagesJob(array_map(
+                static fn (Media $media): string => (string) $media->getKey(),
+                $created,
+            )),
+            new ModerateAdJob((string) $ad->getKey()),
+        ])->dispatch();
 
         return $created;
     }

@@ -6,7 +6,7 @@ namespace App\Listeners\Ads;
 
 use App\Enums\AdStatus;
 use App\Enums\UserStatus;
-use App\Events\Ads\AdSubmittedForReview;
+use App\Events\Ads\AdModerated;
 use App\Models\User;
 use App\Notifications\Ads\AdPendingReviewNotification;
 use App\Services\Admin\StaffDirectory;
@@ -16,8 +16,9 @@ use Illuminate\Support\Facades\Notification;
 
 /**
  * Tells every active staff member who can approve ads that one is waiting,
- * in the panel bell and by email. Queued so the publish request never waits
- * on the staff lookup or the fan-out.
+ * in the panel bell and by email, once the auto-moderation hints for the
+ * submission are ready. Queued so the staff lookup and the fan-out never
+ * run inside the moderation job.
  *
  * Reviewers are found by permission, not role name, so a custom role that is
  * granted `ads.approve` is notified too. An ad already reviewed by the time
@@ -35,7 +36,7 @@ class NotifyAdminsOfPendingAd implements ShouldQueue
         private readonly StaffDirectory $staff,
     ) {}
 
-    public function handle(AdSubmittedForReview $event): void
+    public function handle(AdModerated $event): void
     {
         if ($event->ad->status !== AdStatus::PENDING) {
             return;

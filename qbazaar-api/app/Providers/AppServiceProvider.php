@@ -20,10 +20,14 @@ use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Events\ConnectionEstablished;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Channels\DatabaseChannel;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use PDO;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -103,6 +107,26 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute((int) config('qbazaar.social.follows_per_minute'))->by('follows:' . (optional($r->user())->id ?: $r->ip())),
             Limit::perDay((int) config('qbazaar.social.follows_per_day'))->by('follows-day:' . (optional($r->user())->id ?: $r->ip())),
         ]);
+
+        Event::listen(ConnectionEstablished::class, static function (ConnectionEstablished $event): void {
+            if ($event->connection instanceof SQLiteConnection) {
+                self::addMySqlFunctionsToSqlite($event->connection);
+            }
+        });
+    }
+
+    /**
+     * The duplicate-image check uses MySQL's BIT_COUNT; SQLite (the test
+     * suite) has no equivalent, so it gets one.
+     */
+    private static function addMySqlFunctionsToSqlite(SQLiteConnection $connection): void
+    {
+        $connection->getPdo()->sqliteCreateFunction(
+            'BIT_COUNT',
+            static fn (int|string|null $value): ?int => $value === null ? null : substr_count(decbin((int) $value), '1'),
+            1,
+            PDO::SQLITE_DETERMINISTIC,
+        );
     }
 
     /**
