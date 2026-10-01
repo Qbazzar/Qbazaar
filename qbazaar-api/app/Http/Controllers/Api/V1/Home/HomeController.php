@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Home;
 
-use App\Actions\Catalog\GetHomeFeedAction;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Api\V1\Home\HomeFeedResource;
 use App\Services\Ads\ViewerFavorites;
-use App\Services\Catalog\CatalogCache;
+use App\Services\Catalog\HomeFeedCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * @group Home
@@ -21,19 +18,15 @@ class HomeController extends Controller
     /**
      * GET /api/v1/home — every home-screen section in one response.
      *
-     * The payload is the same for every visitor, so it is cached whole and
-     * flushed by {@see CatalogCache} when listings or the taxonomy change.
-     * The viewer's favourite flags are laid over the cached cards afterwards.
+     * The payload is the same for every visitor, so it is served whole from
+     * {@see HomeFeedCache}, which the catalog warmer refreshes every couple of
+     * minutes. The viewer's favourite flags are laid over the cached cards.
      *
      * @unauthenticated
      */
-    public function __invoke(Request $request, GetHomeFeedAction $getHomeFeed, ViewerFavorites $favorites): JsonResponse
+    public function __invoke(Request $request, HomeFeedCache $homeFeed, ViewerFavorites $favorites): JsonResponse
     {
-        $payload = Cache::remember(
-            CatalogCache::HOME_FEED_KEY,
-            (int) config('qbazaar.home.cache_seconds'),
-            fn (): array => (new HomeFeedResource($getHomeFeed->execute()))->toArray($request),
-        );
+        $payload = $homeFeed->get();
 
         $viewer = $this->viewer($request);
         $payload['recommended'] = $favorites->overlay($viewer, $payload['recommended']);

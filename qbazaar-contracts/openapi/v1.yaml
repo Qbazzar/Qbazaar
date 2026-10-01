@@ -1992,6 +1992,12 @@ paths:
         Each section holds up to 6 of the newest listed ads filed under that
         child or any of its descendants. Inactive categories, and categories
         under an inactive ancestor, return 404.
+
+        The page is shared by every visitor and cached for
+        `qbazaar.catalog.category_page_cache_seconds` (2 minutes, served stale
+        up to 10 while it refreshes), so new listings can take that long to
+        appear; a taxonomy change drops it at once. With a Bearer token,
+        `is_favorited` on the cards reflects the caller's favourites.
       operationId: categoriesShow
       security: [{}, {bearerAuth: []}]
       parameters:
@@ -2019,9 +2025,10 @@ paths:
       tags: [Reference]
       summary: Every home-screen section in one request
       description: |
-        The payload is the same for every visitor. It is cached for
-        `qbazaar.home.cache_seconds` (5 minutes) and flushed early when
-        listings or the taxonomy change. With a Bearer token, `is_favorited`
+        The payload is the same for every visitor. A scheduled job rebuilds it
+        every `qbazaar.catalog.warm_every_minutes` (2 minutes), so new or
+        changed listings and the place counts can be up to that old; a
+        taxonomy change drops it at once. With a Bearer token, `is_favorited`
         on the ad cards reflects the caller's favourites.
       operationId: homeShow
       security: [{}, {bearerAuth: []}]

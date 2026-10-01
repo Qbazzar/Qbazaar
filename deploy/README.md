@@ -106,6 +106,10 @@ Distance search reads `_geo` (the ad's pin, or its location's `lat`/`lng`), so a
 
 If Meilisearch goes down, keep the driver and restart the service: search returns empty results meanwhile, and `scout:import` rebuilds the index at any time. Do not switch to the `database` driver.
 
+## Catalog cache
+
+Requests never rebuild the home feed or the category and place counters: the `catalog.warm-cache` job does, every `qbazaar.catalog.warm_every_minutes` (2) on the `low` queue. It needs the scheduler and Horizon running; `php artisan schedule:list` must show `catalog.warm-cache`. If the scheduler stops, the home feed and counters age until their 15-minute TTL, then the first request rebuilds them under a lock.
+
 ## Upload body size
 
 `POST /api/v1/ads/{ad}/images` takes up to `qbazaar.ads.max_images_per_upload` (10) files per request, each up to `qbazaar.uploads.max_image_size_kb` (10 MB). An ad holds up to 20 images in total (admin setting `ad_max_images`), so the apps send them in batches. Every layer must accept one full batch, or the request fails before Laravel can answer with a JSON error:

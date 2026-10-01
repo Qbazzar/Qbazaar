@@ -160,12 +160,18 @@ return [
     |--------------------------------------------------------------------------
     */
     'catalog' => [
-        'counts_cache_seconds' => 600,
+        // WarmCatalogCacheJob rebuilds the counters and the home feed this often;
+        // the two TTLs below only bound staleness if the scheduler stops.
+        'warm_every_minutes' => 2,
+        'counts_cache_seconds' => 900,
         'category_section_ads' => 6,
+        // Category landing pages are shared by every visitor and served
+        // stale-while-revalidate: fresh this long, stale for up to 5x.
+        'category_page_cache_seconds' => 120,
     ],
 
     'home' => [
-        'cache_seconds' => 300,
+        'cache_seconds' => 900,
         'recommended_limit' => 12,
         'recommended_window_days' => 30,
         'best_selling_limit' => 12,

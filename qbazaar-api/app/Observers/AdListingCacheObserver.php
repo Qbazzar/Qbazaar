@@ -4,43 +4,49 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
-use App\Enums\AdStatus;
 use App\Models\Ad;
 use App\Services\Catalog\CatalogCache;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 /**
- * Flushes the category counters, the home feed and the featured list whenever
- * an ad enters, leaves or moves within the public listings (publish, expiry,
- * moderation, featuring…).
+ * Drops the featured-ads list when a featured ad enters, leaves or moves
+ * within the public listings, or is (un)featured. The home feed and the
+ * category/place counters are not touched here; the catalog warmer rebuilds
+ * them on a schedule.
  */
 class AdListingCacheObserver implements ShouldHandleEventsAfterCommit
 {
-    private const LISTING_ATTRIBUTES = ['status', 'category_id', 'location_id', 'published_at', 'featured', 'reserved_at'];
+    private const LISTING_ATTRIBUTES = ['status', 'published_at', 'featured', 'reserved_at'];
 
     public function __construct(private readonly CatalogCache $cache) {}
 
     public function created(Ad $ad): void
     {
-        if ($ad->status === AdStatus::ACTIVE) {
-            $this->cache->listingsChanged();
+        if ($ad->featured) {
+            $this->cache->featuredAdsChanged();
         }
     }
 
     public function updated(Ad $ad): void
     {
-        if ($ad->wasChanged(self::LISTING_ATTRIBUTES)) {
-            $this->cache->listingsChanged();
+        $concernsFeatured = $ad->featured || $ad->wasChanged('featured');
+
+        if ($concernsFeatured && $ad->wasChanged(self::LISTING_ATTRIBUTES)) {
+            $this->cache->featuredAdsChanged();
         }
     }
 
     public function deleted(Ad $ad): void
     {
-        $this->cache->listingsChanged();
+        if ($ad->featured) {
+            $this->cache->featuredAdsChanged();
+        }
     }
 
     public function restored(Ad $ad): void
     {
-        $this->cache->listingsChanged();
+        if ($ad->featured) {
+            $this->cache->featuredAdsChanged();
+        }
     }
 }

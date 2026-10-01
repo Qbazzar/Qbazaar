@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Reference;
 
-use App\Actions\Catalog\GetCategoryPageAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Reference\CategoryFieldResource;
 use App\Http\Resources\Api\V1\Reference\CategoryFilterResource;
 use App\Http\Resources\Api\V1\Reference\CategoryNodeResource;
-use App\Http\Resources\Api\V1\Reference\CategoryPageResource;
 use App\Http\Resources\Api\V1\Reference\CategoryResource;
 use App\Models\Category;
+use App\Models\User;
 use App\Services\Ads\ViewerFavorites;
 use App\Services\Catalog\CatalogCache;
 use App\Services\Catalog\CategoryAdCounts;
+use App\Services\Catalog\CategoryPageCache;
 use App\Services\Catalog\CategorySchema;
 use App\Services\Catalog\CategoryTree;
 use Illuminate\Database\Eloquent\Collection;
@@ -83,16 +83,16 @@ class CategoryController extends Controller
     /**
      * GET /api/v1/categories/{slug} — category page with a section of newest ads per child.
      *
+     * The page is the same for every visitor and comes from {@see CategoryPageCache};
+     * the viewer's favourite flags are laid over the cached cards.
+     *
      * @unauthenticated
      *
      * @throws DomainException
      */
-    public function show(Request $request, string $slug, GetCategoryPageAction $getCategoryPage, ViewerFavorites $favorites): JsonResponse
+    public function show(Request $request, string $slug, CategoryPageCache $pages, ViewerFavorites $favorites): JsonResponse
     {
-        $page = $getCategoryPage->execute($slug);
-        $favorites->mark($this->viewer($request), collect($page->adsByChild)->flatten(1));
-
-        return response()->json((new CategoryPageResource($page))->toArray($request));
+        return response()->json($this->withFavorites($pages->get($slug), $this->viewer($request), $favorites));
     }
 
     /**
@@ -164,5 +164,29 @@ class CategoryController extends Controller
         }
 
         return $category;
+    }
+
+    /**
+     * Lays the viewer's favourite flags over every section's cards with one lookup.
+     *
+     * @param array<string, mixed> $page
+     * @return array<string, mixed>
+     */
+    private function withFavorites(array $page, ?User $viewer, ViewerFavorites $favorites): array
+    {
+        /** @var list<array{ads: list<array<string, mixed>>}> $sections */
+        $sections = $page['sections'];
+        $cards = $favorites->overlay($viewer, array_merge(...array_column($sections, 'ads')));
+
+        $offset = 0;
+        foreach ($sections as $index => $section) {
+            $count = count($section['ads']);
+            $sections[$index]['ads'] = array_slice($cards, $offset, $count);
+            $offset += $count;
+        }
+
+        $page['sections'] = $sections;
+
+        return $page;
     }
 }

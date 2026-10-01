@@ -7,13 +7,13 @@ namespace App\Services\Catalog;
 use Illuminate\Container\Attributes\Scoped;
 
 /**
- * Live ad counters per category (the category plus all its descendants).
+ * Live ad counters per location (the place plus all its districts).
  */
 #[Scoped]
-class CategoryAdCounts extends CachedListingCounts
+class LocationAdCounts extends CachedListingCounts
 {
     public function __construct(
-        private readonly CategoryHierarchy $categories,
+        private readonly LocationHierarchy $locations,
         ListingCounter $counter,
         WarmedCache $cache,
     ) {
@@ -22,16 +22,16 @@ class CategoryAdCounts extends CachedListingCounts
 
     protected function column(): string
     {
-        return 'category_id';
+        return 'location_id';
     }
 
     protected function hierarchy(): CachedHierarchy
     {
-        return $this->categories;
+        return $this->locations;
     }
 
     protected function cacheKeyPrefix(): string
     {
-        return 'categories.ad_counts.';
+        return 'locations.ad_counts.';
     }
 }

@@ -25,6 +25,6 @@ class SyncSellerListingsVisibility
             return;
         }
 
-        $this->catalogCache->listingsChanged();
+        $this->catalogCache->featuredAdsChanged();
     }
 }

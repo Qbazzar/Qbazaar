@@ -5,8 +5,11 @@ declare(strict_types=1);
 use App\Enums\AdStatus;
 use App\Models\Ad;
 use App\Models\Category;
+use App\Models\Favorite;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\Sanctum;
 
 use function Pest\Laravel\getJson;
 
@@ -106,4 +109,41 @@ it('returns CAT_001 for a category hidden by an inactive ancestor', function ():
     getJson('/api/v1/categories/sedans')
         ->assertNotFound()
         ->assertJsonPath('error.code', 'CAT_001');
+});
+
+it('serves repeat visits from the shared cache without querying ads', function (): void {
+    Ad::factory()->active()->create(['user_id' => $this->seller->id, 'category_id' => $this->sedans->id]);
+    getJson('/api/v1/categories/vehicles')->assertOk();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    getJson('/api/v1/categories/vehicles')->assertOk();
+    DB::disableQueryLog();
+
+    $adQueries = array_filter(DB::getQueryLog(), fn (array $query): bool => str_contains($query['query'], '"ads"'));
+
+    expect($adQueries)->toBe([]);
+});
+
+it('marks the viewer\'s favourites on the cached cards', function (): void {
+    $ad = Ad::factory()->active()->create(['user_id' => $this->seller->id, 'category_id' => $this->sedans->id]);
+    getJson('/api/v1/categories/vehicles')->assertOk();
+
+    $viewer = User::factory()->create();
+    Favorite::query()->create(['user_id' => $viewer->id, 'ad_id' => $ad->id]);
+    Sanctum::actingAs($viewer, ['*']);
+
+    $card = collect(getJson('/api/v1/categories/vehicles')->assertOk()->json('data.sections'))
+        ->firstWhere('category.slug', 'cars')['ads'][0];
+
+    expect($card['id'])->toBe($ad->id)
+        ->and($card['is_favorited'])->toBeTrue();
+});
+
+it('drops the cached pages when the taxonomy changes', function (): void {
+    getJson('/api/v1/categories/vehicles')->assertJsonPath('data.category.name.en', $this->vehicles->name['en']);
+
+    $this->vehicles->update(['name' => ['ar' => 'مركبات', 'en' => 'Motors']]);
+
+    getJson('/api/v1/categories/vehicles')->assertJsonPath('data.category.name.en', 'Motors');
 });

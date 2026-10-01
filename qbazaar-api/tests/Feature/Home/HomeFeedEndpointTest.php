@@ -3,12 +3,15 @@
 declare(strict_types=1);
 
 use App\Enums\AdStatus;
+use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
 use App\Services\Ads\AdLifecycleService;
 use App\Services\Catalog\CatalogCache;
+use Illuminate\Console\Scheduling\Event;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -86,18 +89,31 @@ it('lists the cities with their live ad counts', function (): void {
         ->and($places->firstWhere('id', $district->parent_id)['ads_count'])->toBe(2);
 });
 
-it('serves the feed from the cache and rebuilds it after listings change', function (): void {
+it('keeps serving the cached feed while ads change, and the warmer refreshes it', function (): void {
     getJson('/api/v1/home')->assertOk();
     expect(Cache::has(CatalogCache::HOME_FEED_KEY))->toBeTrue();
-
-    DB::enableQueryLog();
-    getJson('/api/v1/home')->assertOk();
-    expect(DB::getQueryLog())->toBeEmpty();
 
     $ad = Ad::factory()->create(['user_id' => $this->seller->id, 'status' => AdStatus::DRAFT->value]);
     $lifecycle = app(AdLifecycleService::class);
     $lifecycle->approve($lifecycle->submitForReview($ad));
 
-    expect(Cache::has(CatalogCache::HOME_FEED_KEY))->toBeFalse()
-        ->and(collect(getJson('/api/v1/home')->json('data.best_selling'))->pluck('id'))->toContain($ad->id);
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $bestSelling = getJson('/api/v1/home')->assertOk()->json('data.best_selling');
+    DB::disableQueryLog();
+
+    expect(DB::getQueryLog())->toBeEmpty()
+        ->and(collect($bestSelling)->pluck('id'))->not->toContain($ad->id);
+
+    WarmCatalogCacheJob::dispatchSync();
+
+    expect(collect(getJson('/api/v1/home')->json('data.best_selling'))->pluck('id'))->toContain($ad->id);
+});
+
+it('warms the catalog on the scheduler', function (): void {
+    $event = collect(app(Schedule::class)->events())
+        ->first(fn (Event $event): bool => $event->description === 'catalog.warm-cache');
+
+    expect($event)->not->toBeNull()
+        ->and($event->expression)->toBe('*/2 * * * *');
 });
