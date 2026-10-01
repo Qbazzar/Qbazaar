@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Api\V1\Reference;
 
 use App\Models\Category;
+use App\Services\Catalog\CategoryTree;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,9 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * `children` collection so the consumer can render the full browse
  * hierarchy from a single response.
  *
- * Caller is expected to eager-load `children.children…` to whatever depth
- * the taxonomy actually has (two levels today; the resource will silently
- * render an empty children array if more levels exist but weren't loaded).
+ * Render nodes from {@see CategoryTree}, which attaches
+ * every level of `children` in memory so no depth triggers a query.
  *
  * @mixin Category
  */

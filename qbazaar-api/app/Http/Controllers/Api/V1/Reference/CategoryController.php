@@ -12,6 +12,7 @@ use App\Http\Resources\Api\V1\Reference\CategoryFilterResource;
 use App\Http\Resources\Api\V1\Reference\CategoryNodeResource;
 use App\Http\Resources\Api\V1\Reference\CategoryResource;
 use App\Models\Category;
+use App\Services\Catalog\CategoryTree;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,19 +40,9 @@ class CategoryController extends Controller
      *
      * @unauthenticated
      */
-    public function tree(Request $request): JsonResponse
+    public function tree(Request $request, CategoryTree $tree): JsonResponse
     {
-        /** @var Collection<int, Category> $roots */
-        $roots = Cache::remember(
-            'categories.tree',
-            self::TREE_TTL,
-            fn () => Category::query()
-                ->whereNull('parent_id')
-                ->active()
-                ->with(['children' => fn ($q) => $q->active()->orderBy('order')])
-                ->orderBy('order')
-                ->get(),
-        );
+        $roots = $tree->roots();
 
         // Map to plain arrays so the global ApiResponseWrapper produces the
         // canonical `{success, data: [...]}` envelope — JsonResource::collection

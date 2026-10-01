@@ -74,7 +74,7 @@ class AdSearchService
             // recount caps at one page, corrupting `total` and `last_page`
             // (page 2 becomes unreachable). Loading on the paginated models
             // keeps the Meili `totalHits` intact and still avoids N+1.
-            EloquentCollection::make($paginator->items())->load(['category', 'location', 'media']);
+            EloquentCollection::make($paginator->items())->load(['category', 'location', 'primaryImage']);
 
             // Facets need a second, hits-free Meili call (Scout doesn't expose
             // the raw response from paginate() in this version). Cheap because

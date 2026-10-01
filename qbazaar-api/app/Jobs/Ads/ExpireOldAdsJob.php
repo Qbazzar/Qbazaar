@@ -54,6 +54,7 @@ class ExpireOldAdsJob implements ShouldQueue
             ->where('status', AdStatus::ACTIVE->value)
             ->whereNotNull('expires_at')
             ->where('expires_at', '<', $now)
+            ->with('user')
             ->lazyById(100);
 
         foreach ($ads as $ad) {
@@ -68,6 +69,7 @@ class ExpireOldAdsJob implements ShouldQueue
             ->where('status', AdStatus::ACTIVE->value)
             ->whereBetween('expires_at', [$now, $now->copy()->addDays($warningDays)])
             ->whereNull('expiring_notified_at')
+            ->with('user')
             ->lazyById(100);
 
         foreach ($ads as $ad) {

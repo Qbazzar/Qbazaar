@@ -10,8 +10,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Recursive location node — same shape used for cities and their districts.
- * Caller is expected to eager-load `children.children…` to the needed depth
- * (Qatar has two levels: city → district).
+ * `children` is rendered only when loaded (see TreeAssembler), so an ad's
+ * location never walks its subtree lazily.
  *
  * @mixin Location
  */
@@ -22,9 +22,9 @@ class LocationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $children = $this->children->map(
-            fn (Location $child): array => (new self($child))->toArray($request),
-        )->all();
+        $children = $this->resource->relationLoaded('children')
+            ? $this->children->map(fn (Location $child): array => (new self($child))->toArray($request))->all()
+            : [];
 
         return [
             'id' => $this->id,

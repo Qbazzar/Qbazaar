@@ -47,7 +47,7 @@ class AdController extends Controller
     {
         $query = Ad::query()
             ->publiclyListed()
-            ->with(['category', 'location', 'media']);
+            ->with(['category', 'location', 'primaryImage']);
 
         if (($categoryId = $request->query('category_id')) !== null && is_string($categoryId)) {
             $query->where('category_id', $categoryId);
@@ -198,7 +198,7 @@ class AdController extends Controller
         $paginator = Ad::query()
             ->forUser($user)
             ->orderByDesc('created_at')
-            ->with(['category', 'location', 'media'])
+            ->with(['category', 'location', 'primaryImage'])
             ->paginate(self::PER_PAGE);
 
         return AdSummaryResource::collection($paginator);

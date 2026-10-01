@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Reference;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Reference\LocationResource;
 use App\Models\Location;
+use App\Services\Catalog\TreeAssembler;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,17 +31,13 @@ class LocationController extends Controller
      *
      * @unauthenticated
      */
-    public function qatar(Request $request): JsonResponse
+    public function qatar(Request $request, TreeAssembler $assembler): JsonResponse
     {
         /** @var Collection<int, Location> $roots */
         $roots = Cache::remember(
             'locations.qatar',
             self::QATAR_TTL,
-            fn () => Location::query()
-                ->whereNull('parent_id')
-                ->with(['children' => fn ($q) => $q->orderBy('order')])
-                ->orderBy('order')
-                ->get(),
+            fn () => $assembler->nest(Location::query()->orderBy('order')->get()),
         );
 
         // Map to plain arrays — see CategoryController::tree for the rationale.

@@ -10,6 +10,7 @@ use App\Observers\AdObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -42,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
     {
         User::observe(UserObserver::class);
         Ad::observe(AdObserver::class);
+
+        Model::preventLazyLoading(! $this->app->isProduction());
 
         // Rate limiters MUST be registered here (not in the withRouting `then:`
         // closure) so they survive route:cache — Laravel skips that closure when

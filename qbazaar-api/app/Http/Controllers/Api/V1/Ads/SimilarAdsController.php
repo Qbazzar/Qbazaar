@@ -71,7 +71,7 @@ class SimilarAdsController extends Controller
         $ads = Ad::query()
             ->whereIn('id', $similarIds)
             ->publiclyListed()
-            ->with(['category', 'location', 'media'])
+            ->with(['category', 'location', 'primaryImage'])
             ->orderByDesc('published_at')
             ->get();
 
