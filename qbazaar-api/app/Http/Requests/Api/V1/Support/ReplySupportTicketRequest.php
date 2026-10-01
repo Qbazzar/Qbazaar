@@ -19,7 +19,7 @@ class ReplySupportTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['required', 'string', 'min:1', 'max:5000'],
+            'body' => ['required', 'string', 'min:1', 'max:' . (int) config('qbazaar.support.body_max_length')],
         ];
     }
 }

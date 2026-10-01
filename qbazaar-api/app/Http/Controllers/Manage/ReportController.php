@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
-use App\Actions\Users\SuspendUserAction;
+use App\Actions\Reports\ResolveReportAction;
 use App\Enums\AdStatus;
 use App\Enums\ReportCategory;
 use App\Enums\ReportStatus;
 use App\Enums\ReportTarget;
-use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\Report;
 use App\Models\User;
-use App\Services\Admin\StaffHierarchy;
 use App\Services\Ads\AdLifecycleService;
+use App\Services\Users\UserModerationService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +22,8 @@ use Illuminate\View\View;
 
 class ReportController extends Controller
 {
+    public function __construct(private readonly ResolveReportAction $resolveReport) {}
+
     public function index(Request $request): View
     {
         $status = $request->string('status')->toString();
@@ -97,7 +98,7 @@ class ReportController extends Controller
     public function bulkDismiss(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'ids' => ['required', 'array'],
+            'ids' => ['required', 'array', 'max:' . (int) config('qbazaar.admin.bulk_action_max')],
             'ids.*' => ['string'],
         ]);
 
@@ -133,18 +134,13 @@ class ReportController extends Controller
         #[CurrentUser]
         User $actor,
         Report $report,
-        StaffHierarchy $hierarchy,
-        SuspendUserAction $suspendUser,
+        UserModerationService $moderation,
     ): RedirectResponse {
         abort_unless($report->target_type === ReportTarget::USER, 404);
 
         $user = User::find($report->target_id);
         if ($user !== null) {
-            $hierarchy->ensureCanManage($actor, $user);
-
-            if ($user->status !== UserStatus::SUSPENDED) {
-                $suspendUser->execute($user);
-            }
+            $moderation->suspend($actor, $user);
         }
 
         $this->transition($report, ReportStatus::ACTIONED, 'تم إيقاف المستخدم المُبلَّغ عنه.');
@@ -154,11 +150,9 @@ class ReportController extends Controller
 
     private function transition(Report $report, ReportStatus $status, ?string $notes = null): void
     {
-        $report->forceFill([
-            'status' => $status,
-            'reviewed_at' => now(),
-            'reviewed_by' => auth()->id(),
-            'admin_notes' => $notes ?? $report->admin_notes,
-        ])->save();
+        /** @var User $staff */
+        $staff = auth()->user();
+
+        $this->resolveReport->execute($report, $status, $staff, $notes);
     }
 }

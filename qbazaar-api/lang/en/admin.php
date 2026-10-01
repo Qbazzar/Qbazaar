@@ -366,6 +366,11 @@ return [
         'body' => ':subject',
     ],
 
+    'report_filed' => [
+        'title' => 'New report',
+        'body' => ':category — reported :target.',
+    ],
+
     'ad_review' => [
         'title' => 'New ad awaiting review',
         'body' => ':title:hint',

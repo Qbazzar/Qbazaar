@@ -18,6 +18,7 @@ use App\Events\Offers\OfferCreated;
 use App\Events\Offers\OfferExpired;
 use App\Events\Offers\OfferRejected;
 use App\Events\Offers\OfferWithdrawn;
+use App\Events\Reports\ReportCreated;
 use App\Listeners\Ads\NotifyAdminsOfPendingAd;
 use App\Listeners\Ads\NotifyFavoritersOfPriceDrop;
 use App\Listeners\Ads\NotifyFollowersOfNewAd;
@@ -27,6 +28,7 @@ use App\Listeners\Messaging\ScreenChatMessage;
 use App\Listeners\Messaging\SendChatPushNotifications;
 use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
 use App\Listeners\Notifications\PruneStaleDeviceTokens;
+use App\Listeners\Reports\NotifyModeratorsOfReport;
 use App\Listeners\Search\NotifySavedSearchMatches;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSent;
@@ -81,4 +83,5 @@ it('wires each event to its listeners', function (string $event, array $listener
     'OfferRejected' => [OfferRejected::class, [SendChatPushNotifications::class]],
     'OfferWithdrawn' => [OfferWithdrawn::class, [SendChatPushNotifications::class]],
     'OfferExpired' => [OfferExpired::class, [SendChatPushNotifications::class]],
+    'ReportCreated' => [ReportCreated::class, [NotifyModeratorsOfReport::class]],
 ]);

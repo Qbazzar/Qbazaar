@@ -307,6 +307,11 @@ return [
         'body' => ':subject',
     ],
 
+    'report_filed' => [
+        'title' => 'بلاغ جديد',
+        'body' => ':category — بلاغ على :target.',
+    ],
+
     'ad_review' => [
         'title' => 'إعلان جديد بانتظار المراجعة',
         'body' => ':title:hint',

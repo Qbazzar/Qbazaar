@@ -34,7 +34,7 @@ class MakeReportRequest extends FormRequest
             'target_type' => ['required', 'string', Rule::enum(ReportTarget::class)],
             'target_id' => ['required', 'string', 'size:26'],
             'category' => ['required', 'string', Rule::enum(ReportCategory::class)],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'description' => ['nullable', 'string', 'max:' . (int) config('qbazaar.reports.description_max_length')],
         ];
     }
 }

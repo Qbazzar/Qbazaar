@@ -21,8 +21,8 @@ use Illuminate\Support\Facades\DB;
  *    cache entry — a held lock survives Cache::flush() on some stores.
  *  - Caps stored history at 50 rows per user. The cap-cleanup runs in
  *    the same transaction as the insert so a crash can never leave the
- *    history bloated. Anonymous histories are not capped here; we let
- *    the future PruneRecentViewsJob handle session-id pruning.
+ *    history bloated. Anonymous histories are not capped here; the nightly
+ *    `model:prune` drops them by age (see RecentView::prunable()).
  *  - The denormalised `ads.views_count` is incremented once per
  *    accepted (non-throttled) view so feed cards can render the
  *    headline count without a join, and at most once per IP per ad in the
