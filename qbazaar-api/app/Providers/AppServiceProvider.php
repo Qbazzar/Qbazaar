@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
+use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Notifications\Channels\CategorizedDatabaseChannel;
 use App\Observers\AdListingCacheObserver;
@@ -25,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\Channels\DatabaseChannel;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -63,6 +65,8 @@ class AppServiceProvider extends ServiceProvider
         Location::observe(TaxonomyCacheObserver::class);
 
         Model::preventLazyLoading(! $this->app->isProduction());
+
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
 
         // Rate limiters MUST be registered here (not in the withRouting `then:`
         // closure) so they survive route:cache — Laravel skips that closure when

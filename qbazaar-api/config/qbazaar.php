@@ -54,6 +54,8 @@ return [
         'password_min_length' => 8,
         'access_token_ttl_minutes' => 15,
         'refresh_token_ttl_days' => 30,
+        // How stale a session's last_used_at may get before a request rewrites it.
+        'token_last_used_write_minutes' => 5,
         'max_login_attempts' => 5,
         'login_lockout_minutes' => 15,
 
