@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs\Ads;
 
 use App\Enums\AdStatus;
+use App\Enums\QueueName;
 use App\Events\Ads\AdExpiringSoon;
 use App\Models\Ad;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -36,7 +37,7 @@ class WarnExpiringAdsBatchJob implements ShouldQueue
         public readonly array $adIds,
         public readonly int $warningDays,
     ) {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(): void

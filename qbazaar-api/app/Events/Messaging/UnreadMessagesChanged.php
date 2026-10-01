@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Events\Messaging;
 
+use App\Events\Concerns\BroadcastsOnRealtimeQueue;
 use App\Services\Messaging\ConversationInbox;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -20,7 +21,7 @@ use Illuminate\Foundation\Events\Dispatchable;
  */
 class UnreadMessagesChanged implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets;
+    use BroadcastsOnRealtimeQueue, Dispatchable, InteractsWithSockets;
 
     public function __construct(public readonly string $userId) {}
 

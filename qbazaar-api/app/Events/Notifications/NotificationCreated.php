@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Events\Notifications;
 
+use App\Events\Concerns\BroadcastsOnRealtimeQueue;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -27,7 +28,7 @@ use Illuminate\Queue\SerializesModels;
  */
 class NotificationCreated implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use BroadcastsOnRealtimeQueue, Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * @param array<string, mixed> $data

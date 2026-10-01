@@ -6,6 +6,7 @@ namespace App\Jobs\Ads;
 
 use App\Enums\AdStatus;
 use App\Enums\PlatformSetting;
+use App\Enums\QueueName;
 use App\Models\Ad;
 use App\Services\Settings\SettingsService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -44,7 +45,7 @@ class ExpireOldAdsJob implements ShouldBeUnique, ShouldQueue
 
     public function __construct()
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(SettingsService $settings): void

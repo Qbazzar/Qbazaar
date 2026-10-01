@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\QueueName;
+
 return [
 
     /*
@@ -44,7 +46,13 @@ return [
     |
     */
 
-    'queue' => env('SCOUT_QUEUE', true),
+    'queue' => env('SCOUT_QUEUE', true) ? ['queue' => QueueName::SEARCH->value] : false,
+
+    // Index writes retry while Meilisearch restarts instead of being lost.
+    'jobs' => [
+        'tries' => 5,
+        'backoff' => [5, 30, 120, 300],
+    ],
 
     /*
     |--------------------------------------------------------------------------

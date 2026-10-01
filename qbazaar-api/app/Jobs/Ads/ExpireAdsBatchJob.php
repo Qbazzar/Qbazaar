@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs\Ads;
 
 use App\Enums\AdStatus;
+use App\Enums\QueueName;
 use App\Exceptions\DomainException;
 use App\Models\Ad;
 use App\Services\Ads\AdLifecycleService;
@@ -35,7 +36,7 @@ class ExpireAdsBatchJob implements ShouldQueue
      */
     public function __construct(public readonly array $adIds)
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(AdLifecycleService $lifecycle): void

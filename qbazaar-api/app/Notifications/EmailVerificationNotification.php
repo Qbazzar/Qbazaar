@@ -7,7 +7,10 @@ namespace App\Notifications;
 use App\Enums\Language;
 use App\Models\User;
 use App\Notifications\Concerns\BuildsEmailVerificationUrl;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
 /**
@@ -16,10 +19,13 @@ use Illuminate\Notifications\Messages\MailMessage;
  * Extends Laravel's built-in VerifyEmail so we keep its signed-URL machinery
  * (`URL::temporarySignedRoute`) and override `toMail()` to render copy from
  * our own ar/en files and point the link at our API verification route.
+ * Queued so SMTP never runs inside the request.
  */
-class EmailVerificationNotification extends VerifyEmail
+class EmailVerificationNotification extends VerifyEmail implements ShouldQueue
 {
     use BuildsEmailVerificationUrl;
+    use DeliversOnNotificationsQueue;
+    use Queueable;
 
     /**
      * @param object|User $notifiable

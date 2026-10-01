@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners\Search;
 
+use App\Enums\QueueName;
 use App\Events\Ads\AdApproved;
 use App\Events\Ads\AdPublished;
 use App\Models\Ad;
@@ -17,7 +18,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Alerts owners of saved searches (with alerts on) that a newly live ad
- * matches. Runs on the low queue and walks the SQL pre-filtered candidates
+ * matches. Runs on the notifications queue and walks the SQL pre-filtered candidates
  * in chunks; each user is alerted once per ad, even with several matching
  * searches or when the ad is approved again after an edit.
  *
@@ -28,7 +29,7 @@ use Illuminate\Support\Collection;
  */
 class NotifySavedSearchMatches implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
-    public string $queue = 'low';
+    public string $queue = QueueName::NOTIFICATIONS->value;
 
     // Recipients are claimed once per event, so a retry only reaches the ones not alerted yet.
     public int $tries = 3;
@@ -36,7 +37,7 @@ class NotifySavedSearchMatches implements ShouldBeUniqueUntilProcessing, ShouldQ
     /** @var list<int> */
     public array $backoff = [10, 60, 300];
 
-    public int $timeout = 60;
+    public int $timeout = 120;
 
     public int $uniqueFor = 3600;
 

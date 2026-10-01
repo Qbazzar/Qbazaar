@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications\Account;
 
 use App\Models\User;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,7 +17,7 @@ use Illuminate\Notifications\Notification;
  */
 class ReauthCodeNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use DeliversOnNotificationsQueue, Queueable;
 
     public function __construct(
         public readonly string $code,

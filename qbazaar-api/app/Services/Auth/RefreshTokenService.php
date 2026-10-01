@@ -11,7 +11,6 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -27,6 +26,8 @@ use Laravel\Sanctum\PersonalAccessToken;
  */
 class RefreshTokenService
 {
+    public function __construct(private readonly RefreshTokenHasher $hasher) {}
+
     /**
      * Issue a brand-new access+refresh token pair for the given user.
      * Used by register and login. Does NOT rotate anything; just mints.
@@ -69,7 +70,7 @@ class RefreshTokenService
         $token->forceFill([
             'user_id' => $user->id,
             'personal_access_token_id' => $newAccessToken->accessToken->getKey(),
-            'token_hash' => Hash::make($rawRefresh),
+            'token_hash' => $this->hasher->hash($rawRefresh),
             'device_fingerprint' => $deviceFingerprint,
             'expires_at' => Carbon::now()->addDays($refreshTtlDays),
         ])->save();
@@ -85,8 +86,7 @@ class RefreshTokenService
      * Rotate a presented refresh token.
      *
      * Algorithm:
-     *  1. Lookup candidate rows for the user space (we can't query by hash directly
-     *     because Hash::make uses a random salt; we have to verify in PHP).
+     *  1. Look the row up by the ULID embedded in the token and verify its hash.
      *  2. Take a short Redis lock keyed on the matched row to serialise
      *     concurrent refreshes from the same client.
      *  3. In a DB transaction:
@@ -248,8 +248,7 @@ class RefreshTokenService
      * Looks up the candidate row for a presented raw refresh token.
      *
      * We embed the row ID (a ULID) in the raw token itself so we can do a single
-     * indexed read instead of an O(n) Hash::check scan. The salted hash is still
-     * verified before we trust the row.
+     * primary-key read; the hash is still verified before we trust the row.
      */
     private function findCandidate(string $presentedRaw): ?RefreshToken
     {
@@ -265,7 +264,7 @@ class RefreshTokenService
             return null;
         }
 
-        return Hash::check($presentedRaw, $row->token_hash) ? $row : null;
+        return $this->hasher->check($presentedRaw, $row->token_hash) ? $row : null;
     }
 
     private function extractRowId(string $presentedRaw): ?string

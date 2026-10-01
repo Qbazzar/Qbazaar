@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs\Search;
 
+use App\Enums\QueueName;
 use App\Enums\UserStatus;
 use App\Models\User;
 use App\Notifications\Search\SavedSearchDigestNotification;
@@ -31,7 +32,7 @@ class SendSavedSearchDigestJob implements ShouldBeUniqueUntilProcessing, ShouldQ
 
     public function __construct(public readonly string $userId)
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::NOTIFICATIONS);
     }
 
     public function uniqueId(): string
