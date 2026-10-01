@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Support;
 
+use App\Actions\Support\ReplyToTicketAsOwnerAction;
 use App\Actions\Support\SubmitSupportTicketAction;
-use App\Enums\SupportTicketStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Support\MakeSupportTicketRequest;
 use App\Http\Requests\Api\V1\Support\ReplySupportTicketRequest;
-use App\Models\SupportReply;
+use App\Http\Resources\Api\V1\Support\SupportReplyResource;
+use App\Http\Resources\Api\V1\Support\SupportTicketResource;
+use App\Http\Resources\Api\V1\Support\SupportTicketSummaryResource;
 use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class SupportController extends Controller
 {
+    private const PER_PAGE = 20;
+
     /**
      * POST /api/v1/support/tickets — anyone can submit; auth users get their tickets attached.
      */
@@ -32,36 +36,24 @@ class SupportController extends Controller
 
         $fresh = $ticket->fresh(['replies.author']) ?? $ticket;
 
-        return response()->json($this->ticketPayload($fresh), 201);
+        return response()->json((new SupportTicketResource($fresh))->resolve($request), 201);
     }
 
     /**
      * GET /api/v1/account/support/tickets — paginated list of caller's tickets.
      */
-    public function myTickets(Request $request): JsonResponse
+    public function myTickets(Request $request): AnonymousResourceCollection
     {
         /** @var User $user */
         $user = $request->user();
 
-        $page = SupportTicket::query()
+        $tickets = SupportTicket::query()
             ->where('user_id', $user->id)
             ->orderByDesc('created_at')
             ->withCount('replies')
-            ->paginate(20);
+            ->paginate(self::PER_PAGE);
 
-        $items = $page->getCollection()
-            ->map(fn (SupportTicket $t): array => $this->ticketListPayload($t))
-            ->all();
-
-        return response()->json([
-            'data' => $items,
-            'meta' => [
-                'current_page' => $page->currentPage(),
-                'last_page' => $page->lastPage(),
-                'per_page' => $page->perPage(),
-                'total' => $page->total(),
-            ],
-        ]);
+        return SupportTicketSummaryResource::collection($tickets);
     }
 
     /**
@@ -72,54 +64,35 @@ class SupportController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $ticket = $this->findOwnedOrFail($user, $id);
+        $ticket = $this->findOwnedOrFail($user, $id, ['replies.author']);
 
-        return response()->json($this->ticketPayload($ticket));
+        return response()->json((new SupportTicketResource($ticket))->resolve($request));
     }
 
     /**
      * POST /api/v1/account/support/tickets/{id}/reply — user posts a reply.
      */
-    public function reply(ReplySupportTicketRequest $request, string $id): JsonResponse
+    public function reply(ReplySupportTicketRequest $request, string $id, ReplyToTicketAsOwnerAction $replyAsOwner): JsonResponse
     {
         /** @var User $user */
         $user = $request->user();
 
         $ticket = $this->findOwnedOrFail($user, $id);
 
-        if ($ticket->status->isTerminal()) {
-            throw new DomainException(ErrorCode::TICKET_INVALID_TRANSITION);
-        }
+        $reply = $replyAsOwner($ticket, $user, (string) $request->validated('body'));
 
-        /** @var array{body:string} $payload */
-        $payload = $request->validated();
-
-        $reply = DB::transaction(function () use ($ticket, $user, $payload): SupportReply {
-            $r = SupportReply::query()->create([
-                'ticket_id' => $ticket->id,
-                'author_id' => $user->id,
-                'is_staff' => false,
-                'body' => $payload['body'],
-            ]);
-
-            $patch = ['last_replied_at' => now()];
-            // Bringing a waiting_user ticket back into the open queue when the
-            // user replies keeps the support agent's "needs attention" view fresh.
-            if ($ticket->status === SupportTicketStatus::WAITING_USER) {
-                $patch['status'] = SupportTicketStatus::OPEN->value;
-            }
-            $ticket->forceFill($patch)->save();
-
-            return $r;
-        });
-
-        return response()->json($this->replyPayload($reply->load('author')), 201);
+        return response()->json((new SupportReplyResource($reply))->resolve($request), 201);
     }
 
-    private function findOwnedOrFail(User $user, string $id): SupportTicket
+    /**
+     * @param list<string> $relations
+     *
+     * @throws DomainException
+     */
+    private function findOwnedOrFail(User $user, string $id, array $relations = []): SupportTicket
     {
         /** @var SupportTicket|null $ticket */
-        $ticket = SupportTicket::query()->with(['replies.author'])->find($id);
+        $ticket = SupportTicket::query()->with($relations)->find($id);
 
         if ($ticket === null) {
             throw new DomainException(ErrorCode::TICKET_NOT_FOUND);
@@ -130,55 +103,5 @@ class SupportController extends Controller
         }
 
         return $ticket;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function ticketListPayload(SupportTicket $ticket): array
-    {
-        return [
-            'id' => $ticket->id,
-            'subject' => $ticket->subject,
-            'category' => $ticket->category->value,
-            'status' => $ticket->status->value,
-            'priority' => $ticket->priority->value,
-            'last_replied_at' => $ticket->last_replied_at?->toIso8601String(),
-            'replies_count' => (int) ($ticket->replies_count ?? $ticket->replies()->count()),
-            'created_at' => $ticket->created_at->toIso8601String(),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function ticketPayload(SupportTicket $ticket): array
-    {
-        return array_merge($this->ticketListPayload($ticket), [
-            'body' => $ticket->body,
-            'email' => $ticket->email,
-            'replies' => $ticket->replies
-                ->sortBy('created_at')
-                ->values()
-                ->map(fn (SupportReply $r): array => $this->replyPayload($r))
-                ->all(),
-        ]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function replyPayload(SupportReply $reply): array
-    {
-        return [
-            'id' => $reply->id,
-            'author' => [
-                'id' => $reply->author->id,
-                'name' => $reply->author->full_name,
-                'is_staff' => $reply->is_staff,
-            ],
-            'body' => $reply->body,
-            'created_at' => $reply->created_at->toIso8601String(),
-        ];
     }
 }

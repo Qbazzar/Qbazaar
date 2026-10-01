@@ -5,18 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Manage;
 
 use App\Actions\Reports\ResolveReportAction;
-use App\Actions\Users\SuspendUserAction;
 use App\Enums\AdStatus;
 use App\Enums\ReportCategory;
 use App\Enums\ReportStatus;
 use App\Enums\ReportTarget;
-use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\Report;
 use App\Models\User;
-use App\Services\Admin\StaffHierarchy;
 use App\Services\Ads\AdLifecycleService;
+use App\Services\Users\UserModerationService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -136,18 +134,13 @@ class ReportController extends Controller
         #[CurrentUser]
         User $actor,
         Report $report,
-        StaffHierarchy $hierarchy,
-        SuspendUserAction $suspendUser,
+        UserModerationService $moderation,
     ): RedirectResponse {
         abort_unless($report->target_type === ReportTarget::USER, 404);
 
         $user = User::find($report->target_id);
         if ($user !== null) {
-            $hierarchy->ensureCanManage($actor, $user);
-
-            if ($user->status !== UserStatus::SUSPENDED) {
-                $suspendUser->execute($user);
-            }
+            $moderation->suspend($actor, $user);
         }
 
         $this->transition($report, ReportStatus::ACTIONED, 'تم إيقاف المستخدم المُبلَّغ عنه.');

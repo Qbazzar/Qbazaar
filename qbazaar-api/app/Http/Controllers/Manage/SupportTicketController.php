@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Actions\Support\ChangeTicketStatusAction;
 use App\Actions\Support\ReplyToTicketAsStaffAction;
 use App\Enums\SupportTicketPriority;
 use App\Enums\SupportTicketStatus;
@@ -82,13 +83,13 @@ class SupportTicketController extends Controller
         return back()->with('status', 'تم إرسال الرد');
     }
 
-    public function updateStatus(Request $request, SupportTicket $ticket): RedirectResponse
+    public function updateStatus(Request $request, SupportTicket $ticket, ChangeTicketStatusAction $changeStatus): RedirectResponse
     {
         $data = $request->validate([
             'status' => ['required', 'string', 'in:' . implode(',', array_column(SupportTicketStatus::cases(), 'value'))],
         ]);
 
-        $ticket->forceFill(['status' => $data['status']])->save();
+        $changeStatus($ticket, SupportTicketStatus::from($data['status']));
 
         return back()->with('status', 'تم تحديث حالة التذكرة');
     }

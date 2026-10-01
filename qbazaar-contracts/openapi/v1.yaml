@@ -3694,6 +3694,8 @@ paths:
       summary: Review the seller of an ad
       description: |
         A buyer may review the ad's seller once per ad, and only after a closed
+        deal (an accepted offer on that ad). A concurrent double-submit is
+        answered with REVIEW_ALREADY_EXISTS, never a 500.
       operationId: reviewsCreate
       parameters:
         - in: path

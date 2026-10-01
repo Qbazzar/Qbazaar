@@ -6,13 +6,13 @@ namespace App\Http\Controllers\Manage;
 
 use App\Actions\Admin\ImpersonateUserAction;
 use App\Actions\Admin\SyncUserRolesAction;
-use App\Actions\Users\SuspendUserAction;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Manage\ImpersonateUserRequest;
 use App\Http\Requests\Manage\UpdateUserRolesRequest;
 use App\Models\User;
 use App\Services\Admin\StaffHierarchy;
+use App\Services\Users\UserModerationService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,20 +77,16 @@ class UserController extends Controller
         ]);
     }
 
-    public function suspend(#[CurrentUser] User $actor, User $user, SuspendUserAction $suspendUser): RedirectResponse
+    public function suspend(#[CurrentUser] User $actor, User $user, UserModerationService $moderation): RedirectResponse
     {
-        $this->hierarchy->ensureCanManage($actor, $user);
-
-        $suspendUser->execute($user);
+        $moderation->suspend($actor, $user);
 
         return back()->with('status', 'تم إيقاف المستخدم.');
     }
 
-    public function activate(#[CurrentUser] User $actor, User $user): RedirectResponse
+    public function activate(#[CurrentUser] User $actor, User $user, UserModerationService $moderation): RedirectResponse
     {
-        $this->hierarchy->ensureCanManage($actor, $user);
-
-        $user->forceFill(['status' => UserStatus::ACTIVE])->save();
+        $moderation->activate($actor, $user);
 
         return back()->with('status', 'تم تفعيل المستخدم.');
     }
