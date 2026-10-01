@@ -22,6 +22,10 @@ beforeEach(function (): void {
     $this->seller = User::factory()->create();
 });
 
+afterEach(function (): void {
+    Lottery::determineResultNormally();
+});
+
 it('lists the caller history newest first with viewed_at injected', function (): void {
     $adA = $this->makeAd($this->seller, ['status' => 'active', 'published_at' => now()]);
     $adB = $this->makeAd($this->seller, ['status' => 'active', 'published_at' => now()]);
@@ -77,8 +81,6 @@ it('caps the stored history at 50 rows per user when a write draws the trim — 
 
     expect(RecentView::query()->where('user_id', $this->user->id)->count())->toBe(50)
         ->and(RecentView::query()->where('id', $oldest->id)->exists())->toBeFalse();
-
-    Lottery::determineResultNormally();
 });
 
 it('skips the trim on writes that do not draw it, so most views cost one insert', function (): void {
@@ -90,6 +92,4 @@ it('skips the trim on writes that do not draw it, so most views cost one insert'
     app(TrackAdViewAction::class)->execute($ad, $this->user, null);
 
     expect(RecentView::query()->where('user_id', $this->user->id)->count())->toBe(51);
-
-    Lottery::determineResultNormally();
 });
