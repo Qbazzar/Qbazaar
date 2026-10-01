@@ -582,7 +582,9 @@ paths:
       summary: Verify the email code and sign in, or sign up
       description: |
         - Account exists: 200 with tokens (or 202 when the device is new).
-          The email becomes verified.
+          The email becomes verified. If it was not verified before, the
+          account's password, sessions and trusted devices are dropped first,
+          since whoever registered the address may not have owned it.
         - No account and no sign-up details: 422 `AUTH_011`, returned only
           after the code checks out. The code is **not** spent, so repeat this
           call with the same code plus `full_name`, `phone`, `account_type`,
@@ -644,7 +646,9 @@ paths:
         '422':
           description: |
             `AUTH_005` wrong code (or attempts used up), `AUTH_011` sign-up
-            details needed (`details.email`), or `VALIDATION_FAILED`.
+            details needed (`details.email`), `AUTH_007` / `AUTH_008` when a
+            parallel sign-up took the email or phone first, or
+            `VALIDATION_FAILED`.
           content:
             application/json:
               schema:
@@ -723,7 +727,9 @@ paths:
         The id_token is verified against the provider's published keys
         (signature, issuer, audience = one of our client ids, expiry) and must
         carry a verified email. A known provider account signs in; otherwise
-        an account with the same email is linked. A new person gets 422
+        an account with the same email is linked (if that account's email was
+        not verified yet, its password, sessions and trusted devices are
+        dropped first). A new person gets 422
         `AUTH_011` (with `details.email` and, from Google, `details.full_name`)
         and repeats the call with the sign-up details; the new account has no
         password and `phone_verified=false`. Unknown devices get 202.
@@ -773,7 +779,9 @@ paths:
         '404':
           description: Unsupported provider
         '422':
-          description: Sign-up details needed (`AUTH_011`) or `VALIDATION_FAILED`
+          description: |
+            Sign-up details needed (`AUTH_011`), `AUTH_008` when a parallel
+            sign-up took the phone first, or `VALIDATION_FAILED`.
           content:
             application/json:
               schema:

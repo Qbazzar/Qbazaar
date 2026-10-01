@@ -7,11 +7,13 @@ use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\SocialAccount;
 use App\Models\User;
+use App\Services\Auth\RefreshTokenService;
 use App\Services\Auth\Social\SocialIdentity;
 use App\Services\Auth\Social\SocialTokenVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Sanctum\PersonalAccessToken;
 
 use function Pest\Laravel\postJson;
 
@@ -53,6 +55,31 @@ it('links an existing account by its verified email and signs in', function (): 
         ->and($account->provider)->toBe(SocialProvider::GOOGLE)
         ->and($account->provider_user_id)->toBe('google-sub-1')
         ->and($user->fresh()->email_verified)->toBeTrue();
+});
+
+it('drops the password and sessions of whoever pre-registered an unverified email', function (): void {
+    $user = User::factory()->create(['email' => 'owner@example.qa', 'email_verified' => false]);
+    $squatterSession = app(RefreshTokenService::class)->issue($user);
+
+    postJson('/api/v1/auth/social/google', ['id_token' => 'good-token'])->assertOk();
+
+    expect($user->fresh()->password)->toBeNull()
+        ->and(PersonalAccessToken::findToken($squatterSession->accessToken))->toBeNull();
+});
+
+it('does not touch an account whose email differs from the provider email', function (): void {
+    $user = User::factory()->create(['email' => 'renamed@example.qa', 'email_verified' => false]);
+    SocialAccount::query()->create([
+        'user_id' => $user->id,
+        'provider' => SocialProvider::GOOGLE,
+        'provider_user_id' => 'google-sub-1',
+        'email' => 'owner@example.qa',
+    ]);
+
+    postJson('/api/v1/auth/social/google', ['id_token' => 'good-token'])->assertOk();
+
+    expect($user->fresh()->email_verified)->toBeFalse()
+        ->and($user->fresh()->password)->not->toBeNull();
 });
 
 it('finds a linked account by provider subject even after the email changed', function (): void {

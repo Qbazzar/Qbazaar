@@ -26,6 +26,7 @@ class SocialSignInAction
         private readonly SocialTokenVerifier $verifier,
         private readonly RegisterUserAction $registerUser,
         private readonly CompleteSignInAction $completeSignIn,
+        private readonly ConfirmEmailOwnershipAction $confirmEmailOwnership,
     ) {}
 
     /**
@@ -55,8 +56,8 @@ class SocialSignInAction
             $this->link($user, $identity);
         }
 
-        if (! $user->email_verified && $user->email === $identity->email) {
-            $user->forceFill(['email_verified' => true])->save();
+        if ($user->email === $identity->email) {
+            $this->confirmEmailOwnership->execute($user);
         }
 
         return $this->completeSignIn->execute($user, $device);

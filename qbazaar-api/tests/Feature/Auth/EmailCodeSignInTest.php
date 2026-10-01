@@ -10,9 +10,11 @@ use App\Models\User;
 use App\Notifications\EmailSignInCodeNotification;
 use App\Notifications\WelcomeNotification;
 use App\Services\Auth\OtpService;
+use App\Services\Auth\RefreshTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Sanctum\PersonalAccessToken;
 
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\travel;
@@ -106,6 +108,34 @@ describe('POST /auth/email-otp/verify', function (): void {
         postJson('/api/v1/auth/email-otp/verify', ['email' => 'owner@example.qa', 'code' => $code])
             ->assertStatus(422)
             ->assertJsonPath('error.code', 'AUTH_005');
+    });
+
+    it('locks out whoever pre-registered an unverified email once the owner proves it', function (): void {
+        $user = User::factory()->create(['email' => 'owner@example.qa', 'email_verified' => false]);
+        $squatterSession = app(RefreshTokenService::class)->issue($user);
+        TrustedDevice::query()->create([
+            'user_id' => $user->id,
+            'device_hash' => str_repeat('a', 64),
+            'last_used_at' => now(),
+        ]);
+
+        postJson('/api/v1/auth/email-otp/verify', ['email' => 'owner@example.qa', 'code' => issueEmailCode('owner@example.qa')])
+            ->assertOk();
+
+        expect($user->fresh()->password)->toBeNull()
+            ->and(PersonalAccessToken::findToken($squatterSession->accessToken))->toBeNull()
+            ->and(TrustedDevice::query()->where('device_hash', str_repeat('a', 64))->exists())->toBeFalse();
+    });
+
+    it('keeps the password and sessions of an account whose email was already verified', function (): void {
+        $user = User::factory()->create(['email' => 'owner@example.qa', 'email_verified' => true]);
+        $session = app(RefreshTokenService::class)->issue($user);
+
+        postJson('/api/v1/auth/email-otp/verify', ['email' => 'owner@example.qa', 'code' => issueEmailCode('owner@example.qa')])
+            ->assertOk();
+
+        expect($user->fresh()->password)->not->toBeNull()
+            ->and(PersonalAccessToken::findToken($session->accessToken))->not->toBeNull();
     });
 
     it('asks for sign-up details without spending the code, then creates a passwordless account', function (): void {

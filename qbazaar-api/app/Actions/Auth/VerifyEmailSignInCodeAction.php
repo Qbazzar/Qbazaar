@@ -26,6 +26,7 @@ class VerifyEmailSignInCodeAction
         private readonly OtpService $otpService,
         private readonly RegisterUserAction $registerUser,
         private readonly CompleteSignInAction $completeSignIn,
+        private readonly ConfirmEmailOwnershipAction $confirmEmailOwnership,
     ) {}
 
     /**
@@ -54,9 +55,7 @@ class VerifyEmailSignInCodeAction
             return SignInResult::registered($created['user'], $created['tokens']);
         }
 
-        if (! $user->email_verified) {
-            $user->forceFill(['email_verified' => true])->save();
-        }
+        $this->confirmEmailOwnership->execute($user);
 
         return $this->completeSignIn->execute($user, $device);
     }
