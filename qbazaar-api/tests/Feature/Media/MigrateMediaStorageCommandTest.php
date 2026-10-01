@@ -150,3 +150,17 @@ it('keeps a row on the old disk and fails when a conversion cannot be copied', f
     expect($this->adImage->fresh()?->disk)->toBe('public')
         ->and($this->adImage->fresh()?->conversions_disk)->toBe('public');
 });
+
+it('leaves a file alone when only the other disk of its row changes', function (): void {
+    $originalPath = $this->adImage->getPathRelativeToRoot();
+    $originalBytes = Storage::disk('public')->get($originalPath);
+
+    config(['qbazaar.uploads.public_disk' => 'r2_public']);
+
+    $this->artisan('media:migrate-storage')->assertSuccessful();
+
+    expect($this->adImage->fresh()?->disk)->toBe('public')
+        ->and($this->adImage->fresh()?->conversions_disk)->toBe('r2_public')
+        ->and(Storage::disk('public')->get($originalPath))->toBe($originalBytes);
+    Storage::disk('r2_public')->assertExists($this->adImage->getPathRelativeToRoot('thumbnail'));
+});

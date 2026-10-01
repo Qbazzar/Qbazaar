@@ -64,7 +64,7 @@ class MediaDiskMigrator
     /**
      * @return array{disk: string, conversions_disk: string}
      */
-    public function targetsFor(Media $media): array
+    private function targetsFor(Media $media): array
     {
         $key = $media->model_type . '|' . $media->collection_name;
 
@@ -77,7 +77,7 @@ class MediaDiskMigrator
     private function resolveTargets(Media $media): array
     {
         $modelClass = Relation::getMorphedModel($media->model_type) ?? $media->model_type;
-        $model = new $modelClass;
+        $model = class_exists($modelClass) ? new $modelClass : null;
         $collection = $model instanceof HasMedia ? $model->getMediaCollection($media->collection_name) : null;
 
         $disk = $collection?->diskName ?: (string) config('media-library.disk_name');
@@ -104,6 +104,11 @@ class MediaDiskMigrator
 
     private function copy(string $fromDisk, string $toDisk, string $path): bool
     {
+        // Streaming a file onto itself would truncate it.
+        if ($fromDisk === $toDisk) {
+            return true;
+        }
+
         $stream = Storage::disk($fromDisk)->readStream($path);
 
         if (! is_resource($stream)) {
