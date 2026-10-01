@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Offers;
 
 use App\Actions\Offers\AcceptOfferAction;
+use App\Actions\Offers\CounterOfferAction;
 use App\Actions\Offers\MakeOfferAction;
 use App\Actions\Offers\RejectOfferAction;
 use App\Actions\Offers\WithdrawOfferAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Offers\CounterOfferRequest;
 use App\Http\Requests\Api\V1\Offers\MakeOfferRequest;
 use App\Http\Resources\Api\V1\Offers\OfferResource;
 use App\Models\Conversation;
@@ -23,7 +25,7 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * Offer endpoints — make / list (per-conversation) + accept / reject /
- * withdraw (per-offer).
+ * counter / withdraw (per-offer).
  *
  * The controller stays thin: every endpoint resolves the persisted row,
  * authorises via {@see OfferPolicy}, then delegates to a
@@ -44,6 +46,7 @@ class OfferController extends Controller
         private readonly AcceptOfferAction $acceptAction,
         private readonly RejectOfferAction $rejectAction,
         private readonly WithdrawOfferAction $withdrawAction,
+        private readonly CounterOfferAction $counterAction,
     ) {}
 
     /**
@@ -105,7 +108,7 @@ class OfferController extends Controller
     }
 
     /**
-     * POST /api/v1/offers/{id}/accept (seller).
+     * POST /api/v1/offers/{id}/accept (responder).
      *
      * @authenticated
      */
@@ -123,7 +126,7 @@ class OfferController extends Controller
     }
 
     /**
-     * POST /api/v1/offers/{id}/reject (seller).
+     * POST /api/v1/offers/{id}/reject (responder).
      *
      * @authenticated
      */
@@ -141,7 +144,35 @@ class OfferController extends Controller
     }
 
     /**
-     * POST /api/v1/offers/{id}/withdraw (buyer).
+     * POST /api/v1/offers/{id}/counter (responder) — returns the new counter-offer.
+     *
+     * @authenticated
+     */
+    public function counter(CounterOfferRequest $request, string $id): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $offer = $this->findOfferOrFail($id, $user);
+        $this->authorize('counter', $offer);
+
+        /** @var array{amount: float|int|string, note?: string|null} $validated */
+        $validated = $request->validated();
+
+        $counter = ($this->counterAction)(
+            $user,
+            $offer,
+            (float) $validated['amount'],
+            $validated['note'] ?? null,
+        );
+
+        return response()
+            ->json((new OfferResource($counter))->toArray($request))
+            ->setStatusCode(SymfonyResponse::HTTP_CREATED);
+    }
+
+    /**
+     * POST /api/v1/offers/{id}/withdraw (proposer).
      *
      * @authenticated
      */

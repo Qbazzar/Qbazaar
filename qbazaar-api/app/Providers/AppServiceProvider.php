@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Ad;
 use App\Models\User;
 use App\Observers\AdObserver;
+use App\Observers\AdOffersObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -42,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
     {
         User::observe(UserObserver::class);
         Ad::observe(AdObserver::class);
+        Ad::observe(AdOffersObserver::class);
 
         // Rate limiters MUST be registered here (not in the withRouting `then:`
         // closure) so they survive route:cache — Laravel skips that closure when

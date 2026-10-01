@@ -86,6 +86,8 @@ enum ErrorCode: string
     case OFFER_AD_NOT_ACTIVE = 'OFFER_007';
     case OFFER_NOT_PENDING = 'OFFER_008';
     case OFFER_FORBIDDEN = 'OFFER_009';
+    case OFFER_AD_ALREADY_AGREED = 'OFFER_010';
+    case OFFER_COUNTER_LIMIT_REACHED = 'OFFER_011';
 
     // ── Reviews ─────────────────────────────────────────────────────
     case REVIEW_NOT_ELIGIBLE = 'REVIEW_001';
@@ -149,6 +151,8 @@ enum ErrorCode: string
             self::OFFER_OWN_AD,
             self::OFFER_AD_NOT_ACTIVE,
             self::OFFER_NOT_PENDING,
+            self::OFFER_AD_ALREADY_AGREED,
+            self::OFFER_COUNTER_LIMIT_REACHED,
             self::REPORT_SELF_FORBIDDEN,
             self::REPORT_INVALID_TARGET,
             self::NOTIF_DEVICE_TOKEN_INVALID,

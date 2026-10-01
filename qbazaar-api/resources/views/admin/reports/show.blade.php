@@ -73,7 +73,7 @@
         <div class="space-y-6">
             <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
                 <div class="mb-3 text-sm font-semibold text-ink-500">المُبلِّغ</div>
-                <div class="font-semibold">{{ $report->reporter?->full_name ?? '—' }}</div>
+                <div class="font-semibold">{{ $report->reporter?->full_name ?? 'الإشراف التلقائي' }}</div>
                 <div class="text-sm text-ink-500">{{ $report->reporter?->email }}</div>
             </div>
 

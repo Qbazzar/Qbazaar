@@ -124,6 +124,33 @@ return [
             'title' => 'New sign-in detected',
             'body' => 'A new sign-in from :device. If this wasn\'t you, secure your account now.',
         ],
+        'message_new' => [
+            'title' => 'New message from :name',
+        ],
+        'offer_created' => [
+            'title' => 'New offer',
+            'body' => 'You received an offer of :amount :currency on ":title".',
+        ],
+        'offer_countered' => [
+            'title' => 'Counter-offer received',
+            'body' => 'You received a counter-offer of :amount :currency on ":title".',
+        ],
+        'offer_accepted' => [
+            'title' => 'Offer accepted',
+            'body' => 'Your offer of :amount :currency on ":title" was accepted.',
+        ],
+        'offer_rejected' => [
+            'title' => 'Offer declined',
+            'body' => 'Your offer of :amount :currency on ":title" was declined.',
+        ],
+        'offer_withdrawn' => [
+            'title' => 'Offer withdrawn',
+            'body' => 'The offer of :amount :currency on ":title" was withdrawn.',
+        ],
+        'offer_expired' => [
+            'title' => 'Offer expired',
+            'body' => 'The offer of :amount :currency on ":title" has expired.',
+        ],
         'system_announcement' => [
             'greeting' => 'Hello,',
             'footer' => 'Thanks for being a part of QBazaar.',

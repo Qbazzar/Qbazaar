@@ -102,6 +102,33 @@ return [
             'title' => 'تسجيل دخول جديد',
             'body' => 'تم تسجيل دخول جديد من :device. إذا لم يكن أنت، قم بتأمين حسابك.',
         ],
+        'message_new' => [
+            'title' => 'رسالة جديدة من :name',
+        ],
+        'offer_created' => [
+            'title' => 'عرض جديد',
+            'body' => 'وصلك عرض بقيمة :amount :currency على ":title".',
+        ],
+        'offer_countered' => [
+            'title' => 'عرض مقابل',
+            'body' => 'وصلك عرض مقابل بقيمة :amount :currency على ":title".',
+        ],
+        'offer_accepted' => [
+            'title' => 'تم قبول العرض',
+            'body' => 'تم قبول عرضك بقيمة :amount :currency على ":title".',
+        ],
+        'offer_rejected' => [
+            'title' => 'تم رفض العرض',
+            'body' => 'تم رفض عرضك بقيمة :amount :currency على ":title".',
+        ],
+        'offer_withdrawn' => [
+            'title' => 'تم سحب العرض',
+            'body' => 'تم سحب العرض بقيمة :amount :currency على ":title".',
+        ],
+        'offer_expired' => [
+            'title' => 'انتهت صلاحية العرض',
+            'body' => 'انتهت صلاحية العرض بقيمة :amount :currency على ":title".',
+        ],
         'system_announcement' => [
             'greeting' => 'مرحباً،',
             'footer' => 'شكراً لكونك جزءاً من كيوبازار.',

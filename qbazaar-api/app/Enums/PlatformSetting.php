@@ -16,6 +16,7 @@ enum PlatformSetting: string
     case COMMISSION_DEBT_CEILING = 'commission_debt_ceiling';
     case SETTLEMENT_DEADLINE_DAYS = 'settlement_deadline_days';
     case AD_EXPIRY_WARNING_DAYS = 'ad_expiry_warning_days';
+    case OFFER_COUNTER_ROUNDS_PER_SIDE = 'offer_counter_rounds_per_side';
 
     public function definition(): SettingDefinition
     {
@@ -23,6 +24,7 @@ enum PlatformSetting: string
             self::COMMISSION_DEBT_CEILING => SettingDefinition::decimal(SettingGroup::COMMISSION, 'qbazaar.commission.debt_ceiling', min: 0, max: 9_999_999_999.99),
             self::SETTLEMENT_DEADLINE_DAYS => SettingDefinition::integer(SettingGroup::COMMISSION, 'qbazaar.commission.settlement_deadline_days', min: 1, max: 90),
             self::AD_EXPIRY_WARNING_DAYS => SettingDefinition::integer(SettingGroup::ADS, 'qbazaar.ads.expiry_warning_days_before', min: 1, max: 30),
+            self::OFFER_COUNTER_ROUNDS_PER_SIDE => SettingDefinition::integer(SettingGroup::OFFERS, 'qbazaar.offers.counter_rounds_per_side', min: 0, max: 5),
         };
     }
 

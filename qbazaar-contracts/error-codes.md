@@ -109,6 +109,8 @@ requested locale.
 | `OFFER_007` | Ad must be active to receive an offer | 422 |
 | `OFFER_008` | Offer is not in a pending state | 422 |
 | `OFFER_009` | Not authorised to act on this offer | 403 |
+| `OFFER_010` | Another offer on this ad has already been accepted | 422 |
+| `OFFER_011` | No counter-offer rounds left for this side | 422 |
 
 ## Reports (Sprint 10)
 
