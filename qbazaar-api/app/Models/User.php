@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\AsNotificationPreferences;
+use App\Data\Account\NotificationPreferences;
 use App\Data\Account\PrivacySettings;
 use App\Enums\AccountType;
 use App\Enums\Language;
@@ -45,6 +47,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Language $language
  * @property string|null $avatar_url
  * @property PrivacySettings|null $privacy_settings
+ * @property NotificationPreferences $notification_preferences
  * @property Carbon|null $last_login_at
  * @property Carbon|null $deletion_requested_at
  * @property Carbon $created_at
@@ -97,6 +100,7 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
             'status' => UserStatus::class,
             'language' => Language::class,
             'privacy_settings' => PrivacySettings::class,
+            'notification_preferences' => AsNotificationPreferences::class,
             'rating_avg' => 'decimal:2',
             'rating_count' => 'integer',
         ];

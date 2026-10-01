@@ -716,6 +716,94 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v1/account/notification-preferences:
+    get:
+      tags: [Account]
+      summary: Email and push switches for every notification topic
+      description: |
+        One store for both channels. A topic switched off is dropped from that
+        channel when a notification is sent; the in-app inbox always records it.
+        Account and security notices (OTP, verification, data export, security
+        alerts) have no topic and are always sent. Every topic starts on.
+      operationId: accountNotificationPreferencesShow
+      responses:
+        '200':
+          description: Preferences returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [Account]
+      summary: Replace every email and push switch
+      operationId: accountNotificationPreferencesUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPreferences'
+            examples:
+              valid:
+                value:
+                  email: { user_messages: true, offers: true, listing_updates: true, saved_search_alerts: false, newsletters: false }
+                  push: { user_messages: true, offers: true, listing_updates: true, saved_search_alerts: true, newsletters: false }
+      responses:
+        '200':
+          description: Preferences replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/account/email-preferences:
+    get:
+      tags: [Account]
+      summary: The email switch of every notification topic
+      description: The `email` half of `/account/notification-preferences`.
+      operationId: accountEmailPreferencesShow
+      responses:
+        '200':
+          description: Email preferences returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailPreferencesEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [Account]
+      summary: Change any subset of the email switches
+      description: Topics left out keep their value; push switches are not touched. At least one topic is required.
+      operationId: accountEmailPreferencesUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailPreferencesPatch'
+            examples:
+              no_newsletters:
+                value:
+                  newsletters: false
+      responses:
+        '200':
+          description: Email preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailPreferencesEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
   /api/v1/account/addresses:
     get:
       tags: [Account]
@@ -3382,6 +3470,69 @@ components:
         language:
           type: string
           enum: [ar, en]
+
+    NotificationTopicSwitches:
+      type: object
+      description: One switch per notification topic.
+      additionalProperties: false
+      required: [user_messages, offers, listing_updates, saved_search_alerts, newsletters]
+      properties:
+        user_messages:
+          type: boolean
+          description: New chat messages
+        offers:
+          type: boolean
+          description: Offers made, countered, accepted, rejected or withdrawn
+        listing_updates:
+          type: boolean
+          description: Your ad was approved, rejected, is expiring or expired
+        saved_search_alerts:
+          type: boolean
+          description: New ads matching a saved search
+        newsletters:
+          type: boolean
+          description: News and announcements from QBazaar
+
+    NotificationPreferences:
+      type: object
+      required: [email, push]
+      properties:
+        email:
+          $ref: '#/components/schemas/NotificationTopicSwitches'
+        push:
+          $ref: '#/components/schemas/NotificationTopicSwitches'
+
+    NotificationPreferencesEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/NotificationPreferences'
+
+    EmailPreferencesPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        user_messages:
+          type: boolean
+        offers:
+          type: boolean
+        listing_updates:
+          type: boolean
+        saved_search_alerts:
+          type: boolean
+        newsletters:
+          type: boolean
+
+    EmailPreferencesEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/NotificationTopicSwitches'
 
     SavedAddress:
       type: object

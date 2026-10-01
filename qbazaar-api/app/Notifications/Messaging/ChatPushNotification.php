@@ -6,6 +6,7 @@ namespace App\Notifications\Messaging;
 
 use App\Enums\Language;
 use App\Models\User;
+use App\Notifications\Concerns\RespectsNotificationPreferences;
 use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
@@ -20,14 +21,14 @@ use NotificationChannels\Fcm\FcmChannel;
  */
 abstract class ChatPushNotification extends Notification
 {
-    use SendsFcmPush;
+    use RespectsNotificationPreferences, SendsFcmPush;
 
     /**
      * @return array<int, string>
      */
     public function via(mixed $notifiable): array
     {
-        return $this->fcmEnabledFor($notifiable) ? [FcmChannel::class] : [];
+        return $this->withoutMutedChannels($notifiable, $this->fcmEnabledFor($notifiable) ? [FcmChannel::class] : []);
     }
 
     protected function conversationUrl(string $conversationId): string

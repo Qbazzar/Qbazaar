@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
 use App\Http\Controllers\Api\V1\Account\DeviceTokenController;
+use App\Http\Controllers\Api\V1\Account\EmailPreferencesController;
+use App\Http\Controllers\Api\V1\Account\NotificationPreferencesController;
 use App\Http\Controllers\Api\V1\Account\NotificationsController;
 use App\Http\Controllers\Api\V1\Account\PasswordController;
 use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
@@ -190,6 +192,11 @@ Route::prefix('account')
         Route::put('/privacy-settings', [PrivacySettingsController::class, 'update'])->name('privacy.update');
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
+
+        Route::get('/notification-preferences', [NotificationPreferencesController::class, 'show'])->name('notification-preferences.show');
+        Route::put('/notification-preferences', [NotificationPreferencesController::class, 'update'])->name('notification-preferences.update');
+        Route::get('/email-preferences', [EmailPreferencesController::class, 'show'])->name('email-preferences.show');
+        Route::patch('/email-preferences', [EmailPreferencesController::class, 'update'])->name('email-preferences.update');
 
         Route::get('/addresses', [AddressController::class, 'index'])->name('addresses.index');
         Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');

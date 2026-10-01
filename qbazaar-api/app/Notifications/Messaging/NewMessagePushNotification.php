@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications\Messaging;
 
+use App\Enums\NotificationTopic;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -16,6 +17,11 @@ class NewMessagePushNotification extends ChatPushNotification
         public readonly Message $message,
         public readonly User $sender,
     ) {}
+
+    protected function topic(): NotificationTopic
+    {
+        return NotificationTopic::USER_MESSAGES;
+    }
 
     /**
      * @return array<string, mixed>
