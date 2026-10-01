@@ -244,6 +244,12 @@ class AdSearchService
             $clauses[] = sprintf('price_type = "%s"', $params['price_type']);
         }
 
+        foreach (['ad_type', 'shipping'] as $field) {
+            if (isset($params[$field]) && is_string($params[$field]) && $params[$field] !== '') {
+                $clauses[] = sprintf('%s = "%s"', $field, $params[$field]);
+            }
+        }
+
         if (isset($params['price_min']) && is_numeric($params['price_min'])) {
             $clauses[] = sprintf('price >= %s', (float) $params['price_min']);
         }

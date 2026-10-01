@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\V1\Search;
 
+use App\Enums\AdShipping;
+use App\Enums\AdType;
 use App\Enums\Condition;
 use App\Enums\PriceType;
 use App\Models\Category;
@@ -29,6 +31,8 @@ use Illuminate\Validation\Rule;
  * @queryParam price_max number Optional maximum price.
  * @queryParam condition string Optional `new|like_new|used`.
  * @queryParam price_type string Optional `fixed|negotiable|free|contact`.
+ * @queryParam ad_type string Optional `offering|wanted`.
+ * @queryParam shipping string Optional `pickup_only|delivery`.
  * @queryParam sort string `latest|oldest|price_asc|price_desc`. Defaults to `latest`.
  * @queryParam page int Default 1.
  * @queryParam per_page int Default 20, max 50.
@@ -100,6 +104,8 @@ class SearchRequest extends FormRequest
                 PriceType::FREE->value,
                 PriceType::CONTACT->value,
             ])],
+            'ad_type' => ['nullable', Rule::enum(AdType::class)],
+            'shipping' => ['nullable', Rule::enum(AdShipping::class)],
             'sort' => ['nullable', Rule::in(['latest', 'oldest', 'price_asc', 'price_desc'])],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],

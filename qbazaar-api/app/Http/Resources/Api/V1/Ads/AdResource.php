@@ -23,6 +23,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *    know the user.
  *  - `images` — always returned when the media relation has been loaded,
  *    ordered by `order_column` so the frontend doesn't have to sort.
+ *  - `street` — null for everyone but the seller unless `show_full_address`.
  *
  * @mixin Ad
  */
@@ -42,6 +43,11 @@ class AdResource extends JsonResource
             'price_type' => $this->price_type->value,
             'currency' => $this->currency,
             'condition' => $this->condition?->value,
+            'ad_type' => $this->ad_type->value,
+            'shipping' => $this->shipping->value,
+            'postal_code' => $this->postal_code,
+            'street' => $this->streetFor($request),
+            'show_full_address' => $this->show_full_address,
             'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
             'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
             'status' => $this->status->value,
@@ -73,5 +79,15 @@ class AdResource extends JsonResource
                 ->map(fn (Media $m): array => (new MediaResource($m))->toArray($request))
                 ->all()),
         ];
+    }
+
+    /** By default only the postal code and city are public; the street needs the seller's opt-in. */
+    private function streetFor(Request $request): ?string
+    {
+        if ($this->show_full_address || $request->user('sanctum')?->getAuthIdentifier() === $this->user_id) {
+            return $this->street;
+        }
+
+        return null;
     }
 }

@@ -102,6 +102,8 @@ return [
         'description_min_length' => 20,
         'description_max_length' => 3000,
         'price_max' => 99_999_999,
+        'postal_code_max_length' => 10,
+        'street_max_length' => 255,
         'view_throttle_per_user_per_minute' => 60,
     ],
 
