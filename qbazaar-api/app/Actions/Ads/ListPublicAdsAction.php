@@ -80,12 +80,15 @@ class ListPublicAdsAction
      */
     private function applySort(Builder $query, AdSort $sort): void
     {
+        // The id tie-breaker keeps pages stable when many ads share a price or
+        // view count, and matches the primary key InnoDB appends to every
+        // (status, column) index, so the sort is still read off the index.
         match ($sort) {
-            AdSort::PRICE_ASC => $query->orderBy('price'),
-            AdSort::PRICE_DESC => $query->orderByDesc('price'),
-            AdSort::OLDEST => $query->orderBy('published_at'),
-            AdSort::MOST_VIEWED => $query->orderByDesc('views_count')->orderedForFeed(),
-            AdSort::LATEST, AdSort::DISTANCE => $query->orderedForFeed(),
+            AdSort::PRICE_ASC => $query->orderBy('price')->orderBy('id'),
+            AdSort::PRICE_DESC => $query->orderByDesc('price')->orderByDesc('id'),
+            AdSort::OLDEST => $query->orderBy('published_at')->orderBy('id'),
+            AdSort::MOST_VIEWED => $query->orderByDesc('views_count')->orderedForFeed()->orderByDesc('id'),
+            AdSort::LATEST, AdSort::DISTANCE => $query->orderedForFeed()->orderByDesc('id'),
         };
     }
 }

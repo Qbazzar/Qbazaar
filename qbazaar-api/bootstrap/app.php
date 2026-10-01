@@ -97,7 +97,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ->withoutOverlapping();
 
         $schedule->job(new SyncAdViewCountsJob)
-            ->cron(sprintf('*/%d * * * *', (int) config('qbazaar.search.views_sync_minutes')))
+            ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.search.views_sync_minutes'))))
             ->name('search.sync-view-counts')
             ->withoutOverlapping();
     })

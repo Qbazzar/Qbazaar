@@ -11,8 +11,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ads', function (Blueprint $table): void {
-            // GET /ads?sort=most_viewed and the home "recommended" section.
-            $table->index(['status', 'views_count'], 'ads_status_views_idx');
+            // GET /ads?sort=most_viewed orders by views_count, published_at, id.
+            $table->index(['status', 'views_count', 'published_at'], 'ads_status_views_idx');
             // SyncAdViewCountsJob: public ads touched since the last sync.
             $table->index(['status', 'updated_at'], 'ads_status_updated_idx');
         });
