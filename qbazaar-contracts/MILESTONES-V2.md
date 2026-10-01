@@ -23,7 +23,7 @@
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
 | M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
-| M1 Closing the backend gaps | 14 | 73 | 51 | 22 | Batches 1–2 merged (#160–#164, #193–#197); performance batch next |
+| M1 Closing the backend gaps | 14 | 73 | 70 | 3 | Performance batch merged (#199–#203); left: R2 test, new-device SMS, Google/Apple (waiting for credentials) |
 | M1b Orders and payments | 14 | 10 | 1 | 9 | Settings store done (#156); the rest after the M1 entry items below |
 | M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
 | M3 Web on the new design | 16 | 11 | 1 | 10 | Phone-verification flow done (#157); the rest once the M1 endpoints it needs exist |
@@ -31,7 +31,7 @@
 | M5 Deployment on the new server | 18 | 18 | 0 | 18 | Waits for M1–M4 and the domain |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **179** | **71** | **108** | |
+| **Total** | | **179** | **90** | **89** | |
 
 ---
 
@@ -87,6 +87,33 @@
 **Entry:** M0 [P0] tasks done. **Do first:** BE-13.4 and SEC-13.9 (both block M1b), then the security block.
 
 **Exit criteria:** every [P0] below is done and in OpenAPI · the M1 rows in `GAP-ANALYSIS-MOBILE.md` are ✅ · new uploads land on R2 · Turnstile protects registration and code requests.
+
+### Done — performance batch (merged 2026-10-02)
+
+> Status: ✅ done. #199 → BE-13.26, BE-13.27, BE-13.32, BE-13.35 · #200 → BE-13.9, BE-13.17, BE-13.19, BE-13.23 · #201 → BE-13.29, BE-13.30, BE-13.33, BE-13.37 · #202 → BE-13.24, BE-13.28, BE-13.34 · #203 → BE-13.25, BE-13.31, BE-13.36, BE-13.38. All critical and high findings of DOCS/PERF-AUDIT-2026-10-01.md on the backend are closed; the server-side ones are OPS-18.11–OPS-18.18.
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| BE-13.9 | Scheduled pruning (sanctum, refresh/otp, activitylog, guest recents) | [P1] | Fixes audit finding RT-6, PERF-13, F17 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.17 | NOT_FOUND/FORBIDDEN error codes + config-driven validation limits | [P2] | Fixes audit finding ARCH-11, ARCH-12 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.19 | Small fixes: reviews withTrashed, queued reset/verify mails, ReportCreated listener | [P2] | Fixes audit finding PERF-15, PERF-16, F16 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.23 | Layering refactor: Review/Support actions, UserModerationService, resources | [P2] | Fixes audit finding ARCH-06 (DOCS/AUDIT-2026-09-30.md) |
+| BE-13.24 | Async ad moderation + pHash duplicate detection in a ModerateAdJob chained after ProcessAdImagesJob, compared in SQL (BIT_COUNT on an integer phash) | [P0] | Fixes PERF2-01: publishing never scans all images or holds row locks while moderating; duplicate detection still works; tests |
+| BE-13.25 | Catalog cache warmer (home feed, category/place counts) on the scheduler + stale-while-revalidate reads; no per-ad-event invalidation | [P0] | Fixes PERF2-02: no rebuild stampede; counts at most ~2 minutes stale; supporting indexes added |
+| BE-13.26 | Refresh tokens hashed with HMAC-SHA256 (lazy migration from bcrypt) + token-keyed /refresh limiter + rate limiters not keyed by IP alone (TrustProxies-aware) | [P0] | Fixes PERF2-03/04: refresh costs no bcrypt; users behind CGNAT/Cloudflare are not locked out; old tokens keep working |
+| BE-13.27 | Queue topology: realtime, notifications, search, media, low queues; per-job tries/backoff/timeout; broadcasts and Scout on their queues; after_commit; Horizon supervisors per queue | [P0] | Fixes PERF2-06: image work cannot delay chat; transient failures retry; a test asserts every queue used is consumed |
+| BE-13.28 | Image pipeline: thumbnail generated on the queue (or Imagick), dedicated uploads limiter, short lock wait, originals downscaled on the queue, lower max image size | [P1] | Fixes PERF2-05: an upload request does no heavy image work; stored originals are bounded |
+| BE-13.29 | Saved-search matching on indexed filter columns with an SQL prefilter, hourly digest, ShouldBeUnique | [P1] | Fixes PERF2-07: approving an ad does not scan every saved search in PHP |
+| BE-13.30 | Chat inbox at scale: denormalized unread counters or a participants table, inbox query without OR, badge updates over Reverb | [P1] | Inbox and unread badge use indexed queries only; tests |
+| BE-13.31 | Public feed: stored seller_active flag, cursor/simple pagination, the full index migration from the perf audit | [P1] | Feed queries use indexes (EXPLAIN noted in the PR); no COUNT(*) on hot paths |
+| BE-13.32 | Throttle Sanctum last_used_at writes to at most once per 5 minutes | [P1] | No write per authenticated request |
+| BE-13.33 | Search: one rawSearch for hits + facets, throttle:search, no N+1 in toSearchableArray, searchIndexShouldBeUpdated, leaner index settings | [P1] | One Meilisearch call per search request; reindex cost reduced |
+| BE-13.34 | CDN-friendly media URLs: public conversions on `cdn.` with immutable cache headers; signed originals only on ad detail with hour-bucketed expiry | [P1] | Image URLs are cacheable by Cloudflare; originals stay private |
+| BE-13.35 | Forgot-password and verification mails queued + per-email limiter (Turnstile is added by BE-14.11's PR) | [P0] | Reset/verify requests return fast and cannot be used to flood one inbox |
+| BE-13.36 | Buffer ad view counts in Redis with a 1-minute flush; cap recently-viewed writes; guest history on the client | [P2] | No row write per ad view |
+| BE-13.37 | Expiry sweeps as hourly chunked batches with ShouldBeUnique | [P2] | Sweeps never overlap or run as one huge transaction |
+| BE-13.38 | Small perf fixes: stored seller ads_count, public ad-detail cache, scoped ModerationRulesService, no double JSON decode in the response wrapper, StartConversation race, one activity-log row per ad change | [P2] | Each item covered by a test or a benchmark note in the PR |
+
 
 ### Done — batch 2 (merged 2026-10-01)
 
@@ -212,34 +239,11 @@
 
 ### Platform upkeep
 
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| BE-13.9 | Scheduled pruning (sanctum, refresh/otp, activitylog, guest recents) | [P1] | Fixes audit finding RT-6, PERF-13, F17 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.17 | NOT_FOUND/FORBIDDEN error codes + config-driven validation limits | [P2] | Fixes audit finding ARCH-11, ARCH-12 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.19 | Small fixes: reviews withTrashed, queued reset/verify mails, ReportCreated listener | [P2] | Fixes audit finding PERF-15, PERF-16, F16 (DOCS/AUDIT-2026-09-30.md) |
-| BE-13.23 | Layering refactor: Review/Support actions, UserModerationService, resources | [P2] | Fixes audit finding ARCH-06 (DOCS/AUDIT-2026-09-30.md) |
 
 ### Performance and load (from [`DOCS/PERF-AUDIT-2026-10-01.md`](../DOCS/PERF-AUDIT-2026-10-01.md))
 
 > Owner rule (2026-10-01): every change accounts for indexes, queues, the service layer, caching and behaviour under load. BE-13.24 supersedes BE-13.21; BE-13.31 extends BE-13.22.
 
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| BE-13.24 | Async ad moderation + pHash duplicate detection in a ModerateAdJob chained after ProcessAdImagesJob, compared in SQL (BIT_COUNT on an integer phash) | [P0] | Fixes PERF2-01: publishing never scans all images or holds row locks while moderating; duplicate detection still works; tests |
-| BE-13.25 | Catalog cache warmer (home feed, category/place counts) on the scheduler + stale-while-revalidate reads; no per-ad-event invalidation | [P0] | Fixes PERF2-02: no rebuild stampede; counts at most ~2 minutes stale; supporting indexes added |
-| BE-13.26 | Refresh tokens hashed with HMAC-SHA256 (lazy migration from bcrypt) + token-keyed /refresh limiter + rate limiters not keyed by IP alone (TrustProxies-aware) | [P0] | Fixes PERF2-03/04: refresh costs no bcrypt; users behind CGNAT/Cloudflare are not locked out; old tokens keep working |
-| BE-13.27 | Queue topology: realtime, notifications, search, media, low queues; per-job tries/backoff/timeout; broadcasts and Scout on their queues; after_commit; Horizon supervisors per queue | [P0] | Fixes PERF2-06: image work cannot delay chat; transient failures retry; a test asserts every queue used is consumed |
-| BE-13.28 | Image pipeline: thumbnail generated on the queue (or Imagick), dedicated uploads limiter, short lock wait, originals downscaled on the queue, lower max image size | [P1] | Fixes PERF2-05: an upload request does no heavy image work; stored originals are bounded |
-| BE-13.29 | Saved-search matching on indexed filter columns with an SQL prefilter, hourly digest, ShouldBeUnique | [P1] | Fixes PERF2-07: approving an ad does not scan every saved search in PHP |
-| BE-13.30 | Chat inbox at scale: denormalized unread counters or a participants table, inbox query without OR, badge updates over Reverb | [P1] | Inbox and unread badge use indexed queries only; tests |
-| BE-13.31 | Public feed: stored seller_active flag, cursor/simple pagination, the full index migration from the perf audit | [P1] | Feed queries use indexes (EXPLAIN noted in the PR); no COUNT(*) on hot paths |
-| BE-13.32 | Throttle Sanctum last_used_at writes to at most once per 5 minutes | [P1] | No write per authenticated request |
-| BE-13.33 | Search: one rawSearch for hits + facets, throttle:search, no N+1 in toSearchableArray, searchIndexShouldBeUpdated, leaner index settings | [P1] | One Meilisearch call per search request; reindex cost reduced |
-| BE-13.34 | CDN-friendly media URLs: public conversions on `cdn.` with immutable cache headers; signed originals only on ad detail with hour-bucketed expiry | [P1] | Image URLs are cacheable by Cloudflare; originals stay private |
-| BE-13.35 | Forgot-password and verification mails queued + per-email limiter (Turnstile is added by BE-14.11's PR) | [P0] | Reset/verify requests return fast and cannot be used to flood one inbox |
-| BE-13.36 | Buffer ad view counts in Redis with a 1-minute flush; cap recently-viewed writes; guest history on the client | [P2] | No row write per ad view |
-| BE-13.37 | Expiry sweeps as hourly chunked batches with ShouldBeUnique | [P2] | Sweeps never overlap or run as one huge transaction |
-| BE-13.38 | Small perf fixes: stored seller ads_count, public ad-detail cache, scoped ModerationRulesService, no double JSON decode in the response wrapper, StartConversation race, one activity-log row per ad change | [P2] | Each item covered by a test or a benchmark note in the PR |
 
 ## Sprint 14 — M1b Orders and payments (no gateway)
 
