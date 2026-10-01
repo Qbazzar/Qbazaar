@@ -139,3 +139,25 @@ it('refuses unsigned media links', function (): void {
     get('/api/v1/media/' . $media->id . '/conversions/preview')->assertForbidden();
     get('/api/v1/media/' . $media->id . '/original')->assertForbidden();
 });
+
+it('rejects photos whose pixel size would not fit in worker memory', function (): void {
+    config(['qbazaar.messaging.image_max_side_px' => 1000]);
+    Sanctum::actingAs($this->buyer, ['*']);
+
+    sendImage($this, ['image' => UploadedFile::fake()->image('wide.jpg', 1001, 10)])
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', 'VALIDATION_FAILED');
+
+    sendImage($this, ['image' => UploadedFile::fake()->image('ok.jpg', 1000, 1000)])->assertCreated();
+});
+
+it('gives photos a tighter per-minute budget than text', function (): void {
+    config(['qbazaar.messaging.images_per_minute' => 2]);
+    Sanctum::actingAs($this->buyer, ['*']);
+
+    sendImage($this, ['image' => UploadedFile::fake()->image('1.jpg')])->assertCreated();
+    sendImage($this, ['image' => UploadedFile::fake()->image('2.jpg')])->assertCreated();
+    sendImage($this, ['image' => UploadedFile::fake()->image('3.jpg')])->assertStatus(429);
+
+    post($this->url, ['body' => 'text still goes through'], ['Accept' => 'application/json'])->assertCreated();
+});

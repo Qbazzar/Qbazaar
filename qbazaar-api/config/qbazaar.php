@@ -181,6 +181,9 @@ return [
         'images_per_minute' => 10,
         'images_per_day' => 200,
         'bulk_hide_max' => 100,
+        // A small file can still decode to a huge bitmap; this keeps the
+        // queued preview conversion within worker memory.
+        'image_max_side_px' => 8192,
     ],
 
     /*

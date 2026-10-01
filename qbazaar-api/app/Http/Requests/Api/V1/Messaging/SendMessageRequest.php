@@ -43,6 +43,9 @@ class SendMessageRequest extends FormRequest
                 'file',
                 'mimetypes:' . implode(',', (array) config('qbazaar.uploads.allowed_mime_types')),
                 'max:' . (int) config('qbazaar.uploads.max_image_size_kb'),
+                Rule::dimensions()
+                    ->maxWidth((int) config('qbazaar.messaging.image_max_side_px'))
+                    ->maxHeight((int) config('qbazaar.messaging.image_max_side_px')),
             ],
         ];
     }
