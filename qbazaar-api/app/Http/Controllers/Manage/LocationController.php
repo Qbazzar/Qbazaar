@@ -7,16 +7,18 @@ namespace App\Http\Controllers\Manage;
 use App\Enums\LocationType;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
+use App\Services\Catalog\CatalogCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\View\View;
 
 class LocationController extends Controller
 {
+    public function __construct(private readonly CatalogCache $catalogCache) {}
+
     public function index(Request $request): View
     {
         $search = $request->string('q')->toString();
@@ -158,8 +160,11 @@ class LocationController extends Controller
             ->get();
     }
 
+    /**
+     * Bulk deletes skip model events, so the catalog caches are flushed here as well as by the observer.
+     */
     private function flushCache(): void
     {
-        Cache::forget('locations.qatar');
+        $this->catalogCache->taxonomyChanged();
     }
 }

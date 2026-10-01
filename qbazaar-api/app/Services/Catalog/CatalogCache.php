@@ -16,6 +16,8 @@ class CatalogCache
 
     public const MAIN_CATEGORIES_KEY = 'categories.main';
 
+    public const LOCATION_TREE_KEY = 'locations.qatar';
+
     public function __construct(
         private readonly CategoryHierarchy $categories,
         private readonly LocationHierarchy $locations,
@@ -29,6 +31,7 @@ class CatalogCache
         $this->locations->flush();
         $this->tree->flush();
         Cache::forget(self::MAIN_CATEGORIES_KEY);
+        Cache::forget(self::LOCATION_TREE_KEY);
 
         $this->listingsChanged();
     }
