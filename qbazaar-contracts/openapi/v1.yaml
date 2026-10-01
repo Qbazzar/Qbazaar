@@ -2038,6 +2038,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedConversationListEnvelope'
         '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Conversations]
+      summary: Hide conversations from the caller's inbox
+      description: |
+        Hidden for the caller only — the other participant still sees the
+        thread. The next message in a hidden thread brings it back. Hidden
+        threads also leave the unread badge. Ids the caller does not take
+        part in are ignored (no existence oracle), so `hidden` may be lower
+        than the number of ids sent.
+      operationId: conversationsHide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HideConversationsRequest'
+      responses:
+        '200':
+          description: Number of conversations hidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HideConversationsEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   /api/v1/conversations/unread-count:
     get:
@@ -4370,6 +4395,28 @@ components:
           type: string
           maxLength: 5000
           description: Optional caption.
+
+    HideConversationsRequest:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/ULID' }
+
+    HideConversationsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [hidden]
+              properties:
+                hidden: { type: integer, minimum: 0 }
 
     UnreadCountResponse:
       type: object

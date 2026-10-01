@@ -142,7 +142,7 @@ class Message extends Model implements HasMedia
     public function scopeUnreadFor(Builder $query, User $user): Builder
     {
         return $query
-            ->whereIn('conversation_id', Conversation::query()->forUser($user)->select('id'))
+            ->whereIn('conversation_id', Conversation::query()->visibleTo($user)->select('id'))
             ->where('sender_id', '!=', $user->id)
             ->whereNull('read_at');
     }

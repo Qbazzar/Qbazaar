@@ -58,6 +58,8 @@ class ConversationMessageWriter
                 'last_message_preview' => Str::limit($this->english($previewKey, $draft), ChatMessageRenderer::PREVIEW_LENGTH),
                 'last_message_key' => $previewKey?->value,
                 'last_message_params' => $created->params,
+                'buyer_hidden_at' => null,
+                'seller_hidden_at' => null,
             ])->save();
 
             return $created;

@@ -389,6 +389,7 @@ Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
 //   Authenticated:
 //     POST   /conversations                       — start / resolve a thread
 //     GET    /conversations                       — paginated inbox
+//     DELETE /conversations                       — hide {ids} for the caller only
 //     GET    /conversations/unread-count          — header badge
 //     GET    /conversations/{id}                  — full thread
 //     GET    /conversations/{id}/messages         — cursor transcript
@@ -401,6 +402,9 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
 
     Route::get('/conversations', [ConversationController::class, 'index'])
         ->name('api.v1.conversations.index');
+
+    Route::delete('/conversations', [ConversationController::class, 'destroy'])
+        ->name('api.v1.conversations.destroy');
 
     Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount'])
         ->name('api.v1.conversations.unread-count');

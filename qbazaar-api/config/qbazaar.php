@@ -172,6 +172,7 @@ return [
         // Photos cost storage and bandwidth, so they get a tighter budget than text.
         'images_per_minute' => 10,
         'images_per_day' => 200,
+        'bulk_hide_max' => 100,
     ],
 
     /*
