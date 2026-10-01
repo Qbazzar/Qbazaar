@@ -12,6 +12,10 @@ declare(strict_types=1);
 
 return [
 
+    // The `media` queue (Horizon supervisor-media) keeps image work away from
+    // chat and notifications even when MEDIA_QUEUE is missing from .env.
+    'queue_name' => env('MEDIA_QUEUE', 'media'),
+
     'remote' => [
         // Conversion paths are server-generated and never rewritten, so the
         // CDN and browsers may keep a copy for a year. Originals are only
