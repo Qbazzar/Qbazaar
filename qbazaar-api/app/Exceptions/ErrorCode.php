@@ -43,6 +43,11 @@ enum ErrorCode: string
     case USER_PASSWORD_CURRENT_REQUIRED = 'USER_004';
     case USER_DEACTIVATION_PASSWORD_REQUIRED = 'USER_005';
 
+    // ── Social: follows, business profiles ─────────────────────────
+    case FOLLOW_SELF_FORBIDDEN = 'FOLLOW_001';
+    case FOLLOW_BLOCKED = 'FOLLOW_002';
+    case BUSINESS_ACCOUNT_REQUIRED = 'BIZ_001';
+
     // ── Categories & Locations (Sprint 3) ───────────────────────────
     case CATEGORY_NOT_FOUND = 'CAT_001';
     case LOCATION_NOT_FOUND = 'LOC_001';
@@ -72,6 +77,9 @@ enum ErrorCode: string
     case SEARCH_SAVED_NOT_FOUND = 'SEARCH_002';
     case SEARCH_INVALID_PARAMS = 'SEARCH_003';
     case SEARCH_SAVED_LIMIT = 'SEARCH_004';
+
+    // ── Favorites ───────────────────────────────────────────────────
+    case FAV_LIMIT_REACHED = 'FAV_001';
 
     // ── Messaging (Sprint 8) ────────────────────────────────────────
     case MSG_BLOCKED = 'MSG_001';
@@ -143,6 +151,7 @@ enum ErrorCode: string
             self::USER_PASSWORD_CURRENT_REQUIRED,
             self::USER_DEACTIVATION_PASSWORD_REQUIRED,
             self::USER_BLOCK_SELF_FORBIDDEN,
+            self::FOLLOW_SELF_FORBIDDEN,
             self::UPLOAD_INVALID_MIME,
             self::UPLOAD_MAX_IMAGES_REACHED,
             self::UPLOAD_MAGIC_BYTES_MISMATCH,
@@ -167,6 +176,7 @@ enum ErrorCode: string
             self::NOTIF_DEVICE_TOKEN_INVALID,
             self::SEARCH_INVALID_PARAMS,
             self::SEARCH_SAVED_LIMIT,
+            self::FAV_LIMIT_REACHED,
             self::REVIEW_ALREADY_EXISTS,
             self::REVIEW_OWN_AD,
             self::TICKET_INVALID_TRANSITION => 422,
@@ -181,6 +191,8 @@ enum ErrorCode: string
             self::AUTH_PHONE_NOT_VERIFIED,
             self::AUTH_PASSWORD_LOGIN_DISABLED,
             self::USER_BLOCK_ADMIN_FORBIDDEN,
+            self::FOLLOW_BLOCKED,
+            self::BUSINESS_ACCOUNT_REQUIRED,
             self::AD_EDIT_FORBIDDEN,
             self::MSG_BLOCKED,
             self::MSG_NOT_PARTICIPANT,

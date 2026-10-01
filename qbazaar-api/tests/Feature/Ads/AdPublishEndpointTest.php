@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
 use App\Services\Settings\SettingsService;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
@@ -17,7 +18,6 @@ use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 
-use Spatie\Permission\Models\Role;
 use Tests\Concerns\CreatesAds;
 
 uses(RefreshDatabase::class, CreatesAds::class);
@@ -51,7 +51,7 @@ it('submits a draft for review (pending) and keeps it off the public feed', func
 });
 
 it('notifies reviewers via the panel bell when an ad is submitted', function (): void {
-    Role::findOrCreate('super_admin', 'web');
+    $this->seed(RolesAndPermissionsSeeder::class);
     $reviewer = User::factory()->phoneVerified()->create();
     $reviewer->assignRole('super_admin');
 

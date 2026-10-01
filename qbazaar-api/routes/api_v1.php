@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
+use App\Http\Controllers\Api\V1\Account\BusinessProfileController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
 use App\Http\Controllers\Api\V1\Account\DeviceTokenController;
+use App\Http\Controllers\Api\V1\Account\FollowsController;
 use App\Http\Controllers\Api\V1\Account\NotificationsController;
 use App\Http\Controllers\Api\V1\Account\PasswordController;
 use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
@@ -20,6 +22,7 @@ use App\Http\Controllers\Api\V1\Ads\FeaturedAdsController;
 use App\Http\Controllers\Api\V1\Ads\MarkSoldController;
 use App\Http\Controllers\Api\V1\Ads\PublishAdController;
 use App\Http\Controllers\Api\V1\Ads\RenewAdController;
+use App\Http\Controllers\Api\V1\Ads\ReserveAdController;
 use App\Http\Controllers\Api\V1\Ads\SimilarAdsController;
 use App\Http\Controllers\Api\V1\Auth\DeviceVerificationController;
 use App\Http\Controllers\Api\V1\Auth\EmailCodeController;
@@ -32,9 +35,11 @@ use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Auth\SocialSignInController;
 use App\Http\Controllers\Api\V1\Cms\PageController;
+use App\Http\Controllers\Api\V1\Companies\CompanyController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Help\HelpController;
 use App\Http\Controllers\Api\V1\Home\HomeController;
+use App\Http\Controllers\Api\V1\Media\MediaConversionController;
 use App\Http\Controllers\Api\V1\Media\MediaOriginalController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
@@ -49,6 +54,7 @@ use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Support\SupportController;
 use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
+use App\Http\Controllers\Api\V1\Users\FollowController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
 use App\Http\Middleware\EnsureApiDocsEnabled;
@@ -209,6 +215,15 @@ Route::prefix('account')
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
 
+        Route::get('/followers', [FollowsController::class, 'followers'])->name('followers.index');
+        Route::delete('/followers/{user}', [FollowsController::class, 'removeFollower'])->name('followers.destroy');
+        Route::get('/following', [FollowsController::class, 'following'])->name('following.index');
+
+        Route::get('/business-profile', [BusinessProfileController::class, 'show'])->name('business-profile.show');
+        Route::put('/business-profile', [BusinessProfileController::class, 'update'])->name('business-profile.update');
+        Route::post('/business-profile/cover', [BusinessProfileController::class, 'uploadCover'])->name('business-profile.cover.store');
+        Route::delete('/business-profile/cover', [BusinessProfileController::class, 'removeCover'])->name('business-profile.cover.destroy');
+
         // Web-push device tokens (FCM). DELETE takes the token in the body —
         // FCM tokens are too long (and too sensitive) to put in the URL.
         Route::post('/device-tokens', [DeviceTokenController::class, 'store'])->name('device-tokens.store');
@@ -308,6 +323,11 @@ Route::get('/media/{media}/original', MediaOriginalController::class)
     ->middleware(['signed', 'throttle:api'])
     ->name('api.v1.media.original');
 
+// Downsized chat photos kept on the private disk, behind the same expiring signature.
+Route::get('/media/{media}/conversions/{conversion}', MediaConversionController::class)
+    ->middleware(['signed', 'throttle:api'])
+    ->name('api.v1.media.conversion');
+
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/ads', [AdController::class, 'store'])
         ->middleware('throttle:drafts')
@@ -332,6 +352,14 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/ads/{id}/renew', RenewAdController::class)
         ->middleware('throttle:api')
         ->name('api.v1.ads.renew');
+
+    Route::post('/ads/{id}/reserve', [ReserveAdController::class, 'store'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.reserve');
+
+    Route::delete('/ads/{id}/reserve', [ReserveAdController::class, 'destroy'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.release');
 
     Route::post('/ads/{ad}/reviews', [ReviewController::class, 'store'])
         ->middleware('throttle:api')
@@ -361,6 +389,8 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 //   Authenticated (account group):
 //     GET    /account/saved-searches        — list (cap 10/user)
 //     POST   /account/saved-searches        — create
+//     PUT    /account/saved-searches/{id}   — replace name + filters
+//     PATCH  /account/saved-searches/{id}   — alerts_enabled / rename
 //     DELETE /account/saved-searches/{id}   — remove
 Route::prefix('search')
     ->name('api.v1.search.')
@@ -376,13 +406,18 @@ Route::prefix('account/saved-searches')
     ->group(function (): void {
         Route::get('/', [SavedSearchController::class, 'index'])->name('index');
         Route::post('/', [SavedSearchController::class, 'store'])->name('store');
+        Route::put('/{id}', [SavedSearchController::class, 'update'])->name('update');
+        Route::patch('/{id}', [SavedSearchController::class, 'patch'])->name('patch');
         Route::delete('/{id}', [SavedSearchController::class, 'destroy'])->name('destroy');
     });
 
 // ── Sprint 7 — Favorites & Recently Viewed ──────────────────────────────────
 //   Authenticated:
 //     POST   /ads/{id}/favorite           — toggle favourite (returns state + count)
+//     PUT    /ads/{id}/favorite           — idempotent add
+//     DELETE /ads/{id}/favorite           — idempotent remove
 //     GET    /account/favorites           — paginated list of caller's favourites
+//     GET    /account/favorites/ids       — every favourited ad id (capped)
 //     GET    /account/recently-viewed     — paginated history (auth-only)
 //     DELETE /account/recently-viewed     — clear caller's history
 //   Public-ish:
@@ -391,8 +426,17 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
     Route::post('/ads/{id}/favorite', [FavoriteController::class, 'toggle'])
         ->name('api.v1.ads.favorite.toggle');
 
+    Route::put('/ads/{id}/favorite', [FavoriteController::class, 'add'])
+        ->name('api.v1.ads.favorite.add');
+
+    Route::delete('/ads/{id}/favorite', [FavoriteController::class, 'remove'])
+        ->name('api.v1.ads.favorite.remove');
+
     Route::get('/account/favorites', [FavoriteController::class, 'index'])
         ->name('api.v1.account.favorites.index');
+
+    Route::get('/account/favorites/ids', [FavoriteController::class, 'ids'])
+        ->name('api.v1.account.favorites.ids');
 
     Route::get('/account/recently-viewed', [RecentViewController::class, 'index'])
         ->name('api.v1.account.recently-viewed.index');
@@ -409,6 +453,7 @@ Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
 //   Authenticated:
 //     POST   /conversations                       — start / resolve a thread
 //     GET    /conversations                       — paginated inbox
+//     DELETE /conversations                       — hide {ids} for the caller only
 //     GET    /conversations/unread-count          — header badge
 //     GET    /conversations/{id}                  — full thread
 //     GET    /conversations/{id}/messages         — cursor transcript
@@ -421,6 +466,9 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
 
     Route::get('/conversations', [ConversationController::class, 'index'])
         ->name('api.v1.conversations.index');
+
+    Route::delete('/conversations', [ConversationController::class, 'destroy'])
+        ->name('api.v1.conversations.destroy');
 
     Route::get('/conversations/unread-count', [ConversationController::class, 'unreadCount'])
         ->name('api.v1.conversations.unread-count');
@@ -511,8 +559,16 @@ Route::prefix('users')
         Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
             Route::post('/{user}/block', [BlockController::class, 'store'])->name('block.store');
             Route::delete('/{user}/block', [BlockController::class, 'destroy'])->name('block.destroy');
+
+            Route::post('/{user}/follow', [FollowController::class, 'store'])->middleware('throttle:follows')->name('follow.store');
+            Route::delete('/{user}/follow', [FollowController::class, 'destroy'])->middleware('throttle:follows')->name('follow.destroy');
         });
     });
+
+// Companies directory — active business accounts (public, optional Bearer for is_following).
+Route::get('/companies', CompanyController::class)
+    ->middleware('throttle:api')
+    ->name('api.v1.companies.index');
 
 // ── Sprint 12 — CMS Pages (public, 1h cached) ──────────────────────────────
 Route::prefix('pages')->name('api.v1.pages.')->middleware('throttle:api')->group(function (): void {

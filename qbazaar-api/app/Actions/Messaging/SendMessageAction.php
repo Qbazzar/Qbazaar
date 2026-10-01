@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Messaging;
 
-use App\Enums\MessageType;
+use App\Data\Messaging\ChatMessageDraft;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\Conversation;
@@ -30,12 +30,8 @@ class SendMessageAction
 {
     public function __construct(private readonly ConversationMessageWriter $messages) {}
 
-    public function execute(
-        User $sender,
-        Conversation $conversation,
-        string $body,
-        MessageType $type = MessageType::TEXT,
-    ): Message {
+    public function execute(User $sender, Conversation $conversation, ChatMessageDraft $draft): Message
+    {
         $conversation->loadMissing(['buyer', 'seller']);
         $other = $conversation->otherParticipant($sender);
 
@@ -43,6 +39,6 @@ class SendMessageAction
             throw new DomainException(ErrorCode::MSG_BLOCKED);
         }
 
-        return $this->messages->append($conversation, $sender, $body, $type);
+        return $this->messages->append($conversation, $sender, $draft);
     }
 }

@@ -37,6 +37,30 @@
                 </div>
             </div>
 
+            @if ($ad->moderation_result !== null)
+                <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
+                    <div class="mb-3 text-sm font-semibold text-ink-500">{{ __('admin.ad_review.auto_check') }}</div>
+                    @if ($ad->moderation_result->clean)
+                        <p class="text-sm text-emerald-700">{{ __('admin.ad_review.auto_check_clean') }}</p>
+                    @else
+                        <ul class="space-y-1.5 text-sm text-red-700">
+                            @foreach ($ad->moderation_result->flags as $flag)
+                                <li>{{ __('admin.ad_review.auto_check_flags.' . $flag) }}</li>
+                            @endforeach
+                        </ul>
+                        @php($duplicateAdIds = $ad->moderation_result->details['duplicate_image']['duplicate_ad_ids'] ?? [])
+                        @if ($duplicateAdIds !== [])
+                            <div class="mt-3 text-sm">
+                                <span class="text-ink-500">{{ __('admin.ad_review.duplicate_of') }}</span>
+                                @foreach ($duplicateAdIds as $duplicateAdId)
+                                    <a href="{{ route('admin.ads.show', $duplicateAdId) }}" class="font-semibold text-coral hover:underline">#{{ $duplicateAdId }}</a>
+                                @endforeach
+                            </div>
+                        @endif
+                    @endif
+                </div>
+            @endif
+
             @php($images = $ad->getMedia('images'))
             @php($mediaStorage = app(\App\Services\Media\MediaStorage::class))
             @if ($images->isNotEmpty())

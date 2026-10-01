@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\Report;
 use App\Models\User;
+use App\Services\Ads\PendingReviewCounter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -18,6 +19,10 @@ use Illuminate\View\View;
 class DashboardController extends Controller
 {
     private const TREND_DAYS = 14;
+
+    public function __construct(
+        private readonly PendingReviewCounter $pendingReview,
+    ) {}
 
     public function index(): View
     {
@@ -40,7 +45,7 @@ class DashboardController extends Controller
         return [
             'total' => Ad::count(),
             'active' => Ad::where('status', AdStatus::ACTIVE->value)->count(),
-            'pending' => Ad::where('status', AdStatus::PENDING->value)->count(),
+            'pending' => $this->pendingReview->count(),
             'published_today' => Ad::where('status', AdStatus::ACTIVE->value)
                 ->where('published_at', '>=', now()->startOfDay())
                 ->count(),

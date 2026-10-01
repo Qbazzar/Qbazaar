@@ -7,15 +7,15 @@ namespace App\Notifications\Ads;
 use App\Models\Ad;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Database notification fanned out to reviewers when a seller submits an ad for
- * review, so the /manage notifications bell surfaces the moderation queue.
+ * Sent to every reviewer when a seller submits an ad for review: a panel
+ * bell entry plus an email, both written in the admin locale.
  *
- * Database-only: reviewers see it in the panel, not their inbox. The stored
- * payload keys (`title`, `body`, `cta_url`) are read verbatim by the panel's
- * NotificationController.
+ * The stored payload keys (`title`, `body`, `cta_url`) are read verbatim by
+ * the panel's NotificationController.
  */
 class AdPendingReviewNotification extends Notification implements ShouldQueue
 {
@@ -35,7 +35,25 @@ class AdPendingReviewNotification extends Notification implements ShouldQueue
      */
     public function via(mixed $notifiable): array
     {
-        return ['database'];
+        return ['database', 'mail'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function viaQueues(): array
+    {
+        return ['database' => 'default', 'mail' => 'low'];
+    }
+
+    public function toMail(mixed $notifiable): MailMessage
+    {
+        $locale = $this->adminLocale();
+
+        return (new MailMessage)
+            ->subject(__('admin.ad_review.title', [], $locale))
+            ->line($this->body($locale))
+            ->action(__('admin.ad_review.action', [], $locale), $this->reviewUrl());
     }
 
     /**
@@ -43,19 +61,34 @@ class AdPendingReviewNotification extends Notification implements ShouldQueue
      */
     public function toArray(mixed $notifiable): array
     {
-        $locale = (string) config('app.admin_locale', 'ar');
-
-        $hint = $this->flagged
-            ? __('admin.ad_review.flagged', ['flags' => implode(', ', $this->flags)], $locale)
-            : '';
+        $locale = $this->adminLocale();
 
         return [
             'category' => 'ad.pending_review',
             'title' => __('admin.ad_review.title', [], $locale),
-            'body' => __('admin.ad_review.body', ['title' => $this->ad->title, 'hint' => $hint], $locale),
-            'cta_url' => rtrim((string) config('app.url'), '/') . '/admin/ads/' . $this->ad->id,
+            'body' => $this->body($locale),
+            'cta_url' => $this->reviewUrl(),
             'icon' => $this->flagged ? 'flag' : 'inbox',
             'ad_id' => $this->ad->id,
         ];
+    }
+
+    private function body(string $locale): string
+    {
+        $hint = $this->flagged
+            ? __('admin.ad_review.flagged', ['flags' => implode(', ', $this->flags)], $locale)
+            : '';
+
+        return __('admin.ad_review.body', ['title' => $this->ad->title, 'hint' => $hint], $locale);
+    }
+
+    private function reviewUrl(): string
+    {
+        return rtrim((string) config('app.url'), '/') . '/admin/ads/' . $this->ad->id;
+    }
+
+    private function adminLocale(): string
+    {
+        return (string) config('app.admin_locale', 'ar');
     }
 }

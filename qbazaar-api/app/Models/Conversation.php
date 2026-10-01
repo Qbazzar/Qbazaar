@@ -32,6 +32,10 @@ use RuntimeException;
  * @property string $seller_id
  * @property Carbon|null $last_message_at
  * @property string|null $last_message_preview
+ * @property string|null $last_message_key
+ * @property array<string, scalar|null>|null $last_message_params
+ * @property Carbon|null $buyer_hidden_at
+ * @property Carbon|null $seller_hidden_at
  * @property int|null $unread_count set by {@see scopeWithUnreadCountFor()}
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -58,6 +62,8 @@ class Conversation extends Model
         'seller_id',
         'last_message_at',
         'last_message_preview',
+        'last_message_key',
+        'last_message_params',
     ];
 
     /**
@@ -67,6 +73,9 @@ class Conversation extends Model
     {
         return [
             'last_message_at' => 'datetime',
+            'last_message_params' => 'array',
+            'buyer_hidden_at' => 'datetime',
+            'seller_hidden_at' => 'datetime',
         ];
     }
 
@@ -164,6 +173,20 @@ class Conversation extends Model
     {
         return $query->where(function (Builder $q) use ($user): void {
             $q->where('buyer_id', $user->id)->orWhere('seller_id', $user->id);
+        });
+    }
+
+    /**
+     * Conversations of $user that $user has not hidden since the last message.
+     *
+     * @param Builder<Conversation> $query
+     * @return Builder<Conversation>
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $q) use ($user): void {
+            $q->where(fn (Builder $buyer) => $buyer->where('buyer_id', $user->id)->whereNull('buyer_hidden_at'))
+                ->orWhere(fn (Builder $seller) => $seller->where('seller_id', $user->id)->whereNull('seller_hidden_at'));
         });
     }
 

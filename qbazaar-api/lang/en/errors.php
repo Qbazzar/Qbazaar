@@ -185,6 +185,12 @@ return [
         ],
     ],
 
+    'fav' => [
+        'limit' => [
+            'reached' => 'You have reached the maximum number of favourites. Remove some to add new ones.',
+        ],
+    ],
+
     'offer' => [
         'not' => [
             'found' => 'Offer not found.',
@@ -318,6 +324,19 @@ return [
             'password' => [
                 'required' => 'Please provide your password to deactivate the account.',
             ],
+        ],
+    ],
+
+    'follow' => [
+        'self' => [
+            'forbidden' => 'You cannot follow yourself.',
+        ],
+        'blocked' => 'You cannot follow this user.',
+    ],
+
+    'business' => [
+        'account' => [
+            'required' => 'This is only available to business accounts.',
         ],
     ],
 ];

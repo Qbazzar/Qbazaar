@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Offers;
 
-use App\Enums\MessageType;
+use App\Enums\ChatMessageKey;
 use App\Enums\OfferParty;
 use App\Enums\OfferStatus;
 use App\Enums\PlatformSetting;
@@ -76,8 +76,7 @@ class CounterOfferAction
         $message = $this->messages->append(
             $offer->conversation,
             $actor,
-            $this->formatter->body($amount, $note),
-            MessageType::OFFER,
+            $this->formatter->bubble(ChatMessageKey::OFFER_COUNTERED, $amount, $note),
         );
 
         /** @var Offer $counter */

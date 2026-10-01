@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Favorites;
 
+use App\Actions\Favorites\SetFavoriteAction;
 use App\Actions\Favorites\ToggleFavoriteAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
@@ -42,19 +43,52 @@ class FavoriteController extends Controller
      */
     public function toggle(Request $request, ToggleFavoriteAction $action, string $id): JsonResponse
     {
-        /** @var User $user */
-        $user = $request->user();
+        return response()->json($action->execute($this->caller($request), $this->findAdOrFail($id)));
+    }
 
-        /** @var Ad|null $ad */
-        $ad = Ad::query()->find($id);
+    /**
+     * PUT /api/v1/ads/{id}/favorite — idempotent add.
+     *
+     * @authenticated
+     *
+     * @throws DomainException
+     */
+    public function add(Request $request, SetFavoriteAction $action, string $id): JsonResponse
+    {
+        return response()->json($action->execute($this->caller($request), $this->findAdOrFail($id), true));
+    }
 
-        if ($ad === null) {
-            throw new DomainException(ErrorCode::AD_NOT_FOUND);
-        }
+    /**
+     * DELETE /api/v1/ads/{id}/favorite — idempotent remove.
+     *
+     * @authenticated
+     *
+     * @throws DomainException
+     */
+    public function remove(Request $request, SetFavoriteAction $action, string $id): JsonResponse
+    {
+        // A deleted ad must still leave the list, or it would hold a slot under the cap.
+        $ad = Ad::withTrashed()->find($id) ?? throw new DomainException(ErrorCode::AD_NOT_FOUND);
 
-        $result = $action->execute($user, $ad);
+        return response()->json($action->execute($this->caller($request), $ad, false));
+    }
 
-        return response()->json($result);
+    /**
+     * GET /api/v1/account/favorites/ids — every favourited ad id, newest
+     * first, so clients can paint hearts on any list without a lookup per ad.
+     * Bounded by `qbazaar.favorites.max_per_user`.
+     *
+     * @authenticated
+     */
+    public function ids(Request $request): JsonResponse
+    {
+        $ids = Favorite::query()
+            ->where('user_id', $this->caller($request)->id)
+            ->orderByDesc('created_at')
+            ->limit((int) config('qbazaar.favorites.max_per_user'))
+            ->pluck('ad_id');
+
+        return response()->json(['ids' => $ids]);
     }
 
     /**
@@ -101,5 +135,21 @@ class FavoriteController extends Controller
                 'last_page' => $paginator->lastPage(),
             ],
         ]);
+    }
+
+    private function caller(Request $request): User
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return $user;
+    }
+
+    /**
+     * @throws DomainException
+     */
+    private function findAdOrFail(string $id): Ad
+    {
+        return Ad::query()->find($id) ?? throw new DomainException(ErrorCode::AD_NOT_FOUND);
     }
 }

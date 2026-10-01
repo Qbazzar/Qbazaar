@@ -6,6 +6,7 @@ namespace App\Http\Requests\Api\V1\Ads;
 
 use App\Enums\Condition;
 use App\Enums\PriceType;
+use App\Http\Requests\Api\V1\Ads\Concerns\ValidatesListingDetails;
 use App\Models\Category;
 use App\Rules\NoMarkup;
 use App\Rules\SelectableCategory;
@@ -35,6 +36,8 @@ use Illuminate\Validation\ValidationException;
  */
 class CreateAdRequest extends FormRequest
 {
+    use ValidatesListingDetails;
+
     public function authorize(): bool
     {
         return true;
@@ -79,6 +82,7 @@ class CreateAdRequest extends FormRequest
                 Condition::USED->value,
             ])],
             'custom_fields' => ['nullable', 'array'],
+            ...$this->listingDetailsRules(),
         ];
     }
 

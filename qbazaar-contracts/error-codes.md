@@ -53,6 +53,14 @@ requested locale.
 | `USER_004` | Password change requires current password | 422 |
 | `USER_005` | Account deactivation requires password confirmation | 422 |
 
+## Social (follows, business profiles)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `FOLLOW_001` | Cannot follow yourself | 422 |
+| `FOLLOW_002` | Cannot follow: one of the two users has blocked the other | 403 |
+| `BIZ_001` | Only business accounts can have a business profile | 403 |
+
 ## Categories & Locations (Sprint 3)
 
 | Code | Meaning | HTTP |
@@ -94,6 +102,12 @@ requested locale.
 | `SEARCH_002` | Saved search not found | 404 |
 | `SEARCH_003` | Invalid search parameters | 422 |
 | `SEARCH_004` | Saved-search limit per user reached | 422 |
+
+## Favorites
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `FAV_001` | Favourites limit per user reached (`qbazaar.favorites.max_per_user`) | 422 |
 
 ## Messaging (Sprint 8)
 

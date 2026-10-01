@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace App\Services\Offers;
 
+use App\Data\Messaging\ChatMessageDraft;
+use App\Enums\ChatMessageKey;
+
 /**
- * Plain-text body of an offer chat bubble. Clients render the offer card
- * from the structured `message.offer` payload; this text only shows in the
+ * Chat bubble that carries an offer. Clients render the offer card from the
+ * structured `message.offer` payload; the bubble text only shows in the
  * inbox preview and in clients that predate offer cards.
  */
 class OfferMessageFormatter
 {
-    public function body(float $amount, ?string $note): string
+    public function bubble(ChatMessageKey $key, float $amount, ?string $note): ChatMessageDraft
     {
-        $base = sprintf(
-            'Offer: %s %s',
+        return ChatMessageDraft::offer(
+            $key,
             number_format($amount, 2, '.', ''),
-            config('qbazaar.default_currency', 'QAR'),
+            (string) config('qbazaar.default_currency', 'QAR'),
+            $note,
         );
-
-        return $note !== null && $note !== '' ? $base . ' — ' . $note : $base;
     }
 }
