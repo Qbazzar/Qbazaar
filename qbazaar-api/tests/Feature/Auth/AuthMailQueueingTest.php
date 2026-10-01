@@ -73,3 +73,14 @@ it('caps verification mails per account', function (): void {
     postJson('/api/v1/auth/send-email-verification')->assertStatus(202);
     postJson('/api/v1/auth/send-email-verification')->assertStatus(429);
 });
+
+it('does not let requests without an address share one global bucket', function (): void {
+    config(['qbazaar.auth.rate_limits.email_links_per_hour' => 1]);
+
+    withServerVariables(['REMOTE_ADDR' => '10.0.0.1']);
+    postJson('/api/v1/auth/forgot-password', [])->assertStatus(422);
+    postJson('/api/v1/auth/forgot-password', [])->assertStatus(429);
+
+    withServerVariables(['REMOTE_ADDR' => '10.0.0.2']);
+    postJson('/api/v1/auth/forgot-password', [])->assertStatus(422);
+});

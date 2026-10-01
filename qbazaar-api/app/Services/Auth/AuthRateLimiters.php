@@ -30,7 +30,18 @@ final class AuthRateLimiters
 
         // Each hit mails a link, so the inbox is capped whoever asks for it.
         RateLimiter::for('email-links', fn (Request $request): Limit => Limit::perHour(self::limit('email_links_per_hour'))
-            ->by('email-links:' . (self::inputString($request, 'email') ?: mb_strtolower((string) $request->user()?->email))));
+            ->by('email-links:' . self::inbox($request)));
+    }
+
+    /**
+     * Without an address (a malformed request, a phone-only account) the
+     * caller's IP keeps those requests out of one global bucket.
+     */
+    private static function inbox(Request $request): string
+    {
+        $email = self::inputString($request, 'email') ?: mb_strtolower(trim((string) $request->user()?->email));
+
+        return $email !== '' ? $email : 'ip:' . $request->ip();
     }
 
     private static function limit(string $key): int
