@@ -243,16 +243,16 @@ Route::prefix('locations')
 //     GET    /ads/{id}          — single ad detail (public visibility rules)
 //     GET    /media/{media}/original   — original image (signed, expiring)
 //   Authenticated:
-//     POST   /ads               — create draft
+//     POST   /ads               — create draft (throttle:drafts)
 //     PUT    /ads/{id}          — owner update
 //     DELETE /ads/{id}          — owner soft-delete
-//     POST   /ads/{id}/publish  — draft → active (throttle:publish)
+//     POST   /ads/{id}/publish  — submit for review → pending (throttle:publish)
 //     POST   /ads/{id}/mark-sold
 //     POST   /ads/{id}/renew
 //     POST   /ads/{ad}/images          — multipart image upload
 //     POST   /ads/{ad}/images/reorder
 //     DELETE /media/{media}            — remove a single image
-//     GET    /account/ads              — caller's own ads (every status)
+//     GET    /account/ads              — caller's own ads (optional ?status=)
 Route::prefix('ads')
     ->name('api.v1.ads.')
     ->middleware('throttle:api')
