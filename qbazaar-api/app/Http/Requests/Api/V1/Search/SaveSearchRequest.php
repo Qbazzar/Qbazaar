@@ -34,7 +34,8 @@ class SaveSearchRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'min:1', 'max:60'],
-            'query_params' => ['required', 'array'],
+            // Bounded because every new ad is checked against these rows.
+            'query_params' => ['required', 'array', 'max:30'],
             'query_params.q' => ['nullable', 'string', 'max:200'],
             'query_params.category_id' => ['nullable', 'ulid'],
             'query_params.category_slug' => ['nullable', 'string', 'max:120'],
@@ -44,7 +45,7 @@ class SaveSearchRequest extends FormRequest
             'query_params.price_max' => ['nullable', 'numeric', 'min:0'],
             'query_params.condition' => ['nullable', Rule::enum(Condition::class)],
             'query_params.price_type' => ['nullable', Rule::enum(PriceType::class)],
-            'query_params.custom_fields' => ['nullable', 'array'],
+            'query_params.custom_fields' => ['nullable', 'array', 'max:20'],
             'alerts_enabled' => ['sometimes', 'boolean'],
         ];
     }

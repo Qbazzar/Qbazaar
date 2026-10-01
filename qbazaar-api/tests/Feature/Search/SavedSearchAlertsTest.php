@@ -193,6 +193,10 @@ it('validates updates', function (): void {
     patchJson("/api/v1/account/saved-searches/{$search->id}", ['alerts_enabled' => 'maybe'])->assertStatus(422);
     putJson("/api/v1/account/saved-searches/{$search->id}", ['name' => 'x', 'query_params' => ['condition' => 'broken']])
         ->assertStatus(422);
+
+    $tooManyFields = array_fill_keys(array_map(fn (int $i): string => "field_{$i}", range(1, 21)), 'x');
+    putJson("/api/v1/account/saved-searches/{$search->id}", ['name' => 'x', 'query_params' => ['custom_fields' => $tooManyFields]])
+        ->assertStatus(422);
 });
 
 it('backfills criteria and alert switches for existing saved searches', function (): void {
