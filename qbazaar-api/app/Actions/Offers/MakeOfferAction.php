@@ -5,63 +5,48 @@ declare(strict_types=1);
 namespace App\Actions\Offers;
 
 use App\Enums\MessageType;
+use App\Enums\OfferParty;
 use App\Enums\OfferStatus;
-use App\Events\Messaging\MessageSent;
 use App\Events\Offers\OfferCreated;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
+use App\Models\Ad;
 use App\Models\Conversation;
-use App\Models\Message;
 use App\Models\Offer;
 use App\Models\User;
+use App\Services\Messaging\ConversationMessageWriter;
+use App\Services\Offers\OfferMessageFormatter;
+use App\Services\Offers\OfferTransitionService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
- * Creates a buyer-side offer attached to a conversation.
+ * Creates a buyer offer in a conversation together with its `type=offer`
+ * chat bubble.
  *
- * Sequence inside the transaction:
- *   1. Insert the chat bubble (`type=offer`) so the offer message has a
- *      stable id we can pin on the Offer row.
- *   2. Insert the Offer row referencing that message via `message_id`.
- *   3. Refresh the conversation preview so the inbox lists the new
- *      activity without a sub-query against `messages`.
- *
- * All three writes happen in a single DB::transaction. The `MessageSent`
- * + `OfferCreated` broadcasts are deferred to `afterCommit` so Reverb
- * subscribers can't observe rows that don't exist yet — same pattern as
- * SendMessageAction.
- *
- * Domain invariants enforced (each throws a stable ErrorCode):
- *   - OFFER_OWN_AD          : buyer can't offer on their own ad.
- *   - OFFER_AD_NOT_ACTIVE   : refuses non-ACTIVE ads (draft/sold/expired/...)
- *                             and ads of a suspended or deactivated seller.
- *   - MSG_CHAT_DISABLED     : the seller has turned chat off.
- *   - MSG_BLOCKED           : same block-check used by messaging — refuse
- *                             when either side has blocked the other.
- *   - OFFER_ACTIVE_EXISTS   : one open offer per (buyer, ad).
+ * Domain invariants (each throws a stable ErrorCode):
+ *   - OFFER_OWN_AD            : buyer can't offer on their own ad.
+ *   - MSG_CHAT_DISABLED       : the seller has turned chat off.
+ *   - MSG_BLOCKED             : either side has blocked the other.
+ *   - OFFER_AD_NOT_ACTIVE     : the ad is not publicly listed.
+ *   - OFFER_AD_ALREADY_AGREED : another offer on the ad was accepted.
+ *   - OFFER_ACTIVE_EXISTS     : one open offer per (buyer, ad).
  */
 class MakeOfferAction
 {
-    public function __invoke(
-        User $buyer,
-        Conversation $conversation,
-        float $amount,
-        ?string $note,
-    ): Offer {
-        $conversation->loadMissing(['ad', 'buyer', 'seller']);
+    public function __construct(
+        private readonly OfferTransitionService $transitions,
+        private readonly ConversationMessageWriter $messages,
+        private readonly OfferMessageFormatter $formatter,
+    ) {}
 
-        $ad = $conversation->ad;
+    public function __invoke(User $buyer, Conversation $conversation, float $amount, ?string $note): Offer
+    {
+        $conversation->loadMissing(['buyer', 'seller']);
         $seller = $conversation->seller;
 
-        // Cheapest checks first — own-ad + ad-status don't touch the
-        // blocked-users join.
         if ($buyer->id === $conversation->seller_id) {
             throw new DomainException(ErrorCode::OFFER_OWN_AD);
-        }
-
-        if (! $ad->isPubliclyListed()) {
-            throw new DomainException(ErrorCode::OFFER_AD_NOT_ACTIVE);
         }
 
         if (! $seller->privacySettings()->allow_chat) {
@@ -72,96 +57,70 @@ class MakeOfferAction
             throw new DomainException(ErrorCode::MSG_BLOCKED);
         }
 
-        $activeExists = Offer::query()
-            ->where('buyer_id', $buyer->id)
-            ->where('ad_id', $conversation->ad_id)
-            ->where('status', OfferStatus::PENDING->value)
-            ->exists();
-
-        if ($activeExists) {
+        try {
+            return $this->transitions->withLockedAd(
+                $conversation->ad_id,
+                fn (Ad $ad): Offer => $this->createOffer($ad, $buyer, $conversation, $amount, $note),
+            );
+        } catch (UniqueConstraintViolationException) {
             throw new DomainException(ErrorCode::OFFER_ACTIVE_EXISTS);
         }
+    }
 
-        $expiryDays = (int) config('qbazaar.offers.expiry_days', 7);
-        $body = $this->formatBody($amount, $note);
+    private function createOffer(Ad $ad, User $buyer, Conversation $conversation, float $amount, ?string $note): Offer
+    {
+        $this->transitions->assertAdIsOpenForOffers($ad);
+        $this->ensureNoOpenOffer($buyer, $ad);
 
-        /** @var array{message: Message, offer: Offer} $result */
-        $result = DB::transaction(function () use (
-            $buyer,
+        $message = $this->messages->append(
             $conversation,
-            $amount,
-            $note,
-            $body,
-            $expiryDays,
-        ): array {
-            /** @var Message $message */
-            $message = Message::query()->create([
-                'conversation_id' => $conversation->id,
-                'sender_id' => $buyer->id,
-                'body' => $body,
-                'type' => MessageType::OFFER->value,
-            ]);
+            $buyer,
+            $this->formatter->body($amount, $note),
+            MessageType::OFFER,
+        );
 
-            /** @var Offer $offer */
-            $offer = Offer::query()->create([
-                'conversation_id' => $conversation->id,
-                'ad_id' => $conversation->ad_id,
-                'buyer_id' => $buyer->id,
-                'seller_id' => $conversation->seller_id,
-                'message_id' => $message->id,
-                'amount' => $amount,
-                'currency' => config('qbazaar.default_currency', 'QAR'),
-                'note' => $note,
-                'status' => OfferStatus::PENDING->value,
-                'expires_at' => now()->addDays($expiryDays),
-            ]);
+        /** @var Offer $offer */
+        $offer = Offer::query()->create([
+            'conversation_id' => $conversation->id,
+            'ad_id' => $ad->id,
+            'buyer_id' => $buyer->id,
+            'seller_id' => $conversation->seller_id,
+            'proposed_by' => OfferParty::BUYER,
+            'message_id' => $message->id,
+            'amount' => $amount,
+            'currency' => config('qbazaar.default_currency', 'QAR'),
+            'note' => $note,
+            'status' => OfferStatus::PENDING,
+            'expires_at' => now()->addDays((int) config('qbazaar.offers.expiry_days', 7)),
+        ]);
 
-            $conversation->forceFill([
-                'last_message_at' => $message->created_at,
-                'last_message_preview' => Str::limit($body, 160),
-            ])->save();
-
-            return ['message' => $message, 'offer' => $offer];
-        });
-
-        $message = $result['message'];
-        $offer = $result['offer'];
-
-        // Hydrate relations the listeners + serialisers need so the
-        // broadcasts don't trigger fresh queries inside the worker.
-        $message->load('sender');
         $message->setRelation('offer', $offer);
 
-        $fresh = $conversation->fresh() ?? $conversation;
-
-        DB::afterCommit(function () use ($message, $offer, $fresh, $seller): void {
-            // Reuse the messaging broadcast so existing chat subscribers
-            // see the offer bubble appear inline without any FE changes.
-            MessageSent::dispatch($message, $fresh, $seller);
-            OfferCreated::dispatch($offer, $seller->id);
-        });
+        DB::afterCommit(fn () => OfferCreated::dispatch($offer, $conversation->seller_id));
 
         return $offer;
     }
 
     /**
-     * Inline "I offer X.XX QAR — {note}" string used both as the chat
-     * bubble body and as the conversation preview. Format is bilingual-
-     * friendly: the FE re-renders offer cards from the structured
-     * `message.offer` payload, so this text is only seen in
-     * (a) legacy clients and (b) the inbox preview cell.
+     * An open offer whose window already closed only waits for the daily
+     * sweep, so it is expired here instead of blocking the new one.
      */
-    private function formatBody(float $amount, ?string $note): string
+    private function ensureNoOpenOffer(User $buyer, Ad $ad): void
     {
-        $currency = config('qbazaar.default_currency', 'QAR');
-        $formatted = number_format($amount, 2, '.', '');
+        /** @var Offer|null $open */
+        $open = Offer::query()
+            ->where('buyer_id', $buyer->id)
+            ->where('ad_id', $ad->id)
+            ->where('status', OfferStatus::PENDING->value)
+            ->lockForUpdate()
+            ->first();
 
-        $base = sprintf('Offer: %s %s', $formatted, $currency);
-
-        if ($note !== null && $note !== '') {
-            return $base . ' — ' . $note;
+        if ($open === null) {
+            return;
         }
 
-        return $base;
+        if ($open->isActive() || ! $this->transitions->expireIfDue($open)) {
+            throw new DomainException(ErrorCode::OFFER_ACTIVE_EXISTS);
+        }
     }
 }

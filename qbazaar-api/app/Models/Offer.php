@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\OfferParty;
 use App\Enums\OfferStatus;
 use Database\Factories\OfferFactory;
 use DateTimeInterface;
@@ -27,21 +28,31 @@ use Illuminate\Support\Carbon;
  *  - The lifecycle invariant is "PENDING is the only mutable state";
  *    {@see isActive()} bundles that with the expires_at check so callers
  *    don't have to re-compute it.
+ *  - `proposed_by` says which side made this proposal; the other side is
+ *    the responder. A counter-offer is a new row whose `parent_offer_id`
+ *    points at the offer it answers, one `counter_round` further along.
+ *  - `is_open` mirrors "status is pending" as TRUE/NULL and backs the
+ *    unique "one open offer per buyer and ad" index.
  *
  * @property string $id
  * @property string $conversation_id
  * @property string $ad_id
  * @property string $buyer_id
  * @property string $seller_id
+ * @property OfferParty $proposed_by
  * @property string|null $message_id
+ * @property string|null $parent_offer_id
+ * @property int $counter_round
  * @property string $amount
  * @property string $currency
  * @property string|null $note
  * @property OfferStatus $status
+ * @property bool|null $is_open
  * @property Carbon $expires_at
  * @property Carbon|null $accepted_at
  * @property Carbon|null $rejected_at
  * @property Carbon|null $withdrawn_at
+ * @property Carbon|null $countered_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Conversation $conversation
@@ -49,6 +60,7 @@ use Illuminate\Support\Carbon;
  * @property User $buyer
  * @property User $seller
  * @property Message|null $message
+ * @property Offer|null $parentOffer
  */
 class Offer extends Model
 {
@@ -60,6 +72,12 @@ class Offer extends Model
     /** @var string */
     protected $keyType = 'string';
 
+    /** @var array<string, mixed> */
+    protected $attributes = [
+        'proposed_by' => 'buyer',
+        'counter_round' => 0,
+    ];
+
     /**
      * @var list<string>
      */
@@ -68,7 +86,10 @@ class Offer extends Model
         'ad_id',
         'buyer_id',
         'seller_id',
+        'proposed_by',
         'message_id',
+        'parent_offer_id',
+        'counter_round',
         'amount',
         'currency',
         'note',
@@ -77,6 +98,7 @@ class Offer extends Model
         'accepted_at',
         'rejected_at',
         'withdrawn_at',
+        'countered_at',
     ];
 
     /**
@@ -86,12 +108,23 @@ class Offer extends Model
     {
         return [
             'status' => OfferStatus::class,
+            'proposed_by' => OfferParty::class,
+            'counter_round' => 'integer',
+            'is_open' => 'boolean',
             'amount' => 'decimal:2',
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
             'rejected_at' => 'datetime',
             'withdrawn_at' => 'datetime',
+            'countered_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Offer $offer): void {
+            $offer->is_open = $offer->status === OfferStatus::PENDING ? true : null;
+        });
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -126,6 +159,12 @@ class Offer extends Model
     public function message(): BelongsTo
     {
         return $this->belongsTo(Message::class);
+    }
+
+    /** @return BelongsTo<Offer, $this> */
+    public function parentOffer(): BelongsTo
+    {
+        return $this->belongsTo(Offer::class, 'parent_offer_id');
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -172,5 +211,20 @@ class Offer extends Model
     {
         return $this->status === OfferStatus::PENDING
             && $this->expires_at->isFuture();
+    }
+
+    public function proposerId(): string
+    {
+        return $this->partyId($this->proposed_by);
+    }
+
+    public function responderId(): string
+    {
+        return $this->partyId($this->proposed_by->opposite());
+    }
+
+    public function partyId(OfferParty $party): string
+    {
+        return $party === OfferParty::BUYER ? $this->buyer_id : $this->seller_id;
     }
 }

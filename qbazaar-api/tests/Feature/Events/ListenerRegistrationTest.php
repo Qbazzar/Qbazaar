@@ -9,8 +9,17 @@ use App\Events\Ads\AdPublished;
 use App\Events\Ads\AdRejected;
 use App\Events\Ads\AdRenewed;
 use App\Events\Ads\AdSubmittedForReview;
+use App\Events\Messaging\MessageSent;
+use App\Events\Offers\OfferAccepted;
+use App\Events\Offers\OfferCountered;
+use App\Events\Offers\OfferCreated;
+use App\Events\Offers\OfferExpired;
+use App\Events\Offers\OfferRejected;
+use App\Events\Offers\OfferWithdrawn;
 use App\Listeners\Ads\NotifyAdminsOfPendingAd;
 use App\Listeners\Ads\SendAdNotifications;
+use App\Listeners\Messaging\ScreenChatMessage;
+use App\Listeners\Messaging\SendChatPushNotifications;
 use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
 use App\Listeners\Notifications\PruneStaleDeviceTokens;
 use App\Listeners\Search\NotifySavedSearchMatches;
@@ -58,4 +67,11 @@ it('wires each event to its listeners', function (string $event, array $listener
     'AdSubmittedForReview' => [AdSubmittedForReview::class, [NotifyAdminsOfPendingAd::class]],
     'NotificationSent' => [NotificationSent::class, [BroadcastDatabaseNotificationCreated::class]],
     'NotificationFailed' => [NotificationFailed::class, [PruneStaleDeviceTokens::class]],
+    'MessageSent' => [MessageSent::class, [SendChatPushNotifications::class, ScreenChatMessage::class]],
+    'OfferCreated' => [OfferCreated::class, [SendChatPushNotifications::class]],
+    'OfferCountered' => [OfferCountered::class, [SendChatPushNotifications::class]],
+    'OfferAccepted' => [OfferAccepted::class, [SendChatPushNotifications::class]],
+    'OfferRejected' => [OfferRejected::class, [SendChatPushNotifications::class]],
+    'OfferWithdrawn' => [OfferWithdrawn::class, [SendChatPushNotifications::class]],
+    'OfferExpired' => [OfferExpired::class, [SendChatPushNotifications::class]],
 ]);

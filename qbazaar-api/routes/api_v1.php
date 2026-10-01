@@ -410,9 +410,10 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 //   Authenticated:
 //     POST   /conversations/{id}/offers       — buyer creates an offer
 //     GET    /conversations/{id}/offers       — list offers in this thread
-//     POST   /offers/{id}/accept              — seller accepts (PENDING only)
-//     POST   /offers/{id}/reject              — seller rejects (PENDING only)
-//     POST   /offers/{id}/withdraw            — buyer withdraws (PENDING only)
+//     POST   /offers/{id}/accept              — responder accepts (PENDING only)
+//     POST   /offers/{id}/reject              — responder rejects (PENDING only)
+//     POST   /offers/{id}/withdraw            — proposer withdraws (PENDING only)
+//     POST   /offers/{id}/counter             — responder counters (PENDING only)
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/conversations/{id}/offers', [OfferController::class, 'store'])
         ->middleware('phone.verified')
@@ -429,6 +430,10 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 
     Route::post('/offers/{id}/withdraw', [OfferController::class, 'withdraw'])
         ->name('api.v1.offers.withdraw');
+
+    Route::post('/offers/{id}/counter', [OfferController::class, 'counter'])
+        ->middleware('phone.verified')
+        ->name('api.v1.offers.counter');
 });
 
 // ── Sprint 10 — Notifications inbox ─────────────────────────────────────────
