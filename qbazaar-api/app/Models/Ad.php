@@ -62,6 +62,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Carbon|null $expires_at
  * @property Carbon|null $expiring_notified_at
  * @property Carbon|null $submitted_at
+ * @property Carbon|null $reserved_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
@@ -139,6 +140,7 @@ class Ad extends Model implements HasMedia
             'expires_at' => 'datetime',
             'expiring_notified_at' => 'datetime',
             'submitted_at' => 'datetime',
+            'reserved_at' => 'datetime',
             'price' => 'decimal:2',
             'featured' => 'boolean',
         ];
@@ -305,6 +307,11 @@ class Ad extends Model implements HasMedia
         return $this->isPubliclyListed();
     }
 
+    public function isReserved(): bool
+    {
+        return $this->reserved_at !== null;
+    }
+
     /** Instance counterpart of {@see scopePubliclyListed()}. */
     public function isPubliclyListed(): bool
     {
@@ -382,6 +389,7 @@ class Ad extends Model implements HasMedia
             'shipping' => $this->shipping->value,
             'postal_code' => $this->postal_code,
             'status' => $this->status->value,
+            'is_reserved' => $this->isReserved(),
             'published_at' => $this->published_at?->getTimestamp(),
             'created_at_ts' => $this->created_at instanceof Carbon ? $this->created_at->getTimestamp() : null,
             'has_images' => $hasImages,

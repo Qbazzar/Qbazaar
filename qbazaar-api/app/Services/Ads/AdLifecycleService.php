@@ -124,6 +124,36 @@ class AdLifecycleService
     }
 
     /**
+     * Mark a live ad as reserved for a buyer. It stays ACTIVE and listed;
+     * repeating the call keeps the original reservation time.
+     */
+    public function reserve(Ad $ad): Ad
+    {
+        return $this->locked($ad, function (Ad $locked): null {
+            if ($locked->status !== AdStatus::ACTIVE) {
+                throw new DomainException(ErrorCode::AD_NOT_ACTIVE, details: ['status' => $locked->status->value]);
+            }
+
+            if (! $locked->isReserved()) {
+                $locked->forceFill(['reserved_at' => now()])->save();
+            }
+
+            return null;
+        });
+    }
+
+    public function releaseReservation(Ad $ad): Ad
+    {
+        return $this->locked($ad, function (Ad $locked): null {
+            if ($locked->isReserved()) {
+                $locked->forceFill(['reserved_at' => null])->save();
+            }
+
+            return null;
+        });
+    }
+
+    /**
      * Extend the expiry window by another lifetime. A live ad keeps its
      * status; an expired one goes straight back to ACTIVE.
      */
@@ -152,11 +182,21 @@ class AdLifecycleService
         ?AdStatus $from = null,
         bool $allowSameStatus = false,
     ): Ad {
-        $locked = DB::transaction(function () use ($ad, $target, $change, $from, $allowSameStatus): Ad {
+        return $this->locked($ad, function (Ad $locked) use ($target, $change, $from, $allowSameStatus): ?Closure {
+            $this->guard($locked->status, $target, $from, $allowSameStatus);
+
+            return $change($locked);
+        });
+    }
+
+    /**
+     * @param Closure(Ad): (Closure|null) $change runs on the locked row and returns the post-commit side effect, if any
+     */
+    private function locked(Ad $ad, Closure $change): Ad
+    {
+        $locked = DB::transaction(function () use ($ad, $change): Ad {
             /** @var Ad $locked */
             $locked = Ad::query()->lockForUpdate()->findOrFail($ad->getKey());
-
-            $this->guard($locked->status, $target, $from, $allowSameStatus);
 
             $afterCommit = $change($locked);
 
@@ -177,6 +217,11 @@ class AdLifecycleService
      */
     private function apply(Ad $ad, AdStatus $status, array $attributes = []): void
     {
+        // A reservation only means something on a live ad, so leaving ACTIVE releases it.
+        if ($status !== AdStatus::ACTIVE) {
+            $attributes['reserved_at'] = null;
+        }
+
         $ad->forceFill(['status' => $status, ...$attributes])->save();
     }
 

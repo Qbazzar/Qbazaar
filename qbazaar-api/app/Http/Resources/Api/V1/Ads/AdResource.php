@@ -52,6 +52,8 @@ class AdResource extends JsonResource
             'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
+            'is_reserved' => $this->resource->isReserved(),
+            'reserved_at' => $this->reserved_at?->toIso8601String(),
             'custom_fields' => $this->custom_fields,
             'views_count' => (int) $this->views_count,
             'favorites_count' => (int) $this->favorites_count,

@@ -160,6 +160,7 @@ return [
                     'ad_type',
                     'shipping',
                     'postal_code',
+                    'is_reserved',
                     'status',
                     'published_at',
                     'has_images',

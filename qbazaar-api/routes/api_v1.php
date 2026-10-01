@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\V1\Ads\FeaturedAdsController;
 use App\Http\Controllers\Api\V1\Ads\MarkSoldController;
 use App\Http\Controllers\Api\V1\Ads\PublishAdController;
 use App\Http\Controllers\Api\V1\Ads\RenewAdController;
+use App\Http\Controllers\Api\V1\Ads\ReserveAdController;
 use App\Http\Controllers\Api\V1\Ads\SimilarAdsController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
@@ -306,6 +307,14 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/ads/{id}/renew', RenewAdController::class)
         ->middleware('throttle:api')
         ->name('api.v1.ads.renew');
+
+    Route::post('/ads/{id}/reserve', [ReserveAdController::class, 'store'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.reserve');
+
+    Route::delete('/ads/{id}/reserve', [ReserveAdController::class, 'destroy'])
+        ->middleware('throttle:api')
+        ->name('api.v1.ads.release');
 
     Route::post('/ads/{ad}/reviews', [ReviewController::class, 'store'])
         ->middleware('throttle:api')

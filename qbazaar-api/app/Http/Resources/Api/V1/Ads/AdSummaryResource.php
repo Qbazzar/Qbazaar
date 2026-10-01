@@ -45,6 +45,7 @@ class AdSummaryResource extends JsonResource
             'price_type' => $this->price_type->value,
             'currency' => $this->currency,
             'status' => $this->status->value,
+            'is_reserved' => $this->resource->isReserved(),
             'ad_type' => $this->ad_type->value,
             'shipping' => $this->shipping->value,
             'views_count' => (int) $this->views_count,

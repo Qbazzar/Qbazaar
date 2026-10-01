@@ -1409,6 +1409,53 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/v1/ads/{id}/reserve:
+    post:
+      tags: [Ads]
+      summary: Reserve a live ad for a buyer (seller only)
+      description: >
+        The ad stays `active` and keeps showing in listings and search with
+        `is_reserved: true`. Idempotent: reserving again keeps the first
+        `reserved_at`. The reservation is released automatically when the ad
+        leaves `active` (sold, expired, blocked, back to review).
+      operationId: adsReserve
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Ad reserved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: The ad is not `active`, e.g. still a draft (`AD_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+    delete:
+      tags: [Ads]
+      summary: Release the reservation (seller only, idempotent)
+      operationId: adsRelease
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: Reservation released
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   /api/v1/ads/{ad}/images:
     post:
       tags: [Ads]
@@ -3869,6 +3916,7 @@ components:
         price_type: { $ref: '#/components/schemas/PriceType' }
         currency: { type: string, example: QAR }
         status: { $ref: '#/components/schemas/AdStatus' }
+        is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
         ad_type: { $ref: '#/components/schemas/AdType' }
         shipping: { $ref: '#/components/schemas/AdShipping' }
         primary_image: { $ref: '#/components/schemas/Media', nullable: true }
@@ -3906,6 +3954,8 @@ components:
           description: Always null for other viewers unless `show_full_address` is true; the seller always sees it.
         show_full_address: { type: boolean }
         status: { $ref: '#/components/schemas/AdStatus' }
+        is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
+        reserved_at: { type: string, format: date-time, nullable: true }
         custom_fields:
           type: object
           additionalProperties: true
