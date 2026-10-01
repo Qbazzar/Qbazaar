@@ -23,6 +23,11 @@ class EmailVerificationNotification extends VerifyEmail implements ShouldQueue
 {
     use BuildsEmailVerificationUrl, Queueable;
 
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [10, 60, 300];
+
     /**
      * @param object|User $notifiable
      */

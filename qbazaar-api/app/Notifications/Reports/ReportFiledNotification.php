@@ -20,6 +20,11 @@ class ReportFiledNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [10, 60, 300];
+
     public function __construct(public readonly Report $report)
     {
         $this->onQueue('low');

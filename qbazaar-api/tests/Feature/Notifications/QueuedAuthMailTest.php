@@ -46,3 +46,12 @@ it('queues the email-verification mail', function (): void {
         fn (SendQueuedNotifications $job): bool => $job->notification instanceof EmailVerificationNotification,
     );
 });
+
+it('retries the auth mails when the mail server hiccups', function (string $notification): void {
+    $instance = $notification === PasswordResetNotification::class
+        ? new PasswordResetNotification('token')
+        : new EmailVerificationNotification;
+
+    expect($instance->tries)->toBe(3)
+        ->and($instance->backoff)->toBe([10, 60, 300]);
+})->with([PasswordResetNotification::class, EmailVerificationNotification::class]);
