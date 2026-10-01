@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Search\SearchRequest;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
+use App\Services\Ads\ViewerFavorites;
 use App\Services\Search\AdSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,7 +38,7 @@ class SearchController extends Controller
      *
      * @unauthenticated
      */
-    public function index(SearchRequest $request): JsonResponse
+    public function index(SearchRequest $request, ViewerFavorites $favorites): JsonResponse
     {
         /** @var array<string, mixed> $params */
         $params = $request->validated();
@@ -45,6 +46,7 @@ class SearchController extends Controller
         $result = $this->search->search($params);
 
         $paginator = $result['paginator'];
+        $favorites->mark($this->viewer($request), $paginator->items());
 
         // Map manually to plain arrays so the wrapper produces the desired
         // envelope (data + meta), matching the precedent set by

@@ -5,20 +5,21 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Ads;
 
 use App\Actions\Ads\ListOwnAdsAction;
+use App\Actions\Ads\ListPublicAdsAction;
 use App\Actions\Ads\UpdateAdAction;
 use App\Enums\AdStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Ads\CreateAdRequest;
+use App\Http\Requests\Api\V1\Ads\ListAdsRequest;
 use App\Http\Requests\Api\V1\Ads\ListOwnAdsRequest;
 use App\Http\Requests\Api\V1\Ads\UpdateAdRequest;
 use App\Http\Resources\Api\V1\Ads\AdResource;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
 use App\Models\User;
-use App\Services\Catalog\CategoryHierarchy;
-use App\Services\Catalog\LocationHierarchy;
+use App\Services\Ads\ViewerFavorites;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -37,52 +38,20 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
  */
 class AdController extends Controller
 {
-    private const PER_PAGE = 20;
-
     /**
      * GET /api/v1/ads — public feed of active ads, latest first.
      *
-     * Optional filters: `category_id`, `location_id`. Both accept the ULID
-     * of the corresponding row and include its descendants. Filters are AND-combined.
+     * Filters (`category_id`, `location_id` with descendants, price range) are
+     * AND-combined. `ids` switches to a lookup that keeps the given order.
      *
      * @unauthenticated
      */
-    public function index(Request $request, CategoryHierarchy $categories, LocationHierarchy $locations): AnonymousResourceCollection
+    public function index(ListAdsRequest $request, ListPublicAdsAction $listAds, ViewerFavorites $favorites): AnonymousResourceCollection
     {
-        $query = Ad::query()
-            ->publiclyListed()
-            ->with(['category', 'location', 'primaryImage']);
+        $ids = $request->ids();
 
-        if (($categoryId = $request->query('category_id')) !== null && is_string($categoryId)) {
-            $query->whereIn('category_id', $categories->descendantsOf($categoryId));
-        }
-
-        if (($locationId = $request->query('location_id')) !== null && is_string($locationId)) {
-            $query->whereIn('location_id', $locations->descendantsOf($locationId));
-        }
-
-        // Price range — ads without a numeric price (free/contact) drop out of a
-        // bounded range, which is the expected behaviour when filtering by budget.
-        if (is_numeric($priceMin = $request->query('price_min'))) {
-            $query->where('price', '>=', (float) $priceMin);
-        }
-        if (is_numeric($priceMax = $request->query('price_max'))) {
-            $query->where('price', '<=', (float) $priceMax);
-        }
-
-        // Sort — default is the canonical "newest published" feed order.
-        $sort = $request->query('sort');
-        if ($sort === 'price_asc') {
-            $query->orderBy('price');
-        } elseif ($sort === 'price_desc') {
-            $query->orderByDesc('price');
-        } elseif ($sort === 'oldest') {
-            $query->orderBy('published_at');
-        } else {
-            $query->orderedForFeed();
-        }
-
-        $paginator = $query->paginate(self::PER_PAGE);
+        $paginator = $ids !== null ? $listAds->byIds($ids) : $listAds->feed($request->filters());
+        $favorites->mark($this->viewer($request), $paginator->items());
 
         return AdSummaryResource::collection($paginator);
     }
@@ -97,23 +66,19 @@ class AdController extends Controller
      *
      * @throws DomainException
      */
-    public function show(Request $request, string $id): JsonResponse
+    public function show(Request $request, string $id, ViewerFavorites $favorites): JsonResponse
     {
         $ad = $this->findAdOrFail($id);
+        $viewer = $this->viewer($request);
 
-        // This route is public (no `auth:sanctum` middleware), so the DEFAULT
-        // guard is `web` and `$request->user()` is null even when a valid
-        // Bearer token is present — which hid an owner's own draft behind a
-        // 404 (they couldn't open the edit page). Resolve the caller through
-        // the `sanctum` guard explicitly so a token-authenticated owner is
-        // recognised; the policy still handles the null (truly anonymous) case.
-        if (Gate::forUser($request->user('sanctum'))->denies('view', $ad)) {
+        if (Gate::forUser($viewer)->denies('view', $ad)) {
             // Treat hidden ads (drafts, expired) as "not found" so we
             // don't leak the existence of someone else's draft.
             throw new DomainException(ErrorCode::AD_NOT_FOUND);
         }
 
         $ad->load(['user', 'category', 'location', 'media']);
+        $favorites->mark($viewer, [$ad]);
 
         return response()->json((new AdResource($ad))->toArray($request));
     }
@@ -194,12 +159,15 @@ class AdController extends Controller
      *
      * @authenticated
      */
-    public function myAds(ListOwnAdsRequest $request, ListOwnAdsAction $listOwnAds): AnonymousResourceCollection
+    public function myAds(ListOwnAdsRequest $request, ListOwnAdsAction $listOwnAds, ViewerFavorites $favorites): AnonymousResourceCollection
     {
         /** @var User $user */
         $user = $request->user();
 
-        return AdSummaryResource::collection($listOwnAds($user, $request->status()));
+        $paginator = $listOwnAds($user, $request->status());
+        $favorites->mark($user, $paginator->items());
+
+        return AdSummaryResource::collection($paginator);
     }
 
     /**

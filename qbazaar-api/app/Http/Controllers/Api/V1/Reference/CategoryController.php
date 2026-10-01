@@ -14,6 +14,7 @@ use App\Http\Resources\Api\V1\Reference\CategoryNodeResource;
 use App\Http\Resources\Api\V1\Reference\CategoryPageResource;
 use App\Http\Resources\Api\V1\Reference\CategoryResource;
 use App\Models\Category;
+use App\Services\Ads\ViewerFavorites;
 use App\Services\Catalog\CatalogCache;
 use App\Services\Catalog\CategoryAdCounts;
 use App\Services\Catalog\CategoryTree;
@@ -87,9 +88,10 @@ class CategoryController extends Controller
      *
      * @throws DomainException
      */
-    public function show(Request $request, string $slug, GetCategoryPageAction $getCategoryPage): JsonResponse
+    public function show(Request $request, string $slug, GetCategoryPageAction $getCategoryPage, ViewerFavorites $favorites): JsonResponse
     {
         $page = $getCategoryPage->execute($slug);
+        $favorites->mark($this->viewer($request), collect($page->adsByChild)->flatten(1));
 
         return response()->json((new CategoryPageResource($page))->toArray($request));
     }

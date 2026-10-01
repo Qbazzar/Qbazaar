@@ -9,6 +9,7 @@ use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
+use App\Services\Ads\ViewerFavorites;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -41,7 +42,7 @@ class SimilarAdsController extends Controller
      *
      * @throws DomainException
      */
-    public function __invoke(Request $request, string $id): JsonResponse
+    public function __invoke(Request $request, string $id, ViewerFavorites $favorites): JsonResponse
     {
         $ad = Ad::query()->find($id);
 
@@ -74,6 +75,8 @@ class SimilarAdsController extends Controller
             ->with(['category', 'location', 'primaryImage'])
             ->orderByDesc('published_at')
             ->get();
+
+        $favorites->mark($this->viewer($request), $ads);
 
         $items = $ads
             ->map(fn (Ad $similar): array => (new AdSummaryResource($similar))->toArray($request))

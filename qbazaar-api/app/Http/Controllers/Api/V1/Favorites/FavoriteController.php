@@ -86,6 +86,7 @@ class FavoriteController extends Controller
             }
 
             $payload = (new AdSummaryResource($ad))->toArray($request);
+            $payload['is_favorited'] = true;
             $payload['favorited_at'] = $favorite->created_at?->toIso8601String();
 
             $items[] = $payload;
