@@ -147,11 +147,12 @@ return [
             // facet / range / sort queries error at runtime. Run
             // `php artisan scout:sync-index-settings` after editing this block.
             'ads_index' => [
+                // Only what AdSearchCriteria filters on or facets by; every
+                // filterable attribute costs indexing time on each write.
                 'filterableAttributes' => [
-                    'category_id',
+                    'status',
                     'category_slug',
                     'category_path',
-                    'location_id',
                     'location_slug',
                     'location_path',
                     'price',
@@ -159,23 +160,23 @@ return [
                     'condition',
                     'ad_type',
                     'shipping',
-                    'postal_code',
-                    'is_reserved',
-                    'status',
-                    'published_at',
-                    'has_images',
-                    // Declaring the parent makes every custom_fields.<key>
-                    // filterable (make/year/bedrooms/…) without listing each.
+                    // Category fields are admin-defined at runtime, so the
+                    // parent stays filterable rather than a fixed key list.
                     'custom_fields',
                     '_geo',
                 ],
                 'sortableAttributes' => [
                     'published_at',
                     'price',
-                    'created_at_ts',
                     'views_count',
                     '_geo',
                 ],
+                // Results are hydrated from MySQL by id; suggestions read the title.
+                'displayedAttributes' => [
+                    'id',
+                    'title',
+                ],
+                'proximityPrecision' => 'byAttribute',
                 'searchableAttributes' => [
                     'title',
                     'description',

@@ -104,6 +104,8 @@ Run the same two commands after any release that changes the `ads` index setting
 
 Distance search reads `_geo` (the ad's pin, or its location's `lat`/`lng`), so also run `scout:import` after filling in coordinates for locations. View counters reach the index through the `search.sync-view-counts` scheduled job (every `qbazaar.search.views_sync_minutes`, on the `low` queue) rather than on each view, so `sort=most_viewed` lags by up to that interval.
 
+Each `/search` request is one Meilisearch call (hits, total and facets together) and is limited to 60 per minute per user or IP (`throttle:search`). The ads index declares only the attributes the API filters, sorts or facets on and returns only `id` and `title`, so after deploying BE-13.33 run `php artisan scout:sync-index-settings` once (no reimport needed). Saves that change no indexed column no longer queue a Scout job.
+
 If Meilisearch goes down, keep the driver and restart the service: search returns empty results meanwhile, and `scout:import` rebuilds the index at any time. Do not switch to the `database` driver.
 
 ## Upload body size

@@ -58,6 +58,11 @@ class AttachAdImagesAction
 
         ($this->resubmit)($ad);
 
+        // `has_images` is indexed and adding media does not save the ad.
+        if ($created !== [] && $ad->shouldBeSearchable()) {
+            $ad->searchable();
+        }
+
         return $created;
     }
 
