@@ -1031,9 +1031,12 @@ paths:
       description: |
         Verifies the password, sets status `pending_deletion`, records
         `deletion_requested_at`, burns all sessions, and queues
-        `DeleteAccountJob` for 30 days later. Signing back in within the
-        grace window implicitly cancels the request — the queued job
-        re-checks the status before doing anything destructive.
+        `DeleteAccountJob` for 30 days later (a daily sweep re-queues any
+        account past its grace period). Signing back in within the grace
+        window cancels the request: the job re-checks that the account is
+        still pending deletion and was requested at least 30 days ago. The
+        deletion removes the user's ads with their images and search
+        documents, offers, chats, addresses and tokens.
       operationId: accountDeleteRequest
       requestBody:
         required: true

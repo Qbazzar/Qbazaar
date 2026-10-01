@@ -131,6 +131,21 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         return $this->hasAnyRole(StaffRole::names());
     }
 
+    /**
+     * Deletion requests made at or before this moment are past their grace period.
+     */
+    public static function deletionCutoff(): Carbon
+    {
+        return Carbon::now()->subDays((int) config('qbazaar.account.deletion_grace_period_days'));
+    }
+
+    public function isDueForDeletion(): bool
+    {
+        return $this->status === UserStatus::PENDING_DELETION
+            && $this->deletion_requested_at !== null
+            && $this->deletion_requested_at->lessThanOrEqualTo(self::deletionCutoff());
+    }
+
     /* ──────────────────────────────────────────────────────────────────
      *  Ads — a user's listings across every status.
      * ──────────────────────────────────────────────────────────────────*/
