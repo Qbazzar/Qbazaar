@@ -12,6 +12,7 @@ use App\Http\Resources\Api\V1\Reference\CategoryFilterResource;
 use App\Http\Resources\Api\V1\Reference\CategoryNodeResource;
 use App\Http\Resources\Api\V1\Reference\CategoryResource;
 use App\Models\Category;
+use App\Services\Catalog\CatalogCache;
 use App\Services\Catalog\CategoryTree;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -21,9 +22,8 @@ use Illuminate\Support\Facades\Cache;
 /**
  * Read-only category endpoints used by the browse + search UX.
  *
- * Every method is cached — the taxonomy changes by manual migration only,
- * so we trade write-through complexity for a longer TTL. The cache keys are
- * stable strings so the orchestrator can flush them by name when seeders run.
+ * The taxonomy views are cached and flushed by {@see CatalogCache} whenever a
+ * category changes.
  *
  * @group Reference
  */
@@ -63,7 +63,7 @@ class CategoryController extends Controller
     {
         /** @var Collection<int, Category> $roots */
         $roots = Cache::remember(
-            'categories.main',
+            CatalogCache::MAIN_CATEGORIES_KEY,
             self::TREE_TTL,
             fn () => Category::query()
                 ->whereNull('parent_id')

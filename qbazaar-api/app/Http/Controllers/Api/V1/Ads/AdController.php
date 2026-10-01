@@ -15,6 +15,8 @@ use App\Http\Resources\Api\V1\Ads\AdResource;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
 use App\Models\User;
+use App\Services\Catalog\CategoryHierarchy;
+use App\Services\Catalog\LocationHierarchy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -39,22 +41,22 @@ class AdController extends Controller
      * GET /api/v1/ads — public feed of active ads, latest first.
      *
      * Optional filters: `category_id`, `location_id`. Both accept the ULID
-     * of the corresponding row. Filters are AND-combined.
+     * of the corresponding row and include its descendants. Filters are AND-combined.
      *
      * @unauthenticated
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, CategoryHierarchy $categories, LocationHierarchy $locations): AnonymousResourceCollection
     {
         $query = Ad::query()
             ->publiclyListed()
             ->with(['category', 'location', 'primaryImage']);
 
         if (($categoryId = $request->query('category_id')) !== null && is_string($categoryId)) {
-            $query->where('category_id', $categoryId);
+            $query->whereIn('category_id', $categories->descendantsOf($categoryId));
         }
 
         if (($locationId = $request->query('location_id')) !== null && is_string($locationId)) {
-            $query->where('location_id', $locationId);
+            $query->whereIn('location_id', $locations->descendantsOf($locationId));
         }
 
         // Price range — ads without a numeric price (free/contact) drop out of a

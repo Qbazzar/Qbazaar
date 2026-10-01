@@ -8,6 +8,7 @@ use App\Enums\Condition;
 use App\Enums\PriceType;
 use App\Models\Category;
 use App\Rules\NoMarkup;
+use App\Rules\SelectableCategory;
 use App\Services\Ads\CustomFieldsValidator;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -59,7 +60,7 @@ class CreateAdRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => ['required', 'ulid', 'exists:categories,id'],
+            'category_id' => ['required', 'bail', 'ulid', new SelectableCategory],
             'location_id' => ['required', 'ulid', 'exists:locations,id'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],

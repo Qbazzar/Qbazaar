@@ -106,9 +106,9 @@ it('narrows results with a price range filter', function (): void {
 
 it('returns a category_slug filter via slug resolution', function (): void {
     /** @var Category $categoryA */
-    $categoryA = Category::query()->first();
+    $categoryA = Category::query()->leaf()->first();
     /** @var Category $categoryB */
-    $categoryB = Category::query()->skip(1)->first();
+    $categoryB = Category::query()->leaf()->skip(1)->first();
 
     $adA = Ad::factory()->active()->create([
         'user_id' => $this->seller->id,

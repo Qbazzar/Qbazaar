@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\Ad;
+use App\Models\Category;
+use App\Models\Location;
 use App\Models\User;
 use App\Observers\AdObserver;
+use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -43,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
     {
         User::observe(UserObserver::class);
         Ad::observe(AdObserver::class);
+        Category::observe(TaxonomyCacheObserver::class);
+        Location::observe(TaxonomyCacheObserver::class);
 
         Model::preventLazyLoading(! $this->app->isProduction());
 

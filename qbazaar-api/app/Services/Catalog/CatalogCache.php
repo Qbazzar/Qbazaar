@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Catalog;
+
+use Illuminate\Support\Facades\Cache;
+
+/**
+ * Single place that knows which cached catalog views depend on what, so
+ * callers only report *what* changed.
+ */
+class CatalogCache
+{
+    public const MAIN_CATEGORIES_KEY = 'categories.main';
+
+    public function __construct(
+        private readonly CategoryHierarchy $categories,
+        private readonly LocationHierarchy $locations,
+        private readonly CategoryTree $tree,
+    ) {}
+
+    public function taxonomyChanged(): void
+    {
+        $this->categories->flush();
+        $this->locations->flush();
+        $this->tree->flush();
+        Cache::forget(self::MAIN_CATEGORIES_KEY);
+    }
+}

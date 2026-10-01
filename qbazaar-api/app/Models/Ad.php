@@ -11,6 +11,8 @@ use App\Enums\PriceType;
 use App\Enums\UserStatus;
 use App\Events\Ads\AdRejected;
 use App\Http\Resources\Api\V1\Media\MediaResource;
+use App\Services\Catalog\CategoryHierarchy;
+use App\Services\Catalog\LocationHierarchy;
 use Database\Factories\AdFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -416,8 +418,10 @@ class Ad extends Model implements HasMedia
             'description' => Str::limit((string) $this->description, 500, ''),
             'category_id' => $this->category_id,
             'category_slug' => $category?->slug,
+            'category_path' => app(CategoryHierarchy::class)->pathTo($this->category_id),
             'location_id' => $this->location_id,
             'location_slug' => $location?->slug,
+            'location_path' => app(LocationHierarchy::class)->pathTo($this->location_id),
             'user_id' => $this->user_id,
             'price' => $this->price !== null ? (float) $this->price : null,
             'price_type' => $this->price_type->value,

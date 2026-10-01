@@ -227,12 +227,13 @@ class AdSearchService
         // doesn't leak drafts into public results.
         $clauses[] = 'status = "active"';
 
+        // The *_path arrays hold every ancestor, so a parent id also matches ads in its descendants.
         if (isset($params['category_id']) && is_string($params['category_id']) && $params['category_id'] !== '') {
-            $clauses[] = sprintf('category_id = "%s"', $params['category_id']);
+            $clauses[] = sprintf('category_path = "%s"', $params['category_id']);
         }
 
         if (isset($params['location_id']) && is_string($params['location_id']) && $params['location_id'] !== '') {
-            $clauses[] = sprintf('location_id = "%s"', $params['location_id']);
+            $clauses[] = sprintf('location_path = "%s"', $params['location_id']);
         }
 
         if (isset($params['condition']) && is_string($params['condition']) && $params['condition'] !== '') {

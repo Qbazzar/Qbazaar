@@ -61,7 +61,7 @@ it('sends an active ad back to review when its description changes', function ()
 it('sends an active ad back to review when its category changes', function (): void {
     Event::fake([AdSubmittedForReview::class]);
 
-    $otherCategory = Category::query()->whereKeyNot($this->ad->category_id)->value('id');
+    $otherCategory = Category::query()->leaf()->whereKeyNot($this->ad->category_id)->value('id');
 
     putJson("/api/v1/ads/{$this->ad->id}", ['category_id' => $otherCategory])->assertOk();
 

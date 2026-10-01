@@ -150,8 +150,10 @@ return [
                 'filterableAttributes' => [
                     'category_id',
                     'category_slug',
+                    'category_path',
                     'location_id',
                     'location_slug',
+                    'location_path',
                     'price',
                     'price_type',
                     'condition',

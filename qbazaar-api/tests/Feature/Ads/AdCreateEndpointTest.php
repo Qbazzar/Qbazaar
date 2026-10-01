@@ -25,7 +25,7 @@ it('creates a draft ad when payload is valid', function (): void {
     Sanctum::actingAs($this->user, ['*']);
 
     $payload = [
-        'category_id' => Category::query()->whereNull('custom_fields')->inRandomOrder()->value('id'),
+        'category_id' => Category::query()->leaf()->whereNull('custom_fields')->inRandomOrder()->value('id'),
         'location_id' => Location::query()->inRandomOrder()->value('id'),
         'title' => 'Vintage camera for sale',
         'description' => 'A well-kept vintage camera with original packaging and lens.',
@@ -70,7 +70,7 @@ it('forces price to null for free price type', function (): void {
     Sanctum::actingAs($this->user, ['*']);
 
     $payload = [
-        'category_id' => Category::query()->whereNull('custom_fields')->inRandomOrder()->value('id'),
+        'category_id' => Category::query()->leaf()->whereNull('custom_fields')->inRandomOrder()->value('id'),
         'location_id' => Location::query()->inRandomOrder()->value('id'),
         'title' => 'Free items giveaway',
         'description' => 'Take these items off my hands, free of charge for pickup.',
