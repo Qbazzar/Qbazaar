@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
+use App\Exceptions\NotFoundErrorCode;
 use App\Http\Middleware\ApiResponseWrapper;
 use App\Http\Middleware\EnsurePhoneVerified;
 use App\Http\Middleware\EnsureStaff;
@@ -18,10 +19,12 @@ use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
+use App\Models\DatabaseNotification;
 use App\Models\DataExport;
 use App\Models\OtpCode;
+use App\Models\RecentView;
+use App\Models\RefreshToken;
 use App\Models\TrustedDevice;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -31,6 +34,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -125,6 +129,45 @@ return Application::configure(basePath: dirname(__DIR__))
             ->name('auth.prune')
             ->withoutOverlapping();
 
+        // Every refresh mints a new access and refresh token, so tokens pile
+        // up fastest; pruning hourly keeps each run to an hour's worth.
+        $schedule->command('sanctum:prune-expired', ['--hours' => (int) config('qbazaar.retention.expired_tokens_hours')])
+            ->hourly()
+            ->name('auth.prune-access-tokens')
+            ->withoutOverlapping();
+
+        $schedule->command('model:prune', ['--model' => [RefreshToken::class]])
+            ->hourlyAt(5)
+            ->name('auth.prune-refresh-tokens')
+            ->withoutOverlapping();
+
+        $schedule->command('model:prune', ['--model' => [RecentView::class, DatabaseNotification::class]])
+            ->dailyAt('03:30')
+            ->timezone('Asia/Qatar')
+            ->name('retention.prune-history')
+            ->withoutOverlapping();
+
+        $schedule->command('activitylog:clean', ['--force' => true])
+            ->dailyAt('03:45')
+            ->timezone('Asia/Qatar')
+            ->name('retention.clean-activity-log')
+            ->withoutOverlapping();
+
+        $schedule->command('queue:prune-failed', ['--hours' => (int) config('qbazaar.retention.failed_jobs_hours')])
+            ->dailyAt('04:00')
+            ->timezone('Asia/Qatar')
+            ->name('retention.prune-failed-jobs')
+            ->withoutOverlapping();
+
+        $schedule->command('auth:clear-resets')
+            ->everyFifteenMinutes()
+            ->name('auth.clear-password-resets')
+            ->withoutOverlapping();
+
+        $schedule->command('horizon:snapshot')
+            ->everyFiveMinutes()
+            ->name('horizon.snapshot');
+
         // Requests only read the home feed and the category/place counters;
         // this keeps them at most a couple of minutes old.
         $schedule->job(new WarmCatalogCacheJob)
@@ -200,7 +243,9 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        $exceptions->render(function (AuthorizationException $e, Request $request) {
+        // The framework turns a failed policy or gate (AuthorizationException)
+        // into AccessDeniedHttpException before these renderers run.
+        $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
             if (! ($request->is('api/*') || $request->expectsJson())) {
                 return null;
             }
@@ -209,16 +254,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // Domain rules with specific ErrorCodes (USER_002, USER_003, …)
             // should still throw DomainException so they keep their stable
             // codes; this branch is the catch-all "you don't own this".
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'FORBIDDEN',
-                    'message_key' => 'errors.forbidden',
-                    'message' => $e->getMessage() !== '' ? $e->getMessage() : __('errors.forbidden'),
-                    'details' => null,
-                    'request_id' => $request->header('X-Request-Id'),
-                ],
-            ], 403);
+            return jsonError(
+                ErrorCode::FORBIDDEN,
+                $e->getMessage() !== '' ? $e->getMessage() : __(ErrorCode::FORBIDDEN->messageKey()),
+                requestId: $request->header('X-Request-Id'),
+            );
         });
 
         $exceptions->render(function (AuthenticationException $e, Request $request) {
@@ -238,9 +278,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
+            $code = NotFoundErrorCode::for($e);
+
             return jsonError(
-                ErrorCode::AD_NOT_FOUND,  // generic "not found" — overridden by domain controllers as needed
-                __('errors.not_found'),
+                $code,
+                __($code->messageKey()),
                 requestId: $request->header('X-Request-Id'),
             );
         });

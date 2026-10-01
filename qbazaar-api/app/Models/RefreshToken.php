@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -22,7 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class RefreshToken extends Model
 {
-    use HasUlids;
+    use HasUlids, MassPrunable;
 
     /**
      * @var list<string>
@@ -51,6 +53,16 @@ class RefreshToken extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return Builder<static> */
+    public function prunable(): Builder
+    {
+        return static::query()->where(
+            'expires_at',
+            '<',
+            Carbon::now()->subHours((int) config('qbazaar.retention.expired_tokens_hours')),
+        );
     }
 
     public function isExpired(): bool

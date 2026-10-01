@@ -48,7 +48,6 @@ return new class extends Migration
 
         Schema::table('refresh_tokens', function (Blueprint $table): void {
             $table->index(['user_id', 'device_fingerprint'], 'refresh_tokens_user_device_idx');
-            $table->index('expires_at', 'refresh_tokens_expires_at_idx');
         });
 
         Schema::table('recently_viewed', function (Blueprint $table): void {
@@ -56,7 +55,6 @@ return new class extends Migration
         });
 
         Schema::table('activity_log', function (Blueprint $table): void {
-            $table->index('created_at', 'activity_log_created_at_idx');
             $table->index(['causer_type', 'causer_id', 'created_at'], 'activity_log_causer_created_idx');
             $table->dropIndex('causer');
         });
@@ -97,7 +95,6 @@ return new class extends Migration
 
         Schema::table('refresh_tokens', function (Blueprint $table): void {
             $table->dropIndex('refresh_tokens_user_device_idx');
-            $table->dropIndex('refresh_tokens_expires_at_idx');
         });
 
         Schema::table('recently_viewed', function (Blueprint $table): void {
@@ -107,7 +104,6 @@ return new class extends Migration
         Schema::table('activity_log', function (Blueprint $table): void {
             $table->index(['causer_type', 'causer_id'], 'causer');
             $table->dropIndex('activity_log_causer_created_idx');
-            $table->dropIndex('activity_log_created_at_idx');
         });
 
         Schema::table('password_reset_tokens', function (Blueprint $table): void {

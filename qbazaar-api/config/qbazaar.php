@@ -52,6 +52,8 @@ return [
     */
     'auth' => [
         'password_min_length' => 8,
+        'full_name_min_length' => 3,
+        'full_name_max_length' => 80,
         'access_token_ttl_minutes' => 15,
         'refresh_token_ttl_days' => 30,
         // How stale a session's last_used_at may get before a request rewrites it.
@@ -142,10 +144,10 @@ return [
         'drafts_per_hour_per_user' => 30,
         'publish_attempts_per_minute_per_user' => 10,
         'title_min_length' => 5,
-        'title_max_length' => 100,
+        'title_max_length' => 120,
         'description_min_length' => 20,
-        'description_max_length' => 3000,
-        'price_max' => 99_999_999,
+        'description_max_length' => 5000,
+        'price_max' => 9_999_999,
         'postal_code_max_length' => 10,
         'street_max_length' => 255,
         'view_throttle_per_user_per_minute' => 60,
@@ -262,6 +264,7 @@ return [
         'images_per_minute' => 10,
         'images_per_day' => 200,
         'bulk_hide_max' => 100,
+        'page_size_max' => 100,
         // A small file can still decode to a huge bitmap; this keeps the
         // queued preview conversion within worker memory.
         'image_max_side_px' => 8192,
@@ -279,6 +282,7 @@ return [
         'max_per_day' => 50,
         // Default for the admin setting; each side may counter this many times.
         'counter_rounds_per_side' => 1,
+        'note_max_length' => 280,
     ],
 
     /*
@@ -371,6 +375,7 @@ return [
         // report against the same target. Tightening this is the first
         // dial to turn if "report spam" becomes an abuse vector.
         'duplicate_window_days' => 7,
+        'description_max_length' => 1000,
     ],
 
     /*
@@ -385,6 +390,32 @@ return [
         'phone_in_text_regex' => '/(?:\+?974[\s-]?)?[0-9]{8}/',
         'external_link_regex' => '/https?:\/\/(?!qbazaar\.qa)[^\s]+/i',
         'phash_distance_threshold' => 8, // for duplicate image detection
+    ],
+
+    'reviews' => [
+        'comment_max_length' => 1000,
+    ],
+
+    'support' => [
+        'subject_min_length' => 3,
+        'subject_max_length' => 160,
+        'body_min_length' => 10,
+        'body_max_length' => 5000,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Data retention — nightly pruning
+    |--------------------------------------------------------------------------
+    */
+    // Activity log retention is activitylog.clean_after_days (ACTIVITY_LOG_RETENTION_DAYS).
+    'retention' => [
+        'read_notifications_days' => (int) env('READ_NOTIFICATIONS_RETENTION_DAYS', 90),
+        'guest_recent_views_days' => 30,
+        // Kept a day past expiry so a late refresh still gets a clear "expired" answer.
+        'expired_tokens_hours' => 24,
+        'failed_jobs_hours' => 168,
+        'prune_chunk' => 1000,
     ],
 
 ];

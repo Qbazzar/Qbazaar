@@ -13,7 +13,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *    a buyer can offer up to (but not beyond) what the seller could
  *    have listed the ad for. Lower bound is `1` — a zero or negative
  *    offer is non-sensical for QBazaar's marketplace model.
- *  - `note` is capped at 280 chars to keep the offer card compact;
+ *  - `note` is capped (`offers.note_max_length`) to keep the offer card compact;
  *    longer commentary belongs in regular chat.
  */
 class MakeOfferRequest extends FormRequest
@@ -28,11 +28,11 @@ class MakeOfferRequest extends FormRequest
      */
     public function rules(): array
     {
-        $max = (int) config('qbazaar.ads.price_max', 99_999_999);
+        $max = (int) config('qbazaar.ads.price_max');
 
         return [
             'amount' => ['required', 'numeric', 'min:1', 'max:' . $max],
-            'note' => ['nullable', 'string', 'max:280'],
+            'note' => ['nullable', 'string', 'max:' . (int) config('qbazaar.offers.note_max_length')],
         ];
     }
 }

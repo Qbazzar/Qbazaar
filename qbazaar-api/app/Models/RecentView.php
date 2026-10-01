@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\RecentViewFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -28,7 +30,7 @@ use Illuminate\Support\Carbon;
 class RecentView extends Model
 {
     /** @use HasFactory<RecentViewFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, MassPrunable;
 
     protected $table = 'recently_viewed';
 
@@ -59,6 +61,19 @@ class RecentView extends Model
         return [
             'viewed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Signed-in histories are capped per user on write; guest histories have
+     * no cap, so they are dropped once they are too old to be useful.
+     *
+     * @return Builder<static>
+     */
+    public function prunable(): Builder
+    {
+        return static::query()
+            ->whereNull('user_id')
+            ->where('viewed_at', '<', Carbon::now()->subDays((int) config('qbazaar.retention.guest_recent_views_days')));
     }
 
     /** @return BelongsTo<User, $this> */
