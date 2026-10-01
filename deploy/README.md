@@ -121,6 +121,10 @@ If Meilisearch goes down, keep the driver and restart the service: search return
 
 If one of the limits has to be lower, lower `max_images_per_upload` to match (`floor(post_max_size / 10 MB)`) rather than the per-file size. The larger image sizes are rendered on the `default` queue by Horizon, so it must be running for `medium`, `large` and `original_webp` to appear; until then the API serves the original.
 
+## Expiry sweeps
+
+`ads.expire-old` runs at minute 0 of every hour and `offers.expire-old` at minute 30. Each sweep only reads due ids and queues one batch job per `qbazaar.sweeps.batch_size` (200) rows on the `low` queue, so Horizon must be running for ads and offers to expire. The sweeps are `ShouldBeUnique` (lock held for up to an hour), which needs a cache store with atomic locks (`redis` in production). Nothing to do on deploy beyond the usual `config:cache`; `php artisan schedule:list` shows both tasks as hourly.
+
 ## Manual deploy (if Actions is down)
 
 ```bash

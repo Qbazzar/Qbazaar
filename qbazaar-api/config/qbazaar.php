@@ -349,4 +349,15 @@ return [
         'phash_distance_threshold' => 8, // for duplicate image detection
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Scheduled sweeps (ad and offer expiry)
+    |--------------------------------------------------------------------------
+    | The hourly sweep only collects due ids; each batch of `batch_size` rows
+    | is expired by its own queued job so no run outgrows a worker timeout.
+    */
+    'sweeps' => [
+        'batch_size' => 200,
+    ],
+
 ];

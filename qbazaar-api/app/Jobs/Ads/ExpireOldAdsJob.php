@@ -6,92 +6,79 @@ namespace App\Jobs\Ads;
 
 use App\Enums\AdStatus;
 use App\Enums\PlatformSetting;
-use App\Events\Ads\AdExpiringSoon;
-use App\Exceptions\DomainException;
 use App\Models\Ad;
-use App\Services\Ads\AdLifecycleService;
 use App\Services\Settings\SettingsService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Carbon;
 
 /**
- * Daily sweeper for ad lifecycle.
+ * Hourly sweep for ad lifecycle. It only reads ids and queues the work in
+ * batches of `qbazaar.sweeps.batch_size`:
+ *   1. Active ads whose `expires_at` has passed → {@see ExpireAdsBatchJob}.
+ *   2. Active ads inside the admin-set warning window (the
+ *      `ad_expiry_warning_days` platform setting) that were not warned yet
+ *      → {@see WarnExpiringAdsBatchJob}.
  *
- * Two passes:
- *   1. Active ads whose `expires_at` is in the past → EXPIRED through
- *      AdLifecycleService, which fires AdExpired.
- *   2. Active ads expiring within the admin-set warning window (the
- *      `ad_expiry_warning_days` platform setting) → fire AdExpiringSoon once
- *      per expiry, guarded by `expiring_notified_at`.
- *
- * Pass 1 iterates row-by-row (instead of a single mass UPDATE) so that
- * Spatie\Activitylog observers, Scout's unsearchable() and the AdExpired
- * listener chain all run with full model context.
+ * Unique while queued or running, so a slow run and the next hour's run never
+ * overlap. Both batch jobs re-check each ad, so an ad queued twice (by a retry
+ * or by the next run) is still handled once.
  *
  * Both passes walk by primary key only: combining another ORDER BY with
  * keyset chunking skips rows once the two orders disagree.
  */
-class ExpireOldAdsJob implements ShouldQueue
+class ExpireOldAdsJob implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [60, 300];
+
+    public int $timeout = 120;
+
+    public int $uniqueFor = 3600;
 
     public function __construct()
     {
         $this->onQueue('low');
     }
 
-    public function handle(SettingsService $settings, AdLifecycleService $lifecycle): void
+    public function handle(SettingsService $settings): void
     {
         $now = now();
+        $warningDays = $settings->integer(PlatformSetting::AD_EXPIRY_WARNING_DAYS);
 
-        $this->expirePastDueAds($now, $lifecycle);
-        $this->notifyExpiringSoon($now, $settings->integer(PlatformSetting::AD_EXPIRY_WARNING_DAYS));
-    }
+        $this->dispatchBatches(
+            Ad::query()->where('status', AdStatus::ACTIVE->value)->where('expires_at', '<', $now),
+            fn (array $ids) => ExpireAdsBatchJob::dispatch($ids),
+        );
 
-    private function expirePastDueAds(Carbon $now, AdLifecycleService $lifecycle): void
-    {
-        $ads = Ad::query()
-            ->where('status', AdStatus::ACTIVE->value)
-            ->whereNotNull('expires_at')
-            ->where('expires_at', '<', $now)
-            ->with('user')
-            ->lazyById(100);
-
-        foreach ($ads as $ad) {
-            try {
-                $lifecycle->expireIfPastDue($ad);
-            } catch (DomainException) {
-                // Sold, edited or suspended since it was read: nothing to expire.
-            }
-        }
-    }
-
-    private function notifyExpiringSoon(Carbon $now, int $warningDays): void
-    {
-        $ads = Ad::query()
-            ->where('status', AdStatus::ACTIVE->value)
-            ->whereBetween('expires_at', [$now, $now->copy()->addDays($warningDays)])
-            ->whereNull('expiring_notified_at')
-            ->with('user')
-            ->lazyById(100);
-
-        foreach ($ads as $ad) {
-            if ($this->claimExpiryWarning($ad, $now)) {
-                AdExpiringSoon::dispatch($ad);
-            }
-        }
+        $this->dispatchBatches(
+            Ad::query()
+                ->where('status', AdStatus::ACTIVE->value)
+                ->whereBetween('expires_at', [$now, $now->copy()->addDays($warningDays)])
+                ->whereNull('expiring_notified_at'),
+            fn (array $ids) => WarnExpiringAdsBatchJob::dispatch($ids, $warningDays),
+        );
     }
 
     /**
-     * Conditional update so an overlapping run cannot warn the same ad twice;
-     * a query-level write also keeps Scout and the activity log out of it.
+     * @param Builder<Ad> $due
+     * @param callable(list<string>): mixed $dispatch
      */
-    private function claimExpiryWarning(Ad $ad, Carbon $now): bool
+    private function dispatchBatches(Builder $due, callable $dispatch): void
     {
-        return Ad::query()
-            ->whereKey($ad->getKey())
-            ->whereNull('expiring_notified_at')
-            ->update(['expiring_notified_at' => $now]) === 1;
+        $due->select('id')->chunkById(
+            (int) config('qbazaar.sweeps.batch_size'),
+            function (Collection $ads) use ($dispatch): void {
+                /** @var list<string> $ids */
+                $ids = $ads->modelKeys();
+                $dispatch($ids);
+            },
+        );
     }
 }
