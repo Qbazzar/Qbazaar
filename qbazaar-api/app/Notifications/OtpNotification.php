@@ -8,6 +8,7 @@ use App\Enums\Language;
 use App\Models\User;
 use App\Notifications\Channels\TwilioSmsChannel;
 use App\Notifications\Channels\TwilioSmsMessage;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -23,7 +24,7 @@ use Illuminate\Notifications\Notification;
  */
 class OtpNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use DeliversOnNotificationsQueue, Queueable;
 
     public function __construct(
         public readonly string $phone,

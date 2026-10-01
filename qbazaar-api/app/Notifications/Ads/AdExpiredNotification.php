@@ -8,6 +8,7 @@ use App\Enums\Language;
 use App\Enums\NotificationTopic;
 use App\Models\Ad;
 use App\Models\User;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use App\Notifications\Concerns\RespectsNotificationPreferences;
 use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
@@ -22,7 +23,7 @@ use NotificationChannels\Fcm\FcmChannel;
  */
 class AdExpiredNotification extends Notification implements ShouldQueue
 {
-    use Queueable, RespectsNotificationPreferences, SendsFcmPush;
+    use DeliversOnNotificationsQueue, Queueable, RespectsNotificationPreferences, SendsFcmPush;
 
     public function __construct(public readonly Ad $ad) {}
 

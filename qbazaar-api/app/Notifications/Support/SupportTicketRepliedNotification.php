@@ -7,6 +7,7 @@ namespace App\Notifications\Support;
 use App\Enums\Language;
 use App\Models\SupportReply;
 use App\Models\User;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,7 +23,7 @@ use NotificationChannels\Fcm\FcmChannel;
  */
 class SupportTicketRepliedNotification extends Notification implements ShouldQueue
 {
-    use Queueable, SendsFcmPush;
+    use DeliversOnNotificationsQueue, Queueable, SendsFcmPush;
 
     public function __construct(public readonly SupportReply $reply) {}
 

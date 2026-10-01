@@ -8,6 +8,7 @@ use App\Enums\Language;
 use App\Enums\ReportStatus;
 use App\Models\Report;
 use App\Models\User;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,17 +22,9 @@ use NotificationChannels\Fcm\FcmChannel;
  */
 class ReportResolvedNotification extends Notification implements ShouldQueue
 {
-    use Queueable, SendsFcmPush;
+    use DeliversOnNotificationsQueue, Queueable, SendsFcmPush;
 
-    public int $tries = 3;
-
-    /** @var list<int> */
-    public array $backoff = [10, 60, 300];
-
-    public function __construct(public readonly Report $report)
-    {
-        $this->onQueue('low');
-    }
+    public function __construct(public readonly Report $report) {}
 
     /**
      * @return array<int, string>

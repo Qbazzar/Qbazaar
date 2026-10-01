@@ -8,6 +8,7 @@ use App\Enums\Language;
 use App\Enums\NotificationTopic;
 use App\Models\Ad;
 use App\Models\User;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use App\Notifications\Concerns\RespectsNotificationPreferences;
 use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
@@ -18,22 +19,14 @@ use NotificationChannels\Fcm\FcmChannel;
 /**
  * "Something happened to an ad you care about" — sent to many users at
  * once (followers, favouriters, saved-search owners), so it is delivered
- * from the low queue to the bell and to push, never by email. Push follows
+ * to the bell and to push, never by email. Push follows
  * the recipient's switch for the alert's topic; the bell always gets it.
  */
 abstract class AdAlertNotification extends Notification implements ShouldQueue
 {
-    use Queueable, RespectsNotificationPreferences, SendsFcmPush;
+    use DeliversOnNotificationsQueue, Queueable, RespectsNotificationPreferences, SendsFcmPush;
 
-    public int $tries = 3;
-
-    /** @var list<int> */
-    public array $backoff = [10, 60, 300];
-
-    public function __construct(public readonly Ad $ad)
-    {
-        $this->onQueue('low');
-    }
+    public function __construct(public readonly Ad $ad) {}
 
     abstract protected function category(): string;
 

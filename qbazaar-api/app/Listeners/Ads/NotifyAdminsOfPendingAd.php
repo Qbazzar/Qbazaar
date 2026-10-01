@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Listeners\Ads;
 
 use App\Enums\AdStatus;
+use App\Enums\QueueName;
 use App\Enums\UserStatus;
 use App\Events\Ads\AdSubmittedForReview;
 use App\Models\User;
@@ -29,7 +30,14 @@ class NotifyAdminsOfPendingAd implements ShouldQueue
 
     private const CHUNK_SIZE = 100;
 
-    public string $queue = 'default';
+    public string $queue = QueueName::NOTIFICATIONS->value;
+
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [10, 60, 300];
+
+    public int $timeout = 60;
 
     public function __construct(
         private readonly StaffDirectory $staff,

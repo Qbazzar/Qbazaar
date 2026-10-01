@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Enums\DataExportStatus;
+use App\Enums\QueueName;
 use App\Models\DataExport;
 use App\Models\User;
 use App\Notifications\DataExportReadyNotification;
@@ -31,10 +32,12 @@ class ExportUserDataJob implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [60, 300];
 
+    public int $timeout = 600;
+
     public function __construct(
         public readonly string $exportId,
     ) {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(UserDataExporter $exporter): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications\Reports;
 
 use App\Models\Report;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -18,17 +19,9 @@ use Illuminate\Notifications\Notification;
  */
 class ReportFiledNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use DeliversOnNotificationsQueue, Queueable;
 
-    public int $tries = 3;
-
-    /** @var list<int> */
-    public array $backoff = [10, 60, 300];
-
-    public function __construct(public readonly Report $report)
-    {
-        $this->onQueue('low');
-    }
+    public function __construct(public readonly Report $report) {}
 
     /**
      * @return array<int, string>

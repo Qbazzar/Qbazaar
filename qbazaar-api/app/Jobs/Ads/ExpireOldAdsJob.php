@@ -6,6 +6,7 @@ namespace App\Jobs\Ads;
 
 use App\Enums\AdStatus;
 use App\Enums\PlatformSetting;
+use App\Enums\QueueName;
 use App\Events\Ads\AdExpiringSoon;
 use App\Exceptions\DomainException;
 use App\Models\Ad;
@@ -36,9 +37,18 @@ class ExpireOldAdsJob implements ShouldQueue
 {
     use Queueable;
 
+    // Every row is re-checked under its lock, so a retry after a timeout
+    // resumes where the killed run stopped.
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [300, 900];
+
+    public int $timeout = 1500;
+
     public function __construct()
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(SettingsService $settings, AdLifecycleService $lifecycle): void

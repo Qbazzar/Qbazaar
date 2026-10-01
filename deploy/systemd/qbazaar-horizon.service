@@ -1,5 +1,6 @@
 # QBazaar Horizon (queue workers) — systemd unit
-# Handles: ad-image processing, notifications, ad/offer expiry, FCM pushes.
+# Runs one supervisor per queue: realtime, notifications, default, search,
+# media, low (see deploy/README.md "Queues").
 # Install (as root):
 #   cp deploy/systemd/qbazaar-horizon.service /etc/systemd/system/
 #   systemctl daemon-reload && systemctl enable --now qbazaar-horizon
@@ -20,6 +21,9 @@ ExecStart=/opt/cpanel/ea-php84/root/usr/bin/php /home/fleeteye/qbazaar/qbazaar-a
 ExecStop=/opt/cpanel/ea-php84/root/usr/bin/php /home/fleeteye/qbazaar/qbazaar-api/artisan horizon:terminate
 Restart=always
 RestartSec=5
+# Lets a running image conversion (300 s timeout) finish on restart. A longer
+# low-queue sweep is stopped and picked up again after its retry_after.
+TimeoutStopSec=330
 
 [Install]
 WantedBy=multi-user.target

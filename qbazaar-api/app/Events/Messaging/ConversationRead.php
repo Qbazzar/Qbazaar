@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Events\Messaging;
 
+use App\Events\Concerns\BroadcastsOnRealtimeQueue;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -22,7 +23,7 @@ use Illuminate\Support\Carbon;
  */
 class ConversationRead implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use BroadcastsOnRealtimeQueue, Dispatchable, InteractsWithSockets, SerializesModels;
 
     public string $conversationId;
 

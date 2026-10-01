@@ -6,6 +6,7 @@ namespace App\Notifications;
 
 use App\Enums\Language;
 use App\Models\User;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,17 +23,12 @@ use Illuminate\Support\Facades\URL;
  *  - point the reset link at the qbazaar-web URL so the email lands on the
  *    frontend reset page (we ship `email` + `token` query params).
  *
- * Queued so the forgot-password response takes the same time whether or not
- * the address has an account, and never waits on SMTP.
+ * Queued so SMTP never runs inside the request, and so a reply takes the
+ * same time whether or not the address has an account.
  */
 class PasswordResetNotification extends ResetPassword implements ShouldQueue
 {
-    use Queueable;
-
-    public int $tries = 3;
-
-    /** @var list<int> */
-    public array $backoff = [10, 60, 300];
+    use DeliversOnNotificationsQueue, Queueable;
 
     /**
      * @param object|User $notifiable

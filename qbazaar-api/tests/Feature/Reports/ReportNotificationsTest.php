@@ -29,7 +29,7 @@ it('queues the moderator alert after commit so filing a report never waits on it
     $listener = new ReflectionClass(NotifyModeratorsOfReport::class);
 
     expect($listener->implementsInterface(ShouldQueueAfterCommit::class))->toBeTrue()
-        ->and($listener->getDefaultProperties())->toMatchArray(['queue' => 'low', 'tries' => 3, 'timeout' => 60]);
+        ->and($listener->getDefaultProperties())->toMatchArray(['queue' => 'notifications', 'tries' => 3, 'timeout' => 60]);
 });
 
 it('puts a new report in the bell of active staff who can act on reports', function (): void {

@@ -56,6 +56,8 @@ return [
         'full_name_max_length' => 80,
         'access_token_ttl_minutes' => 15,
         'refresh_token_ttl_days' => 30,
+        // How stale a session's last_used_at may get before a request rewrites it.
+        'token_last_used_write_minutes' => 5,
         'max_login_attempts' => 5,
         'login_lockout_minutes' => 15,
 
@@ -77,6 +79,21 @@ return [
             'jwks_cache_minutes' => 360,
             'clock_leeway_seconds' => 60,
         ],
+
+        // Keyed by account, token or inbox; the per-IP ceilings are loose
+        // because carrier NAT puts many users behind one address.
+        'rate_limits' => [
+            'attempts_per_minute' => 5,
+            'attempts_per_minute_per_ip' => 30,
+            'refresh_per_minute_per_token' => 5,
+            'refresh_per_minute_per_ip' => 120,
+            'email_links_per_hour' => 3,
+        ],
+    ],
+
+    'api' => [
+        'requests_per_minute' => 120,
+        'guest_requests_per_minute' => 300,
     ],
 
     /*

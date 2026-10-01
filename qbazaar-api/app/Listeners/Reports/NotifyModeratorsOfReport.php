@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners\Reports;
 
+use App\Enums\QueueName;
 use App\Enums\ReportStatus;
 use App\Enums\UserStatus;
 use App\Events\Reports\ReportCreated;
@@ -25,7 +26,7 @@ class NotifyModeratorsOfReport implements ShouldQueueAfterCommit
 
     private const CHUNK_SIZE = 100;
 
-    public string $queue = 'low';
+    public string $queue = QueueName::NOTIFICATIONS->value;
 
     public int $tries = 3;
 

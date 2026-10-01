@@ -137,7 +137,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->name('logout');
 
     Route::post('/refresh', RefreshTokenController::class)
-        ->middleware('throttle:auth')
+        ->middleware('throttle:refresh')
         ->name('refresh');
 
     // OTP — phone verification (Wave 2)
@@ -155,7 +155,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
 
     // Password reset (Wave 2)
     Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])
-        ->middleware(['throttle:auth', 'turnstile'])
+        ->middleware(['throttle:auth', 'turnstile', 'throttle:email-links'])
         ->name('forgot-password');
 
     Route::post('/reset-password', [PasswordResetController::class, 'reset'])
@@ -171,7 +171,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
 
     // Email verification (Wave 2)
     Route::post('/send-email-verification', [EmailVerificationController::class, 'send'])
-        ->middleware('auth:sanctum')
+        ->middleware(['auth:sanctum', 'throttle:email-links'])
         ->name('send-email-verification');
 
     Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
