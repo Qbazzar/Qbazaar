@@ -225,8 +225,8 @@ Route::prefix('account')
             ->name('data-export-request');
     });
 
-// Emailed download link for a data export. It opens in a browser, so the
-// signature is the credential (no bearer); the link expires and works once.
+// Emailed links opened in a browser: the signature is the credential (no
+// bearer), and each link expires and works once.
 Route::middleware(['signed', 'throttle:api'])
     ->get('/account/email/confirm', [ContactChangeController::class, 'confirmEmailChange'])
     ->name('api.v1.account.email.confirm');

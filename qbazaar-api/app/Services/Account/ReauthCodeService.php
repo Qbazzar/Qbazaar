@@ -8,6 +8,7 @@ use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\User;
 use App\Notifications\Account\ReauthCodeNotification;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 
@@ -58,7 +59,11 @@ class ReauthCodeService
      */
     public function consume(User $user, string $code): void
     {
-        $valid = Cache::lock($this->key($user, 'lock'), 10)->block(5, fn (): bool => $this->check($user, $code));
+        try {
+            $valid = Cache::lock($this->key($user, 'lock'), 10)->block(5, fn (): bool => $this->check($user, $code));
+        } catch (LockTimeoutException) {
+            $valid = false;
+        }
 
         if (! $valid) {
             throw new DomainException(ErrorCode::ACCOUNT_REAUTH_INVALID);
