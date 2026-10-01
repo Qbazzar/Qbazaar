@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Single Offer payload — used by Offers endpoint responses, the linked
  * `offer` field on MessageResource, and the broadcastWith() payload of
- * every `OfferCreated|Accepted|Rejected|Withdrawn|Expired` event.
+ * every `OfferCreated|Accepted|Rejected|Withdrawn|Expired|Countered` event.
  *
  * The shape stays flat (no nested user/ad envelopes) so the FE can keep
  * the offer-card component cheap — the conversation page already has the
@@ -39,6 +39,9 @@ class OfferResource extends JsonResource
             'ad_id' => $this->ad_id,
             'buyer_id' => $this->buyer_id,
             'seller_id' => $this->seller_id,
+            'proposed_by' => $this->proposed_by->value,
+            'parent_offer_id' => $this->parent_offer_id,
+            'counter_round' => $this->counter_round,
             'message_id' => $this->message_id,
             'amount' => $this->amount,
             'currency' => $this->currency,
@@ -48,6 +51,7 @@ class OfferResource extends JsonResource
             'accepted_at' => $this->accepted_at?->toIso8601String(),
             'rejected_at' => $this->rejected_at?->toIso8601String(),
             'withdrawn_at' => $this->withdrawn_at?->toIso8601String(),
+            'countered_at' => $this->countered_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
             'viewer_role' => $this->resolveViewerRole($request),
         ];

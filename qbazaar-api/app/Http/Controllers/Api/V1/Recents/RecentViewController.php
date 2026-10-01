@@ -62,7 +62,7 @@ class RecentViewController extends Controller
 
         $sessionId = $this->resolveSessionId($request);
 
-        $action->execute($ad, $user, $sessionId);
+        $action->execute($ad, $user, $sessionId, $request->ip());
 
         return response()->noContent();
     }

@@ -7,6 +7,7 @@ use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
+use App\Services\Ads\AdLifecycleService;
 use App\Services\Catalog\CatalogCache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -94,7 +95,8 @@ it('serves the feed from the cache and rebuilds it after listings change', funct
     expect(DB::getQueryLog())->toBeEmpty();
 
     $ad = Ad::factory()->create(['user_id' => $this->seller->id, 'status' => AdStatus::DRAFT->value]);
-    $ad->publish();
+    $lifecycle = app(AdLifecycleService::class);
+    $lifecycle->approve($lifecycle->submitForReview($ad));
 
     expect(Cache::has(CatalogCache::HOME_FEED_KEY))->toBeFalse()
         ->and(collect(getJson('/api/v1/home')->json('data.best_selling'))->pluck('id'))->toContain($ad->id);

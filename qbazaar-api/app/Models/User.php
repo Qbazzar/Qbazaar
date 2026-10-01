@@ -57,6 +57,9 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     use HasApiTokens, HasFactory, HasRoles, HasUlids, InteractsWithMedia, Notifiable, SoftDeletes;
 
     /**
+     * Status, verification flags and lifecycle timestamps are left out on
+     * purpose: only the actions that own them may set them, via forceFill.
+     *
      * @var list<string>
      */
     protected $fillable = [
@@ -65,14 +68,9 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         'phone',
         'password',
         'account_type',
-        'status',
-        'email_verified',
-        'phone_verified',
         'language',
         'avatar_url',
         'privacy_settings',
-        'last_login_at',
-        'deletion_requested_at',
     ];
 
     /**
@@ -247,7 +245,11 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
      * ──────────────────────────────────────────────────────────────────*/
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('avatar')->singleFile();
+        // Avatars are public profile pictures, so the original may be linked
+        // permanently and lives on the public disk with its conversions.
+        $this->addMediaCollection('avatar')
+            ->useDisk((string) config('qbazaar.uploads.public_disk'))
+            ->singleFile();
     }
 
     public function registerMediaConversions(?Media $media = null): void

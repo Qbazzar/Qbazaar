@@ -11,6 +11,7 @@ use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Models\Ad;
 use App\Models\User;
 use App\Notifications\Ads\AdExpiringSoonNotification;
+use App\Services\Ads\AdLifecycleService;
 use App\Services\Settings\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -101,7 +102,7 @@ it('warns again after the ad is renewed', function (): void {
     $ad = activeAdExpiringAt($this->seller, now()->addDay());
     runExpiryJob();
 
-    $ad->renew();
+    app(AdLifecycleService::class)->renew($ad);
     expect($ad->fresh()->expiring_notified_at)->toBeNull();
 
     $this->travelTo($ad->fresh()->expires_at->subDay());
@@ -135,4 +136,16 @@ it('tells the seller the expiry in Qatar time and their own language', function 
 
     expect($arabicBody)->toContain('4 أكتوبر 2026')
         ->and($englishBody)->toContain('4 October 2026, 12:30 AM');
+});
+
+it('leaves an ad live when it was renewed after the sweep read it', function (): void {
+    Event::fake([AdExpired::class]);
+    $readBySweep = activeAdExpiringAt($this->seller, now()->subHour());
+
+    app(AdLifecycleService::class)->renew(Ad::query()->findOrFail($readBySweep->id));
+
+    app(AdLifecycleService::class)->expireIfPastDue($readBySweep);
+
+    expect($readBySweep->fresh()->status)->toBe(AdStatus::ACTIVE);
+    Event::assertNotDispatched(AdExpired::class);
 });

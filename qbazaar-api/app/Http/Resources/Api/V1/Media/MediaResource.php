@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Api\V1\Media;
 
+use App\Services\Media\MediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\URL;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
@@ -19,7 +19,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *    hotlinked permanently. Clients must not persist it.
  *  - `sizes` always carries the four conversion keys as plain public URLs.
  *    If a conversion hasn't generated yet (job lag), we fall back to the
- *    original URL so the frontend never sees an empty string.
+ *    signed original URL so the frontend never sees an empty string.
  *  - `blurhash` is null while ProcessAdImagesJob is queued; clients should
  *    treat it as optional metadata.
  *  - `width` / `height` are populated by the same job; null in the meantime.
@@ -33,15 +33,17 @@ class MediaResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $storage = app(MediaStorage::class);
+
         return [
             'id' => $this->resource->getKey(),
             'collection' => $this->resource->collection_name,
-            'url' => $this->signedOriginalUrl(),
+            'url' => $storage->signedOriginalUrl($this->resource),
             'sizes' => [
-                'thumbnail' => $this->urlForConversion('thumbnail'),
-                'medium' => $this->urlForConversion('medium'),
-                'large' => $this->urlForConversion('large'),
-                'original_webp' => $this->urlForConversion('original_webp'),
+                'thumbnail' => $storage->conversionUrl($this->resource, 'thumbnail'),
+                'medium' => $storage->conversionUrl($this->resource, 'medium'),
+                'large' => $storage->conversionUrl($this->resource, 'large'),
+                'original_webp' => $storage->conversionUrl($this->resource, 'original_webp'),
             ],
             'blurhash' => $this->resource->getCustomProperty('blurhash'),
             'width' => $this->resource->getCustomProperty('width'),
@@ -49,33 +51,5 @@ class MediaResource extends JsonResource
             'order' => (int) ($this->resource->order_column ?? 0),
             'size_bytes' => (int) $this->resource->size,
         ];
-    }
-
-    /**
-     * Expiring signed URL for the original-resolution file. Served through
-     * MediaOriginalController (`signed` middleware) rather than a permanent
-     * storage URL so full-res originals can't be hotlinked forever.
-     */
-    private function signedOriginalUrl(): string
-    {
-        return URL::temporarySignedRoute(
-            'api.v1.media.original',
-            now()->addHours((int) config('qbazaar.uploads.original_url_ttl_hours')),
-            ['media' => $this->resource->getKey()],
-        );
-    }
-
-    /**
-     * Conversion URL with graceful fallback to the original when the
-     * conversion hasn't been generated yet. Keeps the response shape
-     * always-populated so client code can avoid null-checks per size.
-     */
-    private function urlForConversion(string $name): string
-    {
-        if ($this->resource->hasGeneratedConversion($name)) {
-            return $this->resource->getUrl($name);
-        }
-
-        return $this->resource->getUrl();
     }
 }

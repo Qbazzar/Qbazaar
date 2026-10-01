@@ -117,7 +117,7 @@ it('flags duplicate_image when another seller has an active ad with an identical
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$draft->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
@@ -136,7 +136,7 @@ it('does not flag duplicate_image when the matching image belongs to the same se
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$draft->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
@@ -155,7 +155,7 @@ it('does not flag duplicate_image when the Hamming distance exceeds the threshol
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, '0000000000000fff');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$draft->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
@@ -174,7 +174,7 @@ it('flags duplicate_image when the Hamming distance equals the threshold', funct
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, '00000000000000ff');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$draft->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
@@ -194,7 +194,7 @@ it('does not flag duplicate_image when the candidate image has no phash yet', fu
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, null);
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$draft->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
@@ -214,7 +214,7 @@ it('does not flag duplicate_image when another seller has an active ad with a ma
     $draft = ($this->makeCleanDraft)();
     attachImageWithPhash($draft, 'a1b2c3d4e5f60718');
 
-    postJson("/api/v1/ads/{$draft->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$draft->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 

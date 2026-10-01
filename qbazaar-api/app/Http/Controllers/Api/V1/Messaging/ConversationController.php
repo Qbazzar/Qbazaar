@@ -141,14 +141,7 @@ class ConversationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $total = Message::query()
-            ->whereIn(
-                'conversation_id',
-                Conversation::query()->forUser($user)->select('id'),
-            )
-            ->where('sender_id', '!=', $user->id)
-            ->whereNull('read_at')
-            ->count();
+        $total = Message::query()->unreadFor($user)->count();
 
         return response()->json(['total' => $total]);
     }

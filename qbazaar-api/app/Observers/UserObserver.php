@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\Events\Users\UserStatusChanged;
 use App\Models\User;
+use App\Observers\Concerns\ResolvesActivityCauser;
 use BackedEnum;
 
 /**
@@ -32,11 +33,13 @@ use BackedEnum;
  */
 class UserObserver
 {
+    use ResolvesActivityCauser;
+
     public function created(User $user): void
     {
         activity('user')
             ->performedOn($user)
-            ->causedBy($user)
+            ->causedBy($this->causer($user))
             ->event('signed_up')
             ->withProperties([
                 'account_type' => $user->account_type->value,
@@ -55,7 +58,7 @@ class UserObserver
             // separately by RequestAccountDeletionAction.
             activity('user')
                 ->performedOn($user)
-                ->causedBy($user)
+                ->causedBy($this->causer($user))
                 ->event('account_deletion_requested')
                 ->withProperties([
                     'requested_at' => $user->deletion_requested_at->toIso8601String(),
@@ -74,7 +77,7 @@ class UserObserver
             // only records the fact that a change happened.
             activity('user')
                 ->performedOn($user)
-                ->causedBy($user)
+                ->causedBy($this->causer($user))
                 ->event('password_changed')
                 ->log('Password changed');
         }
@@ -92,7 +95,7 @@ class UserObserver
     {
         activity('user')
             ->performedOn($user)
-            ->causedBy($user)
+            ->causedBy($this->causer($user))
             ->event('deleted')
             ->log('User account deleted');
     }
@@ -109,7 +112,7 @@ class UserObserver
 
         activity('user')
             ->performedOn($user)
-            ->causedBy($user)
+            ->causedBy($this->causer($user))
             ->event($event)
             ->withProperties([
                 'old' => $this->stringify($original),

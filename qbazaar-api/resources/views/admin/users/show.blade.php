@@ -127,10 +127,19 @@
 
                     @if (auth()->user()->can('users.impersonate') && ! $user->isStaff())
                         <form method="POST" action="{{ route('admin.users.impersonate', $user) }}"
-                              onsubmit="return confirm('فتح الموقع كأنك هذا المستخدم في تبويب جديد؟')" target="_blank">
+                              onsubmit="return confirm('فتح الموقع كأنك هذا المستخدم في تبويب جديد؟')" target="_blank" class="space-y-2">
                             @csrf
+                            <label for="impersonation-reason" class="block text-sm font-semibold text-ink-700">{{ __('admin.impersonation.reason') }}</label>
+                            <textarea id="impersonation-reason" name="reason" rows="2" required
+                                      minlength="{{ config('qbazaar.admin.impersonation_reason_min_length') }}"
+                                      maxlength="{{ config('qbazaar.admin.impersonation_reason_max_length') }}"
+                                      class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">{{ old('reason') }}</textarea>
+                            <p class="text-xs text-ink-500">{{ __('admin.impersonation.reason_hint', ['minutes' => config('qbazaar.admin.impersonation_ttl_minutes')]) }}</p>
+                            @error('reason')
+                                <p class="text-xs text-red-600">{{ $message }}</p>
+                            @enderror
                             <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
-                                <x-admin.icon name="external" class="size-[18px]" /> تصفّح كهذا المستخدم
+                                <x-admin.icon name="external" class="size-[18px]" /> {{ __('admin.impersonation.submit') }}
                             </button>
                         </form>
                     @endif

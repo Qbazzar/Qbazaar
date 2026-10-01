@@ -26,6 +26,12 @@ return [
     */
     'web_url' => env('WEB_URL', env('APP_URL', 'http://localhost')),
 
+    // Swagger UI (/swagger, /docs) and /api/v1/openapi.yaml. Off in
+    // production unless API_DOCS_ENABLED=true.
+    'api_docs_enabled' => in_array(env('API_DOCS_ENABLED'), [null, ''], true)
+        ? env('APP_ENV', 'production') !== 'production'
+        : (bool) env('API_DOCS_ENABLED'),
+
     /*
     |--------------------------------------------------------------------------
     | Locale & Currency
@@ -63,6 +69,10 @@ return [
         'max_attempts' => 3,
         'resend_cooldown_seconds' => 60,
         'max_per_hour' => 5,
+        'max_per_minute' => 3,
+        'max_per_day_per_phone' => 10,
+        'max_per_day_per_ip' => 30,
+        'verify_max_per_minute' => 5,
 
         // Dev override: when set, OtpService::issue() short-circuits the random
         // generator and emits this exact code (still goes through Twilio/log/email
@@ -77,11 +87,16 @@ return [
     |--------------------------------------------------------------------------
     */
     'ads' => [
-        'max_images' => 10,
+        // max_images and daily_publish_limit_per_user are defaults for the
+        // admin-editable platform settings of the same meaning.
+        'max_images' => 20,
+        'max_images_per_upload' => 10,
         'min_images' => 1,
         'lifetime_days' => 30,
         'expiry_warning_days_before' => 3,
         'daily_publish_limit_per_user' => 10,
+        'drafts_per_hour_per_user' => 30,
+        'publish_attempts_per_minute_per_user' => 10,
         'title_min_length' => 5,
         'title_max_length' => 100,
         'description_min_length' => 20,
@@ -142,7 +157,13 @@ return [
     'messaging' => [
         'max_message_length' => 5_000,
         'rate_limit_per_minute' => 30,
+        'new_conversations_per_minute' => 10,
+        'new_conversations_per_day' => 50,
         'auto_archive_inactive_days' => 90,
+        // Skip the push when the recipient has an app open on Reverb.
+        'push_skip_online_recipients' => (bool) env('CHAT_PUSH_SKIP_ONLINE', true),
+        // File a report for staff when a message matches the moderation rules.
+        'auto_report_flagged_messages' => (bool) env('CHAT_AUTO_REPORT_FLAGGED', true),
     ],
 
     /*
@@ -153,6 +174,10 @@ return [
     'offers' => [
         'expiry_days' => 7,
         'max_active_per_ad_per_user' => 1,
+        'max_per_minute' => 10,
+        'max_per_day' => 50,
+        // Default for the admin setting; each side may counter this many times.
+        'counter_rounds_per_side' => 1,
     ],
 
     /*
@@ -181,6 +206,15 @@ return [
         // originals are served via an expiring signed route so they can't
         // be hotlinked permanently (conversions stay public).
         'original_url_ttl_hours' => 24,
+
+        // Originals live on MEDIA_DISK (see config/media-library.php). Files
+        // that are linked permanently — conversions and avatars — go to
+        // MEDIA_PUBLIC_DISK, which defaults to the same disk.
+        'public_disk' => env('MEDIA_PUBLIC_DISK', env('MEDIA_DISK', 'public')),
+
+        // On a remote disk the signed original route redirects to a presigned
+        // URL valid for this long.
+        'original_redirect_ttl_minutes' => 5,
         'image_conversions' => [
             'thumbnail' => ['width' => 200, 'height' => 200],
             'medium' => ['width' => 640],
@@ -200,6 +234,9 @@ return [
         'login_max_attempts' => 5,
         'login_lockout_seconds' => 900,
         'bulk_action_max' => 100,
+        'impersonation_ttl_minutes' => 20,
+        'impersonation_reason_min_length' => 10,
+        'impersonation_reason_max_length' => 500,
     ],
 
     /*

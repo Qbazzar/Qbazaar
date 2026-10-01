@@ -147,6 +147,7 @@ return [
             'rejected' => 'Rejected',
             'withdrawn' => 'Withdrawn',
             'expired' => 'Expired',
+            'countered' => 'Countered',
         ],
     ],
 
@@ -460,6 +461,13 @@ return [
         'permissions' => 'Permissions',
     ],
 
+    'impersonation' => [
+        'reason' => 'Impersonation reason',
+        'reason_hint' => 'The reason is kept in the audit log. The session ends after :minutes minutes.',
+        'submit' => 'Browse as this user',
+        'staff_refused' => 'Staff members cannot be impersonated.',
+    ],
+
     'settings' => [
         'title' => 'Platform settings',
         'intro' => 'Changes apply immediately across the platform and are recorded in the activity log.',
@@ -468,6 +476,7 @@ return [
         'groups' => [
             'commission' => 'Commission',
             'ads' => 'Ads',
+            'offers' => 'Offers',
         ],
         'fields' => [
             'commission_debt_ceiling' => [
@@ -484,6 +493,21 @@ return [
                 'label' => 'Expiry warning lead time',
                 'help' => 'How many days before an ad expires its seller is reminded to renew. Sent once per ad.',
                 'unit' => 'days',
+            ],
+            'ad_max_images' => [
+                'label' => 'Images per ad',
+                'help' => 'The most photos a seller can attach to one ad.',
+                'unit' => 'images',
+            ],
+            'ad_daily_publish_limit' => [
+                'label' => 'Daily publish limit',
+                'help' => 'How many ads a seller can submit for review in 24 hours.',
+                'unit' => 'ads',
+            ],
+            'offer_counter_rounds_per_side' => [
+                'label' => 'Counter-offer rounds',
+                'help' => 'How many times each side (seller first, then buyer) may answer with a counter-offer in one negotiation. Zero turns counter-offers off.',
+                'unit' => 'rounds',
             ],
         ],
     ],

@@ -6,7 +6,7 @@ use App\Enums\AdStatus;
 use App\Enums\UserStatus;
 use App\Models\Ad;
 use App\Models\User;
-use App\Services\Ads\AdModerationService;
+use App\Services\Ads\AdLifecycleService;
 use App\Services\Users\SellerListingsVisibilityService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -167,7 +167,7 @@ it('keeps an approved ad of a suspended seller out of the search index', functio
 
     Queue::fake([MakeSearchable::class, RemoveFromSearch::class]);
 
-    app(AdModerationService::class)->approve($pending->fresh());
+    app(AdLifecycleService::class)->approve($pending->fresh());
 
     expect($pending->fresh()->status)->toBe(AdStatus::ACTIVE);
     Queue::assertNotPushed(MakeSearchable::class);

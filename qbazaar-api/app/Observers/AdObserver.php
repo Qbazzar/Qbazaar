@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Models\Ad;
+use App\Observers\Concerns\ResolvesActivityCauser;
 use BackedEnum;
 
 /**
@@ -19,11 +20,13 @@ use BackedEnum;
  */
 class AdObserver
 {
+    use ResolvesActivityCauser;
+
     public function created(Ad $ad): void
     {
         activity('ad')
             ->performedOn($ad)
-            ->causedBy($ad->user)
+            ->causedBy($this->causer($ad->user))
             ->event('ad_created')
             ->withProperties([
                 'status' => $ad->status->value,
@@ -54,7 +57,7 @@ class AdObserver
             // generic "updated" row.
             activity('ad')
                 ->performedOn($ad)
-                ->causedBy($ad->user)
+                ->causedBy($this->causer($ad->user))
                 ->event('description_changed')
                 ->log('Ad description changed');
         }
@@ -64,7 +67,7 @@ class AdObserver
     {
         activity('ad')
             ->performedOn($ad)
-            ->causedBy($ad->user)
+            ->causedBy($this->causer($ad->user))
             ->event('ad_deleted')
             ->log('Ad deleted');
     }
@@ -76,7 +79,7 @@ class AdObserver
 
         activity('ad')
             ->performedOn($ad)
-            ->causedBy($ad->user)
+            ->causedBy($this->causer($ad->user))
             ->event($event)
             ->withProperties([
                 'old' => $this->stringify($original),

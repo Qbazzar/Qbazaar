@@ -33,13 +33,12 @@ class AuthServiceProvider extends ServiceProvider
         Gate::policy(Conversation::class, ConversationPolicy::class);
         Gate::policy(Offer::class, OfferPolicy::class);
 
-        // Super admins bypass every ability check. Our domain policies
-        // (AccountPolicy, AdPolicy, …) are owner-scoped by design, so staff
-        // operating the admin panel — e.g. viewing/editing another user from
-        // UserResource — would otherwise hit a 403. Returning `null` (not
-        // `false`) for everyone else leaves the per-policy rules untouched.
-        // AccountPolicy's docblock anticipates exactly this Gate::before hook.
-        Gate::before(static fn (User $user): ?bool => $user->hasRole('super_admin') ? true : null);
+        // Super admins bypass ability checks only inside the admin panel,
+        // where staff act on other users' records and the owner-scoped
+        // policies would otherwise refuse them. On the API a super admin is
+        // an ordinary account, so a leaked admin token cannot override
+        // ownership rules.
+        Gate::before(static fn (User $user): ?bool => request()->routeIs('admin.*') && $user->hasRole('super_admin') ? true : null);
 
         Gate::define('block-user', [BlockPolicy::class, 'block']);
         Gate::define('unblock-user', [BlockPolicy::class, 'unblock']);

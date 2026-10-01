@@ -30,6 +30,12 @@ return [
         'error' => 'An unexpected error occurred. Please try again later.',
     ],
 
+    'request' => [
+        'in' => [
+            'progress' => 'The same request is still being processed. Please try again in a moment.',
+        ],
+    ],
+
     'auth' => [
         'invalid' => [
             'credentials' => 'Invalid credentials.',
@@ -57,6 +63,10 @@ return [
             'expired' => 'The token has expired.',
             'invalid' => 'The token is invalid.',
         ],
+    ],
+
+    'turnstile' => [
+        'failed' => 'The security check failed. Please try again.',
     ],
 
     'not_found' => 'The requested resource was not found.',

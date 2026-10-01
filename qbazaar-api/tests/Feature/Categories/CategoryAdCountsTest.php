@@ -6,6 +6,7 @@ use App\Enums\AdStatus;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\User;
+use App\Services\Ads\AdLifecycleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -71,10 +72,11 @@ it('refreshes the counts when an ad is published or expires', function (): void 
     $draft = listedAdIn($this->sedans, $this->seller, ['status' => AdStatus::DRAFT->value]);
     expect(treeNode('vehicles')['ads_count'])->toBe(0);
 
-    $draft->publish();
+    $lifecycle = app(AdLifecycleService::class);
+    $live = $lifecycle->approve($lifecycle->submitForReview($draft));
     expect(treeNode('vehicles'))->toMatchArray(['ads_count' => 1, 'today_count' => 1]);
 
-    $draft->markExpired();
+    $lifecycle->expire($live);
     expect(treeNode('vehicles')['ads_count'])->toBe(0);
 });
 

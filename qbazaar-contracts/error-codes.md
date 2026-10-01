@@ -15,6 +15,7 @@ requested locale.
 | `VALIDATION_FAILED` | Request body failed validation. `details` carries field errors. | 422 |
 | `RATE_LIMIT_EXCEEDED` | Too many requests for the current rate-limit tier. | 429 |
 | `SERVER_ERROR` | Unhandled server-side error. | 500 |
+| `REQUEST_IN_PROGRESS` | An identical request (same idempotency key, or a concurrent image upload to the same ad) is still running; retry shortly. | 409 |
 
 ## Auth (Sprint 1)
 
@@ -25,11 +26,17 @@ requested locale.
 | `AUTH_003` | Phone not verified — endpoint requires verified phone | 403 |
 | `AUTH_004` | OTP expired | 410 |
 | `AUTH_005` | OTP invalid (wrong code, or max attempts exceeded) | 422 |
-| `AUTH_006` | Rate limit on auth (login / OTP send) | 429 |
+| `AUTH_006` | Rate limit on auth: OTP send, or the login identifier is locked after repeated failed sign-ins (`details.retry_after` in seconds) | 429 |
 | `AUTH_007` | Email already exists | 422 |
 | `AUTH_008` | Phone already exists | 422 |
 | `AUTH_009` | Token expired | 401 |
 | `AUTH_010` | Token invalid (malformed / revoked) | 401 |
+
+## Bot protection (Cloudflare Turnstile)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `TURNSTILE_001` | Turnstile check failed: the `X-Turnstile-Token` header is missing, invalid, expired or already used. Get a fresh token from the widget and retry. Only returned while `TURNSTILE_ENABLED=true`. | 422 |
 
 ## Users (Sprint 2)
 
@@ -54,7 +61,7 @@ requested locale.
 |------|---------|------|
 | `UPLOAD_001` | File too large (> 10MB) | 413 |
 | `UPLOAD_002` | Unsupported MIME type | 422 |
-| `UPLOAD_003` | Max images per ad reached (`qbazaar.ads.max_images`: 10 today, 20 planned in BE-14.20) | 422 |
+| `UPLOAD_003` | Max images per ad reached (platform setting `ad_max_images`, default 20) | 422 |
 | `UPLOAD_004` | File magic bytes mismatch declared MIME | 422 |
 
 ## Ads (Sprint 5)
@@ -66,10 +73,10 @@ requested locale.
 | `AD_003` | Cannot edit ad you do not own | 403 |
 | `AD_004` | Invalid state transition for ad | 422 |
 | `AD_005` | Auto-moderation rejected the ad — see rejection_reason | 422 |
-| `AD_006` | Daily publish limit reached | 429 |
+| `AD_006` | Daily publish limit reached (platform setting `ad_daily_publish_limit`, rolling 24 h) | 429 |
 | `AD_007` | Ad expired | 410 |
 | `AD_008` | Cannot perform offers on your own ad | 422 |
-| `AD_009` | Ad images required (min 1) | 422 |
+| `AD_009` | Ad images required (`qbazaar.ads.min_images`, default 1) | 422 |
 | `AD_010` | Custom fields for category did not validate | 422 |
 | `AD_011` | Ad cannot be published in its current state | 422 |
 | `AD_012` | Image not found for this ad | 404 |
@@ -109,6 +116,8 @@ requested locale.
 | `OFFER_007` | Ad must be active to receive an offer | 422 |
 | `OFFER_008` | Offer is not in a pending state | 422 |
 | `OFFER_009` | Not authorised to act on this offer | 403 |
+| `OFFER_010` | Another offer on this ad has already been accepted | 422 |
+| `OFFER_011` | No counter-offer rounds left for this side | 422 |
 
 ## Reports (Sprint 10)
 

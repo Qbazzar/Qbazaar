@@ -11,6 +11,7 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\Idempotent;
 use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\TrackClient;
+use App\Http\Middleware\VerifyTurnstile;
 use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -107,6 +108,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotent' => Idempotent::class,
             'staff' => EnsureStaff::class,
             'permission' => PermissionMiddleware::class,
+            'turnstile' => VerifyTurnstile::class,
         ]);
 
         // API group — every /api/v1/* request runs through these in order
@@ -136,6 +138,10 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (DomainException $e, Request $request) {
+            if ($request->is('admin/*') && ! $request->expectsJson()) {
+                return back()->with('error', $e->getMessage());
+            }
+
             if (! ($request->is('api/*') || $request->expectsJson())) {
                 return null;
             }

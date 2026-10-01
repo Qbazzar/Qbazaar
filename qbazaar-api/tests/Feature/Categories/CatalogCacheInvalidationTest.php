@@ -47,10 +47,10 @@ it('drops and restores the counts when the seller is suspended and reinstated', 
     Ad::factory()->active()->create(['user_id' => $this->seller->id, 'category_id' => $this->cars->id]);
     expect(categoryAdsCount('cars'))->toBe(1);
 
-    $this->seller->update(['status' => UserStatus::SUSPENDED->value]);
+    $this->seller->forceFill(['status' => UserStatus::SUSPENDED])->save();
     expect(categoryAdsCount('cars'))->toBe(0);
 
-    $this->seller->update(['status' => UserStatus::ACTIVE->value]);
+    $this->seller->forceFill(['status' => UserStatus::ACTIVE])->save();
     expect(categoryAdsCount('cars'))->toBe(1);
 });
 

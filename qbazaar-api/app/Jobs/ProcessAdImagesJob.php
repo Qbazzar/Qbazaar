@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\Ad;
 use App\Services\Media\BlurHashGeneratorService;
+use App\Services\Media\MediaStorage;
 use App\Services\Media\PerceptualHashService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,9 +18,8 @@ use Throwable;
 /**
  * Post-upload pipeline for ad images.
  *
- * Conversions (thumbnail/medium/large/original_webp) run synchronously at
- * upload time so the HTTP response can already cite every variant. This
- * job handles the cheaper-but-still-non-trivial work:
+ * The size conversions are handled by MediaLibrary (thumbnail during the
+ * upload, the rest on the queue). This job adds the image metadata:
  *
  *   1. Compute a BlurHash for each image and stash it in
  *      `media.custom_properties['blurhash']`.
@@ -47,8 +47,11 @@ class ProcessAdImagesJob implements ShouldQueue
         $this->onQueue('low');
     }
 
-    public function handle(BlurHashGeneratorService $blurHasher, PerceptualHashService $perceptualHasher): void
-    {
+    public function handle(
+        BlurHashGeneratorService $blurHasher,
+        PerceptualHashService $perceptualHasher,
+        MediaStorage $storage,
+    ): void {
         if ($this->mediaIds === []) {
             return;
         }
@@ -60,22 +63,24 @@ class ProcessAdImagesJob implements ShouldQueue
 
         foreach ($mediaItems as $media) {
             try {
-                $path = $media->getPath();
+                $hashes = $storage->withLocalCopy($media, fn (string $path): array => [
+                    'blurhash' => $blurHasher->forFile($path),
+                    'phash' => $perceptualHasher->hash($path),
+                ]);
 
-                if (! is_string($path) || ! is_file($path)) {
+                if ($hashes === null) {
                     Log::warning('ProcessAdImagesJob: media file missing', [
                         'media_id' => $media->getKey(),
-                        'path' => $path,
+                        'disk' => $media->disk,
                     ]);
 
                     continue;
                 }
 
-                $hash = $blurHasher->forFile($path);
-                $media->setCustomProperty('blurhash', $hash);
+                $media->setCustomProperty('blurhash', $hashes['blurhash']);
                 // Guard re-runs: a transient decode failure must not overwrite
                 // a previously valid hash with null.
-                $media->phash = $perceptualHasher->hash($path) ?? $media->phash;
+                $media->phash = $hashes['phash'] ?? $media->phash;
                 $media->save();
 
                 if ($media->model_type === Ad::class && is_string($media->model_id)) {

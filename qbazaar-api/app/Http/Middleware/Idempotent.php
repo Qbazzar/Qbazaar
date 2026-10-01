@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Exceptions\DomainException;
+use App\Exceptions\ErrorCode;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +21,9 @@ use Symfony\Component\HttpFoundation\Response;
  * request that arrives with the same key replays the cached response
  * verbatim — without re-running the controller (no duplicate publishes,
  * no duplicate notifications, no duplicate billing in future sprints).
+ *
+ * While the first request runs, a second one with the same key gets
+ * REQUEST_IN_PROGRESS (409) instead of running the controller in parallel.
  *
  * If the client doesn't provide a key we skip the middleware entirely — this
  * is opt-in idempotency: only callers who care pay the cache cost.
@@ -38,6 +43,8 @@ class Idempotent
 {
     private const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h
 
+    private const LOCK_SECONDS = 30;
+
     private const KEY_MIN_LENGTH = 16;
 
     private const KEY_MAX_LENGTH = 128;
@@ -52,25 +59,52 @@ class Idempotent
 
         $cacheKey = $this->buildCacheKey($request, $key);
 
-        $cached = Cache::get($cacheKey);
+        $replay = $this->replay($cacheKey);
+        if ($replay !== null) {
+            return $replay;
+        }
 
-        if (is_array($cached) && isset($cached['status'], $cached['body']) && is_int($cached['status'])) {
-            /** @var array<string, mixed>|scalar|null $body */
-            $body = $cached['body'];
-            $response = new JsonResponse($body, $cached['status']);
-            $response->headers->set('X-Idempotent-Replay', 'true');
+        // Without the lock two retries racing each other would both miss the
+        // cache and run the controller twice.
+        $lock = Cache::lock($cacheKey . ':lock', self::LOCK_SECONDS);
+
+        if (! $lock->get()) {
+            throw new DomainException(ErrorCode::REQUEST_IN_PROGRESS);
+        }
+
+        try {
+            $replay = $this->replay($cacheKey);
+            if ($replay !== null) {
+                return $replay;
+            }
+
+            $response = $next($request);
+
+            if ($response instanceof JsonResponse && $this->isSuccess($response)) {
+                Cache::put($cacheKey, [
+                    'status' => $response->getStatusCode(),
+                    'body' => $response->getData(true),
+                ], self::CACHE_TTL_SECONDS);
+            }
 
             return $response;
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function replay(string $cacheKey): ?JsonResponse
+    {
+        $cached = Cache::get($cacheKey);
+
+        if (! is_array($cached) || ! isset($cached['status'], $cached['body']) || ! is_int($cached['status'])) {
+            return null;
         }
 
-        $response = $next($request);
-
-        if ($response instanceof JsonResponse && $this->isSuccess($response)) {
-            Cache::put($cacheKey, [
-                'status' => $response->getStatusCode(),
-                'body' => $response->getData(true),
-            ], self::CACHE_TTL_SECONDS);
-        }
+        /** @var array<string, mixed>|scalar|null $body */
+        $body = $cached['body'];
+        $response = new JsonResponse($body, $cached['status']);
+        $response->headers->set('X-Idempotent-Replay', 'true');
 
         return $response;
     }

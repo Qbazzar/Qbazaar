@@ -25,7 +25,9 @@ use Illuminate\Support\Facades\DB;
  *    the future PruneRecentViewsJob handle session-id pruning.
  *  - The denormalised `ads.views_count` is incremented once per
  *    accepted (non-throttled) view so feed cards can render the
- *    headline count without a join.
+ *    headline count without a join, and at most once per IP per ad in the
+ *    same window: anonymous callers choose their own X-Session-Id, so
+ *    rotating it must not inflate the count.
  */
 class TrackAdViewAction
 {
@@ -35,7 +37,7 @@ class TrackAdViewAction
     /** Throttle window for repeat views of the same ad by the same viewer. */
     private const THROTTLE_TTL_SECONDS = 3600;
 
-    public function execute(Ad $ad, ?User $user, ?string $sessionId): bool
+    public function execute(Ad $ad, ?User $user, ?string $sessionId, ?string $ip = null): bool
     {
         $viewerKey = $user !== null ? 'u:' . $user->id : ($sessionId !== null ? 's:' . $sessionId : null);
 
@@ -55,7 +57,9 @@ class TrackAdViewAction
             return false;
         }
 
-        DB::transaction(function () use ($ad, $user, $sessionId): void {
+        $countsTowardViews = $ip === null || Cache::add('view-ip:' . $ip . ':' . $ad->id, true, self::THROTTLE_TTL_SECONDS);
+
+        DB::transaction(function () use ($ad, $user, $sessionId, $countsTowardViews): void {
             RecentView::query()->create([
                 'user_id' => $user?->id,
                 'session_id' => $user === null ? $sessionId : null,
@@ -63,7 +67,9 @@ class TrackAdViewAction
                 'viewed_at' => now(),
             ]);
 
-            Ad::query()->where('id', $ad->id)->increment('views_count');
+            if ($countsTowardViews) {
+                Ad::query()->where('id', $ad->id)->increment('views_count');
+            }
 
             if ($user !== null) {
                 $this->capUserHistory($user->id);

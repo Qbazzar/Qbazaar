@@ -6,7 +6,6 @@
 @php
     $priceTypeLabels = ['fixed' => 'سعر ثابت', 'negotiable' => 'قابل للتفاوض', 'free' => 'مجاني', 'contact' => 'بالتواصل'];
     $conditionLabels = ['new' => 'جديد', 'like_new' => 'شبه جديد', 'used' => 'مستعمل'];
-    $statusLabels = ['draft' => 'مسودة', 'pending' => 'بانتظار المراجعة', 'active' => 'نشط', 'rejected' => 'مرفوض', 'sold' => 'مباع', 'expired' => 'منتهٍ', 'blocked' => 'موقوف'];
 @endphp
 
 @section('content')
@@ -102,13 +101,9 @@
             <h2 class="mb-4 font-bold">الإشراف</h2>
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label for="status" class="mb-1.5 block text-sm font-semibold">حالة الإعلان</label>
-                    <select id="status" name="status" required
-                            class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                        @foreach ($statuses as $case)
-                            <option value="{{ $case->value }}" @selected(old('status', $ad->status?->value) === $case->value)>{{ $statusLabels[$case->value] ?? $case->value }}</option>
-                        @endforeach
-                    </select>
+                    <span class="mb-1.5 block text-sm font-semibold">حالة الإعلان</span>
+                    @include('admin.partials.status-badge', ['status' => $ad->status])
+                    <p class="mt-1.5 text-xs text-ink-500">تتغير الحالة من أزرار الإجراءات في صفحة الإعلان.</p>
                 </div>
                 <label class="flex items-center gap-2 self-end pb-2.5 text-sm font-semibold">
                     <input type="hidden" name="featured" value="0">
