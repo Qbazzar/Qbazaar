@@ -29,8 +29,7 @@ class CompanyController extends Controller
         /** @var User|null $viewer */
         $viewer = $request->user('sanctum');
 
-        /** @var list<string> $companyIds */
-        $companyIds = $page->getCollection()->pluck('id')->all();
+        $companyIds = array_values(array_map(static fn (User $company): string => $company->id, $page->items()));
 
         return new CompanyCollection($page, $viewer === null ? [] : $follows->followedAmong($viewer, $companyIds));
     }

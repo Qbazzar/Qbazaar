@@ -34,10 +34,15 @@ class CompanyCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return $this->collection
-            ->map(fn (User $company): array => $this->row($company))
-            ->values()
-            ->all();
+        $rows = [];
+
+        foreach ($this->collection ?? [] as $company) {
+            if ($company instanceof User) {
+                $rows[] = $this->row($company);
+            }
+        }
+
+        return $rows;
     }
 
     /**
