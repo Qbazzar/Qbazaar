@@ -8,6 +8,7 @@ use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\User;
 use App\Services\Users\FollowGraph;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Follows another user. Idempotent; refused for yourself and whenever either
@@ -20,6 +21,10 @@ class FollowUserAction
     ) {}
 
     /**
+     * The block check is a locking read in the same transaction as the
+     * insert, so a block committed at the same moment either is seen here or
+     * waits for this follow and then removes it.
+     *
      * @throws DomainException
      */
     public function __invoke(User $follower, User $followed): void
@@ -28,10 +33,12 @@ class FollowUserAction
             throw new DomainException(ErrorCode::FOLLOW_SELF_FORBIDDEN);
         }
 
-        if ($follower->isBlockedEitherWay($followed)) {
-            throw new DomainException(ErrorCode::FOLLOW_BLOCKED);
-        }
+        DB::transaction(function () use ($follower, $followed): void {
+            if ($follower->isBlockedEitherWay($followed, lock: true)) {
+                throw new DomainException(ErrorCode::FOLLOW_BLOCKED);
+            }
 
-        $this->graph->link($follower, $followed);
+            $this->graph->link($follower, $followed);
+        });
     }
 }

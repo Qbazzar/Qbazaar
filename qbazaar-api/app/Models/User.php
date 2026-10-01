@@ -215,13 +215,19 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         return $this->blockedUsers()->where('blocked_id', $other->id)->exists();
     }
 
-    /** Whether either user has blocked the other; both lookups hit the pivot's primary key. */
-    public function isBlockedEitherWay(User $other): bool
+    /**
+     * Whether either user has blocked the other; both lookups hit the pivot's
+     * primary key. With $lock, inside a transaction, a concurrent block of the
+     * pair waits until that transaction ends. first() rather than exists()
+     * keeps the lock on the outer select, where MySQL applies it.
+     */
+    public function isBlockedEitherWay(User $other, bool $lock = false): bool
     {
         return DB::table('user_blocks')
             ->where(fn ($query) => $query->where('blocker_id', $this->id)->where('blocked_id', $other->id))
             ->orWhere(fn ($query) => $query->where('blocker_id', $other->id)->where('blocked_id', $this->id))
-            ->exists();
+            ->when($lock, fn ($query) => $query->sharedLock())
+            ->first(['blocker_id']) !== null;
     }
 
     /* ──────────────────────────────────────────────────────────────────
