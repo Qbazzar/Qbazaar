@@ -28,13 +28,19 @@ return new class extends Migration
             ->select(['id', 'data'])
             ->whereNull('category')
             ->chunkById(self::CHUNK, function (Collection $rows): void {
+                // One UPDATE per distinct category in the chunk, not one per row.
+                $idsByCategory = [];
+
                 foreach ($rows as $row) {
                     $data = json_decode((string) $row->data, true);
-                    $category = is_array($data) && is_string($data['category'] ?? null) ? $data['category'] : null;
 
-                    if ($category !== null) {
-                        DB::table('notifications')->where('id', $row->id)->update(['category' => mb_substr($category, 0, 64)]);
+                    if (is_array($data) && is_string($data['category'] ?? null)) {
+                        $idsByCategory[mb_substr($data['category'], 0, 64)][] = $row->id;
                     }
+                }
+
+                foreach ($idsByCategory as $category => $ids) {
+                    DB::table('notifications')->whereIn('id', $ids)->update(['category' => $category]);
                 }
             });
     }
