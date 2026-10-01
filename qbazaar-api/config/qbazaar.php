@@ -63,6 +63,10 @@ return [
         'max_attempts' => 3,
         'resend_cooldown_seconds' => 60,
         'max_per_hour' => 5,
+        'max_per_minute' => 3,
+        'max_per_day_per_phone' => 10,
+        'max_per_day_per_ip' => 30,
+        'verify_max_per_minute' => 5,
 
         // Dev override: when set, OtpService::issue() short-circuits the random
         // generator and emits this exact code (still goes through Twilio/log/email
@@ -124,6 +128,8 @@ return [
     'messaging' => [
         'max_message_length' => 5_000,
         'rate_limit_per_minute' => 30,
+        'new_conversations_per_minute' => 10,
+        'new_conversations_per_day' => 50,
         'auto_archive_inactive_days' => 90,
     ],
 
@@ -135,6 +141,8 @@ return [
     'offers' => [
         'expiry_days' => 7,
         'max_active_per_ad_per_user' => 1,
+        'max_per_minute' => 10,
+        'max_per_day' => 50,
     ],
 
     /*

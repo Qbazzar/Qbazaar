@@ -25,7 +25,7 @@ requested locale.
 | `AUTH_003` | Phone not verified — endpoint requires verified phone | 403 |
 | `AUTH_004` | OTP expired | 410 |
 | `AUTH_005` | OTP invalid (wrong code, or max attempts exceeded) | 422 |
-| `AUTH_006` | Rate limit on auth (login / OTP send) | 429 |
+| `AUTH_006` | Rate limit on auth: OTP send, or the login identifier is locked after repeated failed sign-ins (`details.retry_after` in seconds) | 429 |
 | `AUTH_007` | Email already exists | 422 |
 | `AUTH_008` | Phone already exists | 422 |
 | `AUTH_009` | Token expired | 401 |

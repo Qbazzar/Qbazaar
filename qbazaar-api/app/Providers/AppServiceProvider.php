@@ -48,7 +48,22 @@ class AppServiceProvider extends ServiceProvider
         // routes come from cache, and the throttle middleware would crash with
         // "Rate limiter [api] is not defined" in production.
         RateLimiter::for('auth', fn (Request $r) => Limit::perMinute(5)->by($r->ip()));
-        RateLimiter::for('otp', fn (Request $r) => Limit::perMinute(3)->by($r->input('phone') ?? $r->ip()));
+        // Every send costs an SMS: cap each phone and each IP per day so
+        // rotating either one alone cannot pump messages.
+        RateLimiter::for('otp', fn (Request $r) => [
+            Limit::perMinute((int) config('qbazaar.otp.max_per_minute'))->by('otp:' . $r->ip() . '|' . $r->string('phone')),
+            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_phone'))->by('otp-phone:' . $r->string('phone')),
+            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_ip'))->by('otp-ip:' . $r->ip()),
+        ]);
+        RateLimiter::for('otp-verify', fn (Request $r) => Limit::perMinute((int) config('qbazaar.otp.verify_max_per_minute'))->by('otp-verify:' . $r->ip() . '|' . $r->string('phone')));
+        RateLimiter::for('conversations', fn (Request $r) => [
+            Limit::perMinute((int) config('qbazaar.messaging.new_conversations_per_minute'))->by('conversations:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.messaging.new_conversations_per_day'))->by('conversations-day:' . (optional($r->user())->id ?: $r->ip())),
+        ]);
+        RateLimiter::for('offers', fn (Request $r) => [
+            Limit::perMinute((int) config('qbazaar.offers.max_per_minute'))->by('offers:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.offers.max_per_day'))->by('offers-day:' . (optional($r->user())->id ?: $r->ip())),
+        ]);
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('publish', fn (Request $r) => Limit::perDay((int) config('qbazaar.ads.daily_publish_limit_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('messages', fn (Request $r) => Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()));

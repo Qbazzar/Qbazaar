@@ -129,7 +129,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->name('send-otp');
 
     Route::post('/verify-otp', [OtpController::class, 'verify'])
-        ->middleware('throttle:otp')
+        ->middleware('throttle:otp-verify')
         ->name('verify-otp');
 
     Route::post('/resend-otp', [OtpController::class, 'resend'])
@@ -381,9 +381,9 @@ Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
 //     GET    /conversations/{id}/messages         — cursor transcript
 //     POST   /conversations/{id}/messages         — append + broadcast
 //     POST   /conversations/{id}/read             — mark all read
-Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
     Route::post('/conversations', [ConversationController::class, 'store'])
-        ->middleware('phone.verified')
+        ->middleware(['phone.verified', 'throttle:conversations'])
         ->name('api.v1.conversations.store');
 
     Route::get('/conversations', [ConversationController::class, 'index'])
@@ -413,9 +413,9 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 //     POST   /offers/{id}/accept              — seller accepts (PENDING only)
 //     POST   /offers/{id}/reject              — seller rejects (PENDING only)
 //     POST   /offers/{id}/withdraw            — buyer withdraws (PENDING only)
-Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
     Route::post('/conversations/{id}/offers', [OfferController::class, 'store'])
-        ->middleware('phone.verified')
+        ->middleware(['phone.verified', 'throttle:offers'])
         ->name('api.v1.conversations.offers.store');
 
     Route::get('/conversations/{id}/offers', [OfferController::class, 'index'])
