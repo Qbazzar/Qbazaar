@@ -23,6 +23,44 @@ use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
+/**
+ * Evaluates a config file under the given environment, restoring the
+ * process environment afterwards; null unsets a variable.
+ *
+ * @param array<string, string|null> $env
+ * @return array<string, mixed>
+ */
+function loadConfigWithEnv(string $file, array $env): array
+{
+    $previous = [];
+
+    foreach ($env as $name => $value) {
+        $previous[$name] = [$_SERVER[$name] ?? null, $_ENV[$name] ?? null, getenv($name)];
+        setEnvVariable($name, $value);
+    }
+
+    try {
+        return require config_path($file);
+    } finally {
+        foreach ($previous as $name => [$server, $envValue, $process]) {
+            setEnvVariable($name, $server ?? $envValue ?? ($process === false ? null : $process));
+        }
+    }
+}
+
+function setEnvVariable(string $name, ?string $value): void
+{
+    if ($value === null) {
+        unset($_SERVER[$name], $_ENV[$name]);
+        putenv($name);
+
+        return;
+    }
+
+    $_SERVER[$name] = $_ENV[$name] = $value;
+    putenv("{$name}={$value}");
+}
+
 describe('super admin bypass', function (): void {
     it('does not let a super admin override ownership rules on the API', function (): void {
         seed([CategorySeeder::class, LocationSeeder::class]);
@@ -78,6 +116,23 @@ describe('OTP_FIXED_CODE', function (): void {
 });
 
 describe('CORS', function (): void {
+    it('reads the allowed origins from CORS_ALLOWED_ORIGINS', function (): void {
+        $config = loadConfigWithEnv('cors.php', [
+            'CORS_ALLOWED_ORIGINS' => 'https://qbazaar.qa/, https://www.qbazaar.qa',
+        ]);
+
+        expect($config['allowed_origins'])->toBe(['https://qbazaar.qa', 'https://www.qbazaar.qa']);
+    });
+
+    it('falls back to WEB_URL instead of any origin', function (): void {
+        $config = loadConfigWithEnv('cors.php', [
+            'CORS_ALLOWED_ORIGINS' => null,
+            'WEB_URL' => 'https://web.qbazaar.qa',
+        ]);
+
+        expect($config['allowed_origins'])->toBe(['https://web.qbazaar.qa']);
+    });
+
     beforeEach(function (): void {
         config(['cors.allowed_origins' => ['https://qbazaar.qa']]);
     });
@@ -101,6 +156,17 @@ describe('CORS', function (): void {
 });
 
 describe('API docs', function (): void {
+    it('default to off in production and on elsewhere', function (string $appEnv, ?string $flag, bool $enabled): void {
+        $config = loadConfigWithEnv('qbazaar.php', ['APP_ENV' => $appEnv, 'API_DOCS_ENABLED' => $flag]);
+
+        expect($config['api_docs_enabled'])->toBe($enabled);
+    })->with([
+        'production, unset' => ['production', null, false],
+        'production, enabled' => ['production', 'true', true],
+        'local, unset' => ['local', null, true],
+        'local, disabled' => ['local', 'false', false],
+    ]);
+
     it('are hidden when disabled', function (): void {
         config(['qbazaar.api_docs_enabled' => false]);
 

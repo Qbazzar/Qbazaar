@@ -26,7 +26,6 @@ export default function ImpersonatePage() {
       : '';
     const params = new URLSearchParams(hash);
     const access = params.get('access');
-    const refresh = params.get('refresh');
     const name = params.get('name') ?? '';
 
     // Wipe the fragment immediately so the tokens don't linger in history.

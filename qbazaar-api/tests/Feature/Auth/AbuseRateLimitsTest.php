@@ -97,6 +97,11 @@ describe('OTP limits', function (): void {
             ->assertStatus(422);
     });
 
+    it('rejects a non-string phone with a validation error', function (): void {
+        postJson('/api/v1/auth/send-otp', ['phone' => ['+97455123456']])->assertStatus(422);
+        postJson('/api/v1/auth/verify-otp', ['phone' => ['+97455123456'], 'code' => '000000'])->assertStatus(422);
+    });
+
     it('limits verification attempts per IP and phone', function (): void {
         config(['qbazaar.otp.verify_max_per_minute' => 1]);
 

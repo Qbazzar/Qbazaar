@@ -51,11 +51,11 @@ class AppServiceProvider extends ServiceProvider
         // Every send costs an SMS: cap each phone and each IP per day so
         // rotating either one alone cannot pump messages.
         RateLimiter::for('otp', fn (Request $r) => [
-            Limit::perMinute((int) config('qbazaar.otp.max_per_minute'))->by('otp:' . $r->ip() . '|' . $r->string('phone')),
-            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_phone'))->by('otp-phone:' . $r->string('phone')),
+            Limit::perMinute((int) config('qbazaar.otp.max_per_minute'))->by('otp:' . $r->ip() . '|' . self::phoneKey($r)),
+            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_phone'))->by('otp-phone:' . self::phoneKey($r)),
             Limit::perDay((int) config('qbazaar.otp.max_per_day_per_ip'))->by('otp-ip:' . $r->ip()),
         ]);
-        RateLimiter::for('otp-verify', fn (Request $r) => Limit::perMinute((int) config('qbazaar.otp.verify_max_per_minute'))->by('otp-verify:' . $r->ip() . '|' . $r->string('phone')));
+        RateLimiter::for('otp-verify', fn (Request $r) => Limit::perMinute((int) config('qbazaar.otp.verify_max_per_minute'))->by('otp-verify:' . $r->ip() . '|' . self::phoneKey($r)));
         RateLimiter::for('conversations', fn (Request $r) => [
             Limit::perMinute((int) config('qbazaar.messaging.new_conversations_per_minute'))->by('conversations:' . (optional($r->user())->id ?: $r->ip())),
             Limit::perDay((int) config('qbazaar.messaging.new_conversations_per_day'))->by('conversations-day:' . (optional($r->user())->id ?: $r->ip())),
@@ -68,5 +68,16 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('publish', fn (Request $r) => Limit::perDay((int) config('qbazaar.ads.daily_publish_limit_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('messages', fn (Request $r) => Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
+    }
+
+    /**
+     * Limiters run before validation, so a non-string phone must still yield
+     * a key instead of an array-to-string error.
+     */
+    private static function phoneKey(Request $request): string
+    {
+        $phone = $request->input('phone');
+
+        return is_string($phone) ? $phone : '';
     }
 }
