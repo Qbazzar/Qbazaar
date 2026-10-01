@@ -29,8 +29,8 @@ use Illuminate\Notifications\Channels\DatabaseChannel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use PDO;
 use Laravel\Sanctum\Sanctum;
+use PDO;
 
 class AppServiceProvider extends ServiceProvider
 {
