@@ -6345,8 +6345,8 @@ components:
         amount:
           type: number
           minimum: 1
-          maximum: 99999999
-          description: Offered price in the conversation's currency (QAR for MVP).
+          maximum: 9999999
+          description: Offered price in the conversation's currency (QAR for MVP). Capped at the highest price an ad can be listed for.
         note:
           type: string
           maxLength: 280
@@ -6920,14 +6920,14 @@ components:
                   request_id: req_abc123
 
     Forbidden:
-      description: Authenticated but not authorized for this resource
+      description: Authenticated but not authorized for this resource (`FORBIDDEN`, or the domain's own 403 code)
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
 
     NotFound:
-      description: Resource does not exist or is hidden
+      description: Resource does not exist or is hidden. A record bound from the URL answers with its own code (`AD_001`, `USER_001`, …); an unknown route answers `NOT_FOUND`.
       content:
         application/json:
           schema:

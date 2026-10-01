@@ -10,10 +10,44 @@ use App\Rules\NoMarkup;
 use Illuminate\Validation\Rule;
 
 /**
- * Rules for the ad type, shipping and address fields, shared by create and update.
+ * Field rules shared by create and update; limits come from config('qbazaar.ads').
  */
 trait ValidatesListingDetails
 {
+    /**
+     * @return list<mixed>
+     */
+    protected function titleRules(): array
+    {
+        return [
+            'string',
+            'min:' . (int) config('qbazaar.ads.title_min_length'),
+            'max:' . (int) config('qbazaar.ads.title_max_length'),
+            new NoMarkup,
+        ];
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    protected function descriptionRules(): array
+    {
+        return [
+            'string',
+            'min:' . (int) config('qbazaar.ads.description_min_length'),
+            'max:' . (int) config('qbazaar.ads.description_max_length'),
+            new NoMarkup,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function priceRules(): array
+    {
+        return ['numeric', 'min:0', 'max:' . (int) config('qbazaar.ads.price_max')];
+    }
+
     /**
      * @return array<string, list<mixed>>
      */

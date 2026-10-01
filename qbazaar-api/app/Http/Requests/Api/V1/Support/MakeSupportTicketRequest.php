@@ -22,9 +22,19 @@ class MakeSupportTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'subject' => ['required', 'string', 'min:3', 'max:160'],
+            'subject' => [
+                'required',
+                'string',
+                'min:' . (int) config('qbazaar.support.subject_min_length'),
+                'max:' . (int) config('qbazaar.support.subject_max_length'),
+            ],
             'category' => ['required', Rule::enum(SupportTicketCategory::class)],
-            'body' => ['required', 'string', 'min:10', 'max:5000'],
+            'body' => [
+                'required',
+                'string',
+                'min:' . (int) config('qbazaar.support.body_min_length'),
+                'max:' . (int) config('qbazaar.support.body_max_length'),
+            ],
             'email' => [
                 $this->submitter() === null ? 'required' : 'nullable',
                 'email',

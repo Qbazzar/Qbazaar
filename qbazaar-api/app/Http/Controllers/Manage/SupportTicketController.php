@@ -71,7 +71,7 @@ class SupportTicketController extends Controller
     public function reply(Request $request, SupportTicket $ticket, ReplyToTicketAsStaffAction $replyAsStaff): RedirectResponse
     {
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
+            'body' => ['required', 'string', 'max:' . (int) config('qbazaar.support.body_max_length')],
         ]);
 
         /** @var User $staff */

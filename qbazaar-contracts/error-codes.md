@@ -16,6 +16,8 @@ requested locale.
 | `RATE_LIMIT_EXCEEDED` | Too many requests for the current rate-limit tier. | 429 |
 | `SERVER_ERROR` | Unhandled server-side error. | 500 |
 | `REQUEST_IN_PROGRESS` | An identical request (same idempotency key, or a concurrent image upload to the same ad) is still running; retry shortly. | 409 |
+| `NOT_FOUND` | Unknown route or resource. A missing record bound from the URL answers with its own code instead (`AD_001`, `USER_001`, `OFFER_001`, …). | 404 |
+| `FORBIDDEN` | A policy refused the action; domain refusals keep their own codes (`AD_003`, `TICKET_002`, …). | 403 |
 
 ## Auth (Sprint 1)
 

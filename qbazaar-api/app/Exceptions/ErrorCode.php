@@ -17,6 +17,8 @@ enum ErrorCode: string
     case RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED';
     case SERVER_ERROR = 'SERVER_ERROR';
     case REQUEST_IN_PROGRESS = 'REQUEST_IN_PROGRESS';
+    case NOT_FOUND = 'NOT_FOUND';
+    case FORBIDDEN = 'FORBIDDEN';
 
     // ── Auth (Sprint 1) ─────────────────────────────────────────────
     case AUTH_INVALID_CREDENTIALS = 'AUTH_001';
@@ -214,7 +216,8 @@ enum ErrorCode: string
             self::OFFER_FORBIDDEN,
             self::NOTIF_FORBIDDEN,
             self::REVIEW_NOT_ELIGIBLE,
-            self::TICKET_FORBIDDEN => 403,
+            self::TICKET_FORBIDDEN,
+            self::FORBIDDEN => 403,
 
             self::USER_NOT_FOUND,
             self::CATEGORY_NOT_FOUND,
@@ -230,7 +233,8 @@ enum ErrorCode: string
             self::HELP_ARTICLE_NOT_FOUND,
             self::HELP_CATEGORY_NOT_FOUND,
             self::TICKET_NOT_FOUND,
-            self::ADDRESS_NOT_FOUND => 404,
+            self::ADDRESS_NOT_FOUND,
+            self::NOT_FOUND => 404,
 
             self::AUTH_OTP_EXPIRED,
             self::AD_EXPIRED,

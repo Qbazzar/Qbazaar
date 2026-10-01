@@ -25,7 +25,7 @@ trait AcceptsRegistrationDetails
         }
 
         return [
-            'full_name' => ['required', 'string', 'min:3', 'max:80'],
+            'full_name' => ['required', 'string', 'min:' . (int) config('qbazaar.auth.full_name_min_length'), 'max:' . (int) config('qbazaar.auth.full_name_max_length')],
             'phone' => ['required', 'string', 'regex:' . config('qbazaar.phone_regex'), 'unique:users,phone'],
             'account_type' => ['required', Rule::in([
                 AccountType::PRIVATE_INDIVIDUAL->value,

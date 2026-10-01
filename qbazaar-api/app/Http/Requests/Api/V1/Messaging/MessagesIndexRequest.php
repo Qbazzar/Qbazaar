@@ -33,7 +33,7 @@ class MessagesIndexRequest extends FormRequest
     {
         return [
             'before' => ['sometimes', 'nullable', 'ulid'],
-            'limit' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:100'],
+            'limit' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:' . (int) config('qbazaar.messaging.page_size_max')],
         ];
     }
 }
