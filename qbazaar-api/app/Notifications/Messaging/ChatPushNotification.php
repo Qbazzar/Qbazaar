@@ -28,7 +28,10 @@ abstract class ChatPushNotification extends Notification
      */
     public function via(mixed $notifiable): array
     {
-        return $this->withoutMutedChannels($notifiable, $this->fcmEnabledFor($notifiable) ? [FcmChannel::class] : []);
+        // The preference check is free; fcmEnabledFor() may cost a query.
+        $channels = $this->withoutMutedChannels($notifiable, [FcmChannel::class]);
+
+        return $channels !== [] && $this->fcmEnabledFor($notifiable) ? $channels : [];
     }
 
     protected function conversationUrl(string $conversationId): string

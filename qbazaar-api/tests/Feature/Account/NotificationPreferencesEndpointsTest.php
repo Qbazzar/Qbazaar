@@ -5,10 +5,13 @@ declare(strict_types=1);
 use App\Data\Account\NotificationPreferences;
 use App\Enums\NotificationTopic;
 use App\Models\Ad;
+use App\Models\Message;
 use App\Models\User;
 use App\Notifications\Ads\AdApprovedNotification;
+use App\Notifications\Messaging\NewMessagePushNotification;
 use App\Notifications\SystemAnnouncementNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 use NotificationChannels\Fcm\FcmChannel;
 
@@ -116,4 +119,24 @@ it('drops push when the topic push switch is off', function (): void {
     ])->save();
 
     expect($notification->via($this->user->fresh()))->toBe(['mail', 'database']);
+});
+
+it('skips the device-token lookup for a chat push the user muted', function (): void {
+    config()->set('firebase.projects.' . config('firebase.default', 'app') . '.credentials', '{"type":"service_account"}');
+    $this->user->deviceTokens()->create(['token' => str_repeat('a', 40), 'platform' => 'web']);
+
+    $notification = new NewMessagePushNotification(new Message, User::factory()->make());
+
+    expect($notification->via($this->user))->toBe([FcmChannel::class]);
+
+    $this->user->forceFill([
+        'notification_preferences' => NotificationPreferences::defaults()->with(push: ['user_messages' => false]),
+    ])->save();
+    $muted = $this->user->fresh();
+
+    DB::enableQueryLog();
+    $channels = $notification->via($muted);
+
+    expect($channels)->toBe([])
+        ->and(DB::getQueryLog())->toBe([]);
 });
