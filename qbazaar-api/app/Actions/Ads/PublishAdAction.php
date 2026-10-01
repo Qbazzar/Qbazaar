@@ -64,7 +64,8 @@ class PublishAdAction
     {
         $limit = $this->settings->integer(PlatformSetting::AD_DAILY_PUBLISH_LIMIT);
 
-        $submittedToday = Ad::query()
+        // Deleted ads still count, or deleting a submitted ad would free its slot.
+        $submittedToday = Ad::withTrashed()
             ->forUser($seller)
             ->whereKeyNot($ad->getKey())
             ->where('submitted_at', '>=', now()->subDay())

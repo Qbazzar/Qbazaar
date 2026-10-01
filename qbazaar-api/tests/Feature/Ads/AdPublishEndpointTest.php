@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
 
+use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 
@@ -119,6 +120,21 @@ it('enforces the daily publish limit from the platform settings', function (): v
     $this->travel(25)->hours();
 
     postJson("/api/v1/ads/{$second->id}/publish", ['accepted_terms' => true])->assertOk();
+});
+
+it('keeps counting a submitted ad against the daily limit after it is deleted', function (): void {
+    Sanctum::actingAs($this->user, ['*']);
+    app(SettingsService::class)->put(PlatformSetting::AD_DAILY_PUBLISH_LIMIT, 1, $this->user);
+
+    $first = $this->makePublishableDraft($this->user);
+    $second = $this->makePublishableDraft($this->user);
+
+    postJson("/api/v1/ads/{$first->id}/publish", ['accepted_terms' => true])->assertOk();
+    deleteJson("/api/v1/ads/{$first->id}")->assertNoContent();
+
+    postJson("/api/v1/ads/{$second->id}/publish", ['accepted_terms' => true])
+        ->assertStatus(429)
+        ->assertJsonPath('error.code', 'AD_006');
 });
 
 it('treats publishing an ad already under review as a no-op', function (): void {
