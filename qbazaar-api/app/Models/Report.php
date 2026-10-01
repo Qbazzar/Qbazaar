@@ -24,8 +24,10 @@ use Illuminate\Support\Carbon;
  * "ad"/"user" for OpenAPI friendliness). Resolution to a concrete model
  * lives in {@see App\Services\Reports\ReportTargetResolver}.
  *
+ * A null reporter marks a report raised by auto-moderation.
+ *
  * @property string $id
- * @property string $reporter_id
+ * @property string|null $reporter_id
  * @property ReportTarget $target_type
  * @property string $target_id
  * @property ReportCategory $category
@@ -36,7 +38,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $admin_notes
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property User $reporter
+ * @property User|null $reporter
  * @property User|null $reviewer
  */
 class Report extends Model

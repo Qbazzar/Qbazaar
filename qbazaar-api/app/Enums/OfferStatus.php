@@ -5,19 +5,17 @@ declare(strict_types=1);
 namespace App\Enums;
 
 /**
- * Lifecycle states for a buyer-side offer attached to a conversation.
+ * Lifecycle states for a price offer attached to a conversation.
  *
- * PENDING is the only "open" state — every other case is terminal and
- * permanently freezes the row (no further status mutations allowed).
+ * PENDING is the only open state; every other case is terminal.
  *
- *   - ACCEPTED  → seller agreed to the offered price.
- *   - REJECTED  → seller declined.
- *   - WITHDRAWN → buyer pulled the offer before the seller acted.
- *   - EXPIRED   → ExpireOldOffersJob flipped a stale pending offer.
- *
- * A buyer can only have ONE pending offer per ad at a time — the
- * `active-offer` invariant enforced by MakeOfferAction and the
- * (buyer_id, ad_id, status) composite index in the offers table.
+ *   - ACCEPTED  → the responder agreed to the offered price.
+ *   - REJECTED  → the responder declined.
+ *   - WITHDRAWN → the proposer pulled the offer before a response.
+ *   - EXPIRED   → closed by the platform: the expiry window passed, the ad
+ *                 stopped accepting offers, or another offer was accepted.
+ *   - COUNTERED → the responder answered with a counter-offer, which lives
+ *                 on a new row pointing back through `parent_offer_id`.
  */
 enum OfferStatus: string
 {
@@ -26,14 +24,29 @@ enum OfferStatus: string
     case REJECTED = 'rejected';
     case WITHDRAWN = 'withdrawn';
     case EXPIRED = 'expired';
+    case COUNTERED = 'countered';
 
-    /**
-     * "Pending" is the only non-terminal status. Once an offer leaves
-     * PENDING it can never come back — controllers and actions rely on
-     * this invariant to keep their guards simple.
-     */
     public function isTerminal(): bool
     {
         return $this !== self::PENDING;
+    }
+
+    public function canTransitionTo(self $next): bool
+    {
+        return $this === self::PENDING && $next !== self::PENDING;
+    }
+
+    /**
+     * The timestamp column stamped when an offer enters this state.
+     */
+    public function timestampColumn(): ?string
+    {
+        return match ($this) {
+            self::ACCEPTED => 'accepted_at',
+            self::REJECTED => 'rejected_at',
+            self::WITHDRAWN => 'withdrawn_at',
+            self::COUNTERED => 'countered_at',
+            self::PENDING, self::EXPIRED => null,
+        };
     }
 }

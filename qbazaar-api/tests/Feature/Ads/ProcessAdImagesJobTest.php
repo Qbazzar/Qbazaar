@@ -6,6 +6,7 @@ use App\Jobs\ProcessAdImagesJob;
 use App\Models\Ad;
 use App\Models\User;
 use App\Services\Media\BlurHashGeneratorService;
+use App\Services\Media\MediaStorage;
 use App\Services\Media\PerceptualHashService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -68,6 +69,7 @@ it('populates phash on media after the job runs', function (): void {
     (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(
         app(BlurHashGeneratorService::class),
         app(PerceptualHashService::class),
+        app(MediaStorage::class),
     );
 
     $fresh = $media->fresh();
@@ -96,6 +98,7 @@ it('completes without throwing when the media file is missing and leaves phash n
     expect(fn () => (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(
         app(BlurHashGeneratorService::class),
         app(PerceptualHashService::class),
+        app(MediaStorage::class),
     ))->not->toThrow(Throwable::class);
 
     $fresh = $media->fresh();

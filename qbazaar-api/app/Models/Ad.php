@@ -354,7 +354,8 @@ class Ad extends Model implements HasMedia
      * ──────────────────────────────────────────────────────────────────*/
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('images');
+        $this->addMediaCollection('images')
+            ->storeConversionsOnDisk((string) config('qbazaar.uploads.public_disk'));
     }
 
     public function registerMediaConversions(?Media $media = null): void

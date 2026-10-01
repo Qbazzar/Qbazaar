@@ -108,7 +108,7 @@ Route::get('/openapi.yaml', function (): Response {
 //   Wave 2: OTP (send/verify/resend), password reset, email verification
 Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
     Route::post('/register', RegisterController::class)
-        ->middleware('throttle:auth')
+        ->middleware(['throttle:auth', 'turnstile'])
         ->name('register');
 
     Route::post('/login', LoginController::class)
@@ -125,7 +125,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
 
     // OTP — phone verification (Wave 2)
     Route::post('/send-otp', [OtpController::class, 'send'])
-        ->middleware('throttle:otp')
+        ->middleware(['throttle:otp', 'turnstile'])
         ->name('send-otp');
 
     Route::post('/verify-otp', [OtpController::class, 'verify'])
@@ -133,7 +133,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         ->name('verify-otp');
 
     Route::post('/resend-otp', [OtpController::class, 'resend'])
-        ->middleware('throttle:otp')
+        ->middleware(['throttle:otp', 'turnstile'])
         ->name('resend-otp');
 
     // Password reset (Wave 2)
@@ -410,9 +410,10 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 //   Authenticated:
 //     POST   /conversations/{id}/offers       — buyer creates an offer
 //     GET    /conversations/{id}/offers       — list offers in this thread
-//     POST   /offers/{id}/accept              — seller accepts (PENDING only)
-//     POST   /offers/{id}/reject              — seller rejects (PENDING only)
-//     POST   /offers/{id}/withdraw            — buyer withdraws (PENDING only)
+//     POST   /offers/{id}/accept              — responder accepts (PENDING only)
+//     POST   /offers/{id}/reject              — responder rejects (PENDING only)
+//     POST   /offers/{id}/withdraw            — proposer withdraws (PENDING only)
+//     POST   /offers/{id}/counter             — responder counters (PENDING only)
 Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
     Route::post('/conversations/{id}/offers', [OfferController::class, 'store'])
         ->middleware('phone.verified')
@@ -429,6 +430,10 @@ Route::middleware(['auth:sanctum', 'active.user'])->group(function (): void {
 
     Route::post('/offers/{id}/withdraw', [OfferController::class, 'withdraw'])
         ->name('api.v1.offers.withdraw');
+
+    Route::post('/offers/{id}/counter', [OfferController::class, 'counter'])
+        ->middleware('phone.verified')
+        ->name('api.v1.offers.counter');
 });
 
 // ── Sprint 10 — Notifications inbox ─────────────────────────────────────────

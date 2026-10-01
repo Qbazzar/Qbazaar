@@ -32,6 +32,7 @@ function validSettingsPayload(array $overrides = []): array
         'ad_expiry_warning_days' => 5,
         'ad_max_images' => 20,
         'ad_daily_publish_limit' => 10,
+        'offer_counter_rounds_per_side' => 1,
         ...$overrides,
     ];
 }
@@ -123,6 +124,8 @@ it('rejects out-of-range values', function (string $field, mixed $value): void {
     'images zero' => ['ad_max_images', 0],
     'images above 20' => ['ad_max_images', 21],
     'daily limit zero' => ['ad_daily_publish_limit', 0],
+    'counter rounds negative' => ['offer_counter_rounds_per_side', -1],
+    'counter rounds above 5' => ['offer_counter_rounds_per_side', 6],
 ]);
 
 it('serves reads from the cache and refreshes it after a write', function (): void {

@@ -64,6 +64,10 @@ return [
         ],
     ],
 
+    'turnstile' => [
+        'failed' => 'The security check failed. Please try again.',
+    ],
+
     'not_found' => 'The requested resource was not found.',
 
     'forbidden' => 'You are not authorised to perform this action.',

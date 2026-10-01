@@ -18,6 +18,7 @@ enum PlatformSetting: string
     case AD_EXPIRY_WARNING_DAYS = 'ad_expiry_warning_days';
     case AD_MAX_IMAGES = 'ad_max_images';
     case AD_DAILY_PUBLISH_LIMIT = 'ad_daily_publish_limit';
+    case OFFER_COUNTER_ROUNDS_PER_SIDE = 'offer_counter_rounds_per_side';
 
     public function definition(): SettingDefinition
     {
@@ -27,6 +28,7 @@ enum PlatformSetting: string
             self::AD_EXPIRY_WARNING_DAYS => SettingDefinition::integer(SettingGroup::ADS, 'qbazaar.ads.expiry_warning_days_before', min: 1, max: 30),
             self::AD_MAX_IMAGES => SettingDefinition::integer(SettingGroup::ADS, 'qbazaar.ads.max_images', min: 1, max: 20),
             self::AD_DAILY_PUBLISH_LIMIT => SettingDefinition::integer(SettingGroup::ADS, 'qbazaar.ads.daily_publish_limit_per_user', min: 1, max: 100),
+            self::OFFER_COUNTER_ROUNDS_PER_SIDE => SettingDefinition::integer(SettingGroup::OFFERS, 'qbazaar.offers.counter_rounds_per_side', min: 0, max: 5),
         };
     }
 
