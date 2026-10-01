@@ -354,14 +354,8 @@ return [
         'phash_distance_threshold' => 8, // for duplicate image detection
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Data retention — nightly pruning
-    |--------------------------------------------------------------------------
-    */
     'reviews' => [
         'comment_max_length' => 1000,
-        'per_page' => 15,
     ],
 
     'support' => [
@@ -369,9 +363,13 @@ return [
         'subject_max_length' => 160,
         'body_min_length' => 10,
         'body_max_length' => 5000,
-        'tickets_per_page' => 20,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Data retention — nightly pruning
+    |--------------------------------------------------------------------------
+    */
     // Activity log retention is activitylog.clean_after_days (ACTIVITY_LOG_RETENTION_DAYS).
     'retention' => [
         'read_notifications_days' => (int) env('READ_NOTIFICATIONS_RETENTION_DAYS', 90),
