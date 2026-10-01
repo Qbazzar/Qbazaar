@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Api\V1\Reference;
 
 use App\Models\Category;
+use App\Services\Catalog\CategoryAdCounts;
 use App\Services\Catalog\CategoryTree;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -33,6 +34,8 @@ class CategoryNodeResource extends JsonResource
             fn (Category $child): array => (new self($child))->toArray($request),
         )->all();
 
+        $counts = app(CategoryAdCounts::class)->for($this->id);
+
         return [
             'id' => $this->id,
             'parent_id' => $this->parent_id,
@@ -44,7 +47,8 @@ class CategoryNodeResource extends JsonResource
             'is_active' => $this->is_active,
             'custom_fields' => $this->custom_fields,
             'custom_filters' => $this->custom_filters,
-            'ads_count' => 0,
+            'ads_count' => $counts['ads_count'],
+            'today_count' => $counts['today_count'],
             'children' => $children,
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),

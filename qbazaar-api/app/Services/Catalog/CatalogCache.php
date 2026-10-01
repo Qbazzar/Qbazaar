@@ -18,6 +18,7 @@ class CatalogCache
         private readonly CategoryHierarchy $categories,
         private readonly LocationHierarchy $locations,
         private readonly CategoryTree $tree,
+        private readonly CategoryAdCounts $counts,
     ) {}
 
     public function taxonomyChanged(): void
@@ -26,5 +27,12 @@ class CatalogCache
         $this->locations->flush();
         $this->tree->flush();
         Cache::forget(self::MAIN_CATEGORIES_KEY);
+
+        $this->listingsChanged();
+    }
+
+    public function listingsChanged(): void
+    {
+        $this->counts->flush();
     }
 }

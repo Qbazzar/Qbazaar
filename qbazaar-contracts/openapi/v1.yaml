@@ -895,7 +895,8 @@ paths:
                         is_active: true
                         custom_fields: null
                         custom_filters: null
-                        ads_count: 0
+                        ads_count: 12
+                        today_count: 1
                         created_at: '2026-05-23T12:00:00+00:00'
                         updated_at: '2026-05-23T12:00:00+00:00'
                         children:
@@ -909,7 +910,8 @@ paths:
                             is_active: true
                             custom_fields: []
                             custom_filters: []
-                            ads_count: 0
+                            ads_count: 12
+                            today_count: 1
                             created_at: '2026-05-23T12:00:00+00:00'
                             updated_at: '2026-05-23T12:00:00+00:00'
                             children: []
@@ -931,7 +933,8 @@ paths:
   /api/v1/categories/{slug}/stats:
     get:
       tags: [Reference]
-      summary: Ad counters for a category (stub — Sprint 5 will populate)
+      summary: Live ad counters for a category, descendants included
+      description: Cached for up to `qbazaar.catalog.counts_cache_seconds` and flushed when an ad is published, expires or changes status, category or location.
       operationId: categoriesStats
       security: []
       parameters:
@@ -952,8 +955,9 @@ paths:
                   value:
                     success: true
                     data:
-                      ads_count: 0
-                      sub_ads_count: 0
+                      ads_count: 42
+                      sub_ads_count: 40
+                      today_count: 3
         '404':
           description: Category not found (CAT_001)
           content:
@@ -3263,7 +3267,7 @@ components:
     Category:
       type: object
       required:
-        [id, parent_id, slug, name, icon, order, is_active, ads_count, created_at, updated_at]
+        [id, parent_id, slug, name, icon, order, is_active, ads_count, today_count, created_at, updated_at]
       properties:
         id:
           $ref: '#/components/schemas/ULID'
@@ -3302,7 +3306,12 @@ components:
             - type: 'null'
         ads_count:
           type: integer
-          example: 0
+          description: Publicly listed ads in this category and all its descendants.
+          example: 42
+        today_count:
+          type: integer
+          description: Of `ads_count`, the ads published since local midnight (Asia/Qatar).
+          example: 3
         created_at:
           type: string
           format: date-time
@@ -3390,14 +3399,20 @@ components:
 
     CategoryStats:
       type: object
-      required: [ads_count, sub_ads_count]
+      required: [ads_count, sub_ads_count, today_count]
       properties:
         ads_count:
           type: integer
-          example: 0
+          description: Publicly listed ads in the category and all its descendants.
+          example: 42
         sub_ads_count:
           type: integer
-          example: 0
+          description: The part of `ads_count` filed under descendant categories.
+          example: 40
+        today_count:
+          type: integer
+          description: Ads published since local midnight (Asia/Qatar), descendants included.
+          example: 3
 
     CategoryTreeEnvelope:
       allOf:

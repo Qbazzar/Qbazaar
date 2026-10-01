@@ -8,6 +8,7 @@ use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
+use App\Observers\AdListingCacheObserver;
 use App\Observers\AdObserver;
 use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
@@ -45,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         User::observe(UserObserver::class);
-        Ad::observe(AdObserver::class);
+        Ad::observe([AdObserver::class, AdListingCacheObserver::class]);
         Category::observe(TaxonomyCacheObserver::class);
         Location::observe(TaxonomyCacheObserver::class);
 

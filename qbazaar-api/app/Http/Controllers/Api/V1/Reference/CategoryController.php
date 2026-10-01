@@ -13,6 +13,7 @@ use App\Http\Resources\Api\V1\Reference\CategoryNodeResource;
 use App\Http\Resources\Api\V1\Reference\CategoryResource;
 use App\Models\Category;
 use App\Services\Catalog\CatalogCache;
+use App\Services\Catalog\CategoryAdCounts;
 use App\Services\Catalog\CategoryTree;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -23,15 +24,13 @@ use Illuminate\Support\Facades\Cache;
  * Read-only category endpoints used by the browse + search UX.
  *
  * The taxonomy views are cached and flushed by {@see CatalogCache} whenever a
- * category changes.
+ * category changes; ad counters come from {@see CategoryAdCounts}.
  *
  * @group Reference
  */
 class CategoryController extends Controller
 {
     private const TREE_TTL = 3600;        // 1 hour
-
-    private const STATS_TTL = 300;        // 5 minutes
 
     private const FIELD_TTL = 3600;       // 1 hour
 
@@ -80,30 +79,21 @@ class CategoryController extends Controller
     }
 
     /**
-     * GET /api/v1/categories/{slug}/stats — ad counters for the category.
-     *
-     * Sprint 5 will replace the zeros with real counts; the shape is
-     * already committed so consumers can integrate today.
+     * GET /api/v1/categories/{slug}/stats — ad counters for the category and its descendants.
      *
      * @unauthenticated
      *
      * @throws DomainException
      */
-    public function stats(string $slug): JsonResponse
+    public function stats(string $slug, CategoryAdCounts $adCounts): JsonResponse
     {
-        $this->resolveCategoryOrFail($slug);
+        $counts = $adCounts->for($this->resolveCategoryOrFail($slug)->id);
 
-        /** @var array{ads_count: int, sub_ads_count: int} $stats */
-        $stats = Cache::remember(
-            "categories.stats.{$slug}",
-            self::STATS_TTL,
-            fn () => [
-                'ads_count' => 0,
-                'sub_ads_count' => 0,
-            ],
-        );
-
-        return response()->json($stats);
+        return response()->json([
+            'ads_count' => $counts['ads_count'],
+            'sub_ads_count' => $counts['ads_count'] - $counts['own_count'],
+            'today_count' => $counts['today_count'],
+        ]);
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Api\V1\Reference;
 
 use App\Models\Category;
+use App\Services\Catalog\CategoryAdCounts;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,6 +25,8 @@ class CategoryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $counts = app(CategoryAdCounts::class)->for($this->id);
+
         return [
             'id' => $this->id,
             'parent_id' => $this->parent_id,
@@ -35,9 +38,8 @@ class CategoryResource extends JsonResource
             'is_active' => $this->is_active,
             'custom_fields' => $this->custom_fields,
             'custom_filters' => $this->custom_filters,
-            // Sprint 5 will populate this from the ads table; until then we
-            // expose a stable 0 so the wire shape doesn't change later.
-            'ads_count' => 0,
+            'ads_count' => $counts['ads_count'],
+            'today_count' => $counts['today_count'],
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
         ];
