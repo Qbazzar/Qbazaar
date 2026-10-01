@@ -69,6 +69,11 @@ return [
             'enabled' => (bool) env('AUTH_NEW_DEVICE_CHECK_ENABLED', false) && env('APP_ENV') !== 'testing',
             'challenge_ttl_minutes' => 10,
         ],
+
+        'social' => [
+            'jwks_cache_minutes' => 360,
+            'clock_leeway_seconds' => 60,
+        ],
     ],
 
     /*

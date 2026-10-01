@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RefreshTokenController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
+use App\Http\Controllers\Api\V1\Auth\SocialSignInController;
 use App\Http\Controllers\Api\V1\Cms\PageController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Help\HelpController;
@@ -178,6 +179,10 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
     Route::post('/device/verify', DeviceVerificationController::class)
         ->middleware('throttle:otp-verify')
         ->name('device.verify');
+
+    Route::post('/social/{provider}', SocialSignInController::class)
+        ->middleware('throttle:auth')
+        ->name('social');
 });
 
 // ── Sprint 2 — Account & Users ──────────────────────────────────────────────
