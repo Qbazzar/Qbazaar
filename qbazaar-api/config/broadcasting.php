@@ -43,8 +43,10 @@ return [
                 'scheme' => env('REVERB_SCHEME', 'https'),
                 'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
             ],
+            // A hung Reverb must fail a broadcast fast, not stall the realtime queue.
             'client_options' => [
-                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                'connect_timeout' => 1,
+                'timeout' => 3,
             ],
         ],
 

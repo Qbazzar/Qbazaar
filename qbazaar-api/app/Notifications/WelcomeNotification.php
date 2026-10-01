@@ -7,6 +7,7 @@ namespace App\Notifications;
 use App\Enums\Language;
 use App\Models\User;
 use App\Notifications\Concerns\BuildsEmailVerificationUrl;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,6 +29,7 @@ use Illuminate\Notifications\Notification;
 class WelcomeNotification extends Notification implements ShouldQueue
 {
     use BuildsEmailVerificationUrl;
+    use DeliversOnNotificationsQueue;
     use Queueable;
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs\Search;
 
+use App\Enums\QueueName;
 use App\Models\Ad;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
@@ -30,9 +31,11 @@ class SyncAdViewCountsJob implements ShouldQueue
 
     public int $backoff = 60;
 
+    public int $timeout = 300;
+
     public function __construct()
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(Client $meilisearch): void

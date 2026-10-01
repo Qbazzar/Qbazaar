@@ -99,8 +99,12 @@ return [
     */
 
     'waits' => [
+        'redis:realtime' => 10,
+        'redis:notifications' => 120,
         'redis:default' => 60,
-        'redis:low' => 300,
+        'redis:search' => 300,
+        'redis-long:media' => 600,
+        'redis-long:low' => 1800,
     ],
 
     /*
@@ -199,35 +203,115 @@ return [
     |
     */
 
+    // One supervisor per queue so a backlog on one (a burst of image
+    // uploads, a long sweep) never delays another (chat broadcasts). Sized
+    // for a single server: production peaks at 14 workers. Job classes set
+    // their own tries/backoff/timeout; these are the fallbacks. Every
+    // timeout stays below the retry_after of its connection (config/queue.php).
     'defaults' => [
-        'supervisor-1' => [
+        'supervisor-realtime' => [
             'connection' => 'redis',
-            'queue' => ['default', 'low'],
+            'queue' => ['realtime'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'size',
+            'minProcesses' => 1,
+            'maxProcesses' => 2,
+            'maxTime' => 3600,
+            'maxJobs' => 1000,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 30,
+            'nice' => 0,
+        ],
+        'supervisor-notifications' => [
+            'connection' => 'redis',
+            'queue' => ['notifications'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
+            'minProcesses' => 1,
+            'maxProcesses' => 2,
+            'maxTime' => 3600,
+            'maxJobs' => 1000,
+            'memory' => 128,
+            'tries' => 5,
+            'timeout' => 120,
+            'nice' => 0,
+        ],
+        'supervisor-default' => [
+            'connection' => 'redis',
+            'queue' => ['default'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'minProcesses' => 1,
+            'maxProcesses' => 2,
+            'maxTime' => 3600,
+            'maxJobs' => 1000,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
+        'supervisor-search' => [
+            'connection' => 'redis',
+            'queue' => ['search'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'minProcesses' => 1,
+            'maxProcesses' => 2,
+            'maxTime' => 3600,
+            'maxJobs' => 1000,
+            'memory' => 128,
+            'tries' => 5,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
+        'supervisor-media' => [
+            'connection' => 'redis-long',
+            'queue' => ['media'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'minProcesses' => 1,
+            'maxProcesses' => 2,
+            'maxTime' => 3600,
+            // Image libraries leak; recycle workers often.
+            'maxJobs' => 200,
+            'memory' => 512,
+            'tries' => 3,
+            'timeout' => 300,
+            'nice' => 10,
+        ],
+        'supervisor-low' => [
+            'connection' => 'redis-long',
+            'queue' => ['low'],
+            'balance' => 'simple',
+            'minProcesses' => 1,
             'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
-            'memory' => 128,
-            'tries' => 1,
-            'timeout' => 60,
-            'nice' => 0,
+            'memory' => 256,
+            'tries' => 3,
+            'timeout' => 1800,
+            'nice' => 10,
         ],
     ],
 
     'environments' => [
         'production' => [
-            'supervisor-1' => [
-                'maxProcesses' => 10,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
-            ],
+            'supervisor-realtime' => ['maxProcesses' => 4, 'balanceMaxShift' => 2, 'balanceCooldown' => 1],
+            'supervisor-notifications' => ['maxProcesses' => 3, 'balanceMaxShift' => 1, 'balanceCooldown' => 3],
+            'supervisor-default' => ['maxProcesses' => 2, 'balanceMaxShift' => 1, 'balanceCooldown' => 3],
+            'supervisor-search' => ['maxProcesses' => 2, 'balanceMaxShift' => 1, 'balanceCooldown' => 3],
+            'supervisor-media' => ['maxProcesses' => 2, 'balanceMaxShift' => 1, 'balanceCooldown' => 5],
+            'supervisor-low' => [],
         ],
 
         'local' => [
-            'supervisor-1' => [
-                'maxProcesses' => 3,
-            ],
+            'supervisor-realtime' => [],
+            'supervisor-notifications' => [],
+            'supervisor-default' => [],
+            'supervisor-search' => [],
+            'supervisor-media' => [],
+            'supervisor-low' => [],
         ],
     ],
 

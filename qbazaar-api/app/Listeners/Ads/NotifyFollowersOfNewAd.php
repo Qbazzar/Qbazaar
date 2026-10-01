@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners\Ads;
 
+use App\Enums\QueueName;
 use App\Events\Ads\AdApproved;
 use App\Events\Ads\AdPublished;
 use App\Notifications\Ads\NewAdFromFollowedSellerNotification;
@@ -17,13 +18,15 @@ use Illuminate\Contracts\Queue\ShouldQueue;
  */
 class NotifyFollowersOfNewAd implements ShouldQueue
 {
-    public string $queue = 'low';
+    public string $queue = QueueName::NOTIFICATIONS->value;
 
     // Recipients are claimed once per event, so a retry only reaches the ones not alerted yet.
     public int $tries = 3;
 
     /** @var list<int> */
     public array $backoff = [10, 60, 300];
+
+    public int $timeout = 120;
 
     public function __construct(
         private readonly SellerFollowers $followers,
