@@ -39,7 +39,7 @@ class RegisterRequest extends FormRequest
         $minLength = (int) config('qbazaar.auth.password_min_length', 8);
 
         return [
-            'full_name' => ['required', 'string', 'min:3', 'max:80'],
+            'full_name' => ['required', 'string', 'min:' . (int) config('qbazaar.auth.full_name_min_length'), 'max:' . (int) config('qbazaar.auth.full_name_max_length')],
             'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
             'phone' => [
                 'required',

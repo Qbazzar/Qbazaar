@@ -113,6 +113,14 @@ return [
     | possible and never include HTML.
     */
     'notifications' => [
+        'report_actioned' => [
+            'title' => 'Thanks for your report',
+            'body' => 'We reviewed your report and took action.',
+        ],
+        'report_dismissed' => [
+            'title' => 'Thanks for your report',
+            'body' => 'We reviewed your report and found no breach of our rules.',
+        ],
         'ad_approved' => [
             'title' => 'Your ad is live',
             'body' => 'Your ad ":title" has been approved and is now visible to buyers.',
