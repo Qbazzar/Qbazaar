@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Observers\AdListingCacheObserver;
 use App\Observers\AdObserver;
 use App\Observers\AdOffersObserver;
+use App\Observers\AdReviewQueueObserver;
 use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
 use App\Services\Moderation\ModerationRulesService;
@@ -47,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         User::observe(UserObserver::class);
-        Ad::observe([AdObserver::class, AdOffersObserver::class, AdListingCacheObserver::class]);
+        Ad::observe([AdObserver::class, AdOffersObserver::class, AdListingCacheObserver::class, AdReviewQueueObserver::class]);
         Category::observe(TaxonomyCacheObserver::class);
         Location::observe(TaxonomyCacheObserver::class);
 

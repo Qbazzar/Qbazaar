@@ -29,12 +29,13 @@
                 </button>
             </div>
             <nav class="flex-1 space-y-4 overflow-y-auto p-4">
+                @php($pendingReviewCount = auth()->user()->can(\App\Listeners\Ads\NotifyAdminsOfPendingAd::REVIEW_PERMISSION) ? app(\App\Services\Ads\PendingReviewCounter::class)->count() : 0)
                 @php($groups = [
                     'عام' => [
                         ['route' => 'admin.dashboard', 'label' => 'لوحة القيادة', 'match' => 'admin.dashboard', 'icon' => 'dashboard'],
                     ],
                     'الإشراف' => [
-                        ['route' => 'admin.ads.index', 'label' => 'الإعلانات', 'match' => 'admin.ads.*', 'icon' => 'tag', 'permission' => 'ads.view'],
+                        ['route' => 'admin.ads.index', 'label' => 'الإعلانات', 'match' => 'admin.ads.*', 'icon' => 'tag', 'permission' => 'ads.view', 'badge' => $pendingReviewCount, 'badge_label' => __('admin.ad_review.pending_badge')],
                         ['route' => 'admin.reports.index', 'label' => 'البلاغات', 'match' => 'admin.reports.*', 'icon' => 'flag', 'permission' => 'reports.view'],
                         ['route' => 'admin.moderation-rules.index', 'label' => 'قواعد الإشراف', 'match' => 'admin.moderation-rules.*', 'icon' => 'shield', 'permission' => 'moderation-rules.manage'],
                     ],
@@ -75,6 +76,9 @@
                                       {{ $active ? 'bg-coral-soft text-coral' : 'text-ink-700 hover:bg-cream-200' }}">
                                 <x-admin.icon :name="$item['icon']" class="size-[18px] shrink-0 {{ $active ? 'text-coral' : 'text-ink-500' }}" />
                                 {{ $item['label'] }}
+                                @if (($item['badge'] ?? 0) > 0)
+                                    <span class="ms-auto rounded-full bg-coral px-2 py-0.5 text-[11px] font-bold text-white" title="{{ $item['badge_label'] }}">{{ $item['badge'] > 99 ? '99+' : $item['badge'] }}</span>
+                                @endif
                             </a>
                         @endforeach
                     </div>

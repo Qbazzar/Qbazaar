@@ -239,6 +239,7 @@ return [
         'impersonation_ttl_minutes' => 20,
         'impersonation_reason_min_length' => 10,
         'impersonation_reason_max_length' => 500,
+        'pending_review_count_cache_seconds' => 300,
     ],
 
     /*

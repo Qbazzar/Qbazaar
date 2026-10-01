@@ -321,6 +321,7 @@ return [
             'duplicate_image' => 'صورة تشبه صورة إعلان لبائع آخر',
         ],
         'duplicate_of' => 'الإعلانات المشابهة:',
+        'pending_badge' => 'إعلانات بانتظار المراجعة',
     ],
 
     'announcement' => [

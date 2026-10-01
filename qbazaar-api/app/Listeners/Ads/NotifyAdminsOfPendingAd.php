@@ -4,49 +4,58 @@ declare(strict_types=1);
 
 namespace App\Listeners\Ads;
 
+use App\Enums\UserStatus;
 use App\Events\Ads\AdSubmittedForReview;
 use App\Models\User;
 use App\Notifications\Ads\AdPendingReviewNotification;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Sends a database notification to every reviewer whenever a seller submits an
- * ad for review, so the /manage notifications bell surfaces the queue.
+ * Tells every active staff member who can approve ads that one is waiting,
+ * in the panel bell and by email. Queued so the publish request never waits
+ * on the staff lookup or the fan-out.
  *
- * Reviewers are users holding `super_admin` or `moderator` — the same roles
- * that gate the panel's approve/reject actions. `support` is excluded: it can
- * read the panel but does not action the moderation queue.
+ * Reviewers are found by permission, not role name, so a custom role that is
+ * granted `ads.approve` is notified too.
  */
-class NotifyAdminsOfPendingAd
+class NotifyAdminsOfPendingAd implements ShouldQueue
 {
+    public const REVIEW_PERMISSION = 'ads.approve';
+
+    private const CHUNK_SIZE = 100;
+
+    public string $queue = 'default';
+
     public function handle(AdSubmittedForReview $event): void
     {
-        $reviewers = $this->reviewers();
-
-        if ($reviewers->isEmpty()) {
-            return;
-        }
-
-        Notification::send(
-            $reviewers,
-            new AdPendingReviewNotification(
-                $event->ad,
-                flagged: ! $event->result->clean,
-                flags: $event->result->flags,
-            ),
+        $notification = new AdPendingReviewNotification(
+            $event->ad,
+            flagged: ! $event->result->clean,
+            flags: $event->result->flags,
         );
+
+        $this->reviewers()->chunkById(self::CHUNK_SIZE, function (Collection $reviewers) use ($notification): void {
+            Notification::send($reviewers, $notification);
+        });
     }
 
     /**
-     * @return Collection<int, User>
+     * whereHas rather than Spatie's `permission()` scope, which throws when
+     * the permission has not been seeded yet.
+     *
+     * @return Builder<User>
      */
-    private function reviewers(): Collection
+    private function reviewers(): Builder
     {
-        // whereHas (not the `role()` scope) so a missing role never throws
-        // RoleDoesNotExist and 500s the publish request — it just yields none.
+        $hasPermission = static fn (Builder $permissions) => $permissions->where('name', self::REVIEW_PERMISSION);
+
         return User::query()
-            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['super_admin', 'moderator']))
-            ->get();
+            ->where('status', UserStatus::ACTIVE->value)
+            ->where(static fn (Builder $query) => $query
+                ->whereHas('roles.permissions', $hasPermission)
+                ->orWhereHas('permissions', $hasPermission));
     }
 }

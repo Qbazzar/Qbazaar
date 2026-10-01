@@ -380,6 +380,7 @@ return [
             'duplicate_image' => 'An image matches another seller\'s ad',
         ],
         'duplicate_of' => 'Matching ads:',
+        'pending_badge' => 'Ads waiting for review',
     ],
 
     'announcement' => [
