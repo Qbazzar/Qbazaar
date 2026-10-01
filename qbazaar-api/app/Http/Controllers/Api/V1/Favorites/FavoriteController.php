@@ -67,7 +67,10 @@ class FavoriteController extends Controller
      */
     public function remove(Request $request, SetFavoriteAction $action, string $id): JsonResponse
     {
-        return response()->json($action->execute($this->caller($request), $this->findAdOrFail($id), false));
+        // A deleted ad must still leave the list, or it would hold a slot under the cap.
+        $ad = Ad::withTrashed()->find($id) ?? throw new DomainException(ErrorCode::AD_NOT_FOUND);
+
+        return response()->json($action->execute($this->caller($request), $ad, false));
     }
 
     /**

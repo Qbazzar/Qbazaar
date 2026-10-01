@@ -1870,7 +1870,9 @@ paths:
     put:
       tags: [Favorites]
       summary: Add the ad to the caller's favourites (idempotent)
-      description: Repeating the call is a no-op and returns the same state; the count only moves once.
+      description: |
+        Repeating the call is a no-op and returns the same state; the count only moves once.
+        Only publicly listed ads can be added; drafts, pending, sold, expired and blocked ads answer AD_NOT_FOUND.
       operationId: favoritesAdd
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -1897,7 +1899,7 @@ paths:
     delete:
       tags: [Favorites]
       summary: Remove the ad from the caller's favourites (idempotent)
-      description: Removing an ad that is not favourited succeeds with `favorited=false`.
+      description: Removing an ad that is not favourited succeeds with `favorited=false`. Works for ads in any status, including deleted ones.
       operationId: favoritesRemove
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -4569,7 +4571,7 @@ components:
         image:
           type: string
           format: binary
-          description: JPEG, PNG or WebP (sniffed content), at most 10 MB. Stored under a server-generated name.
+          description: JPEG, PNG or WebP (sniffed content), at most 10 MB and 8192 px on either side (`qbazaar.messaging.image_max_side_px`). Stored under a server-generated name.
         body:
           type: string
           maxLength: 5000

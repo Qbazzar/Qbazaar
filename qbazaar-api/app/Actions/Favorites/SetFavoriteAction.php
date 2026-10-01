@@ -17,6 +17,9 @@ use Illuminate\Support\Str;
  * no-op: the (user_id, ad_id) unique key decides whether a row was really
  * added or removed, and `ads.favorites_count` only moves when it was, so
  * concurrent double taps can neither duplicate a row nor skew the counter.
+ *
+ * Only a publicly listed ad can be added, so drafts, pending and blocked ads
+ * answer AD_NOT_FOUND like everywhere else. Removing works on any ad.
  */
 class SetFavoriteAction
 {
@@ -42,6 +45,13 @@ class SetFavoriteAction
         if ($alreadyFavorited) {
             return;
         }
+
+        if (! $ad->isPubliclyListed()) {
+            throw new DomainException(ErrorCode::AD_NOT_FOUND);
+        }
+
+        // Serialises a user's parallel adds so they cannot all pass the cap.
+        User::query()->whereKey($user->id)->lockForUpdate()->first(['id']);
 
         if (Favorite::query()->where('user_id', $user->id)->count() >= (int) config('qbazaar.favorites.max_per_user')) {
             throw new DomainException(ErrorCode::FAV_LIMIT_REACHED);

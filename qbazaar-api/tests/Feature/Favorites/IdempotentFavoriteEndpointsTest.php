@@ -119,3 +119,30 @@ it('returns AD_NOT_FOUND for unknown ads and 401 for guests', function (): void 
         ->assertNotFound()
         ->assertJsonPath('error.code', 'AD_001');
 });
+
+it('answers AD_NOT_FOUND when adding an ad that is not publicly listed', function (string $status): void {
+    $hidden = $this->makeAd(User::factory()->create(), ['status' => $status]);
+
+    Sanctum::actingAs($this->user, ['*']);
+
+    putJson("/api/v1/ads/{$hidden->id}/favorite")
+        ->assertNotFound()
+        ->assertJsonPath('error.code', 'AD_001');
+
+    postJson("/api/v1/ads/{$hidden->id}/favorite")->assertNotFound();
+
+    expect(Favorite::query()->count())->toBe(0);
+})->with(['draft', 'pending', 'blocked']);
+
+it('still removes a favourite whose ad was deleted', function (): void {
+    Favorite::query()->create(['user_id' => $this->user->id, 'ad_id' => $this->ad->id, 'created_at' => now()]);
+    $this->ad->delete();
+
+    Sanctum::actingAs($this->user, ['*']);
+
+    deleteJson("/api/v1/ads/{$this->ad->id}/favorite")
+        ->assertOk()
+        ->assertJsonPath('data.favorited', false);
+
+    expect(Favorite::query()->count())->toBe(0);
+});
