@@ -8,16 +8,17 @@ use App\Enums\UserStatus;
 use App\Models\User;
 use App\Notifications\Search\SavedSearchDigestNotification;
 use App\Services\Search\SavedSearchPushBatcher;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
  * Sends one push for the saved-search matches a user got while their push
- * window was closed. Unique per user, so every batched match in a window
- * shares one delayed job.
+ * window was closed. Unique per user until it starts, so every batched match
+ * in a window shares one delayed job, and a match counted while this run is
+ * sending queues the next window's digest instead of waiting for a later one.
  */
-class SendSavedSearchDigestJob implements ShouldBeUnique, ShouldQueue
+class SendSavedSearchDigestJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
     use Queueable;
 

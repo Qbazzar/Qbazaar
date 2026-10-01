@@ -33,6 +33,8 @@ return new class extends Migration
         $this->backfill('buyer');
         $this->backfill('seller');
 
+        // The inbox indexes about to go are what the buyer_id / seller_id
+        // foreign keys use, so each key needs its own index first.
         Schema::table('conversations', function (Blueprint $table): void {
             $table->index(['buyer_id', 'last_message_at'], 'conversations_buyer_last_msg_idx');
             $table->index(['seller_id', 'last_message_at'], 'conversations_seller_last_msg_idx');

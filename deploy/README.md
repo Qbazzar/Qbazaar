@@ -129,7 +129,7 @@ If one of the limits has to be lower, lower `max_images_per_upload` to match (`f
 
 ## Saved-search alerts
 
-Each newly live ad queues one fan-out per ad (`ShouldBeUnique`, `low` queue). Candidates come from one indexed query on `saved_searches` (`saved_searches_alerts_category_location_idx`). A user gets at most one saved-search push per `qbazaar.search.saved_search_check_interval_minutes` (60); later matches in the window only reach the bell and one `search.digest` push follows when the window closes (a delayed `SendSavedSearchDigestJob` on `low`). The window and the pending counts live in the cache, so it must be `redis` in production. Nothing to run on deploy beyond `migrate`.
+Each newly live ad queues one fan-out per ad (unique while queued, `low` queue). Candidates come from one indexed query on `saved_searches` (`saved_searches_alerts_category_location_idx`). A user gets at most one saved-search push per `qbazaar.search.saved_search_check_interval_minutes` (60); later matches in the window only reach the bell and one `search.digest` push follows when the window closes (a delayed `SendSavedSearchDigestJob` on `low`). The window and the pending counts live in the cache, so it must be `redis` in production. Nothing to run on deploy beyond `migrate`.
 
 ## Chat inbox
 
