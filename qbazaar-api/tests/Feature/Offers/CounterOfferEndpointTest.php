@@ -146,6 +146,19 @@ it('refuses to counter once the ad is back in review', function (): void {
         ->assertJsonPath('error.code', 'OFFER_007');
 });
 
+it('refuses to counter when either side has blocked the other', function (User $blocker, User $blocked): void {
+    $blocker->blockedUsers()->attach($blocked->id, ['created_at' => now()]);
+
+    counterOffer($this->seller, $this->offer, 950)
+        ->assertForbidden()
+        ->assertJsonPath('error.code', 'MSG_001');
+
+    expect($this->offer->fresh()->status)->toBe(OfferStatus::PENDING);
+})->with([
+    'seller blocked buyer' => [fn () => $this->seller, fn () => $this->buyer],
+    'buyer blocked seller' => [fn () => $this->buyer, fn () => $this->seller],
+]);
+
 it('validates the counter amount', function (): void {
     counterOffer($this->seller, $this->offer, 0)
         ->assertStatus(422)

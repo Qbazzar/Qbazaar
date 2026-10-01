@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Offers;
 
 use App\Enums\MessageType;
+use App\Enums\OfferParty;
 use App\Enums\OfferStatus;
 use App\Enums\PlatformSetting;
 use App\Events\Offers\OfferCountered;
@@ -42,10 +43,22 @@ class CounterOfferAction
             throw new DomainException(ErrorCode::OFFER_FORBIDDEN);
         }
 
+        $this->ensureNotBlocked($actor, $offer);
+
         return $this->transitions->withLockedOffer(
             $offer,
             fn (Offer $offer, Ad $ad): Offer => $this->counter($actor, $offer, $ad, $amount, $note),
         );
+    }
+
+    private function ensureNotBlocked(User $actor, Offer $offer): void
+    {
+        $offer->loadMissing(['buyer', 'seller']);
+        $proposer = $offer->proposed_by === OfferParty::BUYER ? $offer->buyer : $offer->seller;
+
+        if ($actor->hasBlocked($proposer) || $proposer->hasBlocked($actor)) {
+            throw new DomainException(ErrorCode::MSG_BLOCKED);
+        }
     }
 
     private function counter(User $actor, Offer $offer, Ad $ad, float $amount, ?string $note): Offer
