@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Models\Ad;
 use App\Models\DatabaseNotification;
 use App\Models\RecentView;
 use App\Models\RefreshToken;
 use App\Models\User;
+use Database\Seeders\CategorySeeder;
+use Database\Seeders\LocationSeeder;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -13,12 +16,11 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-use function Pest\Laravel\artisan;
+use function Pest\Laravel\seed;
 
 use Spatie\Activitylog\Models\Activity;
-use Tests\Concerns\CreatesAds;
 
-uses(RefreshDatabase::class, CreatesAds::class);
+uses(RefreshDatabase::class);
 
 function refreshTokenExpiring(User $user, Carbon $expiresAt): RefreshToken
 {
@@ -47,22 +49,22 @@ it('prunes refresh tokens a day past expiry and keeps live ones', function (): v
     $recentlyExpired = refreshTokenExpiring($user, Carbon::now()->subHour());
     $live = refreshTokenExpiring($user, Carbon::now()->addDays(10));
 
-    artisan('model:prune', ['--model' => [RefreshToken::class]])->assertSuccessful();
+    expect(Artisan::call('model:prune', ['--model' => [RefreshToken::class]]))->toBe(0);
 
     expect(RefreshToken::query()->pluck('id')->sort()->values()->all())
         ->toBe(collect([$recentlyExpired->id, $live->id])->sort()->values()->all());
 });
 
 it('prunes old guest views but never a signed-in history', function (): void {
-    $this->seedReferenceData();
+    seed([CategorySeeder::class, LocationSeeder::class]);
     $user = User::factory()->create();
-    $ad = $this->makeAd(User::factory()->create());
+    $ad = Ad::factory()->create();
 
     $oldGuest = RecentView::query()->create(['session_id' => 'guest-a', 'ad_id' => $ad->id, 'viewed_at' => Carbon::now()->subDays(31)]);
     $freshGuest = RecentView::query()->create(['session_id' => 'guest-b', 'ad_id' => $ad->id, 'viewed_at' => Carbon::now()->subDays(2)]);
     $oldMember = RecentView::query()->create(['user_id' => $user->id, 'ad_id' => $ad->id, 'viewed_at' => Carbon::now()->subDays(90)]);
 
-    artisan('model:prune', ['--model' => [RecentView::class]])->assertSuccessful();
+    expect(Artisan::call('model:prune', ['--model' => [RecentView::class]]))->toBe(0);
 
     expect(RecentView::query()->find($oldGuest->id))->toBeNull()
         ->and(RecentView::query()->find($freshGuest->id))->not->toBeNull()
@@ -76,7 +78,7 @@ it('prunes notifications read long ago and keeps unread ones', function (): void
     $unread = storedNotification($user, null);
     DB::table('notifications')->where('id', $unread->id)->update(['created_at' => Carbon::now()->subYears(2)]);
 
-    artisan('model:prune', ['--model' => [DatabaseNotification::class]])->assertSuccessful();
+    expect(Artisan::call('model:prune', ['--model' => [DatabaseNotification::class]]))->toBe(0);
 
     expect(DatabaseNotification::query()->pluck('id')->sort()->values()->all())
         ->toBe(collect([$recentRead->id, $unread->id])->sort()->values()->all())
@@ -92,7 +94,7 @@ it('cleans activity older than the retention in batches', function (): void {
     Activity::query()->update(['created_at' => Carbon::now()->subDays(31)]);
     activity('test')->log('recent');
 
-    artisan('activitylog:clean', ['--force' => true])->assertSuccessful();
+    expect(Artisan::call('activitylog:clean', ['--force' => true]))->toBe(0);
 
     expect(Activity::query()->pluck('description')->all())->toBe(['recent']);
 });
@@ -103,8 +105,7 @@ it('schedules every retention task', function (string $name, string $command): v
 
     $event = collect(app(Schedule::class)->events())->first(fn ($event): bool => $event->description === $name);
 
-    expect($event)->not->toBeNull()
-        ->and($event->command)->toContain($command);
+    expect($event?->command)->toContain($command);
 })->with([
     ['auth.prune-access-tokens', 'sanctum:prune-expired'],
     ['auth.prune-refresh-tokens', 'model:prune'],
