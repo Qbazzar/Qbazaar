@@ -9,16 +9,16 @@ QBazaar is a classifieds marketplace for Qatar (QAR, Arabic + English). The MVP 
 ## Progress
 
 <!-- progress:start -->
-**Current phase:** M0 Preparation and alignment · **Overall:** 26% (41/154 tasks)
+**Current phase:** M0 Preparation and alignment · **Overall:** 22% (41/179 tasks)
 
 ```text
 M0   ███████░░░   72% (18/25)   Preparation and alignment
-M1   ████░░░░░░   36% (21/58)   Closing the backend gaps
+M1   ███░░░░░░░   28% (21/73)   Closing the backend gaps
 M1b  █░░░░░░░░░   10% (1/10)    Orders and payments
-M2   ░░░░░░░░░░    0% (0/14)    Connecting the mobile app
-M3   █░░░░░░░░░   10% (1/10)    Web on the new design
+M2   ░░░░░░░░░░    0% (0/15)    Connecting the mobile app
+M3   █░░░░░░░░░    9% (1/11)    Web on the new design
 M4   ░░░░░░░░░░    0% (0/15)    Admin additions
-M5   ░░░░░░░░░░    0% (0/10)    Deployment on the new server
+M5   ░░░░░░░░░░    0% (0/18)    Deployment on the new server
 M6   ░░░░░░░░░░    0% (0/5)     Releasing the mobile app
 M7   ░░░░░░░░░░    0% (0/7)     Electronic payment and monetization
 ```
