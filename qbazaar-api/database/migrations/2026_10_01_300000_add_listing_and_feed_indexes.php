@@ -16,6 +16,10 @@ return new class extends Migration
 
         Schema::table('notifications', function (Blueprint $table): void {
             $table->index(['notifiable_type', 'notifiable_id', 'created_at'], 'notifications_notifiable_created_idx');
+            // Admin notifications list, newest first across every user.
+            $table->index('created_at', 'notifications_created_idx');
+            // Its leading columns repeat the morph index, which only costs writes now.
+            $table->dropIndex(['notifiable_type', 'notifiable_id']);
         });
 
         Schema::table('users', function (Blueprint $table): void {
@@ -30,6 +34,8 @@ return new class extends Migration
         });
 
         Schema::table('notifications', function (Blueprint $table): void {
+            $table->index(['notifiable_type', 'notifiable_id']);
+            $table->dropIndex('notifications_created_idx');
             $table->dropIndex('notifications_notifiable_created_idx');
         });
 
