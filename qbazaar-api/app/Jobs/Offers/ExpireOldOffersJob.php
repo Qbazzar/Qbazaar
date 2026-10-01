@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs\Offers;
 
 use App\Enums\OfferStatus;
+use App\Enums\QueueName;
 use App\Models\Offer;
 use App\Services\Offers\OfferTransitionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,9 +29,18 @@ class ExpireOldOffersJob implements ShouldQueue
 {
     use Queueable;
 
+    // Every row is re-checked under its lock, so a retry after a timeout
+    // resumes where the killed run stopped.
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [300, 900];
+
+    public int $timeout = 1500;
+
     public function __construct()
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(OfferTransitionService $transitions): void

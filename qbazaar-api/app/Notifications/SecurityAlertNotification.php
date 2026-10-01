@@ -6,6 +6,7 @@ namespace App\Notifications;
 
 use App\Enums\Language;
 use App\Models\User;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,7 +29,7 @@ use Illuminate\Support\Carbon;
  */
 class SecurityAlertNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use DeliversOnNotificationsQueue, Queueable;
 
     public function __construct(
         public readonly string $deviceLabel,

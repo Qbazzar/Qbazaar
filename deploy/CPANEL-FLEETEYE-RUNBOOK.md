@@ -79,7 +79,7 @@
 
 ### أ. وحدات systemd (`deploy/systemd/`)
 - `qbazaar-web.service` — `ExecStart=<node> <repo>/qbazaar-web/node_modules/.bin/next start -p 3000`, `User=fleeteye`, `Environment=NODE_ENV=production`, `WorkingDirectory=<repo>/qbazaar-web`, `Restart=always`.
-- `qbazaar-horizon.service` — `php artisan horizon` (الطوابير: صور، إشعارات، انتهاء إعلانات).
+- `qbazaar-horizon.service` — `php artisan horizon`، وفيه supervisor لكل طابور: `realtime` و`notifications` و`default` و`search` و`media` و`low` (التفاصيل بقسم Queues بـ `deploy/README.md`).
 - `qbazaar-reverb.service` — `php artisan reverb:start --host=127.0.0.1 --port=8080` (الشات الفوري).
 - `qbazaar-scheduler.service` — `php artisan schedule:work` (مهام الـ scheduler: انتهاء الإعلانات والعروض). بدونه لا ينتهي أي إعلان ولا عرض.
 

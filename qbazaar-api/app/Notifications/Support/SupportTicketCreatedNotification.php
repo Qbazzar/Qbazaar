@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications\Support;
 
 use App\Models\SupportTicket;
+use App\Notifications\Concerns\DeliversOnNotificationsQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notification;
  */
 class SupportTicketCreatedNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use DeliversOnNotificationsQueue, Queueable;
 
     public function __construct(public readonly SupportTicket $ticket) {}
 

@@ -36,7 +36,7 @@ it('leaves the image scan to the queue and stores the text checks on the ad', fu
 
     postJson("/api/v1/ads/{$draft->id}/publish", ['accepted_terms' => true])->assertOk();
 
-    Queue::assertPushedOn('low', DetectDuplicateImagesJob::class, fn (DetectDuplicateImagesJob $job): bool => $job->adId === $draft->id);
+    Queue::assertPushedOn('media', DetectDuplicateImagesJob::class, fn (DetectDuplicateImagesJob $job): bool => $job->adId === $draft->id);
 
     $result = $draft->fresh()?->moderation_result;
     expect($result)->toBeInstanceOf(ModerationResult::class)

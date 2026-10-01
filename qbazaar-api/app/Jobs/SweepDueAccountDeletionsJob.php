@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\QueueName;
 use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,9 +21,15 @@ class SweepDueAccountDeletionsJob implements ShouldQueue
 
     private const int CHUNK = 200;
 
+    public int $tries = 3;
+
+    public int $backoff = 300;
+
+    public int $timeout = 600;
+
     public function __construct()
     {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::LOW);
     }
 
     public function handle(): void

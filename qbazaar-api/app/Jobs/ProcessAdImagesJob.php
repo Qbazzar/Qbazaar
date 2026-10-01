@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Enums\AdStatus;
+use App\Enums\QueueName;
 use App\Jobs\Ads\DetectDuplicateImagesJob;
 use App\Models\Ad;
 use App\Services\Media\BlurHashGeneratorService;
@@ -42,13 +43,21 @@ class ProcessAdImagesJob implements ShouldQueue
 {
     use Queueable;
 
+    // Recomputing the hashes yields the same values, so a retry is harmless.
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [10, 60];
+
+    public int $timeout = 180;
+
     /**
      * @param list<string> $mediaIds
      */
     public function __construct(
         public readonly array $mediaIds,
     ) {
-        $this->onQueue('low');
+        $this->onQueue(QueueName::MEDIA);
     }
 
     public function handle(
