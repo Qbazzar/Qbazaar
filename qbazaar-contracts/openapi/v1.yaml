@@ -542,6 +542,32 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
+    patch:
+      tags: [Account]
+      summary: Change any subset of the editable profile fields
+      description: Fields left out keep their current value; an empty body changes nothing.
+      operationId: accountProfilePatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchProfileRequest'
+            examples:
+              name_only:
+                value:
+                  full_name: Ahmed Al-Ali
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 
   /api/v1/account/password:
     put:
@@ -891,6 +917,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [Uploads]
+      summary: Remove the caller's avatar
+      description: Deletes the avatar and its conversions. Idempotent.
+      operationId: uploadsAvatarDestroy
+      responses:
+        '204':
+          description: Avatar removed (or there was none)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Reference data — Categories & Locations (Sprint 3). All endpoints are
@@ -3225,6 +3261,17 @@ components:
     UpdateProfileRequest:
       type: object
       required: [full_name, language]
+      properties:
+        full_name:
+          type: string
+          minLength: 3
+          maxLength: 80
+        language:
+          type: string
+          enum: [ar, en]
+
+    PatchProfileRequest:
+      type: object
       properties:
         full_name:
           type: string

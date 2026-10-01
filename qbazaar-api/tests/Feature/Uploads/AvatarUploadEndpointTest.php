@@ -8,6 +8,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
+use function Pest\Laravel\deleteJson;
+use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 
 uses(RefreshDatabase::class);
@@ -77,4 +79,30 @@ it('rejects unauthenticated requests', function (): void {
     ], [
         'Accept' => 'application/json',
     ])->assertStatus(401);
+});
+
+it('removes the avatar and its files', function (): void {
+    postJson('/api/v1/uploads/avatar', ['avatar' => UploadedFile::fake()->image('avatar.png', 600, 600)])
+        ->assertOk();
+
+    $media = $this->user->fresh()->getFirstMedia('avatar');
+    $disk = Storage::disk($media->disk);
+    expect($disk->exists($media->getPathRelativeToRoot()))->toBeTrue();
+
+    deleteJson('/api/v1/uploads/avatar')->assertNoContent();
+
+    expect($this->user->fresh()->getFirstMedia('avatar'))->toBeNull()
+        ->and($disk->exists($media->getPathRelativeToRoot()))->toBeFalse();
+
+    getJson('/api/v1/account/profile')->assertOk()->assertJsonPath('data.avatar_url', null);
+});
+
+it('answers 204 when there is no avatar to remove', function (): void {
+    deleteJson('/api/v1/uploads/avatar')->assertNoContent();
+});
+
+it('rejects an unauthenticated avatar removal', function (): void {
+    $this->refreshApplication();
+
+    deleteJson('/api/v1/uploads/avatar')->assertStatus(401);
 });

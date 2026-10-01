@@ -9,14 +9,13 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
 /**
- * Profile update payload.
+ * Profile update payload for both PUT (every field) and PATCH (any subset).
  *
  * Deliberately narrow: email / phone changes go through their own verified
- * flows (Sprint 1 Wave 2 OTP + email-verification), so this request only
- * accepts the freely-editable fields.
+ * flows, so this request only accepts the freely-editable fields.
  *
- * @bodyParam full_name string required Updated display name. Example: Ahmed Al-Ali
- * @bodyParam language string required UI language preference. Example: ar
+ * @bodyParam full_name string Updated display name; required on PUT. Example: Ahmed Al-Ali
+ * @bodyParam language string UI language preference; required on PUT. Example: ar
  */
 class UpdateProfileRequest extends FormRequest
 {
@@ -30,9 +29,11 @@ class UpdateProfileRequest extends FormRequest
      */
     public function rules(): array
     {
+        $presence = $this->isMethod('PATCH') ? 'sometimes' : 'required';
+
         return [
-            'full_name' => ['required', 'string', 'min:3', 'max:80'],
-            'language' => ['required', 'string', new Enum(Language::class)],
+            'full_name' => [$presence, 'string', 'min:3', 'max:80'],
+            'language' => [$presence, 'string', new Enum(Language::class)],
         ];
     }
 }

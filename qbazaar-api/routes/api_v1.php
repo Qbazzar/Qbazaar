@@ -45,6 +45,7 @@ use App\Http\Controllers\Api\V1\Search\SavedSearchController;
 use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Support\SupportController;
 use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
+use App\Http\Controllers\Api\V1\Uploads\RemoveAvatarController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
@@ -175,6 +176,7 @@ Route::prefix('account')
 
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.patch');
 
         Route::put('/password', PasswordController::class)->name('password.update');
 
@@ -216,6 +218,7 @@ Route::prefix('uploads')
     ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
     ->group(function (): void {
         Route::post('/avatar', AvatarUploadController::class)->name('avatar');
+        Route::delete('/avatar', RemoveAvatarController::class)->name('avatar.destroy');
     });
 
 // ── Sprint 3 — Categories & Locations ───────────────────────────────────────
