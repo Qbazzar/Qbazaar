@@ -13,6 +13,7 @@ use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\Offer;
 use App\Models\User;
+use App\Services\Ads\AdLifecycleService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -204,9 +205,9 @@ it('closes the open offers when the ad stops being available', function (callabl
 
     Event::assertDispatchedTimes(OfferExpired::class, 1);
 })->with([
-    'sold' => [fn (Ad $ad) => $ad->markSold()],
-    'expired' => [fn (Ad $ad) => $ad->markExpired()],
-    'blocked' => [fn (Ad $ad) => $ad->forceFill(['status' => AdStatus::BLOCKED])->save()],
+    'sold' => [fn (Ad $ad) => app(AdLifecycleService::class)->markSold($ad)],
+    'expired' => [fn (Ad $ad) => app(AdLifecycleService::class)->expire($ad)],
+    'blocked' => [fn (Ad $ad) => app(AdLifecycleService::class)->block($ad)],
     'deleted' => [fn (Ad $ad) => $ad->delete()],
 ]);
 

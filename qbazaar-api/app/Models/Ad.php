@@ -9,7 +9,6 @@ use App\Enums\Condition;
 use App\Enums\OfferStatus;
 use App\Enums\PriceType;
 use App\Enums\UserStatus;
-use App\Events\Ads\AdRejected;
 use App\Http\Resources\Api\V1\Media\MediaResource;
 use Database\Factories\AdFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +16,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -49,6 +49,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Carbon|null $published_at
  * @property Carbon|null $expires_at
  * @property Carbon|null $expiring_notified_at
+ * @property Carbon|null $submitted_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
@@ -82,7 +83,6 @@ class Ad extends Model implements HasMedia
         'price_type',
         'currency',
         'condition',
-        'status',
         'custom_fields',
         'views_count',
         'favorites_count',
@@ -106,6 +106,7 @@ class Ad extends Model implements HasMedia
             'published_at' => 'datetime',
             'expires_at' => 'datetime',
             'expiring_notified_at' => 'datetime',
+            'submitted_at' => 'datetime',
             'price' => 'decimal:2',
             'featured' => 'boolean',
         ];
@@ -155,6 +156,12 @@ class Ad extends Model implements HasMedia
         return $this->hasOne(Offer::class)
             ->where('status', OfferStatus::ACCEPTED->value)
             ->latest('accepted_at');
+    }
+
+    /** @return HasMany<Conversation, $this> */
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
     }
 
     /** @return BelongsTo<Category, $this> */
@@ -221,87 +228,6 @@ class Ad extends Model implements HasMedia
     public function scopeOrderedForFeed(Builder $query): Builder
     {
         return $query->orderByDesc('published_at');
-    }
-
-    /* ──────────────────────────────────────────────────────────────────
-     *  Lifecycle transitions — keep the rules in one place so the
-     *  controllers stay declarative.
-     * ──────────────────────────────────────────────────────────────────*/
-
-    /**
-     * Publish a draft and transition straight to ACTIVE.
-     *
-     * Used after auto-moderation clears the ad (see PublishAdController).
-     */
-    public function publish(): void
-    {
-        $lifetimeDays = (int) config('qbazaar.ads.lifetime_days', 30);
-
-        $this->forceFill([
-            'status' => AdStatus::ACTIVE,
-            'published_at' => now(),
-            'expires_at' => now()->addDays($lifetimeDays),
-            'expiring_notified_at' => null,
-        ])->save();
-    }
-
-    /**
-     * Park a flagged draft in PENDING — awaiting manual review.
-     *
-     * Caller fires {@see AdRejected} so the seller receives
-     * the rejection notification AND the search index is kept clean.
-     * Setting `published_at` to null keeps the public feed safe.
-     */
-    public function holdForReview(): void
-    {
-        $this->forceFill([
-            'status' => AdStatus::PENDING,
-            'published_at' => null,
-            'expires_at' => null,
-        ])->save();
-    }
-
-    /**
-     * Mark a previously expired ad as EXPIRED.
-     * Invoked by the daily expiry job; kept on the model so the rule lives
-     * with the other lifecycle transitions.
-     */
-    public function markExpired(): void
-    {
-        $this->forceFill(['status' => AdStatus::EXPIRED])->save();
-    }
-
-    /**
-     * Mark the ad as sold. Only ACTIVE and EXPIRED ads can be sold —
-     * enforced by AdPolicy::markSold().
-     */
-    public function markSold(): void
-    {
-        $this->forceFill(['status' => AdStatus::SOLD])->save();
-    }
-
-    /**
-     * Extend expiry by another lifetime window. If the ad has already
-     * expired, flip it back to ACTIVE in the same call so the seller
-     * doesn't need a separate "republish" step.
-     */
-    public function renew(): void
-    {
-        $lifetimeDays = (int) config('qbazaar.ads.lifetime_days', 30);
-
-        $base = $this->expires_at !== null && $this->expires_at->isFuture()
-            ? $this->expires_at
-            : now();
-
-        $wasExpired = $this->status === AdStatus::EXPIRED;
-
-        $this->forceFill([
-            'expires_at' => $base->copy()->addDays($lifetimeDays),
-            'expiring_notified_at' => null,
-            'status' => $wasExpired
-                ? AdStatus::ACTIVE
-                : $this->status,
-        ])->save();
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -421,15 +347,13 @@ class Ad extends Model implements HasMedia
     /* ──────────────────────────────────────────────────────────────────
      *  Media — Spatie MediaLibrary integration.
      *
-     *  Conversions are non-queued so the upload response can already cite
-     *  every variant. BlurHash + (future) pHash run async via
-     *  ProcessAdImagesJob because they're cheap-but-not-instant.
+     *  Only the thumbnail is rendered during the upload request so the
+     *  response can show a preview; the larger variants are queued because
+     *  an ad carries up to `qbazaar.ads.max_images` photos. MediaResource
+     *  falls back to the original URL until a variant exists.
      * ──────────────────────────────────────────────────────────────────*/
     public function registerMediaCollections(): void
     {
-        // No singleFile() — ads carry up to 10 images. The count cap is
-        // enforced in UploadImagesRequest, not here, so a future bulk
-        // import can opt out without changing the model contract.
         $this->addMediaCollection('images')
             ->storeConversionsOnDisk((string) config('qbazaar.uploads.public_disk'));
     }
@@ -442,17 +366,17 @@ class Ad extends Model implements HasMedia
             ->fit(Fit::Crop, 200, 200);
 
         $this->addMediaConversion('medium')
-            ->nonQueued()
+            ->queued()
             ->performOnCollections('images')
             ->fit(Fit::Contain, 640, 640);
 
         $this->addMediaConversion('large')
-            ->nonQueued()
+            ->queued()
             ->performOnCollections('images')
             ->fit(Fit::Contain, 1024, 1024);
 
         $this->addMediaConversion('original_webp')
-            ->nonQueued()
+            ->queued()
             ->performOnCollections('images')
             ->fit(Fit::Contain, 1920, 1920)
             ->format('webp');

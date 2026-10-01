@@ -102,6 +102,21 @@ Check with a typo, which only Meilisearch tolerates: `curl -s 'https://api.qbaza
 
 If Meilisearch goes down, keep the driver and restart the service: search returns empty results meanwhile, and `scout:import` rebuilds the index at any time. Do not switch to the `database` driver.
 
+## Upload body size
+
+`POST /api/v1/ads/{ad}/images` takes up to `qbazaar.ads.max_images_per_upload` (10) files per request, each up to `qbazaar.uploads.max_image_size_kb` (10 MB). An ad holds up to 20 images in total (admin setting `ad_max_images`), so the apps send them in batches. Every layer must accept one full batch, or the request fails before Laravel can answer with a JSON error:
+
+| Layer | Setting | Value |
+|---|---|---|
+| Apache (API include) | `LimitRequestBody` | `110100480` (105 MiB), set in `deploy/apache/api.qbazaar.fleeteye.de.include.conf` |
+| PHP 8.4 (cPanel MultiPHP INI Editor, `ea-php84`) | `upload_max_filesize` | `10M` |
+| | `post_max_size` | `105M` |
+| | `max_file_uploads` | `20` or more |
+| | `memory_limit` | `256M` or more (the thumbnail is rendered during the request) |
+| Cloudflare / any proxy in front | max upload size | 105 MiB or more. Cloudflare Free and Pro cap a request at 100 MB, just under a worst-case batch of ten 10 MB files; if the API is proxied there, set `max_images_per_upload` to 9 |
+
+If one of the limits has to be lower, lower `max_images_per_upload` to match (`floor(post_max_size / 10 MB)`) rather than the per-file size. The larger image sizes are rendered on the `default` queue by Horizon, so it must be running for `medium`, `large` and `original_webp` to appear; until then the API serves the original.
+
 ## Manual deploy (if Actions is down)
 
 ```bash

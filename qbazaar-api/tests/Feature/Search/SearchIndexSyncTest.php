@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Enums\AdStatus;
 use App\Models\Ad;
 use App\Models\User;
-use App\Services\Ads\AdModerationService;
+use App\Services\Ads\AdLifecycleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
@@ -37,7 +37,7 @@ it('queues exactly one index job when an ad goes live', function (): void {
 
     Queue::fake([MakeSearchable::class, RemoveFromSearch::class]);
 
-    app(AdModerationService::class)->approve($ad);
+    app(AdLifecycleService::class)->approve($ad);
 
     Queue::assertPushed(MakeSearchable::class, 1);
     Queue::assertNotPushed(RemoveFromSearch::class);
@@ -61,7 +61,7 @@ it('does not queue the removal job until the surrounding transaction commits', f
     Queue::fake([MakeSearchable::class, RemoveFromSearch::class]);
 
     DB::transaction(function () use ($ad): void {
-        $ad->markSold();
+        app(AdLifecycleService::class)->markSold($ad);
 
         Queue::assertNotPushed(RemoveFromSearch::class);
     });

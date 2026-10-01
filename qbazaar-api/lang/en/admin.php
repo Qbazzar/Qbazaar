@@ -487,6 +487,16 @@ return [
                 'help' => 'How many days before an ad expires its seller is reminded to renew. Sent once per ad.',
                 'unit' => 'days',
             ],
+            'ad_max_images' => [
+                'label' => 'Images per ad',
+                'help' => 'The most photos a seller can attach to one ad.',
+                'unit' => 'images',
+            ],
+            'ad_daily_publish_limit' => [
+                'label' => 'Daily publish limit',
+                'help' => 'How many ads a seller can submit for review in 24 hours.',
+                'unit' => 'ads',
+            ],
             'offer_counter_rounds_per_side' => [
                 'label' => 'Counter-offer rounds',
                 'help' => 'How many times each side (seller first, then buyer) may answer with a counter-offer in one negotiation. Zero turns counter-offers off.',

@@ -6,6 +6,7 @@ namespace App\Actions\Ads;
 
 use App\Enums\AdStatus;
 use App\Models\Ad;
+use App\Services\Ads\AdLifecycleService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 class ResubmitActiveAdAction
 {
     public function __construct(
-        private readonly SubmitAdForReviewAction $submitForReview,
+        private readonly AdLifecycleService $lifecycle,
     ) {}
 
     public function __invoke(Ad $ad): void
@@ -29,7 +30,7 @@ class ResubmitActiveAdAction
                 return;
             }
 
-            ($this->submitForReview)($locked);
+            $this->lifecycle->submitForReview($locked);
         });
     }
 }

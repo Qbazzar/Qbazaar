@@ -6,9 +6,10 @@ namespace App\Jobs\Ads;
 
 use App\Enums\AdStatus;
 use App\Enums\PlatformSetting;
-use App\Events\Ads\AdExpired;
 use App\Events\Ads\AdExpiringSoon;
+use App\Exceptions\DomainException;
 use App\Models\Ad;
+use App\Services\Ads\AdLifecycleService;
 use App\Services\Settings\SettingsService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -18,8 +19,8 @@ use Illuminate\Support\Carbon;
  * Daily sweeper for ad lifecycle.
  *
  * Two passes:
- *   1. Active ads whose `expires_at` is in the past → flip to EXPIRED,
- *      unindex from search, fire AdExpired.
+ *   1. Active ads whose `expires_at` is in the past → EXPIRED through
+ *      AdLifecycleService, which fires AdExpired.
  *   2. Active ads expiring within the admin-set warning window (the
  *      `ad_expiry_warning_days` platform setting) → fire AdExpiringSoon once
  *      per expiry, guarded by `expiring_notified_at`.
@@ -40,15 +41,15 @@ class ExpireOldAdsJob implements ShouldQueue
         $this->onQueue('low');
     }
 
-    public function handle(SettingsService $settings): void
+    public function handle(SettingsService $settings, AdLifecycleService $lifecycle): void
     {
         $now = now();
 
-        $this->expirePastDueAds($now);
+        $this->expirePastDueAds($now, $lifecycle);
         $this->notifyExpiringSoon($now, $settings->integer(PlatformSetting::AD_EXPIRY_WARNING_DAYS));
     }
 
-    private function expirePastDueAds(Carbon $now): void
+    private function expirePastDueAds(Carbon $now, AdLifecycleService $lifecycle): void
     {
         $ads = Ad::query()
             ->where('status', AdStatus::ACTIVE->value)
@@ -57,8 +58,11 @@ class ExpireOldAdsJob implements ShouldQueue
             ->lazyById(100);
 
         foreach ($ads as $ad) {
-            $ad->markExpired();
-            AdExpired::dispatch($ad);
+            try {
+                $lifecycle->expireIfPastDue($ad);
+            } catch (DomainException) {
+                // Sold, edited or suspended since it was read: nothing to expire.
+            }
         }
     }
 

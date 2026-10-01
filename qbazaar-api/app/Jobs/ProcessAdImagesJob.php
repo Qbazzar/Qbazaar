@@ -18,9 +18,8 @@ use Throwable;
 /**
  * Post-upload pipeline for ad images.
  *
- * Conversions (thumbnail/medium/large/original_webp) run synchronously at
- * upload time so the HTTP response can already cite every variant. This
- * job handles the cheaper-but-still-non-trivial work:
+ * The size conversions are handled by MediaLibrary (thumbnail during the
+ * upload, the rest on the queue). This job adds the image metadata:
  *
  *   1. Compute a BlurHash for each image and stash it in
  *      `media.custom_properties['blurhash']`.

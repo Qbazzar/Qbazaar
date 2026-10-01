@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Ads;
 
+use App\Actions\Ads\ListOwnAdsAction;
 use App\Actions\Ads\UpdateAdAction;
 use App\Enums\AdStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Ads\CreateAdRequest;
+use App\Http\Requests\Api\V1\Ads\ListOwnAdsRequest;
 use App\Http\Requests\Api\V1\Ads\UpdateAdRequest;
 use App\Http\Resources\Api\V1\Ads\AdResource;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
@@ -186,22 +188,16 @@ class AdController extends Controller
     }
 
     /**
-     * GET /api/v1/account/ads — caller's own ads across every status.
+     * GET /api/v1/account/ads — caller's own ads, optionally one status only.
      *
      * @authenticated
      */
-    public function myAds(Request $request): AnonymousResourceCollection
+    public function myAds(ListOwnAdsRequest $request, ListOwnAdsAction $listOwnAds): AnonymousResourceCollection
     {
         /** @var User $user */
         $user = $request->user();
 
-        $paginator = Ad::query()
-            ->forUser($user)
-            ->orderByDesc('created_at')
-            ->with(['category', 'location', 'media'])
-            ->paginate(self::PER_PAGE);
-
-        return AdSummaryResource::collection($paginator);
+        return AdSummaryResource::collection($listOwnAds($user, $request->status()));
     }
 
     /**

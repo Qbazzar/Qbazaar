@@ -28,13 +28,13 @@ beforeEach(function (): void {
 it('flags an ad in moderation when the description contains a banned word', function (): void {
     Event::fake([AdSubmittedForReview::class]);
 
-    $ad = $this->makeAd($this->user, [
+    $ad = $this->makePublishableDraft($this->user, [
         'status' => AdStatus::DRAFT->value,
         'title' => 'Great phone for sale',
         'description' => 'Buy this phone today! Bitcoin payment accepted. ' . str_repeat('Lorem ipsum text. ', 5),
     ]);
 
-    postJson("/api/v1/ads/{$ad->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$ad->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 
@@ -48,13 +48,13 @@ it('flags an ad in moderation when the description contains a banned word', func
 it('passes moderation cleanly for a clean ad', function (): void {
     Event::fake([AdSubmittedForReview::class]);
 
-    $ad = $this->makeAd($this->user, [
+    $ad = $this->makePublishableDraft($this->user, [
         'status' => AdStatus::DRAFT->value,
         'title' => 'Comfy reading chair for the living room',
         'description' => 'Very comfortable reading chair in excellent condition. Wood frame and cotton upholstery. Pick up from West Bay.',
     ]);
 
-    postJson("/api/v1/ads/{$ad->id}/publish", [], ['Accept' => 'application/json'])
+    postJson("/api/v1/ads/{$ad->id}/publish", ['accepted_terms' => true], ['Accept' => 'application/json'])
         ->assertOk()
         ->assertJsonPath('data.status', AdStatus::PENDING->value);
 

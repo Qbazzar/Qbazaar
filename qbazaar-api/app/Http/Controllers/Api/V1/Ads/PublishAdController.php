@@ -4,41 +4,32 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Ads;
 
-use App\Actions\Ads\SubmitAdForReviewAction;
+use App\Actions\Ads\PublishAdAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Ads\PublishAdRequest;
 use App\Http\Resources\Api\V1\Ads\AdResource;
 use App\Models\Ad;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 
 /**
- * POST /api/v1/ads/{id}/publish — submit a draft for review.
+ * POST /api/v1/ads/{id}/publish — submit an ad for admin review.
  *
- * Every ad now requires manual admin approval before going live: publishing
- * always transitions DRAFT → PENDING and fires AdSubmittedForReview, which
- * notifies reviewers via the panel bell. Auto-moderation still runs so the
- * notification can hint which (if any) rules fired. An admin then approves the
- * ad in the panel (PENDING → ACTIVE) — see AdResource's approve action.
- *
- * Returns 200 with the updated AdResource; the client inspects `data.status`
- * (`pending`) to render the "we're reviewing your ad" UX.
+ * The ad moves to PENDING and the reviewers are notified; the client reads
+ * `data.status` to show the "we're reviewing your ad" state.
  *
  * @group Ads
  */
 class PublishAdController extends Controller
 {
-    public function __construct(
-        private readonly SubmitAdForReviewAction $submitForReview,
-    ) {}
-
     /**
      * @authenticated
      *
      * @throws DomainException
      */
-    public function __invoke(PublishAdRequest $request, string $id): JsonResponse
+    public function __invoke(PublishAdRequest $request, PublishAdAction $publish, string $id): JsonResponse
     {
         $ad = Ad::query()->find($id);
 
@@ -48,8 +39,10 @@ class PublishAdController extends Controller
 
         $this->authorize('publish', $ad);
 
-        ($this->submitForReview)($ad);
+        /** @var User $seller */
+        $seller = $request->user();
 
+        $ad = $publish($ad, $seller);
         $ad->load(['user', 'category', 'location', 'media']);
 
         return response()->json((new AdResource($ad))->toArray($request));

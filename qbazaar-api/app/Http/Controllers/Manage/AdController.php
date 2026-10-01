@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Actions\Ads\ToggleAdFeaturedAction;
 use App\Enums\AdStatus;
 use App\Enums\Condition;
 use App\Enums\PriceType;
@@ -12,7 +13,7 @@ use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
 use App\Rules\NoMarkup;
-use App\Services\Ads\AdModerationService;
+use App\Services\Ads\AdLifecycleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ use Illuminate\View\View;
 
 class AdController extends Controller
 {
-    public function __construct(private readonly AdModerationService $moderation) {}
+    public function __construct(private readonly AdLifecycleService $lifecycle) {}
 
     public function index(Request $request): View
     {
@@ -69,7 +70,6 @@ class AdController extends Controller
             'locations' => $this->locationOptions(),
             'priceTypes' => PriceType::cases(),
             'conditions' => Condition::cases(),
-            'statuses' => AdStatus::cases(),
         ]);
     }
 
@@ -83,7 +83,6 @@ class AdController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
             'price_type' => ['required', new Enum(PriceType::class)],
             'condition' => ['nullable', new Enum(Condition::class)],
-            'status' => ['required', new Enum(AdStatus::class)],
             'featured' => ['boolean'],
         ]);
 
@@ -119,7 +118,7 @@ class AdController extends Controller
 
     public function approve(Ad $ad): RedirectResponse
     {
-        $this->moderation->approve($ad);
+        $this->lifecycle->approve($ad);
 
         return back()->with('status', __('admin.actions.ad_approved'));
     }
@@ -130,35 +129,35 @@ class AdController extends Controller
             'admin_notes' => ['required', 'string', 'max:1000'],
         ]);
 
-        $this->moderation->reject($ad, $data['admin_notes']);
+        $this->lifecycle->reject($ad, $data['admin_notes']);
 
         return back()->with('status', __('admin.actions.ad_rejected'));
     }
 
     public function suspend(Ad $ad): RedirectResponse
     {
-        $this->moderation->suspend($ad);
+        $this->lifecycle->block($ad);
 
         return back()->with('status', __('admin.actions.ad_suspended'));
     }
 
     public function unsuspend(Ad $ad): RedirectResponse
     {
-        $this->moderation->unsuspend($ad);
+        $this->lifecycle->unblock($ad);
 
         return back()->with('status', __('admin.actions.ad_unsuspended'));
     }
 
-    public function toggleFeature(Ad $ad): RedirectResponse
+    public function toggleFeature(Ad $ad, ToggleAdFeaturedAction $toggleFeatured): RedirectResponse
     {
-        $featured = $this->moderation->toggleFeature($ad);
+        $featured = $toggleFeatured($ad);
 
         return back()->with('status', $featured ? 'تم تمييز الإعلان.' : 'تم إلغاء تمييز الإعلان.');
     }
 
     public function forceExpire(Ad $ad): RedirectResponse
     {
-        $this->moderation->forceExpire($ad);
+        $this->lifecycle->expire($ad);
 
         return back()->with('status', 'تم إنهاء الإعلان.');
     }
