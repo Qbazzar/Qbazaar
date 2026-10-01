@@ -9,7 +9,7 @@ use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
-use App\Services\Search\AdSearchService;
+use App\Services\Search\AdSearchCriteria;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
@@ -151,9 +151,7 @@ it('validates the type and shipping search filters', function (): void {
 });
 
 it('turns the type and shipping filters into filterable Meilisearch clauses', function (): void {
-    $composeFilter = new ReflectionMethod(AdSearchService::class, 'composeFilter');
-
-    $filter = $composeFilter->invoke(app(AdSearchService::class), ['ad_type' => 'wanted', 'shipping' => 'delivery']);
+    $filter = (new AdSearchCriteria)->filter(['ad_type' => 'wanted', 'shipping' => 'delivery']);
 
     expect($filter)
         ->toContain('ad_type = "wanted"')

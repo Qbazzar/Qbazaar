@@ -25,9 +25,7 @@ class CompanyController extends Controller
     {
         $page = $directory->search($request->term());
 
-        // Public route: the default guard is `web`, so read the optional Bearer token explicitly.
-        /** @var User|null $viewer */
-        $viewer = $request->user('sanctum');
+        $viewer = $this->viewer($request);
 
         $companyIds = array_values(array_map(static fn (User $company): string => $company->id, $page->items()));
 

@@ -32,7 +32,7 @@ class FollowController extends Controller
     {
         $target = $this->activeUser($user);
 
-        $follow($this->viewer($request), $target);
+        $follow($this->follower($request), $target);
 
         return $this->state($target, following: true);
     }
@@ -48,12 +48,12 @@ class FollowController extends Controller
     {
         $target = $this->activeUser($user);
 
-        $unfollow($this->viewer($request), $target);
+        $unfollow($this->follower($request), $target);
 
         return $this->state($target, following: false);
     }
 
-    private function viewer(Request $request): User
+    private function follower(Request $request): User
     {
         /** @var User $viewer */
         $viewer = $request->user();

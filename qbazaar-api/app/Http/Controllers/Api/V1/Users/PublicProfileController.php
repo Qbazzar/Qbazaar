@@ -40,9 +40,7 @@ class PublicProfileController extends Controller
             $user->load(['businessProfile', 'media' => fn ($media) => $media->where('collection_name', User::BUSINESS_COVER_COLLECTION)]);
         }
 
-        // Public route: the default guard is `web`, so read the optional Bearer token explicitly.
-        /** @var User|null $viewer */
-        $viewer = $request->user('sanctum');
+        $viewer = $this->viewer($request);
 
         return response()->json(
             (new PublicProfileResource($user, $follows->isFollowing($viewer, $user)))->toArray($request),

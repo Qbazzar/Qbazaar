@@ -28,6 +28,8 @@ class AdSearchService
     /** @var int */
     public const MAX_PER_PAGE = 50;
 
+    public function __construct(private readonly AdSearchCriteria $criteria) {}
+
     /**
      * Run a paginated search + facet aggregation.
      *
@@ -41,13 +43,8 @@ class AdSearchService
 
         $query = isset($params['q']) && is_string($params['q']) ? trim($params['q']) : '';
 
-        $sort = $this->resolveSort(is_string($params['sort'] ?? null) ? $params['sort'] : null);
-
-        // Compose the Meilisearch filter string. We must always restrict to
-        // status=active even though Scout's `shouldBeSearchable()` already
-        // guards the index — a defence-in-depth check is cheap and survives
-        // any future bug that lets a non-active ad slip into the index.
-        $filter = $this->composeFilter($params);
+        $sort = $this->criteria->sort($params);
+        $filter = $this->criteria->filter($params);
 
         if (! $this->usesMeilisearch()) {
             return $this->emptyResult($perPage, $page);
@@ -198,91 +195,6 @@ class AdSearchService
             ),
             'facets' => $this->extractFacets([]),
         ];
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function resolveSort(?string $sort): array
-    {
-        return match ($sort) {
-            'oldest' => ['published_at:asc'],
-            'price_asc' => ['price:asc'],
-            'price_desc' => ['price:desc'],
-            default => ['published_at:desc'],
-        };
-    }
-
-    /**
-     * Build the Meilisearch filter expression from the validated params.
-     *
-     * @param array<string, mixed> $params
-     */
-    private function composeFilter(array $params): string
-    {
-        $clauses = [];
-
-        // Defence-in-depth — we ONLY index active ads, but pinning the
-        // filter at query time means an accidental indexer regression
-        // doesn't leak drafts into public results.
-        $clauses[] = 'status = "active"';
-
-        // The *_path arrays hold every ancestor, so a parent id also matches ads in its descendants.
-        if (isset($params['category_id']) && is_string($params['category_id']) && $params['category_id'] !== '') {
-            $clauses[] = sprintf('category_path = "%s"', $params['category_id']);
-        }
-
-        if (isset($params['location_id']) && is_string($params['location_id']) && $params['location_id'] !== '') {
-            $clauses[] = sprintf('location_path = "%s"', $params['location_id']);
-        }
-
-        if (isset($params['condition']) && is_string($params['condition']) && $params['condition'] !== '') {
-            $clauses[] = sprintf('condition = "%s"', $params['condition']);
-        }
-
-        if (isset($params['price_type']) && is_string($params['price_type']) && $params['price_type'] !== '') {
-            $clauses[] = sprintf('price_type = "%s"', $params['price_type']);
-        }
-
-        foreach (['ad_type', 'shipping'] as $field) {
-            if (isset($params[$field]) && is_string($params[$field]) && $params[$field] !== '') {
-                $clauses[] = sprintf('%s = "%s"', $field, $params[$field]);
-            }
-        }
-
-        if (isset($params['price_min']) && is_numeric($params['price_min'])) {
-            $clauses[] = sprintf('price >= %s', (float) $params['price_min']);
-        }
-
-        if (isset($params['price_max']) && is_numeric($params['price_max'])) {
-            $clauses[] = sprintf('price <= %s', (float) $params['price_max']);
-        }
-
-        // Category-specific custom-field filters. Shape (parsed from the query
-        // string): custom_fields[make]=Toyota (equality) or
-        // custom_fields[year][min]=2015&custom_fields[year][max]=2020 (range).
-        if (isset($params['custom_fields']) && is_array($params['custom_fields'])) {
-            foreach ($params['custom_fields'] as $key => $value) {
-                // Keys mirror the category schema (make/year/…) — reject
-                // anything that isn't a safe attribute path.
-                if (! is_string($key) || preg_match('/^[a-z0-9_]+$/i', $key) !== 1) {
-                    continue;
-                }
-
-                if (is_array($value)) {
-                    if (isset($value['min']) && is_numeric($value['min'])) {
-                        $clauses[] = sprintf('custom_fields.%s >= %s', $key, (float) $value['min']);
-                    }
-                    if (isset($value['max']) && is_numeric($value['max'])) {
-                        $clauses[] = sprintf('custom_fields.%s <= %s', $key, (float) $value['max']);
-                    }
-                } elseif (is_string($value) && $value !== '') {
-                    $clauses[] = sprintf('custom_fields.%s = "%s"', $key, str_replace('"', '\"', $value));
-                }
-            }
-        }
-
-        return implode(' AND ', $clauses);
     }
 
     /**

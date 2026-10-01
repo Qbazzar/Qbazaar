@@ -57,6 +57,8 @@ class AdResource extends JsonResource
             'custom_fields' => $this->custom_fields,
             'views_count' => (int) $this->views_count,
             'favorites_count' => (int) $this->favorites_count,
+            // Set by ViewerFavorites for a signed-in viewer; guests always get false.
+            'is_favorited' => (bool) $this->resource->getAttribute('is_favorited'),
             'published_at' => $this->published_at?->toIso8601String(),
             'expires_at' => $this->expires_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
