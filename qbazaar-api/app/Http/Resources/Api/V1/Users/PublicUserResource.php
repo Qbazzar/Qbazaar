@@ -18,7 +18,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * `business_name` is only populated when the account type is business; it
  * comes from the business profile when the caller loaded it.
- * `ads_count` reflects the user's currently-active (public) listings.
+ * `ads_count` is the stored count of the user's ACTIVE ads.
  *
  * @mixin User
  */
@@ -43,7 +43,7 @@ class PublicUserResource extends JsonResource
                 'phone_verified' => (bool) $this->phone_verified,
                 'business_verified' => false, // TODO Phase 2
             ],
-            'ads_count' => $this->resource->ads()->active()->count(),
+            'ads_count' => (int) $this->active_ads_count,
             'rating_avg' => (float) $this->rating_avg,
             'rating_count' => (int) $this->rating_count,
             'followers_count' => (int) $this->followers_count,

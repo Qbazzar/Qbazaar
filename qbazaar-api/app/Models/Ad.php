@@ -31,8 +31,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -74,11 +72,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Location $location
  * @property Media|null $primaryImage
  * @property bool $featured
+ * @property bool $seller_active
  */
 class Ad extends Model implements HasMedia
 {
     /** @use HasFactory<AdFactory> */
-    use HasFactory, HasUlids, InteractsWithMedia, LogsActivity, Searchable, SoftDeletes;
+    use HasFactory, HasUlids, InteractsWithMedia, Searchable, SoftDeletes;
 
     /**
      * Columns read by {@see toSearchableArray()} or {@see shouldBeSearchable()}.
@@ -158,31 +157,17 @@ class Ad extends Model implements HasMedia
             'moderation_result' => ModerationResult::class,
             'price' => 'decimal:2',
             'featured' => 'boolean',
+            'seller_active' => 'boolean',
         ];
     }
 
-    /**
-     * Spatie activity-log configuration. We log the user-facing attributes
-     * (title / description / price / status / category / location) under the
-     * `ad` log name so admin queries scope cleanly.
-     *
-     * `logOnlyDirty()` ensures we only persist a row when one of the watched
-     * columns actually changed — avoids one log entry per touch / counter bump.
-     */
-    public function getActivitylogOptions(): LogOptions
+    protected static function booted(): void
     {
-        return LogOptions::defaults()
-            ->logOnly([
-                'title',
-                'description',
-                'price',
-                'status',
-                'category_id',
-                'location_id',
-            ])
-            ->logOnlyDirty()
-            ->useLogName('ad')
-            ->dontLogEmptyChanges();
+        // Mirrors the seller's status at creation; SellerListingsVisibilityService
+        // keeps it in step afterwards.
+        static::creating(function (Ad $ad): void {
+            $ad->seller_active ??= User::query()->whereKey($ad->user_id)->value('status') === UserStatus::ACTIVE;
+        });
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -266,7 +251,8 @@ class Ad extends Model implements HasMedia
     /**
      * Active ads whose seller is active too — what public listings may show.
      * A suspended or deactivated seller keeps their ads' status untouched so
-     * reactivation restores them as they were.
+     * reactivation restores them as they were. The seller's status is read
+     * from the stored `seller_active` flag, so listings need no users join.
      *
      * @param Builder<Ad> $query
      * @return Builder<Ad>
@@ -275,7 +261,7 @@ class Ad extends Model implements HasMedia
     {
         return $query
             ->active()
-            ->whereHas('user', fn (Builder $seller) => $seller->where('status', UserStatus::ACTIVE->value));
+            ->where('seller_active', true);
     }
 
     /**
@@ -345,10 +331,7 @@ class Ad extends Model implements HasMedia
 
     public function hasActiveSeller(): bool
     {
-        /** @var User|null $seller */
-        $seller = $this->user;
-
-        return $seller?->status === UserStatus::ACTIVE;
+        return $this->seller_active;
     }
 
     /**

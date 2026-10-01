@@ -9,18 +9,19 @@ use App\Observers\Concerns\ResolvesActivityCauser;
 use BackedEnum;
 
 /**
- * Mirrors meaningful Ad lifecycle changes onto the activity-log table.
- *
- * Pattern matches {@see UserObserver}:
- *  - One event-name per intent ("status_changed", "price_changed", …) so the
- *    admin can index queries by event without parsing the diff blob.
- *  - The Ad model also uses Spatie\LogsActivity for raw attribute snapshots
- *    (old/new diff) — this observer adds the *named* per-field events on top
- *    so we have both views available.
+ * Mirrors meaningful Ad lifecycle changes onto the activity-log table, one
+ * row per save. A status change is logged as `status_changed` so the admin
+ * can find lifecycle transitions by event name; any other edit of a watched
+ * field is `ad_updated`. Both carry the changed fields with old/new values,
+ * except the description, which is recorded as changed without its text.
  */
 class AdObserver
 {
     use ResolvesActivityCauser;
+
+    private const LOGGED_FIELDS = ['status', 'title', 'price', 'description', 'category_id', 'location_id'];
+
+    private const UNDIFFED_FIELDS = ['description'];
 
     public function created(Ad $ad): void
     {
@@ -38,29 +39,25 @@ class AdObserver
 
     public function updated(Ad $ad): void
     {
-        if ($ad->wasChanged('status')) {
-            $this->logFieldChange($ad, 'status_changed', 'status', 'Ad status changed');
+        $fields = array_values(array_filter(self::LOGGED_FIELDS, fn (string $field): bool => $ad->wasChanged($field)));
+
+        if ($fields === []) {
+            return;
         }
 
-        if ($ad->wasChanged('title')) {
-            $this->logFieldChange($ad, 'title_changed', 'title', 'Ad title changed');
-        }
+        $diffed = array_diff($fields, self::UNDIFFED_FIELDS);
+        $statusChanged = in_array('status', $fields, true);
 
-        if ($ad->wasChanged('price')) {
-            $this->logFieldChange($ad, 'price_changed', 'price', 'Ad price changed');
-        }
-
-        if ($ad->wasChanged('description')) {
-            // Description is logged as a fact, not a diff — descriptions are
-            // long and the activity-log JSON column would balloon. The raw
-            // old/new is still available through the Spatie LogsActivity
-            // generic "updated" row.
-            activity('ad')
-                ->performedOn($ad)
-                ->causedBy($this->causer($ad->user))
-                ->event('description_changed')
-                ->log('Ad description changed');
-        }
+        activity('ad')
+            ->performedOn($ad)
+            ->causedBy($this->causer($ad->user))
+            ->event($statusChanged ? 'status_changed' : 'ad_updated')
+            ->withProperties([
+                'fields' => $fields,
+                'old' => $this->values($diffed, fn (string $field): mixed => $ad->getOriginal($field)),
+                'new' => $this->values($diffed, fn (string $field): mixed => $ad->getAttribute($field)),
+            ])
+            ->log($statusChanged ? 'Ad status changed' : 'Ad updated');
     }
 
     public function deleted(Ad $ad): void
@@ -72,20 +69,29 @@ class AdObserver
             ->log('Ad deleted');
     }
 
-    private function logFieldChange(Ad $ad, string $event, string $field, string $description): void
+    public function restored(Ad $ad): void
     {
-        $original = $ad->getOriginal($field);
-        $new = $ad->getAttribute($field);
-
         activity('ad')
             ->performedOn($ad)
             ->causedBy($this->causer($ad->user))
-            ->event($event)
-            ->withProperties([
-                'old' => $this->stringify($original),
-                'new' => $this->stringify($new),
-            ])
-            ->log($description);
+            ->event('ad_restored')
+            ->log('Ad restored');
+    }
+
+    /**
+     * @param array<int, string> $fields
+     * @param callable(string): mixed $read
+     * @return array<string, mixed>
+     */
+    private function values(array $fields, callable $read): array
+    {
+        $values = [];
+
+        foreach ($fields as $field) {
+            $values[$field] = $this->stringify($read($field));
+        }
+
+        return $values;
     }
 
     private function stringify(mixed $value): mixed

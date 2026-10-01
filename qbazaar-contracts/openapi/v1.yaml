@@ -2011,6 +2011,12 @@ paths:
         Each section holds up to 6 of the newest listed ads filed under that
         child or any of its descendants. Inactive categories, and categories
         under an inactive ancestor, return 404.
+
+        The page is shared by every visitor and cached for
+        `qbazaar.catalog.category_page_cache_seconds` (2 minutes, served stale
+        up to 10 while it refreshes), so new listings can take that long to
+        appear; a taxonomy change drops it at once. With a Bearer token,
+        `is_favorited` on the cards reflects the caller's favourites.
       operationId: categoriesShow
       security: [{}, {bearerAuth: []}]
       parameters:
@@ -2038,9 +2044,10 @@ paths:
       tags: [Reference]
       summary: Every home-screen section in one request
       description: |
-        The payload is the same for every visitor. It is cached for
-        `qbazaar.home.cache_seconds` (5 minutes) and flushed early when
-        listings or the taxonomy change. With a Bearer token, `is_favorited`
+        The payload is the same for every visitor. A scheduled job rebuilds it
+        every `qbazaar.catalog.warm_every_minutes` (2 minutes), so new or
+        changed listings and the place counts can be up to that old; a
+        taxonomy change drops it at once. With a Bearer token, `is_favorited`
         on the ad cards reflects the caller's favourites.
       operationId: homeShow
       security: [{}, {bearerAuth: []}]
@@ -2153,6 +2160,10 @@ paths:
         can be lower than the number of ids sent. At most
         `qbazaar.search.ids_lookup_max` (50) distinct ids; more is a 422.
 
+        Without `ids`, `meta.total` (and so `meta.last_page`) is shared per
+        filter set for `qbazaar.ads.feed_total_cache_seconds` (60 seconds), so
+        it can trail the listings by that long; the page items are always live.
+
         An optional Bearer token sets `is_favorited` on each ad; guests get false.
       operationId: adsIndex
       security: [{}, {bearerAuth: []}]
@@ -2166,7 +2177,7 @@ paths:
         - { name: price_min, in: query, schema: { type: number, minimum: 0 } }
         - { name: price_max, in: query, schema: { type: number, minimum: 0 }, description: Must not be below `price_min`. }
         - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed], default: latest } }
-        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: page, in: query, description: "At most `qbazaar.ads.feed_max_page` (250); deeper pages are a 422, narrow the filters or use search instead.", schema: { type: integer, minimum: 1, maximum: 250, default: 1 } }
       responses:
         '422': { $ref: '#/components/responses/ValidationError' }
         '200':
@@ -2222,7 +2233,12 @@ paths:
     get:
       tags: [Ads]
       summary: Get ad detail
-      description: An optional Bearer token lets the owner see their own non-public ad and sets `is_favorited`.
+      description: |
+        An optional Bearer token lets the owner see their own non-public ad and sets `is_favorited`.
+        Visitors other than the owner share a rendering cached for up to
+        `qbazaar.ads.detail_cache_seconds` (60 seconds); any edit of the ad or
+        its images drops it at once, so only `views_count`, `favorites_count`
+        and the seller block can trail by that long.
       operationId: adsShow
       security: [{}, {bearerAuth: []}]
       parameters:
@@ -3027,6 +3043,10 @@ paths:
         identified via their bearer token; anonymous clients pass a
         stable identifier in the `X-Session-Id` header. Calls without
         either identity are accepted and silently no-op.
+
+        `views_count` is buffered and written within about a minute. Only
+        signed-in viewers get a stored history (`GET /account/recently-viewed`);
+        a guest's history stays on the client.
       operationId: recentlyViewedTrack
       security: []
       parameters:
@@ -3049,6 +3069,9 @@ paths:
     get:
       tags: [RecentlyViewed]
       summary: List the caller's recently-viewed ads, newest first
+      description: |
+        The history is trimmed to the newest 50 rows on a share of new views,
+        so it can briefly hold a few more.
       operationId: recentlyViewedIndex
       parameters:
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
@@ -3218,6 +3241,7 @@ paths:
     get:
       tags: [Users]
       summary: Public list of a user's active ads (stub until Sprint 5)
+      description: '`meta.total` is the seller''s stored count of active ads.'
       operationId: usersAds
       security: [{}, {bearerAuth: []}]
       parameters:

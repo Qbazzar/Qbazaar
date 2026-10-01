@@ -155,6 +155,12 @@ Each `/search` request is one Meilisearch call (hits, total and facets together)
 
 If Meilisearch goes down, keep the driver and restart the service: search returns empty results meanwhile, and `scout:import` rebuilds the index at any time. Do not switch to the `database` driver.
 
+## Catalog cache and view counters
+
+Requests never rebuild the home feed or the category and place counters: the `catalog.warm-cache` job does, every `qbazaar.catalog.warm_every_minutes` (2) on the `low` queue. Ad views are buffered in Redis and `ads.flush-view-counts` writes them every minute, also on `low`. Both need the scheduler and Horizon running; `php artisan schedule:list` must show `catalog.warm-cache` and `ads.flush-view-counts`. If the scheduler stops, the home feed and counters age until their 15-minute TTL, then the first request rebuilds them under a lock; buffered views wait in `ads:views:buffer` and are written once it runs again.
+
+After the BE-13.31 index migrations reach production, run `ANALYZE TABLE ads, media, messages, offers, users, activity_log;` so MySQL picks up the new indexes.
+
 ## Upload body size
 
 `POST /api/v1/ads/{ad}/images` takes up to `qbazaar.ads.max_images_per_upload` (10) files per request, each up to `qbazaar.uploads.max_image_size_kb` (5 MB by default, `UPLOAD_MAX_IMAGE_SIZE_KB`; the web and mobile apps resize photos before upload). Each user may send `UPLOAD_REQUESTS_PER_MINUTE` (20) upload requests a minute (`throttle:uploads`). An ad holds up to 20 images in total (admin setting `ad_max_images`), so the apps send them in batches. Every layer must accept one full batch, or the request fails before Laravel can answer with a JSON error:

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\UserStatus;
+use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
@@ -30,7 +31,7 @@ function categoryAdsCount(string $slug): int
     return (int) getJson("/api/v1/categories/{$slug}/stats")->assertOk()->json('data.ads_count');
 }
 
-it('moves the count when an ad changes category', function (): void {
+it('moves the count to the new category on the next warm-up', function (): void {
     $ad = Ad::factory()->active()->create(['user_id' => $this->seller->id, 'category_id' => $this->cars->id]);
     $furniture = Category::query()->where('slug', 'furniture')->firstOrFail();
 
@@ -38,6 +39,7 @@ it('moves the count when an ad changes category', function (): void {
         ->and(categoryAdsCount('furniture'))->toBe(0);
 
     $ad->update(['category_id' => $furniture->id]);
+    WarmCatalogCacheJob::dispatchSync();
 
     expect(categoryAdsCount('cars'))->toBe(0)
         ->and(categoryAdsCount('furniture'))->toBe(1);
@@ -48,9 +50,11 @@ it('drops and restores the counts when the seller is suspended and reinstated', 
     expect(categoryAdsCount('cars'))->toBe(1);
 
     $this->seller->forceFill(['status' => UserStatus::SUSPENDED])->save();
+    WarmCatalogCacheJob::dispatchSync();
     expect(categoryAdsCount('cars'))->toBe(0);
 
     $this->seller->forceFill(['status' => UserStatus::ACTIVE])->save();
+    WarmCatalogCacheJob::dispatchSync();
     expect(categoryAdsCount('cars'))->toBe(1);
 });
 

@@ -19,6 +19,7 @@ use App\Http\Resources\Api\V1\Ads\AdResource;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
 use App\Models\User;
+use App\Services\Ads\AdDetailCache;
 use App\Services\Ads\ViewerFavorites;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,12 +62,14 @@ class AdController extends Controller
      *
      * Visibility is governed by AdPolicy::view — public sees ACTIVE / SOLD,
      * owner sees their own drafts. Increments are tracked separately (Sprint 6).
+     * Visitors other than the seller share one cached rendering; the seller
+     * always gets a fresh one (it carries the private street).
      *
      * @unauthenticated
      *
      * @throws DomainException
      */
-    public function show(Request $request, string $id, ViewerFavorites $favorites): JsonResponse
+    public function show(Request $request, string $id, ViewerFavorites $favorites, AdDetailCache $detailCache): JsonResponse
     {
         $ad = $this->findAdOrFail($id);
         $viewer = $this->viewer($request);
@@ -77,10 +80,15 @@ class AdController extends Controller
             throw new DomainException(ErrorCode::AD_NOT_FOUND);
         }
 
-        $ad->load(['user', 'category', 'location', 'media']);
-        $favorites->mark($viewer, [$ad]);
+        $render = function () use ($ad, $request): array {
+            $ad->loadMissing(['user', 'category', 'location', 'media']);
 
-        return response()->json((new AdResource($ad))->toArray($request));
+            return (new AdResource($ad))->toArray($request);
+        };
+
+        $payload = $viewer?->id === $ad->user_id ? $render() : $detailCache->remember($ad->id, $render);
+
+        return response()->json($favorites->overlay($viewer, [$payload])[0]);
     }
 
     /**

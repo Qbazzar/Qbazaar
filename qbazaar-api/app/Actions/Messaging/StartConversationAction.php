@@ -9,6 +9,7 @@ use App\Exceptions\ErrorCode;
 use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 /**
  * Resolves the conversation row for (buyer, ad) — creating it on first
@@ -53,15 +54,10 @@ class StartConversationAction
             throw new DomainException(ErrorCode::MSG_BLOCKED);
         }
 
-        $existing = Conversation::query()
-            ->where('ad_id', $ad->id)
-            ->where('buyer_id', $buyer->id)
-            ->first();
+        $existing = $this->findExisting($buyer, $ad);
 
         if ($existing !== null) {
-            $existing->load(['ad.user', 'ad.primaryImage', 'buyer', 'seller']);
-
-            return ['conversation' => $existing, 'created' => false];
+            return $this->result($existing, created: false);
         }
 
         if (! $ad->isPubliclyListed()) {
@@ -72,14 +68,36 @@ class StartConversationAction
             throw new DomainException(ErrorCode::MSG_CHAT_DISABLED);
         }
 
-        $conversation = Conversation::query()->create([
-            'ad_id' => $ad->id,
-            'buyer_id' => $buyer->id,
-            'seller_id' => $seller->id,
-        ]);
+        try {
+            $conversation = Conversation::query()->create([
+                'ad_id' => $ad->id,
+                'buyer_id' => $buyer->id,
+                'seller_id' => $seller->id,
+            ]);
+        } catch (UniqueConstraintViolationException $race) {
+            // A concurrent request (double tap, two tabs) inserted the pair
+            // between the lookup above and this insert; theirs is the thread.
+            return $this->result($this->findExisting($buyer, $ad) ?? throw $race, created: false);
+        }
 
+        return $this->result($conversation, created: true);
+    }
+
+    private function findExisting(User $buyer, Ad $ad): ?Conversation
+    {
+        return Conversation::query()
+            ->where('ad_id', $ad->id)
+            ->where('buyer_id', $buyer->id)
+            ->first();
+    }
+
+    /**
+     * @return array{conversation: Conversation, created: bool}
+     */
+    private function result(Conversation $conversation, bool $created): array
+    {
         $conversation->load(['ad.user', 'ad.primaryImage', 'buyer', 'seller']);
 
-        return ['conversation' => $conversation, 'created' => true];
+        return ['conversation' => $conversation, 'created' => $created];
     }
 }

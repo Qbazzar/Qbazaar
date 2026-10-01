@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Ad;
 use App\Models\RecentView;
 use App\Models\User;
+use App\Services\Ads\Views\AdViewCounter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\Sanctum;
@@ -28,14 +29,14 @@ beforeEach(function (): void {
     Cache::flush();
 });
 
-it('records a view for an anonymous client identified by X-Session-Id', function (): void {
+it('counts a guest view by X-Session-Id without storing a server-side history', function (): void {
     postJson(
         "/api/v1/ads/{$this->ad->id}/view",
         [],
         ['Accept' => 'application/json', 'X-Session-Id' => 'sess-abc-123'],
     )->assertNoContent();
 
-    expect(RecentView::query()->where('session_id', 'sess-abc-123')->where('ad_id', $this->ad->id)->count())->toBe(1)
+    expect(RecentView::query()->count())->toBe(0)
         ->and((int) Ad::query()->where('id', $this->ad->id)->value('views_count'))->toBe(1);
 });
 
@@ -106,6 +107,27 @@ it('counts one view per IP when anonymous callers rotate their session id', func
     $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.9']);
     postJson("/api/v1/ads/{$this->ad->id}/view", [], ['X-Session-Id' => 'sess-4'])->assertNoContent();
 
-    expect(RecentView::query()->where('ad_id', $this->ad->id)->count())->toBe(4)
+    expect(RecentView::query()->count())->toBe(0)
         ->and((int) Ad::query()->where('id', $this->ad->id)->value('views_count'))->toBe(2);
+});
+
+it('buffers views through the bound counter instead of writing the ad row per view', function (): void {
+    $counter = new class implements AdViewCounter
+    {
+        /** @var list<string> */
+        public array $recorded = [];
+
+        public function record(string $adId): void
+        {
+            $this->recorded[] = $adId;
+        }
+
+        public function flush(): void {}
+    };
+    app()->instance(AdViewCounter::class, $counter);
+
+    postJson("/api/v1/ads/{$this->ad->id}/view", [], ['X-Session-Id' => 'sess-buffered'])->assertNoContent();
+
+    expect($counter->recorded)->toBe([$this->ad->id])
+        ->and((int) Ad::query()->whereKey($this->ad->id)->value('views_count'))->toBe(0);
 });

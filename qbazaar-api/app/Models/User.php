@@ -49,6 +49,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $rating_count
  * @property int $followers_count
  * @property int $following_count
+ * @property int $active_ads_count
  * @property BusinessProfile|null $businessProfile
  * @property Language $language
  * @property string|null $avatar_url
@@ -113,6 +114,7 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
             'rating_count' => 'integer',
             'followers_count' => 'integer',
             'following_count' => 'integer',
+            'active_ads_count' => 'integer',
         ];
     }
 

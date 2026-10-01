@@ -6,6 +6,7 @@ use App\Actions\Recents\TrackAdViewAction;
 use App\Models\RecentView;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Lottery;
 use Laravel\Sanctum\Sanctum;
 
 use function Pest\Laravel\getJson;
@@ -19,6 +20,10 @@ beforeEach(function (): void {
     $this->user = User::factory()->create();
     Sanctum::actingAs($this->user, ['*']);
     $this->seller = User::factory()->create();
+});
+
+afterEach(function (): void {
+    Lottery::determineResultNormally();
 });
 
 it('lists the caller history newest first with viewed_at injected', function (): void {
@@ -47,7 +52,8 @@ it('lists the caller history newest first with viewed_at injected', function ():
         ->and($data[0])->toHaveKey('viewed_at');
 });
 
-it('caps the stored history at 50 rows per user — the 51st insert evicts the oldest', function (): void {
+it('caps the stored history at 50 rows per user when a write draws the trim — the oldest goes', function (): void {
+    Lottery::alwaysWin();
     $ad = $this->makeAd($this->seller, ['status' => 'active', 'published_at' => now()]);
 
     // Seed 50 existing rows with strictly increasing viewed_at so the
@@ -75,4 +81,15 @@ it('caps the stored history at 50 rows per user — the 51st insert evicts the o
 
     expect(RecentView::query()->where('user_id', $this->user->id)->count())->toBe(50)
         ->and(RecentView::query()->where('id', $oldest->id)->exists())->toBeFalse();
+});
+
+it('skips the trim on writes that do not draw it, so most views cost one insert', function (): void {
+    Lottery::alwaysLose();
+    $ad = $this->makeAd($this->seller, ['status' => 'active', 'published_at' => now()]);
+
+    RecentView::factory()->count(50)->create(['user_id' => $this->user->id, 'ad_id' => $ad->id, 'session_id' => null]);
+
+    app(TrackAdViewAction::class)->execute($ad, $this->user, null);
+
+    expect(RecentView::query()->where('user_id', $this->user->id)->count())->toBe(51);
 });

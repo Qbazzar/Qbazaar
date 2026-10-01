@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Users;
 
 use App\Enums\AccountType;
-use App\Enums\AdStatus;
 use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -29,7 +28,6 @@ class CompanyDirectory
                 'businessProfile',
                 'media' => static fn ($media) => $media->where('collection_name', User::BUSINESS_COVER_COLLECTION),
             ])
-            ->withCount(['ads as active_ads_count' => static fn (Builder $ads) => $ads->where('status', AdStatus::ACTIVE->value)])
             ->orderByDesc('users.followers_count')
             ->orderByDesc('users.id');
 

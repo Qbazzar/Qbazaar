@@ -151,6 +151,21 @@ return [
         'postal_code_max_length' => 10,
         'street_max_length' => 255,
         'view_throttle_per_user_per_minute' => 60,
+        // Public ad detail served to visitors other than the seller; saves to the
+        // ad or its images drop the entry, so this only bounds seller/counter staleness.
+        'detail_cache_seconds' => 60,
+        // GET /ads page totals are shared per filter set for this long.
+        'feed_total_cache_seconds' => 60,
+        // GET /ads is offset-paginated; deeper pages cost a scan of every row
+        // before them, so browsing stops here and filters or search take over.
+        'feed_max_page' => 250,
+        // `redis` buffers ad views and FlushAdViewCountsJob writes them every
+        // minute; `database` writes each view (local setups without Redis).
+        'views_buffer' => env('AD_VIEWS_BUFFER', 'redis'),
+        'views_buffer_connection' => env('AD_VIEWS_REDIS_CONNECTION', 'default'),
+        // One in N history writes also trims the viewer's history to the cap.
+        'recent_views_cap' => 50,
+        'recent_views_trim_odds' => 10,
     ],
 
     /*
@@ -176,12 +191,18 @@ return [
     |--------------------------------------------------------------------------
     */
     'catalog' => [
-        'counts_cache_seconds' => 600,
+        // WarmCatalogCacheJob rebuilds the counters and the home feed this often;
+        // the two TTLs below only bound staleness if the scheduler stops.
+        'warm_every_minutes' => 2,
+        'counts_cache_seconds' => 900,
         'category_section_ads' => 6,
+        // Category landing pages are shared by every visitor and served
+        // stale-while-revalidate: fresh this long, stale for up to 5x.
+        'category_page_cache_seconds' => 120,
     ],
 
     'home' => [
-        'cache_seconds' => 300,
+        'cache_seconds' => 900,
         'recommended_limit' => 12,
         'recommended_window_days' => 30,
         'best_selling_limit' => 12,

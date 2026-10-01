@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\AdStatus;
+use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\User;
@@ -68,15 +69,19 @@ it('ignores ads that are not publicly listed', function (): void {
     expect(treeNode('vehicles')['ads_count'])->toBe(0);
 });
 
-it('refreshes the counts when an ad is published or expires', function (): void {
+it('picks up published and expired ads on the next warm-up, not per event', function (): void {
     $draft = listedAdIn($this->sedans, $this->seller, ['status' => AdStatus::DRAFT->value]);
     expect(treeNode('vehicles')['ads_count'])->toBe(0);
 
     $lifecycle = app(AdLifecycleService::class);
     $live = $lifecycle->approve($lifecycle->submitForReview($draft));
+    expect(treeNode('vehicles')['ads_count'])->toBe(0);
+
+    WarmCatalogCacheJob::dispatchSync();
     expect(treeNode('vehicles'))->toMatchArray(['ads_count' => 1, 'today_count' => 1]);
 
     $lifecycle->expire($live);
+    WarmCatalogCacheJob::dispatchSync();
     expect(treeNode('vehicles')['ads_count'])->toBe(0);
 });
 

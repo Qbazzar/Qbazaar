@@ -27,7 +27,8 @@ class UserAdsController extends Controller
      *
      * Mirrors the public feed ordering (latest published first) and is
      * restricted to ACTIVE ads via the model scope, so drafts, pending,
-     * sold and expired listings never leak on a public profile.
+     * sold and expired listings never leak on a public profile. The page
+     * total is the seller's stored active-ads counter rather than a COUNT.
      *
      * @unauthenticated
      *
@@ -44,7 +45,7 @@ class UserAdsController extends Controller
             ->active()
             ->orderedForFeed()
             ->with(['category', 'location', 'primaryImage'])
-            ->paginate(self::PER_PAGE);
+            ->paginate(self::PER_PAGE, total: $user->active_ads_count);
 
         $favorites->mark($this->viewer($request), $paginator->items());
 

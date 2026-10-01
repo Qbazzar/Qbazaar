@@ -14,6 +14,8 @@ use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\TrackClient;
 use App\Http\Middleware\VerifyTurnstile;
 use App\Jobs\Ads\ExpireOldAdsJob;
+use App\Jobs\Ads\FlushAdViewCountsJob;
+use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
@@ -162,6 +164,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('horizon:snapshot')
             ->everyFiveMinutes()
             ->name('horizon.snapshot');
+
+        // Requests only read the home feed and the category/place counters;
+        // this keeps them at most a couple of minutes old.
+        $schedule->job(new WarmCatalogCacheJob)
+            ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.catalog.warm_every_minutes'))))
+            ->name('catalog.warm-cache')
+            ->withoutOverlapping();
+
+        $schedule->job(new FlushAdViewCountsJob)
+            ->everyMinute()
+            ->name('ads.flush-view-counts')
+            ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         // Aliases so route files can use 'locale', 'api.wrap', 'track.client'.

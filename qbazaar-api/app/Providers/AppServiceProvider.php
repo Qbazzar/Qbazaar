@@ -10,12 +10,18 @@ use App\Models\Location;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
 use App\Notifications\Channels\CategorizedDatabaseChannel;
+use App\Observers\AdDetailCacheObserver;
 use App\Observers\AdListingCacheObserver;
 use App\Observers\AdObserver;
 use App\Observers\AdOffersObserver;
 use App\Observers\AdReviewQueueObserver;
+use App\Observers\SellerAdsCountObserver;
 use App\Observers\TaxonomyCacheObserver;
 use App\Observers\UserObserver;
+use App\Services\Ads\Views\AdViewCounter;
+use App\Services\Ads\Views\AdViewCountWriter;
+use App\Services\Ads\Views\DatabaseAdViewCounter;
+use App\Services\Ads\Views\RedisAdViewCounter;
 use App\Services\Auth\AuthRateLimiters;
 use App\Services\Moderation\ModerationRulesService;
 use App\Services\Users\FollowTableSellerFollowers;
@@ -31,6 +37,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use PDO;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,12 +46,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // The moderation rule list is parsed once on construction; binding as
-        // a singleton avoids re-parsing the banned-words array on every
-        // publish call within a single worker process.
-        $this->app->singleton(ModerationRulesService::class);
+        // Scoped, not a singleton: a long-lived Horizon worker must pick up
+        // rules the admin edits, so the parsed lists live for one request or
+        // job and the shared copy stays in the cache.
+        $this->app->scoped(ModerationRulesService::class);
 
         $this->app->bind(DatabaseChannel::class, CategorizedDatabaseChannel::class);
+
+        $this->app->bind(AdViewCounter::class, fn ($app): AdViewCounter => config('qbazaar.ads.views_buffer') === 'redis'
+            ? new RedisAdViewCounter($app->make(AdViewCountWriter::class), (string) config('qbazaar.ads.views_buffer_connection'))
+            : new DatabaseAdViewCounter);
 
         // Follows land with BE-14.28, which binds the real directory here.
         $this->app->bind(SellerFollowers::class, FollowTableSellerFollowers::class);
@@ -67,6 +78,8 @@ class AppServiceProvider extends ServiceProvider
         Ad::observe([AdObserver::class, AdOffersObserver::class, AdListingCacheObserver::class, AdReviewQueueObserver::class]);
         Category::observe(TaxonomyCacheObserver::class);
         Location::observe(TaxonomyCacheObserver::class);
+        Ad::observe([SellerAdsCountObserver::class, AdDetailCacheObserver::class]);
+        Media::observe(AdDetailCacheObserver::class);
 
         Model::preventLazyLoading(! $this->app->isProduction());
 
