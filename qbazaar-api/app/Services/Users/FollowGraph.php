@@ -50,6 +50,29 @@ class FollowGraph
         $this->remove($other->id, $one->id);
     }
 
+    /**
+     * Drop every follow of a user who is about to be deleted, lowering the
+     * other side's counts in two set-based updates instead of row by row.
+     * Expects to run inside the caller's transaction.
+     */
+    public function detachAll(User $user): void
+    {
+        User::query()->toBase()
+            ->whereIn('id', Follow::query()->select('follower_id')->where('followed_id', $user->id))
+            ->where('following_count', '>', 0)
+            ->decrement('following_count');
+
+        User::query()->toBase()
+            ->whereIn('id', Follow::query()->select('followed_id')->where('follower_id', $user->id))
+            ->where('followers_count', '>', 0)
+            ->decrement('followers_count');
+
+        Follow::query()
+            ->where('follower_id', $user->id)
+            ->orWhere('followed_id', $user->id)
+            ->delete();
+    }
+
     private function remove(string $followerId, string $followedId): bool
     {
         $deleted = Follow::query()

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\UserStatus;
+use App\Jobs\DeleteAccountJob;
 use App\Models\Follow;
 use App\Models\User;
 use App\Services\Users\FollowGraph;
@@ -199,4 +201,18 @@ it('rate limits follow requests', function (): void {
     postJson("/api/v1/users/{$this->seller->id}/follow")
         ->assertStatus(429)
         ->assertJsonPath('error.code', 'RATE_LIMIT_EXCEEDED');
+});
+
+it('lowers the other users counts when an account is deleted for good', function (): void {
+    $graph = app(FollowGraph::class);
+    $fan = User::factory()->create();
+    $graph->link($this->me, $this->seller);
+    $graph->link($fan, $this->me);
+    $this->me->forceFill(['status' => UserStatus::PENDING_DELETION])->save();
+
+    DeleteAccountJob::dispatchSync($this->me->id);
+
+    expect(Follow::query()->count())->toBe(0)
+        ->and(followCounts($this->seller))->toBe([0, 0])
+        ->and(followCounts($fan))->toBe([0, 0]);
 });
