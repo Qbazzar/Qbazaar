@@ -50,6 +50,13 @@ dataset('protected auth requests', [
     'send otp' => ['/api/v1/auth/send-otp', ['phone' => '+97455123456']],
     'resend otp' => ['/api/v1/auth/resend-otp', ['phone' => '+97455123456']],
     'send email code' => ['/api/v1/auth/email-otp/send', ['email' => 'ahmed@example.qa']],
+    'forgot password' => ['/api/v1/auth/forgot-password', ['email' => 'ahmed@example.qa']],
+    'guest support ticket' => ['/api/v1/support/tickets', [
+        'subject' => 'Cannot sign in',
+        'category' => 'technical',
+        'body' => 'The code never arrives on my phone.',
+        'email' => 'ahmed@example.qa',
+    ]],
 ]);
 
 it('rejects a request without a turnstile token', function (string $uri, array $payload): void {

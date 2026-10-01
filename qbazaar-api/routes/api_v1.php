@@ -144,7 +144,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
 
     // Password reset (Wave 2)
     Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])
-        ->middleware('throttle:auth')
+        ->middleware(['throttle:auth', 'turnstile'])
         ->name('forgot-password');
 
     Route::post('/reset-password', [PasswordResetController::class, 'reset'])
@@ -533,7 +533,7 @@ Route::prefix('help')->name('api.v1.help.')->middleware('throttle:api')->group(f
 // under /account/support/* manage the caller's tickets + replies. Admin
 // staff workflow lives in Filament (Sprint 11 admin panel).
 Route::post('/support/tickets', [SupportController::class, 'store'])
-    ->middleware('throttle:api')
+    ->middleware(['throttle:api', 'turnstile'])
     ->name('api.v1.support.tickets.store');
 
 Route::prefix('account/support/tickets')

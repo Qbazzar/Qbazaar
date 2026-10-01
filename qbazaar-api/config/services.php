@@ -55,7 +55,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Cloudflare Turnstile (bot protection on register and OTP sends)
+    | Cloudflare Turnstile (bot protection on public email / SMS senders)
     |--------------------------------------------------------------------------
     |
     | Never enforced under APP_ENV=testing so the suite needs no tokens;
