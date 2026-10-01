@@ -59,7 +59,7 @@ class ExpireOldAdsJob implements ShouldQueue
 
         foreach ($ads as $ad) {
             try {
-                $lifecycle->expire($ad);
+                $lifecycle->expireIfPastDue($ad);
             } catch (DomainException) {
                 // Sold, edited or suspended since it was read: nothing to expire.
             }

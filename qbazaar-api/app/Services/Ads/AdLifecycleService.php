@@ -96,10 +96,21 @@ class AdLifecycleService
 
     public function expire(Ad $ad): Ad
     {
-        return $this->transition($ad, AdStatus::EXPIRED, function (Ad $locked): Closure {
-            $this->apply($locked, AdStatus::EXPIRED);
+        return $this->transition($ad, AdStatus::EXPIRED, fn (Ad $locked): Closure => $this->markExpired($locked));
+    }
 
-            return fn () => AdExpired::dispatch($locked);
+    /**
+     * Expire an ad whose lifetime has run out. A renewal committed after the
+     * caller read the row has moved `expires_at` forward, so that ad stays live.
+     */
+    public function expireIfPastDue(Ad $ad): Ad
+    {
+        return $this->transition($ad, AdStatus::EXPIRED, function (Ad $locked): ?Closure {
+            if ($locked->expires_at?->isFuture() === true) {
+                return null;
+            }
+
+            return $this->markExpired($locked);
         });
     }
 
@@ -167,6 +178,13 @@ class AdLifecycleService
     private function apply(Ad $ad, AdStatus $status, array $attributes = []): void
     {
         $ad->forceFill(['status' => $status, ...$attributes])->save();
+    }
+
+    private function markExpired(Ad $ad): Closure
+    {
+        $this->apply($ad, AdStatus::EXPIRED);
+
+        return fn () => AdExpired::dispatch($ad);
     }
 
     private function goLive(Ad $ad): void
