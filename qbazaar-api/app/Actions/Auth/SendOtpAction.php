@@ -27,9 +27,9 @@ class SendOtpAction
     /**
      * @throws DomainException
      */
-    public function execute(string $phone): OtpIssueResult
+    public function execute(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): OtpIssueResult
     {
-        $result = $this->issuer->issue($phone, OtpPurpose::PHONE_VERIFICATION);
+        $result = $this->issuer->issue($phone, $purpose);
 
         // A registered owner only changes the SMS locale; delivery always goes
         // to the phone number itself.

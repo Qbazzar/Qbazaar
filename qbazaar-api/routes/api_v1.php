@@ -3,13 +3,17 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
+use App\Http\Controllers\Api\V1\Account\AddressController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
 use App\Http\Controllers\Api\V1\Account\BusinessProfileController;
+use App\Http\Controllers\Api\V1\Account\ContactChangeController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
 use App\Http\Controllers\Api\V1\Account\DeviceTokenController;
+use App\Http\Controllers\Api\V1\Account\EmailPreferencesController;
 use App\Http\Controllers\Api\V1\Account\FollowsController;
+use App\Http\Controllers\Api\V1\Account\NotificationPreferencesController;
 use App\Http\Controllers\Api\V1\Account\NotificationsController;
 use App\Http\Controllers\Api\V1\Account\PasswordController;
 use App\Http\Controllers\Api\V1\Account\PrivacySettingsController;
@@ -53,6 +57,7 @@ use App\Http\Controllers\Api\V1\Search\SavedSearchController;
 use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Support\SupportController;
 use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
+use App\Http\Controllers\Api\V1\Uploads\RemoveAvatarController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\FollowController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
@@ -202,6 +207,7 @@ Route::prefix('account')
 
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.patch');
 
         Route::put('/password', PasswordController::class)->name('password.update');
 
@@ -214,6 +220,25 @@ Route::prefix('account')
         Route::put('/privacy-settings', [PrivacySettingsController::class, 'update'])->name('privacy.update');
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
+
+        Route::middleware('throttle:contact-change')->group(function (): void {
+            Route::post('/reauth-code', [ContactChangeController::class, 'sendReauthCode'])->name('reauth-code');
+            Route::post('/email', [ContactChangeController::class, 'requestEmailChange'])->name('email.change');
+            Route::post('/phone', [ContactChangeController::class, 'requestPhoneChange'])->name('phone.change');
+        });
+        Route::post('/phone/verify', [ContactChangeController::class, 'confirmPhoneChange'])
+            ->middleware('throttle:otp-verify')
+            ->name('phone.verify');
+
+        Route::get('/notification-preferences', [NotificationPreferencesController::class, 'show'])->name('notification-preferences.show');
+        Route::put('/notification-preferences', [NotificationPreferencesController::class, 'update'])->name('notification-preferences.update');
+        Route::get('/email-preferences', [EmailPreferencesController::class, 'show'])->name('email-preferences.show');
+        Route::patch('/email-preferences', [EmailPreferencesController::class, 'update'])->name('email-preferences.update');
+
+        Route::get('/addresses', [AddressController::class, 'index'])->name('addresses.index');
+        Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
+        Route::patch('/addresses/{id}', [AddressController::class, 'update'])->name('addresses.update');
+        Route::delete('/addresses/{id}', [AddressController::class, 'destroy'])->name('addresses.destroy');
 
         Route::get('/followers', [FollowsController::class, 'followers'])->name('followers.index');
         Route::delete('/followers/{user}', [FollowsController::class, 'removeFollower'])->name('followers.destroy');
@@ -236,12 +261,13 @@ Route::prefix('account')
             ->name('data-export-request');
     });
 
-// Signed download URL for a previously-generated data export.
-// Kept outside the `account` group so `signed` is the only auth check we
-// need on a one-shot link emailed to the user. We still require an
-// authenticated user via `auth:sanctum` on top of the signature so a
-// leaked URL alone is not enough.
-Route::middleware(['signed', 'auth:sanctum', 'active.user'])
+// Emailed links opened in a browser: the signature is the credential (no
+// bearer), and each link expires and works once.
+Route::middleware(['signed', 'throttle:api'])
+    ->get('/account/email/confirm', [ContactChangeController::class, 'confirmEmailChange'])
+    ->name('api.v1.account.email.confirm');
+
+Route::middleware(['signed', 'throttle:api'])
     ->get('/account/data-export/{id}', [DataExportController::class, 'download'])
     ->name('api.v1.account.data-export.download');
 
@@ -257,6 +283,7 @@ Route::prefix('uploads')
     ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
     ->group(function (): void {
         Route::post('/avatar', AvatarUploadController::class)->name('avatar');
+        Route::delete('/avatar', RemoveAvatarController::class)->name('avatar.destroy');
     });
 
 // ── Sprint 3 — Categories & Locations ───────────────────────────────────────

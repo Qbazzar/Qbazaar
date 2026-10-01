@@ -873,6 +873,32 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
+    patch:
+      tags: [Account]
+      summary: Change any subset of the editable profile fields
+      description: Fields left out keep their current value; an empty body changes nothing.
+      operationId: accountProfilePatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchProfileRequest'
+            examples:
+              name_only:
+                value:
+                  full_name: Ahmed Al-Ali
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 
   /api/v1/account/password:
     put:
@@ -1020,6 +1046,440 @@ paths:
                 $ref: '#/components/schemas/BlockedUsersEnvelope'
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/account/reauth-code:
+    post:
+      tags: [Account]
+      summary: Email a step-up code before changing the email or phone
+      description: |
+        Sign-in is passwordless, so sensitive changes ask for a fresh 6-digit
+        code emailed to the current address instead of a password. The code
+        lives 10 minutes, allows 3 attempts and is spent on first use. One
+        code per 60 seconds (`AUTH_006`); together with `POST /account/email`
+        and `POST /account/phone` at most 5 requests per hour (`429`).
+      operationId: accountReauthCode
+      responses:
+        '202':
+          description: Code emailed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [expires_in, can_resend_in]
+                        properties:
+                          expires_in: { type: integer, description: Seconds, example: 600 }
+                          can_resend_in: { type: integer, description: Seconds, example: 60 }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/account/email:
+    post:
+      tags: [Account]
+      summary: Start changing the account email
+      description: |
+        Needs a step-up code. Emails a confirmation link (60 min, single use)
+        to the new address; nothing changes until it is opened. When it is,
+        the old address gets a notice with the new one masked.
+      operationId: accountEmailChange
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, reauth_code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                  description: Must not belong to any account, the caller's included
+                reauth_code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+            examples:
+              valid:
+                value:
+                  email: new@example.qa
+                  reauth_code: '123456'
+      responses:
+        '202':
+          description: Confirmation link sent to the new address
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [pending_email, expires_in]
+                        properties:
+                          pending_email: { type: string, format: email }
+                          expires_in: { type: integer, description: Seconds the link stays valid, example: 3600 }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation failed (email taken or unchanged) or wrong step-up code (`ACCOUNT_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/account/email/confirm:
+    get:
+      tags: [Account]
+      summary: Confirm an email change from the emailed link
+      description: |
+        Signed link; the signature is the credential (no bearer). Browsers are
+        redirected to `{web_url}/account/email-change/result?status=` with
+        `success`, `ACCOUNT_002` or `AUTH_007`; JSON clients get the profile
+        or the error.
+      operationId: accountEmailConfirm
+      security: []
+      parameters:
+        - { name: user, in: query, required: true, schema: { type: string } }
+        - { name: email, in: query, required: true, schema: { type: string, format: email } }
+        - { name: from, in: query, required: true, schema: { type: string }, description: Fingerprint of the email the link was issued for }
+        - { name: expires, in: query, required: true, schema: { type: integer } }
+        - { name: signature, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Email changed (JSON clients)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '302':
+          description: Browser redirect to the web result page
+        '403':
+          description: Invalid or expired signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '410':
+          description: Link already used or the email changed since (`ACCOUNT_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: The new email was taken in the meantime (`AUTH_007`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/phone:
+    post:
+      tags: [Account]
+      summary: Start changing the account phone
+      description: |
+        Needs a step-up code. Texts an OTP to the new number (same cooldown and
+        hourly cap as `send-otp`); confirm it with `POST /account/phone/verify`
+        before it expires.
+      operationId: accountPhoneChange
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, reauth_code]
+              properties:
+                phone:
+                  type: string
+                  pattern: '^\+974[0-9]{8}$'
+                  description: Must not belong to any account
+                reauth_code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+            examples:
+              valid:
+                value:
+                  phone: '+97455123456'
+                  reauth_code: '123456'
+      responses:
+        '202':
+          description: OTP texted to the new number
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [sent_to, expires_in, can_resend_in]
+                        properties:
+                          sent_to: { type: string }
+                          expires_in: { type: integer }
+                          can_resend_in: { type: integer }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation failed (phone taken or unchanged) or wrong step-up code (`ACCOUNT_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Too many requests, or the OTP cooldown / hourly cap (`AUTH_006`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/phone/verify:
+    post:
+      tags: [Account]
+      summary: Confirm the new phone with the texted OTP
+      operationId: accountPhoneVerify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+      responses:
+        '200':
+          description: Phone changed and verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '410':
+          description: OTP expired (`AUTH_004`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Wrong code, or no pending change (`AUTH_005`); number taken meanwhile (`AUTH_008`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/notification-preferences:
+    get:
+      tags: [Account]
+      summary: Email and push switches for every notification topic
+      description: |
+        One store for both channels. A topic switched off is dropped from that
+        channel when a notification is sent; the in-app inbox always records it.
+        Account and security notices (OTP, verification, data export, security
+        alerts) have no topic and are always sent. Every topic starts on.
+      operationId: accountNotificationPreferencesShow
+      responses:
+        '200':
+          description: Preferences returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [Account]
+      summary: Replace every email and push switch
+      operationId: accountNotificationPreferencesUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPreferences'
+            examples:
+              valid:
+                value:
+                  email: { user_messages: true, offers: true, listing_updates: true, saved_search_alerts: false, newsletters: false }
+                  push: { user_messages: true, offers: true, listing_updates: true, saved_search_alerts: true, newsletters: false }
+      responses:
+        '200':
+          description: Preferences replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/account/email-preferences:
+    get:
+      tags: [Account]
+      summary: The email switch of every notification topic
+      description: The `email` half of `/account/notification-preferences`.
+      operationId: accountEmailPreferencesShow
+      responses:
+        '200':
+          description: Email preferences returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailPreferencesEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [Account]
+      summary: Change any subset of the email switches
+      description: Topics left out keep their value; push switches are not touched. At least one topic is required.
+      operationId: accountEmailPreferencesUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailPreferencesPatch'
+            examples:
+              no_newsletters:
+                value:
+                  newsletters: false
+      responses:
+        '200':
+          description: Email preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailPreferencesEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/v1/account/addresses:
+    get:
+      tags: [Account]
+      summary: List saved delivery addresses, the default first
+      description: Bounded by the 10-address limit, so the list is not paginated.
+      operationId: accountAddressesIndex
+      responses:
+        '200':
+          description: Addresses returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAddressListEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Account]
+      summary: Save a new delivery address
+      description: |
+        At most 10 addresses per user (`ADDRESS_002`). The first address is
+        always the default; `is_default: true` moves the default to the new one.
+      operationId: accountAddressesStore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSavedAddressRequest'
+            examples:
+              valid:
+                value:
+                  label: Home
+                  full_name: Ahmed Al-Ali
+                  phone: '+97455123456'
+                  street: Al Sadd Street
+                  house_number: '12'
+                  supplement: Flat 4
+                  city: Doha
+                  is_default: true
+      responses:
+        '201':
+          description: Address saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAddressEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation failed or the address limit is reached (`ADDRESS_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/addresses/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/ULID'
+    patch:
+      tags: [Account]
+      summary: Change any subset of a saved address
+      description: |
+        `is_default: true` makes this the only default. `is_default: false`
+        on the current default is ignored: there is always exactly one default.
+      operationId: accountAddressesUpdate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSavedAddressRequest'
+            examples:
+              make_default:
+                value:
+                  is_default: true
+      responses:
+        '200':
+          description: Address updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedAddressEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Not one of the caller's addresses (`ADDRESS_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Account]
+      summary: Delete a saved address
+      description: Deleting the default makes the newest remaining address the default.
+      operationId: accountAddressesDestroy
+      responses:
+        '204':
+          description: Address deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Not one of the caller's addresses (`ADDRESS_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/account/followers:
     get:
@@ -1202,9 +1662,12 @@ paths:
       tags: [Account]
       summary: Request a GDPR-style export of the caller's personal data
       description: |
-        Throttled to 1 export per user per 24h via Redis lock. Dispatches
-        `ExportUserDataJob` to the `low` queue; the user receives an email
-        with a signed download link (TTL 48h) when the export finishes.
+        Throttled to 1 export per user per 24h. Dispatches `ExportUserDataJob`
+        to the `low` queue; when the export is ready the user receives an
+        email with a signed, single-use download link (TTL 48h) that opens in
+        a browser. The export contains the profile, preferences, addresses,
+        ads, sent messages, offers made and received, favorites, saved
+        searches, reviews written, blocked users, sessions and activity.
       operationId: accountDataExportRequest
       responses:
         '202':
@@ -1233,11 +1696,13 @@ paths:
   /api/v1/account/data-export/{id}:
     get:
       tags: [Account]
-      summary: Download a previously-generated data export
+      summary: Download a data export from the emailed link
       description: |
-        Requires a signed URL (TTL 48h) plus a Sanctum bearer for the owner.
-        The export id must start with the caller's user-id prefix.
+        The signed URL is the only credential: no bearer token, so the link
+        opens in a browser. It works once and expires after 48h; the file is
+        deleted after it is sent.
       operationId: accountDataExportDownload
+      security: []
       parameters:
         - name: id
           in: path
@@ -1256,18 +1721,26 @@ paths:
             type: string
       responses:
         '200':
-          description: JSON file streamed
+          description: JSON file sent as an attachment
           content:
             application/json:
               schema:
                 type: string
                 format: binary
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+          description: Missing, invalid or expired signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '410':
+          description: Link already used, export expired or not ready (`EXPORT_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/account/deactivate:
     post:
@@ -1308,9 +1781,12 @@ paths:
       description: |
         Verifies the password, sets status `pending_deletion`, records
         `deletion_requested_at`, burns all sessions, and queues
-        `DeleteAccountJob` for 30 days later. Signing back in within the
-        grace window implicitly cancels the request — the queued job
-        re-checks the status before doing anything destructive.
+        `DeleteAccountJob` for 30 days later (a daily sweep re-queues any
+        account past its grace period). Signing back in within the grace
+        window cancels the request: the job re-checks that the account is
+        still pending deletion and was requested at least 30 days ago. The
+        deletion removes the user's ads with their images and search
+        documents, offers, chats, addresses and tokens.
       operationId: accountDeleteRequest
       requestBody:
         required: true
@@ -1395,6 +1871,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [Uploads]
+      summary: Remove the caller's avatar
+      description: Deletes the avatar and its conversions. Idempotent.
+      operationId: uploadsAvatarDestroy
+      responses:
+        '204':
+          description: Avatar removed (or there was none)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Reference data — Categories & Locations (Sprint 3). All endpoints are
@@ -4211,6 +4697,175 @@ components:
     UpdateProfileRequest:
       type: object
       required: [full_name, language]
+      properties:
+        full_name:
+          type: string
+          minLength: 3
+          maxLength: 80
+        language:
+          type: string
+          enum: [ar, en]
+
+    NotificationTopicSwitches:
+      type: object
+      description: One switch per notification topic.
+      additionalProperties: false
+      required: [user_messages, offers, listing_updates, saved_search_alerts, newsletters]
+      properties:
+        user_messages:
+          type: boolean
+          description: New chat messages
+        offers:
+          type: boolean
+          description: Offers made, countered, accepted, rejected or withdrawn
+        listing_updates:
+          type: boolean
+          description: Your ad was approved, rejected, is expiring or expired
+        saved_search_alerts:
+          type: boolean
+          description: Alerts about ads you watch — new ads matching a saved search or from a seller you follow, and price drops on your favorites (push only; the in-app inbox always records them)
+        newsletters:
+          type: boolean
+          description: News and announcements from QBazaar
+
+    NotificationPreferences:
+      type: object
+      required: [email, push]
+      properties:
+        email:
+          $ref: '#/components/schemas/NotificationTopicSwitches'
+        push:
+          $ref: '#/components/schemas/NotificationTopicSwitches'
+
+    NotificationPreferencesEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/NotificationPreferences'
+
+    EmailPreferencesPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        user_messages:
+          type: boolean
+        offers:
+          type: boolean
+        listing_updates:
+          type: boolean
+        saved_search_alerts:
+          type: boolean
+        newsletters:
+          type: boolean
+
+    EmailPreferencesEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/NotificationTopicSwitches'
+
+    SavedAddress:
+      type: object
+      required: [id, label, full_name, phone, street, house_number, supplement, city, postal_code, location_id, is_default, created_at, updated_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/ULID'
+        label:
+          type: [string, 'null']
+          maxLength: 50
+        full_name:
+          type: string
+        phone:
+          type: [string, 'null']
+          description: E.164
+        street:
+          type: string
+        house_number:
+          type: string
+        supplement:
+          type: [string, 'null']
+          description: Floor, flat or landmark
+        city:
+          type: string
+        postal_code:
+          type: [string, 'null']
+        location_id:
+          type: [string, 'null']
+          description: Optional zone id from `/locations/qatar`
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UpdateSavedAddressRequest:
+      type: object
+      properties:
+        label:
+          type: [string, 'null']
+          maxLength: 50
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 80
+        phone:
+          type: [string, 'null']
+          pattern: '^\+[1-9]\d{6,14}$'
+        street:
+          type: string
+          maxLength: 120
+        house_number:
+          type: string
+          maxLength: 20
+        supplement:
+          type: [string, 'null']
+          maxLength: 120
+        city:
+          type: string
+          maxLength: 80
+        postal_code:
+          type: [string, 'null']
+          maxLength: 20
+        location_id:
+          type: [string, 'null']
+        is_default:
+          type: boolean
+
+    CreateSavedAddressRequest:
+      allOf:
+        - $ref: '#/components/schemas/UpdateSavedAddressRequest'
+        - type: object
+          required: [full_name, street, house_number, city]
+
+    SavedAddressEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SavedAddress'
+
+    SavedAddressListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              maxItems: 10
+              items:
+                $ref: '#/components/schemas/SavedAddress'
+
+    PatchProfileRequest:
+      type: object
       properties:
         full_name:
           type: string

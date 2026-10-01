@@ -311,6 +311,14 @@ return [
     'account' => [
         'deletion_grace_period_days' => 30,
         'data_export_link_ttl_hours' => 48,
+        'max_addresses' => 10,
+
+        // Step-up code emailed before an email or phone change.
+        'reauth_code_ttl_minutes' => 10,
+        'reauth_code_max_attempts' => 3,
+        'reauth_code_cooldown_seconds' => 60,
+        'email_change_link_ttl_minutes' => 60,
+        'contact_change_attempts_per_hour' => 5,
     ],
 
     /*

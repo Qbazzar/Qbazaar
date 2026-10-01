@@ -208,7 +208,7 @@ it('lowers the other users counts when an account is deleted for good', function
     $fan = User::factory()->create();
     $graph->link($this->me, $this->seller);
     $graph->link($fan, $this->me);
-    $this->me->forceFill(['status' => UserStatus::PENDING_DELETION])->save();
+    $this->me->forceFill(['status' => UserStatus::PENDING_DELETION, 'deletion_requested_at' => User::deletionCutoff()->subMinute()])->save();
 
     DeleteAccountJob::dispatchSync($this->me->id);
 

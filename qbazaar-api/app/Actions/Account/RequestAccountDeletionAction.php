@@ -57,10 +57,9 @@ class RequestAccountDeletionAction
             $user->deviceTokens()->delete();
         });
 
-        // Why dispatch outside the transaction? If the DB write rolls back
-        // we don't want a delete job sitting in the queue with no row to
-        // match it; conversely, a queue dispatch failure shouldn't undo
-        // the user-visible "your request has been recorded" state.
+        // Dispatched after the commit so the job never runs against a request
+        // that rolled back. If this dispatch is lost, the daily
+        // SweepDueAccountDeletionsJob still picks the account up.
         DeleteAccountJob::dispatch($user->id)->delay($scheduledAt);
 
         return CarbonImmutable::instance($scheduledAt);

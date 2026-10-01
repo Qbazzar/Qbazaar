@@ -5,8 +5,11 @@ declare(strict_types=1);
 use App\Enums\Language;
 use App\Http\Middleware\LocaleMiddleware;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+
+uses(RefreshDatabase::class);
 
 /**
  * Regression: the `language` column is cast to the Language enum, so the
@@ -48,4 +51,27 @@ it('lets the ?lang query override the user preference', function (): void {
 
 it('falls back to the default language for a guest', function (): void {
     expect(runLocale(null))->toBe((string) config('qbazaar.default_language'));
+});
+
+it('answers in the language saved on the token owner', function (string $language, string $message): void {
+    $user = User::factory()->create(['language' => $language]);
+    $token = $user->createToken('test')->plainTextToken;
+
+    $this->withToken($token)
+        ->withHeader('Accept-Language', $language === 'ar' ? 'en' : 'ar')
+        ->getJson('/api/v1/conversations/01HZZZZZZZZZZZZZZZZZZZZZZZ')
+        ->assertNotFound()
+        ->assertJsonPath('error.code', 'MSG_004')
+        ->assertJsonPath('error.message', $message);
+})->with([
+    'arabic' => ['ar', 'المحادثة غير موجودة.'],
+    'english' => ['en', 'Conversation not found.'],
+]);
+
+it('lets a guest pick the language with Accept-Language', function (): void {
+    $this->withHeader('Accept-Language', 'en-US,en;q=0.9')
+        ->getJson('/api/v1/ads/01HZZZZZZZZZZZZZZZZZZZZZZZ')
+        ->assertNotFound()
+        ->assertJsonPath('error.code', 'AD_001')
+        ->assertJsonPath('error.message', __('errors.ad.not.found', [], 'en'));
 });

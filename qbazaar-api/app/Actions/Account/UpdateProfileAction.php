@@ -8,7 +8,8 @@ use App\Enums\Language;
 use App\Models\User;
 
 /**
- * Persists the editable subset of a profile (display name + language).
+ * Persists the editable subset of a profile (display name + language);
+ * fields missing from the payload keep their current value.
  *
  * Email and phone changes are intentionally NOT supported here — they each
  * have their own verified flow (OTP / email-verification) and updating them
@@ -17,14 +18,19 @@ use App\Models\User;
 class UpdateProfileAction
 {
     /**
-     * @param array{full_name: string, language: string} $payload
+     * @param array{full_name?: string, language?: string} $payload
      */
     public function execute(User $user, array $payload): User
     {
-        $user->forceFill([
-            'full_name' => $payload['full_name'],
-            'language' => Language::from($payload['language'])->value,
-        ])->save();
+        if (isset($payload['full_name'])) {
+            $user->full_name = $payload['full_name'];
+        }
+
+        if (isset($payload['language'])) {
+            $user->language = Language::from($payload['language']);
+        }
+
+        $user->save();
 
         return $user->refresh();
     }

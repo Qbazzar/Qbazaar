@@ -327,6 +327,36 @@ return [
         ],
     ],
 
+    'data' => [
+        'export' => [
+            'link' => [
+                'expired' => 'This download link has already been used or has expired. Request a new export from your account.',
+            ],
+        ],
+    ],
+
+    'account' => [
+        'reauth' => [
+            'invalid' => 'The confirmation code is wrong or has expired. Request a new code.',
+        ],
+        'email' => [
+            'change' => [
+                'link' => [
+                    'invalid' => 'This confirmation link has already been used or is no longer valid.',
+                ],
+            ],
+        ],
+    ],
+
+    'address' => [
+        'not' => [
+            'found' => 'Address not found.',
+        ],
+        'limit' => [
+            'reached' => 'You have reached the maximum number of saved addresses.',
+        ],
+    ],
+
     'follow' => [
         'self' => [
             'forbidden' => 'You cannot follow yourself.',

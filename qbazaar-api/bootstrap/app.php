@@ -15,6 +15,8 @@ use App\Http\Middleware\VerifyTurnstile;
 use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
+use App\Jobs\SweepDueAccountDeletionsJob;
+use App\Models\DataExport;
 use App\Models\OtpCode;
 use App\Models\TrustedDevice;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -101,6 +103,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new SyncAdViewCountsJob)
             ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.search.views_sync_minutes'))))
             ->name('search.sync-view-counts')
+            ->withoutOverlapping();
+
+        $schedule->job(new SweepDueAccountDeletionsJob)
+            ->dailyAt('03:00')
+            ->timezone('Asia/Qatar')
+            ->name('accounts.sweep-deletions')
+            ->withoutOverlapping();
+
+        $schedule->command('model:prune', ['--model' => [DataExport::class]])
+            ->dailyAt('03:15')
+            ->timezone('Asia/Qatar')
+            ->name('accounts.prune-data-exports')
             ->withoutOverlapping();
 
         $schedule->command('model:prune', ['--model' => [OtpCode::class, TrustedDevice::class]])

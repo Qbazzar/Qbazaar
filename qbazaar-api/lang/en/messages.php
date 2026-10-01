@@ -23,6 +23,27 @@ return [
         'email_verified' => 'Your email address has been verified.',
     ],
 
+    'account_change' => [
+        'reauth' => [
+            'subject' => 'Your QBazaar confirmation code',
+            'line_code' => 'Use this code to confirm the change to your account: :code',
+            'line_expires' => 'The code expires in :minutes minutes.',
+            'line_ignore' => 'If you did not ask for this, someone may be using your account. Sign out of other devices and contact support.',
+        ],
+        'confirm_email' => [
+            'subject' => 'Confirm your new email address',
+            'line_intro' => 'Open the link below to use this address for your QBazaar account.',
+            'action' => 'Confirm email',
+            'line_expires' => 'The link expires in :minutes minutes and works once.',
+            'line_ignore' => 'If you did not ask for this, ignore this email; nothing will change.',
+        ],
+        'email_changed' => [
+            'subject' => 'Your QBazaar email was changed',
+            'line_intro' => 'The email address on your QBazaar account was changed to :email.',
+            'line_not_you' => 'If you did not make this change, contact our support team right away.',
+        ],
+    ],
+
     'data_export' => [
         'queued' => 'Your data export has been queued. You will receive an email with a download link shortly.',
         'mail' => [
@@ -30,7 +51,7 @@ return [
             'greeting' => 'Hello,',
             'line_intro' => 'Your personal data export is ready for download.',
             'action' => 'Download my data',
-            'line_expires' => 'This link will expire in :hours hours for your security.',
+            'line_expires' => 'This link works once and expires in :hours hours.',
             'line_ignore' => 'If you did not request this export, please contact our support team immediately.',
         ],
     ],

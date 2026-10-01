@@ -173,6 +173,26 @@ requested locale.
 | `REVIEW_002` | This ad has already been reviewed by you | 422 |
 | `REVIEW_003` | Cannot review your own ad | 422 |
 
+## Saved addresses
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `ADDRESS_001` | Address not found (or owned by someone else) | 404 |
+| `ADDRESS_002` | The saved-address limit (`qbazaar.account.max_addresses`, 10) is reached | 422 |
+
+## Data export
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `EXPORT_001` | The export download link was already used, has expired, or the export is not ready | 410 |
+
+## Account changes (email / phone)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `ACCOUNT_001` | The step-up code from `POST /account/reauth-code` is wrong, expired or already used | 422 |
+| `ACCOUNT_002` | The email-change link was already used or the account email changed since it was sent | 410 |
+
 ---
 
 ## Guidelines

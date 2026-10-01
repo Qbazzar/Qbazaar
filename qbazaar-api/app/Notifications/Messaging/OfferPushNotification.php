@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications\Messaging;
 
+use App\Enums\NotificationTopic;
 use App\Models\Offer;
 
 /**
@@ -16,6 +17,11 @@ class OfferPushNotification extends ChatPushNotification
         public readonly Offer $offer,
         public readonly string $category,
     ) {}
+
+    protected function topic(): NotificationTopic
+    {
+        return NotificationTopic::OFFERS;
+    }
 
     /**
      * @return array<string, mixed>

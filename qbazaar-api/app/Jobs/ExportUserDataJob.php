@@ -4,142 +4,83 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\DataExportStatus;
+use App\Models\DataExport;
 use App\Models\User;
 use App\Notifications\DataExportReadyNotification;
+use App\Services\Account\UserDataExporter;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
-use Spatie\Activitylog\Models\Activity;
+use RuntimeException;
 
 /**
- * Builds the user's personal-data export and emails them a signed link.
+ * Builds a requested personal-data export and emails the owner a signed,
+ * single-use download link that opens straight from the browser.
  *
- * Output layout:
- *  - `storage/app/private/exports/{user_id}-{timestamp}.json`
- *  - Filename embeds both pieces so the download route can verify the file
- *    belongs to the caller, and so admin tooling can scan disk usage with
- *    a simple glob.
- *
- * Contents (denormalised JSON, GDPR-style "everything we hold about you"):
- *   user           : the public profile + privacy settings
- *   refresh_tokens : id, device fingerprint, created_at, expires_at (no hashes)
- *   otp_codes      : id, purpose, used_at, created_at (no codes)
- *   trusted_devices: label, last ip, last used / first trusted (no hashes)
- *   social_accounts: linked Google / Apple accounts
- *   activity_log   : event, properties, created_at
- *   blocked_users  : the ids the caller blocked
- *
- * Sensitive secrets (password hashes, raw tokens, raw OTPs) are NEVER
- * exported — only metadata.
+ * Idempotent: an export that is already ready is not rebuilt or re-sent.
  */
 class ExportUserDataJob implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [60, 300];
+
     public function __construct(
-        public readonly string $userId,
         public readonly string $exportId,
     ) {
         $this->onQueue('low');
     }
 
-    public function handle(): void
+    public function handle(UserDataExporter $exporter): void
     {
-        /** @var User|null $user */
-        $user = User::query()->find($this->userId);
+        $export = DataExport::query()->with('user')->find($this->exportId);
+        $user = $export?->user;
 
-        if ($user === null) {
+        if ($export === null || $user === null || $export->status === DataExportStatus::READY) {
             return;
         }
 
-        $payload = $this->buildPayload($user);
-        $disk = Storage::disk('local');
-        $path = "exports/{$this->exportId}.json";
+        $path = "exports/{$export->id}.json";
+        $this->writeFile($exporter, $user, $export->id, $path);
 
-        $disk->put(
-            $path,
-            json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}',
-        );
+        $hours = (int) config('qbazaar.account.data_export_link_ttl_hours');
+        $expiresAt = Carbon::now()->addHours($hours);
 
-        $expiresInHours = (int) config('qbazaar.account.data_export_link_ttl_hours', 48);
-
-        $signedUrl = URL::temporarySignedRoute(
-            'api.v1.account.data-export.download',
-            Carbon::now()->addHours($expiresInHours),
-            ['id' => $this->exportId],
-        );
+        $export->forceFill([
+            'status' => DataExportStatus::READY,
+            'path' => $path,
+            'expires_at' => $expiresAt,
+        ])->save();
 
         $user->notify(new DataExportReadyNotification(
-            downloadUrl: $signedUrl,
-            expiresInHours: $expiresInHours,
+            downloadUrl: URL::temporarySignedRoute('api.v1.account.data-export.download', $expiresAt, ['id' => $export->id]),
+            expiresInHours: $hours,
         ));
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function buildPayload(User $user): array
+    private function writeFile(UserDataExporter $exporter, User $user, string $exportId, string $path): void
     {
-        return [
-            'generated_at' => Carbon::now()->toIso8601String(),
-            'export_id' => $this->exportId,
-            'user' => [
-                'id' => $user->id,
-                'full_name' => $user->full_name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'account_type' => $user->account_type->value,
-                'status' => $user->status->value,
-                'email_verified' => (bool) $user->email_verified,
-                'phone_verified' => (bool) $user->phone_verified,
-                'language' => $user->language->value,
-                'last_login_at' => $user->last_login_at?->toIso8601String(),
-                'created_at' => $user->created_at->toIso8601String(),
-                'privacy_settings' => $user->privacySettings()->toArray(),
-            ],
-            'refresh_tokens' => DB::table('refresh_tokens')
-                ->where('user_id', $user->id)
-                ->get(['id', 'device_fingerprint', 'expires_at', 'used_at', 'created_at'])
-                ->map(fn ($r): array => (array) $r)
-                ->all(),
-            // OTP rows are keyed by recipient, not user_id — fetch what we
-            // have for the user's current phone and email; the hashed code is
-            // intentionally excluded.
-            'otp_codes' => DB::table('otp_codes')
-                ->whereIn('recipient', [$user->phone, $user->email])
-                ->get(['id', 'purpose', 'expires_at', 'used_at', 'attempts', 'created_at'])
-                ->map(fn ($r): array => (array) $r)
-                ->all(),
-            'trusted_devices' => DB::table('trusted_devices')
-                ->where('user_id', $user->id)
-                ->get(['label', 'last_ip', 'last_used_at', 'created_at'])
-                ->map(fn ($r): array => (array) $r)
-                ->all(),
-            'social_accounts' => DB::table('social_accounts')
-                ->where('user_id', $user->id)
-                ->get(['provider', 'email', 'created_at'])
-                ->map(fn ($r): array => (array) $r)
-                ->all(),
-            'activity_log' => Activity::query()
-                ->where('causer_type', $user::class)
-                ->where('causer_id', $user->id)
-                ->orderBy('created_at')
-                ->get(['log_name', 'event', 'description', 'properties', 'created_at'])
-                ->map(fn (Activity $a): array => [
-                    'log_name' => $a->log_name,
-                    'event' => $a->event,
-                    'description' => $a->description,
-                    'properties' => $a->properties,
-                    'created_at' => $a->created_at?->toIso8601String(),
-                ])
-                ->all(),
-            'blocked_users' => DB::table('user_blocks')
-                ->where('blocker_id', $user->id)
-                ->pluck('blocked_id')
-                ->all(),
-        ];
+        $stream = fopen('php://temp', 'w+b');
+
+        if ($stream === false) {
+            throw new RuntimeException('Could not open a buffer for the data export.');
+        }
+
+        try {
+            $exporter->write($stream, $user, $exportId);
+            rewind($stream);
+
+            if (! Storage::disk(DataExport::DISK)->writeStream($path, $stream)) {
+                throw new RuntimeException("Could not store the data export {$exportId}.");
+            }
+        } finally {
+            fclose($stream);
+        }
     }
 }

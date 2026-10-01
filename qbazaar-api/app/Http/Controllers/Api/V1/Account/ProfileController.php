@@ -36,6 +36,7 @@ class ProfileController extends Controller
 
     /**
      * Update the editable subset of the profile (full_name + language).
+     * PUT replaces both fields; PATCH changes only the fields sent.
      *
      * @authenticated
      */
@@ -46,7 +47,7 @@ class ProfileController extends Controller
 
         $this->authorize('update', $user);
 
-        /** @var array{full_name: string, language: string} $payload */
+        /** @var array{full_name?: string, language?: string} $payload */
         $payload = $request->validated();
 
         $updated = $action->execute($user, $payload);

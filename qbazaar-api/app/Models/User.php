@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\AsNotificationPreferences;
+use App\Data\Account\NotificationPreferences;
 use App\Data\Account\PrivacySettings;
 use App\Enums\AccountType;
 use App\Enums\Language;
@@ -51,6 +53,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Language $language
  * @property string|null $avatar_url
  * @property PrivacySettings|null $privacy_settings
+ * @property NotificationPreferences $notification_preferences
  * @property Carbon|null $last_login_at
  * @property Carbon|null $deletion_requested_at
  * @property Carbon $created_at
@@ -105,6 +108,7 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
             'status' => UserStatus::class,
             'language' => Language::class,
             'privacy_settings' => PrivacySettings::class,
+            'notification_preferences' => AsNotificationPreferences::class,
             'rating_avg' => 'decimal:2',
             'rating_count' => 'integer',
             'followers_count' => 'integer',
@@ -137,6 +141,21 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         return $this->hasAnyRole(StaffRole::names());
     }
 
+    /**
+     * Deletion requests made at or before this moment are past their grace period.
+     */
+    public static function deletionCutoff(): Carbon
+    {
+        return Carbon::now()->subDays((int) config('qbazaar.account.deletion_grace_period_days'));
+    }
+
+    public function isDueForDeletion(): bool
+    {
+        return $this->status === UserStatus::PENDING_DELETION
+            && $this->deletion_requested_at !== null
+            && $this->deletion_requested_at->lessThanOrEqualTo(self::deletionCutoff());
+    }
+
     public function isBusiness(): bool
     {
         return $this->account_type === AccountType::BUSINESS;
@@ -163,6 +182,12 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
      *  `routeNotificationForFcm()` is the hook the FCM notification channel
      *  calls to resolve where a push should go.
      * ──────────────────────────────────────────────────────────────────*/
+
+    /** @return HasMany<UserAddress, $this> */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class);
+    }
 
     /** @return HasMany<DeviceToken, $this> */
     public function deviceTokens(): HasMany

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Notifications\Ads;
 
 use App\Enums\Language;
+use App\Enums\NotificationTopic;
 use App\Models\Ad;
 use App\Models\User;
+use App\Notifications\Concerns\RespectsNotificationPreferences;
 use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,11 +18,12 @@ use NotificationChannels\Fcm\FcmChannel;
 /**
  * "Something happened to an ad you care about" — sent to many users at
  * once (followers, favouriters, saved-search owners), so it is delivered
- * from the low queue to the bell and to push, never by email.
+ * from the low queue to the bell and to push, never by email. Push follows
+ * the recipient's switch for the alert's topic; the bell always gets it.
  */
 abstract class AdAlertNotification extends Notification implements ShouldQueue
 {
-    use Queueable, SendsFcmPush;
+    use Queueable, RespectsNotificationPreferences, SendsFcmPush;
 
     public int $tries = 3;
 
@@ -39,6 +42,15 @@ abstract class AdAlertNotification extends Notification implements ShouldQueue
     abstract protected function body(string $locale): string;
 
     /**
+     * Alerts about ads the user watches (saved searches, followed sellers,
+     * favourites) share one switch, so the preferences contract stays the same.
+     */
+    protected function topic(): NotificationTopic
+    {
+        return NotificationTopic::SAVED_SEARCH_ALERTS;
+    }
+
+    /**
      * Extra structured fields clients can use instead of parsing the text.
      *
      * @return array<string, mixed>
@@ -55,7 +67,8 @@ abstract class AdAlertNotification extends Notification implements ShouldQueue
     {
         $channels = $notifiable instanceof User ? ['database'] : [];
 
-        if ($this->fcmEnabledFor($notifiable)) {
+        // The preference check is free; fcmEnabledFor() may cost a query.
+        if ($this->withoutMutedChannels($notifiable, [FcmChannel::class]) !== [] && $this->fcmEnabledFor($notifiable)) {
             $channels[] = FcmChannel::class;
         }
 

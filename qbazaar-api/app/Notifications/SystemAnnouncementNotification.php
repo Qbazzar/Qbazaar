@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Enums\Language;
+use App\Enums\NotificationTopic;
 use App\Models\User;
+use App\Notifications\Concerns\RespectsNotificationPreferences;
 use App\Notifications\Concerns\SendsFcmPush;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,7 +32,7 @@ use NotificationChannels\Fcm\FcmChannel;
  */
 class SystemAnnouncementNotification extends Notification implements ShouldQueue
 {
-    use Queueable, SendsFcmPush;
+    use Queueable, RespectsNotificationPreferences, SendsFcmPush;
 
     public function __construct(
         public readonly string $title,
@@ -52,7 +54,12 @@ class SystemAnnouncementNotification extends Notification implements ShouldQueue
             $channels[] = FcmChannel::class;
         }
 
-        return $channels;
+        return $this->withoutMutedChannels($notifiable, $channels);
+    }
+
+    protected function topic(): NotificationTopic
+    {
+        return NotificationTopic::NEWSLETTERS;
     }
 
     public function toMail(mixed $notifiable): MailMessage

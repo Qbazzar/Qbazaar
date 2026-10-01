@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 use function Pest\Laravel\getJson;
+use function Pest\Laravel\patchJson;
 use function Pest\Laravel\putJson;
 
 uses(RefreshDatabase::class);
@@ -87,4 +88,42 @@ it('rejects unauthenticated requests', function (): void {
     $this->refreshApplication();
 
     getJson('/api/v1/account/profile')->assertStatus(401);
+});
+
+it('patches the name alone and keeps the language', function (): void {
+    patchJson('/api/v1/account/profile', ['full_name' => 'Only Name'])
+        ->assertOk()
+        ->assertJsonPath('data.full_name', 'Only Name')
+        ->assertJsonPath('data.language', 'ar');
+
+    expect($this->user->fresh()->language)->toBe(Language::ARABIC);
+});
+
+it('patches the language alone and keeps the name', function (): void {
+    patchJson('/api/v1/account/profile', ['language' => 'en'])
+        ->assertOk()
+        ->assertJsonPath('data.full_name', 'Old Name')
+        ->assertJsonPath('data.language', 'en');
+});
+
+it('validates the fields a patch sends', function (): void {
+    patchJson('/api/v1/account/profile', ['full_name' => 'ab', 'language' => 'xx'])
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', 'VALIDATION_FAILED')
+        ->assertJsonValidationErrors(['full_name', 'language'], 'error.details');
+
+    expect($this->user->fresh()->full_name)->toBe('Old Name');
+});
+
+it('ignores email and phone in a patch', function (): void {
+    patchJson('/api/v1/account/profile', ['email' => 'attacker@example.com', 'phone' => '+97455999999'])
+        ->assertOk();
+
+    expect($this->user->fresh()->email)->not->toBe('attacker@example.com');
+});
+
+it('rejects an unauthenticated patch', function (): void {
+    $this->refreshApplication();
+
+    patchJson('/api/v1/account/profile', ['full_name' => 'Nobody'])->assertStatus(401);
 });
