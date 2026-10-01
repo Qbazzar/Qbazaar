@@ -133,6 +133,10 @@ return [
             'title' => 'New ad matches your search',
             'body' => 'A new ad ":title" matches your saved search ":search".',
         ],
+        'saved_search_digest' => [
+            'title' => 'More ads match your searches',
+            'body' => '{1} One more new ad matches your saved searches.|[2,*] :count more new ads match your saved searches.',
+        ],
         'data_export_ready' => [
             'title' => 'Your data export is ready',
             'body' => 'Tap to download your personal data export.',

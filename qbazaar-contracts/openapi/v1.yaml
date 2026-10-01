@@ -5857,7 +5857,7 @@ components:
           description: Envelope replayed verbatim against `/search`.
         alerts_enabled:
           type: boolean
-          description: When true, a newly live ad matching the filters sends a `search.match` notification (once per ad per user).
+          description: When true, a newly live ad matching the filters sends a `search.match` notification (once per ad per user). Push is limited to the first match per user per hour; later matches only reach the bell and are summed into one `search.digest` push when the hour ends.
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 
