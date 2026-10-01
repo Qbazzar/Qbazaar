@@ -7,4 +7,5 @@ namespace App\Enums;
 enum OtpPurpose: string
 {
     case PHONE_VERIFICATION = 'phone_verification';
+    case PHONE_CHANGE = 'phone_change';
 }

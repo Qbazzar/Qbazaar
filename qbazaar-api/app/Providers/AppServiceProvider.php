@@ -79,6 +79,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('drafts', fn (Request $r) => Limit::perHour((int) config('qbazaar.ads.drafts_per_hour_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('messages', fn (Request $r) => Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by(optional($r->user())->id ?: $r->ip()));
+        // Each hit sends an email or SMS.
+        RateLimiter::for('contact-change', fn (Request $r) => Limit::perHour((int) config('qbazaar.account.contact_change_attempts_per_hour'))
+            ->by('contact-change:' . (optional($r->user())->id ?: $r->ip())));
     }
 
     /**

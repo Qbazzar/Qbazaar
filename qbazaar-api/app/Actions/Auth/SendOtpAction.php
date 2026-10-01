@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Auth;
 
+use App\Enums\OtpPurpose;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\User;
@@ -38,12 +39,12 @@ class SendOtpAction
     /**
      * @throws DomainException
      */
-    public function execute(string $phone): OtpIssueResult
+    public function execute(string $phone, OtpPurpose $purpose = OtpPurpose::PHONE_VERIFICATION): OtpIssueResult
     {
         $this->enforceCooldown($phone);
-        $this->enforceHourlyCeiling($phone);
+        $this->enforceHourlyCeiling($phone, $purpose);
 
-        $result = $this->otpService->issue($phone);
+        $result = $this->otpService->issue($phone, $purpose);
 
         $this->markCooldown($phone, $result->canResendIn);
 
@@ -65,11 +66,11 @@ class SendOtpAction
     /**
      * @throws DomainException
      */
-    private function enforceHourlyCeiling(string $phone): void
+    private function enforceHourlyCeiling(string $phone, OtpPurpose $purpose): void
     {
         $max = (int) config('qbazaar.otp.max_per_hour', 5);
 
-        if ($this->otpService->countLastHour($phone) >= $max) {
+        if ($this->otpService->countLastHour($phone, $purpose) >= $max) {
             throw new DomainException(ErrorCode::AUTH_RATE_LIMITED);
         }
     }

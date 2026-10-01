@@ -167,6 +167,13 @@ requested locale.
 |------|---------|------|
 | `EXPORT_001` | The export download link was already used, has expired, or the export is not ready | 410 |
 
+## Account changes (email / phone)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `ACCOUNT_001` | The step-up code from `POST /account/reauth-code` is wrong, expired or already used | 422 |
+| `ACCOUNT_002` | The email-change link was already used or the account email changed since it was sent | 410 |
+
 ---
 
 ## Guidelines

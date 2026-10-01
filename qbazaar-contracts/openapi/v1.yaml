@@ -716,6 +716,239 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v1/account/reauth-code:
+    post:
+      tags: [Account]
+      summary: Email a step-up code before changing the email or phone
+      description: |
+        Sign-in is passwordless, so sensitive changes ask for a fresh 6-digit
+        code emailed to the current address instead of a password. The code
+        lives 10 minutes, allows 3 attempts and is spent on first use. One
+        code per 60 seconds (`AUTH_006`); together with `POST /account/email`
+        and `POST /account/phone` at most 5 requests per hour (`429`).
+      operationId: accountReauthCode
+      responses:
+        '202':
+          description: Code emailed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [expires_in, can_resend_in]
+                        properties:
+                          expires_in: { type: integer, description: Seconds, example: 600 }
+                          can_resend_in: { type: integer, description: Seconds, example: 60 }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/account/email:
+    post:
+      tags: [Account]
+      summary: Start changing the account email
+      description: |
+        Needs a step-up code. Emails a confirmation link (60 min, single use)
+        to the new address; nothing changes until it is opened. When it is,
+        the old address gets a notice with the new one masked.
+      operationId: accountEmailChange
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, reauth_code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                  description: Must not belong to any account, the caller's included
+                reauth_code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+            examples:
+              valid:
+                value:
+                  email: new@example.qa
+                  reauth_code: '123456'
+      responses:
+        '202':
+          description: Confirmation link sent to the new address
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [pending_email, expires_in]
+                        properties:
+                          pending_email: { type: string, format: email }
+                          expires_in: { type: integer, description: Seconds the link stays valid, example: 3600 }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation failed (email taken or unchanged) or wrong step-up code (`ACCOUNT_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/account/email/confirm:
+    get:
+      tags: [Account]
+      summary: Confirm an email change from the emailed link
+      description: |
+        Signed link; the signature is the credential (no bearer). Browsers are
+        redirected to `{web_url}/account/email-change/result?status=` with
+        `success`, `ACCOUNT_002` or `AUTH_007`; JSON clients get the profile
+        or the error.
+      operationId: accountEmailConfirm
+      security: []
+      parameters:
+        - { name: user, in: query, required: true, schema: { type: string } }
+        - { name: email, in: query, required: true, schema: { type: string, format: email } }
+        - { name: from, in: query, required: true, schema: { type: string }, description: Fingerprint of the email the link was issued for }
+        - { name: expires, in: query, required: true, schema: { type: integer } }
+        - { name: signature, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Email changed (JSON clients)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '302':
+          description: Browser redirect to the web result page
+        '403':
+          description: Invalid or expired signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '410':
+          description: Link already used or the email changed since (`ACCOUNT_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: The new email was taken in the meantime (`AUTH_007`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/phone:
+    post:
+      tags: [Account]
+      summary: Start changing the account phone
+      description: |
+        Needs a step-up code. Texts an OTP to the new number (same cooldown and
+        hourly cap as `send-otp`); confirm it with `POST /account/phone/verify`
+        before it expires.
+      operationId: accountPhoneChange
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, reauth_code]
+              properties:
+                phone:
+                  type: string
+                  pattern: '^\+974[0-9]{8}$'
+                  description: Must not belong to any account
+                reauth_code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+            examples:
+              valid:
+                value:
+                  phone: '+97455123456'
+                  reauth_code: '123456'
+      responses:
+        '202':
+          description: OTP texted to the new number
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [sent_to, expires_in, can_resend_in]
+                        properties:
+                          sent_to: { type: string }
+                          expires_in: { type: integer }
+                          can_resend_in: { type: integer }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation failed (phone taken or unchanged) or wrong step-up code (`ACCOUNT_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Too many requests, or the OTP cooldown / hourly cap (`AUTH_006`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /api/v1/account/phone/verify:
+    post:
+      tags: [Account]
+      summary: Confirm the new phone with the texted OTP
+      operationId: accountPhoneVerify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+      responses:
+        '200':
+          description: Phone changed and verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountProfileEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '410':
+          description: OTP expired (`AUTH_004`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Wrong code, or no pending change (`AUTH_005`); number taken meanwhile (`AUTH_008`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   /api/v1/account/notification-preferences:
     get:
       tags: [Account]

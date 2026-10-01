@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
 use App\Http\Controllers\Api\V1\Account\AddressController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
+use App\Http\Controllers\Api\V1\Account\ContactChangeController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
 use App\Http\Controllers\Api\V1\Account\DeactivateAccountController;
 use App\Http\Controllers\Api\V1\Account\DeleteAccountController;
@@ -193,6 +194,15 @@ Route::prefix('account')
 
         Route::get('/blocked-users', BlockedUsersController::class)->name('blocked-users');
 
+        Route::middleware('throttle:contact-change')->group(function (): void {
+            Route::post('/reauth-code', [ContactChangeController::class, 'sendReauthCode'])->name('reauth-code');
+            Route::post('/email', [ContactChangeController::class, 'requestEmailChange'])->name('email.change');
+            Route::post('/phone', [ContactChangeController::class, 'requestPhoneChange'])->name('phone.change');
+        });
+        Route::post('/phone/verify', [ContactChangeController::class, 'confirmPhoneChange'])
+            ->middleware('throttle:otp-verify')
+            ->name('phone.verify');
+
         Route::get('/notification-preferences', [NotificationPreferencesController::class, 'show'])->name('notification-preferences.show');
         Route::put('/notification-preferences', [NotificationPreferencesController::class, 'update'])->name('notification-preferences.update');
         Route::get('/email-preferences', [EmailPreferencesController::class, 'show'])->name('email-preferences.show');
@@ -217,6 +227,10 @@ Route::prefix('account')
 
 // Emailed download link for a data export. It opens in a browser, so the
 // signature is the credential (no bearer); the link expires and works once.
+Route::middleware(['signed', 'throttle:api'])
+    ->get('/account/email/confirm', [ContactChangeController::class, 'confirmEmailChange'])
+    ->name('api.v1.account.email.confirm');
+
 Route::middleware(['signed', 'throttle:api'])
     ->get('/account/data-export/{id}', [DataExportController::class, 'download'])
     ->name('api.v1.account.data-export.download');

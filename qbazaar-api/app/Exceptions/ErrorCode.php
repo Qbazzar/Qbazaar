@@ -121,6 +121,10 @@ enum ErrorCode: string
     // ── Data export ────────────────────────────────────────────────────────
     case DATA_EXPORT_LINK_EXPIRED = 'EXPORT_001';
 
+    // ── Account changes ────────────────────────────────────────────────────
+    case ACCOUNT_REAUTH_INVALID = 'ACCOUNT_001';
+    case ACCOUNT_EMAIL_CHANGE_LINK_INVALID = 'ACCOUNT_002';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -171,7 +175,8 @@ enum ErrorCode: string
             self::REVIEW_ALREADY_EXISTS,
             self::REVIEW_OWN_AD,
             self::TICKET_INVALID_TRANSITION,
-            self::ADDRESS_LIMIT_REACHED => 422,
+            self::ADDRESS_LIMIT_REACHED,
+            self::ACCOUNT_REAUTH_INVALID => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,
@@ -209,7 +214,8 @@ enum ErrorCode: string
             self::AUTH_OTP_EXPIRED,
             self::AD_EXPIRED,
             self::OFFER_EXPIRED,
-            self::DATA_EXPORT_LINK_EXPIRED => 410,
+            self::DATA_EXPORT_LINK_EXPIRED,
+            self::ACCOUNT_EMAIL_CHANGE_LINK_INVALID => 410,
 
             self::UPLOAD_TOO_LARGE => 413,
 

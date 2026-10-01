@@ -308,6 +308,19 @@ return [
         ],
     ],
 
+    'account' => [
+        'reauth' => [
+            'invalid' => 'The confirmation code is wrong or has expired. Request a new code.',
+        ],
+        'email' => [
+            'change' => [
+                'link' => [
+                    'invalid' => 'This confirmation link has already been used or is no longer valid.',
+                ],
+            ],
+        ],
+    ],
+
     'address' => [
         'not' => [
             'found' => 'Address not found.',
