@@ -17,6 +17,7 @@ use App\Models\Category;
 use App\Services\Ads\ViewerFavorites;
 use App\Services\Catalog\CatalogCache;
 use App\Services\Catalog\CategoryAdCounts;
+use App\Services\Catalog\CategorySchema;
 use App\Services\Catalog\CategoryTree;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -34,8 +35,6 @@ use Illuminate\Support\Facades\Cache;
 class CategoryController extends Controller
 {
     private const TREE_TTL = 3600;        // 1 hour
-
-    private const FIELD_TTL = 3600;       // 1 hour
 
     /**
      * GET /api/v1/categories/tree — full active taxonomy as a nested tree.
@@ -121,22 +120,11 @@ class CategoryController extends Controller
      *
      * @throws DomainException
      */
-    public function filters(Request $request, string $slug): JsonResponse
+    public function filters(Request $request, string $slug, CategorySchema $schema): JsonResponse
     {
-        // Validate the slug BEFORE touching the cache so an unknown slug
-        // surfaces as a clean 404 even when the cache layer is up.
-        $this->resolveCategoryOrFail($slug);
-
-        /** @var array<int, array<string, mixed>> $filters */
-        $filters = Cache::remember(
-            "categories.filters.{$slug}",
-            self::FIELD_TTL,
-            fn (): array => $this->resolveCategoryOrFail($slug)->custom_filters ?? [],
-        );
-
         $data = array_map(
             fn (array $row): array => (new CategoryFilterResource($row))->toArray($request),
-            $filters,
+            $schema->for($slug)['filters'],
         );
 
         return response()->json($data);
@@ -149,27 +137,18 @@ class CategoryController extends Controller
      *
      * @throws DomainException
      */
-    public function fields(Request $request, string $slug): JsonResponse
+    public function fields(Request $request, string $slug, CategorySchema $schema): JsonResponse
     {
-        $this->resolveCategoryOrFail($slug);
-
-        /** @var array<int, array<string, mixed>> $fields */
-        $fields = Cache::remember(
-            "categories.fields.{$slug}",
-            self::FIELD_TTL,
-            fn (): array => $this->resolveCategoryOrFail($slug)->custom_fields ?? [],
-        );
-
         $data = array_map(
             fn (array $row): array => (new CategoryFieldResource($row))->toArray($request),
-            $fields,
+            $schema->for($slug)['fields'],
         );
 
         return response()->json($data);
     }
 
     /**
-     * Centralised "find by slug or throw" — keeps the four methods that need
+     * Centralised "find by slug or throw" — keeps the methods that need
      * it from duplicating the not-found branch and ensures every miss surfaces
      * the same stable CATEGORY_NOT_FOUND code.
      *

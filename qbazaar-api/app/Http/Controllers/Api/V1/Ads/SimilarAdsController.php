@@ -13,6 +13,7 @@ use App\Services\Ads\ViewerFavorites;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * GET /api/v1/ads/{id}/similar — public list of related ads.
@@ -21,9 +22,11 @@ use Illuminate\Support\Facades\Cache;
  *   - Same category, ACTIVE only, excluding the current ad.
  *   - Latest-published-first, capped at 12 rows.
  *
- * Cached for 5 minutes per ad-id; the cache key includes the category id so
- * that admin re-categorisation of an ad invalidates implicitly (the new key
- * has no warm entry yet).
+ * Only the id list is cached, for 5 minutes per ad-id; the key includes the
+ * category id so re-categorisation invalidates implicitly. Rows are re-read
+ * with the public-listing filter, so ads that went off the market in the
+ * meantime drop out. The source ad follows the same visibility rule as its
+ * detail page.
  *
  * The endpoint is public — no auth, no rate limiting beyond the global
  * `throttle:api` group. It returns AdSummaryResource shapes for parity with
@@ -45,8 +48,9 @@ class SimilarAdsController extends Controller
     public function __invoke(Request $request, string $id, ViewerFavorites $favorites): JsonResponse
     {
         $ad = Ad::query()->find($id);
+        $viewer = $this->viewer($request);
 
-        if ($ad === null) {
+        if ($ad === null || Gate::forUser($viewer)->denies('view', $ad)) {
             throw new DomainException(ErrorCode::AD_NOT_FOUND);
         }
 
@@ -76,7 +80,7 @@ class SimilarAdsController extends Controller
             ->orderByDesc('published_at')
             ->get();
 
-        $favorites->mark($this->viewer($request), $ads);
+        $favorites->mark($viewer, $ads);
 
         $items = $ads
             ->map(fn (Ad $similar): array => (new AdSummaryResource($similar))->toArray($request))
