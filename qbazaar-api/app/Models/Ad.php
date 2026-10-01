@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Data\Moderation\ModerationResult;
 use App\Enums\AdShipping;
 use App\Enums\AdStatus;
 use App\Enums\AdType;
@@ -63,6 +64,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Carbon|null $expiring_notified_at
  * @property Carbon|null $submitted_at
  * @property Carbon|null $reserved_at
+ * @property ModerationResult|null $moderation_result
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
@@ -141,6 +143,7 @@ class Ad extends Model implements HasMedia
             'expiring_notified_at' => 'datetime',
             'submitted_at' => 'datetime',
             'reserved_at' => 'datetime',
+            'moderation_result' => ModerationResult::class,
             'price' => 'decimal:2',
             'featured' => 'boolean',
         ];

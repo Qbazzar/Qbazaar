@@ -47,6 +47,7 @@ class AdLifecycleService
                 'published_at' => null,
                 'expires_at' => null,
                 'submitted_at' => now(),
+                'moderation_result' => $result,
             ]);
 
             return fn () => AdSubmittedForReview::dispatch($locked, $result);

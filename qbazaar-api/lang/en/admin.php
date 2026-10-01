@@ -371,6 +371,15 @@ return [
         'body' => ':title:hint',
         'flagged' => ' — auto-flagged: :flags',
         'action' => 'Review ad',
+        'auto_check' => 'Automatic check',
+        'auto_check_clean' => 'The check found no problems.',
+        'auto_check_flags' => [
+            'banned_words' => 'Banned words',
+            'phone' => 'Phone number in the text',
+            'external_link' => 'External link',
+            'duplicate_image' => 'An image matches another seller\'s ad',
+        ],
+        'duplicate_of' => 'Matching ads:',
     ],
 
     'announcement' => [
