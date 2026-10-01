@@ -5,8 +5,8 @@ declare(strict_types=1);
 use App\Jobs\ProcessAdImagesJob;
 use App\Models\Ad;
 use App\Models\User;
+use App\Services\Media\AdImageProcessor;
 use App\Services\Media\BlurHashGeneratorService;
-use App\Services\Media\MediaStorage;
 use App\Services\Media\PerceptualHashService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -66,16 +66,15 @@ it('populates phash on media after the job runs', function (): void {
         ->usingFileName('test.png')
         ->toMediaCollection('images');
 
-    (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(
-        app(BlurHashGeneratorService::class),
-        app(PerceptualHashService::class),
-        app(MediaStorage::class),
-    );
+    (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(app(AdImageProcessor::class));
 
     $fresh = $media->fresh();
     assert($fresh !== null);
 
-    expect($fresh->phash)->toMatch('/^[0-9a-f]{16}$/');
+    expect($fresh->phash)->toMatch('/^[0-9a-f]{16}$/')
+        ->and($fresh->phash_int)->toBe(app(PerceptualHashService::class)->toInteger($fresh->phash))
+        ->and($fresh->getCustomProperty('width'))->toBe(32)
+        ->and($fresh->getCustomProperty('height'))->toBe(32);
     expect($fresh->getCustomProperty('blurhash'))->not->toBe(BlurHashGeneratorService::PLACEHOLDER);
 });
 
@@ -95,14 +94,34 @@ it('completes without throwing when the media file is missing and leaves phash n
     // complete without throwing, and phash stays null.
     Storage::disk('public')->delete($media->getPathRelativeToRoot());
 
-    expect(fn () => (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(
-        app(BlurHashGeneratorService::class),
-        app(PerceptualHashService::class),
-        app(MediaStorage::class),
-    ))->not->toThrow(Throwable::class);
+    expect(fn () => (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(app(AdImageProcessor::class)))->not->toThrow(Throwable::class);
 
     $fresh = $media->fresh();
     assert($fresh !== null);
 
     expect($fresh->phash)->toBeNull();
+});
+
+it('downscales an original above the configured longest side and records the new size', function (): void {
+    config(['qbazaar.uploads.original_max_side_px' => 16]);
+
+    /** @var Ad $ad */
+    $ad = Ad::withoutSyncingToSearch(fn () => $this->makeAd($this->seller));
+
+    /** @var Media $media */
+    $media = $ad->addMedia(makeTempPng('downscale_test_'))
+        ->usingFileName('test.png')
+        ->toMediaCollection('images');
+
+    (new ProcessAdImagesJob([(string) $media->getKey()]))->handle(app(AdImageProcessor::class));
+
+    $fresh = $media->fresh();
+    assert($fresh !== null);
+    $stored = getimagesize($fresh->getPath());
+
+    expect($stored)->not->toBeFalse()
+        ->and([$stored[0], $stored[1]])->toBe([16, 16])
+        ->and($fresh->size)->toBe(filesize($fresh->getPath()))
+        ->and($fresh->getCustomProperty('width'))->toBe(16)
+        ->and($fresh->phash)->toMatch('/^[0-9a-f]{16}$/');
 });

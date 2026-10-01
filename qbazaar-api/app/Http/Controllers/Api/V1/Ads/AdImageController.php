@@ -22,8 +22,8 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 /**
  * Ad image management — upload, reorder, delete.
  *
- * Only the thumbnail is rendered during the upload; the larger variants,
- * BlurHash and pHash are produced on the queue.
+ * Uploads only store the files; the sizes, BlurHash and pHash are produced
+ * on the queue.
  *
  * @group Ads
  */

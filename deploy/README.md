@@ -52,7 +52,7 @@ Horizon runs one supervisor per queue (`config/horizon.php`), so a backlog on on
 | `notifications` | mail, push, SMS, inbox notifications and their audience fan-out | `redis` | 1–3 | 120 s |
 | `default` | chat screening and other listeners | `redis` | 1–2 | 60 s |
 | `search` | Scout index writes | `redis` | 1–2 | 60 s |
-| `media` | image conversions, hashes, duplicate check | `redis-long` | 1–2 | 300 s |
+| `media` | image conversions, hashes, original downscale, ad auto-moderation | `redis-long` | 1–2 | 300 s |
 | `low` | expiry sweeps, exports, account deletion, view-count sync | `redis-long` | 1 | 1800 s |
 
 `redis-long` reads the same Redis lists as `redis` with a longer `retry_after` (`REDIS_LONG_QUEUE_RETRY_AFTER`, 1900 s), so a job is never started twice while it is still running. Both connections push only after the surrounding database transaction commits. Peak memory is about 14 workers × 128–512 MB; lower `maxProcesses` in `config/horizon.php` on a smaller box.
@@ -157,7 +157,7 @@ If Meilisearch goes down, keep the driver and restart the service: search return
 
 ## Upload body size
 
-`POST /api/v1/ads/{ad}/images` takes up to `qbazaar.ads.max_images_per_upload` (10) files per request, each up to `qbazaar.uploads.max_image_size_kb` (10 MB). An ad holds up to 20 images in total (admin setting `ad_max_images`), so the apps send them in batches. Every layer must accept one full batch, or the request fails before Laravel can answer with a JSON error:
+`POST /api/v1/ads/{ad}/images` takes up to `qbazaar.ads.max_images_per_upload` (10) files per request, each up to `qbazaar.uploads.max_image_size_kb` (5 MB by default, `UPLOAD_MAX_IMAGE_SIZE_KB`; the web and mobile apps resize photos before upload). Each user may send `UPLOAD_REQUESTS_PER_MINUTE` (20) upload requests a minute (`throttle:uploads`). An ad holds up to 20 images in total (admin setting `ad_max_images`), so the apps send them in batches. Every layer must accept one full batch, or the request fails before Laravel can answer with a JSON error:
 
 | Layer | Setting | Value |
 |---|---|---|
@@ -165,10 +165,16 @@ If Meilisearch goes down, keep the driver and restart the service: search return
 | PHP 8.4 (cPanel MultiPHP INI Editor, `ea-php84`) | `upload_max_filesize` | `10M` |
 | | `post_max_size` | `105M` |
 | | `max_file_uploads` | `20` or more |
-| | `memory_limit` | `256M` or more (the thumbnail is rendered during the request) |
+| | `memory_limit` | `128M` is enough: the request only stores the files, every size is rendered on the queue |
 | Cloudflare / any proxy in front | max upload size | 105 MiB or more. Cloudflare Free and Pro cap a request at 100 MB, just under a worst-case batch of ten 10 MB files; if the API is proxied there, set `max_images_per_upload` to 9 |
 
-If one of the limits has to be lower, lower `max_images_per_upload` to match (`floor(post_max_size / 10 MB)`) rather than the per-file size. The larger image sizes are rendered on the `media` queue by Horizon, so it must be running for `medium`, `large` and `original_webp` to appear; until then the API serves the original.
+The limits above still fit a 10 MB per-file override. If one of them has to be lower, lower `max_images_per_upload` to match (`floor(post_max_size / max_image_size)`) rather than the per-file size.
+
+## Image queue and CDN
+
+All image sizes (`thumbnail` included), the BlurHash/pHash metadata, the downscale of large originals (`UPLOAD_ORIGINAL_MAX_SIDE_PX`, 2560 px) and the ad auto-moderation (`ModerateAdJob`) run on the `media` queue, consumed by the `supervisor-media` Horizon supervisor. MediaLibrary queues its conversions there too (`MEDIA_QUEUE`, `media` by default). Deploy once Horizon has drained its queues: a `DetectDuplicateImagesJob` or pending-ad alert queued by the old code fails after the switch, and that ad then misses its duplicate hint or reviewer alert (it still shows in the pending list). After deploying run `php artisan config:cache` and `php artisan horizon:terminate`. Until a size exists the API serves the signed original; until `ModerateAdJob` runs the admin ad page shows "check still running" and reviewers are not alerted yet.
+
+Public conversions are served from `MEDIA_CDN_URL` when it is set: the base URL that maps to the root of the conversions disk, e.g. `https://cdn.qbazaar.fleeteye.de/storage` for a proxied host in front of the local `public` disk, or the R2 custom domain (same value as `R2_PUBLIC_URL`) on R2. Conversion paths never change, so they are sent with `Cache-Control: public, max-age=31536000, immutable` (Apache include for `/storage/*/conversions/`, the `media-library.remote.extra_headers` override on R2). Signed original links appear on ad detail only and expire on the hour, so one URL is reused for a whole hour. Files uploaded to R2 before this release keep their old `max-age=604800` header.
 
 ## Expiry sweeps
 

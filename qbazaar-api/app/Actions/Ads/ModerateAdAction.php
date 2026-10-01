@@ -6,26 +6,23 @@ namespace App\Actions\Ads;
 
 use App\Data\Moderation\ModerationResult;
 use App\Models\Ad;
+use App\Services\Moderation\DuplicateImageDetector;
 use App\Services\Moderation\ModerationRulesService;
 
 /**
- * Runs an ad's text through the moderation rule families — banned words,
- * phone-in-text and external links (title + description) — and returns a
- * structured outcome. Near-duplicate images are checked later on the queue
- * by DetectDuplicateImagesJob because that scan grows with the catalogue.
- * Kept as a thin invokable
- * action because it composes service calls and has no side effects — easy
- * to unit-test and to dispatch from synchronous AND queued contexts.
+ * Runs an ad through the auto-moderation checks — banned words, phone in
+ * text and external links (title + description), then near-duplicate images
+ * — and returns triage hints for the reviewer. It has no side effects and
+ * takes no locks; ModerateAdJob calls it on the queue.
  *
- * If moderation is disabled (`config('moderation.enabled') === false`) we
- * return a clean result immediately so the publish flow short-circuits to the
- * pre-Wave-B behaviour. This is the single kill-switch the operations team
- * can flip when a regex misfires in production.
+ * `moderation.enabled = false` returns a clean result, the kill-switch the
+ * operations team can flip when a rule misfires in production.
  */
 class ModerateAdAction
 {
     public function __construct(
         private readonly ModerationRulesService $rules,
+        private readonly DuplicateImageDetector $duplicates,
     ) {}
 
     public function __invoke(Ad $ad): ModerationResult
@@ -34,6 +31,11 @@ class ModerateAdAction
             return ModerationResult::clean();
         }
 
+        return $this->checkText($ad)->withDuplicateImages($this->duplicates->findDuplicateAdIds($ad));
+    }
+
+    private function checkText(Ad $ad): ModerationResult
+    {
         $combined = trim($ad->title . "\n" . $ad->description);
 
         $flags = [];
@@ -56,10 +58,6 @@ class ModerateAdAction
             $details['external_link'] = $linkHits;
         }
 
-        if ($flags === []) {
-            return ModerationResult::clean();
-        }
-
-        return ModerationResult::rejected($flags, $details);
+        return $flags === [] ? ModerationResult::clean() : ModerationResult::rejected($flags, $details);
     }
 }

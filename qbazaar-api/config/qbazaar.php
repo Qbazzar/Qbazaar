@@ -282,9 +282,22 @@ return [
     |--------------------------------------------------------------------------
     */
     'uploads' => [
-        'max_image_size_kb' => 10_240, // 10 MB
+        // Clients resize photos before upload (~2048 px), so 5 MB leaves room.
+        'max_image_size_kb' => (int) env('UPLOAD_MAX_IMAGE_SIZE_KB', 5_120),
         'max_avatar_size_kb' => 5_120, // 5 MB
         'allowed_mime_types' => ['image/jpeg', 'image/png', 'image/webp'],
+
+        // Ad photo uploads per user per minute (each request carries up to
+        // qbazaar.ads.max_images_per_upload files).
+        'requests_per_minute' => (int) env('UPLOAD_REQUESTS_PER_MINUTE', 20),
+
+        // Stored originals larger than this on their longest side are shrunk
+        // on the queue, which bounds storage and egress per ad.
+        'original_max_side_px' => (int) env('UPLOAD_ORIGINAL_MAX_SIDE_PX', 2560),
+
+        // Base URL that public conversions are served from, e.g. a Cloudflare
+        // proxied cdn. host. Empty: the public disk's own URL.
+        'cdn_url' => env('MEDIA_CDN_URL'),
 
         // Lifetime of the signed link to an original-resolution image —
         // originals are served via an expiring signed route so they can't
