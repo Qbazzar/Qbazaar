@@ -1620,7 +1620,8 @@ paths:
       summary: Record an ad view (authenticated user OR anonymous session)
       description: |
         Tracks a view and increments `ads.views_count`. Throttled to one
-        recorded view per (viewer, ad) per hour. Authenticated users are
+        recorded view per (viewer, ad) per hour; `views_count` also grows at
+        most once per (IP, ad) per hour. Authenticated users are
         identified via their bearer token; anonymous clients pass a
         stable identifier in the `X-Session-Id` header. Calls without
         either identity are accepted and silently no-op.

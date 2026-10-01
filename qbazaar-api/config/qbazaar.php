@@ -26,6 +26,12 @@ return [
     */
     'web_url' => env('WEB_URL', env('APP_URL', 'http://localhost')),
 
+    // Swagger UI (/swagger, /docs) and /api/v1/openapi.yaml. Off in
+    // production unless API_DOCS_ENABLED=true.
+    'api_docs_enabled' => in_array(env('API_DOCS_ENABLED'), [null, ''], true)
+        ? env('APP_ENV', 'production') !== 'production'
+        : (bool) env('API_DOCS_ENABLED'),
+
     /*
     |--------------------------------------------------------------------------
     | Locale & Currency

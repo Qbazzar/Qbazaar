@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\V1\Uploads\AvatarUploadController;
 use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
+use App\Http\Middleware\EnsureApiDocsEnabled;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -97,7 +98,7 @@ Route::get('/openapi.yaml', function (): Response {
         'Content-Type' => 'application/yaml; charset=utf-8',
         'Cache-Control' => 'public, max-age=60',
     ]);
-})->name('api.v1.openapi');
+})->middleware(EnsureApiDocsEnabled::class)->name('api.v1.openapi');
 
 // ────────────────────────────────────────────────────────────────────────────
 // Sprint endpoints land here, one Route group per domain.

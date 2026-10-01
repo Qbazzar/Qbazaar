@@ -97,3 +97,15 @@ it('returns AD_NOT_FOUND when the ad does not exist', function (): void {
         ->assertStatus(404)
         ->assertJsonPath('error.code', 'AD_001');
 });
+
+it('counts one view per IP when anonymous callers rotate their session id', function (): void {
+    foreach (['sess-1', 'sess-2', 'sess-3'] as $sessionId) {
+        postJson("/api/v1/ads/{$this->ad->id}/view", [], ['X-Session-Id' => $sessionId])->assertNoContent();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.9']);
+    postJson("/api/v1/ads/{$this->ad->id}/view", [], ['X-Session-Id' => 'sess-4'])->assertNoContent();
+
+    expect(RecentView::query()->where('ad_id', $this->ad->id)->count())->toBe(4)
+        ->and((int) Ad::query()->where('id', $this->ad->id)->value('views_count'))->toBe(2);
+});

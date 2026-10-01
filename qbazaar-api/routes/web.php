@@ -23,6 +23,7 @@ use App\Http\Controllers\Manage\SettingController;
 use App\Http\Controllers\Manage\SupportTicketController;
 use App\Http\Controllers\Manage\UserController;
 use App\Http\Middleware\AuditAdminMutations;
+use App\Http\Middleware\EnsureApiDocsEnabled;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -202,7 +203,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 |--------------------------------------------------------------------------
 | Loads the OpenAPI spec from qbazaar-contracts/openapi/v1.yaml (served by
 | /api/v1/openapi.yaml) and renders Swagger UI from CDN.
-| Available at /swagger and the canonical /docs.
+| Available at /swagger and the canonical /docs; hidden in production unless
+| API_DOCS_ENABLED is set.
 */
-Route::view('/swagger', 'swagger')->name('swagger.ui');
-Route::view('/docs', 'swagger')->name('docs');
+Route::view('/swagger', 'swagger')->middleware(EnsureApiDocsEnabled::class)->name('swagger.ui');
+Route::view('/docs', 'swagger')->middleware(EnsureApiDocsEnabled::class)->name('docs');
