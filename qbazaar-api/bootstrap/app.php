@@ -14,6 +14,7 @@ use App\Http\Middleware\TrackClient;
 use App\Http\Middleware\VerifyTurnstile;
 use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
+use App\Jobs\Search\SyncAdViewCountsJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
 use App\Models\DataExport;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -95,6 +96,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('02:30')
             ->timezone('Asia/Qatar')
             ->name('offers.expire-old')
+            ->withoutOverlapping();
+
+        $schedule->job(new SyncAdViewCountsJob)
+            ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.search.views_sync_minutes'))))
+            ->name('search.sync-view-counts')
             ->withoutOverlapping();
 
         $schedule->job(new SweepDueAccountDeletionsJob)

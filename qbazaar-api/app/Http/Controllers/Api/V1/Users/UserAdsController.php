@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
 use App\Models\User;
+use App\Services\Ads\ViewerFavorites;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -32,7 +33,7 @@ class UserAdsController extends Controller
      *
      * @throws DomainException
      */
-    public function __invoke(Request $request, User $user): AnonymousResourceCollection
+    public function __invoke(Request $request, User $user, ViewerFavorites $favorites): AnonymousResourceCollection
     {
         if ($user->status !== UserStatus::ACTIVE) {
             throw new DomainException(ErrorCode::USER_NOT_FOUND);
@@ -44,6 +45,8 @@ class UserAdsController extends Controller
             ->orderedForFeed()
             ->with(['category', 'location', 'primaryImage'])
             ->paginate(self::PER_PAGE);
+
+        $favorites->mark($this->viewer($request), $paginator->items());
 
         return AdSummaryResource::collection($paginator);
     }

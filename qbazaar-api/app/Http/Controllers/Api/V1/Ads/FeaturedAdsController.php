@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Api\V1\Ads;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
+use App\Services\Ads\ViewerFavorites;
+use App\Services\Catalog\CatalogCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -18,10 +20,10 @@ use Illuminate\Support\Facades\Cache;
  * grid. Ordered by most-recently-published first; ties are broken by id so
  * the order is stable across cache rebuilds.
  *
- * Cached for 5 minutes — the admin doesn't change the curated set often,
- * and a slightly stale homepage is preferable to an extra Meili / DB hit on
- * every public visit. The cache is keyed without parameters so all clients
- * hit the same warm entry.
+ * Only the id list is cached, under one shared key, and {@see CatalogCache}
+ * drops it whenever an ad enters or leaves the listings or is (un)featured.
+ * The rows are re-read with the public-listing filter, so an ad that stops
+ * being public between those events never shows.
  *
  * @group Ads
  */
@@ -34,11 +36,11 @@ class FeaturedAdsController extends Controller
     /**
      * @unauthenticated
      */
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, ViewerFavorites $favorites): JsonResponse
     {
         /** @var list<string> $featuredIds */
         $featuredIds = Cache::remember(
-            'ads.featured.v1',
+            CatalogCache::FEATURED_ADS_KEY,
             self::CACHE_TTL_SECONDS,
             fn (): array => $this->resolveFeaturedIds(),
         );
@@ -61,6 +63,8 @@ class FeaturedAdsController extends Controller
             ->orderByDesc('published_at')
             ->orderBy('id')
             ->get();
+
+        $favorites->mark($this->viewer($request), $ads);
 
         $items = $ads
             ->map(fn (Ad $ad): array => (new AdSummaryResource($ad))->toArray($request))
