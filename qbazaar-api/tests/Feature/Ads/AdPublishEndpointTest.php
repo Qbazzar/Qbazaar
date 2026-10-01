@@ -74,6 +74,18 @@ it('refuses to publish someone else\'s draft', function (): void {
     ])->assertStatus(403);
 });
 
+it('requires the seller to accept the terms', function (mixed $acceptedTerms): void {
+    Sanctum::actingAs($this->user, ['*']);
+    $ad = $this->makePublishableDraft($this->user);
+
+    postJson("/api/v1/ads/{$ad->id}/publish", array_filter(['accepted_terms' => $acceptedTerms], fn ($v) => $v !== null))
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', 'VALIDATION_FAILED')
+        ->assertJsonStructure(['error' => ['details' => ['accepted_terms']]]);
+
+    expect($ad->fresh()->status)->toBe(AdStatus::DRAFT);
+})->with(['missing' => null, 'declined' => false]);
+
 it('refuses to publish an ad with fewer images than the minimum', function (): void {
     Sanctum::actingAs($this->user, ['*']);
     config(['qbazaar.ads.min_images' => 2]);

@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -155,6 +156,12 @@ class Ad extends Model implements HasMedia
         return $this->hasOne(Offer::class)
             ->where('status', OfferStatus::ACCEPTED->value)
             ->latest('accepted_at');
+    }
+
+    /** @return HasMany<Conversation, $this> */
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
     }
 
     /** @return BelongsTo<Category, $this> */

@@ -17,24 +17,10 @@ use Illuminate\Http\Request;
 class AccountSummaryController extends Controller
 {
     /**
-     * Dashboard counters for the signed-in user.
-     *
-     * Returns five at-a-glance numbers — see the OpenAPI spec for the
-     * exact shape. `my_ads` counts every non-draft listing; `drafts`
-     * counts unpublished ones.
+     * Dashboard counters for the signed-in user. `my_ads` counts every
+     * non-draft listing; `ads_by_status` feeds the My Ads tab badges.
      *
      * @authenticated
-     *
-     * @response 200 scenario="Success" {
-     *   "success": true,
-     *   "data": {
-     *     "my_ads": 4,
-     *     "drafts": 1,
-     *     "conversations": 2,
-     *     "unread_notifications": 3,
-     *     "favorites": 7
-     *   }
-     * }
      */
     public function __invoke(Request $request, GetAccountSummaryAction $action): JsonResponse
     {
