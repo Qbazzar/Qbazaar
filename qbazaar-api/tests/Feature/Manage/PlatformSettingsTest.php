@@ -27,6 +27,7 @@ beforeEach(function (): void {
 function validSettingsPayload(array $overrides = []): array
 {
     return [
+        'commission_rate' => (string) config('qbazaar.commission.rate'),
         'commission_debt_ceiling' => '750.50',
         'settlement_deadline_days' => 21,
         'ad_expiry_warning_days' => 5,
@@ -112,6 +113,9 @@ it('rejects out-of-range values', function (string $field, mixed $value): void {
 
     expect(Setting::query()->count())->toBe(0);
 })->with([
+    'negative rate' => ['commission_rate', '-0.01'],
+    'rate above 100' => ['commission_rate', '100.01'],
+    'rate with three decimals' => ['commission_rate', '2.555'],
     'negative ceiling' => ['commission_debt_ceiling', '-1'],
     'ceiling with three decimals' => ['commission_debt_ceiling', '10.555'],
     'ceiling not a number' => ['commission_debt_ceiling', 'abc'],

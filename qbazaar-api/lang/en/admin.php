@@ -371,6 +371,25 @@ return [
         'body' => ':category — reported :target.',
     ],
 
+    'ledger_reconciliation' => [
+        'title' => 'Ledger reconciliation failed',
+        'body' => 'Accounts out of balance: :accounts. Unbalanced transactions: :transactions. Trial balance: :trial_balance. The details are in the application log.',
+        'balanced' => 'holds',
+        'unbalanced' => 'does not hold',
+    ],
+
+    'commission_rates' => [
+        'title' => 'Commission by category',
+        'intro' => 'A category rate applies to the category and to its sub-categories that have no rate of their own. Without one, the general rate applies.',
+        'category' => 'Category',
+        'rate' => 'Rate (%)',
+        'add' => 'Save rate',
+        'remove' => 'Remove',
+        'empty' => 'No category rates yet: every category uses the general rate.',
+        'saved' => 'Category commission rate saved.',
+        'removed' => 'Category commission rate removed.',
+    ],
+
     'ad_review' => [
         'title' => 'New ad awaiting review',
         'body' => ':title:hint',
@@ -495,6 +514,11 @@ return [
             'offers' => 'Offers',
         ],
         'fields' => [
+            'commission_rate' => [
+                'label' => 'Commission rate',
+                'help' => 'Percent of the item price QBazaar keeps on every sale, rounded half-up to 0.01 QAR. A category rate below overrides it. Only new orders use a changed rate.',
+                'unit' => '%',
+            ],
             'commission_debt_ceiling' => [
                 'label' => 'Commission debt ceiling',
                 'help' => "When a seller's unpaid commission reaches this amount, new sales are blocked until they settle.",

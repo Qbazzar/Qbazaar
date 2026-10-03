@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use App\Support\Money;
+
 enum SettingType: string
 {
     case INTEGER = 'integer';
     case DECIMAL = 'decimal';
 
     /**
-     * Money stays a fixed two-decimal string so it never picks up float noise
-     * on its way to a decimal(12,2) comparison.
+     * Money stays an exact two-decimal string, never a float, on its way to
+     * a decimal column comparison.
      */
     public function cast(mixed $value): int|string
     {
         return match ($this) {
             self::INTEGER => (int) $value,
-            self::DECIMAL => number_format((float) $value, 2, '.', ''),
+            self::DECIMAL => Money::round(is_int($value) ? $value : (string) $value),
         };
     }
 

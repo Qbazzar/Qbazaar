@@ -287,12 +287,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Orders and wallet
+    |--------------------------------------------------------------------------
+    */
+    'orders' => [
+        'per_page' => 20,
+        'cancellation_reason_max_length' => 500,
+    ],
+
+    'wallet' => [
+        'statement_per_page' => 20,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Commission
     |--------------------------------------------------------------------------
     | Defaults only: the live values are admin-editable platform settings
     | (see App\Enums\PlatformSetting) and fall back to these until saved.
     */
     'commission' => [
+        // Default for the admin setting: percent of the item price, rounded half-up to 2 decimals.
+        'rate' => '5.00',
         'debt_ceiling' => '500.00',
         'settlement_deadline_days' => 14,
     ],
