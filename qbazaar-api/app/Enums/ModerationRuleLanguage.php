@@ -20,4 +20,16 @@ enum ModerationRuleLanguage: string
     case AR = 'ar';
     case EN = 'en';
     case ANY = 'any';
+
+    /**
+     * @return array{ar: string, en: string}
+     */
+    public function label(): array
+    {
+        return match ($this) {
+            self::ANY => ['ar' => 'الكل', 'en' => 'Any'],
+            self::AR => ['ar' => 'العربية', 'en' => 'Arabic'],
+            self::EN => ['ar' => 'الإنجليزية', 'en' => 'English'],
+        };
+    }
 }
