@@ -27,4 +27,9 @@ class OrderPolicy
     {
         return $order->isParticipant($user);
     }
+
+    public function checkout(User $user, Order $order): bool
+    {
+        return $user->id === $order->buyer_id;
+    }
 }

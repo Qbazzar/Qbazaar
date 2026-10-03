@@ -15,4 +15,12 @@ return [
         'withdrawn' => 'Offer withdrawn',
     ],
     'image' => 'Photo',
+    'purchase_request' => [
+        'created' => 'Buy request: :quantity pcs for :amount :currency',
+        'updated' => 'Buy request updated: :quantity pcs for :amount :currency',
+        'accepted' => 'Buy request accepted',
+        'rejected' => 'Buy request declined',
+        'cancelled' => 'Buy request cancelled',
+        'paid' => 'Purchase completed',
+    ],
 ];
