@@ -6,6 +6,7 @@ namespace App\Services\Orders;
 
 use App\Data\Ledger\LedgerActor;
 use App\Enums\AdStatus;
+use App\Enums\DisputeResolution;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Events\Orders\OrderAwaitingHandover;
@@ -16,6 +17,7 @@ use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\Ad;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\Ads\AdLifecycleService;
 use App\Services\Payments\PaymentGateways;
 use Closure;
@@ -53,6 +55,31 @@ class OrderTransitionService
     }
 
     /**
+     * The seller handed over an escrow order: the buyer's money stays held
+     * while the buyer can still confirm or report a problem, and the order
+     * is released later (ReleaseDueEscrowOrdersJob). Repeating it keeps the
+     * first handover time.
+     */
+    public function recordHandover(Order $order): Order
+    {
+        return $this->transition($order, function (Order $locked): null {
+            if ($locked->status === OrderStatus::COMPLETED) {
+                return null;
+            }
+
+            if ($locked->status !== OrderStatus::AWAITING_HANDOVER) {
+                throw $this->invalidTransition($locked->status, OrderStatus::COMPLETED);
+            }
+
+            if ($locked->handed_over_at === null) {
+                $locked->forceFill(['handed_over_at' => now()])->save();
+            }
+
+            return null;
+        });
+    }
+
+    /**
      * The handover happened: the gateway posts its ledger entries and the ad
      * is marked sold. Confirming an order that is already completed changes
      * nothing, so a retried request never posts twice. A disputed order is
@@ -69,7 +96,7 @@ class OrderTransitionService
                 throw $this->invalidTransition($locked->status, OrderStatus::COMPLETED);
             }
 
-            $this->moveTo($locked, OrderStatus::COMPLETED);
+            $this->moveTo($locked, OrderStatus::COMPLETED, ['handed_over_at' => $locked->handed_over_at ?? now()]);
             $this->gateways->for($locked->payment_method)->settleHandover($locked, $actor);
 
             if ($ad !== null && ! $ad->trashed() && $ad->status->canTransitionTo(AdStatus::SOLD)) {
@@ -109,12 +136,62 @@ class OrderTransitionService
         });
     }
 
-    public function dispute(Order $order): Order
+    /**
+     * The buyer reports a problem. Whether the report window is still open
+     * is the caller's check; this guards what the window cannot see under
+     * the lock.
+     */
+    public function dispute(Order $order, ?string $disputedBy = null, ?string $reason = null): Order
     {
-        return $this->transition($order, function (Order $locked): Closure {
-            $this->moveTo($locked, OrderStatus::DISPUTED);
+        return $this->transition($order, function (Order $locked) use ($disputedBy, $reason): Closure {
+            // Money an escrow order released is in the seller's wallet, and a
+            // ruling is final, so neither can be disputed again.
+            $releasedEscrow = $locked->status === OrderStatus::COMPLETED
+                && $this->gateways->for($locked->payment_method)->holdsFundsInEscrow();
+
+            if ($releasedEscrow || $locked->dispute_resolved_at !== null) {
+                throw $this->invalidTransition($locked->status, OrderStatus::DISPUTED);
+            }
+
+            $this->moveTo($locked, OrderStatus::DISPUTED, [
+                'disputed_by' => $disputedBy,
+                'dispute_reason' => $reason,
+            ]);
 
             return fn () => OrderDisputed::dispatch($locked);
+        });
+    }
+
+    /**
+     * An admin's ruling on a disputed order, kept on the order with the
+     * written reason. Completing settles the handover through the gateway;
+     * cancelling runs the gateway's cancellation. Only an open dispute can
+     * be ruled on, once: anything else rolls the move back.
+     */
+    public function resolveDispute(Order $order, DisputeResolution $ruling, User $admin, string $note): Order
+    {
+        return DB::transaction(function () use ($order, $ruling, $admin, $note): Order {
+            $actor = LedgerActor::admin($admin);
+
+            $resolved = match ($ruling) {
+                DisputeResolution::COMPLETED => $this->complete($order, $actor, resolvingDispute: true),
+                DisputeResolution::CANCELLED => $this->cancel($order, $actor, $admin->id, $note, resolvingDispute: true),
+            };
+
+            if ($resolved->disputed_at === null || $resolved->dispute_resolved_at !== null) {
+                throw $this->invalidTransition($resolved->status, OrderStatus::from($ruling->value));
+            }
+
+            $resolved->forceFill([
+                'dispute_resolution' => $ruling,
+                'dispute_resolution_note' => $note,
+                'dispute_resolved_by' => $admin->id,
+                'dispute_resolved_at' => now(),
+            ])->save();
+
+            $order->setRawAttributes($resolved->getAttributes(), true);
+
+            return $resolved;
         });
     }
 

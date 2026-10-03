@@ -13,7 +13,8 @@ use App\Services\Ledger\LedgerRecipes;
 /**
  * Cash on delivery or at handover. The buyer pays the seller in person, so
  * no money passes through the platform: the handover only books the
- * commission as a debt the seller owes, and a cancellation moves nothing.
+ * commission as a debt the seller owes, and a cancellation only gives that
+ * commission back when the sale had already been completed.
  */
 class CashGateway implements PaymentGateway
 {
@@ -36,8 +37,12 @@ class CashGateway implements PaymentGateway
         return $this->recipes->chargeCommission($order, $actor);
     }
 
+    /**
+     * Before the handover nothing was booked. A sale an admin cancels after
+     * it (a dispute ruling) gives the seller back the commission it cost.
+     */
     public function settleCancellation(Order $order, LedgerActor $actor): ?LedgerTransaction
     {
-        return null;
+        return $this->recipes->refundCommission($order, $actor);
     }
 }

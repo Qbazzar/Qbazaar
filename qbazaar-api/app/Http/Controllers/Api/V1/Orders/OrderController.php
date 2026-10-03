@@ -6,11 +6,14 @@ namespace App\Http\Controllers\Api\V1\Orders;
 
 use App\Actions\Orders\CancelOrderAction;
 use App\Actions\Orders\ConfirmOrderHandoverAction;
+use App\Actions\Orders\ConfirmOrderReceiptAction;
+use App\Actions\Orders\ReportOrderProblemAction;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Orders\CancelOrderRequest;
 use App\Http\Requests\Api\V1\Orders\ListOrdersRequest;
+use App\Http\Requests\Api\V1\Orders\ReportOrderProblemRequest;
 use App\Http\Resources\Api\V1\Orders\OrderResource;
 use App\Models\Order;
 use App\Models\User;
@@ -86,6 +89,32 @@ class OrderController extends Controller
         $this->authorize('cancel', $order);
 
         return $this->respond($request, $cancel($this->user($request), $order, $request->reason()));
+    }
+
+    /**
+     * POST /api/v1/orders/{id}/report-problem (buyer, within the window after the handover)
+     *
+     * @authenticated
+     */
+    public function reportProblem(ReportOrderProblemRequest $request, string $id, ReportOrderProblemAction $report): JsonResponse
+    {
+        $order = $this->findOrFail($request, $id);
+        $this->authorize('reportProblem', $order);
+
+        return $this->respond($request, $report($this->user($request), $order, $request->reason()));
+    }
+
+    /**
+     * POST /api/v1/orders/{id}/confirm-receipt (buyer of an escrow order, after the handover)
+     *
+     * @authenticated
+     */
+    public function confirmReceipt(Request $request, string $id, ConfirmOrderReceiptAction $confirm): JsonResponse
+    {
+        $order = $this->findOrFail($request, $id);
+        $this->authorize('confirmReceipt', $order);
+
+        return $this->respond($request, $confirm($this->user($request), $order));
     }
 
     private function respond(Request $request, Order $order): JsonResponse

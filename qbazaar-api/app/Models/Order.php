@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\DisputeResolution;
 use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
@@ -42,9 +43,16 @@ use Illuminate\Support\Carbon;
  * @property string|null $cancelled_by
  * @property string|null $cancellation_reason
  * @property Carbon|null $awaiting_handover_at
+ * @property Carbon|null $handed_over_at
  * @property Carbon|null $completed_at
  * @property Carbon|null $cancelled_at
  * @property Carbon|null $disputed_at
+ * @property string|null $disputed_by
+ * @property string|null $dispute_reason
+ * @property DisputeResolution|null $dispute_resolution
+ * @property string|null $dispute_resolution_note
+ * @property string|null $dispute_resolved_by
+ * @property Carbon|null $dispute_resolved_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Ad|null $ad
@@ -77,9 +85,12 @@ class Order extends Model
             'commission_rate' => 'decimal:2',
             'commission_amount' => 'decimal:2',
             'awaiting_handover_at' => 'datetime',
+            'handed_over_at' => 'datetime',
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'disputed_at' => 'datetime',
+            'dispute_resolution' => DisputeResolution::class,
+            'dispute_resolved_at' => 'datetime',
         ];
     }
 

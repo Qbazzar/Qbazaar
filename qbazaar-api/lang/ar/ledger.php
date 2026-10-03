@@ -19,5 +19,6 @@ return [
         'promotion_purchased' => 'ترويج إعلان',
         'adjustment' => 'تعديل على الرصيد من QBazaar',
         'reversal' => 'تصحيح قيد سابق',
+        'commission_refunded' => 'إرجاع عمولة بيع أُلغي بعد نزاع',
     ],
 ];

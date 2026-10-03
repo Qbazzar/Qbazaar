@@ -19,5 +19,6 @@ return [
         'promotion_purchased' => 'Ad promotion',
         'adjustment' => 'Balance adjustment by QBazaar',
         'reversal' => 'Correction of an earlier entry',
+        'commission_refunded' => 'Commission returned on a sale cancelled after a dispute',
     ],
 ];

@@ -8,12 +8,14 @@ namespace App\Enums;
  * Order lifecycle:
  *
  *   created ──► awaiting_handover ──► completed
- *      │               │    │
- *      │               │    └──► disputed ──► completed | cancelled
+ *      │               │    │              │
+ *      │               │    └──► disputed ◄┘──► completed | cancelled
  *      └───────────────┴──► cancelled
  *
  * CREATED waits for checkout (address, delivery and payment method);
  * AWAITING_HANDOVER waits for the item and the money to change hands.
+ * A completed cash order can still be disputed by the buyer within the
+ * report-a-problem window after the handover (admin setting).
  */
 enum OrderStatus: string
 {
@@ -31,6 +33,7 @@ enum OrderStatus: string
             [self::AWAITING_HANDOVER, self::COMPLETED],
             [self::AWAITING_HANDOVER, self::CANCELLED],
             [self::AWAITING_HANDOVER, self::DISPUTED],
+            [self::COMPLETED, self::DISPUTED],
             [self::DISPUTED, self::COMPLETED],
             [self::DISPUTED, self::CANCELLED] => true,
             default => false,

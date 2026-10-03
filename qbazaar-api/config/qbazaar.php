@@ -293,10 +293,24 @@ return [
     'orders' => [
         'per_page' => 20,
         'cancellation_reason_max_length' => 500,
+        'dispute_reason_max_length' => 1000,
+
+        // Defaults for the admin settings: how long a buyer can report a
+        // problem after a cash handover, and how many days after the
+        // handover an escrow order is released to the seller on its own.
+        'dispute_window_hours' => 48,
+        'escrow_auto_release_days' => 3,
     ],
 
     'wallet' => [
         'statement_per_page' => 20,
+        'requests_per_page' => 20,
+        'max_bank_accounts' => 5,
+
+        // Settlement transfer receipts are bank documents: keep them on a
+        // private disk (`local` or the private R2 bucket), never a public one.
+        'proof_disk' => env('FINANCE_PROOF_DISK', 'local'),
+        'proof_max_size_kb' => 5_120,
     ],
 
     /*

@@ -21,6 +21,7 @@ it('declares every allowed order transition and nothing else', function (): void
         'awaiting_handover>completed',
         'awaiting_handover>cancelled',
         'awaiting_handover>disputed',
+        'completed>disputed',
         'disputed>completed',
         'disputed>cancelled',
     ]);

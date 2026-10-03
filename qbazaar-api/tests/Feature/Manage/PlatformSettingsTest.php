@@ -34,6 +34,8 @@ function validSettingsPayload(array $overrides = []): array
         'ad_max_images' => 20,
         'ad_daily_publish_limit' => 10,
         'offer_counter_rounds_per_side' => 1,
+        'order_dispute_window_hours' => (int) config('qbazaar.orders.dispute_window_hours'),
+        'escrow_auto_release_days' => (int) config('qbazaar.orders.escrow_auto_release_days'),
         ...$overrides,
     ];
 }
@@ -130,6 +132,10 @@ it('rejects out-of-range values', function (string $field, mixed $value): void {
     'daily limit zero' => ['ad_daily_publish_limit', 0],
     'counter rounds negative' => ['offer_counter_rounds_per_side', -1],
     'counter rounds above 5' => ['offer_counter_rounds_per_side', 6],
+    'dispute window zero' => ['order_dispute_window_hours', 0],
+    'dispute window above 30 days' => ['order_dispute_window_hours', 721],
+    'auto-release zero' => ['escrow_auto_release_days', 0],
+    'auto-release above 60' => ['escrow_auto_release_days', 61],
 ]);
 
 it('serves reads from the cache and refreshes it after a write', function (): void {

@@ -175,4 +175,32 @@ return [
             'body' => 'نشر :name إعلاناً جديداً ":title".',
         ],
     ],
+
+    'finance_notifications' => [
+        'action' => 'افتح محفظتي',
+        'settlement_submitted' => [
+            'title' => 'استلمنا طلب التسوية',
+            'body' => 'استلمنا دفعتك لتسديد العمولة بمبلغ :amount ر.ق، وسنؤكدها عند وصولها إلى حسابنا البنكي.',
+        ],
+        'settlement_approved' => [
+            'title' => 'تم قبول التسوية',
+            'body' => 'تم احتساب دفعتك لتسديد العمولة بمبلغ :amount ر.ق في رصيدك.',
+        ],
+        'settlement_rejected' => [
+            'title' => 'تم رفض التسوية',
+            'body' => 'تعذّر تأكيد دفعتك لتسديد العمولة بمبلغ :amount ر.ق: :reason',
+        ],
+        'withdrawal_requested' => [
+            'title' => 'تم استلام طلب السحب',
+            'body' => 'طلب سحب :amount ر.ق بانتظار المراجعة.',
+        ],
+        'withdrawal_paid' => [
+            'title' => 'تم تحويل السحب',
+            'body' => 'تم تحويل :amount ر.ق إلى حسابك البنكي (المرجع :reference).',
+        ],
+        'withdrawal_rejected' => [
+            'title' => 'تم رفض طلب السحب',
+            'body' => 'تم رفض سحب :amount ر.ق وأُعيد المبلغ إلى محفظتك: :reason',
+        ],
+    ],
 ];

@@ -512,6 +512,7 @@ return [
             'commission' => 'Commission',
             'ads' => 'Ads',
             'offers' => 'Offers',
+            'orders' => 'Orders and disputes',
         ],
         'fields' => [
             'commission_rate' => [
@@ -549,11 +550,50 @@ return [
                 'help' => 'How many times each side (seller first, then buyer) may answer with a counter-offer in one negotiation. Zero turns counter-offers off.',
                 'unit' => 'rounds',
             ],
+            'order_dispute_window_hours' => [
+                'label' => 'Report-a-problem window',
+                'help' => 'How many hours after the seller confirms the handover of a cash order the buyer can report a problem and open a dispute.',
+                'unit' => 'hours',
+            ],
+            'escrow_auto_release_days' => [
+                'label' => 'Escrow auto-release',
+                'help' => 'For orders paid by card or bank transfer: how many days after the handover the held amount goes to the seller on its own when the buyer neither confirms nor disputes. Cash orders are not affected.',
+                'unit' => 'days',
+            ],
         ],
     ],
 
     'locales' => [
         'ar' => 'العربية',
         'en' => 'English',
+    ],
+
+    'finance' => [
+        'settlements' => [
+            'approved' => 'Settlement approved and posted to the books.',
+            'rejected' => 'Settlement rejected; the seller has been told.',
+        ],
+        'withdrawals' => [
+            'paid' => 'Withdrawal recorded as transferred; the seller has been told.',
+            'rejected' => 'Withdrawal rejected; the amount is back in the seller’s wallet.',
+        ],
+        'disputes' => [
+            'resolved' => 'The ruling has been recorded.',
+        ],
+        'review_requested' => [
+            'action' => 'Open the review queue',
+            'settlement' => [
+                'title' => 'Commission settlement waiting for review',
+                'body' => 'A seller sent a bank transfer of :amount QAR to pay their commission. Match it against the bank statement, then approve or reject it.',
+            ],
+            'withdrawal' => [
+                'title' => 'Withdrawal waiting to be transferred',
+                'body' => 'A seller asked to withdraw :amount QAR to their bank account.',
+            ],
+            'dispute' => [
+                'title' => 'New order dispute',
+                'body' => 'A buyer reported a problem with an order of :amount QAR after the handover.',
+            ],
+        ],
     ],
 ];
