@@ -16,6 +16,7 @@ use App\Http\Middleware\VerifyTurnstile;
 use App\Jobs\Ads\ExpireOldAdsJob;
 use App\Jobs\Ads\FlushAdViewCountsJob;
 use App\Jobs\Catalog\WarmCatalogCacheJob;
+use App\Jobs\Ledger\ReconcileLedgerJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
@@ -107,6 +108,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.search.views_sync_minutes'))))
             ->name('search.sync-view-counts')
             ->withoutOverlapping();
+
+        $schedule->job(new ReconcileLedgerJob)
+            ->dailyAt('02:30')
+            ->timezone('Asia/Qatar')
+            ->name('ledger.reconcile');
 
         $schedule->job(new SweepDueAccountDeletionsJob)
             ->dailyAt('03:00')

@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Services\Offers;
 
 use App\Enums\OfferStatus;
+use App\Enums\OrderSource;
+use App\Enums\OrderStatus;
 use App\Events\Offers\OfferExpired;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\Ad;
 use App\Models\Offer;
+use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -62,7 +65,9 @@ class OfferTransitionService
 
     /**
      * An ad takes new offers and acceptances only while it is publicly
-     * listed and no other offer on it has been accepted.
+     * listed and no other offer on it has been accepted, nor another order
+     * placed. An accepted offer whose order was cancelled no longer holds
+     * the ad.
      */
     public function assertAdIsOpenForOffers(Ad $ad): void
     {
@@ -73,7 +78,13 @@ class OfferTransitionService
         $alreadyAgreed = Offer::query()
             ->where('ad_id', $ad->id)
             ->where('status', OfferStatus::ACCEPTED->value)
-            ->exists();
+            ->whereNotExists(fn ($cancelled) => $cancelled->select(DB::raw(1))
+                ->from('orders')
+                ->where('orders.source', OrderSource::OFFER->value)
+                ->whereColumn('orders.source_id', 'offers.id')
+                ->where('orders.status', OrderStatus::CANCELLED->value))
+            ->exists()
+            || Order::query()->where('ad_id', $ad->id)->active()->exists();
 
         if ($alreadyAgreed) {
             throw new DomainException(ErrorCode::OFFER_AD_ALREADY_AGREED);

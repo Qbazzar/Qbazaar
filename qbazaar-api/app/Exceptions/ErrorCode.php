@@ -140,6 +140,17 @@ enum ErrorCode: string
     case ACCOUNT_REAUTH_INVALID = 'ACCOUNT_001';
     case ACCOUNT_EMAIL_CHANGE_LINK_INVALID = 'ACCOUNT_002';
 
+    // ── Orders (M1b) ───────────────────────────────────────────────────────
+    case ORDER_NOT_FOUND = 'ORDER_001';
+    case ORDER_INVALID_TRANSITION = 'ORDER_002';
+    case ORDER_AD_HAS_ACTIVE_ORDER = 'ORDER_003';
+    case ORDER_SELLER_DEBT_CEILING = 'ORDER_004';
+    case ORDER_FORBIDDEN = 'ORDER_005';
+
+    // ── Wallet (M1b) ───────────────────────────────────────────────────────
+    case WALLET_INSUFFICIENT_BALANCE = 'WALLET_001';
+    case WALLET_EXCEEDS_COMMISSION_DEBT = 'WALLET_002';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -194,7 +205,12 @@ enum ErrorCode: string
             self::REVIEW_OWN_AD,
             self::TICKET_INVALID_TRANSITION,
             self::ADDRESS_LIMIT_REACHED,
-            self::ACCOUNT_REAUTH_INVALID => 422,
+            self::ACCOUNT_REAUTH_INVALID,
+            self::ORDER_INVALID_TRANSITION,
+            self::ORDER_AD_HAS_ACTIVE_ORDER,
+            self::ORDER_SELLER_DEBT_CEILING,
+            self::WALLET_INSUFFICIENT_BALANCE,
+            self::WALLET_EXCEEDS_COMMISSION_DEBT => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,
@@ -217,6 +233,7 @@ enum ErrorCode: string
             self::NOTIF_FORBIDDEN,
             self::REVIEW_NOT_ELIGIBLE,
             self::TICKET_FORBIDDEN,
+            self::ORDER_FORBIDDEN,
             self::FORBIDDEN => 403,
 
             self::USER_NOT_FOUND,
@@ -234,6 +251,7 @@ enum ErrorCode: string
             self::HELP_CATEGORY_NOT_FOUND,
             self::TICKET_NOT_FOUND,
             self::ADDRESS_NOT_FOUND,
+            self::ORDER_NOT_FOUND,
             self::NOT_FOUND => 404,
 
             self::AUTH_OTP_EXPIRED,

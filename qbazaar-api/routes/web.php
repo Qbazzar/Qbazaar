@@ -6,6 +6,7 @@ use App\Http\Controllers\Manage\ActivityController;
 use App\Http\Controllers\Manage\AdController;
 use App\Http\Controllers\Manage\AuthController;
 use App\Http\Controllers\Manage\CategoryController;
+use App\Http\Controllers\Manage\CommissionRateController;
 use App\Http\Controllers\Manage\ConversationController;
 use App\Http\Controllers\Manage\DashboardController;
 use App\Http\Controllers\Manage\HelpArticleController;
@@ -187,6 +188,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('permission:settings.manage')->group(function () {
             Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+            Route::post('settings/commission-rates', [CommissionRateController::class, 'store'])->name('settings.commission-rates.store');
+            Route::delete('settings/commission-rates/{category}', [CommissionRateController::class, 'destroy'])->name('settings.commission-rates.destroy');
         });
 
         // Read-only surfaces
