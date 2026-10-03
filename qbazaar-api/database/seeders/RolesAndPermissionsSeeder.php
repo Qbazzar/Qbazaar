@@ -89,6 +89,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Platform settings (commission policy, ad lifecycle)
         'settings.manage',
+
+        // Ledger, wallets and orders (read-only; also receives reconciliation alerts)
+        'finance.view',
     ];
 
     /**

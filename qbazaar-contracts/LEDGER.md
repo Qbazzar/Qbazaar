@@ -1,0 +1,118 @@
+# QBazaar ledger: where every riyal goes
+
+> **Status:** stage A of M1b (BE-14.33, BE-14.35, BE-14.36, BE-14.38). The code lives in `qbazaar-api/app/Services/Ledger/`. The flows marked *later* are already implemented and tested as `LedgerRecipes` methods; stage B (settlements, withdrawals, promotions) and M7 (electronic payment) only call them.
+
+## 1. The idea in one paragraph
+
+QBazaar keeps **double-entry books**, like an accountant. Money never appears or disappears: every movement is one **transaction** made of two or more **entries**, and in every transaction the debits equal the credits. Each user and the platform have **accounts**; an account's balance is the sum of its entries. Nothing in the books is ever edited or deleted: a mistake is fixed by a new transaction that reverses it, so the full history is always there.
+
+## 2. Chart of accounts
+
+Seen from QBazaar's books. *Debit-normal* accounts grow with debits (what we hold or are owed); *credit-normal* accounts grow with credits (what we owe or have earned).
+
+| Code | Account | Normal side | Can go below zero? | Meaning |
+|---|---|---|---|---|
+| `platform:bank` | Bank | debit | yes | QBazaar's bank account |
+| `platform:gateway_clearing` | Gateway clearing | debit | yes | Card money a payment gateway collected and has not paid to the bank yet (M7) |
+| `platform:escrow` | Escrow | credit | **no** | Buyer money held until the handover (bank transfer / gateway only, never cash) |
+| `platform:payouts_payable` | Payouts payable | credit | **no** | Withdrawals approved but not yet transferred |
+| `platform:revenue` | Revenue | credit | yes | Commission and promotion income |
+| `platform:adjustments` | Adjustments | debit | yes | The other side of manual admin corrections |
+| `user:{id}:wallet` | User wallet | credit | **no** | What QBazaar owes the user: money they can withdraw or spend |
+| `user:{id}:commission_receivable` | Commission owed | debit | **no** | What the user owes QBazaar: commission on cash sales |
+
+Accounts open by themselves the first time they are used. A posting that would push a "no" account below zero is refused: a user cannot spend more than their wallet (`WALLET_001`) or pay more commission than they owe (`WALLET_002`).
+
+## 3. Every money flow
+
+Amounts in the examples: an item sold for **200.00 QAR**, shipping **10.00**, commission **5% = 10.00** (on the item price only, never on shipping).
+
+### Now: cash orders (no money passes through QBazaar)
+
+| # | When | Transaction type | Debit | Credit | Example |
+|---|---|---|---|---|---|
+| 1 | The seller confirms the handover of a cash order | `commission_charged` | `user:seller:commission_receivable` | `platform:revenue` | 10.00 |
+| 2 | The seller pays the commission by bank transfer (admin approves, stage B) | `commission_settled` | `platform:bank` | `user:seller:commission_receivable` | 10.00 |
+| 3 | Netting: the debt is paid out of the seller's own wallet | `commission_settled` | `user:seller:wallet` | `user:seller:commission_receivable` | 10.00 |
+
+After 1 the seller owes 10.00; after 2 or 3 they owe nothing. While what they owe is at or above the **debt ceiling** (admin setting), they cannot take new orders (`ORDER_004`).
+
+### Later: escrow orders (bank transfer or card, M7)
+
+| # | When | Transaction type | Debit | Credit | Example |
+|---|---|---|---|---|---|
+| 4 | The buyer's payment arrives | `order_payment_received` | `platform:gateway_clearing` (card) or `platform:bank` (transfer) | `platform:escrow` | 210.00 |
+| 5 | The handover is confirmed | `escrow_released` | `platform:escrow` 210.00 | `user:seller:wallet` 200.00 **and** `platform:revenue` 10.00 | 210.00 |
+| 6 | The order is cancelled or the buyer wins a dispute | `refund` | `platform:escrow` | `platform:gateway_clearing` or `platform:bank` (money goes back out) | 210.00 |
+
+### Stage B: withdrawals
+
+| # | When | Transaction type | Debit | Credit |
+|---|---|---|---|---|
+| 7 | The seller requests a withdrawal (money leaves the wallet at once, so it cannot be spent twice) | `withdrawal_requested` | `user:seller:wallet` | `platform:payouts_payable` |
+| 8 | The admin pays it | `withdrawal_paid` | `platform:payouts_payable` | `platform:bank` |
+| 9 | The admin rejects it | `withdrawal_rejected` (reversal of 7) | `platform:payouts_payable` | `user:seller:wallet` |
+
+### Stage B: paid promotion
+
+| # | When | Transaction type | Debit | Credit |
+|---|---|---|---|---|
+| 10 | Paid from the wallet | `promotion_purchased` | `user:wallet` | `platform:revenue` |
+| 11 | Paid by bank transfer (admin confirms) | `promotion_purchased` | `platform:bank` | `platform:revenue` |
+
+### Corrections
+
+| # | When | Transaction type | Debit | Credit |
+|---|---|---|---|---|
+| 12 | Admin credits a wallet | `adjustment` | `platform:adjustments` | `user:wallet` |
+| 13 | Admin debits a wallet | `adjustment` | `user:wallet` | `platform:adjustments` |
+| 14 | Any transaction posted by mistake | `reversal` | the original's credits | the original's debits |
+
+A transaction can be reversed only once, and a reversal is never reversed (post a new transaction instead).
+
+## 4. The full cycle, account to account
+
+```
+Cash (now)                                  Escrow (M7)
+──────────                                  ───────────
+buyer ──cash──► seller                      buyer ──card──► gateway_clearing ──► escrow
+                  │                                                              │ handover
+   handover ──► seller owes commission                         seller wallet ◄──┤ 200.00
+                (commission_receivable)                        revenue      ◄──┘  10.00
+                  │                                                  │
+   settlement ──► bank ◄── seller pays                  withdrawal ──► payouts_payable ──► bank ──► seller's IBAN
+```
+
+## 5. The guarantees
+
+| Guarantee | How |
+|---|---|
+| No money is created or lost | Every transaction is checked to balance (debits = credits, all amounts > 0) before anything is written |
+| No rounding errors | No floats anywhere: amounts are exact decimal strings (`brick/math`), stored as `decimal(14,2)` (orders: `decimal(12,2)`). The one rounding rule, half-up to 0.01, is applied only to the commission |
+| All or nothing | The journal row, its entries and the account balances are written in one database transaction, together with the order status change that caused them |
+| Never twice | Every flow has an idempotency key built from its business record (`order:{id}:commission_charged`); a retried request or job gets the first transaction back. The key is unique in the database |
+| No race between two requests | The accounts a transaction touches are locked (`SELECT … FOR UPDATE`) in a fixed order (by id), so two postings never deadlock and never read a stale balance. Orders lock the ad first, then the order, then the accounts: the same ad-first order the offer flow uses |
+| History cannot be rewritten | Transactions and entries cannot be updated or deleted through the application; corrections are reversals |
+| Balances can be proved | Each entry stores the balance right after it, and a daily job (02:30 Qatar time) recomputes every balance from its entries, checks every transaction balances, and checks that all debits ever posted equal all credits. Any difference is logged and sent to every admin with `finance.view` |
+
+## 6. Commission
+
+- **General rate:** `/admin/settings` → Commission rate (percent, default 5.00).
+- **Per category (optional):** on the same page. A category without its own rate uses its parent's, then the general rate.
+- **Base:** item price × quantity; shipping is not commissioned.
+- **Rounding:** half-up to 0.01 QAR (2.5% of 10.10 = 0.2525 → 0.25; of 10.30 = 0.2575 → 0.26).
+- **Frozen:** the rate and amount are stored on the order when it is placed. Changing the rate later only affects new orders. Every change is in the activity log with the admin who made it.
+
+## 7. Order states
+
+```
+created ──► awaiting_handover ──► completed
+   │               │    │
+   │               │    └──► disputed ──► completed | cancelled   (admin ruling)
+   └───────────────┴──► cancelled
+```
+
+- **created:** an offer (or, in stage B, a purchase request) was accepted; the ad is reserved. One open order per ad, enforced by a unique database index.
+- **awaiting_handover:** checkout is done (stage B, BE-14.37).
+- **completed:** the seller confirmed the handover (`POST /orders/{id}/confirm-handover`); the ledger posting runs in the same transaction and the ad is marked sold.
+- **cancelled:** either side cancelled before the handover (`POST /orders/{id}/cancel`); the ad's reservation is released.
