@@ -1,12 +1,11 @@
 @extends('admin.layout')
 
-@php($isEdit = $rule->exists)
-
-@section('title', $isEdit ? 'تعديل قاعدة' : 'إضافة قاعدة')
-@section('heading', $isEdit ? 'تعديل قاعدة إشراف' : 'إضافة قاعدة إشراف')
+@section('title', $rule->exists ? 'تعديل قاعدة' : 'إضافة قاعدة')
+@section('heading', $rule->exists ? 'تعديل قاعدة إشراف' : 'إضافة قاعدة إشراف')
 
 @section('content')
     @php
+        $isEdit = $rule->exists;
         $currentType = old('type', $rule->type?->value);
         $currentLanguage = old('language', $rule->language?->value ?? 'any');
     @endphp
