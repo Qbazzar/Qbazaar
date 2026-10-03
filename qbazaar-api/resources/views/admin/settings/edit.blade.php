@@ -11,32 +11,30 @@
         <p class="text-sm text-ink-500">{{ __('admin.settings.intro') }}</p>
 
         @foreach ($groups as $group => $settings)
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <h2 class="mb-4 font-bold">{{ __("admin.settings.groups.{$group}") }}</h2>
+            <x-admin.card :title="__('admin.settings.groups.' . $group)">
                 <div class="space-y-5">
                     @foreach ($settings as $setting)
                         @php($key = $setting->value)
                         @php($definition = $setting->definition())
-                        <div>
-                            <label for="{{ $key }}" class="mb-1.5 block text-sm font-semibold">{{ __("admin.settings.fields.{$key}.label") }}</label>
-                            <div class="flex items-center gap-2">
-                                <input id="{{ $key }}" name="{{ $key }}" type="number" required dir="ltr"
-                                       step="{{ $definition->step() }}" min="{{ $definition->min }}" max="{{ $definition->max }}"
-                                       value="{{ old($key, $values[$key]) }}"
-                                       aria-describedby="{{ $key }}_help"
-                                       class="w-full max-w-xs rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                                <span class="text-sm font-semibold text-ink-500">{{ __("admin.settings.fields.{$key}.unit") }}</span>
-                            </div>
-                            <p id="{{ $key }}_help" class="mt-1 text-xs text-ink-500">{{ __("admin.settings.fields.{$key}.help") }}</p>
-                            @error($key)<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-                        </div>
+                        <x-admin.input
+                            :name="$key"
+                            type="number"
+                            :label="__('admin.settings.fields.' . $key . '.label')"
+                            :value="old($key, $values[$key])"
+                            :hint="__('admin.settings.fields.' . $key . '.help')"
+                            :suffix="__('admin.settings.fields.' . $key . '.unit')"
+                            required
+                            dir="ltr"
+                            step="{{ $definition->step() }}"
+                            min="{{ $definition->min }}"
+                            max="{{ $definition->max }}"
+                            input-class="max-w-xs"
+                        />
                     @endforeach
                 </div>
-            </div>
+            </x-admin.card>
         @endforeach
 
-        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-            <x-admin.icon name="check" class="size-[18px]" /> {{ __('admin.settings.save') }}
-        </button>
+        <x-admin.button icon="check">{{ __('admin.settings.save') }}</x-admin.button>
     </form>
 @endsection
