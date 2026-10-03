@@ -7,6 +7,7 @@ namespace App\Actions\Account;
 use App\Enums\UserStatus;
 use App\Jobs\DeleteAccountJob;
 use App\Models\User;
+use App\Services\Account\AccountDeletionGuard;
 use App\Services\Auth\RefreshTokenService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
@@ -20,6 +21,9 @@ use Illuminate\Support\Facades\DB;
  *   ACTIVE → PENDING_DELETION
  *   sessions: all burnt (refresh + PAT) so the user is signed out everywhere.
  *
+ * Refused while the user owes commission or has an order in progress
+ * (AccountDeletionGuard); the job checks both again before erasing.
+ *
  * The cancel path is implicit — if the user signs back in during the grace
  * window the LoginController flips them back to ACTIVE and the queued
  * DeleteAccountJob re-checks the status before doing anything destructive.
@@ -28,10 +32,13 @@ class RequestAccountDeletionAction
 {
     public function __construct(
         private readonly RefreshTokenService $refreshTokens,
+        private readonly AccountDeletionGuard $guard,
     ) {}
 
     public function execute(User $user, ?string $reason = null): CarbonImmutable
     {
+        $this->guard->ensureDeletable($user);
+
         $graceDays = (int) config('qbazaar.account.deletion_grace_period_days', 30);
         $scheduledAt = Carbon::now()->addDays($graceDays);
 

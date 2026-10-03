@@ -2,9 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Data\Ledger\LedgerActor;
+use App\Data\Ledger\LedgerReference;
 use App\Enums\DataExportStatus;
+use App\Enums\LedgerReferenceType;
+use App\Enums\OrderStatus;
 use App\Enums\OtpPurpose;
+use App\Enums\QueueName;
 use App\Enums\UserStatus;
+use App\Exceptions\ErrorCode;
 use App\Jobs\DeleteAccountJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
 use App\Models\Ad;
@@ -15,19 +21,24 @@ use App\Models\Favorite;
 use App\Models\Follow;
 use App\Models\Message;
 use App\Models\Offer;
+use App\Models\Order;
 use App\Models\OtpCode;
 use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Models\UserAddress;
-use App\Services\Account\AccountEraser;
+use App\Notifications\Account\AccountDeletionOnHoldNotification;
+use App\Services\Ledger\LedgerRecipes;
 use App\Services\Messaging\ConversationInbox;
 use App\Services\Users\FollowGraph;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\Engine;
 use Tests\Concerns\CreatesAds;
@@ -50,7 +61,7 @@ function userPendingDeletionFor(int $days): User
 
 function runDeleteJob(User $user): void
 {
-    (new DeleteAccountJob($user->id))->handle(app(AccountEraser::class));
+    app()->call([new DeleteAccountJob($user->id), 'handle']);
 }
 
 it('erases a due account with its ads, images, search documents, offers and chats', function (): void {
@@ -151,7 +162,7 @@ it('leaves an account alone after the user signed back in', function (): void {
 });
 
 it('does nothing for an account that is already gone', function (): void {
-    (new DeleteAccountJob('01HZZZZZZZZZZZZZZZZZZZZZZZ'))->handle(app(AccountEraser::class));
+    app()->call([new DeleteAccountJob('01HZZZZZZZZZZZZZZZZZZZZZZZ'), 'handle']);
 })->throwsNoExceptions();
 
 it('runs on the low queue without overlapping, and the lock expires before the first retry', function (): void {
@@ -184,4 +195,71 @@ it('schedules the sweep daily', function (): void {
 
     expect($event)->not->toBeNull()
         ->and($event->expression)->toBe('0 3 * * *');
+});
+
+function chargeErasureTestCommission(User $seller, string $amount): Order
+{
+    $order = Order::factory()->status(OrderStatus::COMPLETED)->create([
+        'ad_id' => null,
+        'seller_id' => $seller->id,
+        'commission_amount' => $amount,
+    ]);
+
+    app(LedgerRecipes::class)->chargeCommission($order, LedgerActor::system());
+
+    return $order;
+}
+
+it('keeps a due account pending and tells the user when commission became owed during the grace period', function (): void {
+    Notification::fake();
+    $user = userPendingDeletionFor(31);
+    chargeErasureTestCommission($user, '7.25');
+
+    runDeleteJob($user);
+    runDeleteJob($user);
+
+    expect($user->fresh())->not->toBeNull()
+        ->and($user->fresh()->status)->toBe(UserStatus::PENDING_DELETION);
+    Notification::assertSentToTimes($user, AccountDeletionOnHoldNotification::class, 1);
+    Notification::assertSentTo($user, function (AccountDeletionOnHoldNotification $notification, array $channels) use ($user): bool {
+        return $notification->details['amount'] === '7.25'
+            && str_contains($notification->toArray($user)['body'], '7.25')
+            && in_array('mail', $channels, true);
+    });
+});
+
+it('erases the account once the debt that held it is settled', function (): void {
+    Notification::fake();
+    $user = userPendingDeletionFor(31);
+    chargeErasureTestCommission($user, '7.25');
+    runDeleteJob($user);
+
+    app(LedgerRecipes::class)->settleCommissionByBankTransfer(
+        $user->id,
+        '7.25',
+        new LedgerReference(LedgerReferenceType::SETTLEMENT, (string) Str::ulid()),
+        LedgerActor::system(),
+    );
+    runDeleteJob($user);
+
+    expect(User::withTrashed()->find($user->id))->toBeNull();
+});
+
+it('keeps a due account pending while it has an order in progress', function (): void {
+    Notification::fake();
+    $user = userPendingDeletionFor(31);
+    $order = Order::factory()->status(OrderStatus::AWAITING_HANDOVER)->create(['ad_id' => null, 'buyer_id' => $user->id]);
+
+    runDeleteJob($user);
+
+    expect($user->fresh())->not->toBeNull()
+        ->and($order->fresh()->buyer_id)->toBe($user->id);
+    Notification::assertSentTo($user, AccountDeletionOnHoldNotification::class);
+});
+
+it('sends the on-hold notice on the notifications queue', function (): void {
+    $notification = new AccountDeletionOnHoldNotification(ErrorCode::ACCOUNT_HAS_OPEN_ORDER);
+
+    expect($notification)->toBeInstanceOf(ShouldQueue::class)
+        ->and(array_unique(array_values($notification->viaQueues())))->toBe([QueueName::NOTIFICATIONS->value]);
 });

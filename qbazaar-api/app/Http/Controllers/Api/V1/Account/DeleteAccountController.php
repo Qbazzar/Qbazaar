@@ -34,6 +34,8 @@ class DeleteAccountController extends Controller
      *     "status": "pending_deletion"
      *   }
      * }
+     * @response 422 scenario="Commission owed" {"success": false, "error": {"code": "ACCOUNT_003", "details": {"amount": "12.50", "currency": "QAR"}}}
+     * @response 422 scenario="Order in progress" {"success": false, "error": {"code": "ACCOUNT_004", "details": {"order_id": "01J9Z3K4M5N6P7Q8R9S0T1V2W3"}}}
      */
     public function __invoke(DeleteAccountRequest $request, RequestAccountDeletionAction $action): JsonResponse
     {

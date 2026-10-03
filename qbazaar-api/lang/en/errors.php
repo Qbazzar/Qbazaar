@@ -348,6 +348,14 @@ return [
                 ],
             ],
         ],
+        'debt' => [
+            'outstanding' => 'You still owe :amount QAR in commission. Settle it before deleting your account.',
+        ],
+        'has' => [
+            'open' => [
+                'order' => 'You have an order in progress. Complete or cancel it before deleting your account.',
+            ],
+        ],
     ],
 
     'address' => [

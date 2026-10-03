@@ -139,6 +139,8 @@ enum ErrorCode: string
     // ── Account changes ────────────────────────────────────────────────────
     case ACCOUNT_REAUTH_INVALID = 'ACCOUNT_001';
     case ACCOUNT_EMAIL_CHANGE_LINK_INVALID = 'ACCOUNT_002';
+    case ACCOUNT_DEBT_OUTSTANDING = 'ACCOUNT_003';
+    case ACCOUNT_HAS_OPEN_ORDER = 'ACCOUNT_004';
 
     // ── Orders (M1b) ───────────────────────────────────────────────────────
     case ORDER_NOT_FOUND = 'ORDER_001';
@@ -206,6 +208,8 @@ enum ErrorCode: string
             self::TICKET_INVALID_TRANSITION,
             self::ADDRESS_LIMIT_REACHED,
             self::ACCOUNT_REAUTH_INVALID,
+            self::ACCOUNT_DEBT_OUTSTANDING,
+            self::ACCOUNT_HAS_OPEN_ORDER,
             self::ORDER_INVALID_TRANSITION,
             self::ORDER_AD_HAS_ACTIVE_ORDER,
             self::ORDER_SELLER_DEBT_CEILING,
