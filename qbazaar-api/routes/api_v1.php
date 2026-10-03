@@ -48,6 +48,7 @@ use App\Http\Controllers\Api\V1\Media\MediaOriginalController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
 use App\Http\Controllers\Api\V1\Offers\OfferController;
+use App\Http\Controllers\Api\V1\Orders\OrderController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
@@ -62,6 +63,7 @@ use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\FollowController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
+use App\Http\Controllers\Api\V1\Wallet\WalletController;
 use App\Http\Middleware\EnsureApiDocsEnabled;
 use App\Http\Middleware\EnsurePasswordLoginEnabled;
 use Illuminate\Http\JsonResponse;
@@ -243,6 +245,10 @@ Route::prefix('account')
         Route::get('/followers', [FollowsController::class, 'followers'])->name('followers.index');
         Route::delete('/followers/{user}', [FollowsController::class, 'removeFollower'])->name('followers.destroy');
         Route::get('/following', [FollowsController::class, 'following'])->name('following.index');
+
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/wallet', [WalletController::class, 'show'])->name('wallet.show');
+        Route::get('/wallet/transactions', [WalletController::class, 'transactions'])->name('wallet.transactions');
 
         Route::get('/business-profile', [BusinessProfileController::class, 'show'])->name('business-profile.show');
         Route::put('/business-profile', [BusinessProfileController::class, 'update'])->name('business-profile.update');
@@ -543,6 +549,20 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
         ->middleware(['phone.verified', 'throttle:offers'])
         ->name('api.v1.offers.counter');
 });
+
+// ── M1b — Orders ────────────────────────────────────────────────────────────
+//   GET  /orders/{id}                   — either participant (404 for anyone else)
+//   POST /orders/{id}/confirm-handover  — seller; completes the order and books the commission
+//   POST /orders/{id}/cancel            — either participant, before the handover
+//   The list lives at GET /account/orders; orders are created by accepting an offer.
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])
+    ->prefix('orders')
+    ->name('api.v1.orders.')
+    ->group(function (): void {
+        Route::get('/{id}', [OrderController::class, 'show'])->name('show');
+        Route::post('/{id}/confirm-handover', [OrderController::class, 'confirmHandover'])->middleware('idempotent')->name('confirm-handover');
+        Route::post('/{id}/cancel', [OrderController::class, 'cancel'])->middleware('idempotent')->name('cancel');
+    });
 
 // ── Sprint 10 — Notifications inbox ─────────────────────────────────────────
 //   Authenticated, scoped to the caller. Mounted under `/account/*` so the

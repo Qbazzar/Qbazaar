@@ -195,6 +195,23 @@ requested locale.
 | `ACCOUNT_001` | The step-up code from `POST /account/reauth-code` is wrong, expired or already used | 422 |
 | `ACCOUNT_002` | The email-change link was already used or the account email changed since it was sent | 410 |
 
+## Orders (M1b)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `ORDER_001` | Order not found, or the caller is neither its buyer nor its seller | 404 |
+| `ORDER_002` | The order's status does not allow this move (e.g. confirming the handover before checkout, cancelling a completed order). `details.from` / `details.to` carry the statuses | 422 |
+| `ORDER_003` | The ad already has an open order (created, awaiting handover or disputed) | 422 |
+| `ORDER_004` | The seller's unpaid commission has reached the debt ceiling (admin setting); they take no new orders until they settle | 422 |
+| `ORDER_005` | The caller takes part in the order but may not do this (e.g. the buyer confirming the handover) | 403 |
+
+## Wallet (M1b)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `WALLET_001` | The wallet balance is not enough for this payment or withdrawal | 422 |
+| `WALLET_002` | The settlement is larger than the commission the seller owes | 422 |
+
 ---
 
 ## Guidelines

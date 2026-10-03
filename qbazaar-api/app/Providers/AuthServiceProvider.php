@@ -7,12 +7,14 @@ namespace App\Providers;
 use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\Offer;
+use App\Models\Order;
 use App\Models\User;
 use App\Policies\AccountPolicy;
 use App\Policies\AdPolicy;
 use App\Policies\BlockPolicy;
 use App\Policies\ConversationPolicy;
 use App\Policies\OfferPolicy;
+use App\Policies\OrderPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,6 +34,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::policy(Ad::class, AdPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
         Gate::policy(Offer::class, OfferPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
 
         // Super admins bypass ability checks only inside the admin panel,
         // where staff act on other users' records and the owner-scoped

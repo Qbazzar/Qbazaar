@@ -49,6 +49,10 @@ tags:
     description: Messages within a conversation
   - name: Offers
     description: Price offers attached to ads / conversations
+  - name: Orders
+    description: Orders created from accepted offers and purchase requests; cash handover
+  - name: Wallet
+    description: Wallet balance, commission debt and statement, read from the double-entry ledger
   - name: Reports
     description: User reports on ads, users, conversations
   - name: Reviews
@@ -3571,6 +3575,11 @@ paths:
         same ad (each buyer gets `offer.expired`) and drops an inline
         "Offer accepted" system message in the chat. Runs under a lock on
         the ad and the offer, so one ad never gets two accepted offers.
+
+        In the same transaction it places the order (`GET /orders/{id}`,
+        status `created`) at the agreed price, with the commission rate and
+        amount frozen, and reserves the ad. If the order cannot be placed
+        nothing changes and the offer stays pending.
       operationId: offersAccept
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
@@ -3588,7 +3597,9 @@ paths:
           description: |
             OFFER_NOT_PENDING — offer is already terminal or expired;
             OFFER_AD_NOT_ACTIVE — the ad is no longer publicly listed;
-            OFFER_AD_ALREADY_AGREED — another offer on the ad was accepted.
+            OFFER_AD_ALREADY_AGREED — another offer on the ad was accepted, or another order is open on it;
+            ORDER_003 — another order is open on the ad;
+            ORDER_004 — the seller's unpaid commission has reached the debt ceiling.
           content:
             application/json:
               schema:
@@ -3818,6 +3829,176 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReviewListEnvelope'
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Orders and wallet (M1b, BE-14.35 / BE-14.36 / BE-14.38)
+  # Money is a decimal string with two places in `currency` (QAR). The money
+  # flows and their ledger postings are in qbazaar-contracts/LEDGER.md.
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/account/orders:
+    get:
+      tags: [Orders]
+      summary: The caller's purchases or sales, newest first
+      description: |
+        `role=buyer` (default) lists purchases, `role=seller` lists sales.
+        Cursor-paginated (`qbazaar.orders.per_page`, 20).
+      operationId: accountOrders
+      parameters:
+        - name: role
+          in: query
+          schema: { type: string, enum: [buyer, seller], default: buyer }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/OrderStatus' }
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema: { type: string }
+      responses:
+        '200':
+          description: A page of orders
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /api/v1/orders/{id}:
+    get:
+      tags: [Orders]
+      summary: One order (buyer or seller only)
+      description: Anyone else gets 404 `ORDER_001`, so order ids cannot be probed.
+      operationId: ordersShow
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/orders/{id}/confirm-handover:
+    post:
+      tags: [Orders]
+      summary: The seller confirms the handover and payment
+      description: |
+        Moves an `awaiting_handover` order to `completed` and marks the ad
+        sold. The payment gateway posts its ledger entries in the same
+        database transaction; for a cash order that is the commission,
+        booked as debt the seller owes (`commission_charged`). Confirming an
+        order that is already completed returns it unchanged and posts
+        nothing, so a retry is always safe. A disputed order is completed
+        only by an admin ruling.
+      operationId: ordersConfirmHandover
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: The completed order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The same idempotency key is still being processed (`REQUEST_IN_PROGRESS`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422':
+          description: The order is not awaiting the handover (`ORDER_002`, `details.from` / `details.to`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/v1/orders/{id}/cancel:
+    post:
+      tags: [Orders]
+      summary: The buyer or the seller cancels before the handover
+      description: |
+        Allowed from `created` and `awaiting_handover`. Releases the ad's
+        reservation so it can take offers and orders again. A cash order
+        moves no money, so nothing is posted. Cancelling a cancelled order
+        returns it unchanged.
+      operationId: ordersCancel
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CancelOrderRequest' }
+      responses:
+        '200':
+          description: The cancelled order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            VALIDATION_FAILED — the reason is too long or contains markup;
+            ORDER_002 — the order is completed, cancelled by a ruling, or disputed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/v1/account/wallet:
+    get:
+      tags: [Wallet]
+      summary: The caller's wallet balance and commission debt
+      description: |
+        Read from the double-entry ledger. `available_balance` is what the
+        platform owes the user (sale proceeds of escrow orders, refunds,
+        adjustments); `commission_debt` is the commission the user owes on
+        cash sales. Once the debt reaches `debt_ceiling` (an admin setting)
+        `can_accept_orders` is false and accepting an offer answers
+        `ORDER_004` until the debt is settled.
+      operationId: accountWallet
+      responses:
+        '200':
+          description: Wallet summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WalletEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/account/wallet/transactions:
+    get:
+      tags: [Wallet]
+      summary: The caller's statement, newest first
+      description: |
+        Every ledger line posted to the caller's wallet and commission
+        accounts, with the running balance after each line. Cursor-paginated
+        (`qbazaar.wallet.statement_per_page`, 20). `description` is in the
+        request language.
+      operationId: accountWalletTransactions
+      parameters:
+        - name: type
+          in: query
+          schema: { $ref: '#/components/schemas/LedgerTransactionType' }
+        - name: account
+          in: query
+          schema: { type: string, enum: [wallet, commission_receivable] }
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema: { type: string }
+      responses:
+        '200':
+          description: A page of statement lines
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WalletEntryListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
 
   # ──────────────────────────────────────────────────────────────────────────
   # Notifications inbox (Sprint 10)
@@ -6508,6 +6689,175 @@ components:
               type: array
               items: { $ref: '#/components/schemas/Offer' }
 
+    # ─── Orders and wallet (M1b) ────────────────────────────────────
+    DecimalAmount:
+      type: string
+      pattern: '^-?\d+\.\d{2}$'
+      description: Exact decimal with two places; never a float.
+      example: "1999.99"
+
+    OrderStatus:
+      type: string
+      enum: [created, awaiting_handover, completed, cancelled, disputed]
+      description: |
+        created → awaiting_handover (checkout) → completed;
+        created | awaiting_handover → cancelled; awaiting_handover → disputed;
+        disputed → completed | cancelled (admin ruling only).
+
+    Order:
+      type: object
+      required: [id, status, source, source_id, ad, viewer_role, currency, unit_price, quantity, shipping_fee, total, payment_method, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        source:
+          type: string
+          enum: [offer, purchase_request]
+        source_id: { $ref: '#/components/schemas/ULID' }
+        ad:
+          type: object
+          properties:
+            id:
+              oneOf:
+                - $ref: '#/components/schemas/ULID'
+                - type: 'null'
+              description: Null once the ad is permanently deleted.
+            title:
+              type: string
+              description: The ad title when the order was placed.
+        buyer_id: { oneOf: [{ $ref: '#/components/schemas/ULID' }, { type: 'null' }] }
+        seller_id: { oneOf: [{ $ref: '#/components/schemas/ULID' }, { type: 'null' }] }
+        viewer_role:
+          type: string
+          enum: [buyer, seller]
+        currency: { type: string, example: QAR }
+        unit_price: { $ref: '#/components/schemas/DecimalAmount' }
+        quantity: { type: integer, minimum: 1 }
+        shipping_fee: { $ref: '#/components/schemas/DecimalAmount' }
+        total: { $ref: '#/components/schemas/DecimalAmount' }
+        payment_method:
+          type: string
+          enum: [cash]
+        commission:
+          description: Seller only; null for the buyer. Frozen when the order was placed.
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [rate, amount]
+              properties:
+                rate:
+                  $ref: '#/components/schemas/DecimalAmount'
+                amount:
+                  $ref: '#/components/schemas/DecimalAmount'
+        cancellation_reason: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        awaiting_handover_at: { type: [string, 'null'], format: date-time }
+        completed_at: { type: [string, 'null'], format: date-time }
+        cancelled_at: { type: [string, 'null'], format: date-time }
+        disputed_at: { type: [string, 'null'], format: date-time }
+
+    OrderEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Order' }
+
+    OrderListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Order' }
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    CancelOrderRequest:
+      type: object
+      properties:
+        reason:
+          type: [string, 'null']
+          maxLength: 500
+          description: No `<` or `>`.
+
+    Wallet:
+      type: object
+      required: [currency, available_balance, commission_debt, debt_ceiling, can_accept_orders]
+      properties:
+        currency: { type: string, example: QAR }
+        available_balance: { $ref: '#/components/schemas/DecimalAmount' }
+        commission_debt: { $ref: '#/components/schemas/DecimalAmount' }
+        debt_ceiling: { $ref: '#/components/schemas/DecimalAmount' }
+        can_accept_orders: { type: boolean }
+
+    WalletEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Wallet' }
+
+    LedgerTransactionType:
+      type: string
+      enum:
+        - order_payment_received
+        - escrow_released
+        - commission_charged
+        - commission_settled
+        - withdrawal_requested
+        - withdrawal_paid
+        - withdrawal_rejected
+        - refund
+        - promotion_purchased
+        - adjustment
+        - reversal
+
+    WalletEntry:
+      type: object
+      required: [id, transaction_id, type, account, direction, amount, balance_after, currency, description, posted_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        transaction_id: { $ref: '#/components/schemas/ULID' }
+        type: { $ref: '#/components/schemas/LedgerTransactionType' }
+        account:
+          type: string
+          enum: [wallet, commission_receivable]
+        direction:
+          type: string
+          enum: [increase, decrease]
+          description: On `wallet` an increase is money in; on `commission_receivable` an increase is more debt.
+        amount: { $ref: '#/components/schemas/DecimalAmount' }
+        balance_after: { $ref: '#/components/schemas/DecimalAmount' }
+        currency: { type: string, example: QAR }
+        description:
+          type: string
+          example: QBazaar commission on a cash sale
+        reference:
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [type, id]
+              properties:
+                type:
+                  type: string
+                  enum: [order, settlement, withdrawal, promotion, adjustment]
+                id:
+                  $ref: '#/components/schemas/ULID'
+        posted_at: { type: string, format: date-time }
+
+    WalletEntryListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/WalletEntry' }
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
     # ─── Reports (Sprint 10) ────────────────────────────────────────
     ReportTarget:
       type: string
@@ -7031,6 +7381,18 @@ components:
               $ref: '#/components/schemas/SupportReply'
 
   parameters:
+    IdempotencyKey:
+      name: X-Idempotency-Key
+      in: header
+      required: false
+      description: >
+        16–128 chars, `[A-Za-z0-9_-]`. The same key replays the cached
+        response for 24 hours; a call made while the first one is still
+        running gets 409 `REQUEST_IN_PROGRESS`. Recommended: a fresh ULID
+        per user action, reused on retries.
+      schema:
+        type: string
+        example: 01J9YV3P5Q7AABBCCDDEEFFGG
     DeviceId:
       name: X-Device-Id
       in: header

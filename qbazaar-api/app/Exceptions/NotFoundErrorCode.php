@@ -12,6 +12,7 @@ use App\Models\HelpCategory;
 use App\Models\Location;
 use App\Models\Message;
 use App\Models\Offer;
+use App\Models\Order;
 use App\Models\Page;
 use App\Models\SavedSearch;
 use App\Models\SupportTicket;
@@ -34,6 +35,7 @@ final class NotFoundErrorCode
         Category::class => ErrorCode::CATEGORY_NOT_FOUND,
         Location::class => ErrorCode::LOCATION_NOT_FOUND,
         Offer::class => ErrorCode::OFFER_NOT_FOUND,
+        Order::class => ErrorCode::ORDER_NOT_FOUND,
         Conversation::class => ErrorCode::MSG_CONVERSATION_NOT_FOUND,
         Message::class => ErrorCode::MSG_NOT_FOUND,
         SavedSearch::class => ErrorCode::SEARCH_SAVED_NOT_FOUND,
