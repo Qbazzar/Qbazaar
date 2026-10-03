@@ -8,6 +8,8 @@ use App\Actions\Admin\UpdatePlatformSettingsAction;
 use App\Enums\PlatformSetting;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Manage\UpdatePlatformSettingsRequest;
+use App\Models\Category;
+use App\Models\CategoryCommissionRate;
 use App\Models\User;
 use App\Services\Settings\SettingsService;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +22,8 @@ class SettingController extends Controller
         return view('admin.settings.edit', [
             'groups' => PlatformSetting::grouped(),
             'values' => $settings->all(),
+            'commissionRates' => CategoryCommissionRate::query()->with('category')->orderBy('category_id')->get(),
+            'categories' => Category::query()->orderBy('order')->get(['id', 'name', 'slug']),
         ]);
     }
 

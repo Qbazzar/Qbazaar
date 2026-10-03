@@ -24,6 +24,8 @@ use App\Services\Ads\Views\DatabaseAdViewCounter;
 use App\Services\Ads\Views\RedisAdViewCounter;
 use App\Services\Auth\AuthRateLimiters;
 use App\Services\Moderation\ModerationRulesService;
+use App\Services\Payments\CashGateway;
+use App\Services\Payments\PaymentGateways;
 use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -59,6 +61,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Follows land with BE-14.28, which binds the real directory here.
         $this->app->bind(SellerFollowers::class, FollowTableSellerFollowers::class);
+
+        // Cash only until an electronic gateway is contracted (M7).
+        $this->app->bind(PaymentGateways::class, fn ($app): PaymentGateways => new PaymentGateways(
+            $app->make(CashGateway::class),
+        ));
 
         // Telescope is installed as a dev dependency, so its classes only
         // exist when composer ran without --no-dev. Guard the registration so

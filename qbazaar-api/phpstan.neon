@@ -38,6 +38,9 @@ parameters:
     - tests/Feature/Manage/*
     - tests/Feature/Support/*
     - tests/Feature/Home/*
+    - tests/Feature/Ledger/*
+    - tests/Feature/Orders/*
+    - tests/Feature/Wallet/*
     - tests/Concerns/*
     - bootstrap/cache/*
     - storage/*

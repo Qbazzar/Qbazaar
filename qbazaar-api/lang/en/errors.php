@@ -371,4 +371,37 @@ return [
             'required' => 'This is only available to business accounts.',
         ],
     ],
+
+    'order' => [
+        'not' => [
+            'found' => 'Order not found.',
+        ],
+        'invalid' => [
+            'transition' => 'This order cannot move to that status.',
+        ],
+        'ad' => [
+            'has' => [
+                'active' => [
+                    'order' => 'This item already has an order in progress.',
+                ],
+            ],
+        ],
+        'seller' => [
+            'debt' => [
+                'ceiling' => 'The seller has unpaid commission above the allowed limit and cannot take new orders until it is settled.',
+            ],
+        ],
+        'forbidden' => 'You are not allowed to do this on this order.',
+    ],
+
+    'wallet' => [
+        'insufficient' => [
+            'balance' => 'Your wallet balance is not enough for this.',
+        ],
+        'exceeds' => [
+            'commission' => [
+                'debt' => 'The amount is more than the commission you owe.',
+            ],
+        ],
+    ],
 ];

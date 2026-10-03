@@ -92,6 +92,13 @@ start Meilisearch (section 2) and run them explicitly:
 php vendor/bin/pest --group=meilisearch
 ```
 
+The `mysql` group proves the ledger and order row locks on a real InnoDB (SQLite has no
+row locks). Point it at an empty MySQL 8 database; it migrates and truncates it:
+
+```bash
+DB_CONNECTION=mysql DB_DATABASE=qbazaar_test php vendor/bin/pest --group=mysql
+```
+
 CI (`.github/workflows/ci.yml` at the repository root) runs all three on every
-push and pull request to `main`/`develop`. The API deploy workflow runs the same
+push and pull request to `main`/`develop`, plus the `mysql` group against a MySQL 8.4 service. The API deploy workflow runs the same
 CI first and only deploys when it passes.
