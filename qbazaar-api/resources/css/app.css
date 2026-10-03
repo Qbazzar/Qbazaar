@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
@@ -13,12 +12,24 @@
        /manage panel reads as part of the same product. */
     --color-coral: #f37335;
     --color-coral-soft: #ffe8d9;
+    /* The brand coral is too light for white text (2.9:1) or for text on
+       cream (2.4:1 on coral-soft), so fills and text use these deeper steps:
+       white on coral-600 is 4.7:1, coral-700 text is 5.2:1 on coral-soft. */
+    --color-coral-600: #c2501a;
+    --color-coral-700: #a8410e;
     --color-cream-50: #f7f8fa;
     --color-cream-100: #ffffff;
     --color-cream-200: #f1f2f5;
     --color-ink-900: #1a1a1a;
     --color-ink-700: #4a4a4a;
-    --color-ink-500: #8a8a8a;
+    --color-ink-500: #6b6b6b;
     --color-ink-300: #d1d5db;
     --color-ink-200: #e5e7eb;
+}
+
+@layer base {
+    :where(a, button, summary, [tabindex], input[type='checkbox'], input[type='radio']):focus-visible {
+        outline: 2px solid var(--color-coral-600);
+        outline-offset: 2px;
+    }
 }
