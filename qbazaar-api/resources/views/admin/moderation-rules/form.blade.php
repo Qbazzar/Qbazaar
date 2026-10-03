@@ -1,29 +1,19 @@
 @extends('admin.layout')
 
-@section('title', $rule->exists ? 'تعديل قاعدة' : 'إضافة قاعدة')
-@section('heading', $rule->exists ? 'تعديل قاعدة إشراف' : 'إضافة قاعدة إشراف')
+@php($isEdit = $rule->exists)
+
+@section('title', $isEdit ? 'تعديل قاعدة' : 'إضافة قاعدة')
+@section('heading', $isEdit ? 'تعديل قاعدة إشراف' : 'إضافة قاعدة إشراف')
 
 @section('content')
     @php
-        $isEdit = $rule->exists;
-        $typeLabels = [
-            'banned_word' => 'كلمة محظورة',
-            'blocked_domain' => 'نطاق محظور',
-        ];
-        $languageLabels = [
-            'any' => 'الكل',
-            'ar' => 'العربية',
-            'en' => 'الإنجليزية',
-        ];
         $currentType = old('type', $rule->type?->value);
         $currentLanguage = old('language', $rule->language?->value ?? 'any');
-        $currentActive = old('is_active', $rule->is_active ?? true);
     @endphp
-    <a href="{{ route('admin.moderation-rules.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
-        <x-admin.icon name="arrow-right" class="size-4" /> رجوع للقواعد
-    </a>
 
-    <div class="max-w-2xl rounded-2xl border border-ink-200 bg-cream-100 p-6">
+    <x-admin.back-link :href="route('admin.moderation-rules.index')" class="mb-4">رجوع للقواعد</x-admin.back-link>
+
+    <x-admin.card class="max-w-2xl">
         <form method="POST"
               action="{{ $isEdit ? route('admin.moderation-rules.update', $rule) : route('admin.moderation-rules.store') }}"
               class="space-y-5">
@@ -33,51 +23,25 @@
             @endif
 
             <div class="grid gap-5 sm:grid-cols-2">
-                <div>
-                    <label class="mb-1.5 block text-sm font-semibold text-ink-700">النوع</label>
-                    <select name="type" required
-                            class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                        <option value="">اختر…</option>
-                        @foreach ($types as $case)
-                            <option value="{{ $case->value }}" @selected($currentType === $case->value)>{{ $typeLabels[$case->value] ?? $case->value }}</option>
-                        @endforeach
-                    </select>
-                    @error('type')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-                </div>
+                <x-admin.select name="type" label="النوع" required>
+                    <option value="">اختر…</option>
+                    @foreach ($types as $case)
+                        <option value="{{ $case->value }}" @selected($currentType === $case->value)>{{ $case->label()['ar'] }}</option>
+                    @endforeach
+                </x-admin.select>
 
-                <div>
-                    <label class="mb-1.5 block text-sm font-semibold text-ink-700">اللغة</label>
-                    <select name="language" required
-                            class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                        @foreach ($languages as $case)
-                            <option value="{{ $case->value }}" @selected($currentLanguage === $case->value)>{{ $languageLabels[$case->value] ?? $case->value }}</option>
-                        @endforeach
-                    </select>
-                    @error('language')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-                </div>
+                <x-admin.select name="language" label="اللغة" required>
+                    @foreach ($languages as $case)
+                        <option value="{{ $case->value }}" @selected($currentLanguage === $case->value)>{{ $case->label()['ar'] }}</option>
+                    @endforeach
+                </x-admin.select>
             </div>
 
-            <div>
-                <label class="mb-1.5 block text-sm font-semibold text-ink-700">القيمة</label>
-                <input type="text" name="value" value="{{ old('value', $rule->value) }}" required maxlength="255"
-                       class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                @error('value')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-            </div>
+            <x-admin.input name="value" label="القيمة" :value="old('value', $rule->value)" required maxlength="255" />
 
-            <label class="flex items-center gap-2 text-sm font-semibold text-ink-700">
-                <input type="hidden" name="is_active" value="0">
-                <input type="checkbox" name="is_active" value="1" @checked($currentActive)
-                       class="h-4 w-4 rounded border-ink-200 text-coral focus:ring-coral">
-                مفعّلة
-            </label>
+            <x-admin.checkbox name="is_active" label="مفعّلة" :checked="old('is_active', $rule->is_active ?? true)" unchecked-value="0" />
 
-            <div class="flex items-center gap-3 pt-2">
-                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                    <x-admin.icon name="check" class="size-[18px]" />
-                    {{ $isEdit ? 'حفظ التغييرات' : 'إضافة' }}
-                </button>
-                <a href="{{ route('admin.moderation-rules.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">إلغاء</a>
-            </div>
+            <x-admin.form-actions class="pt-2" :cancel-url="route('admin.moderation-rules.index')" :submit-label="$isEdit ? 'حفظ التغييرات' : 'إضافة'" />
         </form>
-    </div>
+    </x-admin.card>
 @endsection

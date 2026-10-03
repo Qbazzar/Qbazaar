@@ -4,87 +4,45 @@
 @section('heading', 'الإعلانات')
 
 @section('content')
-    {{-- Filters --}}
-    <form method="GET" class="mb-6 flex flex-wrap items-center gap-3">
-        <div class="relative">
-            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-300">
-                <x-admin.icon name="search" class="size-[18px]" />
-            </span>
-            <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالعنوان أو الرقم…"
-                   class="w-64 rounded-xl border border-ink-200 bg-cream-100 py-2.5 pr-10 pl-4 text-sm outline-none focus:border-coral">
-        </div>
+    <x-admin.page-toolbar>
+        <x-admin.filter-bar
+            :reset-url="route('admin.ads.index')"
+            :search="$search"
+            placeholder="بحث بالعنوان أو الرقم…"
+            :filters="[
+                ['name' => 'status', 'label' => 'الحالة', 'placeholder' => 'كل الحالات', 'value' => $status,
+                    'options' => collect($statuses)->mapWithKeys(fn ($case) => [$case->value => $case->label()['ar']])],
+            ]"
+        />
+    </x-admin.page-toolbar>
 
-        <select name="status" class="rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
-            <option value="">كل الحالات</option>
-            @foreach ($statuses as $case)
-                <option value="{{ $case->value }}" @selected($status === $case->value)>{{ $case->label()['ar'] }}</option>
-            @endforeach
-        </select>
+    <x-admin.bulk-bar :action="route('admin.ads.bulk-destroy')" label="حذف المحدد" confirm="حذف الإعلانات المحددة نهائياً؟" />
 
-        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-            <x-admin.icon name="filter" class="size-[18px]" /> تصفية
-        </button>
-        @if ($search !== '' || $status !== '')
-            <a href="{{ route('admin.ads.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">مسح</a>
-        @endif
-    </form>
+    <x-admin.table
+        caption="الإعلانات"
+        selectable
+        :columns="[['label' => '#', 'secondary' => true], 'العنوان', 'البائع', 'الحالة', ['label' => 'التاريخ', 'secondary' => true], ['label' => 'إجراءات', 'srOnly' => true]]"
+        :empty="$ads->isEmpty()"
+        empty-icon="tag"
+        empty-message="لا توجد إعلانات مطابقة."
+    >
+        @foreach ($ads as $ad)
+            <x-admin.table.row>
+                <x-admin.table.select :value="$ad->id" :label="'تحديد: ' . $ad->title" />
+                <x-admin.table.cell label="#" secondary class="text-ink-500">{{ $ad->id }}</x-admin.table.cell>
+                <x-admin.table.cell primary>
+                    <a href="{{ route('admin.ads.show', $ad) }}" class="font-semibold hover:text-coral-700">{{ \Illuminate\Support\Str::limit($ad->title, 50) }}</a>
+                </x-admin.table.cell>
+                <x-admin.table.cell label="البائع" class="text-ink-700">{{ $ad->user?->full_name ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="الحالة"><x-admin.badge :status="$ad->status" /></x-admin.table.cell>
+                <x-admin.table.cell label="التاريخ" secondary class="text-ink-500">{{ optional($ad->created_at)->format('Y-m-d') }}</x-admin.table.cell>
+                <x-admin.table.actions>
+                    <x-admin.icon-button :href="route('admin.ads.show', $ad)" icon="eye" label="عرض" />
+                    <x-admin.icon-button :href="route('admin.ads.edit', $ad)" icon="pencil" label="تعديل" />
+                </x-admin.table.actions>
+            </x-admin.table.row>
+        @endforeach
+    </x-admin.table>
 
-    @include('admin.partials.bulk-bar', ['action' => route('admin.ads.bulk-destroy'), 'label' => 'حذف المحدد', 'confirm' => 'حذف الإعلانات المحددة نهائياً؟'])
-
-    <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-sm">
-                <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
-                    <tr>
-                        <th class="px-4 py-3"><input type="checkbox" id="qb-bulk-all" onclick="qbBulkAll(this)" class="rounded border-ink-300 text-coral"></th>
-                        <th class="px-4 py-3 font-semibold">#</th>
-                        <th class="px-4 py-3 font-semibold">العنوان</th>
-                        <th class="px-4 py-3 font-semibold">البائع</th>
-                        <th class="px-4 py-3 font-semibold">الحالة</th>
-                        <th class="px-4 py-3 font-semibold">التاريخ</th>
-                        <th class="px-4 py-3 font-semibold"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-ink-200">
-                    @forelse ($ads as $ad)
-                        <tr class="transition hover:bg-cream-50">
-                            <td class="px-4 py-3"><input type="checkbox" name="ids[]" value="{{ $ad->id }}" form="qb-bulk-form" class="qb-bulk-cb rounded border-ink-300 text-coral" onchange="qbBulkSync()"></td>
-                            <td class="px-4 py-3 text-ink-500">{{ $ad->id }}</td>
-                            <td class="px-4 py-3">
-                                <a href="{{ route('admin.ads.show', $ad) }}" class="font-semibold hover:text-coral">{{ \Illuminate\Support\Str::limit($ad->title, 50) }}</a>
-                            </td>
-                            <td class="px-4 py-3 text-ink-700">{{ $ad->user?->full_name ?? '—' }}</td>
-                            <td class="px-4 py-3">@include('admin.partials.status-badge', ['status' => $ad->status])</td>
-                            <td class="px-4 py-3 text-ink-500">{{ optional($ad->created_at)->format('Y-m-d') }}</td>
-                            <td class="px-4 py-3 text-left">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <a href="{{ route('admin.ads.show', $ad) }}" title="عرض"
-                                       class="inline-flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-700 transition hover:bg-coral-soft hover:text-coral">
-                                        <x-admin.icon name="eye" class="size-[18px]" />
-                                    </a>
-                                    <a href="{{ route('admin.ads.edit', $ad) }}" title="تعديل"
-                                       class="inline-flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-700 transition hover:bg-coral-soft hover:text-coral">
-                                        <x-admin.icon name="pencil" class="size-[18px]" />
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-16 text-center">
-                                <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
-                                    <x-admin.icon name="tag" class="size-6" />
-                                </span>
-                                <p class="text-sm font-semibold text-ink-500">لا توجد إعلانات مطابقة.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="mt-6">
-        {{ $ads->links() }}
-    </div>
+    <x-admin.pagination :paginator="$ads" />
 @endsection
