@@ -15,7 +15,8 @@ use Illuminate\Database\Eloquent\Collection;
  * Checks the ledger against itself:
  *   1. every account's cached balance equals the sum of its entries,
  *   2. every transaction's debits equal its credits,
- *   3. all debits ever posted equal all credits (the trial balance).
+ *   3. all debits ever posted equal all credits (the trial balance),
+ *   4. every entry has exactly one positive side.
  *
  * Sums run in SQL, an account chunk at a time, so memory stays flat as the
  * ledger grows. Sums are compared after rounding to two decimals, which is
@@ -36,6 +37,7 @@ class LedgerReconciler
         return new ReconciliationReport(
             accountMismatches: $this->accountMismatches(),
             unbalancedTransactionIds: $this->unbalancedTransactionIds(),
+            malformedEntryIds: $this->malformedEntryIds(),
             totalDebits: Money::round((string) ($totals->debits ?? 0)),
             totalCredits: Money::round((string) ($totals->credits ?? 0)),
         );
@@ -84,6 +86,22 @@ class LedgerReconciler
             ->havingRaw('ROUND(SUM(debit) - SUM(credit), 2) <> 0')
             ->limit(self::MAX_REPORTED)
             ->pluck('transaction_id')
+            ->map(fn (mixed $id): string => (string) $id)
+            ->all();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function malformedEntryIds(): array
+    {
+        /** @var list<string> */
+        return LedgerEntry::query()->toBase()
+            ->where(fn ($query) => $query
+                ->where(fn ($neither) => $neither->where('debit', '<=', 0)->where('credit', '<=', 0))
+                ->orWhere(fn ($both) => $both->where('debit', '>', 0)->where('credit', '>', 0)))
+            ->limit(self::MAX_REPORTED)
+            ->pluck('id')
             ->map(fn (mixed $id): string => (string) $id)
             ->all();
     }

@@ -7,7 +7,9 @@ namespace App\Models;
 use App\Enums\LedgerActorType;
 use App\Enums\LedgerReferenceType;
 use App\Enums\LedgerTransactionType;
+use App\Models\Builders\AppendOnlyBuilder;
 use App\Models\Concerns\AppendOnly;
+use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -32,6 +34,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $created_at
  * @property-read Collection<int, LedgerEntry> $entries
  */
+#[UseEloquentBuilder(AppendOnlyBuilder::class)]
 class LedgerTransaction extends Model
 {
     use AppendOnly, HasUlids;

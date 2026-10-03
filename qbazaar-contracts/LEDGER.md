@@ -43,15 +43,19 @@ After 1 the seller owes 10.00; after 2 or 3 they owe nothing. While what they ow
 |---|---|---|---|---|---|
 | 4 | The buyer's payment arrives | `order_payment_received` | `platform:gateway_clearing` (card) or `platform:bank` (transfer) | `platform:escrow` | 210.00 |
 | 5 | The handover is confirmed | `escrow_released` | `platform:escrow` 210.00 | `user:seller:wallet` 200.00 **and** `platform:revenue` 10.00 | 210.00 |
-| 6 | The order is cancelled or the buyer wins a dispute | `refund` | `platform:escrow` | `platform:gateway_clearing` or `platform:bank` (money goes back out) | 210.00 |
+| 6 | The order is cancelled or the buyer wins a dispute | `refund` | `platform:escrow` | the account the payment came in by (`platform:gateway_clearing` or `platform:bank`) | 210.00 |
+
+5 and 6 run only after 4, and an escrow is either released or refunded, never both: they share one idempotency key (`order:{id}:outcome`), so the database accepts only the first.
 
 ### Stage B: withdrawals
 
 | # | When | Transaction type | Debit | Credit |
 |---|---|---|---|---|
 | 7 | The seller requests a withdrawal (money leaves the wallet at once, so it cannot be spent twice) | `withdrawal_requested` | `user:seller:wallet` | `platform:payouts_payable` |
-| 8 | The admin pays it | `withdrawal_paid` | `platform:payouts_payable` | `platform:bank` |
+| 8 | The admin pays it (always the amount requested in 7) | `withdrawal_paid` | `platform:payouts_payable` | `platform:bank` |
 | 9 | The admin rejects it | `withdrawal_rejected` (reversal of 7) | `platform:payouts_payable` | `user:seller:wallet` |
+
+A withdrawal is either paid or rejected, never both: 8 and 9 share one idempotency key (`withdrawal:{id}:outcome`).
 
 ### Stage B: paid promotion
 
@@ -90,10 +94,10 @@ buyer ──cash──► seller                      buyer ──card──► 
 | No money is created or lost | Every transaction is checked to balance (debits = credits, all amounts > 0) before anything is written |
 | No rounding errors | No floats anywhere: amounts are exact decimal strings (`brick/math`), stored as `decimal(14,2)` (orders: `decimal(12,2)`). The one rounding rule, half-up to 0.01, is applied only to the commission |
 | All or nothing | The journal row, its entries and the account balances are written in one database transaction, together with the order status change that caused them |
-| Never twice | Every flow has an idempotency key built from its business record (`order:{id}:commission_charged`); a retried request or job gets the first transaction back. The key is unique in the database |
-| No race between two requests | The accounts a transaction touches are locked (`SELECT … FOR UPDATE`) in a fixed order (by id), so two postings never deadlock and never read a stale balance. Orders lock the ad first, then the order, then the accounts: the same ad-first order the offer flow uses |
-| History cannot be rewritten | Transactions and entries cannot be updated or deleted through the application; corrections are reversals |
-| Balances can be proved | Each entry stores the balance right after it, and a daily job (02:30 Qatar time) recomputes every balance from its entries, checks every transaction balances, and checks that all debits ever posted equal all credits. Any difference is logged and sent to every admin with `finance.view` |
+| Never twice | Every flow has an idempotency key built from its business record (`order:{id}:commission_charged`); a retried request or job gets the first transaction back. The key is unique in the database, and a retry that names other accounts or amounts under the same key is refused |
+| No race between two requests | The accounts a transaction touches are locked (`SELECT … FOR UPDATE`) in a fixed order (by id), so two postings never deadlock and never read a stale balance. Orders lock the ad first, then the order, then the accounts: the same ad-first order the offer flow uses. CI proves these locks on a real MySQL on every pull request |
+| History cannot be rewritten | Transactions and entries cannot be updated or deleted through the application, neither one row at a time nor in bulk; corrections are reversals |
+| Balances can be proved | Each entry stores the balance right after it, and a daily job (02:30 Qatar time) recomputes every balance from its entries, checks every transaction balances, checks every entry has exactly one side, and checks that all debits ever posted equal all credits. Any difference is logged and sent to every admin with `finance.view` |
 
 ## 6. Commission
 

@@ -57,7 +57,7 @@ class LedgerService
         $existing = $this->findByKey($idempotencyKey);
 
         if ($existing !== null) {
-            return $this->assertSameType($existing, $type);
+            return $this->assertSamePosting($existing, $type, $lines);
         }
 
         $accountIds = $this->accounts->idsFor($lines);
@@ -80,7 +80,7 @@ class LedgerService
                 throw $exception;
             }
 
-            return $this->assertSameType($existing, $type);
+            return $this->assertSamePosting($existing, $type, $lines);
         }
     }
 
@@ -241,10 +241,35 @@ class LedgerService
         }
     }
 
-    private function assertSameType(LedgerTransaction $existing, LedgerTransactionType $type): LedgerTransaction
+    /**
+     * A replay must be the same posting. A key reused for other accounts or
+     * amounts is a caller bug that would otherwise be silently swallowed.
+     *
+     * @param list<LedgerLine> $lines
+     */
+    private function assertSamePosting(LedgerTransaction $existing, LedgerTransactionType $type, array $lines): LedgerTransaction
     {
         if ($existing->type !== $type) {
             throw new LogicException("Idempotency key [{$existing->idempotency_key}] already belongs to a {$existing->type->value} transaction.");
+        }
+
+        $accountIds = $this->accounts->existingIdsFor($lines);
+
+        $requested = array_map(fn (LedgerLine $line): string => implode('|', [
+            $accountIds[$line->accountCode()] ?? '',
+            $line->side === LedgerSide::DEBIT ? $line->amount : Money::ZERO,
+            $line->side === LedgerSide::CREDIT ? $line->amount : Money::ZERO,
+        ]), $lines);
+
+        $posted = $existing->entries
+            ->map(fn (LedgerEntry $entry): string => implode('|', [$entry->account_id, $entry->debit, $entry->credit]))
+            ->all();
+
+        sort($requested);
+        sort($posted);
+
+        if ($requested !== $posted) {
+            throw new LogicException("Idempotency key [{$existing->idempotency_key}] was already used for a different posting.");
         }
 
         return $existing;

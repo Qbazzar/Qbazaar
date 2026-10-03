@@ -9,7 +9,9 @@ use LogicException;
 
 /**
  * Ledger rows are written once. A mistake is corrected with a reversal
- * transaction, never by editing or deleting history.
+ * transaction, never by editing or deleting history: single-row saves are
+ * refused here, and mass writes by AppendOnlyBuilder, which every model
+ * using this trait declares with #[UseEloquentBuilder].
  */
 trait AppendOnly
 {

@@ -30,4 +30,14 @@ final readonly class LedgerReference
     {
         return "{$this->type->value}:{$this->id}:{$type->value}";
     }
+
+    /**
+     * The key shared by the flows that close this record one way or the
+     * other (an escrow is released or refunded, a withdrawal is paid or
+     * rejected). The unique key lets the database accept only the first.
+     */
+    public function outcomeKey(): string
+    {
+        return "{$this->type->value}:{$this->id}:outcome";
+    }
 }

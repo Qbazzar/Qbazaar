@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Builders\AppendOnlyBuilder;
 use App\Models\Concerns\AppendOnly;
+use Illuminate\Database\Eloquent\Attributes\UseEloquentBuilder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property LedgerTransaction $transaction
  * @property LedgerAccount $account
  */
+#[UseEloquentBuilder(AppendOnlyBuilder::class)]
 class LedgerEntry extends Model
 {
     use AppendOnly, HasUlids;

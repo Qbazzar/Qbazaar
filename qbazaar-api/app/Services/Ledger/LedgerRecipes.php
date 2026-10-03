@@ -9,6 +9,7 @@ use App\Data\Ledger\LedgerLine;
 use App\Data\Ledger\LedgerReference;
 use App\Enums\LedgerAccountType as Account;
 use App\Enums\LedgerTransactionType as Flow;
+use App\Models\LedgerEntry;
 use App\Models\LedgerTransaction;
 use App\Models\Order;
 use App\Support\Money;
@@ -84,10 +85,14 @@ class LedgerRecipes
 
     /**
      * Handover of an escrow order: the seller's wallet gets the total minus
-     * the commission, which the platform keeps as revenue.
+     * the commission, which the platform keeps as revenue. An escrow is
+     * released or refunded, never both.
      */
     public function releaseEscrow(Order $order, LedgerActor $actor): LedgerTransaction
     {
+        $reference = LedgerReference::order($order->id);
+        $this->paymentReceivedFor($reference);
+
         $sellerShare = Money::subtract($order->total, $order->commission_amount);
 
         $lines = [LedgerLine::debit(Account::PLATFORM_ESCROW, $order->total)];
@@ -100,21 +105,24 @@ class LedgerRecipes
             $lines[] = LedgerLine::credit(Account::PLATFORM_REVENUE, $order->commission_amount);
         }
 
-        return $this->postFor(LedgerReference::order($order->id), Flow::ESCROW_RELEASED, $actor, $lines);
+        return $this->postFor($reference, Flow::ESCROW_RELEASED, $actor, $lines, key: $reference->outcomeKey());
     }
 
     /**
      * A cancelled or lost-dispute escrow order: the held money goes back out
-     * the way it came in.
+     * through the account it came in by, for the amount that came in.
      */
-    public function refundOrderPayment(Order $order, Account $refundedFrom, LedgerActor $actor): LedgerTransaction
+    public function refundOrderPayment(Order $order, LedgerActor $actor): LedgerTransaction
     {
-        $this->assertCollectionAccount($refundedFrom);
+        $reference = LedgerReference::order($order->id);
+        $collected = $this->paymentReceivedFor($reference)->entries
+            ->first(fn (LedgerEntry $entry): bool => Money::isPositive($entry->debit))
+            ?? throw new LogicException("Payment of order [{$order->id}] has no debit line.");
 
-        return $this->postFor(LedgerReference::order($order->id), Flow::REFUND, $actor, [
-            LedgerLine::debit(Account::PLATFORM_ESCROW, $order->total),
-            LedgerLine::credit($refundedFrom, $order->total),
-        ]);
+        return $this->postFor($reference, Flow::REFUND, $actor, [
+            LedgerLine::debit(Account::PLATFORM_ESCROW, $collected->debit),
+            LedgerLine::credit($collected->account->type, $collected->debit),
+        ], key: $reference->outcomeKey());
     }
 
     /**
@@ -129,12 +137,20 @@ class LedgerRecipes
         ]);
     }
 
-    public function payWithdrawal(string $amount, LedgerReference $withdrawal, LedgerActor $admin): LedgerTransaction
+    /**
+     * The admin transferred the requested amount out of the bank. A
+     * withdrawal is paid or rejected, never both.
+     */
+    public function payWithdrawal(LedgerReference $withdrawal, LedgerActor $admin): LedgerTransaction
     {
+        $requested = $this->withdrawalRequestOf($withdrawal)->entries
+            ->first(fn (LedgerEntry $entry): bool => Money::isPositive($entry->credit))
+            ?? throw new LogicException("Withdrawal [{$withdrawal->id}] has no credit line.");
+
         return $this->postFor($withdrawal, Flow::WITHDRAWAL_PAID, $admin, [
-            LedgerLine::debit(Account::PLATFORM_PAYOUTS_PAYABLE, $amount),
-            LedgerLine::credit(Account::PLATFORM_BANK, $amount),
-        ]);
+            LedgerLine::debit(Account::PLATFORM_PAYOUTS_PAYABLE, $requested->credit),
+            LedgerLine::credit(Account::PLATFORM_BANK, $requested->credit),
+        ], key: $withdrawal->outcomeKey());
     }
 
     /**
@@ -142,10 +158,7 @@ class LedgerRecipes
      */
     public function rejectWithdrawal(LedgerReference $withdrawal, LedgerActor $admin, ?string $reason = null): LedgerTransaction
     {
-        $request = $this->ledger->findByKey($withdrawal->keyFor(Flow::WITHDRAWAL_REQUESTED))
-            ?? throw new LogicException("Withdrawal [{$withdrawal->id}] was never requested.");
-
-        return $this->ledger->reverse($request, $withdrawal->keyFor(Flow::WITHDRAWAL_REJECTED), $admin, $reason, Flow::WITHDRAWAL_REJECTED);
+        return $this->ledger->reverse($this->withdrawalRequestOf($withdrawal), $withdrawal->outcomeKey(), $admin, $reason, Flow::WITHDRAWAL_REJECTED);
     }
 
     public function purchasePromotionFromWallet(string $userId, string $amount, LedgerReference $promotion, LedgerActor $actor): LedgerTransaction
@@ -183,9 +196,23 @@ class LedgerRecipes
     /**
      * @param list<LedgerLine> $lines
      */
-    private function postFor(LedgerReference $reference, Flow $flow, LedgerActor $actor, array $lines, ?string $memo = null): LedgerTransaction
+    private function postFor(LedgerReference $reference, Flow $flow, LedgerActor $actor, array $lines, ?string $memo = null, ?string $key = null): LedgerTransaction
     {
-        return $this->ledger->post($flow, $lines, $reference->keyFor($flow), $reference, $actor, $memo);
+        return $this->ledger->post($flow, $lines, $key ?? $reference->keyFor($flow), $reference, $actor, $memo);
+    }
+
+    private function paymentReceivedFor(LedgerReference $order): LedgerTransaction
+    {
+        $payment = $this->ledger->findByKey($order->keyFor(Flow::ORDER_PAYMENT_RECEIVED))
+            ?? throw new LogicException("No payment was received for order [{$order->id}].");
+
+        return $payment->loadMissing('entries.account');
+    }
+
+    private function withdrawalRequestOf(LedgerReference $withdrawal): LedgerTransaction
+    {
+        return $this->ledger->findByKey($withdrawal->keyFor(Flow::WITHDRAWAL_REQUESTED))
+            ?? throw new LogicException("Withdrawal [{$withdrawal->id}] was never requested.");
     }
 
     private function sellerOf(Order $order): string

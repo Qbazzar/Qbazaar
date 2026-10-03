@@ -21,6 +21,7 @@ class LedgerReconciliationFailedNotification extends Notification implements Sho
     public function __construct(
         public readonly int $accountMismatches,
         public readonly int $unbalancedTransactions,
+        public readonly int $malformedEntries,
         public readonly bool $trialBalanceHolds,
     ) {}
 
@@ -63,6 +64,7 @@ class LedgerReconciliationFailedNotification extends Notification implements Sho
         return __('admin.ledger_reconciliation.body', [
             'accounts' => $this->accountMismatches,
             'transactions' => $this->unbalancedTransactions,
+            'entries' => $this->malformedEntries,
             'trial_balance' => __($this->trialBalanceHolds ? 'admin.ledger_reconciliation.balanced' : 'admin.ledger_reconciliation.unbalanced', [], $locale),
         ], $locale);
     }

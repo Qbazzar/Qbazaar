@@ -62,10 +62,10 @@ function postRandomFlows(int $count): void
                 1 => $recipes->settleCommissionByBankTransfer($seller->id, Money::percentOf($amount, '1.00'), ledgerRef(LedgerReferenceType::SETTLEMENT), $system),
                 2 => $recipes->settleCommissionFromWallet($seller->id, Money::percentOf($amount, '1.00'), ledgerRef(LedgerReferenceType::SETTLEMENT), $system),
                 3 => [$recipes->receiveOrderPayment($order, Account::PLATFORM_GATEWAY_CLEARING, $system), $recipes->releaseEscrow($order, $system)],
-                4 => [$recipes->receiveOrderPayment($order, Account::PLATFORM_BANK, $system), $recipes->refundOrderPayment($order, Account::PLATFORM_BANK, $system)],
+                4 => [$recipes->receiveOrderPayment($order, Account::PLATFORM_BANK, $system), $recipes->refundOrderPayment($order, $system)],
                 5 => $requestedWithdrawals[] = [$recipes->requestWithdrawal($seller->id, Money::percentOf($amount, '10.00'), $ref = ledgerRef(LedgerReferenceType::WITHDRAWAL), $system), $ref],
                 6 => ($pending = array_pop($requestedWithdrawals)) === null ? null : (mt_rand(0, 1) === 1
-                    ? $recipes->payWithdrawal(Money::add($pending[0]->entries[0]->debit, $pending[0]->entries[0]->credit), $pending[1], $system)
+                    ? $recipes->payWithdrawal($pending[1], $system)
                     : $recipes->rejectWithdrawal($pending[1], $system)),
                 7 => $recipes->purchasePromotionFromWallet($seller->id, Money::percentOf($amount, '2.00'), ledgerRef(LedgerReferenceType::PROMOTION), $system),
                 default => $recipes->adjustWallet($seller->id, (mt_rand(0, 3) === 0 ? '-' : '') . Money::percentOf($amount, '5.00'), 'random', ledgerRef(LedgerReferenceType::ADJUSTMENT), $system),
@@ -138,7 +138,7 @@ it('detects an entry edited behind the ledger\'s back and alerts finance staff',
 
     dispatch_sync(new ReconcileLedgerJob);
 
-    Notification::assertSentTo($finance, LedgerReconciliationFailedNotification::class, fn (LedgerReconciliationFailedNotification $alert): bool => $alert->accountMismatches === 1 && $alert->unbalancedTransactions === 1 && ! $alert->trialBalanceHolds);
+    Notification::assertSentTo($finance, LedgerReconciliationFailedNotification::class, fn (LedgerReconciliationFailedNotification $alert): bool => $alert->accountMismatches === 1 && $alert->unbalancedTransactions === 1 && $alert->malformedEntries === 0 && ! $alert->trialBalanceHolds);
     Notification::assertNotSentTo($moderator, LedgerReconciliationFailedNotification::class);
 });
 
@@ -155,6 +155,23 @@ it('detects a cached balance that no longer matches its entries', function (): v
         ->and($report->accountMismatches)->toHaveCount(1)
         ->and($report->accountMismatches[0]['code'])->toBe('platform:revenue');
 });
+
+it('detects an entry with both sides or neither side set', function (string $debit, string $credit): void {
+    $seller = User::factory()->create();
+    $order = Order::factory()->make(['id' => (string) Str::ulid(), 'ad_id' => null, 'buyer_id' => null, 'seller_id' => $seller->id, 'commission_amount' => '5.00']);
+    $entryId = app(LedgerRecipes::class)->chargeCommission($order, LedgerActor::system())?->entries
+        ->firstOrFail(fn (LedgerEntry $entry): bool => Money::isPositive($entry->debit))->id;
+
+    DB::table('ledger_entries')->where('id', $entryId)->update(['debit' => $debit, 'credit' => $credit]);
+
+    $report = app(LedgerReconciler::class)->run();
+
+    expect($report->malformedEntryIds)->toBe([$entryId])
+        ->and($report->isClean())->toBeFalse();
+})->with([
+    'both sides' => ['5.00', '5.00'],
+    'neither side' => ['0.00', '0.00'],
+]);
 
 it('runs on the low queue once at a time', function (): void {
     $job = new ReconcileLedgerJob;

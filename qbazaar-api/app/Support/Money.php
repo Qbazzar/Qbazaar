@@ -47,7 +47,7 @@ final class Money
      */
     public static function percentOf(string $amount, string $percent): string
     {
-        return self::round(BigDecimal::of($amount)->multipliedBy($percent)->dividedBy(100, self::SCALE + 4, RoundingMode::HALF_UP));
+        return self::round(BigDecimal::of($amount)->multipliedBy($percent)->dividedByExact(100));
     }
 
     public static function add(string ...$amounts): string

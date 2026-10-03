@@ -104,6 +104,14 @@ it('refuses to reuse an idempotency key for another kind of transaction', functi
     ], 'shared-key', null, LedgerActor::system());
 })->throws(LogicException::class);
 
+it('refuses to replay an idempotency key with other amounts or accounts', function (): void {
+    postCommission($this->userId, 'order:y:commission_charged', '25.00');
+
+    expect(fn () => postCommission($this->userId, 'order:y:commission_charged', '26.00'))->toThrow(LogicException::class, 'different posting')
+        ->and(fn () => postCommission((string) Str::ulid(), 'order:y:commission_charged', '25.00'))->toThrow(LogicException::class, 'different posting')
+        ->and($this->balances->balanceOf(Account::PLATFORM_REVENUE))->toBe('25.00');
+});
+
 it('enforces the idempotency key in the database', function (): void {
     postCommission($this->userId, 'unique-key');
 
@@ -167,7 +175,14 @@ it('keeps journal rows and entries append-only', function (): void {
         ->and(fn () => $account->forceFill(['balance' => '999.00'])->save())->toThrow(LogicException::class)
         ->and(fn () => $account->delete())->toThrow(LogicException::class);
 
+    expect(fn () => LedgerEntry::query()->update(['debit' => '1.00']))->toThrow(LogicException::class)
+        ->and(fn () => LedgerEntry::query()->whereKey($entry->id)->delete())->toThrow(LogicException::class)
+        ->and(fn () => LedgerEntry::query()->increment('debit'))->toThrow(LogicException::class)
+        ->and(fn () => LedgerTransaction::query()->update(['memo' => 'edited']))->toThrow(LogicException::class)
+        ->and(fn () => LedgerTransaction::query()->delete())->toThrow(LogicException::class);
+
     expect(LedgerEntry::query()->count())->toBe(2)
+        ->and(LedgerTransaction::query()->value('memo'))->toBeNull()
         ->and($this->balances->balanceOf(Account::PLATFORM_REVENUE))->toBe('25.00');
 });
 

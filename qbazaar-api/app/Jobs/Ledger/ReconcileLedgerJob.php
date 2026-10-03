@@ -62,6 +62,7 @@ class ReconcileLedgerJob implements ShouldBeUnique, ShouldQueue
         Notification::send($recipients, new LedgerReconciliationFailedNotification(
             accountMismatches: count($report->accountMismatches),
             unbalancedTransactions: count($report->unbalancedTransactionIds),
+            malformedEntries: count($report->malformedEntryIds),
             trialBalanceHolds: $report->trialBalanceHolds(),
         ));
     }

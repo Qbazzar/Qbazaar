@@ -44,6 +44,17 @@ class LedgerAccounts
     }
 
     /**
+     * The ids of the accounts that already exist, without opening any.
+     *
+     * @param list<LedgerLine> $lines
+     * @return array<string, string> account id keyed by account code
+     */
+    public function existingIdsFor(array $lines): array
+    {
+        return $this->idsByCode(array_values(array_unique(array_map(fn (LedgerLine $line): string => $line->accountCode(), $lines))));
+    }
+
+    /**
      * The user's accounts that exist so far, keyed by type.
      *
      * @return Collection<string, LedgerAccount>

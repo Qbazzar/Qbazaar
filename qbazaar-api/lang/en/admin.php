@@ -373,7 +373,7 @@ return [
 
     'ledger_reconciliation' => [
         'title' => 'Ledger reconciliation failed',
-        'body' => 'Accounts out of balance: :accounts. Unbalanced transactions: :transactions. Trial balance: :trial_balance. The details are in the application log.',
+        'body' => 'Accounts out of balance: :accounts. Unbalanced transactions: :transactions. Malformed entries: :entries. Trial balance: :trial_balance. The details are in the application log.',
         'balanced' => 'holds',
         'unbalanced' => 'does not hold',
     ],

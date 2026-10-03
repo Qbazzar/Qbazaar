@@ -314,7 +314,7 @@ return [
 
     'ledger_reconciliation' => [
         'title' => 'فشل تدقيق دفتر الحسابات',
-        'body' => 'حسابات غير متطابقة: :accounts. حركات غير متوازنة: :transactions. ميزان المراجعة: :trial_balance. التفاصيل في سجل التطبيق.',
+        'body' => 'حسابات غير متطابقة: :accounts. حركات غير متوازنة: :transactions. قيود تالفة: :entries. ميزان المراجعة: :trial_balance. التفاصيل في سجل التطبيق.',
         'balanced' => 'متوازن',
         'unbalanced' => 'غير متوازن',
     ],
