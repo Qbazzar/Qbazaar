@@ -12,10 +12,11 @@
             <directory>tests/Feature</directory>
         </testsuite>
     </testsuites>
-    <!-- Needs a live Meilisearch; see DEV-SETUP.md section 5. -->
+    <!-- meilisearch needs a live Meilisearch, mysql a live MySQL; see DEV-SETUP.md section 5. -->
     <groups>
         <exclude>
             <group>meilisearch</group>
+            <group>mysql</group>
         </exclude>
     </groups>
     <source>
