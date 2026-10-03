@@ -301,6 +301,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Paid promotion
+    |--------------------------------------------------------------------------
+    | Prices and durations are defaults for the admin settings (see
+    | App\Enums\PlatformSetting); the live values are edited in /admin.
+    */
+    'promotions' => [
+        'types' => [
+            'highlight' => ['price' => '15.00', 'days' => 7],
+            'push_up' => ['price' => '10.00', 'days' => 3],
+            'premium' => ['price' => '50.00', 'days' => 14],
+            'gallery' => ['price' => '30.00', 'days' => 7],
+        ],
+        'per_page' => 20,
+        'transfer_reference_max_length' => 64,
+        'expire_every_minutes' => 10,
+        // How many promoted ads lead the home feed's recommended section.
+        'home_promoted_limit' => 6,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Commission
     |--------------------------------------------------------------------------
     | Defaults only: the live values are admin-editable platform settings

@@ -151,6 +151,10 @@ enum ErrorCode: string
     case WALLET_INSUFFICIENT_BALANCE = 'WALLET_001';
     case WALLET_EXCEEDS_COMMISSION_DEBT = 'WALLET_002';
 
+    // ── Paid promotion (M1b) ───────────────────────────────────────────────
+    case PROMOTION_ALREADY_OPEN = 'PROMOTION_001';
+    case PROMOTION_INVALID_TRANSITION = 'PROMOTION_002';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -210,7 +214,9 @@ enum ErrorCode: string
             self::ORDER_AD_HAS_ACTIVE_ORDER,
             self::ORDER_SELLER_DEBT_CEILING,
             self::WALLET_INSUFFICIENT_BALANCE,
-            self::WALLET_EXCEEDS_COMMISSION_DEBT => 422,
+            self::WALLET_EXCEEDS_COMMISSION_DEBT,
+            self::PROMOTION_ALREADY_OPEN,
+            self::PROMOTION_INVALID_TRANSITION => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,

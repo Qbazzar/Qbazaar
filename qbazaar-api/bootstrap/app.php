@@ -18,6 +18,7 @@ use App\Jobs\Ads\FlushAdViewCountsJob;
 use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Jobs\Ledger\ReconcileLedgerJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
+use App\Jobs\Promotions\ExpirePromotionsJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
 use App\Models\DatabaseNotification;
@@ -182,6 +183,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ->everyMinute()
             ->name('ads.flush-view-counts')
             ->withoutOverlapping();
+
+        $schedule->job(new ExpirePromotionsJob)
+            ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.promotions.expire_every_minutes'))))
+            ->name('promotions.expire');
     })
     ->withMiddleware(function (Middleware $middleware): void {
         // Aliases so route files can use 'locale', 'api.wrap', 'track.client'.

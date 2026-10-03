@@ -49,6 +49,7 @@ use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
 use App\Http\Controllers\Api\V1\Offers\OfferController;
 use App\Http\Controllers\Api\V1\Orders\OrderController;
+use App\Http\Controllers\Api\V1\Promotions\PromotionController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
@@ -563,6 +564,22 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])
         Route::post('/{id}/confirm-handover', [OrderController::class, 'confirmHandover'])->middleware('idempotent')->name('confirm-handover');
         Route::post('/{id}/cancel', [OrderController::class, 'cancel'])->middleware('idempotent')->name('cancel');
     });
+
+// ── M1b — Paid promotion ────────────────────────────────────────────────────
+//   GET  /promotions            — public catalogue: price and duration per type
+//   POST /ads/{id}/promotions   — the ad's owner buys one (wallet or bank transfer)
+//   GET  /account/promotions    — the caller's promotions, cursor paginated
+Route::get('/promotions', [PromotionController::class, 'index'])
+    ->middleware('throttle:api')
+    ->name('api.v1.promotions.index');
+
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
+    Route::post('/ads/{id}/promotions', [PromotionController::class, 'store'])
+        ->middleware('idempotent')
+        ->name('api.v1.ads.promotions.store');
+    Route::get('/account/promotions', [PromotionController::class, 'mine'])
+        ->name('api.v1.account.promotions.index');
+});
 
 // ── Sprint 10 — Notifications inbox ─────────────────────────────────────────
 //   Authenticated, scoped to the caller. Mounted under `/account/*` so the

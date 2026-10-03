@@ -92,6 +92,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Ledger, wallets and orders (read-only; also receives reconciliation alerts)
         'finance.view',
+
+        // Money-moving admin actions: confirming bank transfers
+        'finance.manage',
     ];
 
     /**

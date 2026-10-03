@@ -11,6 +11,7 @@ use App\Enums\AdType;
 use App\Enums\Condition;
 use App\Enums\OfferStatus;
 use App\Enums\PriceType;
+use App\Enums\PromotionType;
 use App\Enums\UserStatus;
 use App\Http\Resources\Api\V1\Media\MediaResource;
 use App\Services\Catalog\CategoryHierarchy;
@@ -73,6 +74,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Media|null $primaryImage
  * @property bool $featured
  * @property bool $seller_active
+ * @property int $promotion_rank
  */
 class Ad extends Model implements HasMedia
 {
@@ -87,7 +89,7 @@ class Ad extends Model implements HasMedia
     private const SEARCHABLE_COLUMNS = [
         'title', 'description', 'category_id', 'location_id', 'user_id', 'latitude', 'longitude',
         'price', 'price_type', 'condition', 'ad_type', 'shipping', 'postal_code', 'status',
-        'reserved_at', 'published_at', 'views_count', 'custom_fields', 'deleted_at',
+        'reserved_at', 'published_at', 'views_count', 'custom_fields', 'deleted_at', 'promotion_rank',
     ];
 
     protected $table = 'ads';
@@ -104,6 +106,7 @@ class Ad extends Model implements HasMedia
         'ad_type' => 'offering',
         'shipping' => 'pickup_only',
         'show_full_address' => false,
+        'promotion_rank' => 0,
     ];
 
     /**
@@ -157,6 +160,7 @@ class Ad extends Model implements HasMedia
             'moderation_result' => ModerationResult::class,
             'price' => 'decimal:2',
             'featured' => 'boolean',
+            'promotion_rank' => 'integer',
             'seller_active' => 'boolean',
         ];
     }
@@ -329,6 +333,12 @@ class Ad extends Model implements HasMedia
         return $this->status === AdStatus::ACTIVE && $this->hasActiveSeller();
     }
 
+    /** The strongest of the ad's active promotions, if any. */
+    public function promotionType(): ?PromotionType
+    {
+        return PromotionType::forRank((int) $this->promotion_rank);
+    }
+
     public function hasActiveSeller(): bool
     {
         return $this->seller_active;
@@ -413,6 +423,7 @@ class Ad extends Model implements HasMedia
             'created_at_ts' => $this->created_at instanceof Carbon ? $this->created_at->getTimestamp() : null,
             'has_images' => $this->hasImages(),
             'views_count' => (int) $this->views_count,
+            'promotion_rank' => (int) $this->promotion_rank,
             // Category-specific attributes, indexed as a nested object so the
             // search can filter `custom_fields.year >= 2015` etc. Numeric-looking
             // strings are cast to real numbers so range filters compare correctly.

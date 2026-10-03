@@ -212,6 +212,13 @@ requested locale.
 | `WALLET_001` | The wallet balance is not enough for this payment or withdrawal | 422 |
 | `WALLET_002` | The settlement is larger than the commission the seller owes | 422 |
 
+## Paid promotion (M1b)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `PROMOTION_001` | The ad already has an open promotion of this type (active, or waiting for the bank transfer to be confirmed) | 422 |
+| `PROMOTION_002` | The promotion's status does not allow this move (e.g. confirming a transfer that was already confirmed or rejected) | 422 |
+
 ---
 
 ## Guidelines

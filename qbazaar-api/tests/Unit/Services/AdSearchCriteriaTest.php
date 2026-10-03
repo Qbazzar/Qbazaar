@@ -36,14 +36,14 @@ it('sorts by distance from the given point, newest first on ties', function (): 
 });
 
 it('falls back to the newest first when distance sort has no point', function (): void {
-    expect((new AdSearchCriteria)->sort(['sort' => 'distance']))->toBe(['published_at:desc']);
+    expect((new AdSearchCriteria)->sort(['sort' => 'distance']))->toBe(['promotion_rank:desc', 'published_at:desc']);
 });
 
-it('sorts most viewed first', function (): void {
-    expect((new AdSearchCriteria)->sort(['sort' => 'most_viewed']))->toBe(['views_count:desc', 'published_at:desc']);
+it('sorts most viewed first, promoted ads leading', function (): void {
+    expect((new AdSearchCriteria)->sort(['sort' => 'most_viewed']))->toBe(['promotion_rank:desc', 'views_count:desc', 'published_at:desc']);
 });
 
-it('defaults to the newest first', function (): void {
-    expect((new AdSearchCriteria)->sort([]))->toBe(['published_at:desc'])
+it('defaults to the newest first, promoted ads leading', function (): void {
+    expect((new AdSearchCriteria)->sort([]))->toBe(['promotion_rank:desc', 'published_at:desc'])
         ->and((new AdSearchCriteria)->sort(['sort' => 'price_asc']))->toBe(['price:asc']);
 });

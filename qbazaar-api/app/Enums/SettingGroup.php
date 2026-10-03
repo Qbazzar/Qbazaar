@@ -9,4 +9,5 @@ enum SettingGroup: string
     case COMMISSION = 'commission';
     case ADS = 'ads';
     case OFFERS = 'offers';
+    case PROMOTIONS = 'promotions';
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\Manage\CategoryController;
 use App\Http\Controllers\Manage\CommissionRateController;
 use App\Http\Controllers\Manage\ConversationController;
 use App\Http\Controllers\Manage\DashboardController;
+use App\Http\Controllers\Manage\Finance\PromotionTransferController;
 use App\Http\Controllers\Manage\HelpArticleController;
 use App\Http\Controllers\Manage\HelpCategoryController;
 use App\Http\Controllers\Manage\LocationController;
@@ -190,6 +191,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
             Route::post('settings/commission-rates', [CommissionRateController::class, 'store'])->name('settings.commission-rates.store');
             Route::delete('settings/commission-rates/{category}', [CommissionRateController::class, 'destroy'])->name('settings.commission-rates.destroy');
+        });
+
+        // Paid promotions waiting for their bank transfer
+        Route::get('finance/promotions', [PromotionTransferController::class, 'index'])->middleware('permission:finance.view')->name('finance.promotions.index');
+        Route::middleware('permission:finance.manage')->group(function () {
+            Route::post('finance/promotions/{promotion}/confirm', [PromotionTransferController::class, 'confirm'])->name('finance.promotions.confirm');
+            Route::post('finance/promotions/{promotion}/reject', [PromotionTransferController::class, 'reject'])->name('finance.promotions.reject');
         });
 
         // Read-only surfaces

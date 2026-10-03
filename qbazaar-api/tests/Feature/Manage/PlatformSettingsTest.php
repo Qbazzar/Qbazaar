@@ -26,7 +26,14 @@ beforeEach(function (): void {
 
 function validSettingsPayload(array $overrides = []): array
 {
+    $defaults = [];
+
+    foreach (PlatformSetting::cases() as $setting) {
+        $defaults[$setting->value] = $setting->definition()->defaultValue();
+    }
+
     return [
+        ...$defaults,
         'commission_rate' => (string) config('qbazaar.commission.rate'),
         'commission_debt_ceiling' => '750.50',
         'settlement_deadline_days' => 21,
@@ -130,6 +137,9 @@ it('rejects out-of-range values', function (string $field, mixed $value): void {
     'daily limit zero' => ['ad_daily_publish_limit', 0],
     'counter rounds negative' => ['offer_counter_rounds_per_side', -1],
     'counter rounds above 5' => ['offer_counter_rounds_per_side', 6],
+    'promotion price below 1' => ['promotion_premium_price', '0.99'],
+    'promotion duration zero' => ['promotion_highlight_days', 0],
+    'promotion duration above 90' => ['promotion_gallery_days', 91],
 ]);
 
 it('serves reads from the cache and refreshes it after a write', function (): void {
