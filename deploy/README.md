@@ -4,7 +4,7 @@
 > Web: `https://qbazaar.fleeteye.de` · API + admin: `https://api.qbazaar.fleeteye.de`.
 > **Next:** M5 moves everything to the new cPanel VPS (`srv1977263.hstgr.cloud`) behind Cloudflare, once the domain is decided (tasks `OPS-18.x` in [MILESTONES-V2.md](../qbazaar-contracts/MILESTONES-V2.md)). The earlier hosts (CloudPanel `miete.site`, then `qbazaar.taqat.space`) are gone.
 
-First-time server setup is in [CPANEL-FLEETEYE-RUNBOOK.md](CPANEL-FLEETEYE-RUNBOOK.md) (Arabic). This file covers the day-to-day flow.
+First-time server setup is in [CPANEL-FLEETEYE-RUNBOOK.md](CPANEL-FLEETEYE-RUNBOOK.md) (Arabic). Promoting `main` to `production`: follow [DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md). This file covers the day-to-day flow.
 
 ## Branches and workflows
 
@@ -68,25 +68,11 @@ Apache includes for both vhosts are in `deploy/apache/` (install steps are in ea
 
 Both files are gitignored and survive the `git reset --hard` the scripts do.
 
-## Pending production steps after M0
+## Deploying a release
 
-The M0 PRs (#147–#153) need these one-time steps on the server the first time they reach `production`:
+The one-time steps that the M0, M1 and M1-performance PRs need on the server are in **[DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md)**, in the order an operator runs them: pre-flight, env diff, queue drain, deploy, post-deploy commands, server config, smoke tests and rollback. They replace the earlier "pending production steps" lists. Update that file whenever a PR adds a deploy step.
 
-1. `.env`: `SCOUT_DRIVER=meilisearch`, `SCOUT_QUEUE=true`, then `php artisan config:cache` (#147).
-2. Install the scheduler unit (`cp deploy/systemd/qbazaar-scheduler.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now qbazaar-scheduler`) or the cron entry, and restart Horizon so it picks up the `low` queue (#147).
-3. Re-copy the API Apache include into both the `std` and `ssl` userdata dirs, then `/scripts/ensure_vhost_includes --user=fleeteye && apachectl configtest && systemctl restart httpd`; needs `mod_headers` (#150). Check `storage/app/public` for old `*.php*` or `*.html` uploads.
-4. `php artisan db:seed --class=RolesAndPermissionsSeeder --force`, then `php artisan permission:cache-reset` (#151). Migrations run in the deploy script.
-5. Rebuild the ads index: `php artisan scout:flush "App\Models\Ad" && php artisan scout:import "App\Models\Ad"` (#152).
-6. Web `.env.production`: add `NEXT_PUBLIC_APP_URL=https://qbazaar.fleeteye.de` (see `web.env.production.template`); the web deploy rebuilds with it. Without it canonical and sitemap URLs fall back to the same host.
-
-Clients must now authorise channels at `POST /api/v1/broadcasting/auth` with a Bearer token (#149); the web already does.
-
-## Pending production steps after the queue split (BE-13.27)
-
-1. `.env`: add `REDIS_QUEUE_RETRY_AFTER=150` and `REDIS_LONG_QUEUE_RETRY_AFTER=1900`; if a `MEDIA_QUEUE` line names any queue other than `media`, remove it.
-2. Re-copy `deploy/systemd/qbazaar-horizon.service` (adds `TimeoutStopSec`), then `systemctl daemon-reload`.
-3. Deploy as usual; `deploy-api.sh` rebuilds the config cache and restarts Horizon, which starts the new supervisors. Jobs already waiting on `default` or `low` are still consumed.
-4. Check `/horizon` shows six supervisors and no long waits.
+Clients authorise private channels at `POST /api/v1/broadcasting/auth` with a Bearer token (#149); the old session route `/broadcasting/auth` is gone. The web client already uses the new route.
 
 ## Auth limits, proxies and refresh tokens (BE-13.26, BE-13.32, BE-13.35)
 
@@ -207,6 +193,7 @@ The scripts fetch and reset to `origin/production` themselves.
 ```
 deploy/
 ├── README.md                       this file
+├── DEPLOY-CHECKLIST.md             ordered production deploy checklist
 ├── CPANEL-FLEETEYE-RUNBOOK.md      first-time setup of the current cPanel server (Arabic)
 ├── env.production.template         API .env template
 ├── web.env.production.template     web .env.production template
