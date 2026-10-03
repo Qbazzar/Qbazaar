@@ -4,25 +4,18 @@
 @section('heading', 'عرض المحادثة')
 
 @section('content')
-    <a href="{{ route('admin.conversations.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
-        <x-admin.icon name="arrow-right" class="size-4" /> رجوع للمحادثات
-    </a>
+    <x-admin.back-link :href="route('admin.conversations.index')" class="mb-4">رجوع للمحادثات</x-admin.back-link>
 
-    {{-- Meta --}}
-    <div class="mb-6 rounded-2xl border border-ink-200 bg-cream-100 p-6">
-        <div class="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-            <div><span class="text-ink-500">الإعلان:</span> <span class="font-semibold">{{ $conversation->ad?->title ?? '—' }}</span></div>
-            <div><span class="text-ink-500">المشتري:</span> {{ $conversation->buyer?->full_name ?? '—' }}</div>
-            <div><span class="text-ink-500">البائع:</span> {{ $conversation->seller?->full_name ?? '—' }}</div>
-            <div><span class="text-ink-500">عدد الرسائل:</span> {{ number_format($messages->count()) }}</div>
-        </div>
-    </div>
+    <x-admin.card class="mb-6">
+        <x-admin.detail-list class="md:grid-cols-4">
+            <x-admin.detail label="الإعلان"><span class="font-semibold">{{ $conversation->ad?->title ?? '—' }}</span></x-admin.detail>
+            <x-admin.detail label="المشتري">{{ $conversation->buyer?->full_name ?? '—' }}</x-admin.detail>
+            <x-admin.detail label="البائع">{{ $conversation->seller?->full_name ?? '—' }}</x-admin.detail>
+            <x-admin.detail label="عدد الرسائل">{{ number_format($messages->count()) }}</x-admin.detail>
+        </x-admin.detail-list>
+    </x-admin.card>
 
-    {{-- Thread --}}
-    <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-        <div class="mb-4 flex items-center gap-2 text-sm font-semibold text-ink-500">
-            <x-admin.icon name="chat" class="size-[18px] text-coral" /> المحادثة
-        </div>
+    <x-admin.card title="المحادثة" icon="chat">
         <div class="space-y-4">
             @php($sellerId = $conversation->seller_id)
             @forelse ($messages as $message)
@@ -34,13 +27,13 @@
                             <span>{{ optional($message->created_at)->format('Y-m-d H:i') }}</span>
                         </div>
                         @if ($message->type === \App\Enums\MessageType::SYSTEM)
-                            <div class="rounded-2xl bg-cream-200 px-4 py-2.5 text-center text-xs font-medium text-ink-500">{{ $message->body }}</div>
+                            <div class="rounded-2xl bg-cream-200 px-4 py-2.5 text-center text-xs font-medium text-ink-700">{{ $message->body }}</div>
                         @else
-                            <div class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed {{ $fromSeller ? 'bg-cream-200 text-ink-900' : 'bg-coral text-white' }}">
+                            <div class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed {{ $fromSeller ? 'bg-cream-200 text-ink-900' : 'bg-coral-600 text-white' }}">
                                 @if ($message->type === \App\Enums\MessageType::OFFER)
-                                    <span class="mb-1 block text-xs font-bold opacity-80">عرض سعر</span>
+                                    <span class="mb-1 block text-xs font-bold">عرض سعر</span>
                                 @endif
-                                <p class="whitespace-pre-line">{{ $message->body }}</p>
+                                <p class="whitespace-pre-line break-words">{{ $message->body }}</p>
                             </div>
                         @endif
                     </div>
@@ -49,5 +42,5 @@
                 <p class="py-8 text-center text-ink-500">لا توجد رسائل في هذه المحادثة.</p>
             @endforelse
         </div>
-    </div>
+    </x-admin.card>
 @endsection
