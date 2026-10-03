@@ -21,6 +21,7 @@ import {
 import type { ApiClientError } from '@/lib/api/auth';
 import { t } from '@/lib/i18n/messages';
 import { useAuthStore } from '@/store/auth';
+import { AuthErrorCode } from '@/lib/api/types';
 import type {
   MakeSupportTicketRequest,
   PaginatedResponse,
@@ -64,17 +65,22 @@ export function useTicketQuery(
   });
 }
 
+export interface CreateTicketVariables {
+  payload: MakeSupportTicketRequest;
+  turnstileToken?: string;
+}
+
 export function useCreateTicketMutation(): UseMutationResult<
   SupportTicket,
   ApiClientError,
-  MakeSupportTicketRequest
+  CreateTicketVariables
 > {
   const qc = useQueryClient();
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => Boolean(s.user && s.accessToken));
 
-  return useMutation<SupportTicket, ApiClientError, MakeSupportTicketRequest>({
-    mutationFn: (payload) => createTicket(payload),
+  return useMutation<SupportTicket, ApiClientError, CreateTicketVariables>({
+    mutationFn: ({ payload, turnstileToken }) => createTicket(payload, turnstileToken),
     onSuccess: (ticket) => {
       toast.success(
         t('support.submit_success_toast', 'تم استلام طلبك، سنرد قريباً'),
@@ -86,9 +92,9 @@ export function useCreateTicketMutation(): UseMutationResult<
       }
     },
     onError: (err) => {
-      // Validation errors are surfaced inline by the form; bubble everything
-      // else as a generic toast so the user has feedback.
-      if (err.code !== 'VALIDATION_FAILED') {
+      // Validation and Turnstile errors are surfaced by the form; bubble
+      // everything else as a generic toast so the user has feedback.
+      if (err.code !== 'VALIDATION_FAILED' && err.code !== AuthErrorCode.TurnstileFailed) {
         toast.error(err.message || t('common.error', 'حدث خطأ، حاول مرة أخرى'));
       }
     },

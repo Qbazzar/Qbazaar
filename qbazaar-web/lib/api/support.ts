@@ -12,6 +12,7 @@
 import { isAxiosError } from 'axios';
 import { api } from './client';
 import { ApiClientError } from './auth';
+import { withTurnstile } from './turnstile';
 import type {
   ErrorEnvelope,
   MakeSupportTicketRequest,
@@ -70,11 +71,13 @@ export interface ListMyTicketsParams extends Record<string, unknown> {
 
 export async function createTicket(
   payload: MakeSupportTicketRequest,
+  turnstileToken?: string,
 ): Promise<SupportTicket> {
   try {
     const { data } = await api.post<SuccessEnvelope<SupportTicket>>(
       `${PUBLIC_BASE}/tickets`,
       payload,
+      withTurnstile(turnstileToken),
     );
     return data.data;
   } catch (err) {

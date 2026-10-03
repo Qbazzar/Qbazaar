@@ -10,10 +10,11 @@
  *   a confirmation card with the assigned ticket id so they can reference it
  *   when replying via email.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2Icon } from 'lucide-react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -28,8 +29,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FieldError } from '@/components/auth/FieldError';
+import { Turnstile, type TurnstileHandle } from '@/components/auth/Turnstile';
 import { useCreateTicketMutation } from '@/lib/queries/support';
 import { ApiClientError } from '@/lib/api/auth';
+import { AuthErrorCode } from '@/lib/api/types';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { useAuthStore } from '@/store/auth';
 import type {
@@ -77,6 +80,7 @@ export function NewTicketClient() {
   const isAuthenticated = useAuthStore((s) => Boolean(s.user && s.accessToken));
   const mutation = useCreateTicketMutation();
   const [anonResult, setAnonResult] = useState<SupportTicket | null>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
 
   const form = useForm<FormInput, unknown, FormOutput>({
     resolver: zodResolver(baseSchema),
@@ -98,12 +102,15 @@ export function NewTicketClient() {
     if (!isAuthenticated && values.email) payload.email = values.email;
 
     try {
-      const ticket = await mutation.mutateAsync(payload);
+      const turnstileToken = await turnstile.current?.getToken();
+      const ticket = await mutation.mutateAsync({ payload, turnstileToken });
       // Auth users: the mutation hook routes to /account/support/{id}.
       // Anonymous users stay on this page and see the success card.
       if (!isAuthenticated) setAnonResult(ticket);
     } catch (err) {
       handleError(err, form);
+    } finally {
+      turnstile.current?.reset();
     }
   });
 
@@ -218,6 +225,8 @@ export function NewTicketClient() {
             </div>
           ) : null}
 
+          <Turnstile ref={turnstile} />
+
           <Button
             type="submit"
             size="lg"
@@ -261,6 +270,10 @@ function handleError(
   form: ReturnType<typeof useForm<FormInput, unknown, FormOutput>>,
 ) {
   if (!(err instanceof ApiClientError)) return;
+  if (err.code === AuthErrorCode.TurnstileFailed) {
+    toast.error(t('auth.errors.TURNSTILE_001'));
+    return;
+  }
   if (err.code === 'VALIDATION_FAILED' && err.details) {
     const known: (keyof FormInput)[] = ['subject', 'category', 'body', 'email'];
     for (const [field, messages] of Object.entries(err.details)) {

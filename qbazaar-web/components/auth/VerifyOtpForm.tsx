@@ -23,6 +23,7 @@ import { PHONE_VERIFICATION_PATH, isPhoneVerificationPath } from '@/lib/auth/pho
 import { useAuthStore } from '@/store/auth';
 import { FieldError } from './FieldError';
 import { OtpInput } from './OtpInput';
+import { Turnstile, type TurnstileHandle } from './Turnstile';
 
 const CODE_LENGTH = 6;
 // The API does not expose Retry-After for OTP sends, so after a rate-limit
@@ -59,6 +60,7 @@ export function VerifyOtpForm() {
   const [expiresDeadline, setExpiresDeadline] = useState<number | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
   const initialSendDone = useRef(false);
+  const turnstile = useRef<TurnstileHandle>(null);
 
   // Tick once per second while either timer is active.
   useEffect(() => {
@@ -97,10 +99,12 @@ export function VerifyOtpForm() {
     initialSendDone.current = true;
     (async () => {
       try {
-        const data = await sendOtp({ phone });
+        const data = await sendOtp({ phone }, await turnstile.current?.getToken());
         applyCooldowns(data.can_resend_in, data.expires_in);
       } catch (err) {
         handleSendError(err);
+      } finally {
+        turnstile.current?.reset();
       }
     })();
   }, [applyCooldowns, handleSendError, phone, phoneIsValid]);
@@ -150,11 +154,13 @@ export function VerifyOtpForm() {
     setSubmitError(null);
     setCode('');
     try {
-      const data = await resendOtp({ phone });
+      const data = await resendOtp({ phone }, await turnstile.current?.getToken());
       applyCooldowns(data.can_resend_in, data.expires_in);
       toast.success(t('auth.verify_otp.sent_again'));
     } catch (err) {
       handleSendError(err);
+    } finally {
+      turnstile.current?.reset();
     }
   }, [applyCooldowns, canResend, handleSendError, phone, phoneIsValid]);
 
@@ -259,6 +265,8 @@ export function VerifyOtpForm() {
           </p>
         ) : null}
       </div>
+
+      <Turnstile ref={turnstile} />
 
       <Button
         type="submit"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
@@ -20,12 +20,14 @@ import { AuthErrorCode } from '@/lib/api/types';
 import { FieldError } from './FieldError';
 import { PhoneInput } from './PhoneInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { Turnstile, type TurnstileHandle } from './Turnstile';
 
 export function RegisterForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
   const setHydrated = useAuthStore((s) => s.setHydrated);
   const [showPassword, setShowPassword] = useState(false);
+  const turnstile = useRef<TurnstileHandle>(null);
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -43,13 +45,15 @@ export function RegisterForm() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const data = await apiRegister(values);
+      const data = await apiRegister(values, await turnstile.current?.getToken());
       setAuth({ user: data.user, accessToken: data.tokens.access_token });
       setHydrated(true);
       toast.success(t('auth.register.success'));
       router.replace('/');
     } catch (err) {
       handleSubmitError(err, form);
+    } finally {
+      turnstile.current?.reset();
     }
   });
 
@@ -189,6 +193,8 @@ export function RegisterForm() {
         </label>
         <FieldError id="terms-error" message={errors.accepted_terms?.message} />
       </div>
+
+      <Turnstile ref={turnstile} />
 
       <Button
         type="submit"

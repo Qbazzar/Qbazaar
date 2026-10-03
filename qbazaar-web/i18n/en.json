@@ -187,6 +187,7 @@
       "AUTH_010": "Invalid session",
       "VALIDATION_FAILED": "Please review the highlighted fields",
       "RATE_LIMIT_EXCEEDED": "Too many attempts, try again later",
+      "TURNSTILE_001": "The security check failed, please try again",
       "network": "Could not reach the server",
       "unknown": "An unexpected error occurred"
     },
