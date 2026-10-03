@@ -37,10 +37,10 @@ class WalletService
     {
         $accounts = $this->accounts->ofUser($userId);
         $ceiling = $this->settings->decimal(PlatformSetting::COMMISSION_DEBT_CEILING);
-        $debt = $accounts->get(LedgerAccountType::USER_COMMISSION_RECEIVABLE->value)?->balance ?? Money::ZERO;
+        $debt = $accounts->get(LedgerAccountType::USER_COMMISSION_RECEIVABLE->value)->balance ?? Money::ZERO;
 
         return new WalletSummary(
-            available: $accounts->get(LedgerAccountType::USER_WALLET->value)?->balance ?? Money::ZERO,
+            available: $accounts->get(LedgerAccountType::USER_WALLET->value)->balance ?? Money::ZERO,
             commissionDebt: $debt,
             debtCeiling: $ceiling,
             canAcceptOrders: ! $this->isOverCeiling($debt, $ceiling),
