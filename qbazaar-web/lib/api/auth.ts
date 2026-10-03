@@ -15,6 +15,7 @@
  */
 import axios, { isAxiosError } from 'axios';
 import { api } from './client';
+import { withTurnstile } from './turnstile';
 import type {
   AuthResponseEnvelope,
   ErrorEnvelope,
@@ -119,11 +120,13 @@ async function clearRefreshTokenCookie(): Promise<void> {
 
 export async function register(
   payload: RegisterPayload,
+  turnstileToken?: string,
 ): Promise<AuthResponseEnvelope['data']> {
   try {
     const { data } = await api.post<AuthResponseEnvelope>(
       '/api/v1/auth/register',
       payload,
+      withTurnstile(turnstileToken),
     );
     await persistRefreshToken(data.data.tokens.refresh_token);
     return data.data;
@@ -192,11 +195,13 @@ export async function refresh(): Promise<{ token: Token; user?: never } | null> 
  */
 export async function sendOtp(
   payload: OtpSendRequest,
+  turnstileToken?: string,
 ): Promise<OtpSendResponseData> {
   try {
     const { data } = await api.post<OtpSendResponseEnvelope>(
       '/api/v1/auth/send-otp',
       payload,
+      withTurnstile(turnstileToken),
     );
     return data.data;
   } catch (err) {
@@ -229,11 +234,13 @@ export async function verifyOtp(
  */
 export async function resendOtp(
   payload: OtpSendRequest,
+  turnstileToken?: string,
 ): Promise<OtpSendResponseData> {
   try {
     const { data } = await api.post<OtpSendResponseEnvelope>(
       '/api/v1/auth/resend-otp',
       payload,
+      withTurnstile(turnstileToken),
     );
     return data.data;
   } catch (err) {
@@ -249,9 +256,10 @@ export async function resendOtp(
  */
 export async function forgotPassword(
   payload: ForgotPasswordRequest,
+  turnstileToken?: string,
 ): Promise<void> {
   try {
-    await api.post('/api/v1/auth/forgot-password', payload);
+    await api.post('/api/v1/auth/forgot-password', payload, withTurnstile(turnstileToken));
   } catch (err) {
     throw toApiClientError(err);
   }

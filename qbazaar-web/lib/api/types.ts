@@ -138,6 +138,7 @@ export const AuthErrorCode = {
   TokenInvalid: 'AUTH_010',
   ValidationFailed: 'VALIDATION_FAILED',
   RateLimited: 'RATE_LIMIT_EXCEEDED',
+  TurnstileFailed: 'TURNSTILE_001',
 } as const;
 
 export type AuthErrorCodeValue =

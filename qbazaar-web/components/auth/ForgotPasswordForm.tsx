@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +19,7 @@ import {
 import { ApiClientError, forgotPassword } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { FieldError } from './FieldError';
+import { Turnstile, type TurnstileHandle } from './Turnstile';
 
 export function ForgotPasswordForm() {
   /**
@@ -26,6 +27,7 @@ export function ForgotPasswordForm() {
    * if the email isn't on file. The backend already returns a generic 202.
    */
   const [submitted, setSubmitted] = useState(false);
+  const turnstile = useRef<TurnstileHandle>(null);
 
   const form = useForm<ForgotPasswordInput>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -35,10 +37,12 @@ export function ForgotPasswordForm() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await forgotPassword(values);
+      await forgotPassword(values, await turnstile.current?.getToken());
       setSubmitted(true);
     } catch (err) {
       handleSubmitError(err, form);
+    } finally {
+      turnstile.current?.reset();
     }
   });
 
@@ -91,6 +95,8 @@ export function ForgotPasswordForm() {
         />
         <FieldError id="email-error" message={emailError} />
       </div>
+
+      <Turnstile ref={turnstile} />
 
       <Button
         type="submit"
