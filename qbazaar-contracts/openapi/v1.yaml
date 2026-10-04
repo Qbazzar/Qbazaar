@@ -1809,6 +1809,12 @@ paths:
         still pending deletion and was requested at least 30 days ago. The
         deletion removes the user's ads with their images and search
         documents, offers, chats, addresses and tokens.
+
+        Refused while the user owes commission (`ACCOUNT_003`, with the
+        amount in `details`) or has an order in progress as buyer or seller
+        (`ACCOUNT_004`). The job checks both again right before erasing: if
+        either appeared during the grace period the account stays pending,
+        the user is notified, and the daily sweep retries it.
       operationId: accountDeleteRequest
       requestBody:
         required: true
@@ -1838,11 +1844,33 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '422':
-          description: Wrong password (USER_005) or validation failure
+          description: |
+            Wrong password (USER_005), validation failure, commission still
+            owed (ACCOUNT_003) or an order in progress (ACCOUNT_004)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                commissionOwed:
+                  value:
+                    success: false
+                    error:
+                      code: ACCOUNT_003
+                      message_key: errors.account.debt.outstanding
+                      message: You still owe 12.50 QAR in commission. Settle it before deleting your account.
+                      details:
+                        amount: '12.50'
+                        currency: QAR
+                openOrder:
+                  value:
+                    success: false
+                    error:
+                      code: ACCOUNT_004
+                      message_key: errors.account.has.open.order
+                      message: You have an order in progress. Complete or cancel it before deleting your account.
+                      details:
+                        order_id: 01J9Z3K4M5N6P7Q8R9S0T1V2W3
 
   # ──────────────────────────────────────────────────────────────────────────
   # Uploads (Sprint 2 — Wave 2 ships avatar; Sprint 4 adds ad images)
