@@ -28,6 +28,7 @@ class LedgerRecipes
 {
     public function __construct(
         private readonly LedgerService $ledger,
+        private readonly LedgerAccounts $accounts,
     ) {}
 
     /**
@@ -45,6 +46,40 @@ class LedgerRecipes
             LedgerLine::debit(Account::USER_COMMISSION_RECEIVABLE, $order->commission_amount, $this->sellerOf($order)),
             LedgerLine::credit(Account::PLATFORM_REVENUE, $order->commission_amount),
         ]);
+    }
+
+    /**
+     * A cash sale cancelled after its handover (an admin ruling on a
+     * dispute): the commission charged on it is given back. It first
+     * reduces what the seller still owes; any part they already paid off
+     * goes to their wallet. Nothing is posted when no commission was charged.
+     */
+    public function refundCommission(Order $order, LedgerActor $actor): ?LedgerTransaction
+    {
+        $reference = LedgerReference::order($order->id);
+        $charged = $this->ledger->findByKey($reference->keyFor(Flow::COMMISSION_CHARGED));
+
+        if ($charged === null) {
+            return null;
+        }
+
+        $seller = $this->sellerOf($order);
+        $amount = $order->commission_amount;
+        $owed = $this->accounts->balanceOf(Account::USER_COMMISSION_RECEIVABLE, $seller);
+        $fromDebt = Money::compare($owed, $amount) < 0 ? $owed : $amount;
+        $toWallet = Money::subtract($amount, $fromDebt);
+
+        $lines = [LedgerLine::debit(Account::PLATFORM_REVENUE, $amount)];
+
+        if (Money::isPositive($fromDebt)) {
+            $lines[] = LedgerLine::credit(Account::USER_COMMISSION_RECEIVABLE, $fromDebt, $seller);
+        }
+
+        if (Money::isPositive($toWallet)) {
+            $lines[] = LedgerLine::credit(Account::USER_WALLET, $toWallet, $seller);
+        }
+
+        return $this->postFor($reference, Flow::COMMISSION_REFUNDED, $actor, $lines);
     }
 
     /**

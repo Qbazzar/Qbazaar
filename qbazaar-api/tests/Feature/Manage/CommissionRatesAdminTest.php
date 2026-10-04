@@ -37,6 +37,8 @@ it('changes the general commission rate from the settings page and logs who did 
         'ad_max_images' => (int) config('qbazaar.ads.max_images'),
         'ad_daily_publish_limit' => (int) config('qbazaar.ads.daily_publish_limit_per_user'),
         'offer_counter_rounds_per_side' => (int) config('qbazaar.offers.counter_rounds_per_side'),
+        'order_dispute_window_hours' => (int) config('qbazaar.orders.dispute_window_hours'),
+        'escrow_auto_release_days' => (int) config('qbazaar.orders.escrow_auto_release_days'),
     ])->assertRedirect('/admin/settings');
 
     $entry = Activity::query()->where('log_name', 'settings')->where('properties->key', 'commission_rate')->sole();

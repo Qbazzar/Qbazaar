@@ -18,6 +18,7 @@ use App\Jobs\Ads\FlushAdViewCountsJob;
 use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Jobs\Ledger\ReconcileLedgerJob;
 use App\Jobs\Offers\ExpireOldOffersJob;
+use App\Jobs\Orders\ReleaseDueEscrowOrdersJob;
 use App\Jobs\Search\SyncAdViewCountsJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
 use App\Models\DatabaseNotification;
@@ -103,6 +104,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new ExpireOldOffersJob)
             ->hourlyAt(30)
             ->name('offers.expire-old');
+
+        $schedule->job(new ReleaseDueEscrowOrdersJob)
+            ->hourlyAt(45)
+            ->name('orders.release-due-escrow');
 
         $schedule->job(new SyncAdViewCountsJob)
             ->cron(sprintf('*/%d * * * *', max(1, (int) config('qbazaar.search.views_sync_minutes'))))
