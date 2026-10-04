@@ -37,4 +37,9 @@ class OrderPolicy
     {
         return $user->id === $order->buyer_id;
     }
+
+    public function checkout(User $user, Order $order): bool
+    {
+        return $user->id === $order->buyer_id;
+    }
 }

@@ -184,6 +184,30 @@ return [
             'title' => 'Offer expired',
             'body' => 'The offer of :amount :currency on ":title" has expired.',
         ],
+        'purchase_request_created' => [
+            'title' => 'New buy request',
+            'body' => 'A buyer wants :quantity of ":title" for :amount :currency.',
+        ],
+        'purchase_request_updated' => [
+            'title' => 'Buy request updated',
+            'body' => 'The buy request for ":title" is now :quantity for :amount :currency.',
+        ],
+        'purchase_request_accepted' => [
+            'title' => 'Buy request accepted',
+            'body' => 'Your request to buy ":title" was accepted. Complete the checkout.',
+        ],
+        'purchase_request_rejected' => [
+            'title' => 'Buy request declined',
+            'body' => 'Your request to buy ":title" was declined.',
+        ],
+        'purchase_request_cancelled' => [
+            'title' => 'Buy request cancelled',
+            'body' => 'The buy request for ":title" was cancelled.',
+        ],
+        'purchase_request_paid' => [
+            'title' => 'Purchase completed',
+            'body' => 'The purchase of ":title" is complete.',
+        ],
         'system_announcement' => [
             'greeting' => 'Hello,',
             'footer' => 'Thanks for being a part of QBazaar.',

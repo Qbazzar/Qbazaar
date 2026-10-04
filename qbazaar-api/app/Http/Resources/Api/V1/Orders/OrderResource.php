@@ -44,6 +44,8 @@ class OrderResource extends JsonResource
             'shipping_fee' => $this->shipping_fee,
             'total' => $this->total,
             'payment_method' => $this->payment_method->value,
+            'fulfillment' => $this->fulfillment?->value,
+            'delivery_address' => $this->delivery_address,
             'commission' => $viewerRole === 'seller' ? [
                 'rate' => $this->commission_rate,
                 'amount' => $this->commission_amount,

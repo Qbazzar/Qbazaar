@@ -3,94 +3,37 @@
 @section('title', 'العروض')
 @section('heading', 'العروض')
 
-@php
-    $offerStatusStyles = [
-        'pending' => 'bg-amber-50 text-amber-700',
-        'accepted' => 'bg-emerald-50 text-emerald-700',
-        'rejected' => 'bg-red-50 text-red-700',
-        'withdrawn' => 'bg-cream-200 text-ink-500',
-        'expired' => 'bg-cream-200 text-ink-500',
-        'countered' => 'bg-sky-50 text-sky-700',
-    ];
-    $offerStatusLabels = [
-        'pending' => 'قيد الانتظار',
-        'accepted' => 'مقبول',
-        'rejected' => 'مرفوض',
-        'withdrawn' => 'مسحوب',
-        'expired' => 'منتهٍ',
-        'countered' => 'عرض مضاد',
-    ];
-@endphp
-
 @section('content')
-    {{-- Filters --}}
-    <form method="GET" class="mb-6 flex flex-wrap items-center gap-3">
-        <div class="relative">
-            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-300">
-                <x-admin.icon name="search" class="size-[18px]" />
-            </span>
-            <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالإعلان أو المشتري…"
-                   class="w-64 rounded-xl border border-ink-200 bg-cream-100 py-2.5 pr-10 pl-4 text-sm outline-none focus:border-coral">
-        </div>
+    <x-admin.page-toolbar>
+        <x-admin.filter-bar
+            :reset-url="route('admin.offers.index')"
+            :search="$search"
+            placeholder="بحث بالإعلان أو المشتري…"
+            :filters="[
+                ['name' => 'status', 'label' => 'الحالة', 'placeholder' => 'كل الحالات', 'value' => $status,
+                    'options' => collect($statuses)->mapWithKeys(fn ($case) => [$case->value => $case->label()['ar']])],
+            ]"
+        />
+    </x-admin.page-toolbar>
 
-        <select name="status" class="rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
-            <option value="">كل الحالات</option>
-            @foreach ($statuses as $case)
-                <option value="{{ $case->value }}" @selected($status === $case->value)>{{ $offerStatusLabels[$case->value] ?? $case->value }}</option>
-            @endforeach
-        </select>
+    <x-admin.table
+        caption="العروض"
+        :columns="['الإعلان', 'من (مشتري)', 'إلى (بائع)', 'المبلغ', 'الحالة', ['label' => 'التاريخ', 'secondary' => true]]"
+        :empty="$offers->isEmpty()"
+        empty-icon="banknotes"
+        empty-message="لا توجد عروض مطابقة."
+    >
+        @foreach ($offers as $offer)
+            <x-admin.table.row>
+                <x-admin.table.cell primary>{{ \Illuminate\Support\Str::limit($offer->ad?->title ?? '—', 40) }}</x-admin.table.cell>
+                <x-admin.table.cell label="من (مشتري)" class="text-ink-700">{{ $offer->buyer?->full_name ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="إلى (بائع)" class="text-ink-700">{{ $offer->seller?->full_name ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="المبلغ" class="font-semibold tabular-nums">{{ number_format((float) $offer->amount, 2) }} {{ $offer->currency ?: 'QAR' }}</x-admin.table.cell>
+                <x-admin.table.cell label="الحالة"><x-admin.badge :status="$offer->status" /></x-admin.table.cell>
+                <x-admin.table.cell label="التاريخ" secondary class="text-ink-500">{{ optional($offer->created_at)->format('Y-m-d') }}</x-admin.table.cell>
+            </x-admin.table.row>
+        @endforeach
+    </x-admin.table>
 
-        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-            <x-admin.icon name="filter" class="size-[18px]" /> تصفية
-        </button>
-        @if ($search !== '' || $status !== '')
-            <a href="{{ route('admin.offers.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">مسح</a>
-        @endif
-    </form>
-
-    <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-sm">
-                <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
-                    <tr>
-                        <th class="px-4 py-3 font-semibold">الإعلان</th>
-                        <th class="px-4 py-3 font-semibold">من (مشتري)</th>
-                        <th class="px-4 py-3 font-semibold">إلى (بائع)</th>
-                        <th class="px-4 py-3 font-semibold">المبلغ</th>
-                        <th class="px-4 py-3 font-semibold">الحالة</th>
-                        <th class="px-4 py-3 font-semibold">التاريخ</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-ink-200">
-                    @forelse ($offers as $offer)
-                        <tr class="hover:bg-cream-50">
-                            <td class="px-4 py-3">{{ \Illuminate\Support\Str::limit($offer->ad?->title ?? '—', 40) }}</td>
-                            <td class="px-4 py-3 text-ink-700">{{ $offer->buyer?->full_name ?? '—' }}</td>
-                            <td class="px-4 py-3 text-ink-700">{{ $offer->seller?->full_name ?? '—' }}</td>
-                            <td class="px-4 py-3 font-semibold">{{ number_format((float) $offer->amount, 2) }} {{ $offer->currency ?: 'QAR' }}</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $offerStatusStyles[$offer->status->value] ?? 'bg-cream-200 text-ink-500' }}">
-                                    {{ $offerStatusLabels[$offer->status->value] ?? $offer->status->value }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-ink-500">{{ optional($offer->created_at)->format('Y-m-d') }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-16 text-center">
-                                <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
-                                    <x-admin.icon name="banknotes" class="size-6" />
-                                </span>
-                                <p class="text-sm font-semibold text-ink-500">لا توجد عروض مطابقة.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="mt-6">
-        {{ $offers->links() }}
-    </div>
+    <x-admin.pagination :paginator="$offers" />
 @endsection

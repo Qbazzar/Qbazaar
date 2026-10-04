@@ -40,6 +40,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Conversation $conversation
  * @property User $sender
  * @property Offer|null $offer
+ * @property PurchaseRequest|null $purchaseRequest
  */
 class Message extends Model implements HasMedia
 {
@@ -112,6 +113,16 @@ class Message extends Model implements HasMedia
     public function offer(): HasOne
     {
         return $this->hasOne(Offer::class, 'message_id');
+    }
+
+    /**
+     * The "Buy Now" request this card bubble shows (`type=purchase_request`).
+     *
+     * @return HasOne<PurchaseRequest, $this>
+     */
+    public function purchaseRequest(): HasOne
+    {
+        return $this->hasOne(PurchaseRequest::class, 'message_id');
     }
 
     /**

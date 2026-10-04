@@ -49,6 +49,8 @@ tags:
     description: Messages within a conversation
   - name: Offers
     description: Price offers attached to ads / conversations
+  - name: Purchase requests
+    description: Buy Now requests inside the chat; accepting one places an order
   - name: Orders
     description: Orders created from accepted offers and purchase requests; cash handover
   - name: Wallet
@@ -3950,6 +3952,78 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
 
+  /api/v1/orders/{id}/checkout:
+    get:
+      tags: [Orders]
+      summary: The checkout screen of a created order (buyer only)
+      description: |
+        The ways the item can reach the buyer (`pickup`, and `delivery` when
+        the ad's shipping is `delivery`), the seller's delivery fee, the
+        buyer's saved addresses, the enabled payment methods (cash only for
+        now) and the totals for each way at the order's quantity. Every
+        amount is computed on the server. The seller gets 403, anyone else
+        404 `ORDER_001`.
+      operationId: ordersCheckoutShow
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200':
+          description: The checkout
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckoutEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Orders]
+      summary: The buyer completes the checkout
+      description: |
+        Saves the fulfillment, the delivery address (a snapshot of a saved
+        address or an inline one), the quantity (only for orders from a
+        "Buy Now" request, within the ad's units) and the payment method,
+        recomputes the shipping fee (the seller's fee on the ad), the total
+        and the commission (frozen rate, item price only) on the server, and
+        moves the order from `created` to `awaiting_handover` in the same
+        transaction. Checking out an order that already awaits the handover
+        returns it unchanged, so a retry is safe. No money moves for cash.
+      operationId: ordersCheckout
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckoutRequest' }
+      responses:
+        '200':
+          description: The order, now awaiting the handover
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: ORDER_001, or ADDRESS_001 for an `address_id` the buyer does not own
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '409':
+          description: The same idempotency key is still being processed (`REQUEST_IN_PROGRESS`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422':
+          description: |
+            VALIDATION_FAILED — missing fulfillment or payment method, delivery without an address, an address on pickup;
+            CHECKOUT_001 — delivery on a pickup-only ad;
+            PURCHASE_007 — quantity above what the ad offers (`details.available`), or a changed quantity on an offer deal;
+            ORDER_002 — the order is cancelled, completed or disputed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
   /api/v1/orders/{id}/report-problem:
     post:
       tags: [Orders]
@@ -4016,6 +4090,119 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/v1/ads/{id}/purchase-requests:
+    post:
+      tags: [Purchase requests]
+      summary: The buyer asks to buy the ad at its price ("Buy Now")
+      description: |
+        Starts (or reuses) the buyer's conversation about the ad and posts a
+        `purchase_request` card (`message_key` `purchase_request.created`)
+        with the request inline. The unit price is the ad's price, read on
+        the server. One pending request per buyer and ad. The seller gets
+        `purchase_request.created` on Reverb and a push when offline.
+        Throttled (`qbazaar.purchase_requests.max_per_minute` / `max_per_day`).
+      operationId: purchaseRequestsCreate
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SavePurchaseRequestRequest' }
+      responses:
+        '201':
+          description: The pending request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PurchaseRequestEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: MSG_BLOCKED, MSG_CHAT_DISABLED or the phone is not verified
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            PURCHASE_002 — a pending request already exists; PURCHASE_005 — own ad;
+            PURCHASE_006 — the ad is not listed, is a wanted ad or has no fixed price;
+            PURCHASE_007 — more units than the ad offers; ORDER_003 — the ad already has an open order.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/purchase-requests/{id}:
+    put:
+      tags: [Purchase requests]
+      summary: The buyer edits a pending request
+      description: Replaces the quantity and the note and re-reads the ad's price. Posts a `purchase_request.updated` system line; the card keeps its bubble.
+      operationId: purchaseRequestsUpdate
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SavePurchaseRequestRequest' }
+      responses:
+        '200': { description: The updated request, content: { application/json: { schema: { $ref: '#/components/schemas/PurchaseRequestEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: 'PURCHASE_003, PURCHASE_006, PURCHASE_007 or VALIDATION_FAILED', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } } }
+
+  /api/v1/purchase-requests/{id}/accept:
+    post:
+      tags: [Purchase requests]
+      summary: The seller accepts a pending request
+      description: |
+        In one transaction, under the ad lock: places the order
+        (`source` = `purchase_request`, status `created`, price, quantity and
+        commission frozen), reserves the ad, cancels every other pending
+        request on the ad (`purchase_request.cancelled`, `cancelled_by` null)
+        and expires every open offer on it (`offer.expired`). If the order
+        cannot be placed nothing changes. The buyer then checks out with
+        `POST /orders/{order_id}/checkout`.
+      operationId: purchaseRequestsAccept
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: The accepted request with its `order_id`, content: { application/json: { schema: { $ref: '#/components/schemas/PurchaseRequestEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: 'PURCHASE_003, PURCHASE_006, PURCHASE_007, ORDER_003 or ORDER_004 (seller over the commission debt ceiling)', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } } }
+
+  /api/v1/purchase-requests/{id}/reject:
+    post:
+      tags: [Purchase requests]
+      summary: The seller declines a pending request
+      operationId: purchaseRequestsReject
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200': { description: The rejected request, content: { application/json: { schema: { $ref: '#/components/schemas/PurchaseRequestEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: PURCHASE_003, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } } }
+
+  /api/v1/purchase-requests/{id}/cancel:
+    post:
+      tags: [Purchase requests]
+      summary: The buyer withdraws a pending request
+      operationId: purchaseRequestsCancel
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '200': { description: The cancelled request, content: { application/json: { schema: { $ref: '#/components/schemas/PurchaseRequestEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { description: PURCHASE_003, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } } }
 
   /api/v1/account/wallet:
     get:
@@ -6243,6 +6430,12 @@ components:
         condition: { $ref: '#/components/schemas/Condition', nullable: true }
         ad_type: { $ref: '#/components/schemas/AdType' }
         shipping: { $ref: '#/components/schemas/AdShipping' }
+        shipping_fee:
+          oneOf:
+            - $ref: '#/components/schemas/DecimalAmount'
+            - type: 'null'
+          description: What the seller charges for delivery; null is free. Only used when `shipping` is `delivery`.
+        quantity: { type: integer, minimum: 1, description: Units the ad offers; a "Buy Now" request may ask for up to this many. }
         postal_code: { type: string, nullable: true, maxLength: 10 }
         street:
           type: string
@@ -6286,6 +6479,8 @@ components:
         condition: { $ref: '#/components/schemas/Condition', nullable: true }
         ad_type: { allOf: [{ $ref: '#/components/schemas/AdType' }], default: offering }
         shipping: { allOf: [{ $ref: '#/components/schemas/AdShipping' }], default: pickup_only }
+        shipping_fee: { type: [number, 'null'], minimum: 0, maximum: 10000, multipleOf: 0.01, description: 'Delivery fee in QAR; null is free.' }
+        quantity: { type: integer, minimum: 1, maximum: 999, default: 1 }
         postal_code: { type: string, nullable: true, maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
         street: { type: string, nullable: true, maxLength: 255 }
         show_full_address: { type: boolean, description: 'Show the street to everyone. Default false: only the postal code and city are public.' }
@@ -6308,6 +6503,8 @@ components:
         location_id: { $ref: '#/components/schemas/ULID' }
         ad_type: { $ref: '#/components/schemas/AdType' }
         shipping: { $ref: '#/components/schemas/AdShipping' }
+        shipping_fee: { type: [number, 'null'], minimum: 0, maximum: 10000, multipleOf: 0.01, description: 'Delivery fee in QAR; null is free.' }
+        quantity: { type: integer, minimum: 1, maximum: 999, default: 1 }
         postal_code: { type: string, nullable: true, maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
         street: { type: string, nullable: true, maxLength: 255 }
         show_full_address: { type: boolean, description: 'Show the street to everyone. Default false: only the postal code and city are public.' }
@@ -6550,16 +6747,17 @@ components:
     # ───── Messaging (Sprint 8 Wave A) ─────
     MessageType:
       type: string
-      enum: [text, image, offer, system]
+      enum: [text, image, offer, system, purchase_request]
       description: |
         - `text` — plain user chat.
         - `image` — a photo (`media`) with an optional caption in `body`.
         - `offer` — inline offer card (Sprint 9).
         - `system` — moderation / read-receipt placeholder (Sprint 9).
+        - `purchase_request` — inline "Buy Now" card (`purchase_request`).
 
     ChatMessageKey:
       type: [string, 'null']
-      enum: [offer.made, offer.countered, offer.accepted, offer.rejected, offer.withdrawn, image, null]
+      enum: [offer.made, offer.countered, offer.accepted, offer.rejected, offer.withdrawn, image, purchase_request.created, purchase_request.updated, purchase_request.accepted, purchase_request.rejected, purchase_request.cancelled, purchase_request.paid, null]
       description: |
         Set on bubbles the server writes (offer and system messages; `image`
         only on an inbox preview of a photo without caption). `body` is
@@ -6671,6 +6869,11 @@ components:
             Only present when `type === "offer"` AND the server eager-loads
             the relation (every Sprint 9 endpoint does; broadcast frames
             omit it to keep the WebSocket payload small).
+        purchase_request:
+          allOf:
+            - $ref: '#/components/schemas/PurchaseRequest'
+          nullable: true
+          description: Only present when `type === "purchase_request"`; the card's current state.
 
     StartConversationRequest:
       type: object
@@ -6978,6 +7181,15 @@ components:
         payment_method:
           type: string
           enum: [cash]
+        fulfillment:
+          oneOf:
+            - $ref: '#/components/schemas/Fulfillment'
+            - type: 'null'
+          description: Null until the checkout.
+        delivery_address:
+          oneOf:
+            - $ref: '#/components/schemas/DeliveryAddress'
+            - type: 'null'
         commission:
           description: Seller only; null for the buyer. Frozen when the order was placed.
           oneOf:
@@ -7044,6 +7256,126 @@ components:
               items: { $ref: '#/components/schemas/Order' }
             meta:
               $ref: '#/components/schemas/PaginationMeta'
+
+    # ─── Purchase requests and checkout (M1b) ───────────────────────
+    PurchaseRequestStatus:
+      type: string
+      enum: [pending, accepted, rejected, cancelled, paid]
+      description: |
+        pending → accepted (seller; the order is placed) → paid (the order was handed over);
+        pending → rejected (seller) | cancelled (buyer, or the platform when another deal
+        closes the ad or the ad leaves the market; `cancelled_by` is then null).
+
+    PurchaseRequest:
+      type: object
+      required: [id, conversation_id, ad_id, buyer_id, seller_id, status, currency, unit_price, quantity, total, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        conversation_id: { $ref: '#/components/schemas/ULID' }
+        ad_id: { $ref: '#/components/schemas/ULID' }
+        buyer_id: { $ref: '#/components/schemas/ULID' }
+        seller_id: { $ref: '#/components/schemas/ULID' }
+        message_id: { oneOf: [{ $ref: '#/components/schemas/ULID' }, { type: 'null' }], description: The card bubble. }
+        order_id: { oneOf: [{ $ref: '#/components/schemas/ULID' }, { type: 'null' }], description: Set once accepted. }
+        status: { $ref: '#/components/schemas/PurchaseRequestStatus' }
+        currency: { type: string, example: QAR }
+        unit_price: { $ref: '#/components/schemas/DecimalAmount' }
+        quantity: { type: integer, minimum: 1 }
+        total: { $ref: '#/components/schemas/DecimalAmount' }
+        note: { type: [string, 'null'], maxLength: 280 }
+        cancelled_by: { oneOf: [{ $ref: '#/components/schemas/ULID' }, { type: 'null' }] }
+        accepted_at: { type: [string, 'null'], format: date-time }
+        rejected_at: { type: [string, 'null'], format: date-time }
+        cancelled_at: { type: [string, 'null'], format: date-time }
+        paid_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        viewer_role: { type: [string, 'null'], enum: [buyer, seller, null], description: Null on broadcast frames. }
+
+    PurchaseRequestEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/PurchaseRequest' }
+
+    SavePurchaseRequestRequest:
+      type: object
+      properties:
+        quantity: { type: integer, minimum: 1, maximum: 999, default: 1, description: Checked against the ad's `quantity`. }
+        note: { type: [string, 'null'], maxLength: 280, description: No `<` or `>`. }
+
+    Fulfillment:
+      type: string
+      enum: [pickup, delivery]
+
+    DeliveryAddress:
+      type: object
+      description: A snapshot taken at checkout; editing the address book later never changes it.
+      properties:
+        full_name: { type: string }
+        phone: { type: [string, 'null'] }
+        street: { type: string }
+        house_number: { type: string }
+        supplement: { type: [string, 'null'] }
+        city: { type: string }
+        postal_code: { type: [string, 'null'] }
+        location_id: { type: [string, 'null'] }
+
+    CheckoutQuote:
+      type: object
+      required: [unit_price, quantity, items_subtotal, shipping_fee, total]
+      properties:
+        unit_price: { $ref: '#/components/schemas/DecimalAmount' }
+        quantity: { type: integer }
+        items_subtotal: { $ref: '#/components/schemas/DecimalAmount' }
+        shipping_fee: { $ref: '#/components/schemas/DecimalAmount' }
+        total: { $ref: '#/components/schemas/DecimalAmount' }
+
+    Checkout:
+      type: object
+      required: [order, currency, fulfillment_options, delivery_fee, max_quantity, payment_methods, saved_addresses, quotes]
+      properties:
+        order: { $ref: '#/components/schemas/Order' }
+        currency: { type: string, example: QAR }
+        fulfillment_options: { type: array, items: { $ref: '#/components/schemas/Fulfillment' } }
+        delivery_fee: { oneOf: [{ $ref: '#/components/schemas/DecimalAmount' }, { type: 'null' }], description: Null when the ad is pickup only. }
+        max_quantity: { type: integer, description: The order's quantity for an offer deal; the ad's units for a "Buy Now" order. }
+        payment_methods: { type: array, items: { type: string, enum: [cash] } }
+        saved_addresses: { type: array, items: { $ref: '#/components/schemas/SavedAddress' } }
+        quotes:
+          type: object
+          description: Totals keyed by fulfillment (`pickup`, `delivery` when offered).
+          additionalProperties: { $ref: '#/components/schemas/CheckoutQuote' }
+
+    CheckoutEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Checkout' }
+
+    CheckoutRequest:
+      type: object
+      required: [fulfillment, payment_method]
+      properties:
+        fulfillment: { $ref: '#/components/schemas/Fulfillment' }
+        address_id: { $ref: '#/components/schemas/ULID', description: 'A saved address of the buyer. Delivery only; not with `address`.' }
+        address:
+          type: object
+          description: Inline delivery address, same fields and limits as a saved address. Delivery only.
+          required: [full_name, street, house_number, city]
+          properties:
+            full_name: { type: string, minLength: 2, maxLength: 80 }
+            phone: { type: [string, 'null'], description: E.164 }
+            street: { type: string, maxLength: 120 }
+            house_number: { type: string, maxLength: 20 }
+            supplement: { type: [string, 'null'], maxLength: 120 }
+            city: { type: string, maxLength: 80 }
+            postal_code: { type: [string, 'null'], maxLength: 20 }
+            location_id: { oneOf: [{ $ref: '#/components/schemas/ULID' }, { type: 'null' }] }
+        quantity: { type: integer, minimum: 1, description: Orders from a "Buy Now" request only. }
+        payment_method: { type: string, enum: [cash], description: Only methods with a configured gateway are accepted. }
 
     CancelOrderRequest:
       type: object

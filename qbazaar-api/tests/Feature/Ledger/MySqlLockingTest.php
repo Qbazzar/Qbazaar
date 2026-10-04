@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Actions\Messaging\StartConversationAction;
+use App\Actions\PurchaseRequests\AcceptPurchaseRequestAction;
+use App\Actions\PurchaseRequests\CreatePurchaseRequestAction;
 use App\Data\Ledger\LedgerActor;
 use App\Data\Ledger\LedgerLine;
 use App\Enums\LedgerAccountType as Account;
@@ -132,6 +135,44 @@ it('makes a second open order on the same ad wait on the unique index', function
         'commission_rate' => '5.00',
         'commission_amount' => '0.05',
         'payment_method' => 'cash',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]));
+});
+
+it('holds the ad and the request while the seller accepts a purchase request', function (): void {
+    $this->seedReferenceData();
+    $seller = User::factory()->create();
+    $buyer = User::factory()->create();
+    $ad = $this->makeAd($seller, ['status' => 'active', 'price' => '250.00']);
+    $request = app(CreatePurchaseRequestAction::class)($buyer, $ad, 1, null);
+
+    DB::beginTransaction();
+    app(AcceptPurchaseRequestAction::class)($seller, $request);
+
+    expectToWaitForTheLock(fn () => $this->concurrent->selectOne('SELECT id FROM ads WHERE id = ? FOR UPDATE', [$ad->id]));
+    expectToWaitForTheLock(fn () => $this->concurrent->selectOne('SELECT id FROM purchase_requests WHERE id = ? FOR UPDATE', [$request->id]));
+});
+
+it('makes a second open purchase request by the same buyer wait on the unique index', function (): void {
+    $this->seedReferenceData();
+    $buyer = User::factory()->create();
+    $ad = $this->makeAd(User::factory()->create(), ['status' => 'active', 'price' => '250.00']);
+    // Committed up front, so the only lock left to wait on is the unique index.
+    $conversation = app(StartConversationAction::class)->execute($buyer, $ad)['conversation'];
+
+    DB::beginTransaction();
+    app(CreatePurchaseRequestAction::class)($buyer, $ad, 1, null);
+
+    expectToWaitForTheLock(fn () => $this->concurrent->table('purchase_requests')->insert([
+        'id' => (string) Str::ulid(),
+        'conversation_id' => $conversation->id,
+        'ad_id' => $ad->id,
+        'buyer_id' => $buyer->id,
+        'seller_id' => $ad->user_id,
+        'unit_price' => '250.00',
+        'status' => 'pending',
+        'is_open' => true,
         'created_at' => now(),
         'updated_at' => now(),
     ]));

@@ -9,6 +9,7 @@ use App\Models\DataExport;
 use App\Models\Favorite;
 use App\Models\Offer;
 use App\Models\OtpCode;
+use App\Models\PurchaseRequest;
 use App\Models\User;
 use App\Services\Users\FollowGraph;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +19,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Ads go through Eloquent one by one so the media library deletes their
  * files and Scout removes their search documents; a database cascade would
- * leave both behind. Offers are removed first because their foreign keys to
- * ads and users restrict deletes. Follows and favorites are removed here so
+ * leave both behind. Offers and purchase requests are removed first because
+ * their foreign keys to ads and users restrict deletes. Follows and favorites are removed here so
  * the other side's denormalised counters drop with them. Everything else
  * (conversations and their hide flags, messages, reviews, addresses, saved
  * searches, business profile, trusted devices, social logins, tokens, ...)
@@ -39,6 +40,10 @@ class AccountEraser
     public function erase(User $user): void
     {
         Offer::query()
+            ->where(fn ($query) => $query->where('buyer_id', $user->id)->orWhere('seller_id', $user->id))
+            ->delete();
+
+        PurchaseRequest::query()
             ->where(fn ($query) => $query->where('buyer_id', $user->id)->orWhere('seller_id', $user->id))
             ->delete();
 

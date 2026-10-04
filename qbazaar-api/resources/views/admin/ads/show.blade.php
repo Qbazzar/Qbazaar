@@ -4,42 +4,36 @@
 @section('heading', 'مراجعة إعلان')
 
 @section('content')
-    <div class="mb-4 flex items-center justify-between">
-        <a href="{{ route('admin.ads.index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
-            <x-admin.icon name="arrow-right" class="size-4" /> رجوع للإعلانات
-        </a>
-        <a href="{{ route('admin.ads.edit', $ad) }}" class="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-cream-100 px-4 py-2 text-sm font-semibold text-ink-700 transition hover:border-coral hover:text-coral">
-            <x-admin.icon name="pencil" class="size-[18px]" /> تعديل المحتوى
-        </a>
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <x-admin.back-link :href="route('admin.ads.index')">رجوع للإعلانات</x-admin.back-link>
+        <x-admin.button variant="secondary" :href="route('admin.ads.edit', $ad)" icon="pencil">تعديل المحتوى</x-admin.button>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
-        {{-- Details --}}
         <div class="space-y-6 lg:col-span-2">
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
+            <x-admin.card>
                 <div class="flex items-start justify-between gap-4">
-                    <h2 class="text-xl font-bold">{{ $ad->title }}</h2>
-                    @include('admin.partials.status-badge', ['status' => $ad->status])
+                    <h2 class="min-w-0 break-words text-xl font-bold">{{ $ad->title }}</h2>
+                    <x-admin.badge :status="$ad->status" />
                 </div>
 
-                <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
-                    <div><span class="text-ink-500">السعر:</span> {{ $ad->price !== null ? number_format((float) $ad->price, 2) . ' ر.ق' : '—' }}</div>
-                    <div><span class="text-ink-500">التصنيف:</span> {{ $ad->category?->getLocalizedName(app()->getLocale()) ?? '—' }}</div>
-                    <div><span class="text-ink-500">الموقع:</span> {{ $ad->location?->getLocalizedName(app()->getLocale()) ?? '—' }}</div>
-                    <div><span class="text-ink-500">المشاهدات:</span> {{ number_format($ad->views_count) }}</div>
-                    <div><span class="text-ink-500">مميّز:</span> {{ $ad->featured ? 'نعم' : 'لا' }}</div>
-                    <div><span class="text-ink-500">تاريخ الإنشاء:</span> {{ optional($ad->created_at)->format('Y-m-d H:i') }}</div>
-                </div>
+                <x-admin.detail-list class="mt-4">
+                    <x-admin.detail label="السعر">{{ $ad->price !== null ? number_format((float) $ad->price, 2) . ' ر.ق' : '—' }}</x-admin.detail>
+                    <x-admin.detail label="التصنيف">{{ $ad->category?->getLocalizedName(app()->getLocale()) ?? '—' }}</x-admin.detail>
+                    <x-admin.detail label="الموقع">{{ $ad->location?->getLocalizedName(app()->getLocale()) ?? '—' }}</x-admin.detail>
+                    <x-admin.detail label="المشاهدات">{{ number_format($ad->views_count) }}</x-admin.detail>
+                    <x-admin.detail label="مميّز">{{ $ad->featured ? 'نعم' : 'لا' }}</x-admin.detail>
+                    <x-admin.detail label="تاريخ الإنشاء">{{ optional($ad->created_at)->format('Y-m-d H:i') }}</x-admin.detail>
+                </x-admin.detail-list>
 
                 <div class="mt-5">
-                    <div class="mb-1.5 text-sm font-semibold text-ink-500">الوصف</div>
+                    <h3 class="mb-1.5 text-sm font-semibold text-ink-500">الوصف</h3>
                     <p class="whitespace-pre-line text-sm leading-relaxed text-ink-700">{{ $ad->description }}</p>
                 </div>
-            </div>
+            </x-admin.card>
 
             @if ($ad->moderation_result !== null)
-                <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                    <div class="mb-3 text-sm font-semibold text-ink-500">{{ __('admin.ad_review.auto_check') }}</div>
+                <x-admin.card :title="__('admin.ad_review.auto_check')">
                     @if ($ad->moderation_result->clean)
                         <p class="text-sm text-emerald-700">{{ __('admin.ad_review.auto_check_clean') }}</p>
                     @else
@@ -53,114 +47,93 @@
                             <div class="mt-3 text-sm">
                                 <span class="text-ink-500">{{ __('admin.ad_review.duplicate_of') }}</span>
                                 @foreach ($duplicateAdIds as $duplicateAdId)
-                                    <a href="{{ route('admin.ads.show', $duplicateAdId) }}" class="font-semibold text-coral hover:underline">#{{ $duplicateAdId }}</a>
+                                    <a href="{{ route('admin.ads.show', $duplicateAdId) }}" class="font-semibold text-coral-700 hover:underline">#{{ $duplicateAdId }}</a>
                                 @endforeach
                             </div>
                         @endif
                     @endif
-                </div>
+                </x-admin.card>
             @elseif ($ad->status === \App\Enums\AdStatus::PENDING)
-                <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                    <div class="mb-3 text-sm font-semibold text-ink-500">{{ __('admin.ad_review.auto_check') }}</div>
+                <x-admin.card :title="__('admin.ad_review.auto_check')">
                     <p class="text-sm text-ink-500">{{ __('admin.ad_review.auto_check_pending') }}</p>
-                </div>
+                </x-admin.card>
             @endif
 
             @php($images = $ad->getMedia('images'))
             @php($mediaStorage = app(\App\Services\Media\MediaStorage::class))
             @if ($images->isNotEmpty())
-                <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                    <div class="mb-3 text-sm font-semibold text-ink-500">الصور ({{ $images->count() }})</div>
+                <x-admin.card :title="'الصور (' . $images->count() . ')'">
                     <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
                         @foreach ($images as $image)
                             <a href="{{ $mediaStorage->signedOriginalUrl($image) }}" target="_blank"
                                class="block aspect-square overflow-hidden rounded-xl border border-ink-200">
-                                <img src="{{ $mediaStorage->conversionUrl($image, 'medium') }}" alt="" class="h-full w-full object-cover">
+                                <img src="{{ $mediaStorage->conversionUrl($image, 'medium') }}" alt="صورة {{ $loop->iteration }} من الإعلان" class="size-full object-cover">
                             </a>
                         @endforeach
                     </div>
-                </div>
+                </x-admin.card>
             @endif
         </div>
 
-        {{-- Actions --}}
         <div class="space-y-6">
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <div class="mb-3 text-sm font-semibold text-ink-500">البائع</div>
+            <x-admin.card title="البائع">
                 <div class="font-semibold">{{ $ad->user?->full_name ?? '—' }}</div>
-                <div class="text-sm text-ink-500">{{ $ad->user?->email }}</div>
-            </div>
+                <div class="break-all text-sm text-ink-500">{{ $ad->user?->email }}</div>
+            </x-admin.card>
 
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <div class="mb-4 text-sm font-semibold text-ink-500">إجراءات الإشراف</div>
+            <x-admin.card title="إجراءات الإشراف">
                 <div class="space-y-3">
                     @if ($ad->status === \App\Enums\AdStatus::PENDING)
                         <form method="POST" action="{{ route('admin.ads.approve', $ad) }}">
                             @csrf
-                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                                <x-admin.icon name="check" class="size-[18px]" /> اعتماد الإعلان
-                            </button>
+                            <x-admin.button variant="success" icon="check" block>اعتماد الإعلان</x-admin.button>
                         </form>
 
                         <form method="POST" action="{{ route('admin.ads.reject', $ad) }}" class="space-y-2">
                             @csrf
-                            <textarea name="admin_notes" rows="3" required placeholder="سبب الرفض (يظهر للبائع)…"
-                                      class="w-full rounded-xl border border-ink-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-coral">{{ old('admin_notes') }}</textarea>
-                            @error('admin_notes')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                                <x-admin.icon name="x-circle" class="size-[18px]" /> رفض الإعلان
-                            </button>
+                            <x-admin.textarea name="admin_notes" label="سبب الرفض" label-hidden :value="old('admin_notes')" rows="3" required placeholder="سبب الرفض (يظهر للبائع)…" />
+                            <x-admin.button variant="danger" icon="x-circle" block>رفض الإعلان</x-admin.button>
                         </form>
                     @endif
 
                     @if ($ad->status === \App\Enums\AdStatus::ACTIVE)
                         <form method="POST" action="{{ route('admin.ads.suspend', $ad) }}">
                             @csrf
-                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                                <x-admin.icon name="ban" class="size-[18px]" /> إيقاف الإعلان
-                            </button>
+                            <x-admin.button variant="danger" icon="ban" block>إيقاف الإعلان</x-admin.button>
                         </form>
                     @endif
 
                     @if ($ad->status === \App\Enums\AdStatus::BLOCKED)
                         <form method="POST" action="{{ route('admin.ads.unsuspend', $ad) }}">
                             @csrf
-                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                                <x-admin.icon name="check" class="size-[18px]" /> رفع الإيقاف
-                            </button>
+                            <x-admin.button variant="success" icon="check" block>رفع الإيقاف</x-admin.button>
                         </form>
                     @endif
 
                     <form method="POST" action="{{ route('admin.ads.feature', $ad) }}">
                         @csrf
-                        <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
-                            <x-admin.icon name="star" class="size-[18px] {{ $ad->featured ? 'text-coral' : '' }}" />
+                        <x-admin.button variant="secondary" block>
+                            <x-admin.icon name="star" class="size-[18px] {{ $ad->featured ? 'text-coral-600' : '' }}" />
                             {{ $ad->featured ? 'إلغاء التمييز' : 'تمييز الإعلان' }}
-                        </button>
+                        </x-admin.button>
                     </form>
 
                     @if ($ad->status === \App\Enums\AdStatus::ACTIVE)
-                        <form method="POST" action="{{ route('admin.ads.force-expire', $ad) }}"
-                              onsubmit="return confirm('إنهاء صلاحية هذا الإعلان؟')">
+                        <form method="POST" action="{{ route('admin.ads.force-expire', $ad) }}" data-confirm="إنهاء صلاحية هذا الإعلان؟">
                             @csrf
-                            <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
-                                <x-admin.icon name="clock" class="size-[18px]" /> إنهاء الصلاحية
-                            </button>
+                            <x-admin.button variant="secondary" icon="clock" block>إنهاء الصلاحية</x-admin.button>
                         </form>
                     @endif
                 </div>
 
                 <div class="mt-6 border-t border-ink-200 pt-4">
-                    <form method="POST" action="{{ route('admin.ads.destroy', $ad) }}"
-                          onsubmit="return confirm('حذف هذا الإعلان نهائياً؟ لا يمكن التراجع.')">
+                    <form method="POST" action="{{ route('admin.ads.destroy', $ad) }}" data-confirm="حذف هذا الإعلان نهائياً؟ لا يمكن التراجع.">
                         @csrf
                         @method('DELETE')
-                        <button class="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50">
-                            <x-admin.icon name="trash" class="size-[18px]" /> حذف الإعلان
-                        </button>
+                        <x-admin.button variant="danger-ghost" icon="trash" block>حذف الإعلان</x-admin.button>
                     </form>
                 </div>
-            </div>
+            </x-admin.card>
         </div>
     </div>
 @endsection

@@ -49,7 +49,9 @@ use App\Http\Controllers\Api\V1\Media\MediaOriginalController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
 use App\Http\Controllers\Api\V1\Offers\OfferController;
+use App\Http\Controllers\Api\V1\Orders\OrderCheckoutController;
 use App\Http\Controllers\Api\V1\Orders\OrderController;
+use App\Http\Controllers\Api\V1\PurchaseRequests\PurchaseRequestController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
@@ -576,7 +578,28 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])
         Route::post('/{id}/cancel', [OrderController::class, 'cancel'])->middleware('idempotent')->name('cancel');
         Route::post('/{id}/report-problem', [OrderController::class, 'reportProblem'])->middleware('idempotent')->name('report-problem');
         Route::post('/{id}/confirm-receipt', [OrderController::class, 'confirmReceipt'])->middleware('idempotent')->name('confirm-receipt');
+        Route::get('/{id}/checkout', [OrderCheckoutController::class, 'show'])->name('checkout.show');
+        Route::post('/{id}/checkout', [OrderCheckoutController::class, 'store'])->middleware('idempotent')->name('checkout.store');
     });
+
+// ── M1b — "Buy Now" purchase requests ──────────────────────────────────────
+//   POST /ads/{id}/purchase-requests         — buyer; card message in the chat about the ad
+//   PUT  /purchase-requests/{id}             — buyer edits quantity / note (pending only)
+//   POST /purchase-requests/{id}/cancel      — buyer (pending only)
+//   POST /purchase-requests/{id}/accept      — seller; places the order and reserves the ad
+//   POST /purchase-requests/{id}/reject      — seller (pending only)
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
+    Route::post('/ads/{id}/purchase-requests', [PurchaseRequestController::class, 'store'])
+        ->middleware(['phone.verified', 'throttle:purchase-requests'])
+        ->name('api.v1.ads.purchase-requests.store');
+
+    Route::prefix('purchase-requests')->name('api.v1.purchase-requests.')->group(function (): void {
+        Route::put('/{id}', [PurchaseRequestController::class, 'update'])->middleware('throttle:purchase-requests')->name('update');
+        Route::post('/{id}/cancel', [PurchaseRequestController::class, 'cancel'])->name('cancel');
+        Route::post('/{id}/accept', [PurchaseRequestController::class, 'accept'])->middleware('idempotent')->name('accept');
+        Route::post('/{id}/reject', [PurchaseRequestController::class, 'reject'])->name('reject');
+    });
+});
 
 // ── Sprint 10 — Notifications inbox ─────────────────────────────────────────
 //   Authenticated, scoped to the caller. Mounted under `/account/*` so the

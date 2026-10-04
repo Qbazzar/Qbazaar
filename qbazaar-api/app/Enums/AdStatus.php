@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum AdStatus: string
+use App\Enums\Contracts\Badgeable;
+
+enum AdStatus: string implements Badgeable
 {
     case DRAFT = 'draft';
     case PENDING = 'pending';
@@ -59,6 +61,17 @@ enum AdStatus: string
             self::EXPIRED => ['ar' => 'منتهي الصلاحية', 'en' => 'Expired'],
             self::REJECTED => ['ar' => 'مرفوض', 'en' => 'Rejected'],
             self::BLOCKED => ['ar' => 'محظور', 'en' => 'Blocked'],
+        };
+    }
+
+    public function tone(): string
+    {
+        return match ($this) {
+            self::ACTIVE => 'success',
+            self::PENDING => 'warning',
+            self::REJECTED, self::BLOCKED => 'danger',
+            self::SOLD => 'info',
+            self::DRAFT, self::EXPIRED => 'neutral',
         };
     }
 }

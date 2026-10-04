@@ -443,4 +443,34 @@ return [
             'closed' => 'The time to report a problem with this order has passed.',
         ],
     ],
+
+    'purchase' => [
+        'request' => [
+            'not' => [
+                'found' => 'Purchase request not found.',
+                'pending' => 'This purchase request is no longer pending.',
+            ],
+            'open' => [
+                'exists' => 'You already have a pending purchase request on this ad.',
+            ],
+            'forbidden' => 'You are not allowed to do this on this purchase request.',
+            'own' => [
+                'ad' => 'You cannot buy your own ad.',
+            ],
+            'ad' => [
+                'not' => [
+                    'available' => 'This ad cannot be bought right now.',
+                ],
+            ],
+        ],
+        'quantity' => [
+            'unavailable' => 'The seller does not have that many units.',
+        ],
+    ],
+
+    'checkout' => [
+        'delivery' => [
+            'unavailable' => 'The seller does not deliver this item; choose pickup.',
+        ],
+    ],
 ];

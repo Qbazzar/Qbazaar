@@ -18,6 +18,13 @@ use App\Events\Offers\OfferCreated;
 use App\Events\Offers\OfferExpired;
 use App\Events\Offers\OfferRejected;
 use App\Events\Offers\OfferWithdrawn;
+use App\Events\Orders\OrderCompleted;
+use App\Events\PurchaseRequests\PurchaseRequestAccepted;
+use App\Events\PurchaseRequests\PurchaseRequestCancelled;
+use App\Events\PurchaseRequests\PurchaseRequestCreated;
+use App\Events\PurchaseRequests\PurchaseRequestPaid;
+use App\Events\PurchaseRequests\PurchaseRequestRejected;
+use App\Events\PurchaseRequests\PurchaseRequestUpdated;
 use App\Events\Reports\ReportCreated;
 use App\Listeners\Ads\NotifyAdminsOfPendingAd;
 use App\Listeners\Ads\NotifyFavoritersOfPriceDrop;
@@ -28,6 +35,8 @@ use App\Listeners\Messaging\ScreenChatMessage;
 use App\Listeners\Messaging\SendChatPushNotifications;
 use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
 use App\Listeners\Notifications\PruneStaleDeviceTokens;
+use App\Listeners\PurchaseRequests\MarkPurchaseRequestPaid;
+use App\Listeners\PurchaseRequests\SendPurchaseRequestPushNotifications;
 use App\Listeners\Reports\NotifyModeratorsOfReport;
 use App\Listeners\Search\NotifySavedSearchMatches;
 use Illuminate\Notifications\Events\NotificationFailed;
@@ -84,4 +93,11 @@ it('wires each event to its listeners', function (string $event, array $listener
     'OfferWithdrawn' => [OfferWithdrawn::class, [SendChatPushNotifications::class]],
     'OfferExpired' => [OfferExpired::class, [SendChatPushNotifications::class]],
     'ReportCreated' => [ReportCreated::class, [NotifyModeratorsOfReport::class]],
+    'OrderCompleted' => [OrderCompleted::class, [MarkPurchaseRequestPaid::class]],
+    'PurchaseRequestCreated' => [PurchaseRequestCreated::class, [SendPurchaseRequestPushNotifications::class]],
+    'PurchaseRequestUpdated' => [PurchaseRequestUpdated::class, [SendPurchaseRequestPushNotifications::class]],
+    'PurchaseRequestAccepted' => [PurchaseRequestAccepted::class, [SendPurchaseRequestPushNotifications::class]],
+    'PurchaseRequestRejected' => [PurchaseRequestRejected::class, [SendPurchaseRequestPushNotifications::class]],
+    'PurchaseRequestCancelled' => [PurchaseRequestCancelled::class, [SendPurchaseRequestPushNotifications::class]],
+    'PurchaseRequestPaid' => [PurchaseRequestPaid::class, [SendPurchaseRequestPushNotifications::class]],
 ]);
