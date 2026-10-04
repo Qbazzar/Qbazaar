@@ -10,9 +10,10 @@
 @endphp
 
 @section('content')
-    <nav class="mb-6 flex gap-3 text-sm">
+    <nav class="mb-6 flex flex-wrap gap-3 text-sm" aria-label="تصفية حسب الحالة">
         @foreach ($statusLabels as $value => $label)
             <a href="{{ route('admin.finance.settlements.index', ['status' => $value]) }}"
+               @if ($status->value === $value) aria-current="page" @endif
                class="rounded-xl px-4 py-2 font-semibold {{ $status->value === $value ? 'bg-coral text-white' : 'bg-cream-100 text-ink-500' }}">{{ $label }}</a>
         @endforeach
     </nav>
@@ -55,7 +56,7 @@
                         </form>
                         <form method="POST" action="{{ route('admin.finance.settlements.reject', $settlement) }}" class="flex flex-1 flex-wrap items-end gap-2">
                             @csrf
-                            <input type="text" name="reason" required minlength="5" maxlength="500" placeholder="سبب الرفض (يظهر للبائع)"
+                            <input type="text" name="reason" required minlength="5" maxlength="500" placeholder="سبب الرفض (يظهر للبائع)" aria-label="سبب رفض التسوية (يظهر للبائع)"
                                    class="min-w-56 flex-1 rounded-xl border border-ink-200 bg-cream-50 px-4 py-2 outline-none focus:border-coral">
                             <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 font-bold text-white">رفض</button>
                         </form>

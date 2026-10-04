@@ -82,7 +82,7 @@ class SubmitSettlementAction
      */
     public function fromWallet(User $seller, string $amount): CommissionSettlement
     {
-        $amount = $this->withinDebt($seller, $amount);
+        $amount = $this->withinDebt($seller, $amount, $this->pendingTransferOf($seller));
 
         $settlement = DB::transaction(function () use ($seller, $amount): CommissionSettlement {
             $settlement = $this->newSettlement($seller, SettlementMethod::WALLET, SettlementStatus::APPROVED, $amount);
@@ -106,17 +106,29 @@ class SubmitSettlementAction
 
     /**
      * An early answer for the client; the ledger re-checks under its locks.
+     * Debt already covered by a transfer awaiting review is not owed again,
+     * otherwise netting it would leave that transfer impossible to approve.
      */
-    private function withinDebt(User $seller, string $amount): string
+    private function withinDebt(User $seller, string $amount, string $alreadyCovered = '0.00'): string
     {
         $amount = Money::of($amount);
-        $owed = $this->accounts->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $seller->id);
+        $owed = Money::subtract(
+            $this->accounts->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $seller->id),
+            $alreadyCovered,
+        );
 
         if (Money::compare($amount, $owed) > 0) {
             throw new DomainException(ErrorCode::WALLET_EXCEEDS_COMMISSION_DEBT);
         }
 
         return $amount;
+    }
+
+    private function pendingTransferOf(User $seller): string
+    {
+        $amount = CommissionSettlement::query()->where('pending_user_id', $seller->id)->value('amount');
+
+        return Money::of(is_string($amount) ? $amount : '0.00');
     }
 
     private function newSettlement(User $seller, SettlementMethod $method, SettlementStatus $status, string $amount): CommissionSettlement

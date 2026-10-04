@@ -26,7 +26,7 @@
                 @if ($canManage)
                     <form method="POST" action="{{ route('admin.finance.disputes.resolve', $order) }}" class="mt-4 space-y-3 border-t border-ink-200 pt-4">
                         @csrf
-                        <textarea name="note" required minlength="5" maxlength="1000" rows="2" placeholder="سبب القرار"
+                        <textarea name="note" required minlength="5" maxlength="1000" rows="2" placeholder="سبب القرار" aria-label="سبب القرار (يُحفظ مع الطلب)"
                                   class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2 outline-none focus:border-coral"></textarea>
                         <div class="flex flex-wrap gap-3">
                             <button type="submit" name="resolution" value="completed" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">إتمام البيع لصالح البائع</button>

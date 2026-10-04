@@ -136,6 +136,24 @@ it('refuses netting beyond the wallet balance and leaves no settlement behind', 
         ->and($this->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $this->seller))->toBe('50.00');
 });
 
+it('does not net debt a transfer awaiting review already covers', function (): void {
+    $this->owesCommission($this->seller, '100.00');
+    $this->fundWallet($this->seller, '100.00');
+    settleByTransfer($this->seller, '70.00')->assertCreated();
+
+    $this->actingAs($this->seller, 'sanctum')->postJson('/api/v1/account/wallet/settlements', [
+        'method' => 'wallet',
+        'amount' => '40.00',
+    ])->assertStatus(422)->assertJsonPath('error.code', ErrorCode::WALLET_EXCEEDS_COMMISSION_DEBT->value);
+
+    $this->actingAs($this->seller, 'sanctum')->postJson('/api/v1/account/wallet/settlements', [
+        'method' => 'wallet',
+        'amount' => '30.00',
+    ])->assertCreated();
+
+    expect($this->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $this->seller))->toBe('70.00');
+});
+
 it('lists only the caller\'s settlements, newest first', function (): void {
     $this->owesCommission($this->seller, '50.00');
     $this->fundWallet($this->seller, '50.00');

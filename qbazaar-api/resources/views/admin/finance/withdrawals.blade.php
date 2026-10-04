@@ -8,9 +8,10 @@
 @endphp
 
 @section('content')
-    <nav class="mb-6 flex gap-3 text-sm">
+    <nav class="mb-6 flex flex-wrap gap-3 text-sm" aria-label="تصفية حسب الحالة">
         @foreach ($statusLabels as $value => $label)
             <a href="{{ route('admin.finance.withdrawals.index', ['status' => $value]) }}"
+               @if ($status->value === $value) aria-current="page" @endif
                class="rounded-xl px-4 py-2 font-semibold {{ $status->value === $value ? 'bg-coral text-white' : 'bg-cream-100 text-ink-500' }}">{{ $label }}</a>
         @endforeach
     </nav>
@@ -46,13 +47,13 @@
                     <div class="mt-4 grid gap-3 border-t border-ink-200 pt-4 md:grid-cols-2">
                         <form method="POST" action="{{ route('admin.finance.withdrawals.pay', $withdrawal) }}" class="flex flex-wrap items-end gap-2">
                             @csrf
-                            <input type="text" name="transfer_reference" required maxlength="100" placeholder="مرجع التحويل البنكي"
+                            <input type="text" name="transfer_reference" required maxlength="100" placeholder="مرجع التحويل البنكي" aria-label="مرجع التحويل البنكي"
                                    class="min-w-48 flex-1 rounded-xl border border-ink-200 bg-cream-50 px-4 py-2 outline-none focus:border-coral">
                             <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">تم التحويل</button>
                         </form>
                         <form method="POST" action="{{ route('admin.finance.withdrawals.reject', $withdrawal) }}" class="flex flex-wrap items-end gap-2">
                             @csrf
-                            <input type="text" name="reason" required minlength="5" maxlength="500" placeholder="سبب الرفض (يظهر للبائع)"
+                            <input type="text" name="reason" required minlength="5" maxlength="500" placeholder="سبب الرفض (يظهر للبائع)" aria-label="سبب رفض السحب (يظهر للبائع)"
                                    class="min-w-48 flex-1 rounded-xl border border-ink-200 bg-cream-50 px-4 py-2 outline-none focus:border-coral">
                             <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 font-bold text-white">رفض وإرجاع المبلغ</button>
                         </form>

@@ -4118,7 +4118,8 @@ paths:
         '422':
           description: |
             VALIDATION_FAILED; WALLET_001 — netting more than the wallet holds;
-            WALLET_002 — more than the commission owed; SETTLEMENT_001 — a
+            WALLET_002 — more than the commission owed (for netting, minus a
+            bank transfer still waiting for review); SETTLEMENT_001 — a
             bank transfer is already waiting for review.
           content:
             application/json:
