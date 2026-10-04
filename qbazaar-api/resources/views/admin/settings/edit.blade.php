@@ -48,7 +48,8 @@
                         <span>{{ $override->category->getLocalizedName(app()->getLocale()) }}</span>
                         <span class="flex items-center gap-3">
                             <span class="font-semibold" dir="ltr">{{ $override->rate }}%</span>
-                            <form method="POST" action="{{ route('admin.settings.commission-rates.destroy', $override->category_id) }}">
+                            <form method="POST" action="{{ route('admin.settings.commission-rates.destroy', $override->category_id) }}"
+                                  data-confirm="حذف نسبة العمولة الخاصة بتصنيف «{{ $override->category->getLocalizedName(app()->getLocale()) }}»؟">
                                 @csrf
                                 @method('DELETE')
                                 <x-admin.button variant="danger-ghost" size="sm">{{ __('admin.commission_rates.remove') }}</x-admin.button>

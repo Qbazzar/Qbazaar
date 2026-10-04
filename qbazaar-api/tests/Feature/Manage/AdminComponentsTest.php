@@ -11,7 +11,10 @@ use App\Enums\ReportStatus;
 use App\Enums\SupportTicketPriority;
 use App\Enums\SupportTicketStatus;
 use App\Enums\UserStatus;
+use Illuminate\Pagination\Cursor;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 it('links an input to its label, hint and required marker', function (): void {
     $this->blade('<x-admin.input name="title" label="العنوان" hint="يظهر للبائع" required />')
@@ -115,6 +118,16 @@ it('renders buttons as links or buttons with their variant', function (): void {
         ->assertSee('bg-red-600', false);
 });
 
+it('keeps the bulk bar open with the error when a selected id is rejected', function (): void {
+    $this->withViewErrors(['ids.1' => 'المعرّف غير صالح']);
+
+    $html = (string) $this->blade('<x-admin.bulk-bar action="/admin/ads/bulk-destroy" label="حذف المحدد" confirm="حذف؟" />');
+
+    expect($html)
+        ->not->toMatch('/<form id="qb-bulk-form"[^>]*\shidden\s/')
+        ->toContain('role="alert">المعرّف غير صالح</p>');
+});
+
 it('renders the accessible confirm dialog', function (): void {
     $this->blade('<x-admin.confirm-dialog />')
         ->assertSee('<dialog id="qb-confirm" aria-labelledby="qb-confirm-title" aria-describedby="qb-confirm-message"', false)
@@ -137,6 +150,25 @@ it('renders RTL-safe pagination with brand tokens and no dark mode leakage', fun
         ->not->toContain('dark:')
         ->not->toContain('rounded-l-')
         ->not->toContain('rounded-r-');
+});
+
+it('renders previous and next links for cursor and simple paginators', function (): void {
+    $cursorPaginator = new CursorPaginator(array_map(fn (int $id): array => ['id' => $id], range(1, 11)), 10, new Cursor(['id' => 5]), ['path' => '/admin/orders', 'parameters' => ['id']]);
+    $simplePaginator = new Paginator(range(1, 11), 10, 2, ['path' => '/admin/ledger']);
+
+    foreach ([$cursorPaginator, $simplePaginator] as $paginator) {
+        $html = (string) $this->blade('<x-admin.pagination :paginator="$paginator" />', ['paginator' => $paginator]);
+
+        expect($html)
+            ->toContain('aria-label="التنقل بين الصفحات"')
+            ->toContain('rel="prev"')
+            ->toContain('rel="next"')
+            ->not->toContain('aria-current="page"');
+    }
+
+    $firstPage = new CursorPaginator(array_map(fn (int $id): array => ['id' => $id], range(1, 3)), 10, null, ['path' => '/admin/orders']);
+
+    expect((string) $this->blade('<x-admin.pagination :paginator="$paginator" />', ['paginator' => $firstPage]))->toBe('');
 });
 
 it('gives every badge enum an Arabic label and a known tone', function (Badgeable $case): void {

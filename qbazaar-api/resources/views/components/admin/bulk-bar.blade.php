@@ -6,16 +6,18 @@
 --}}
 @props(['action', 'label', 'confirm', 'icon' => 'trash', 'variant' => 'danger'])
 
+@php($selectionError = $errors->first('ids') ?: $errors->first('ids.*'))
+
 <form id="qb-bulk-form" method="POST" action="{{ $action }}" data-confirm="{{ $confirm }}"
       @if ($variant !== 'danger') data-confirm-tone="primary" @endif
-      @unless ($errors->has('ids')) hidden @endunless
+      @unless ($selectionError) hidden @endunless
       class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-coral bg-coral-soft px-4 py-2.5">
     @csrf
     <span class="text-sm font-semibold text-ink-700" aria-live="polite">العناصر المحددة: <span data-bulk-count>0</span></span>
     <x-admin.button :variant="$variant" :icon="$icon">{{ $label }}</x-admin.button>
-    @error('ids')
-        <p class="w-full text-xs font-semibold text-red-700">{{ $message }}</p>
-    @enderror
+    @if ($selectionError)
+        <p class="w-full text-xs font-semibold text-red-700" role="alert">{{ $selectionError }}</p>
+    @endif
 </form>
 
 @once
