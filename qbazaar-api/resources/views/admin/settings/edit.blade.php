@@ -38,10 +38,7 @@
         <x-admin.button icon="check">{{ __('admin.settings.save') }}</x-admin.button>
     </form>
 
-    <section class="mx-auto mt-8 max-w-2xl rounded-2xl border border-ink-200 bg-cream-100 p-6">
-        <h2 class="mb-1 font-bold">{{ __('admin.commission_rates.title') }}</h2>
-        <p class="mb-4 text-xs text-ink-500">{{ __('admin.commission_rates.intro') }}</p>
-
+    <x-admin.card :title="__('admin.commission_rates.title')" :description="__('admin.commission_rates.intro')" class="mx-auto mt-8 max-w-2xl">
         @if ($commissionRates->isEmpty())
             <p class="mb-4 text-sm text-ink-500">{{ __('admin.commission_rates.empty') }}</p>
         @else
@@ -54,7 +51,7 @@
                             <form method="POST" action="{{ route('admin.settings.commission-rates.destroy', $override->category_id) }}">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-xs font-semibold text-red-600 hover:underline">{{ __('admin.commission_rates.remove') }}</button>
+                                <x-admin.button variant="danger-ghost" size="sm">{{ __('admin.commission_rates.remove') }}</x-admin.button>
                             </form>
                         </span>
                     </li>
@@ -64,26 +61,14 @@
 
         <form method="POST" action="{{ route('admin.settings.commission-rates.store') }}" class="flex flex-wrap items-end gap-3">
             @csrf
-            <div class="min-w-48 flex-1">
-                <label for="commission_category_id" class="mb-1.5 block text-sm font-semibold">{{ __('admin.commission_rates.category') }}</label>
-                <select id="commission_category_id" name="category_id" required
-                        class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" @selected(old('category_id') === $category->id)>{{ $category->getLocalizedName(app()->getLocale()) }}</option>
-                    @endforeach
-                </select>
-                @error('category_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label for="commission_rate_value" class="mb-1.5 block text-sm font-semibold">{{ __('admin.commission_rates.rate') }}</label>
-                <input id="commission_rate_value" name="rate" type="number" required dir="ltr" step="0.01" min="0" max="100"
-                       value="{{ old('rate') }}"
-                       class="w-32 rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                @error('rate')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-            </div>
-            <button type="submit" class="rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                {{ __('admin.commission_rates.add') }}
-            </button>
+            <x-admin.select name="category_id" id="commission_category_id" :label="__('admin.commission_rates.category')" required class="min-w-48 flex-1">
+                @foreach ($categories as $category)
+                    <option value="{{ $category->id }}" @selected(old('category_id') === $category->id)>{{ $category->getLocalizedName(app()->getLocale()) }}</option>
+                @endforeach
+            </x-admin.select>
+            <x-admin.input name="rate" id="commission_rate_value" type="number" :label="__('admin.commission_rates.rate')" :value="old('rate')"
+                           required dir="ltr" step="0.01" min="0" max="100" class="w-32" />
+            <x-admin.button icon="plus">{{ __('admin.commission_rates.add') }}</x-admin.button>
         </form>
-    </section>
+    </x-admin.card>
 @endsection
