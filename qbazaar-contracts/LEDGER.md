@@ -34,8 +34,9 @@ Amounts in the examples: an item sold for **200.00 QAR**, shipping **10.00**, co
 | 1 | The seller confirms the handover of a cash order | `commission_charged` | `user:seller:commission_receivable` | `platform:revenue` | 10.00 |
 | 2 | The seller pays the commission by bank transfer (admin approves, stage B) | `commission_settled` | `platform:bank` | `user:seller:commission_receivable` | 10.00 |
 | 3 | Netting: the debt is paid out of the seller's own wallet | `commission_settled` | `user:seller:wallet` | `user:seller:commission_receivable` | 10.00 |
+| 3a | An admin cancels a completed cash sale after a dispute | `commission_refunded` | `platform:revenue` 10.00 | `user:seller:commission_receivable` (what is still owed) **and** `user:seller:wallet` (any part already paid) | 10.00 |
 
-After 1 the seller owes 10.00; after 2 or 3 they owe nothing. While what they owe is at or above the **debt ceiling** (admin setting), they cannot take new orders (`ORDER_004`).
+After 1 the seller owes 10.00; after 2 or 3 they owe nothing. 2 is posted when finance staff approve the seller's transfer (`POST /account/wallet/settlements`, `method=bank_transfer`, key `settlement:{id}:commission_settled`); 3 is posted at once (`method=wallet`). 3a runs once per order (`order:{id}:commission_refunded`) and only when 1 was posted. While what they owe is at or above the **debt ceiling** (admin setting), they cannot take new orders (`ORDER_004`).
 
 ### Later: escrow orders (bank transfer or card, M7)
 
@@ -55,7 +56,7 @@ After 1 the seller owes 10.00; after 2 or 3 they owe nothing. While what they ow
 | 8 | The admin pays it (always the amount requested in 7) | `withdrawal_paid` | `platform:payouts_payable` | `platform:bank` |
 | 9 | The admin rejects it | `withdrawal_rejected` (reversal of 7) | `platform:payouts_payable` | `user:seller:wallet` |
 
-A withdrawal is either paid or rejected, never both: 8 and 9 share one idempotency key (`withdrawal:{id}:outcome`).
+A withdrawal is either paid or rejected, never both: 8 and 9 share one idempotency key (`withdrawal:{id}:outcome`). The seller requests 7 with `POST /account/wallet/withdrawals`; finance staff (`finance.manage`) post 8 or 9 from `/admin/finance/withdrawals`. The withdrawal row is locked before the ledger accounts and keeps its own encrypted copy of the IBAN, so the destination cannot change after the request.
 
 ### Stage B: paid promotion
 
@@ -111,8 +112,8 @@ buyer ──cash──► seller                      buyer ──card──► 
 
 ```
 created ──► awaiting_handover ──► completed
-   │               │    │
-   │               │    └──► disputed ──► completed | cancelled   (admin ruling)
+   │               │    │              │ (cash, within the report window)
+   │               │    └──► disputed ◄┘──► completed | cancelled   (admin ruling)
    └───────────────┴──► cancelled
 ```
 
@@ -120,3 +121,16 @@ created ──► awaiting_handover ──► completed
 - **awaiting_handover:** checkout is done (stage B, BE-14.37).
 - **completed:** the seller confirmed the handover (`POST /orders/{id}/confirm-handover`); the ledger posting runs in the same transaction and the ad is marked sold.
 - **cancelled:** either side cancelled before the handover (`POST /orders/{id}/cancel`); the ad's reservation is released.
+- **disputed:** the buyer reported a problem (`POST /orders/{id}/report-problem`, with a reason) within the window after the handover; only an admin with `finance.manage` rules on it, from `/admin/finance/disputes`, with a written reason kept on the order and in the activity log.
+
+## 8. Disputes and timers (owner decisions)
+
+| Rule | Setting (`/admin/settings`, group Orders) | Default |
+|---|---|---|
+| A cash order is completed by the **seller's** confirmation only; the buyer can then report a problem for this many hours | `order_dispute_window_hours` | 48 |
+| An escrow order (M7) is released to the seller this many days after the handover when the buyer neither confirms (`POST /orders/{id}/confirm-receipt`) nor disputes | `escrow_auto_release_days` | 3 |
+
+- **Ruling for the seller:** the order is completed through the gateway's `settleHandover` (cash: the commission, already charged, is not charged again thanks to its key; escrow: flow 5).
+- **Ruling for the buyer:** the order is cancelled through the gateway's `settleCancellation` (cash: flow 3a gives the commission back; escrow: flow 6 refunds the buyer). A sold ad stays sold.
+- **Auto-release:** `ReleaseDueEscrowOrdersJob` runs hourly on the `low` queue (unique, never overlapping), reads due order ids in chunks and queues `ReleaseEscrowOrdersBatchJob` batches, each completing its orders through `OrderTransitionService::complete()` with the same locks and keys as a manual completion. A disputed order is skipped. With no escrow gateway configured (before M7) it does nothing; cash orders never wait for it.
+- The admin never releases or completes individual sales outside a dispute; staff only rule on disputes and approve settlements and withdrawals.

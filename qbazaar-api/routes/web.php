@@ -9,6 +9,7 @@ use App\Http\Controllers\Manage\CategoryController;
 use App\Http\Controllers\Manage\CommissionRateController;
 use App\Http\Controllers\Manage\ConversationController;
 use App\Http\Controllers\Manage\DashboardController;
+use App\Http\Controllers\Manage\Finance;
 use App\Http\Controllers\Manage\HelpArticleController;
 use App\Http\Controllers\Manage\HelpCategoryController;
 use App\Http\Controllers\Manage\LocationController;
@@ -190,6 +191,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
             Route::post('settings/commission-rates', [CommissionRateController::class, 'store'])->name('settings.commission-rates.store');
             Route::delete('settings/commission-rates/{category}', [CommissionRateController::class, 'destroy'])->name('settings.commission-rates.destroy');
+        });
+
+        // Finance: settlements, withdrawals, disputes and user statements
+        Route::prefix('finance')->name('finance.')->group(function () {
+            Route::middleware('permission:finance.view')->group(function () {
+                Route::get('settlements', [Finance\SettlementController::class, 'index'])->name('settlements.index');
+                Route::get('settlements/{settlement}/proof', [Finance\SettlementController::class, 'proof'])->name('settlements.proof');
+                Route::get('withdrawals', [Finance\WithdrawalController::class, 'index'])->name('withdrawals.index');
+                Route::get('disputes', [Finance\DisputeController::class, 'index'])->name('disputes.index');
+                Route::get('users/{user}/statement', [Finance\StatementController::class, 'show'])->name('statements.show');
+            });
+            Route::middleware('permission:finance.manage')->group(function () {
+                Route::post('settlements/{settlement}/approve', [Finance\SettlementController::class, 'approve'])->name('settlements.approve');
+                Route::post('settlements/{settlement}/reject', [Finance\SettlementController::class, 'reject'])->name('settlements.reject');
+                Route::post('withdrawals/{withdrawal}/pay', [Finance\WithdrawalController::class, 'pay'])->name('withdrawals.pay');
+                Route::post('withdrawals/{withdrawal}/reject', [Finance\WithdrawalController::class, 'reject'])->name('withdrawals.reject');
+                Route::post('disputes/{order}/resolve', [Finance\DisputeController::class, 'resolve'])->name('disputes.resolve');
+            });
         });
 
         // Read-only surfaces

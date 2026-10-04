@@ -151,6 +151,18 @@ enum ErrorCode: string
     case WALLET_INSUFFICIENT_BALANCE = 'WALLET_001';
     case WALLET_EXCEEDS_COMMISSION_DEBT = 'WALLET_002';
 
+    // ── Settlements, withdrawals and bank accounts (M1b) ───────────────────
+    case SETTLEMENT_PENDING_EXISTS = 'SETTLEMENT_001';
+    case SETTLEMENT_NOT_PENDING = 'SETTLEMENT_002';
+    case WITHDRAWAL_NOT_PENDING = 'WITHDRAWAL_001';
+    case WITHDRAWAL_BANK_ACCOUNT_REQUIRED = 'WITHDRAWAL_002';
+    case BANK_ACCOUNT_NOT_FOUND = 'BANK_001';
+    case BANK_ACCOUNT_LIMIT_REACHED = 'BANK_002';
+    case BANK_ACCOUNT_DUPLICATE = 'BANK_003';
+
+    // ── Order disputes (M1b) ───────────────────────────────────────────────
+    case DISPUTE_WINDOW_CLOSED = 'DISPUTE_001';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -210,7 +222,14 @@ enum ErrorCode: string
             self::ORDER_AD_HAS_ACTIVE_ORDER,
             self::ORDER_SELLER_DEBT_CEILING,
             self::WALLET_INSUFFICIENT_BALANCE,
-            self::WALLET_EXCEEDS_COMMISSION_DEBT => 422,
+            self::WALLET_EXCEEDS_COMMISSION_DEBT,
+            self::SETTLEMENT_PENDING_EXISTS,
+            self::SETTLEMENT_NOT_PENDING,
+            self::WITHDRAWAL_NOT_PENDING,
+            self::WITHDRAWAL_BANK_ACCOUNT_REQUIRED,
+            self::BANK_ACCOUNT_LIMIT_REACHED,
+            self::BANK_ACCOUNT_DUPLICATE,
+            self::DISPUTE_WINDOW_CLOSED => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,
@@ -252,6 +271,7 @@ enum ErrorCode: string
             self::TICKET_NOT_FOUND,
             self::ADDRESS_NOT_FOUND,
             self::ORDER_NOT_FOUND,
+            self::BANK_ACCOUNT_NOT_FOUND,
             self::NOT_FOUND => 404,
 
             self::AUTH_OTP_EXPIRED,

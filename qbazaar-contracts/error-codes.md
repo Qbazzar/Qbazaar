@@ -212,6 +212,24 @@ requested locale.
 | `WALLET_001` | The wallet balance is not enough for this payment or withdrawal | 422 |
 | `WALLET_002` | The settlement is larger than the commission the seller owes | 422 |
 
+## Settlements, withdrawals and bank accounts (M1b, BE-14.39)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `SETTLEMENT_001` | The seller already has a bank-transfer settlement waiting for review | 422 |
+| `SETTLEMENT_002` | The settlement was already approved or rejected (admin) | 422 |
+| `WITHDRAWAL_001` | The withdrawal was already paid or rejected (admin) | 422 |
+| `WITHDRAWAL_002` | The caller has no bank account to pay into; add one first | 422 |
+| `BANK_001` | Bank account not found, or it belongs to someone else | 404 |
+| `BANK_002` | The caller already has the maximum number of bank accounts | 422 |
+| `BANK_003` | This IBAN is already saved on the caller's account | 422 |
+
+## Order disputes (M1b, BE-14.39)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `DISPUTE_001` | The buyer can no longer report a problem: the order was not handed over yet, the window (admin setting) has passed, or a problem was already reported | 422 |
+
 ---
 
 ## Guidelines

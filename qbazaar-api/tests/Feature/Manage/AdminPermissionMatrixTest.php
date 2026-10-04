@@ -72,6 +72,10 @@ dataset('admin actions', [
     'activity log' => ['get', '/admin/activity', ['super_admin']],
     'platform settings' => ['get', '/admin/settings', ['super_admin']],
     'update platform settings' => ['put', '/admin/settings', ['super_admin']],
+    'finance settlements' => ['get', '/admin/finance/settlements', ['super_admin']],
+    'finance withdrawals' => ['get', '/admin/finance/withdrawals', ['super_admin']],
+    'finance disputes' => ['get', '/admin/finance/disputes', ['super_admin']],
+    'finance statement' => ['get', '/admin/finance/users/{user}/statement', ['super_admin']],
 ]);
 
 it('enforces the seeded permissions for every staff role', function (string $role, string $method, string $uri, array $allowed): void {

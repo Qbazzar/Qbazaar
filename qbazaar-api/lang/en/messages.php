@@ -197,4 +197,32 @@ return [
             'body' => ':name just posted ":title".',
         ],
     ],
+
+    'finance_notifications' => [
+        'action' => 'Open my wallet',
+        'settlement_submitted' => [
+            'title' => 'Settlement received',
+            'body' => 'We received your commission payment of :amount QAR and will confirm it once it reaches our bank account.',
+        ],
+        'settlement_approved' => [
+            'title' => 'Settlement approved',
+            'body' => 'Your commission payment of :amount QAR was applied to your balance.',
+        ],
+        'settlement_rejected' => [
+            'title' => 'Settlement rejected',
+            'body' => 'Your commission payment of :amount QAR could not be confirmed: :reason',
+        ],
+        'withdrawal_requested' => [
+            'title' => 'Withdrawal requested',
+            'body' => 'Your withdrawal of :amount QAR is waiting for review.',
+        ],
+        'withdrawal_paid' => [
+            'title' => 'Withdrawal sent',
+            'body' => ':amount QAR was transferred to your bank account (reference :reference).',
+        ],
+        'withdrawal_rejected' => [
+            'title' => 'Withdrawal rejected',
+            'body' => 'Your withdrawal of :amount QAR was rejected and the amount is back in your wallet: :reason',
+        ],
+    ],
 ];
