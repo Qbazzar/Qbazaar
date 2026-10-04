@@ -10,6 +10,7 @@ enum MessageType: string
     case IMAGE = 'image';
     case OFFER = 'offer';
     case SYSTEM = 'system';
+    case PURCHASE_REQUEST = 'purchase_request';
 
     /** Written by a participant, so it is pushed and screened like chat text. */
     public function isUserWritten(): bool

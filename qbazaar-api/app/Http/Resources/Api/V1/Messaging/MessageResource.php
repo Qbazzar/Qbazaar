@@ -6,6 +6,7 @@ namespace App\Http\Resources\Api\V1\Messaging;
 
 use App\Enums\MessageType;
 use App\Http\Resources\Api\V1\Offers\OfferResource;
+use App\Http\Resources\Api\V1\PurchaseRequests\PurchaseRequestResource;
 use App\Models\Message;
 use App\Services\Media\MediaStorage;
 use App\Services\Messaging\ChatMessageRenderer;
@@ -73,6 +74,13 @@ class MessageResource extends JsonResource
             $payload['offer'] = $offer === null
                 ? null
                 : (new OfferResource($offer))->toArray($request);
+        }
+
+        if ($this->type === MessageType::PURCHASE_REQUEST && $this->resource->relationLoaded('purchaseRequest')) {
+            $purchaseRequest = $this->resource->purchaseRequest;
+            $payload['purchase_request'] = $purchaseRequest === null
+                ? null
+                : (new PurchaseRequestResource($purchaseRequest))->toArray($request);
         }
 
         return $payload;
