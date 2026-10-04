@@ -153,6 +153,7 @@ it('validates the checkout body', function (array $body, array $errors): void {
     'nothing' => [[], ['fulfillment', 'payment_method']],
     'unknown payment method' => [['fulfillment' => 'pickup', 'payment_method' => 'card'], ['payment_method']],
     'delivery without an address' => [['fulfillment' => 'delivery', 'payment_method' => 'cash'], ['address_id']],
+    'delivery with an empty inline address' => [['fulfillment' => 'delivery', 'payment_method' => 'cash', 'address' => []], ['address_id']],
     'address on pickup' => [['fulfillment' => 'pickup', 'payment_method' => 'cash', 'address' => ['city' => 'Doha']], ['address']],
     'incomplete inline address' => [['fulfillment' => 'delivery', 'payment_method' => 'cash', 'address' => ['city' => 'Doha']], ['address.full_name', 'address.street']],
 ]);

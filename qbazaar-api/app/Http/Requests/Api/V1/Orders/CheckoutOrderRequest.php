@@ -44,7 +44,7 @@ class CheckoutOrderRequest extends FormRequest
             'fulfillment' => ['required', Rule::enum(Fulfillment::class)],
             'payment_method' => ['required', 'string', Rule::in($methods)],
             'quantity' => ['sometimes', 'integer', 'min:1', 'max:' . (int) config('qbazaar.ads.quantity_max')],
-            'address_id' => [Rule::requiredIf($isDelivery && ! $this->has('address')), Rule::prohibitedIf(! $isDelivery), 'prohibits:address', 'string', 'ulid'],
+            'address_id' => [Rule::requiredIf($isDelivery && empty($this->input('address'))), Rule::prohibitedIf(! $isDelivery), 'prohibits:address', 'string', 'ulid'],
             'address' => [Rule::prohibitedIf(! $isDelivery), 'array'],
             ...$this->addressFieldRules('required_with:address', 'address.'),
         ];
