@@ -23,6 +23,7 @@ use App\Models\Order;
 use App\Models\PurchaseRequest;
 use App\Models\User;
 use App\Services\Orders\OrderTransitionService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Testing\TestResponse;
@@ -97,6 +98,22 @@ it('allows one pending request per buyer and ad', function (): void {
     requestToBuy($this->buyer, $this->ad)
         ->assertStatus(422)
         ->assertJsonPath('error.code', ErrorCode::PURCHASE_REQUEST_OPEN_EXISTS->value);
+});
+
+it('backs the one open request rule with the database, whatever the race', function (): void {
+    $request = pendingPurchaseRequest($this->buyer, $this->ad);
+    $duplicate = fn () => PurchaseRequest::factory()->create([
+        'conversation_id' => $request->conversation_id,
+        'ad_id' => $this->ad->id,
+        'buyer_id' => $this->buyer->id,
+        'seller_id' => $this->seller->id,
+    ]);
+
+    expect($duplicate)->toThrow(UniqueConstraintViolationException::class);
+
+    actOnPurchaseRequest($this->buyer, $request, 'cancel')->assertOk();
+
+    expect($duplicate()->is_open)->toBeTrue();
 });
 
 it('refuses a request the ad cannot satisfy', function (array $adOverrides, array $body, ErrorCode $code): void {
