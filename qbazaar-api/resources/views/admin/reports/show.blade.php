@@ -3,137 +3,92 @@
 @section('title', 'بلاغ')
 @section('heading', 'مراجعة بلاغ')
 
-@php
-    $statusStyles = [
-        'pending' => 'bg-amber-50 text-amber-700',
-        'reviewed' => 'bg-sky-50 text-sky-700',
-        'dismissed' => 'bg-cream-200 text-ink-500',
-        'actioned' => 'bg-emerald-50 text-emerald-700',
-    ];
-    $statusLabels = [
-        'pending' => 'بانتظار المراجعة',
-        'reviewed' => 'تمت المراجعة',
-        'dismissed' => 'مرفوض',
-        'actioned' => 'تم اتخاذ إجراء',
-    ];
-    $targetLabels = [
-        'ad' => 'إعلان',
-        'user' => 'مستخدم',
-        'conversation' => 'محادثة',
-        'message' => 'رسالة',
-    ];
-    $isPending = $report->status === \App\Enums\ReportStatus::PENDING;
-@endphp
+@php($isPending = $report->status === \App\Enums\ReportStatus::PENDING)
 
 @section('content')
-    <a href="{{ route('admin.reports.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
-        <x-admin.icon name="arrow-right" class="size-4" /> رجوع للبلاغات
-    </a>
+    <x-admin.back-link :href="route('admin.reports.index')" class="mb-4">رجوع للبلاغات</x-admin.back-link>
 
     <div class="grid gap-6 lg:grid-cols-3">
-        {{-- Details --}}
         <div class="space-y-6 lg:col-span-2">
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
+            <x-admin.card>
                 <div class="flex items-start justify-between gap-4">
                     <h2 class="text-xl font-bold">{{ $report->category->label()['ar'] }}</h2>
-                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusStyles[$report->status->value] ?? 'bg-cream-200 text-ink-500' }}">
-                        {{ $statusLabels[$report->status->value] ?? $report->status->value }}
-                    </span>
+                    <x-admin.badge :status="$report->status" />
                 </div>
 
-                <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
-                    <div><span class="text-ink-500">نوع الهدف:</span> {{ $targetLabels[$report->target_type->value] ?? $report->target_type->value }}</div>
-                    <div>
-                        <span class="text-ink-500">مُعرّف الهدف:</span>
+                <x-admin.detail-list class="mt-4">
+                    <x-admin.detail label="نوع الهدف">{{ $report->target_type->label()['ar'] }}</x-admin.detail>
+                    <x-admin.detail label="مُعرّف الهدف">
                         @if ($report->target_type === \App\Enums\ReportTarget::AD)
-                            <a href="{{ route('admin.ads.show', $report->target_id) }}" class="font-semibold hover:text-coral">{{ $report->target_id }}</a>
+                            <a href="{{ route('admin.ads.show', $report->target_id) }}" class="font-semibold hover:text-coral-700">{{ $report->target_id }}</a>
                         @else
                             <span class="font-mono">{{ $report->target_id }}</span>
                         @endif
-                    </div>
-                    <div><span class="text-ink-500">تاريخ الإنشاء:</span> {{ optional($report->created_at)->format('Y-m-d H:i') }}</div>
-                    <div><span class="text-ink-500">تاريخ المراجعة:</span> {{ optional($report->reviewed_at)->format('Y-m-d H:i') ?? '—' }}</div>
-                </div>
+                    </x-admin.detail>
+                    <x-admin.detail label="تاريخ الإنشاء">{{ optional($report->created_at)->format('Y-m-d H:i') }}</x-admin.detail>
+                    <x-admin.detail label="تاريخ المراجعة">{{ optional($report->reviewed_at)->format('Y-m-d H:i') ?? '—' }}</x-admin.detail>
+                </x-admin.detail-list>
 
                 <div class="mt-5">
-                    <div class="mb-1.5 text-sm font-semibold text-ink-500">وصف البلاغ</div>
+                    <h3 class="mb-1.5 text-sm font-semibold text-ink-500">وصف البلاغ</h3>
                     <p class="whitespace-pre-line text-sm leading-relaxed text-ink-700">{{ $report->description ?: '—' }}</p>
                 </div>
 
                 @if ($report->admin_notes)
                     <div class="mt-5">
-                        <div class="mb-1.5 text-sm font-semibold text-ink-500">ملاحظات الإدارة</div>
+                        <h3 class="mb-1.5 text-sm font-semibold text-ink-500">ملاحظات الإدارة</h3>
                         <p class="whitespace-pre-line text-sm leading-relaxed text-ink-700">{{ $report->admin_notes }}</p>
                     </div>
                 @endif
-            </div>
+            </x-admin.card>
         </div>
 
-        {{-- Actions --}}
         <div class="space-y-6">
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <div class="mb-3 text-sm font-semibold text-ink-500">المُبلِّغ</div>
+            <x-admin.card title="المُبلِّغ">
                 <div class="font-semibold">{{ $report->reporter?->full_name ?? 'الإشراف التلقائي' }}</div>
-                <div class="text-sm text-ink-500">{{ $report->reporter?->email }}</div>
-            </div>
+                <div class="break-all text-sm text-ink-500">{{ $report->reporter?->email }}</div>
+            </x-admin.card>
 
             @if ($report->reviewer)
-                <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                    <div class="mb-3 text-sm font-semibold text-ink-500">راجعه</div>
+                <x-admin.card title="راجعه">
                     <div class="font-semibold">{{ $report->reviewer->full_name }}</div>
-                </div>
+                </x-admin.card>
             @endif
 
             @if ($isPending)
-                <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                    <div class="mb-4 text-sm font-semibold text-ink-500">إجراءات الإشراف</div>
+                <x-admin.card title="إجراءات الإشراف">
                     <div class="space-y-3">
                         <form method="POST" action="{{ route('admin.reports.resolve', $report) }}">
                             @csrf
-                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                                <x-admin.icon name="check" class="size-[18px]" /> تعليم كمراجَع
-                            </button>
+                            <x-admin.button variant="info" icon="check" block>تعليم كمراجَع</x-admin.button>
                         </form>
 
                         <form method="POST" action="{{ route('admin.reports.dismiss', $report) }}">
                             @csrf
-                            <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
-                                <x-admin.icon name="x-circle" class="size-[18px]" /> رفض البلاغ
-                            </button>
+                            <x-admin.button variant="secondary" icon="x-circle" block>رفض البلاغ</x-admin.button>
                         </form>
 
                         <form method="POST" action="{{ route('admin.reports.action', $report) }}" class="space-y-2">
                             @csrf
-                            <textarea name="admin_notes" rows="3" required placeholder="ملاحظات الإجراء المتخذ…"
-                                      class="w-full rounded-xl border border-ink-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-coral">{{ old('admin_notes') }}</textarea>
-                            @error('admin_notes')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                            <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                                <x-admin.icon name="check" class="size-[18px]" /> تم اتخاذ إجراء
-                            </button>
+                            <x-admin.textarea name="admin_notes" label="ملاحظات الإجراء" label-hidden :value="old('admin_notes')" rows="3" required placeholder="ملاحظات الإجراء المتخذ…" />
+                            <x-admin.button variant="success" icon="check" block>تم اتخاذ إجراء</x-admin.button>
                         </form>
 
-                        {{-- Direct action on the reported target --}}
                         @if ($report->target_type === \App\Enums\ReportTarget::AD)
-                            <form method="POST" action="{{ route('admin.reports.suspend-ad', $report) }}"
-                                  onsubmit="return confirm('إيقاف الإعلان المُبلَّغ عنه وإغلاق البلاغ؟')">
+                            <form method="POST" action="{{ route('admin.reports.suspend-ad', $report) }}" data-confirm="إيقاف الإعلان المُبلَّغ عنه وإغلاق البلاغ؟">
                                 @csrf
-                                <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                                    <x-admin.icon name="ban" class="size-[18px]" /> إيقاف الإعلان المُبلَّغ عنه
-                                </button>
+                                <x-admin.button variant="danger" icon="ban" block>إيقاف الإعلان المُبلَّغ عنه</x-admin.button>
                             </form>
                         @endif
 
                         @if ($report->target_type === \App\Enums\ReportTarget::USER)
-                            <form method="POST" action="{{ route('admin.reports.ban-user', $report) }}"
-                                  onsubmit="return confirm('إيقاف المستخدم المُبلَّغ عنه وإغلاق البلاغ؟')">
+                            <form method="POST" action="{{ route('admin.reports.ban-user', $report) }}" data-confirm="إيقاف المستخدم المُبلَّغ عنه وإغلاق البلاغ؟">
                                 @csrf
-                                <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                                    <x-admin.icon name="ban" class="size-[18px]" /> إيقاف المستخدم المُبلَّغ عنه
-                                </button>
+                                <x-admin.button variant="danger" icon="ban" block>إيقاف المستخدم المُبلَّغ عنه</x-admin.button>
                             </form>
                         @endif
                     </div>
-                </div>
+                </x-admin.card>
             @endif
         </div>
     </div>

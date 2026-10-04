@@ -99,6 +99,42 @@ it('updates the listing details without sending a live ad back to review', funct
         ->assertJsonPath('data.status', AdStatus::ACTIVE->value);
 });
 
+it('stores the delivery fee and the units the ad offers', function (): void {
+    Sanctum::actingAs($this->seller, ['*']);
+
+    postJson('/api/v1/ads', ($this->payload)(['shipping' => 'delivery', 'shipping_fee' => 15.5, 'quantity' => 3]))
+        ->assertCreated()
+        ->assertJsonPath('data.shipping_fee', '15.50')
+        ->assertJsonPath('data.quantity', 3);
+
+    $ad = Ad::query()->sole();
+    expect($ad->shipping_fee)->toBe('15.50')
+        ->and($ad->quantity)->toBe(3);
+});
+
+it('defaults to one unit and free delivery', function (): void {
+    Sanctum::actingAs($this->seller, ['*']);
+
+    postJson('/api/v1/ads', ($this->payload)())
+        ->assertCreated()
+        ->assertJsonPath('data.shipping_fee', null)
+        ->assertJsonPath('data.quantity', 1);
+});
+
+it('rejects an invalid delivery fee or quantity', function (array $fields): void {
+    Sanctum::actingAs($this->seller, ['*']);
+
+    postJson('/api/v1/ads', ($this->payload)($fields))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(array_keys($fields), 'error.details');
+})->with([
+    'negative fee' => [['shipping_fee' => -1]],
+    'fee with three decimals' => [['shipping_fee' => 1.234]],
+    'fee above the cap' => [['shipping_fee' => 10_001]],
+    'zero units' => [['quantity' => 0]],
+    'too many units' => [['quantity' => 1000]],
+]);
+
 it('hides the street from the public unless the seller opts in', function (bool $showFullAddress, ?string $expected): void {
     $ad = $this->makeAd($this->seller, [
         'status' => AdStatus::ACTIVE->value,

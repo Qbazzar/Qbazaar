@@ -31,4 +31,17 @@ enum PriceType: string
     {
         return $this === self::FREE || $this === self::CONTACT;
     }
+
+    /**
+     * @return array{ar: string, en: string}
+     */
+    public function label(): array
+    {
+        return match ($this) {
+            self::FIXED => ['ar' => 'سعر ثابت', 'en' => 'Fixed price'],
+            self::NEGOTIABLE => ['ar' => 'قابل للتفاوض', 'en' => 'Negotiable'],
+            self::FREE => ['ar' => 'مجاني', 'en' => 'Free'],
+            self::CONTACT => ['ar' => 'بالتواصل', 'en' => 'Contact for price'],
+        };
+    }
 }

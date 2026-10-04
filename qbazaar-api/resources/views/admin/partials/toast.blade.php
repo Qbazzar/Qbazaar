@@ -1,6 +1,5 @@
 @php
-    // Collect flash messages into a uniform list of {type, message} so the same
-    // markup renders success, error, and validation summaries.
+    // Flash messages only: validation errors are shown inline next to their fields.
     $toasts = [];
     if (session('status')) {
         $toasts[] = ['type' => 'success', 'message' => session('status')];
@@ -8,32 +7,29 @@
     if (session('error')) {
         $toasts[] = ['type' => 'error', 'message' => session('error')];
     }
-    if ($errors->any()) {
-        $toasts[] = ['type' => 'error', 'message' => $errors->first()];
-    }
     $styles = [
-        'success' => ['ring' => 'ring-emerald-200', 'bar' => 'bg-emerald-500', 'icon' => 'text-emerald-600', 'glyph' => 'check'],
-        'error' => ['ring' => 'ring-red-200', 'bar' => 'bg-red-500', 'icon' => 'text-red-600', 'glyph' => 'x-circle'],
+        'success' => ['ring' => 'ring-emerald-200', 'bar' => 'bg-emerald-500', 'icon' => 'text-emerald-700', 'glyph' => 'check', 'role' => 'status'],
+        'error' => ['ring' => 'ring-red-200', 'bar' => 'bg-red-500', 'icon' => 'text-red-700', 'glyph' => 'x-circle', 'role' => 'alert'],
     ];
 @endphp
 
 @if ($toasts !== [])
     <div class="pointer-events-none fixed inset-x-0 top-4 z-50 flex flex-col items-center gap-2 px-4">
         @foreach ($toasts as $toast)
-            @php($s = $styles[$toast['type']])
+            @php($style = $styles[$toast['type']])
             <div
                 data-toast
-                class="qb-toast pointer-events-auto flex w-full max-w-md items-start gap-3 overflow-hidden rounded-2xl bg-white p-4 shadow-lg ring-1 {{ $s['ring'] }}"
-                role="status"
+                class="qb-toast pointer-events-auto flex w-full max-w-md items-start gap-3 overflow-hidden rounded-2xl bg-white p-4 shadow-lg ring-1 {{ $style['ring'] }}"
+                role="{{ $style['role'] }}"
             >
-                <span class="mt-0.5 shrink-0 {{ $s['icon'] }}">
-                    <x-admin.icon :name="$s['glyph']" class="size-5" />
+                <span class="mt-0.5 shrink-0 {{ $style['icon'] }}">
+                    <x-admin.icon :name="$style['glyph']" class="size-5" />
                 </span>
                 <p class="flex-1 text-sm font-semibold leading-relaxed text-ink-900">{{ $toast['message'] }}</p>
-                <button type="button" class="shrink-0 text-ink-300 transition hover:text-ink-700" onclick="this.closest('[data-toast]').remove()" aria-label="إغلاق">
+                <button type="button" class="shrink-0 rounded-lg text-ink-500 transition hover:text-ink-900" onclick="this.closest('[data-toast]').remove()" aria-label="إغلاق التنبيه">
                     <x-admin.icon name="x-circle" class="size-5" />
                 </button>
-                <span class="qb-toast__bar absolute bottom-0 right-0 h-0.5 {{ $s['bar'] }}"></span>
+                <span class="qb-toast__bar absolute bottom-0 start-0 h-0.5 {{ $style['bar'] }}"></span>
             </div>
         @endforeach
     </div>

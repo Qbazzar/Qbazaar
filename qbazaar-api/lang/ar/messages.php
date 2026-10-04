@@ -167,6 +167,30 @@ return [
             'title' => 'انتهت صلاحية العرض',
             'body' => 'انتهت صلاحية العرض بقيمة :amount :currency على ":title".',
         ],
+        'purchase_request_created' => [
+            'title' => 'طلب شراء جديد',
+            'body' => 'مشترٍ يريد :quantity من ":title" بمبلغ :amount :currency.',
+        ],
+        'purchase_request_updated' => [
+            'title' => 'تم تعديل طلب الشراء',
+            'body' => 'أصبح طلب شراء ":title" :quantity بمبلغ :amount :currency.',
+        ],
+        'purchase_request_accepted' => [
+            'title' => 'تم قبول طلب الشراء',
+            'body' => 'تم قبول طلبك لشراء ":title". أكمل إتمام الطلب.',
+        ],
+        'purchase_request_rejected' => [
+            'title' => 'تم رفض طلب الشراء',
+            'body' => 'تم رفض طلبك لشراء ":title".',
+        ],
+        'purchase_request_cancelled' => [
+            'title' => 'تم إلغاء طلب الشراء',
+            'body' => 'تم إلغاء طلب شراء ":title".',
+        ],
+        'purchase_request_paid' => [
+            'title' => 'تمت عملية الشراء',
+            'body' => 'اكتملت عملية شراء ":title".',
+        ],
         'system_announcement' => [
             'greeting' => 'مرحباً،',
             'footer' => 'شكراً لكونك جزءاً من كيوبازار.',

@@ -17,4 +17,17 @@ enum ReportTarget: string
     case USER = 'user';
     case CONVERSATION = 'conversation';
     case MESSAGE = 'message';
+
+    /**
+     * @return array{ar: string, en: string}
+     */
+    public function label(): array
+    {
+        return match ($this) {
+            self::AD => ['ar' => 'إعلان', 'en' => 'Ad'],
+            self::USER => ['ar' => 'مستخدم', 'en' => 'User'],
+            self::CONVERSATION => ['ar' => 'محادثة', 'en' => 'Conversation'],
+            self::MESSAGE => ['ar' => 'رسالة', 'en' => 'Message'],
+        };
+    }
 }

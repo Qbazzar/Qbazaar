@@ -214,6 +214,19 @@ requested locale.
 | `WALLET_001` | The wallet balance is not enough for this payment or withdrawal | 422 |
 | `WALLET_002` | The settlement is larger than the commission the seller owes | 422 |
 
+## Purchase requests and checkout (M1b)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `PURCHASE_001` | Purchase request not found, or the caller is neither its buyer nor its seller | 404 |
+| `PURCHASE_002` | The buyer already has a pending purchase request on this ad | 422 |
+| `PURCHASE_003` | The purchase request is no longer pending (accepted, rejected or cancelled) | 422 |
+| `PURCHASE_004` | The caller takes part in the request but may not do this (e.g. the buyer accepting it) | 403 |
+| `PURCHASE_005` | The seller cannot send a purchase request on their own ad | 422 |
+| `PURCHASE_006` | The ad cannot be bought now: not publicly listed, a "wanted" ad, or without a fixed price | 422 |
+| `PURCHASE_007` | More units than the ad offers (`ads.quantity`) | 422 |
+| `CHECKOUT_001` | Delivery was chosen but the ad is pickup only | 422 |
+
 ---
 
 ## Guidelines

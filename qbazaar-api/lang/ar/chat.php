@@ -15,4 +15,12 @@ return [
         'withdrawn' => 'تم سحب العرض',
     ],
     'image' => 'صورة',
+    'purchase_request' => [
+        'created' => 'طلب شراء: :quantity قطعة بمبلغ :amount :currency',
+        'updated' => 'تم تعديل طلب الشراء: :quantity قطعة بمبلغ :amount :currency',
+        'accepted' => 'تم قبول طلب الشراء',
+        'rejected' => 'تم رفض طلب الشراء',
+        'cancelled' => 'تم إلغاء طلب الشراء',
+        'paid' => 'تمت عملية الشراء',
+    ],
 ];

@@ -23,6 +23,7 @@ use App\Models\Message;
 use App\Models\Offer;
 use App\Models\Order;
 use App\Models\OtpCode;
+use App\Models\PurchaseRequest;
 use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Models\UserAddress;
@@ -64,7 +65,7 @@ function runDeleteJob(User $user): void
     app()->call([new DeleteAccountJob($user->id), 'handle']);
 }
 
-it('erases a due account with its ads, images, search documents, offers and chats', function (): void {
+it('erases a due account with its ads, images, search documents, offers, purchase requests and chats', function (): void {
     $engine = Mockery::spy(Engine::class);
     app(EngineManager::class)->extend('spy', fn () => $engine);
     config()->set('scout.driver', 'spy');
@@ -84,6 +85,8 @@ it('erases a due account with its ads, images, search documents, offers and chat
     Message::factory()->create(['conversation_id' => $buyingChat->id, 'sender_id' => $user->id]);
     Offer::factory()->create(['conversation_id' => $ownAdChat->id, 'ad_id' => $ad->id, 'buyer_id' => $other->id, 'seller_id' => $user->id]);
     Offer::factory()->create(['conversation_id' => $buyingChat->id, 'ad_id' => $otherAd->id, 'buyer_id' => $user->id, 'seller_id' => $other->id]);
+    PurchaseRequest::factory()->create(['conversation_id' => $ownAdChat->id, 'ad_id' => $ad->id, 'buyer_id' => $other->id, 'seller_id' => $user->id]);
+    PurchaseRequest::factory()->create(['conversation_id' => $buyingChat->id, 'ad_id' => $otherAd->id, 'buyer_id' => $user->id, 'seller_id' => $other->id]);
     UserAddress::factory()->for($user)->create();
     $user->createToken('device');
     $export = new DataExport;
@@ -96,6 +99,7 @@ it('erases a due account with its ads, images, search documents, offers and chat
         ->and(Ad::withTrashed()->find($ad->id))->toBeNull()
         ->and($mediaDisk->exists($media->getPathRelativeToRoot()))->toBeFalse()
         ->and(Offer::query()->count())->toBe(0)
+        ->and(PurchaseRequest::query()->count())->toBe(0)
         ->and(Conversation::query()->count())->toBe(0)
         ->and(UserAddress::query()->count())->toBe(0)
         ->and(Storage::disk('local')->exists('exports/old.json'))->toBeFalse()

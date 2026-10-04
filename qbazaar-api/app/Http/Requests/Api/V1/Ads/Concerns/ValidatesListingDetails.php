@@ -56,6 +56,8 @@ trait ValidatesListingDetails
         return [
             'ad_type' => ['sometimes', Rule::enum(AdType::class)],
             'shipping' => ['sometimes', Rule::enum(AdShipping::class)],
+            'shipping_fee' => ['sometimes', 'nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:' . (int) config('qbazaar.ads.shipping_fee_max')],
+            'quantity' => ['sometimes', 'integer', 'min:1', 'max:' . (int) config('qbazaar.ads.quantity_max')],
             'postal_code' => [
                 'sometimes',
                 'nullable',
