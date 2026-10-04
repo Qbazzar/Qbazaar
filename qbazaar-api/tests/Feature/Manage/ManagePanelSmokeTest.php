@@ -2,10 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Enums\ModerationRuleType;
 use App\Enums\UserStatus;
 use App\Models\Ad;
+use App\Models\Category;
 use App\Models\Conversation;
+use App\Models\HelpArticle;
+use App\Models\HelpCategory;
+use App\Models\Location;
+use App\Models\Message;
+use App\Models\ModerationRule;
+use App\Models\Offer;
+use App\Models\Page;
 use App\Models\Report;
+use App\Models\SavedSearch;
+use App\Models\SupportTicket;
 use App\Models\User;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\LocationSeeder;
@@ -186,4 +197,68 @@ it('shows validation errors inline only, not again as a toast', function (): voi
         ->assertSee('id="value-error"', false)
         ->assertSee('aria-invalid="true"', false)
         ->assertDontSee('data-toast', false);
+});
+
+it('renders every admin page with populated rows', function (): void {
+    $this->seed(CategorySeeder::class);
+    $this->seed(LocationSeeder::class);
+
+    $offer = Offer::factory()->create();
+    $ad = $offer->ad;
+    $report = Report::factory()->create();
+    $conversation = Conversation::factory()->create();
+    Message::factory()->create(['conversation_id' => $conversation->id, 'sender_id' => $conversation->seller_id]);
+    $category = Category::query()->firstOrFail();
+    $location = Location::query()->firstOrFail();
+    $page = Page::query()->create([
+        'slug' => 'about',
+        'title' => ['ar' => 'من نحن', 'en' => 'About us'],
+        'body' => ['ar' => 'المحتوى', 'en' => 'The body'],
+        'is_published' => true,
+        'published_at' => now(),
+        'display_order' => 1,
+    ]);
+    $helpCategory = HelpCategory::query()->create([
+        'slug' => 'getting-started',
+        'name' => ['ar' => 'البداية', 'en' => 'Getting started'],
+        'display_order' => 1,
+    ]);
+    $helpArticle = HelpArticle::query()->create([
+        'category_id' => $helpCategory->id,
+        'slug' => 'how-to-post',
+        'title' => ['ar' => 'كيف تنشر إعلان', 'en' => 'How to post an ad'],
+        'body' => ['ar' => 'المحتوى', 'en' => 'The body'],
+        'is_published' => true,
+        'display_order' => 1,
+    ]);
+    $rule = ModerationRule::query()->create(['type' => ModerationRuleType::BANNED_WORD, 'value' => 'spamword', 'is_active' => true]);
+    $ticket = SupportTicket::query()->create([
+        'user_id' => $ad->user_id,
+        'subject' => 'Cannot publish my ad',
+        'category' => 'technical',
+        'body' => 'The publish button keeps spinning forever.',
+    ]);
+    SavedSearch::query()->create(['user_id' => $ad->user_id, 'name' => 'Phones', 'query_params' => ['q' => 'phone']]);
+
+    $indexPages = [
+        '/admin/ads', '/admin/users', '/admin/reports', '/admin/moderation-rules', '/admin/categories',
+        '/admin/locations', '/admin/pages', '/admin/help-categories', '/admin/help-articles', '/admin/support',
+        '/admin/conversations', '/admin/offers', '/admin/saved-searches',
+    ];
+
+    foreach ($indexPages as $uri) {
+        $this->get($uri)->assertOk()->assertSee('md:table-row', false);
+    }
+
+    $detailPages = [
+        "/admin/ads/{$ad->id}", "/admin/ads/{$ad->id}/edit", "/admin/users/{$ad->user_id}", "/admin/reports/{$report->id}",
+        "/admin/conversations/{$conversation->id}", "/admin/support/{$ticket->id}",
+        "/admin/categories/{$category->id}/edit", "/admin/locations/{$location->id}/edit", "/admin/pages/{$page->id}/edit",
+        "/admin/help-categories/{$helpCategory->id}/edit", "/admin/help-articles/{$helpArticle->id}/edit",
+        "/admin/moderation-rules/{$rule->id}/edit",
+    ];
+
+    foreach ($detailPages as $uri) {
+        $this->get($uri)->assertOk()->assertSee('aria-current="page"', false);
+    }
 });
