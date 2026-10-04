@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\V1\Account;
 
+use App\Http\Requests\Api\V1\Account\Concerns\ValidatesAddressFields;
 use App\Rules\NoMarkup;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -23,6 +24,8 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class SaveAddressRequest extends FormRequest
 {
+    use ValidatesAddressFields;
+
     public function authorize(): bool
     {
         return true;
@@ -37,14 +40,7 @@ class SaveAddressRequest extends FormRequest
 
         return [
             'label' => ['sometimes', 'nullable', 'string', 'max:50', new NoMarkup],
-            'full_name' => [$presence, 'string', 'min:2', 'max:80', new NoMarkup],
-            'phone' => ['sometimes', 'nullable', 'string', 'regex:/^\+[1-9]\d{6,14}$/'],
-            'street' => [$presence, 'string', 'max:120', new NoMarkup],
-            'house_number' => [$presence, 'string', 'max:20', new NoMarkup],
-            'supplement' => ['sometimes', 'nullable', 'string', 'max:120', new NoMarkup],
-            'city' => [$presence, 'string', 'max:80', new NoMarkup],
-            'postal_code' => ['sometimes', 'nullable', 'string', 'max:20', 'alpha_dash'],
-            'location_id' => ['sometimes', 'nullable', 'string', 'exists:locations,id'],
+            ...$this->addressFieldRules($presence),
             'is_default' => ['sometimes', 'boolean'],
         ];
     }

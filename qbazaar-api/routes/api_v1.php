@@ -48,6 +48,7 @@ use App\Http\Controllers\Api\V1\Media\MediaOriginalController;
 use App\Http\Controllers\Api\V1\Messaging\ConversationController;
 use App\Http\Controllers\Api\V1\Messaging\MessageController;
 use App\Http\Controllers\Api\V1\Offers\OfferController;
+use App\Http\Controllers\Api\V1\Orders\OrderCheckoutController;
 use App\Http\Controllers\Api\V1\Orders\OrderController;
 use App\Http\Controllers\Api\V1\PurchaseRequests\PurchaseRequestController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
@@ -563,6 +564,8 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])
         Route::get('/{id}', [OrderController::class, 'show'])->name('show');
         Route::post('/{id}/confirm-handover', [OrderController::class, 'confirmHandover'])->middleware('idempotent')->name('confirm-handover');
         Route::post('/{id}/cancel', [OrderController::class, 'cancel'])->middleware('idempotent')->name('cancel');
+        Route::get('/{id}/checkout', [OrderCheckoutController::class, 'show'])->name('checkout.show');
+        Route::post('/{id}/checkout', [OrderCheckoutController::class, 'store'])->middleware('idempotent')->name('checkout.store');
     });
 
 // ── M1b — "Buy Now" purchase requests ──────────────────────────────────────
