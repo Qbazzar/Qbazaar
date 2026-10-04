@@ -45,6 +45,8 @@ class AdResource extends JsonResource
             'condition' => $this->condition?->value,
             'ad_type' => $this->ad_type->value,
             'shipping' => $this->shipping->value,
+            'shipping_fee' => $this->shipping_fee,
+            'quantity' => $this->quantity,
             'postal_code' => $this->postal_code,
             'street' => $this->streetFor($request),
             'show_full_address' => $this->show_full_address,

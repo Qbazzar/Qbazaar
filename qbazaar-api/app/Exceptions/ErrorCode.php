@@ -151,6 +151,16 @@ enum ErrorCode: string
     case WALLET_INSUFFICIENT_BALANCE = 'WALLET_001';
     case WALLET_EXCEEDS_COMMISSION_DEBT = 'WALLET_002';
 
+    // ── Purchase requests and checkout (M1b) ───────────────────────────────
+    case PURCHASE_REQUEST_NOT_FOUND = 'PURCHASE_001';
+    case PURCHASE_REQUEST_OPEN_EXISTS = 'PURCHASE_002';
+    case PURCHASE_REQUEST_NOT_PENDING = 'PURCHASE_003';
+    case PURCHASE_REQUEST_FORBIDDEN = 'PURCHASE_004';
+    case PURCHASE_REQUEST_OWN_AD = 'PURCHASE_005';
+    case PURCHASE_REQUEST_AD_NOT_AVAILABLE = 'PURCHASE_006';
+    case PURCHASE_QUANTITY_UNAVAILABLE = 'PURCHASE_007';
+    case CHECKOUT_DELIVERY_UNAVAILABLE = 'CHECKOUT_001';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -210,7 +220,13 @@ enum ErrorCode: string
             self::ORDER_AD_HAS_ACTIVE_ORDER,
             self::ORDER_SELLER_DEBT_CEILING,
             self::WALLET_INSUFFICIENT_BALANCE,
-            self::WALLET_EXCEEDS_COMMISSION_DEBT => 422,
+            self::WALLET_EXCEEDS_COMMISSION_DEBT,
+            self::PURCHASE_REQUEST_OPEN_EXISTS,
+            self::PURCHASE_REQUEST_NOT_PENDING,
+            self::PURCHASE_REQUEST_OWN_AD,
+            self::PURCHASE_REQUEST_AD_NOT_AVAILABLE,
+            self::PURCHASE_QUANTITY_UNAVAILABLE,
+            self::CHECKOUT_DELIVERY_UNAVAILABLE => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,
@@ -234,6 +250,7 @@ enum ErrorCode: string
             self::REVIEW_NOT_ELIGIBLE,
             self::TICKET_FORBIDDEN,
             self::ORDER_FORBIDDEN,
+            self::PURCHASE_REQUEST_FORBIDDEN,
             self::FORBIDDEN => 403,
 
             self::USER_NOT_FOUND,
@@ -252,6 +269,7 @@ enum ErrorCode: string
             self::TICKET_NOT_FOUND,
             self::ADDRESS_NOT_FOUND,
             self::ORDER_NOT_FOUND,
+            self::PURCHASE_REQUEST_NOT_FOUND,
             self::NOT_FOUND => 404,
 
             self::AUTH_OTP_EXPIRED,

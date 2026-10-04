@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Fulfillment;
 use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
@@ -39,6 +40,8 @@ use Illuminate\Support\Carbon;
  * @property string $commission_rate
  * @property string $commission_amount
  * @property PaymentMethod $payment_method
+ * @property Fulfillment|null $fulfillment
+ * @property array<string, string|null>|null $delivery_address
  * @property string|null $cancelled_by
  * @property string|null $cancellation_reason
  * @property Carbon|null $awaiting_handover_at
@@ -70,6 +73,8 @@ class Order extends Model
             'source' => OrderSource::class,
             'status' => OrderStatus::class,
             'payment_method' => PaymentMethod::class,
+            'fulfillment' => Fulfillment::class,
+            'delivery_address' => 'array',
             'unit_price' => 'decimal:2',
             'quantity' => 'integer',
             'shipping_fee' => 'decimal:2',

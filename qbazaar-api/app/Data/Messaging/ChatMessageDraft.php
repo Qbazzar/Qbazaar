@@ -63,4 +63,19 @@ final readonly class ChatMessageDraft
 
         return new self(MessageType::OFFER, key: $key, params: $params);
     }
+
+    /**
+     * The "Buy Now" card. `amount` is the total for all units, so the bubble
+     * reads correctly in clients that do not render the card.
+     */
+    public static function purchaseRequest(string $total, string $currency, int $quantity, ?string $note): self
+    {
+        $params = ['amount' => $total, 'currency' => $currency, 'quantity' => $quantity];
+
+        if ($note !== null && $note !== '') {
+            $params['note'] = $note;
+        }
+
+        return new self(MessageType::PURCHASE_REQUEST, key: ChatMessageKey::PURCHASE_REQUEST_CREATED, params: $params);
+    }
 }

@@ -148,6 +148,9 @@ return [
         'description_min_length' => 20,
         'description_max_length' => 5000,
         'price_max' => 9_999_999,
+        // Delivery fee the seller may charge on an ad, and units one ad may offer.
+        'shipping_fee_max' => 10_000,
+        'quantity_max' => 999,
         'postal_code_max_length' => 10,
         'street_max_length' => 255,
         'view_throttle_per_user_per_minute' => 60,
@@ -293,6 +296,12 @@ return [
     'orders' => [
         'per_page' => 20,
         'cancellation_reason_max_length' => 500,
+    ],
+
+    'purchase_requests' => [
+        'max_per_minute' => 10,
+        'max_per_day' => 50,
+        'note_max_length' => 280,
     ],
 
     'wallet' => [

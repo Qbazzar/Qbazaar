@@ -17,6 +17,12 @@ enum ChatMessageKey: string
     case OFFER_REJECTED = 'offer.rejected';
     case OFFER_WITHDRAWN = 'offer.withdrawn';
     case IMAGE = 'image';
+    case PURCHASE_REQUEST_CREATED = 'purchase_request.created';
+    case PURCHASE_REQUEST_UPDATED = 'purchase_request.updated';
+    case PURCHASE_REQUEST_ACCEPTED = 'purchase_request.accepted';
+    case PURCHASE_REQUEST_REJECTED = 'purchase_request.rejected';
+    case PURCHASE_REQUEST_CANCELLED = 'purchase_request.cancelled';
+    case PURCHASE_REQUEST_PAID = 'purchase_request.paid';
 
     public function translationKey(): string
     {

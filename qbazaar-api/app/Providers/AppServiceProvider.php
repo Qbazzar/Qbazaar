@@ -14,6 +14,7 @@ use App\Observers\AdDetailCacheObserver;
 use App\Observers\AdListingCacheObserver;
 use App\Observers\AdObserver;
 use App\Observers\AdOffersObserver;
+use App\Observers\AdPurchaseRequestsObserver;
 use App\Observers\AdReviewQueueObserver;
 use App\Observers\SellerAdsCountObserver;
 use App\Observers\TaxonomyCacheObserver;
@@ -86,6 +87,7 @@ class AppServiceProvider extends ServiceProvider
         Category::observe(TaxonomyCacheObserver::class);
         Location::observe(TaxonomyCacheObserver::class);
         Ad::observe([SellerAdsCountObserver::class, AdDetailCacheObserver::class]);
+        Ad::observe(AdPurchaseRequestsObserver::class);
         Media::observe(AdDetailCacheObserver::class);
 
         Model::preventLazyLoading(! $this->app->isProduction());
@@ -112,6 +114,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('offers', fn (Request $r) => [
             Limit::perMinute((int) config('qbazaar.offers.max_per_minute'))->by('offers:' . (optional($r->user())->id ?: $r->ip())),
             Limit::perDay((int) config('qbazaar.offers.max_per_day'))->by('offers-day:' . (optional($r->user())->id ?: $r->ip())),
+        ]);
+        RateLimiter::for('purchase-requests', fn (Request $r) => [
+            Limit::perMinute((int) config('qbazaar.purchase_requests.max_per_minute'))->by('purchase-requests:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.purchase_requests.max_per_day'))->by('purchase-requests-day:' . (optional($r->user())->id ?: $r->ip())),
         ]);
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('publish', fn (Request $r) => Limit::perMinute((int) config('qbazaar.ads.publish_attempts_per_minute_per_user'))->by(optional($r->user())->id ?: $r->ip()));

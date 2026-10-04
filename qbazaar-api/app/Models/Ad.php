@@ -51,6 +51,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Condition|null $condition
  * @property AdType $ad_type
  * @property AdShipping $shipping
+ * @property string|null $shipping_fee
+ * @property int $quantity
  * @property string|null $postal_code
  * @property string|null $street
  * @property bool $show_full_address
@@ -104,6 +106,7 @@ class Ad extends Model implements HasMedia
         'ad_type' => 'offering',
         'shipping' => 'pickup_only',
         'show_full_address' => false,
+        'quantity' => 1,
     ];
 
     /**
@@ -123,6 +126,8 @@ class Ad extends Model implements HasMedia
         'condition',
         'ad_type',
         'shipping',
+        'shipping_fee',
+        'quantity',
         'postal_code',
         'street',
         'show_full_address',
@@ -156,6 +161,8 @@ class Ad extends Model implements HasMedia
             'reserved_at' => 'datetime',
             'moderation_result' => ModerationResult::class,
             'price' => 'decimal:2',
+            'shipping_fee' => 'decimal:2',
+            'quantity' => 'integer',
             'featured' => 'boolean',
             'seller_active' => 'boolean',
         ];
@@ -316,6 +323,11 @@ class Ad extends Model implements HasMedia
     public function shouldBeSearchable(): bool
     {
         return $this->isPubliclyListed();
+    }
+
+    public function offersQuantity(int $quantity): bool
+    {
+        return $quantity >= 1 && $quantity <= $this->quantity;
     }
 
     public function isReserved(): bool
