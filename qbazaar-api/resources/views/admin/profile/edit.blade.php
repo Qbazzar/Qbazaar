@@ -8,44 +8,20 @@
         @csrf
         @method('PUT')
 
-        <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-            <h2 class="mb-4 font-bold">البيانات الأساسية</h2>
+        <x-admin.card title="البيانات الأساسية">
             <div class="space-y-4">
-                <div>
-                    <label for="full_name" class="mb-1.5 block text-sm font-semibold">الاسم الكامل</label>
-                    <input id="full_name" name="full_name" type="text" required value="{{ old('full_name', $user->full_name) }}"
-                           class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                    @error('full_name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="email" class="mb-1.5 block text-sm font-semibold">البريد الإلكتروني</label>
-                    <input id="email" name="email" type="email" required value="{{ old('email', $user->email) }}"
-                           class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                    @error('email')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-                </div>
+                <x-admin.input name="full_name" label="الاسم الكامل" :value="old('full_name', $user->full_name)" required autocomplete="name" />
+                <x-admin.input name="email" type="email" label="البريد الإلكتروني" :value="old('email', $user->email)" required autocomplete="email" />
             </div>
-        </div>
+        </x-admin.card>
 
-        <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-            <h2 class="mb-1 font-bold">تغيير كلمة المرور</h2>
-            <p class="mb-4 text-xs text-ink-500">اتركها فارغة إن لم ترغب بتغييرها.</p>
+        <x-admin.card title="تغيير كلمة المرور" description="اتركها فارغة إن لم ترغب بتغييرها.">
             <div class="space-y-4">
-                <div>
-                    <label for="password" class="mb-1.5 block text-sm font-semibold">كلمة المرور الجديدة</label>
-                    <input id="password" name="password" type="password" autocomplete="new-password"
-                           class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                    @error('password')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="password_confirmation" class="mb-1.5 block text-sm font-semibold">تأكيد كلمة المرور</label>
-                    <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password"
-                           class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                </div>
+                <x-admin.input name="password" type="password" label="كلمة المرور الجديدة" autocomplete="new-password" />
+                <x-admin.input name="password_confirmation" type="password" label="تأكيد كلمة المرور" autocomplete="new-password" />
             </div>
-        </div>
+        </x-admin.card>
 
-        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-            <x-admin.icon name="check" class="size-[18px]" /> حفظ التغييرات
-        </button>
+        <x-admin.button icon="check">حفظ التغييرات</x-admin.button>
     </form>
 @endsection

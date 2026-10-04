@@ -4,74 +4,32 @@
 @section('heading', 'المحادثات')
 
 @section('content')
-    {{-- Filters --}}
-    <form method="GET" class="mb-6 flex flex-wrap items-center gap-3">
-        <div class="relative">
-            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-300">
-                <x-admin.icon name="search" class="size-[18px]" />
-            </span>
-            <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالإعلان أو المشارك…"
-                   class="w-64 rounded-xl border border-ink-200 bg-cream-100 py-2.5 pr-10 pl-4 text-sm outline-none focus:border-coral">
-        </div>
+    <x-admin.page-toolbar>
+        <x-admin.filter-bar :reset-url="route('admin.conversations.index')" :search="$search" placeholder="بحث بالإعلان أو المشارك…" />
+    </x-admin.page-toolbar>
 
-        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-            <x-admin.icon name="filter" class="size-[18px]" /> تصفية
-        </button>
-        @if ($search !== '')
-            <a href="{{ route('admin.conversations.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">مسح</a>
-        @endif
-    </form>
+    <x-admin.table
+        caption="المحادثات"
+        :columns="['الإعلان', 'المشتري', 'البائع', 'الرسائل', ['label' => 'آخر رسالة', 'secondary' => true], ['label' => 'إجراءات', 'srOnly' => true]]"
+        :empty="$conversations->isEmpty()"
+        empty-icon="chat"
+        empty-message="لا توجد محادثات."
+    >
+        @foreach ($conversations as $conversation)
+            <x-admin.table.row>
+                <x-admin.table.cell primary>
+                    <a href="{{ route('admin.conversations.show', $conversation) }}" class="font-semibold hover:text-coral-700">{{ \Illuminate\Support\Str::limit($conversation->ad?->title ?? '—', 40) }}</a>
+                </x-admin.table.cell>
+                <x-admin.table.cell label="المشتري" class="text-ink-700">{{ $conversation->buyer?->full_name ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="البائع" class="text-ink-700">{{ $conversation->seller?->full_name ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="الرسائل"><x-admin.badge>{{ number_format($conversation->messages_count) }}</x-admin.badge></x-admin.table.cell>
+                <x-admin.table.cell label="آخر رسالة" secondary class="text-ink-500">{{ optional($conversation->last_message_at)->format('Y-m-d H:i') ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.actions>
+                    <x-admin.icon-button :href="route('admin.conversations.show', $conversation)" icon="eye" label="عرض" />
+                </x-admin.table.actions>
+            </x-admin.table.row>
+        @endforeach
+    </x-admin.table>
 
-    <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-sm">
-                <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
-                    <tr>
-                        <th class="px-4 py-3 font-semibold">الإعلان</th>
-                        <th class="px-4 py-3 font-semibold">المشتري</th>
-                        <th class="px-4 py-3 font-semibold">البائع</th>
-                        <th class="px-4 py-3 font-semibold">الرسائل</th>
-                        <th class="px-4 py-3 font-semibold">آخر رسالة</th>
-                        <th class="px-4 py-3 font-semibold"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-ink-200">
-                    @forelse ($conversations as $conversation)
-                        <tr class="hover:bg-cream-50">
-                            <td class="px-4 py-3">
-                                <a href="{{ route('admin.conversations.show', $conversation) }}" class="font-semibold hover:text-coral">{{ \Illuminate\Support\Str::limit($conversation->ad?->title ?? '—', 40) }}</a>
-                            </td>
-                            <td class="px-4 py-3 text-ink-700">{{ $conversation->buyer?->full_name ?? '—' }}</td>
-                            <td class="px-4 py-3 text-ink-700">{{ $conversation->seller?->full_name ?? '—' }}</td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center rounded-full bg-cream-200 px-2.5 py-0.5 text-xs font-semibold text-ink-700">{{ number_format($conversation->messages_count) }}</span>
-                            </td>
-                            <td class="px-4 py-3 text-ink-500">{{ optional($conversation->last_message_at)->format('Y-m-d H:i') ?? '—' }}</td>
-                            <td class="px-4 py-3 text-left">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <a href="{{ route('admin.conversations.show', $conversation) }}" title="عرض"
-                                       class="inline-flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-700 transition hover:bg-coral-soft hover:text-coral">
-                                        <x-admin.icon name="eye" class="size-[18px]" />
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-16 text-center">
-                                <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
-                                    <x-admin.icon name="chat" class="size-6" />
-                                </span>
-                                <p class="text-sm font-semibold text-ink-500">لا توجد محادثات.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="mt-6">
-        {{ $conversations->links() }}
-    </div>
+    <x-admin.pagination :paginator="$conversations" />
 @endsection

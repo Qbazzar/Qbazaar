@@ -3,72 +3,32 @@
 @section('title', 'تذكرة: ' . $ticket->subject)
 @section('heading', 'مراجعة تذكرة')
 
-@php
-    $statusStyles = [
-        'open' => 'bg-amber-50 text-amber-700',
-        'in_progress' => 'bg-sky-50 text-sky-700',
-        'waiting_user' => 'bg-violet-50 text-violet-700',
-        'resolved' => 'bg-emerald-50 text-emerald-700',
-        'closed' => 'bg-cream-200 text-ink-500',
-    ];
-    $statusLabels = [
-        'open' => 'مفتوحة',
-        'in_progress' => 'قيد المعالجة',
-        'waiting_user' => 'بانتظار المستخدم',
-        'resolved' => 'تم الحل',
-        'closed' => 'مغلقة',
-    ];
-    $priorityLabels = [
-        'low' => 'منخفضة',
-        'normal' => 'عادية',
-        'high' => 'مرتفعة',
-        'urgent' => 'عاجلة',
-    ];
-    $categoryLabels = [
-        'general' => 'عام',
-        'billing' => 'الفوترة',
-        'technical' => 'تقني',
-        'abuse' => 'إساءة',
-        'feedback' => 'ملاحظات',
-        'other' => 'أخرى',
-    ];
-@endphp
-
 @section('content')
-    <a href="{{ route('admin.support.index') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 transition hover:text-coral">
-        <x-admin.icon name="arrow-right" class="size-4" /> رجوع للتذاكر
-    </a>
+    <x-admin.back-link :href="route('admin.support.index')" class="mb-4">رجوع للتذاكر</x-admin.back-link>
 
     <div class="grid gap-6 lg:grid-cols-3">
-        {{-- Conversation --}}
         <div class="space-y-6 lg:col-span-2">
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
+            <x-admin.card>
                 <div class="flex items-start justify-between gap-4">
-                    <h2 class="text-xl font-bold">{{ $ticket->subject }}</h2>
-                    <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusStyles[$ticket->status->value] ?? 'bg-cream-200 text-ink-500' }}">
-                        {{ $statusLabels[$ticket->status->value] ?? $ticket->status->value }}
-                    </span>
+                    <h2 class="min-w-0 break-words text-xl font-bold">{{ $ticket->subject }}</h2>
+                    <x-admin.badge :status="$ticket->status" />
                 </div>
 
-                <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
-                    <div><span class="text-ink-500">التصنيف:</span> {{ $categoryLabels[$ticket->category->value] ?? $ticket->category->value }}</div>
-                    <div><span class="text-ink-500">الأولوية:</span> {{ $priorityLabels[$ticket->priority->value] ?? $ticket->priority->value }}</div>
-                    <div><span class="text-ink-500">المسؤول:</span> {{ $ticket->assignee?->full_name ?? '—' }}</div>
-                    <div><span class="text-ink-500">تاريخ الإنشاء:</span> {{ optional($ticket->created_at)->format('Y-m-d H:i') }}</div>
-                </div>
-            </div>
+                <x-admin.detail-list class="mt-4">
+                    <x-admin.detail label="التصنيف">{{ $ticket->category->label()['ar'] }}</x-admin.detail>
+                    <x-admin.detail label="الأولوية">{{ $ticket->priority->label()['ar'] }}</x-admin.detail>
+                    <x-admin.detail label="المسؤول">{{ $ticket->assignee?->full_name ?? '—' }}</x-admin.detail>
+                    <x-admin.detail label="تاريخ الإنشاء">{{ optional($ticket->created_at)->format('Y-m-d H:i') }}</x-admin.detail>
+                </x-admin.detail-list>
+            </x-admin.card>
 
-            {{-- Thread bubbles: user messages on the right, staff on the left --}}
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <div class="mb-4 flex items-center gap-2 text-sm font-semibold text-ink-500">
-                    <x-admin.icon name="lifebuoy" class="size-[18px] text-coral" /> المحادثة
-                </div>
+            {{-- User messages sit at the inline end, staff replies at the start. --}}
+            <x-admin.card title="المحادثة" icon="lifebuoy">
                 <div class="space-y-4">
-                    {{-- Original ticket body as first (user) message --}}
                     <div class="flex justify-end">
                         <div class="max-w-[80%] rounded-2xl bg-cream-200 px-4 py-3">
                             <div class="mb-1 text-xs font-semibold text-ink-500">{{ $ticket->user?->full_name ?? $ticket->email ?? 'المستخدم' }}</div>
-                            <p class="whitespace-pre-line text-sm leading-relaxed text-ink-900">{{ $ticket->body }}</p>
+                            <p class="whitespace-pre-line break-words text-sm leading-relaxed text-ink-900">{{ $ticket->body }}</p>
                             <div class="mt-1 text-[11px] text-ink-500">{{ optional($ticket->created_at)->format('Y-m-d H:i') }}</div>
                         </div>
                     </div>
@@ -76,66 +36,52 @@
                     @foreach ($ticket->replies as $reply)
                         <div class="flex {{ $reply->is_staff ? 'justify-start' : 'justify-end' }}">
                             <div class="max-w-[80%] rounded-2xl px-4 py-3 {{ $reply->is_staff ? 'bg-coral-soft' : 'bg-cream-200' }}">
-                                <div class="mb-1 text-xs font-semibold {{ $reply->is_staff ? 'text-coral' : 'text-ink-500' }}">
+                                <div class="mb-1 text-xs font-semibold {{ $reply->is_staff ? 'text-coral-700' : 'text-ink-500' }}">
                                     {{ $reply->author?->full_name ?? '—' }}{{ $reply->is_staff ? ' · فريق الدعم' : '' }}
                                 </div>
-                                <p class="whitespace-pre-line text-sm leading-relaxed text-ink-900">{{ $reply->body }}</p>
+                                <p class="whitespace-pre-line break-words text-sm leading-relaxed text-ink-900">{{ $reply->body }}</p>
                                 <div class="mt-1 text-[11px] text-ink-500">{{ optional($reply->created_at)->format('Y-m-d H:i') }}</div>
                             </div>
                         </div>
                     @endforeach
                 </div>
-            </div>
+            </x-admin.card>
 
-            {{-- Reply form --}}
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <div class="mb-3 text-sm font-semibold text-ink-500">إرسال رد</div>
+            <x-admin.card title="إرسال رد">
                 <form method="POST" action="{{ route('admin.support.reply', $ticket) }}" class="space-y-3">
                     @csrf
-                    <textarea name="body" rows="4" required placeholder="اكتب ردك هنا…"
-                              class="w-full rounded-xl border border-ink-200 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-coral">{{ old('body') }}</textarea>
-                    @error('body')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                    <button class="inline-flex items-center gap-2 rounded-xl bg-coral px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                        <x-admin.icon name="chat" class="size-[18px]" /> إرسال الرد
-                    </button>
+                    <x-admin.textarea name="body" label="نص الرد" label-hidden :value="old('body')" rows="4" required placeholder="اكتب ردك هنا…" />
+                    <x-admin.button icon="chat">إرسال الرد</x-admin.button>
                 </form>
-            </div>
+            </x-admin.card>
         </div>
 
-        {{-- Sidebar --}}
         <div class="space-y-6">
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <div class="mb-3 text-sm font-semibold text-ink-500">المستخدم</div>
+            <x-admin.card title="المستخدم">
                 <div class="font-semibold">{{ $ticket->user?->full_name ?? '—' }}</div>
-                <div class="text-sm text-ink-500">{{ $ticket->user?->email ?? $ticket->email }}</div>
-            </div>
+                <div class="break-all text-sm text-ink-500">{{ $ticket->user?->email ?? $ticket->email }}</div>
+            </x-admin.card>
 
-            <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                <div class="mb-4 text-sm font-semibold text-ink-500">تغيير الحالة</div>
+            <x-admin.card title="تغيير الحالة">
                 <form method="POST" action="{{ route('admin.support.status', $ticket) }}" class="space-y-3">
                     @csrf
-                    <select name="status" class="w-full rounded-xl border border-ink-200 bg-cream-50 px-3 py-2.5 text-sm outline-none focus:border-coral">
+                    <x-admin.select name="status" label="حالة التذكرة" label-hidden>
                         @foreach ($statuses as $case)
-                            <option value="{{ $case->value }}" @selected($ticket->status === $case)>{{ $statusLabels[$case->value] ?? $case->value }}</option>
+                            <option value="{{ $case->value }}" @selected($ticket->status === $case)>{{ $case->label()['ar'] }}</option>
                         @endforeach
-                    </select>
-                    @error('status')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
-                    <button class="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-cream-200">
-                        <x-admin.icon name="check" class="size-[18px]" /> تحديث الحالة
-                    </button>
+                    </x-admin.select>
+                    <x-admin.button variant="secondary" icon="check" block>تحديث الحالة</x-admin.button>
                 </form>
 
                 @if ($ticket->assigned_to !== auth()->id())
                     <form method="POST" action="{{ route('admin.support.assign', $ticket) }}" class="mt-3">
                         @csrf
-                        <button class="flex w-full items-center justify-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                            <x-admin.icon name="check" class="size-[18px]" /> إسناد التذكرة إليّ
-                        </button>
+                        <x-admin.button icon="check" block>إسناد التذكرة إليّ</x-admin.button>
                     </form>
                 @else
-                    <p class="mt-3 text-center text-xs font-semibold text-emerald-600">التذكرة مُسنَدة إليك</p>
+                    <p class="mt-3 text-center text-xs font-semibold text-emerald-700">التذكرة مُسنَدة إليك</p>
                 @endif
-            </div>
+            </x-admin.card>
         </div>
     </div>
 @endsection

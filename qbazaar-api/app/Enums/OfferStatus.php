@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use App\Enums\Contracts\Badgeable;
+
 /**
  * Lifecycle states for a price offer attached to a conversation.
  *
@@ -17,7 +19,7 @@ namespace App\Enums;
  *   - COUNTERED → the responder answered with a counter-offer, which lives
  *                 on a new row pointing back through `parent_offer_id`.
  */
-enum OfferStatus: string
+enum OfferStatus: string implements Badgeable
 {
     case PENDING = 'pending';
     case ACCEPTED = 'accepted';
@@ -47,6 +49,32 @@ enum OfferStatus: string
             self::WITHDRAWN => 'withdrawn_at',
             self::COUNTERED => 'countered_at',
             self::PENDING, self::EXPIRED => null,
+        };
+    }
+
+    /**
+     * @return array{ar: string, en: string}
+     */
+    public function label(): array
+    {
+        return match ($this) {
+            self::PENDING => ['ar' => 'قيد الانتظار', 'en' => 'Pending'],
+            self::ACCEPTED => ['ar' => 'مقبول', 'en' => 'Accepted'],
+            self::REJECTED => ['ar' => 'مرفوض', 'en' => 'Rejected'],
+            self::WITHDRAWN => ['ar' => 'مسحوب', 'en' => 'Withdrawn'],
+            self::EXPIRED => ['ar' => 'منتهٍ', 'en' => 'Expired'],
+            self::COUNTERED => ['ar' => 'عرض مضاد', 'en' => 'Countered'],
+        };
+    }
+
+    public function tone(): string
+    {
+        return match ($this) {
+            self::PENDING => 'warning',
+            self::ACCEPTED => 'success',
+            self::REJECTED => 'danger',
+            self::WITHDRAWN, self::EXPIRED => 'neutral',
+            self::COUNTERED => 'info',
         };
     }
 }

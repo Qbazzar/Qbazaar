@@ -4,91 +4,44 @@
 @section('heading', 'أقسام المساعدة')
 
 @section('content')
-    <p class="mb-4 text-sm text-ink-500">أقسام مركز المساعدة تصنّف المقالات.</p>
+    <x-admin.page-toolbar description="أقسام مركز المساعدة تصنّف المقالات.">
+        <x-admin.filter-bar :reset-url="route('admin.help-categories.index')" :search="$search" placeholder="بحث بالاسم أو المعرف…" />
+        <x-slot:actions>
+            <x-admin.button :href="route('admin.help-categories.create')" icon="plus">قسم جديد</x-admin.button>
+        </x-slot:actions>
+    </x-admin.page-toolbar>
 
-    {{-- Toolbar --}}
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <form method="GET" class="flex flex-wrap items-center gap-3">
-            <div class="relative">
-                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-300">
-                    <x-admin.icon name="search" class="size-[18px]" />
-                </span>
-                <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالاسم أو المعرف…"
-                       class="w-64 rounded-xl border border-ink-200 bg-cream-100 py-2.5 pr-10 pl-4 text-sm outline-none focus:border-coral">
-            </div>
-            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                <x-admin.icon name="filter" class="size-[18px]" /> تصفية
-            </button>
-            @if ($search !== '')
-                <a href="{{ route('admin.help-categories.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">مسح</a>
-            @endif
-        </form>
+    <x-admin.bulk-bar :action="route('admin.help-categories.bulk-destroy')" label="حذف المحدد" confirm="حذف العناصر المحددة نهائياً؟" />
 
-        <a href="{{ route('admin.help-categories.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-            <x-admin.icon name="plus" class="size-[18px]" /> قسم جديد
-        </a>
-    </div>
+    <x-admin.table
+        caption="أقسام المساعدة"
+        selectable
+        :columns="['الاسم', 'المعرف', ['label' => 'الأيقونة', 'secondary' => true], 'المقالات', ['label' => 'الترتيب', 'secondary' => true], ['label' => 'إجراءات', 'srOnly' => true]]"
+        :empty="$categories->isEmpty()"
+        empty-icon="help"
+        empty-message="لا توجد أقسام بعد."
+    >
+        @foreach ($categories as $category)
+            <x-admin.table.row>
+                <x-admin.table.select :value="$category->id" :label="'تحديد: ' . ($category->name['ar'] ?? $category->slug)" />
+                <x-admin.table.cell primary>
+                    <a href="{{ route('admin.help-categories.edit', $category) }}" class="font-semibold hover:text-coral-700">{{ $category->name['ar'] ?? '—' }}</a>
+                </x-admin.table.cell>
+                <x-admin.table.cell label="المعرف" class="font-mono text-ink-700">{{ $category->slug }}</x-admin.table.cell>
+                <x-admin.table.cell label="الأيقونة" secondary class="font-mono text-ink-500">{{ $category->icon ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="المقالات" class="text-ink-700">{{ number_format($category->articles_count) }}</x-admin.table.cell>
+                <x-admin.table.cell label="الترتيب" secondary class="text-ink-700">{{ $category->display_order }}</x-admin.table.cell>
+                <x-admin.table.actions>
+                    <x-admin.icon-button :href="route('admin.help-categories.edit', $category)" icon="pencil" label="تعديل" />
+                    <form method="POST" action="{{ route('admin.help-categories.destroy', $category) }}" data-confirm="هل أنت متأكد من حذف هذا القسم؟">
+                        @csrf
+                        @method('DELETE')
+                        <x-admin.icon-button icon="trash" label="حذف" variant="danger" />
+                    </form>
+                </x-admin.table.actions>
+            </x-admin.table.row>
+        @endforeach
+    </x-admin.table>
 
-    @include('admin.partials.bulk-bar', ['action' => route('admin.help-categories.bulk-destroy'), 'label' => 'حذف المحدد', 'confirm' => 'حذف العناصر المحددة نهائياً؟'])
-
-    <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-sm">
-                <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
-                    <tr>
-                        <th class="px-4 py-3"><input type="checkbox" id="qb-bulk-all" onclick="qbBulkAll(this)" class="rounded border-ink-300 text-coral"></th>
-                        <th class="px-4 py-3 font-semibold">الاسم</th>
-                        <th class="px-4 py-3 font-semibold">المعرف</th>
-                        <th class="px-4 py-3 font-semibold">الأيقونة</th>
-                        <th class="px-4 py-3 font-semibold">المقالات</th>
-                        <th class="px-4 py-3 font-semibold">الترتيب</th>
-                        <th class="px-4 py-3 font-semibold"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-ink-200">
-                    @forelse ($categories as $category)
-                        <tr class="hover:bg-cream-50">
-                            <td class="px-4 py-3"><input type="checkbox" name="ids[]" value="{{ $category->id }}" form="qb-bulk-form" class="qb-bulk-cb rounded border-ink-300 text-coral" onchange="qbBulkSync()"></td>
-                            <td class="px-4 py-3">
-                                <a href="{{ route('admin.help-categories.edit', $category) }}" class="font-semibold hover:text-coral">{{ $category->name['ar'] ?? '—' }}</a>
-                            </td>
-                            <td class="px-4 py-3 font-mono text-ink-700">{{ $category->slug }}</td>
-                            <td class="px-4 py-3 font-mono text-ink-500">{{ $category->icon ?? '—' }}</td>
-                            <td class="px-4 py-3 text-ink-700">{{ number_format($category->articles_count) }}</td>
-                            <td class="px-4 py-3 text-ink-700">{{ $category->display_order }}</td>
-                            <td class="px-4 py-3 text-left">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <a href="{{ route('admin.help-categories.edit', $category) }}" title="تعديل"
-                                       class="inline-flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-700 transition hover:bg-coral-soft hover:text-coral">
-                                        <x-admin.icon name="pencil" class="size-[18px]" />
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.help-categories.destroy', $category) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا القسم؟');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" title="حذف"
-                                                class="inline-flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-700 transition hover:bg-red-50 hover:text-red-600">
-                                            <x-admin.icon name="trash" class="size-[18px]" />
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-16 text-center">
-                                <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
-                                    <x-admin.icon name="help" class="size-6" />
-                                </span>
-                                <p class="text-sm font-semibold text-ink-500">لا توجد أقسام بعد.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="mt-6">
-        {{ $categories->links() }}
-    </div>
+    <x-admin.pagination :paginator="$categories" />
 @endsection

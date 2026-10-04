@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use App\Enums\Contracts\Badgeable;
+
 /**
  * Lifecycle of a moderation report.
  *
@@ -16,10 +18,33 @@ namespace App\Enums;
  * the duplicate-report guard relies on PENDING vs terminal). Admin
  * transitions are gated by the Sprint 11 Filament resource.
  */
-enum ReportStatus: string
+enum ReportStatus: string implements Badgeable
 {
     case PENDING = 'pending';
     case REVIEWED = 'reviewed';
     case DISMISSED = 'dismissed';
     case ACTIONED = 'actioned';
+
+    /**
+     * @return array{ar: string, en: string}
+     */
+    public function label(): array
+    {
+        return match ($this) {
+            self::PENDING => ['ar' => 'بانتظار المراجعة', 'en' => 'Pending review'],
+            self::REVIEWED => ['ar' => 'تمت المراجعة', 'en' => 'Reviewed'],
+            self::DISMISSED => ['ar' => 'مرفوض', 'en' => 'Dismissed'],
+            self::ACTIONED => ['ar' => 'تم اتخاذ إجراء', 'en' => 'Actioned'],
+        };
+    }
+
+    public function tone(): string
+    {
+        return match ($this) {
+            self::PENDING => 'warning',
+            self::REVIEWED => 'info',
+            self::DISMISSED => 'neutral',
+            self::ACTIONED => 'success',
+        };
+    }
 }

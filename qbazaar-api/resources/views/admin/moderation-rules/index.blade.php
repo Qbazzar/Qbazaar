@@ -3,126 +3,55 @@
 @section('title', 'قواعد الإشراف')
 @section('heading', 'قواعد الإشراف')
 
-@php
-    $typeLabels = [
-        'banned_word' => 'كلمة محظورة',
-        'blocked_domain' => 'نطاق محظور',
-    ];
-    $languageLabels = [
-        'any' => 'الكل',
-        'ar' => 'العربية',
-        'en' => 'الإنجليزية',
-    ];
-@endphp
-
 @section('content')
-    {{-- Filters + create --}}
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <form method="GET" class="flex flex-wrap items-center gap-3">
-            <div class="relative">
-                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-ink-300">
-                    <x-admin.icon name="search" class="size-[18px]" />
-                </span>
-                <input type="text" name="q" value="{{ $search }}" placeholder="بحث بالقيمة…"
-                       class="w-56 rounded-xl border border-ink-200 bg-cream-100 py-2.5 pr-10 pl-4 text-sm outline-none focus:border-coral">
-            </div>
+    <x-admin.page-toolbar>
+        <x-admin.filter-bar
+            :reset-url="route('admin.moderation-rules.index')"
+            :search="$search"
+            placeholder="بحث بالقيمة…"
+            :filters="[
+                ['name' => 'type', 'label' => 'النوع', 'placeholder' => 'كل الأنواع', 'value' => $type,
+                    'options' => collect($types)->mapWithKeys(fn ($case) => [$case->value => $case->label()['ar']])],
+                ['name' => 'language', 'label' => 'اللغة', 'placeholder' => 'كل اللغات', 'value' => $language,
+                    'options' => collect($languages)->mapWithKeys(fn ($case) => [$case->value => $case->label()['ar']])],
+            ]"
+        />
+        <x-slot:actions>
+            <x-admin.button :href="route('admin.moderation-rules.create')" icon="plus">إضافة قاعدة</x-admin.button>
+        </x-slot:actions>
+    </x-admin.page-toolbar>
 
-            <select name="type" class="rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                <option value="">كل الأنواع</option>
-                @foreach ($types as $case)
-                    <option value="{{ $case->value }}" @selected($type === $case->value)>{{ $typeLabels[$case->value] ?? $case->value }}</option>
-                @endforeach
-            </select>
+    <x-admin.bulk-bar :action="route('admin.moderation-rules.bulk-destroy')" label="حذف المحدد" confirm="حذف العناصر المحددة نهائياً؟" />
 
-            <select name="language" class="rounded-xl border border-ink-200 bg-cream-100 px-4 py-2.5 text-sm outline-none focus:border-coral">
-                <option value="">كل اللغات</option>
-                @foreach ($languages as $case)
-                    <option value="{{ $case->value }}" @selected($language === $case->value)>{{ $languageLabels[$case->value] ?? $case->value }}</option>
-                @endforeach
-            </select>
+    <x-admin.table
+        caption="قواعد الإشراف"
+        selectable
+        :columns="['النوع', 'القيمة', 'اللغة', 'مفعّلة', ['label' => 'آخر تحديث', 'secondary' => true], ['label' => 'إجراءات', 'srOnly' => true]]"
+        :empty="$rules->isEmpty()"
+        empty-icon="shield"
+        empty-message="لا توجد قواعد مطابقة."
+    >
+        @foreach ($rules as $rule)
+            <x-admin.table.row>
+                <x-admin.table.select :value="$rule->id" :label="'تحديد: ' . $rule->value" />
+                <x-admin.table.cell label="النوع"><x-admin.badge :status="$rule->type" /></x-admin.table.cell>
+                <x-admin.table.cell label="القيمة" class="font-mono text-ink-900">{{ $rule->value }}</x-admin.table.cell>
+                <x-admin.table.cell label="اللغة" class="text-ink-700">{{ $rule->language->label()['ar'] }}</x-admin.table.cell>
+                <x-admin.table.cell label="مفعّلة">
+                    <x-admin.badge :tone="$rule->is_active ? 'success' : 'neutral'">{{ $rule->is_active ? 'نعم' : 'لا' }}</x-admin.badge>
+                </x-admin.table.cell>
+                <x-admin.table.cell label="آخر تحديث" secondary class="text-ink-500">{{ optional($rule->updated_at)->format('Y-m-d') }}</x-admin.table.cell>
+                <x-admin.table.actions>
+                    <x-admin.icon-button :href="route('admin.moderation-rules.edit', $rule)" icon="pencil" label="تعديل" />
+                    <form method="POST" action="{{ route('admin.moderation-rules.destroy', $rule) }}" data-confirm="حذف هذه القاعدة؟">
+                        @csrf
+                        @method('DELETE')
+                        <x-admin.icon-button icon="trash" label="حذف" variant="danger" />
+                    </form>
+                </x-admin.table.actions>
+            </x-admin.table.row>
+        @endforeach
+    </x-admin.table>
 
-            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-                <x-admin.icon name="filter" class="size-[18px]" /> تصفية
-            </button>
-            @if ($search !== '' || $type !== '' || $language !== '')
-                <a href="{{ route('admin.moderation-rules.index') }}" class="text-sm font-semibold text-ink-500 hover:text-coral">مسح</a>
-            @endif
-        </form>
-
-        <a href="{{ route('admin.moderation-rules.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-coral px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-95">
-            <x-admin.icon name="plus" class="size-[18px]" /> إضافة قاعدة
-        </a>
-    </div>
-
-    @include('admin.partials.bulk-bar', ['action' => route('admin.moderation-rules.bulk-destroy'), 'label' => 'حذف المحدد', 'confirm' => 'حذف العناصر المحددة نهائياً؟'])
-
-    <div class="overflow-hidden rounded-2xl border border-ink-200 bg-cream-100">
-        <div class="overflow-x-auto">
-            <table class="w-full text-right text-sm">
-                <thead class="border-b border-ink-200 bg-cream-50 text-xs font-semibold text-ink-500">
-                    <tr>
-                        <th class="px-4 py-3"><input type="checkbox" id="qb-bulk-all" onclick="qbBulkAll(this)" class="rounded border-ink-300 text-coral"></th>
-                        <th class="px-4 py-3 font-semibold">النوع</th>
-                        <th class="px-4 py-3 font-semibold">القيمة</th>
-                        <th class="px-4 py-3 font-semibold">اللغة</th>
-                        <th class="px-4 py-3 font-semibold">مفعّلة</th>
-                        <th class="px-4 py-3 font-semibold">آخر تحديث</th>
-                        <th class="px-4 py-3 font-semibold"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-ink-200">
-                    @forelse ($rules as $rule)
-                        <tr class="transition hover:bg-cream-50">
-                            <td class="px-4 py-3"><input type="checkbox" name="ids[]" value="{{ $rule->id }}" form="qb-bulk-form" class="qb-bulk-cb rounded border-ink-300 text-coral" onchange="qbBulkSync()"></td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                                    {{ $typeLabels[$rule->type->value] ?? $rule->type->value }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 font-mono text-ink-900">{{ $rule->value }}</td>
-                            <td class="px-4 py-3 text-ink-700">{{ $languageLabels[$rule->language->value] ?? $rule->language->value }}</td>
-                            <td class="px-4 py-3">
-                                @if ($rule->is_active)
-                                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">نعم</span>
-                                @else
-                                    <span class="inline-flex items-center rounded-full bg-cream-200 px-2.5 py-0.5 text-xs font-semibold text-ink-500">لا</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-ink-500">{{ optional($rule->updated_at)->format('Y-m-d') }}</td>
-                            <td class="px-4 py-3 text-left">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <a href="{{ route('admin.moderation-rules.edit', $rule) }}" title="تعديل"
-                                       class="inline-flex size-8 items-center justify-center rounded-lg bg-cream-200 text-ink-700 transition hover:bg-coral-soft hover:text-coral">
-                                        <x-admin.icon name="pencil" class="size-[18px]" />
-                                    </a>
-                                    <form method="POST" action="{{ route('admin.moderation-rules.destroy', $rule) }}"
-                                          onsubmit="return confirm('حذف هذه القاعدة؟');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" title="حذف"
-                                                class="inline-flex size-8 items-center justify-center rounded-lg bg-red-50 text-red-700 transition hover:bg-red-100">
-                                            <x-admin.icon name="trash" class="size-[18px]" />
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-16 text-center">
-                                <span class="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-cream-200 text-ink-300">
-                                    <x-admin.icon name="shield" class="size-6" />
-                                </span>
-                                <p class="text-sm font-semibold text-ink-500">لا توجد قواعد مطابقة.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="mt-6">
-        {{ $rules->links() }}
-    </div>
+    <x-admin.pagination :paginator="$rules" />
 @endsection
