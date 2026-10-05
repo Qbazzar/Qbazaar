@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\Finance\SubmitSettlementAction;
 use App\Actions\Messaging\StartConversationAction;
 use App\Actions\PurchaseRequests\AcceptPurchaseRequestAction;
 use App\Actions\PurchaseRequests\CreatePurchaseRequestAction;
@@ -16,9 +17,12 @@ use App\Services\Orders\OrderTransitionService;
 use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Concerns\CreatesAds;
+use Tests\Concerns\ManagesMoney;
 use Tests\Concerns\PlacesOrders;
 
 /*
@@ -29,7 +33,7 @@ use Tests\Concerns\PlacesOrders;
  * concurrent one and must be made to wait, which a one-second lock wait
  * timeout turns into error 1205.
  */
-uses(DatabaseTruncation::class, CreatesAds::class, PlacesOrders::class)->group('mysql');
+uses(DatabaseTruncation::class, CreatesAds::class, ManagesMoney::class, PlacesOrders::class)->group('mysql');
 
 const MYSQL_LOCK_WAIT_TIMEOUT = 1205;
 
@@ -176,4 +180,15 @@ it('makes a second open purchase request by the same buyer wait on the unique in
         'created_at' => now(),
         'updated_at' => now(),
     ]));
+});
+
+it('holds the seller\'s ledger accounts while a bank-transfer settlement is submitted', function (): void {
+    Storage::fake('local');
+    $seller = User::factory()->create();
+    $this->owesCommission($seller, '100.00');
+
+    DB::beginTransaction();
+    app(SubmitSettlementAction::class)->byBankTransfer($seller, '40.00', 'TRX-1', UploadedFile::fake()->image('receipt.jpg'));
+
+    expectToWaitForTheLock(fn () => $this->concurrent->selectOne('SELECT id FROM ledger_accounts WHERE code = ? FOR UPDATE', ["user:{$seller->id}:commission_receivable"]));
 });

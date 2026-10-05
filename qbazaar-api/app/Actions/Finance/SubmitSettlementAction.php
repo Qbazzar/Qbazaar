@@ -42,17 +42,23 @@ class SubmitSettlementAction
 
     /**
      * Only one bank transfer waits for review at a time; the database
-     * enforces it, so two concurrent submissions cannot both pass.
+     * enforces it, so two concurrent submissions cannot both pass. The
+     * seller's accounts are locked while the debt is checked and the row is
+     * saved, so a withdrawal request cannot net that debt in between and
+     * leave this transfer impossible to approve.
      */
     public function byBankTransfer(User $seller, string $amount, string $bankReference, UploadedFile $proof): CommissionSettlement
     {
-        $amount = $this->withinDebt($seller, $amount);
-
-        $settlement = $this->newSettlement($seller, SettlementMethod::BANK_TRANSFER, SettlementStatus::PENDING, $amount);
-        $settlement->bank_reference = $bankReference;
-
         try {
-            $settlement->save();
+            $settlement = DB::transaction(function () use ($seller, $amount, $bankReference): CommissionSettlement {
+                $this->accounts->lockUserAccounts($seller->id);
+
+                $settlement = $this->newSettlement($seller, SettlementMethod::BANK_TRANSFER, SettlementStatus::PENDING, $this->withinDebt($seller, $amount));
+                $settlement->bank_reference = $bankReference;
+                $settlement->save();
+
+                return $settlement;
+            });
         } catch (UniqueConstraintViolationException) {
             throw new DomainException(ErrorCode::SETTLEMENT_PENDING_EXISTS);
         }
@@ -69,8 +75,8 @@ class SubmitSettlementAction
             throw $exception;
         }
 
-        $seller->notify(new WalletActivityNotification(FinanceNotice::SETTLEMENT_SUBMITTED, $settlement->id, ['amount' => $amount]));
-        $this->staff->requestReview(FinanceReview::SETTLEMENT, $amount);
+        $seller->notify(new WalletActivityNotification(FinanceNotice::SETTLEMENT_SUBMITTED, $settlement->id, ['amount' => $settlement->amount]));
+        $this->staff->requestReview(FinanceReview::SETTLEMENT, $settlement->amount);
 
         return $settlement;
     }
