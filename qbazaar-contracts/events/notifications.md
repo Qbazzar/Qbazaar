@@ -64,7 +64,7 @@ fields without breaking older clients.
 | `search.match`          | A new ad matches a saved search with alerts on. Every match reaches the bell; push goes out for the first match in each `qbazaar.search.saved_search_check_interval_minutes` window (60) per user. | first in window |
 | `search.digest`         | Push only: the window closed with more matches (`data.matches`); they are already in the bell. | yes (push only) |
 | `account.data_export_ready` | `ExportUserDataJob` finishes. | yes |
-| `account.deletion_on_hold` | `DeleteAccountJob` finds the grace period over but the user owes commission or has an order in progress (`data.reason` = `ACCOUNT_003` / `ACCOUNT_004`). Database + mail, at most once per `qbazaar.account.deletion_on_hold_notice_days` (7). | — |
+| `account.deletion_on_hold` | `DeleteAccountJob` finds the grace period over but the user owes commission, has an order in progress or money in the wallet (`data.reason` = `ACCOUNT_003` / `ACCOUNT_004` / `ACCOUNT_005`). Database + mail, at most once per `qbazaar.account.deletion_on_hold_notice_days` (7). | — |
 | `security.new_device`   | Successful login from an unrecognised device. | — |
 | `support.reply`         | Staff reply to the user's support ticket. | yes |
 | `support.ticket_created` | A user opens a ticket; sent to staff. | — |

@@ -356,6 +356,11 @@ return [
                 'order' => 'You have an order in progress. Complete or cancel it before deleting your account.',
             ],
         ],
+        'wallet' => [
+            'not' => [
+                'empty' => 'You still have :amount QAR in your wallet. Withdraw it before deleting your account.',
+            ],
+        ],
     ],
 
     'address' => [

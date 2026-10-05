@@ -14,10 +14,10 @@ use App\Services\Ledger\LedgerAccounts;
 use App\Support\Money;
 
 /**
- * Decides whether an account may be erased. Two things stop it: commission
- * the user still owes the platform (erasing would write the debt off) and an
+ * Decides whether an account may be erased. Three things stop it: commission
+ * the user still owes the platform (erasing would write the debt off), an
  * order still in progress (erasing would leave the other side with a trade
- * nobody can finish). Checked when the deletion is requested and again by
+ * nobody can finish) and money still in their wallet (erasing would lose it). Checked when the deletion is requested and again by
  * DeleteAccountJob right before erasing, since either can appear during the
  * grace period.
  */
@@ -44,23 +44,70 @@ class AccountDeletionGuard
      */
     public function blockerFor(User $user): ?DomainException
     {
+        return $this->debtBlocker($user)
+            ?? $this->openOrderBlocker($user)
+            ?? $this->walletBalanceBlocker($user)
+            ?? $this->pendingPayoutBlocker($user);
+    }
+
+    private function debtBlocker(User $user): ?DomainException
+    {
         $debt = $this->accounts->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $user->id);
 
-        if (Money::isPositive($debt)) {
-            return new DomainException(
-                ErrorCode::ACCOUNT_DEBT_OUTSTANDING,
-                __(ErrorCode::ACCOUNT_DEBT_OUTSTANDING->messageKey(), ['amount' => $debt]),
-                ['amount' => $debt, 'currency' => (string) config('qbazaar.default_currency', 'QAR')],
-            );
+        if (! Money::isPositive($debt)) {
+            return null;
         }
 
-        $openOrderId = $this->openOrderIdOf($user);
+        return new DomainException(
+            ErrorCode::ACCOUNT_DEBT_OUTSTANDING,
+            __(ErrorCode::ACCOUNT_DEBT_OUTSTANDING->messageKey(), ['amount' => $debt]),
+            ['amount' => $debt, 'currency' => $this->currency()],
+        );
+    }
 
-        if ($openOrderId !== null) {
-            return new DomainException(ErrorCode::ACCOUNT_HAS_OPEN_ORDER, details: ['order_id' => $openOrderId]);
+    private function openOrderBlocker(User $user): ?DomainException
+    {
+        $orderId = $this->openOrderIdOf($user);
+
+        return $orderId === null
+            ? null
+            : new DomainException(ErrorCode::ACCOUNT_HAS_OPEN_ORDER, details: ['order_id' => $orderId]);
+    }
+
+    /**
+     * Money the platform still owes the user would vanish with the account,
+     * so they have to withdraw it first.
+     */
+    private function walletBalanceBlocker(User $user): ?DomainException
+    {
+        $balance = $this->accounts->balanceOf(LedgerAccountType::USER_WALLET, $user->id);
+
+        if (! Money::isPositive($balance)) {
+            return null;
         }
 
+        return new DomainException(
+            ErrorCode::ACCOUNT_WALLET_NOT_EMPTY,
+            __(ErrorCode::ACCOUNT_WALLET_NOT_EMPTY->messageKey(), ['amount' => $balance]),
+            ['amount' => $balance, 'currency' => $this->currency()],
+        );
+    }
+
+    /**
+     * A withdrawal debits the wallet when it is requested, so one waiting for
+     * review leaves the wallet at zero and needs its own check. Withdrawals
+     * and settlements arrive with the M1b settlements work; until then there
+     * is nothing pending to look for. Wire them in here.
+     */
+    // @phpstan-ignore return.unusedType (nothing pending to find until #211's models exist)
+    private function pendingPayoutBlocker(User $user): ?DomainException
+    {
         return null;
+    }
+
+    private function currency(): string
+    {
+        return (string) config('qbazaar.default_currency', 'QAR');
     }
 
     /**

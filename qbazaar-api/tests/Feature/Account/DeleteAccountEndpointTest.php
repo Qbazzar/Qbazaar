@@ -152,3 +152,34 @@ it('allows the deletion when every order is completed or cancelled', function ()
 
     deleteJson('/api/v1/account/delete-request', ['password' => 'Str0ng!Pass1'])->assertStatus(202);
 });
+
+function adjustDeletionTestWallet(User $user, string $signedAmount): void
+{
+    app(LedgerRecipes::class)->adjustWallet(
+        $user->id,
+        $signedAmount,
+        'deletion test',
+        new LedgerReference(LedgerReferenceType::ADJUSTMENT, (string) Str::ulid()),
+        LedgerActor::system(),
+    );
+}
+
+it('refuses with ACCOUNT_005 and the balance while the wallet is not empty', function (): void {
+    adjustDeletionTestWallet($this->user, '40.00');
+
+    deleteJson('/api/v1/account/delete-request', ['password' => 'Str0ng!Pass1'])
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', 'ACCOUNT_005')
+        ->assertJsonPath('error.details.amount', '40.00')
+        ->assertJsonPath('error.details.currency', 'QAR');
+
+    Bus::assertNotDispatched(DeleteAccountJob::class);
+    expect($this->user->fresh()->status)->toBe(UserStatus::ACTIVE);
+});
+
+it('allows the deletion once the wallet has been emptied', function (): void {
+    adjustDeletionTestWallet($this->user, '40.00');
+    adjustDeletionTestWallet($this->user, '-40.00');
+
+    deleteJson('/api/v1/account/delete-request', ['password' => 'Str0ng!Pass1'])->assertStatus(202);
+});

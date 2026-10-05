@@ -21,8 +21,8 @@ use Illuminate\Support\Facades\DB;
  *   ACTIVE → PENDING_DELETION
  *   sessions: all burnt (refresh + PAT) so the user is signed out everywhere.
  *
- * Refused while the user owes commission or has an order in progress
- * (AccountDeletionGuard); the job checks both again before erasing.
+ * Refused while the user owes commission, has an order in progress or money
+ * in the wallet (AccountDeletionGuard); the job checks both again before erasing.
  *
  * The cancel path is implicit — if the user signs back in during the grace
  * window the LoginController flips them back to ACTIVE and the queued

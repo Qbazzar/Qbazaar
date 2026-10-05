@@ -283,3 +283,24 @@ it('reminds the user of a held deletion again once the notice window has passed'
     runDeleteJob($user);
     Notification::assertSentToTimes($user, AccountDeletionOnHoldNotification::class, 2);
 });
+
+it('keeps a due account pending and tells the user when money reached the wallet during the grace period', function (): void {
+    Notification::fake();
+    $user = userPendingDeletionFor(31);
+    app(LedgerRecipes::class)->adjustWallet(
+        $user->id,
+        '15.00',
+        'job test',
+        new LedgerReference(LedgerReferenceType::ADJUSTMENT, (string) Str::ulid()),
+        LedgerActor::system(),
+    );
+
+    runDeleteJob($user);
+
+    expect($user->fresh())->not->toBeNull()
+        ->and($user->fresh()->status)->toBe(UserStatus::PENDING_DELETION);
+    Notification::assertSentTo($user, function (AccountDeletionOnHoldNotification $notification) use ($user): bool {
+        return $notification->reason === ErrorCode::ACCOUNT_WALLET_NOT_EMPTY
+            && str_contains($notification->toArray($user)['body'], '15.00');
+    });
+});

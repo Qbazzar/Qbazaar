@@ -69,9 +69,13 @@ class AccountDeletionOnHoldNotification extends Notification implements ShouldQu
 
     private function body(string $locale): string
     {
-        return $this->reason === ErrorCode::ACCOUNT_DEBT_OUTSTANDING
-            ? __('messages.notifications.account_deletion_on_hold.body_debt', ['amount' => (string) ($this->details['amount'] ?? '')], $locale)
-            : __('messages.notifications.account_deletion_on_hold.body_open_order', [], $locale);
+        $amount = ['amount' => (string) ($this->details['amount'] ?? '')];
+
+        return match ($this->reason) {
+            ErrorCode::ACCOUNT_DEBT_OUTSTANDING => __('messages.notifications.account_deletion_on_hold.body_debt', $amount, $locale),
+            ErrorCode::ACCOUNT_WALLET_NOT_EMPTY => __('messages.notifications.account_deletion_on_hold.body_wallet', $amount, $locale),
+            default => __('messages.notifications.account_deletion_on_hold.body_open_order', [], $locale),
+        };
     }
 
     private function resolveLocale(mixed $notifiable): string

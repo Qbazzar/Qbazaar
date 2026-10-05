@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Log;
  * second check stops a delayed job from an earlier, cancelled request from
  * deleting an account whose new request is still inside its grace window.
  *
- * Commission owed or an order in progress may appear during the grace
+ * Commission owed, an order in progress or money in the wallet may appear during the grace
  * period, so AccountDeletionGuard runs again right before erasing. A blocked
  * account stays pending (the daily sweep retries it) and the user is told
  * why, at most once a week so the daily retries do not flood them.
@@ -91,7 +91,7 @@ class DeleteAccountJob implements ShouldQueue
 
     private function holdDeletion(User $user, DomainException $blocker): void
     {
-        Log::info('DeleteAccountJob: skipped, the account owes commission or has an open order', [
+        Log::info('DeleteAccountJob: skipped, the account has a deletion blocker', [
             'user_id' => $this->userId,
             'reason' => $blocker->errorCode->value,
         ]);

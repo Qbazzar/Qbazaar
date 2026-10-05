@@ -196,6 +196,7 @@ requested locale.
 | `ACCOUNT_002` | The email-change link was already used or the account email changed since it was sent | 410 |
 | `ACCOUNT_003` | Account deletion refused: the user still owes commission to the platform. `details.amount` (decimal string) / `details.currency` carry the debt; settle it first | 422 |
 | `ACCOUNT_004` | Account deletion refused: the user has an order in progress (created, awaiting handover or disputed) as buyer or seller. `details.order_id` names one | 422 |
+| `ACCOUNT_005` | Account deletion refused: the user still has money in their wallet. `details.amount` / `details.currency` carry the balance; withdraw it first | 422 |
 
 ## Orders (M1b)
 
