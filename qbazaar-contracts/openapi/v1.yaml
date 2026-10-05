@@ -4525,7 +4525,10 @@ paths:
         - `wallet`: the price leaves the wallet (`promotion_purchased`: debit
           `user:wallet`, credit `platform:revenue`) in the same database
           transaction that starts the promotion; status `active`.
-          Not enough balance → `WALLET_001`, nothing is kept.
+          Not enough balance → `WALLET_001`; a price above the withdrawable
+          amount (wallet minus the commission owed, never below zero, the
+          same rule as withdrawals) → `WALLET_003` with
+          `error.details.withdrawable`. The debt is not netted; nothing is kept.
         - `bank_transfer`: status `pending_payment` with nothing booked; an
           admin confirms the transfer (`promotion_purchased`: debit
           `platform:bank`, credit `platform:revenue`) and the promotion
@@ -4556,7 +4559,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
         '422':
-          description: Validation failed, the ad is not live (`AD_002`), the type is already open on the ad (`PROMOTION_001`) or the wallet is short (`WALLET_001`)
+          description: Validation failed, the ad is not live (`AD_002`), the type is already open on the ad (`PROMOTION_001`) the wallet is short (`WALLET_001`) or the price is above the withdrawable amount (`WALLET_003`)
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }

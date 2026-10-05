@@ -215,7 +215,7 @@ requested locale.
 |------|---------|------|
 | `WALLET_001` | The wallet balance is not enough for this payment or withdrawal | 422 |
 | `WALLET_002` | The settlement is larger than the commission the seller owes | 422 |
-| `WALLET_003` | The withdrawal is larger than the withdrawable amount (wallet balance minus the commission owed, never below zero); `details.withdrawable` holds the amount that can be withdrawn | 422 |
+| `WALLET_003` | The withdrawal or the wallet-paid promotion is larger than the withdrawable amount (wallet balance minus the commission owed, never below zero); `details.withdrawable` holds the amount that can be withdrawn | 422 |
 
 ## Settlements, withdrawals and bank accounts (M1b, BE-14.39)
 

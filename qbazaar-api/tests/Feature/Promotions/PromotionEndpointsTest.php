@@ -23,8 +23,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Tests\Concerns\CreatesAds;
+use Tests\Concerns\ManagesMoney;
 
-uses(RefreshDatabase::class, CreatesAds::class);
+uses(RefreshDatabase::class, CreatesAds::class, ManagesMoney::class);
 
 beforeEach(function (): void {
     $this->seedReferenceData();
@@ -92,6 +93,43 @@ it('refuses a wallet purchase the balance cannot cover and keeps nothing', funct
     expect(AdPromotion::query()->count())->toBe(0)
         ->and($this->ad->fresh()->promotion_rank)->toBe(0)
         ->and(app(LedgerAccounts::class)->balanceOf(LedgerAccountType::USER_WALLET, $this->owner->id))->toBe('10.00');
+});
+
+it('refuses a wallet purchase larger than the wallet minus the commission owed and posts nothing', function (): void {
+    fundWallet($this->owner, '80.00');
+    $this->owesCommission($this->owner, '40.00');
+    $entriesBefore = LedgerTransaction::query()->count();
+
+    buyPromotion($this->owner, $this->ad, ['type' => 'premium', 'payment_method' => 'wallet'])
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', ErrorCode::WALLET_EXCEEDS_WITHDRAWABLE->value)
+        ->assertJsonPath('error.details.withdrawable', '40.00');
+
+    expect(AdPromotion::query()->count())->toBe(0)
+        ->and($this->ad->fresh()->promotion_rank)->toBe(0)
+        ->and(LedgerTransaction::query()->count())->toBe($entriesBefore)
+        ->and($this->balanceOf(LedgerAccountType::USER_WALLET, $this->owner))->toBe('80.00')
+        ->and($this->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $this->owner))->toBe('40.00');
+});
+
+it('allows a wallet purchase up to the withdrawable amount and leaves the debt alone', function (): void {
+    fundWallet($this->owner, '90.00');
+    $this->owesCommission($this->owner, '40.00');
+
+    buyPromotion($this->owner, $this->ad, ['type' => 'premium', 'payment_method' => 'wallet'])
+        ->assertCreated()
+        ->assertJsonPath('data.status', 'active');
+
+    expect($this->balanceOf(LedgerAccountType::USER_WALLET, $this->owner))->toBe('40.00')
+        ->and($this->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $this->owner))->toBe('40.00');
+});
+
+it('lets a bank-transfer promotion be bought by someone who owes commission', function (): void {
+    $this->owesCommission($this->owner, '40.00');
+
+    buyPromotion($this->owner, $this->ad, ['type' => 'premium', 'payment_method' => 'bank_transfer', 'transfer_reference' => 'TRX-9'])
+        ->assertCreated()
+        ->assertJsonPath('data.status', 'pending_payment');
 });
 
 it('leaves a bank-transfer promotion pending with nothing booked', function (): void {

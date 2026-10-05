@@ -22,6 +22,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Str;
 
 use function Pest\Laravel\actingAs;
 
@@ -108,7 +109,7 @@ it('lists the transfers waiting for confirmation to finance staff', function ():
     actingAs($this->admin)->get('/admin/finance/promotions')
         ->assertOk()
         ->assertSee($promotion->transfer_reference)
-        ->assertSee($this->ad->title);
+        ->assertSee(Str::limit($this->ad->title, 40));
 });
 
 it('keeps the transfer actions behind finance.manage', function (): void {

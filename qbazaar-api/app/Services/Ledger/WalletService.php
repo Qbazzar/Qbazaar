@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\Ledger;
 
+use App\Data\Ledger\LockedWallet;
 use App\Data\Ledger\WalletSummary;
 use App\Enums\LedgerAccountType;
 use App\Enums\LedgerTransactionType;
 use App\Enums\PlatformSetting;
+use App\Exceptions\DomainException;
+use App\Exceptions\ErrorCode;
 use App\Models\LedgerAccount;
 use App\Models\LedgerEntry;
 use App\Services\Settings\SettingsService;
@@ -58,6 +61,31 @@ class WalletService
         $left = Money::subtract($balance, $debt);
 
         return Money::isPositive($left) ? $left : Money::ZERO;
+    }
+
+    /**
+     * Locks the user's accounts (and one platform account the caller is
+     * about to post to) and refuses a spend larger than the wallet or than
+     * the withdrawable amount. Call it inside the transaction that posts the
+     * spend, so concurrent spends are checked one after the other.
+     */
+    public function lockForSpend(string $userId, string $amount, ?LedgerAccountType $alongside = null): LockedWallet
+    {
+        $owned = $this->accounts->lockUserAccounts($userId, $alongside);
+        $wallet = $owned->get(LedgerAccountType::USER_WALLET->value)->balance ?? Money::ZERO;
+        $debt = $owned->get(LedgerAccountType::USER_COMMISSION_RECEIVABLE->value)->balance ?? Money::ZERO;
+
+        if (Money::compare($amount, $wallet) > 0) {
+            throw new DomainException(ErrorCode::WALLET_INSUFFICIENT_BALANCE);
+        }
+
+        $withdrawable = $this->withdrawable($wallet, $debt);
+
+        if (Money::compare($amount, $withdrawable) > 0) {
+            throw new DomainException(ErrorCode::WALLET_EXCEEDS_WITHDRAWABLE, details: ['withdrawable' => $withdrawable]);
+        }
+
+        return new LockedWallet($wallet, $debt, $withdrawable);
     }
 
     /**

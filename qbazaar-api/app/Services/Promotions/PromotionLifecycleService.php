@@ -6,6 +6,7 @@ namespace App\Services\Promotions;
 
 use App\Data\Ledger\LedgerActor;
 use App\Data\Ledger\LedgerReference;
+use App\Enums\LedgerAccountType;
 use App\Enums\LedgerReferenceType;
 use App\Enums\PromotionPaymentMethod;
 use App\Enums\PromotionStatus;
@@ -20,6 +21,7 @@ use App\Models\Ad;
 use App\Models\AdPromotion;
 use App\Models\User;
 use App\Services\Ledger\LedgerRecipes;
+use App\Services\Ledger\WalletService;
 use Closure;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -37,10 +39,12 @@ class PromotionLifecycleService
     public function __construct(
         private readonly PromotionCatalog $catalog,
         private readonly LedgerRecipes $recipes,
+        private readonly WalletService $wallets,
     ) {}
 
     /**
      * Buys a promotion at the current catalogue price. Paid from the wallet
+     * (at most the withdrawable amount, so owed commission is never spent)
      * it starts at once; by bank transfer it waits for an admin.
      */
     public function purchase(User $owner, Ad $ad, PromotionType $type, PromotionPaymentMethod $method, ?string $transferReference): AdPromotion
@@ -77,6 +81,7 @@ class PromotionLifecycleService
                 return [$promotion, null];
             }
 
+            $this->wallets->lockForSpend($owner->id, $promotion->price, LedgerAccountType::PLATFORM_REVENUE);
             $this->recipes->purchasePromotionFromWallet($owner->id, $promotion->price, $this->referenceOf($promotion), LedgerActor::user($owner));
 
             return [$promotion, $this->activate($promotion, $lockedAd)];
