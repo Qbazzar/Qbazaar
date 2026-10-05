@@ -14,11 +14,11 @@ After=network.target redis.service mysqld.service
 
 [Service]
 Type=simple
-User=fleeteye
-Group=fleeteye
-WorkingDirectory=/home/fleeteye/qbazaar/qbazaar-api
-ExecStart=/opt/cpanel/ea-php84/root/usr/bin/php /home/fleeteye/qbazaar/qbazaar-api/artisan horizon
-ExecStop=/opt/cpanel/ea-php84/root/usr/bin/php /home/fleeteye/qbazaar/qbazaar-api/artisan horizon:terminate
+User=qbazaar
+Group=qbazaar
+WorkingDirectory=/home/qbazaar/qbazaar/qbazaar-api
+ExecStart=/opt/cpanel/ea-php84/root/usr/bin/php /home/qbazaar/qbazaar/qbazaar-api/artisan horizon
+ExecStop=/opt/cpanel/ea-php84/root/usr/bin/php /home/qbazaar/qbazaar/qbazaar-api/artisan horizon:terminate
 Restart=always
 RestartSec=5
 # Lets a running image conversion (300 s timeout) finish on restart. A longer

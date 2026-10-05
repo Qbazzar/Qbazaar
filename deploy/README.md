@@ -1,10 +1,10 @@
 # QBazaar — Production Deploy
 
-> **Production today:** one WHM/cPanel server, cPanel user `fleeteye`, repo clone at `/home/fleeteye/qbazaar`.
-> Web: `https://qbazaar.fleeteye.de` · API + admin: `https://api.qbazaar.fleeteye.de`.
-> **Next:** M5 moves everything to the new cPanel VPS (`srv1977263.hstgr.cloud`) behind Cloudflare, once the domain is decided (tasks `OPS-18.x` in [MILESTONES-V2.md](../qbazaar-contracts/MILESTONES-V2.md)). The earlier hosts (CloudPanel `miete.site`, then `qbazaar.taqat.space`) are gone.
+> **Production today (since 2026-10-05):** the new cPanel VPS `srv1977263.hstgr.cloud` (`187.53.139.138`, AlmaLinux 9), cPanel user `qbazaar`, repo clone at `/home/qbazaar/qbazaar`.
+> Web: `https://qbazaar.187-53-139-138.sslip.io` · API + admin: `https://api.qbazaar.187-53-139-138.sslip.io`. These are temporary [sslip.io](https://sslip.io) names until the real domain exists; see [Switching to the real domain](#switching-to-the-real-domain).
+> The old server (`fleeteye`, `qbazaar.fleeteye.de`) is retired. Cloudflare and the real domain follow in M5 (`OPS-18.x` in [MILESTONES-V2.md](../qbazaar-contracts/MILESTONES-V2.md)).
 
-First-time server setup is in [CPANEL-FLEETEYE-RUNBOOK.md](CPANEL-FLEETEYE-RUNBOOK.md) (Arabic). Promoting `main` to `production`: follow [DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md). This file covers the day-to-day flow.
+First-time setup of this server is in [NEW-SERVER-RUNBOOK.md](NEW-SERVER-RUNBOOK.md). [CPANEL-FLEETEYE-RUNBOOK.md](CPANEL-FLEETEYE-RUNBOOK.md) (Arabic) is the older runbook for the retired server. Promoting `main` to `production`: follow [DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md). This file covers the day-to-day flow.
 
 ## Branches and workflows
 
@@ -22,7 +22,31 @@ Promote with `git switch production && git merge --ff-only main && git push orig
 
 Changes that only touch `qbazaar-contracts/`, `DOCS/` or the READMEs don't deploy.
 
-**Repository secrets** (`Settings → Secrets and variables → Actions`): `DEPLOY_HOST`, `DEPLOY_USER` (`fleeteye`), `DEPLOY_PORT`, `DEPLOY_SSH_KEY`. `deploy-api.yml` also accepts `DEPLOY_PASSWORD` as a bootstrap fallback; remove it once key auth works.
+**Repository secrets** (`Settings → Secrets and variables → Actions`): `DEPLOY_HOST`, `DEPLOY_USER` (`qbazaar`), `DEPLOY_PORT`, `DEPLOY_SSH_KEY` (private half of `keys/github-actions.pub`). `deploy-api.yml` also accepts `DEPLOY_PASSWORD` as a bootstrap fallback; it is not set.
+
+## Server settings file
+
+Hosts and paths live in one non-secret file on the server, `~qbazaar/.qbazaar-deploy.env`:
+
+```bash
+API_HOST=api.qbazaar.187-53-139-138.sslip.io
+WEB_HOST=qbazaar.187-53-139-138.sslip.io
+URL_SCHEME=https
+REPO_DIR=/home/qbazaar/qbazaar
+PHP_BIN_DIR=/opt/cpanel/ea-php84/root/usr/bin
+```
+
+The deploy scripts read it (an explicit environment variable wins, e.g. `HEALTH_HOST=… bash deploy/scripts/deploy-api.sh`), and the defaults in `common.sh` match it. `HEALTH_HOST` defaults to `API_HOST`. The root-only `/root/qbazaar-secrets/render-env.sh` builds both `.env` files from the templates, this file and the generated secrets in `/root/qbazaar-secrets/`.
+
+## Switching to the real domain
+
+1. DNS: `A` records for the web and `api.` hosts → `187.53.139.138` (or Cloudflare, OPS-18.9).
+2. WHM: add the new domain to the `qbazaar` account (or `whmapi1 modifyacct user=qbazaar DNS=<domain>`), then add the `api` subdomain with docroot `qbazaar/qbazaar-api/public`. Run AutoSSL (`/usr/local/cpanel/bin/autossl_check --user=qbazaar`).
+3. Edit `API_HOST` / `WEB_HOST` in `~qbazaar/.qbazaar-deploy.env`.
+4. As root: `bash /root/qbazaar-secrets/render-env.sh` (rewrites `APP_URL`, `WEB_URL`, `CORS_ALLOWED_ORIGINS`, mail sender and the web `NEXT_PUBLIC_*` hosts).
+5. Install the Apache includes under the new host directories (commands in each file's header), `ensure_vhost_includes`, `configtest`, restart httpd.
+6. Redeploy both (`gh workflow run deploy-api.yml --ref production`, same for web): the web bundle inlines the hosts at build time.
+7. Behind Cloudflare, keep `TRUSTED_PROXIES` empty; see OPS-18.9.
 
 ## What the deploy scripts do
 
@@ -30,7 +54,7 @@ Changes that only touch `qbazaar-contracts/`, `DOCS/` or the READMEs don't deplo
 
 **`deploy-web.sh`:** reset to `origin/production` → `npm ci` → `next build` → restart `qbazaar-web` → probe `http://127.0.0.1:3000/`.
 
-Both scripts put the `ea-php84` CLI first on `PATH`. The `fleeteye` user may restart only `qbazaar-web`, `qbazaar-horizon` and `qbazaar-reverb` through a sudoers drop-in.
+Both scripts source `scripts/common.sh`, which reads the server settings file (below) and puts the `ea-php84` CLI and `/usr/local/bin` (Composer, npm 11) first on `PATH`. The `qbazaar` user may restart only `qbazaar-web`, `qbazaar-horizon` and `qbazaar-reverb` through a sudoers drop-in.
 
 ## Services on the server
 
@@ -100,8 +124,10 @@ First deploy: the migration adds the indexes these deletes use. The first runs c
 ## Meilisearch (install once, as root)
 
 ```bash
-curl -L https://install.meilisearch.com | sh
-mv ./meilisearch /usr/local/bin/
+# AlmaLinux 9 has glibc 2.34; Meilisearch 1.13+ binaries need 2.35, so install
+# the last 1.12 release (the app needs >= 1.4). Re-check when the OS moves on.
+curl -fsSL -o meilisearch https://github.com/meilisearch/meilisearch/releases/download/v1.12.8/meilisearch-linux-amd64
+install -m 755 meilisearch /usr/local/bin/meilisearch
 useradd -r -s /sbin/nologin meilisearch
 mkdir -p /var/lib/meilisearch && chown meilisearch: /var/lib/meilisearch
 
@@ -112,16 +138,18 @@ env = "production"
 master_key = "${MASTER_KEY}"
 db_path = "/var/lib/meilisearch"
 http_addr = "127.0.0.1:7700"
+dump_dir = "/var/lib/meilisearch/dumps"
+snapshot_dir = "/var/lib/meilisearch/snapshots"
 TOML
 chmod 600 /etc/meilisearch.toml
 echo "MEILISEARCH_KEY=${MASTER_KEY}"   # goes into qbazaar-api/.env
 
-cp /home/fleeteye/qbazaar/deploy/systemd/meilisearch.service /etc/systemd/system/
+cp /home/qbazaar/qbazaar/deploy/systemd/meilisearch.service /etc/systemd/system/
 systemctl daemon-reload && systemctl enable --now meilisearch
 curl -s http://127.0.0.1:7700/health   # {"status":"available"}
 ```
 
-Then, as `fleeteye`:
+Then, as `qbazaar`:
 
 ```bash
 cd ~/qbazaar/qbazaar-api
@@ -131,7 +159,7 @@ php artisan scout:sync-index-settings
 php artisan scout:import "App\Models\Ad"
 ```
 
-Check with a typo, which only Meilisearch tolerates: `curl -s 'https://api.qbazaar.fleeteye.de/api/v1/search?q=iphnoe' | head -c 400`.
+Check with a typo, which only Meilisearch tolerates: `curl -s 'https://api.qbazaar.187-53-139-138.sslip.io/api/v1/search?q=iphnoe' | head -c 400`.
 
 Run the same two commands after any release that changes the `ads` index settings in `config/scout.php` or the fields in `Ad::toSearchableArray()`. Each ad carries `category_path` and `location_path` (its ancestors), so also run `scout:import` after moving a category or location under a new parent in the admin; until then, filtering by the old parent still matches those ads.
 
@@ -153,7 +181,7 @@ After the BE-13.31 index migrations reach production, run `ANALYZE TABLE ads, me
 
 | Layer | Setting | Value |
 |---|---|---|
-| Apache (API include) | `LimitRequestBody` | `110100480` (105 MiB), set in `deploy/apache/api.qbazaar.fleeteye.de.include.conf` |
+| Apache (API include) | `LimitRequestBody` | `110100480` (105 MiB), set in `deploy/apache/api.include.conf` |
 | PHP 8.4 (cPanel MultiPHP INI Editor, `ea-php84`) | `upload_max_filesize` | `10M` |
 | | `post_max_size` | `105M` |
 | | `max_file_uploads` | `20` or more |
@@ -166,7 +194,7 @@ The limits above still fit a 10 MB per-file override. If one of them has to be l
 
 All image sizes (`thumbnail` included), the BlurHash/pHash metadata, the downscale of large originals (`UPLOAD_ORIGINAL_MAX_SIDE_PX`, 2560 px) and the ad auto-moderation (`ModerateAdJob`) run on the `media` queue, consumed by the `supervisor-media` Horizon supervisor. MediaLibrary queues its conversions there too (`MEDIA_QUEUE`, `media` by default). Deploy once Horizon has drained its queues: a `DetectDuplicateImagesJob` or pending-ad alert queued by the old code fails after the switch, and that ad then misses its duplicate hint or reviewer alert (it still shows in the pending list). After deploying run `php artisan config:cache` and `php artisan horizon:terminate`. Until a size exists the API serves the signed original; until `ModerateAdJob` runs the admin ad page shows "check still running" and reviewers are not alerted yet.
 
-Public conversions are served from `MEDIA_CDN_URL` when it is set: the base URL that maps to the root of the conversions disk, e.g. `https://cdn.qbazaar.fleeteye.de/storage` for a proxied host in front of the local `public` disk, or the R2 custom domain (same value as `R2_PUBLIC_URL`) on R2. Conversion paths never change, so they are sent with `Cache-Control: public, max-age=31536000, immutable` (Apache include for `/storage/*/conversions/`, the `media-library.remote.extra_headers` override on R2). Signed original links appear on ad detail only and expire on the hour, so one URL is reused for a whole hour. Files uploaded to R2 before this release keep their old `max-age=604800` header.
+Public conversions are served from `MEDIA_CDN_URL` when it is set: the base URL that maps to the root of the conversions disk, e.g. `https://cdn.<domain>/storage` for a proxied host in front of the local `public` disk, or the R2 custom domain (same value as `R2_PUBLIC_URL`) on R2. Conversion paths never change, so they are sent with `Cache-Control: public, max-age=31536000, immutable` (Apache include for `/storage/*/conversions/`, the `media-library.remote.extra_headers` override on R2). Signed original links appear on ad detail only and expire on the hour, so one URL is reused for a whole hour. Files uploaded to R2 before this release keep their old `max-age=604800` header.
 
 ## Expiry sweeps
 
@@ -183,7 +211,7 @@ The inbox and the unread badge read `conversation_participants` (one row per sid
 ## Manual deploy (if Actions is down)
 
 ```bash
-ssh fleeteye@<server> "cd ~/qbazaar && bash deploy/scripts/deploy-api.sh"   # or deploy-web.sh
+ssh qbazaar@187.53.139.138 "cd ~/qbazaar && bash deploy/scripts/deploy-api.sh"   # or deploy-web.sh
 ```
 
 The scripts fetch and reset to `origin/production` themselves.
@@ -194,11 +222,12 @@ The scripts fetch and reset to `origin/production` themselves.
 deploy/
 ├── README.md                       this file
 ├── DEPLOY-CHECKLIST.md             ordered production deploy checklist
-├── CPANEL-FLEETEYE-RUNBOOK.md      first-time setup of the current cPanel server (Arabic)
+├── NEW-SERVER-RUNBOOK.md          first-time setup of the current server
+├── CPANEL-FLEETEYE-RUNBOOK.md      first-time setup of the retired fleeteye server (Arabic)
 ├── env.production.template         API .env template
 ├── web.env.production.template     web .env.production template
-├── scripts/                        deploy-api.sh, deploy-web.sh (run by the workflows)
+├── scripts/                        deploy-api.sh, deploy-web.sh (run by the workflows), common.sh
 ├── systemd/                        horizon, reverb, scheduler, web, meilisearch units
-├── apache/                         vhost includes for qbazaar.fleeteye.de and api.qbazaar.fleeteye.de
+├── apache/                         web.include.conf (WEB_HOST) and api.include.conf (API_HOST)
 └── keys/github-actions.pub         public key for the deploy user
 ```
