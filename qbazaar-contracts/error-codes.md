@@ -248,6 +248,13 @@ requested locale.
 | `PURCHASE_007` | More units than the ad offers (`ads.quantity`) | 422 |
 | `CHECKOUT_001` | Delivery was chosen but the ad is pickup only | 422 |
 
+## Paid promotion (M1b)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `PROMOTION_001` | The ad already has an open promotion of this type (active, or waiting for the bank transfer to be confirmed) | 422 |
+| `PROMOTION_002` | The promotion's status does not allow this move (e.g. confirming a transfer that was already confirmed or rejected) | 422 |
+
 ---
 
 ## Guidelines

@@ -68,6 +68,8 @@ The **withdrawable amount** is the wallet balance minus the commission receivabl
 | 10 | Paid from the wallet | `promotion_purchased` | `user:wallet` | `platform:revenue` |
 | 11 | Paid by bank transfer (admin confirms) | `promotion_purchased` | `platform:bank` | `platform:revenue` |
 
+Both use the idempotency key `promotion:{id}:promotion_purchased`, so a promotion is booked once whichever way it was paid. The seller buys with `POST /ads/{id}/promotions`; 10 posts in the same transaction that activates it (the ad is locked first, then the promotion, then the wallet). A bank-transfer promotion stays `pending_payment` with nothing booked until finance staff (`finance.manage`) confirm it at `/admin/finance/promotions`, which posts 11 and activates it; rejecting it books nothing. The price and duration are frozen on the promotion when it is bought. An expired promotion is never refunded.
+
 ### Corrections
 
 | # | When | Transaction type | Debit | Credit |

@@ -46,6 +46,8 @@ class AdSummaryResource extends JsonResource
             'currency' => $this->currency,
             'status' => $this->status->value,
             'is_reserved' => $this->resource->isReserved(),
+            // The strongest active paid promotion (highlight, push_up, gallery, premium), or null.
+            'promotion' => $this->resource->promotionType()?->value,
             'ad_type' => $this->ad_type->value,
             'shipping' => $this->shipping->value,
             'views_count' => (int) $this->views_count,

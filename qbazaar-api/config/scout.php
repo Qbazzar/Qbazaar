@@ -178,6 +178,8 @@ return [
                     'price',
                     'views_count',
                     '_geo',
+                    // Paid promotions lead the default and most-viewed orders.
+                    'promotion_rank',
                 ],
                 // Results are hydrated from MySQL by id; suggestions read the title.
                 'displayedAttributes' => [

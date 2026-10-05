@@ -55,6 +55,8 @@ class AdResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'is_reserved' => $this->resource->isReserved(),
+            // The strongest active paid promotion (highlight, push_up, gallery, premium), or null.
+            'promotion' => $this->resource->promotionType()?->value,
             'reserved_at' => $this->reserved_at?->toIso8601String(),
             'custom_fields' => $this->custom_fields,
             'views_count' => (int) $this->views_count,

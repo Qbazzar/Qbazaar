@@ -93,7 +93,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Ledger, wallets and orders (read-only; also receives reconciliation alerts)
         'finance.view',
 
-        // Approve settlements, pay or reject withdrawals, rule on order disputes (super_admin only by default)
+        // Approve settlements, withdrawals and promotion bank transfers, rule on order disputes (super_admin only by default)
         'finance.manage',
     ];
 

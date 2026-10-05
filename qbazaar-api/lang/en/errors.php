@@ -490,4 +490,13 @@ return [
             'unavailable' => 'The seller does not deliver this item; choose pickup.',
         ],
     ],
+
+    'promotion' => [
+        'already' => [
+            'open' => 'This ad already has this promotion running or waiting for payment.',
+        ],
+        'invalid' => [
+            'transition' => 'This promotion cannot move to that status.',
+        ],
+    ],
 ];
