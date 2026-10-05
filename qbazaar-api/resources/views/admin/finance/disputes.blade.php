@@ -8,39 +8,40 @@
 @endphp
 
 @section('content')
-    <p class="mb-6 text-sm text-ink-500">طلبات أبلغ المشتري عن مشكلة فيها بعد التسليم. اكتب سبب القرار؛ يُحفظ مع الطلب وفي سجل النشاط.</p>
+    <x-admin.page-toolbar description="طلبات أبلغ المشتري عن مشكلة فيها بعد التسليم. اكتب سبب القرار؛ يُحفظ مع الطلب وفي سجل النشاط." />
 
-    <div class="space-y-4">
-        @forelse ($orders as $order)
-            <article class="rounded-2xl border border-ink-200 bg-cream-100 p-5 text-sm">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div class="space-y-1">
-                        <p class="font-bold">{{ $order->ad_title }}</p>
-                        <p class="text-ink-500">المشتري: {{ $order->buyer?->full_name ?? 'حساب محذوف' }} · البائع: {{ $order->seller?->full_name ?? 'حساب محذوف' }}</p>
-                        <p class="text-ink-500">طريقة الدفع: {{ $order->payment_method->value }} · فُتح النزاع: <span dir="ltr">{{ $order->disputed_at?->format('Y-m-d H:i') }}</span></p>
-                        <p class="mt-2 rounded-xl bg-cream-50 p-3">{{ $order->dispute_reason }}</p>
-                    </div>
-                    <p class="text-lg font-bold" dir="ltr">{{ $order->total }} {{ $order->currency }}</p>
-                </div>
+    <x-admin.table
+        caption="نزاعات الطلبات"
+        :columns="['الطلب', 'سبب الإبلاغ', 'المبلغ', ['label' => 'فُتح في', 'secondary' => true], ['label' => 'القرار', 'srOnly' => true]]"
+        :empty="$orders->isEmpty()"
+        empty-icon="flag"
+        empty-message="لا توجد نزاعات مفتوحة."
+    >
+        @foreach ($orders as $order)
+            <x-admin.table.row>
+                <x-admin.table.cell primary>
+                    <span class="font-semibold">{{ $order->ad_title }}</span>
+                    <span class="block text-xs text-ink-500">المشتري: {{ $order->buyer?->full_name ?? 'حساب محذوف' }} · البائع: {{ $order->seller?->full_name ?? 'حساب محذوف' }}</span>
+                    <span class="block text-xs text-ink-500">طريقة الدفع: {{ $order->payment_method->value }}</span>
+                </x-admin.table.cell>
+                <x-admin.table.cell label="سبب الإبلاغ" class="text-ink-700">{{ $order->dispute_reason }}</x-admin.table.cell>
+                <x-admin.table.cell label="المبلغ" class="font-bold"><span dir="ltr">{{ $order->total }} {{ $order->currency }}</span></x-admin.table.cell>
+                <x-admin.table.cell label="فُتح في" secondary class="text-ink-500"><span dir="ltr">{{ $order->disputed_at?->format('Y-m-d H:i') }}</span></x-admin.table.cell>
+                <x-admin.table.actions class="max-md:flex-wrap">
+                    @if ($canManage)
+                        <form method="POST" action="{{ route('admin.finance.disputes.resolve', $order) }}" data-confirm="تثبيت قرارك في هذا النزاع؟ لا يمكن التراجع عنه." data-confirm-tone="primary" class="w-full space-y-2 md:w-64">
+                            @csrf
+                            <x-admin.textarea name="note" :id="'note-' . $order->id" label="سبب القرار (يُحفظ مع الطلب)" label-hidden placeholder="سبب القرار" :rows="2" required minlength="5" maxlength="1000" />
+                            <div class="flex flex-wrap gap-2">
+                                <x-admin.button variant="success" size="sm" name="resolution" value="completed">إتمام البيع لصالح البائع</x-admin.button>
+                                <x-admin.button variant="danger" size="sm" name="resolution" value="cancelled">إلغاء البيع لصالح المشتري</x-admin.button>
+                            </div>
+                        </form>
+                    @endif
+                </x-admin.table.actions>
+            </x-admin.table.row>
+        @endforeach
+    </x-admin.table>
 
-                @if ($canManage)
-                    <form method="POST" action="{{ route('admin.finance.disputes.resolve', $order) }}" class="mt-4 space-y-3 border-t border-ink-200 pt-4">
-                        @csrf
-                        <textarea name="note" required minlength="5" maxlength="1000" rows="2" placeholder="سبب القرار" aria-label="سبب القرار (يُحفظ مع الطلب)"
-                                  class="w-full rounded-xl border border-ink-200 bg-cream-50 px-4 py-2 outline-none focus:border-coral"></textarea>
-                        <div class="flex flex-wrap gap-3">
-                            <button type="submit" name="resolution" value="completed" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">إتمام البيع لصالح البائع</button>
-                            <button type="submit" name="resolution" value="cancelled" class="rounded-xl bg-red-600 px-4 py-2 font-bold text-white">إلغاء البيع لصالح المشتري</button>
-                        </div>
-                    </form>
-                @endif
-            </article>
-        @empty
-            <p class="rounded-2xl border border-ink-200 bg-cream-100 p-6 text-center text-ink-500">لا توجد نزاعات مفتوحة.</p>
-        @endforelse
-    </div>
-
-    <div class="mt-6">
-        {{ $orders->links() }}
-    </div>
+    <x-admin.pagination :paginator="$orders" />
 @endsection

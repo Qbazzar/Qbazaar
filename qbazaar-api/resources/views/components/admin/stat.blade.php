@@ -1,4 +1,4 @@
-@props(['label', 'value', 'icon' => null, 'href' => null])
+@props(['label', 'value' => null, 'icon' => null, 'href' => null])
 
 @php($tag = $href ? 'a' : 'div')
 
@@ -15,5 +15,5 @@
             </span>
         @endif
     </div>
-    <div class="mt-2 text-3xl font-extrabold">{{ $value }}</div>
+    <div class="mt-2 text-3xl font-extrabold">{{ $slot->isNotEmpty() ? $slot : $value }}</div>
 </{{ $tag }}>

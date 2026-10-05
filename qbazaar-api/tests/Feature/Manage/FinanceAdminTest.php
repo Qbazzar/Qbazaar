@@ -193,3 +193,16 @@ it('refuses finance actions to staff without finance.manage', function (string $
 
     expect($withdrawal->refresh()->status)->toBe(WithdrawalStatus::PENDING);
 })->with(['moderator', 'support']);
+
+it('links the finance queues in the sidebar only for staff who manage finance', function (): void {
+    actingAs($this->admin)->get(route('admin.dashboard'))
+        ->assertSee(route('admin.finance.settlements.index'), false)
+        ->assertSee(route('admin.finance.withdrawals.index'), false)
+        ->assertSee(route('admin.finance.disputes.index'), false);
+
+    $viewer = User::factory()->create();
+    $viewer->assignRole('support');
+    $viewer->givePermissionTo('finance.view');
+
+    actingAs($viewer)->get(route('admin.dashboard'))->assertDontSee(route('admin.finance.withdrawals.index'), false);
+});
