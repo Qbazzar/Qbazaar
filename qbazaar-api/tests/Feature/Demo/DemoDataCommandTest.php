@@ -16,12 +16,14 @@ use App\Enums\WithdrawalStatus;
 use App\Models\User;
 use App\Services\Ledger\LedgerReconciler;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\Demo\DemoDataException;
 use Database\Seeders\Demo\DemoOptions;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\PendingCommand;
 
@@ -73,7 +75,17 @@ function demoValuesIn(string $table, string $column): array
     return array_values(DB::table($table)->whereNotNull($column)->distinct()->orderBy($column)->pluck($column)->map(static fn (mixed $value): string => (string) $value)->all());
 }
 
-it('builds a demo marketplace with every state of every entity and a balanced ledger', function (): void {
+function demoAccountsExist(): bool
+{
+    return User::query()->where('email', 'like', '%@' . DemoOptions::EMAIL_DOMAIN)->exists();
+}
+
+function productionQuestion(string $action = 'This fills'): string
+{
+    return "{$action} the production database [" . config('database.connections.sqlite.database') . '] with demo data. Type its name to continue';
+}
+
+it('builds every state of every entity at the minimum counts, with photos and a balanced ledger', function (): void {
     demoCommand(['--users' => 10, '--ads' => 40])->assertSuccessful();
 
     expect(demoValuesIn('ads', 'status'))->toEqualCanonicalizing(demoStatuses(AdStatus::class))
@@ -102,10 +114,6 @@ it('builds a demo marketplace with every state of every entity and a balanced le
         ->and(DB::table('users')->where('phone', 'not like', '+974%')->exists())->toBeFalse();
 
     expect(app(LedgerReconciler::class)->run()->isClean())->toBeTrue();
-});
-
-it('attaches one to eight photos to every listing and leaves no orphan media', function (): void {
-    demoCommand(['--users' => 6, '--ads' => 20])->assertSuccessful();
 
     $photosPerAd = DB::table('ads')
         ->leftJoin('media', fn ($join) => $join->on('media.model_id', '=', 'ads.id')->where('media.collection_name', 'images'))
@@ -129,47 +137,66 @@ it('attaches one to eight photos to every listing and leaves no orphan media', f
     foreach (Media::query()->get() as $media) {
         expect(Storage::disk($media->disk)->exists($media->getPathRelativeToRoot()))->toBeTrue();
     }
-});
 
-it('refuses to run twice without --fresh', function (): void {
-    demoCommand(['--users' => 4, '--ads' => 12])->assertSuccessful();
     $users = User::query()->count();
-
-    demoCommand(['--users' => 4, '--ads' => 12])->assertFailed();
-
+    demoCommand(['--users' => 10, '--ads' => 40])->assertFailed();
     expect(User::query()->count())->toBe($users);
 });
 
 it('refuses to run in production without --force', function (): void {
     app()->detectEnvironment(fn (): string => 'production');
 
-    demoCommand(['--users' => 4, '--ads' => 12])->assertFailed();
+    demoCommand(['--users' => 10, '--ads' => 40])->assertFailed();
 
-    expect(User::query()->where('email', 'like', '%@' . DemoOptions::EMAIL_DOMAIN)->exists())->toBeFalse();
+    expect(demoAccountsExist())->toBeFalse();
 });
 
 it('refuses to run in production when the typed confirmation does not match', function (): void {
     app()->detectEnvironment(fn (): string => 'production');
 
-    demoCommand(['--users' => 4, '--ads' => 12, '--force' => true])
-        ->expectsQuestion('This fills the production database [' . config('database.connections.sqlite.database') . '] with demo data. Type its name to continue', 'yes')
+    demoCommand(['--users' => 10, '--ads' => 40, '--force' => true])
+        ->expectsQuestion(productionQuestion(), 'yes')
         ->assertFailed();
 
-    expect(User::query()->where('email', 'like', '%@' . DemoOptions::EMAIL_DOMAIN)->exists())->toBeFalse();
+    expect(demoAccountsExist())->toBeFalse();
+});
+
+it('keeps the schema when a production --fresh is not confirmed', function (): void {
+    app()->detectEnvironment(fn (): string => 'production');
+    $categories = DB::table('categories')->count();
+
+    demoCommand(['--users' => 10, '--ads' => 40, '--force' => true, '--fresh' => true])
+        ->expectsQuestion(productionQuestion('This DROPS EVERY TABLE and fills'), '')
+        ->assertFailed();
+
+    expect(DB::table('categories')->count())->toBe($categories)->toBeGreaterThan(0);
+});
+
+it('runs in production once confirmed, with a random password instead of the local one', function (): void {
+    app()->detectEnvironment(fn (): string => 'production');
+
+    demoCommand(['--users' => 10, '--ads' => 40, '--force' => true])
+        ->expectsQuestion(productionQuestion(), (string) config('database.connections.sqlite.database'))
+        ->assertSuccessful();
+
+    $staff = User::query()->where('email', 'super-admin@' . DemoOptions::EMAIL_DOMAIN)->firstOrFail();
+
+    expect(Hash::check(DemoOptions::LOCAL_PASSWORD, (string) $staff->password))->toBeFalse();
 });
 
 it('refuses to be seeded directly in production, around the command', function (): void {
     app()->detectEnvironment(fn (): string => 'production');
 
-    expect(fn () => app(DemoDataSeeder::class)->run(new DemoOptions(users: 4, ads: 12)))
-        ->toThrow(RuntimeException::class, 'never seeded in production');
+    expect(fn () => app(DemoDataSeeder::class)->run(new DemoOptions(users: 10, ads: 40)))
+        ->toThrow(DemoDataException::class, 'never seeded in production');
 
-    expect(User::query()->where('email', 'like', '%@' . DemoOptions::EMAIL_DOMAIN)->exists())->toBeFalse();
+    expect(demoAccountsExist())->toBeFalse();
 });
 
 it('rejects counts outside the supported range', function (array $options): void {
     demoCommand($options)->assertExitCode(2);
 })->with([
-    'too few users' => [['--users' => 1]],
+    'too few users' => [['--users' => 9]],
+    'too few ads' => [['--ads' => 39]],
     'not a number' => [['--ads' => 'many']],
 ]);

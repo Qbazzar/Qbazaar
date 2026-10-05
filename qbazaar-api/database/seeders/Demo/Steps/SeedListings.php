@@ -20,11 +20,11 @@ use Closure;
 use Database\Seeders\Demo\Catalog\Listings;
 use Database\Seeders\Demo\Catalog\Phrases;
 use Database\Seeders\Demo\DemoContext;
+use Database\Seeders\Demo\DemoDataException;
 use Database\Seeders\Demo\DemoMedia;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 /**
  * Creates the listings with photos and walks each one to its final status
@@ -108,7 +108,7 @@ final class SeedListings
         $this->districts = Location::query()->where('type', LocationType::DISTRICT->value)->get();
 
         if ($this->categories->isEmpty() || $this->districts->isEmpty()) {
-            throw new RuntimeException('Categories and locations are missing. Run with --fresh or seed the reference data first.');
+            throw new DemoDataException('Categories and locations are missing. Run with --fresh or seed the reference data first.');
         }
     }
 
@@ -217,7 +217,8 @@ final class SeedListings
     }
 
     /**
-     * Business accounts list three times as much as private ones.
+     * Half the listings drawn for a private member go to someone else, so
+     * business accounts end up listing noticeably more each.
      */
     private function pickSeller(DemoContext $context): User
     {

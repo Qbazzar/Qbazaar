@@ -210,8 +210,8 @@ final class SeedDeals
             self::OFFER_WITHDRAWN => $context->clock->at($answerAt, fn () => ($this->withdrawOffer)($buyer, $offer)),
             self::OFFER_EXPIRED => $this->offers->expireIfDue($offer),
             self::OFFER_COUNTERED => $this->counter($context, $seller, $offer, $ad, $answerAt),
-            self::COUNTER_ACCEPTED => $this->closeDeal($context, $placesOrder(), $this->counter($context, $seller, $offer, $ad, $answerAt), $buyer, $ad, $answerAt->copy()->addHours(2)),
-            default => $this->closeDeal($context, $placesOrder(), $offer, $seller, $ad, $answerAt),
+            self::COUNTER_ACCEPTED => $this->closeDeal($context, $placesOrder(), $this->counter($context, $seller, $offer, $ad, $answerAt), $buyer, $buyer, $ad, $answerAt->copy()->addHours(2)),
+            default => $this->closeDeal($context, $placesOrder(), $offer, $seller, $buyer, $ad, $answerAt),
         };
     }
 
@@ -224,7 +224,7 @@ final class SeedDeals
      * The responder accepts (placing the order and reserving the ad), then
      * the order is taken as far as the scenario asks.
      */
-    private function closeDeal(DemoContext $context, OrderOutcome $outcome, Offer $offer, User $acceptedBy, Ad $ad, Carbon $at): void
+    private function closeDeal(DemoContext $context, OrderOutcome $outcome, Offer $offer, User $acceptedBy, User $buyer, Ad $ad, Carbon $at): void
     {
         $this->finance->ensureCanTakeOrders($context, $ad->user, $at);
 
@@ -232,7 +232,7 @@ final class SeedDeals
         $order = Order::query()->where('source', OrderSource::OFFER->value)->where('source_id', $offer->id)->firstOrFail();
         $fulfillment = $ad->shipping === AdShipping::DELIVERY && $this->deliveryTurn ? Fulfillment::DELIVERY : Fulfillment::PICKUP;
 
-        $this->journey->run($context, $order, $ad, $offer->buyer, $outcome, $at, $fulfillment);
+        $this->journey->run($context, $order, $ad, $buyer, $outcome, $at, $fulfillment);
     }
 
     private function blockSomePairs(DemoContext $context): void

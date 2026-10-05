@@ -6,12 +6,12 @@ namespace App\Console\Commands;
 
 use App\Models\Ad;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\Demo\DemoDataException;
 use Database\Seeders\Demo\DemoOptions;
 use Database\Seeders\Demo\DemoSummary;
 use Database\Seeders\DemoDataSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
-use RuntimeException;
 use Throwable;
 
 class SeedDemoDataCommand extends Command
@@ -25,11 +25,12 @@ class SeedDemoDataCommand extends Command
 
     protected $description = 'Fill the database with a realistic Qatar demo marketplace: members, listings with photos, chats, offers, orders, commission, reports and tickets.';
 
-    private const int MIN_USERS = 4;
+    /** The smallest counts at which every state of every entity still appears. */
+    private const int MIN_USERS = 10;
 
     private const int MAX_USERS = 2_000;
 
-    private const int MIN_ADS = 10;
+    private const int MIN_ADS = 40;
 
     private const int MAX_ADS = 20_000;
 
@@ -66,7 +67,7 @@ class SeedDemoDataCommand extends Command
 
         try {
             $seeder->run($options);
-        } catch (RuntimeException $failure) {
+        } catch (DemoDataException $failure) {
             $this->components->error($failure->getMessage());
 
             return self::FAILURE;
@@ -140,6 +141,12 @@ class SeedDemoDataCommand extends Command
         ]);
 
         foreach ($disks as $disk) {
+            if (config("filesystems.disks.{$disk}.driver") !== 'local') {
+                $this->components->warn("Left the files on the remote disk [{$disk}] alone; it may be shared with another environment.");
+
+                continue;
+            }
+
             $this->callSilently('media-library:clean', ['disk' => $disk, '--skip-conversions' => true, '--force' => true]);
         }
     }
@@ -163,10 +170,15 @@ class SeedDemoDataCommand extends Command
                 $this->call('scout:flush', ['model' => Ad::class]);
             }
 
-            $this->call('scout:sync-index-settings');
-            $this->call('scout:import', ['model' => Ad::class]);
+            $failed = $this->call('scout:sync-index-settings') !== self::SUCCESS
+                || $this->call('scout:import', ['model' => Ad::class]) !== self::SUCCESS;
         } catch (Throwable $failure) {
-            $this->components->warn('Search index not updated (' . $failure->getMessage() . '). Start Meilisearch and run: php artisan scout:import "App\Models\Ad"');
+            $failed = true;
+            $this->components->warn($failure->getMessage());
+        }
+
+        if ($failed) {
+            $this->components->warn('Search index not updated. Start Meilisearch and run: php artisan scout:import "App\Models\Ad"');
         }
     }
 

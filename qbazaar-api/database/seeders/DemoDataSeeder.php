@@ -12,6 +12,7 @@ use App\Services\Ledger\LedgerReconciler;
 use Closure;
 use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoContext;
+use Database\Seeders\Demo\DemoDataException;
 use Database\Seeders\Demo\DemoMedia;
 use Database\Seeders\Demo\DemoOptions;
 use Database\Seeders\Demo\DemoRandom;
@@ -25,7 +26,6 @@ use Database\Seeders\Demo\Steps\SeedPurchaseRequests;
 use Database\Seeders\Demo\Steps\SeedSocialGraph;
 use Database\Seeders\Demo\Steps\SeedWalletActivity;
 use Illuminate\Database\Seeder;
-use RuntimeException;
 
 /**
  * A realistic Qatar marketplace to click through: staff for every role,
@@ -48,7 +48,7 @@ class DemoDataSeeder extends Seeder
     ) {}
 
     /**
-     * @throws RuntimeException in production without confirmation, when demo data already exists, or when the ledger does not reconcile
+     * @throws DemoDataException in production without confirmation, when demo data already exists, or when the ledger does not reconcile
      */
     public function run(?DemoOptions $options = null): void
     {
@@ -100,14 +100,14 @@ class DemoDataSeeder extends Seeder
     private function ensureAllowedHere(DemoOptions $options): void
     {
         if (app()->isProduction() && ! $options->confirmedForProduction) {
-            throw new RuntimeException('Demo data is never seeded in production directly. Use `php artisan qbazaar:demo --force` and confirm.');
+            throw new DemoDataException('Demo data is never seeded in production directly. Use `php artisan qbazaar:demo --force` and confirm.');
         }
     }
 
     private function ensureNoDemoDataYet(): void
     {
         if (User::withTrashed()->where('email', 'like', '%@' . DemoOptions::EMAIL_DOMAIN)->exists()) {
-            throw new RuntimeException('Demo data is already in this database. Run `php artisan qbazaar:demo --fresh` to rebuild it.');
+            throw new DemoDataException('Demo data is already in this database. Run `php artisan qbazaar:demo --fresh` to rebuild it.');
         }
     }
 
@@ -146,7 +146,7 @@ class DemoDataSeeder extends Seeder
         $report = $this->reconciler->run();
 
         if (! $report->isClean()) {
-            throw new RuntimeException('The demo ledger does not reconcile: ' . json_encode($report->toArray(), JSON_PRETTY_PRINT));
+            throw new DemoDataException('The demo ledger does not reconcile: ' . json_encode($report->toArray(), JSON_PRETTY_PRINT));
         }
     }
 

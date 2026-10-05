@@ -64,15 +64,15 @@ Horizon is what runs the queues in production, but it needs the `pcntl`/`posix` 
 
 ```bash
 php artisan qbazaar:demo --fresh                 # drop all tables, migrate, reference data, then the demo
-php artisan qbazaar:demo --fresh --users=15 --ads=60   # a smaller, faster demo
+php artisan qbazaar:demo --fresh --users=15 --ads=60   # a smaller, faster demo (about a minute)
 php artisan queue:work --queue=media,default     # until the photo conversions are done
 ```
 
 | Option | Default | |
 |---|---|---|
-| `--fresh` | off | Rebuilds the schema first. Without it the command refuses if demo accounts already exist. |
-| `--users` | 60 | Marketplace members (4–2000); one staff account per role comes on top. |
-| `--ads` | 400 | Listings (10–20000). |
+| `--fresh` | off | Rebuilds the schema first and removes the previous run's media files from local disks (remote disks are left alone). Without it the command refuses if demo accounts already exist. |
+| `--users` | 60 | Marketplace members (10–2000); one staff account per role comes on top. |
+| `--ads` | 400 | Listings (40–20000). The minimums are the smallest counts at which every state still appears. |
 | `--sync-media` | off | Runs the image conversions inline instead of queueing them (much slower). |
 | `--force` | off | Needed in production, together with typing the database name back. |
 
