@@ -149,6 +149,12 @@ return [
             'title' => 'Your data export is ready',
             'body' => 'Tap to download your personal data export.',
         ],
+        'account_deletion_on_hold' => [
+            'title' => 'Your account deletion is on hold',
+            'body_debt' => 'We could not delete your account yet because you still owe :amount QAR in commission. Your request stays pending and goes ahead once the amount is settled.',
+            'body_wallet' => 'We could not delete your account yet because you still have :amount QAR in your wallet. Your request stays pending and goes ahead once you withdraw it.',
+            'body_open_order' => 'We could not delete your account yet because you have an order in progress. Your request stays pending and goes ahead once the order is completed or cancelled.',
+        ],
         'support_reply' => [
             'title' => 'Support replied to your ticket',
             'body' => 'Our support team replied to ":subject".',
