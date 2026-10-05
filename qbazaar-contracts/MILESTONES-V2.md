@@ -28,10 +28,10 @@
 | M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
 | M3 Web on the new design | 16 | 11 | 2 | 9 | Phone verification (#157) and Turnstile (#206) done; FE-16.8 (orders on the web) can start now that M1b is in |
 | M4 Admin additions | 17 | 15 | 0 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, AD-17.7 still needs orders and the revenue report |
-| M5 Deployment on the new server | 18 | 18 | 0 | 18 | Waits for M1–M4 and the domain |
+| M5 Deployment on the new server | 18 | 18 | 2 | 16 | Waits for M1–M4 and the domain |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **179** | **100** | **79** | |
+| **Total** | | **179** | **102** | **77** | |
 
 ---
 
@@ -380,18 +380,25 @@
 
 ## Sprint 18 — M5 Deployment on the new server
 
-**Goal:** the whole system (API, web, workers, search, WebSocket) running natively on the new cPanel VPS (`srv1977263.hstgr.cloud`, no Docker) behind Cloudflare, deployed from GitHub Actions. Production today is the older cPanel server (`qbazaar.fleeteye.de`); the units and scripts in `deploy/` target it and move over in OPS-18.6.
+**Goal:** the whole system (API, web, workers, search, WebSocket) running natively on the new cPanel VPS (`srv1977263.hstgr.cloud`, no Docker) behind Cloudflare, deployed from GitHub Actions. Production runs there since 2026-10-05 under temporary sslip.io hosts ([`deploy/NEW-SERVER-RUNBOOK.md`](../deploy/NEW-SERVER-RUNBOOK.md)); the old `fleeteye` server is retired.
 
 **Entry:** M1–M4 feature-complete. The domain must be decided before OPS-18.9 (V2-PLAN §2.6); `.qa` domains are bought from a Qatari registrar and their DNS moved to Cloudflare.
 
 **Exit criteria:** HTTPS on the final domain through Cloudflare · a push to `production` deploys after CI passes · real SMS and push arrive · a backup has been restored on a copy · alerts fire when the site goes down.
 
-### Server and runtime
+### Done — new server (2026-10-05)
+
+> Status: ✅ done. #215 → OPS-18.1, OPS-18.2
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | OPS-18.1 | cPanel account + domain (or the server name for now) + AutoSSL for `api.` and the main domain | [P0] | HTTPS works on both |
 | OPS-18.2 | EA-PHP 8.4 + required extensions, MySQL, Redis | [P0] | `php artisan about` is clean |
+
+### Server and runtime
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
 | OPS-18.3 | Meilisearch + Horizon + Reverb as systemd services + `mod_proxy_wstunnel` for Reverb | [P0] | WebSocket connects from mobile and web |
 | OPS-18.4 | Next.js on systemd behind an Apache proxy; the static prototype moves off the root | [P0] | The real web on the domain |
 | OPS-18.5 | Secrets: Twilio, Firebase, Sentry, Mail | [P0] | A real SMS arrives; a real push arrives |

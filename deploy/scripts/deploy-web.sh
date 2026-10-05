@@ -1,31 +1,21 @@
 #!/usr/bin/env bash
-# QBazaar — Web (Next.js) deploy (WHM/cPanel VPS · qbazaar.fleeteye.de)
+# QBazaar — Web (Next.js) deploy (WHM/cPanel VPS, cPanel user `qbazaar`)
 #
-# Invoked by .github/workflows/deploy-web.yml over SSH as the `fleeteye` user.
+# Invoked by .github/workflows/deploy-web.yml over SSH as the deploy user.
 # Builds in place, then restarts the qbazaar-web systemd unit (the sudoers
 # drop-in permits the restart). Reads qbazaar-web/.env.production (untracked,
-# survives `git reset` because it's gitignored).
+# survives `git reset` because it's gitignored). Settings: see common.sh.
 
 set -euo pipefail
 shopt -s inherit_errexit
 
-# cPanel: put the ea-php84 CLI binary + composer first so bare `php`/`composer`
-# resolve to the 8.4 CLI SAPI in the minimal non-login PATH that GitHub
-# Actions's SSH shell provides (/usr/bin/php is a cgi-fcgi wrapper).
-export PATH="/opt/cpanel/ea-php84/root/usr/bin:/usr/local/bin:$PATH"
+# shellcheck source=deploy/scripts/common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 WEB_DIR="$REPO_DIR/qbazaar-web"
-BRANCH="${DEPLOY_BRANCH:-production}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/}"
 
-log() { printf '\n\033[1;36m> %s\033[0m\n' "$*"; }
-
-cd "$REPO_DIR"
-log "Fetching origin"
-git fetch origin --prune
-log "Resetting to origin/$BRANCH"
-git reset --hard "origin/$BRANCH"
+reset_to_branch
 
 cd "$WEB_DIR"
 

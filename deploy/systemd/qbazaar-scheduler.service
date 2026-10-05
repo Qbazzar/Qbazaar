@@ -14,10 +14,10 @@ After=network.target redis.service mysqld.service
 
 [Service]
 Type=simple
-User=fleeteye
-Group=fleeteye
-WorkingDirectory=/home/fleeteye/qbazaar/qbazaar-api
-ExecStart=/opt/cpanel/ea-php84/root/usr/bin/php /home/fleeteye/qbazaar/qbazaar-api/artisan schedule:work
+User=qbazaar
+Group=qbazaar
+WorkingDirectory=/home/qbazaar/qbazaar/qbazaar-api
+ExecStart=/opt/cpanel/ea-php84/root/usr/bin/php /home/qbazaar/qbazaar/qbazaar-api/artisan schedule:work
 Restart=always
 RestartSec=5
 

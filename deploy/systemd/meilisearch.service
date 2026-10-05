@@ -8,6 +8,9 @@ After=network.target
 
 [Service]
 User=meilisearch
+# Meili writes dumps/ and snapshots/ relative to its working directory; the
+# default (/) is read-only under ProtectSystem and fails with "Permission denied".
+WorkingDirectory=/var/lib/meilisearch
 ExecStart=/usr/local/bin/meilisearch --config-file-path /etc/meilisearch.toml
 Restart=always
 RestartSec=5

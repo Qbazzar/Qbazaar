@@ -1,34 +1,25 @@
 #!/usr/bin/env bash
-# QBazaar — API deploy (WHM/cPanel VPS · api.qbazaar.fleeteye.de)
+# QBazaar — API deploy (WHM/cPanel VPS, cPanel user `qbazaar`)
 #
-# Invoked by .github/workflows/deploy-api.yml over SSH as the `fleeteye` user.
-# Assumes:
-#  - Repo clone:   /home/fleeteye/qbazaar  (tracks origin/production)
-#  - The api.* subdomain docroot already points at qbazaar-api/public (cPanel)
-#  - PHP 8.4 CLI + Composer on PATH; MySQL + Redis panel-installed
-#  - systemd units qbazaar-horizon / qbazaar-reverb exist, and `fleeteye` has a
-#    sudoers drop-in allowing `systemctl restart` of them (no password).
+# Invoked by .github/workflows/deploy-api.yml over SSH as the deploy user.
+# Hosts, paths and the PHP binary come from common.sh (env, then
+# ~/.qbazaar-deploy.env, then defaults). Assumes:
+#  - Repo clone at $REPO_DIR (tracks origin/production)
+#  - The API_HOST docroot points at qbazaar-api/public (cPanel)
+#  - PHP 8.4 CLI + Composer; MySQL, Redis and Meilisearch running
+#  - systemd units qbazaar-horizon / qbazaar-reverb exist, and the deploy user
+#    has a sudoers drop-in allowing `systemctl restart` of them (no password).
 
 set -euo pipefail
 shopt -s inherit_errexit
 
-# cPanel: put the ea-php84 CLI binary + composer first so bare `php`/`composer`
-# resolve to the 8.4 CLI SAPI in the minimal non-login PATH that GitHub
-# Actions's SSH shell provides (/usr/bin/php is a cgi-fcgi wrapper).
-export PATH="/opt/cpanel/ea-php84/root/usr/bin:/usr/local/bin:$PATH"
+# shellcheck source=deploy/scripts/common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 API_DIR="$REPO_DIR/qbazaar-api"
-BRANCH="${DEPLOY_BRANCH:-production}"
-HEALTH_HOST="${HEALTH_HOST:-api.qbazaar.fleeteye.de}"
+HEALTH_HOST="${HEALTH_HOST:-$API_HOST}"
 
-log() { printf '\n\033[1;36m> %s\033[0m\n' "$*"; }
-
-cd "$REPO_DIR"
-log "Fetching origin"
-git fetch origin --prune
-log "Resetting to origin/$BRANCH"
-git reset --hard "origin/$BRANCH"
+reset_to_branch
 
 cd "$API_DIR"
 

@@ -9,12 +9,12 @@ After=network.target
 
 [Service]
 Type=simple
-User=fleeteye
-Group=fleeteye
-WorkingDirectory=/home/fleeteye/qbazaar/qbazaar-web
+User=qbazaar
+Group=qbazaar
+WorkingDirectory=/home/qbazaar/qbazaar/qbazaar-web
 Environment=NODE_ENV=production
 Environment=NEXT_TELEMETRY_DISABLED=1
-ExecStart=/usr/bin/node /home/fleeteye/qbazaar/qbazaar-web/node_modules/.bin/next start -p 3000
+ExecStart=/usr/bin/node /home/qbazaar/qbazaar/qbazaar-web/node_modules/.bin/next start -p 3000
 Restart=always
 RestartSec=5
 # Next writes nothing outside the repo; give it a private tmp.

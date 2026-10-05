@@ -2,6 +2,8 @@
 
 This release ships every PR merged since the last deploy (2026-07-07, `production` at `1d4248b`): M0 (#147–#157), M1 batches 1–2 (#160–#164, #193–#197) and the M1 performance batch (#199–#203). There are 51 commits and 40 new migrations, and production fast-forwards to `main`.
 
+> **Server moved (2026-10-05):** production is now cPanel user `qbazaar` on `srv1977263` ([NEW-SERVER-RUNBOOK.md](NEW-SERVER-RUNBOOK.md)). Read `fleeteye` below as `qbazaar`, `/home/fleeteye` as `/home/qbazaar`, and the hosts as `API_HOST` / `WEB_HOST` from `~qbazaar/.qbazaar-deploy.env`. The Apache includes are now `apache/api.include.conf` and `apache/web.include.conf`.
+
 Run the sections in order. Server: cPanel user `fleeteye`, clone at `/home/fleeteye/qbazaar`. API: `https://api.qbazaar.fleeteye.de`. Web: `https://qbazaar.fleeteye.de`.
 
 - `fleeteye$` means run it as `fleeteye` in `~/qbazaar/qbazaar-api`.
