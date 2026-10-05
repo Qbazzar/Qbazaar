@@ -58,6 +58,39 @@ php artisan pail                             # tail the logs
 
 Horizon is what runs the queues in production, but it needs the `pcntl`/`posix` extensions, so on Windows use `queue:work` as above.
 
+### Demo data
+
+`migrate --seed` only loads reference data (categories, Qatar locations, roles, CMS pages, help). To click through a realistic marketplace, generate the demo on top:
+
+```bash
+php artisan qbazaar:demo --fresh                 # drop all tables, migrate, reference data, then the demo
+php artisan qbazaar:demo --fresh --users=15 --ads=60   # a smaller, faster demo (about a minute)
+php artisan queue:work --queue=media,default     # until the photo conversions are done
+```
+
+| Option | Default | |
+|---|---|---|
+| `--fresh` | off | Rebuilds the schema first and removes the previous run's media files from local disks (remote disks are left alone). Without it the command refuses if demo accounts already exist. |
+| `--users` | 60 | Marketplace members (10–2000); one staff account per role comes on top. |
+| `--ads` | 400 | Listings (40–20000). The minimums are the smallest counts at which every state still appears. |
+| `--sync-media` | off | Runs the image conversions inline instead of queueing them (much slower). |
+| `--force` | off | Needed in production, together with typing the database name back. |
+
+What it builds, all through the production actions and services so every invariant and ledger posting is real:
+
+- staff for every role and members (private and business with profiles and covers, Arabic and English names, `+974` numbers, verified and unverified, a few suspended);
+- listings in every status across the main categories, with QAR prices and custom fields that fit the category, coordinates inside their Qatar district, and 1–8 photos drawn locally with GD (no network) through Media Library;
+- follows, favourites, recently viewed, saved searches, reviews, chats with text and photos, blocked pairs;
+- offers in every state (including countered), "Buy now" requests in every state, orders in every state with checkout (delivery and pickup), cancellations and disputes (open and ruled), commission booked through `LedgerRecipes`;
+- commission settlements (pending, approved, rejected, wallet netting), bank accounts, withdrawals (pending, paid, rejected, one netting the seller's debt), paid promotions (active, expired, pending bank transfer, rejected);
+- reports, support tickets with replies, notifications and the admin audit trail.
+
+It ends with the ledger reconciliation and fails loudly if anything does not balance, then imports the ads into Meilisearch when `SCOUT_DRIVER=meilisearch` (a stopped server only costs a warning). Every demo account lives on `@demo.qbazaar.qa` and the summary prints the logins: `super-admin@`, `moderator@`, `support@`, `buyer@`, `seller@` and `member01@…`, all with the password `qbazaar-demo`. Runs are seeded, so the same counts give the same data.
+
+In production the command refuses unless `--force` is given and the database name is typed back; the seeder itself refuses there when run through `db:seed`, and the accounts get a random password that is printed once.
+
+Escrow orders do not exist yet (cash is the only payment method until a gateway lands in M7), so the escrow release sweep runs but finds nothing to release.
+
 ---
 
 ## 4. Useful URLs (local)

@@ -12,28 +12,27 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
+    /**
+     * Reference data every environment needs, in dependency order: the
+     * taxonomy first so later seeders can point at it, roles before the admin
+     * account they grant, and moderation rules so the publish path never
+     * falls back to config. Demo users, ads and deals are generated
+     * separately by `php artisan qbazaar:demo`.
+     *
+     * @var list<class-string<Seeder>>
+     */
+    public const array REFERENCE_SEEDERS = [
+        CategorySeeder::class,
+        LocationSeeder::class,
+        RolesAndPermissionsSeeder::class,
+        ModerationRulesSeeder::class,
+        PageSeeder::class,
+        HelpSeeder::class,
+    ];
+
     public function run(): void
     {
-        // Reference data (Sprint 3) — public taxonomy + Qatar locations.
-        // Seeded first so factories in later seeders/tests can reference categories.
-        $this->call([
-            CategorySeeder::class,
-            LocationSeeder::class,
-            // Sprint 11 — admin RBAC + DB-backed moderation rules.
-            // Roles must exist before the admin user is granted super_admin,
-            // and moderation rules must be present so the publish hot path
-            // hits a populated table instead of a slow config-fallback.
-            RolesAndPermissionsSeeder::class,
-            ModerationRulesSeeder::class,
-            // Sprint 12 — CMS pages + Help center seed data.
-            PageSeeder::class,
-            HelpSeeder::class,
-            // Demo data (users / ads / convos / offers / favorites / reports /
-            // tickets) — populates the dev site so designers + QA always see a
-            // realistic shape. Last so it can reference categories + locations
-            // + RBAC roles.
-            DemoDataSeeder::class,
-        ]);
+        $this->call(self::REFERENCE_SEEDERS);
 
         User::factory()->create([
             'full_name' => 'Test User',
