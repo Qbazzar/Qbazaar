@@ -73,12 +73,12 @@ it('tells the proposer of the accepted offer that the order was placed', functio
         ->and(orderNoticesFor($actor))->toBe([]);
 })->with([OfferParty::BUYER, OfferParty::SELLER]);
 
-it('tells the buyer when the seller accepts their purchase request', function (): void {
+it('leaves the acceptance of a purchase request to its own inbox notice', function (): void {
     $order = notifiedOrder(OrderStatus::CREATED, ['source' => OrderSource::PURCHASE_REQUEST]);
 
     OrderCreated::dispatch($order);
 
-    expect(orderNoticesFor($order->buyer))->toBe([OrderNotice::CREATED->value])
+    expect(orderNoticesFor($order->buyer))->toBe([])
         ->and(orderNoticesFor($order->seller))->toBe([]);
 });
 

@@ -71,6 +71,17 @@ fields without breaking older clients.
 | `system.announcement`   | An admin broadcast. | yes |
 | `ad.price_changed`      | The seller lowers the price of a live ad; sent to everyone who favourited it (`data.previous_price`, `data.price`, `data.currency`). | yes |
 | `ads.new_from_followed` | A followed seller's ad goes live (`data.seller_id`). Wired through `SellerFollowers`; silent until follows ship (BE-14.28). | yes |
+| `order.created`         | The party an offer was made to accepts it and the order is placed; the proposer is told (a purchase request's acceptance has its own `purchase_request.accepted` row). Database + mail + push. | yes |
+| `order.awaiting_handover` | The buyer finishes the checkout; the seller is told. | yes |
+| `order.handed_over`     | The order is completed; the buyer is told. | yes |
+| `order.commission_due`  | A cash order is completed with a commission to pay; the seller is told. | yes |
+| `order.cancelled`       | An order is cancelled; the other side is told (both when nobody of them cancelled). | yes |
+| `order.dispute_opened`  | The buyer reports a problem; the seller is told. | yes |
+| `order.dispute_resolved` | An admin ruling; buyer and seller are told, and only about the ruling. | yes |
+| `promotion.activated`   | An admin confirms a bank-transfer promotion (a wallet purchase starts at the seller's own tap and is not announced). | yes |
+| `promotion.expired`     | The promotion's time is up. | yes |
+| `promotion.rejected`    | An admin rejects the transfer. | yes |
+| `purchase_request.created` / `.updated` / `.accepted` / `.rejected` / `.cancelled` | A purchase request changes; the inbox row goes to the side that did not act (the buyer when the platform cancelled it because the ad was sold, expired or removed). Database only: no email, and the push is the chat push below. Queued on the notifications queue, in the recipient's language. | via chat push |
 
 FCM push only goes out when `FIREBASE_CREDENTIALS` is set and the user has a registered device token.
 

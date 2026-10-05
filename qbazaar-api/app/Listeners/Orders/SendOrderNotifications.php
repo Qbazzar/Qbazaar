@@ -45,14 +45,14 @@ class SendOrderNotifications
     }
 
     /**
-     * The order is placed by whoever accepted: the seller for a purchase
-     * request, the party the offer was made to for an offer. The other side
-     * is told.
+     * The order is placed by whoever accepted, and the other side is told:
+     * the party the offer was made to for an offer. A purchase request has
+     * its own inbox notice for its acceptance, so no second one is sent.
      */
     private function recipientOfNewOrder(Order $order): ?string
     {
         if ($order->source === OrderSource::PURCHASE_REQUEST) {
-            return $order->buyer_id;
+            return null;
         }
 
         $proposer = Offer::query()->whereKey($order->source_id)->value('proposed_by');

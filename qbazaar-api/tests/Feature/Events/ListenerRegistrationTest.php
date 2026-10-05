@@ -45,6 +45,7 @@ use App\Listeners\Notifications\PruneStaleDeviceTokens;
 use App\Listeners\Orders\SendOrderNotifications;
 use App\Listeners\Promotions\SendPromotionNotifications;
 use App\Listeners\PurchaseRequests\MarkPurchaseRequestPaid;
+use App\Listeners\PurchaseRequests\SendPurchaseRequestInboxNotifications;
 use App\Listeners\PurchaseRequests\SendPurchaseRequestPushNotifications;
 use App\Listeners\Reports\NotifyModeratorsOfReport;
 use App\Listeners\Search\NotifySavedSearchMatches;
@@ -110,10 +111,10 @@ it('wires each event to its listeners', function (string $event, array $listener
     'PromotionActivated' => [PromotionActivated::class, [SendPromotionNotifications::class]],
     'PromotionExpired' => [PromotionExpired::class, [SendPromotionNotifications::class]],
     'PromotionRejected' => [PromotionRejected::class, [SendPromotionNotifications::class]],
-    'PurchaseRequestCreated' => [PurchaseRequestCreated::class, [SendPurchaseRequestPushNotifications::class]],
-    'PurchaseRequestUpdated' => [PurchaseRequestUpdated::class, [SendPurchaseRequestPushNotifications::class]],
-    'PurchaseRequestAccepted' => [PurchaseRequestAccepted::class, [SendPurchaseRequestPushNotifications::class]],
-    'PurchaseRequestRejected' => [PurchaseRequestRejected::class, [SendPurchaseRequestPushNotifications::class]],
-    'PurchaseRequestCancelled' => [PurchaseRequestCancelled::class, [SendPurchaseRequestPushNotifications::class]],
+    'PurchaseRequestCreated' => [PurchaseRequestCreated::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
+    'PurchaseRequestUpdated' => [PurchaseRequestUpdated::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
+    'PurchaseRequestAccepted' => [PurchaseRequestAccepted::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
+    'PurchaseRequestRejected' => [PurchaseRequestRejected::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
+    'PurchaseRequestCancelled' => [PurchaseRequestCancelled::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
     'PurchaseRequestPaid' => [PurchaseRequestPaid::class, [SendPurchaseRequestPushNotifications::class]],
 ]);
