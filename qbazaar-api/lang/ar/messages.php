@@ -234,4 +234,61 @@ return [
             'body' => 'تم رفض سحب :amount ر.ق وأُعيد المبلغ إلى محفظتك: :reason',
         ],
     ],
+
+    'activity_notifications' => [
+        'action' => 'عرض التفاصيل',
+    ],
+
+    'order_notifications' => [
+        'created' => [
+            'title' => 'تم إنشاء طلبك',
+            'body' => 'تم إنشاء طلب على ":title" (:total :currency). افتحه لمعرفة الخطوة التالية.',
+        ],
+        'awaiting_handover' => [
+            'title' => 'الطلب جاهز للتسليم',
+            'body' => 'أكمل المشتري الدفع لـ ":title" (:total :currency). رتّب موعد التسليم.',
+        ],
+        'handed_over' => [
+            'title' => 'اكتمل الطلب',
+            'body' => 'أكّد البائع تسليم ":title". هل هناك مشكلة؟ يمكنك الإبلاغ عنها خلال مدة محدودة.',
+        ],
+        'cancelled' => [
+            'title' => 'تم إلغاء الطلب',
+            'body' => 'تم إلغاء الطلب على ":title".',
+        ],
+        'commission_due' => [
+            'title' => 'عمولة مستحقة',
+            'body' => 'أُضيفت عمولة بقيمة :commission :currency عن ":title" إلى رصيدك المستحق.',
+        ],
+        'dispute_opened' => [
+            'title' => 'بلاغ عن مشكلة في طلب',
+            'body' => 'أبلغ المشتري عن مشكلة في ":title". سيراجعها فريقنا.',
+        ],
+        'dispute_resolved' => [
+            'title' => 'تم البت في النزاع',
+            'body' => 'أصدر فريقنا قراره بشأن المشكلة المبلّغ عنها في ":title". افتح الطلب لمعرفة النتيجة.',
+        ],
+    ],
+
+    'promotion_types' => [
+        'highlight' => 'تمييز',
+        'push_up' => 'رفع',
+        'gallery' => 'معرض',
+        'premium' => 'مميز',
+    ],
+
+    'promotion_notifications' => [
+        'activated' => [
+            'title' => 'ترويجك فعّال الآن',
+            'body' => 'استلمنا تحويلك: ":title" مروَّج (:type) لمدة :days يوماً.',
+        ],
+        'expired' => [
+            'title' => 'انتهى ترويجك',
+            'body' => 'انتهى ترويج :type لـ ":title". روّج له مجدداً ليبقى في المقدمة.',
+        ],
+        'rejected' => [
+            'title' => 'لم يتم تأكيد دفعة الترويج',
+            'body' => 'لم نتمكن من تأكيد تحويلك بقيمة :price :currency لـ ":title". :reason',
+        ],
+    ],
 ];

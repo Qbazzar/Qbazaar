@@ -215,7 +215,7 @@ requested locale.
 |------|---------|------|
 | `WALLET_001` | The wallet balance is not enough for this payment or withdrawal | 422 |
 | `WALLET_002` | The settlement is larger than the commission the seller owes | 422 |
-| `WALLET_003` | The withdrawal is larger than the withdrawable amount (wallet balance minus the commission owed, never below zero); `details.withdrawable` holds the amount that can be withdrawn | 422 |
+| `WALLET_003` | The withdrawal or the wallet-paid promotion is larger than the withdrawable amount (wallet balance minus the commission owed, never below zero); `details.withdrawable` holds the amount that can be withdrawn | 422 |
 
 ## Settlements, withdrawals and bank accounts (M1b, BE-14.39)
 
@@ -247,6 +247,13 @@ requested locale.
 | `PURCHASE_006` | The ad cannot be bought now: not publicly listed, a "wanted" ad, or without a fixed price | 422 |
 | `PURCHASE_007` | More units than the ad offers (`ads.quantity`) | 422 |
 | `CHECKOUT_001` | Delivery was chosen but the ad is pickup only | 422 |
+
+## Paid promotion (M1b)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `PROMOTION_001` | The ad already has an open promotion of this type (active, or waiting for the bank transfer to be confirmed) | 422 |
+| `PROMOTION_002` | The promotion's status does not allow this move (e.g. confirming a transfer that was already confirmed or rejected) | 422 |
 
 ---
 

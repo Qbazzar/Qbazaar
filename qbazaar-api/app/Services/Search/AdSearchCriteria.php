@@ -14,6 +14,13 @@ use App\Enums\AdSort;
 class AdSearchCriteria
 {
     /**
+     * Paid promotions lead the orders that have no explicit key of the
+     * buyer's own (newest, most viewed); a price or distance sort is
+     * honoured as asked.
+     */
+    private const string PROMOTED_FIRST = 'promotion_rank:desc';
+
+    /**
      * @param array<string, mixed> $params
      */
     public function filter(array $params): string
@@ -79,8 +86,8 @@ class AdSearchCriteria
             AdSort::OLDEST => ['published_at:asc'],
             AdSort::PRICE_ASC => ['price:asc'],
             AdSort::PRICE_DESC => ['price:desc'],
-            AdSort::MOST_VIEWED => ['views_count:desc', 'published_at:desc'],
-            AdSort::LATEST, AdSort::DISTANCE => ['published_at:desc'],
+            AdSort::MOST_VIEWED => [self::PROMOTED_FIRST, 'views_count:desc', 'published_at:desc'],
+            AdSort::LATEST, AdSort::DISTANCE => [self::PROMOTED_FIRST, 'published_at:desc'],
         };
     }
 

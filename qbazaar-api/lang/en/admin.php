@@ -513,6 +513,7 @@ return [
             'ads' => 'Ads',
             'offers' => 'Offers',
             'orders' => 'Orders and disputes',
+            'promotions' => 'Paid promotion',
         ],
         'fields' => [
             'commission_rate' => [
@@ -560,6 +561,14 @@ return [
                 'help' => 'For orders paid by card or bank transfer: how many days after the handover the held amount goes to the seller on its own when the buyer neither confirms nor disputes. Cash orders are not affected.',
                 'unit' => 'days',
             ],
+            'promotion_highlight_price' => ['label' => 'Highlight price', 'help' => 'What a seller pays to show their ad in a standout colour.', 'unit' => 'QAR'],
+            'promotion_highlight_days' => ['label' => 'Highlight duration', 'help' => 'How many days the ad stays highlighted.', 'unit' => 'days'],
+            'promotion_push_up_price' => ['label' => 'Push-up price', 'help' => 'What a seller pays to lift their ad to the top of the results.', 'unit' => 'QAR'],
+            'promotion_push_up_days' => ['label' => 'Push-up duration', 'help' => 'How many days the ad stays pushed up.', 'unit' => 'days'],
+            'promotion_gallery_price' => ['label' => 'Home gallery price', 'help' => 'What a seller pays to show their ad in the home page gallery.', 'unit' => 'QAR'],
+            'promotion_gallery_days' => ['label' => 'Home gallery duration', 'help' => 'How many days the ad stays in the gallery.', 'unit' => 'days'],
+            'promotion_premium_price' => ['label' => 'Premium price', 'help' => 'The strongest promotion: ranks above every other promoted ad.', 'unit' => 'QAR'],
+            'promotion_premium_days' => ['label' => 'Premium duration', 'help' => 'How many days the ad stays premium.', 'unit' => 'days'],
         ],
     ],
 
@@ -594,6 +603,17 @@ return [
                 'title' => 'New order dispute',
                 'body' => 'A buyer reported a problem with an order of :amount QAR after the handover.',
             ],
+        ],
+    ],
+
+    'promotion_transfers' => [
+        'confirmed' => 'Transfer confirmed; the promotion has started.',
+        'rejected' => 'Transfer rejected.',
+        'types' => [
+            'highlight' => 'Highlight',
+            'push_up' => 'Push up',
+            'gallery' => 'Home gallery',
+            'premium' => 'Premium',
         ],
     ],
 ];

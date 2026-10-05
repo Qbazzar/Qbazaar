@@ -47,6 +47,7 @@
                         ['route' => 'admin.finance.settlements.index', 'label' => 'تسويات العمولة', 'match' => 'admin.finance.settlements.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
                         ['route' => 'admin.finance.withdrawals.index', 'label' => 'طلبات السحب', 'match' => 'admin.finance.withdrawals.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
                         ['route' => 'admin.finance.disputes.index', 'label' => 'نزاعات الطلبات', 'match' => 'admin.finance.disputes.*', 'icon' => 'flag', 'permission' => 'finance.manage'],
+                        ['route' => 'admin.finance.promotions.index', 'label' => 'تحويلات الترويج', 'match' => 'admin.finance.promotions.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
                     ],
                     'التواصل' => [
                         ['route' => 'admin.conversations.index', 'label' => 'المحادثات', 'match' => 'admin.conversations.*', 'icon' => 'chat', 'permission' => 'conversations.view'],

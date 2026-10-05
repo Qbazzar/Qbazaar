@@ -18,8 +18,9 @@ use Illuminate\Database\Eloquent\Collection;
  * Everything the home screen shows, gathered in one pass.
  *
  * Until the admin can curate the sections (AD-17.1, AD-17.2) they run in
- * automatic mode: recommended = most viewed among recent ads, best selling =
- * most favourited, featured sellers = business accounts with the most live ads.
+ * automatic mode: recommended = paid promotions first, then the most viewed
+ * among recent ads; best selling = most favourited; featured sellers =
+ * business accounts with the most live ads.
  */
 class GetHomeFeedAction
 {
@@ -47,14 +48,41 @@ class GetHomeFeedAction
      */
     private function recommended(): Collection
     {
+        $limit = (int) config('qbazaar.home.recommended_limit');
+        $promoted = $this->promoted(min($limit, (int) config('qbazaar.promotions.home_promoted_limit')));
         $windowDays = (int) config('qbazaar.home.recommended_window_days');
+
+        $popular = Ad::query()
+            ->publiclyListed()
+            ->where('published_at', '>=', now()->subDays($windowDays))
+            ->whereKeyNot($promoted->modelKeys())
+            ->orderByDesc('views_count')
+            ->orderByDesc('published_at')
+            ->limit($limit - $promoted->count())
+            ->with(self::AD_RELATIONS)
+            ->get();
+
+        return $promoted->concat($popular);
+    }
+
+    /**
+     * Promoted ads, strongest promotion first. The (status, seller_active,
+     * promotion_rank) index keeps this to the few promoted rows.
+     *
+     * @return Collection<int, Ad>
+     */
+    private function promoted(int $limit): Collection
+    {
+        if ($limit < 1) {
+            return new Collection;
+        }
 
         return Ad::query()
             ->publiclyListed()
-            ->where('published_at', '>=', now()->subDays($windowDays))
-            ->orderByDesc('views_count')
+            ->where('promotion_rank', '>', 0)
+            ->orderByDesc('promotion_rank')
             ->orderByDesc('published_at')
-            ->limit((int) config('qbazaar.home.recommended_limit'))
+            ->limit($limit)
             ->with(self::AD_RELATIONS)
             ->get();
     }

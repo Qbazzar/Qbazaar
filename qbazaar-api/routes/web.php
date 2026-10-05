@@ -200,6 +200,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::get('settlements/{settlement}/proof', [Finance\SettlementController::class, 'proof'])->name('settlements.proof');
                 Route::get('withdrawals', [Finance\WithdrawalController::class, 'index'])->name('withdrawals.index');
                 Route::get('disputes', [Finance\DisputeController::class, 'index'])->name('disputes.index');
+                Route::get('promotions', [Finance\PromotionTransferController::class, 'index'])->name('promotions.index');
                 Route::get('users/{user}/statement', [Finance\StatementController::class, 'show'])->name('statements.show');
             });
             Route::middleware('permission:finance.manage')->group(function () {
@@ -207,6 +208,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::post('settlements/{settlement}/reject', [Finance\SettlementController::class, 'reject'])->name('settlements.reject');
                 Route::post('withdrawals/{withdrawal}/pay', [Finance\WithdrawalController::class, 'pay'])->name('withdrawals.pay');
                 Route::post('withdrawals/{withdrawal}/reject', [Finance\WithdrawalController::class, 'reject'])->name('withdrawals.reject');
+                Route::post('promotions/{promotion}/confirm', [Finance\PromotionTransferController::class, 'confirm'])->name('promotions.confirm');
+                Route::post('promotions/{promotion}/reject', [Finance\PromotionTransferController::class, 'reject'])->name('promotions.reject');
                 Route::post('disputes/{order}/resolve', [Finance\DisputeController::class, 'resolve'])->name('disputes.resolve');
             });
         });

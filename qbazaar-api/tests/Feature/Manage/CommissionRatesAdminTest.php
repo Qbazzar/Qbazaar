@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\PlatformSetting;
+use App\Enums\SettingGroup;
 use App\Models\Category;
 use App\Models\CategoryCommissionRate;
 use App\Models\User;
@@ -18,6 +19,22 @@ use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @return array<string, mixed>
+ */
+function promotionSettingDefaults(): array
+{
+    $defaults = [];
+
+    foreach (PlatformSetting::cases() as $setting) {
+        if ($setting->definition()->group === SettingGroup::PROMOTIONS) {
+            $defaults[$setting->value] = $setting->definition()->defaultValue();
+        }
+    }
+
+    return $defaults;
+}
+
 beforeEach(function (): void {
     $this->withoutVite();
     $this->seed([RolesAndPermissionsSeeder::class, CategorySeeder::class]);
@@ -30,6 +47,7 @@ beforeEach(function (): void {
 
 it('changes the general commission rate from the settings page and logs who did it', function (): void {
     actingAs($this->admin)->put('/admin/settings', [
+        ...promotionSettingDefaults(),
         'commission_rate' => '7.25',
         'commission_debt_ceiling' => '500.00',
         'settlement_deadline_days' => 14,

@@ -55,6 +55,8 @@ tags:
     description: Orders created from accepted offers and purchase requests; cash handover
   - name: Wallet
     description: Wallet balance, commission debt and statement (from the double-entry ledger), commission settlements, withdrawals and payout bank accounts
+  - name: Promotions
+    description: Paid promotion of an ad (highlight, push up, home gallery, premium)
   - name: Reports
     description: User reports on ads, users, conversations
   - name: Reviews
@@ -4490,6 +4492,98 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
 
   # ──────────────────────────────────────────────────────────────────────────
+  # Paid promotion (M1b, BE-14.40)
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/promotions:
+    get:
+      tags: [Promotions]
+      summary: The promotion catalogue
+      description: |
+        Every promotion type with its current price and duration. Both are
+        admin settings (`/admin/settings` → Paid promotion), so the list
+        changes when the admin edits them. Every active promotion lifts the
+        ad in search (newest and most-viewed orders) and at the head of the
+        home feed's recommended section; when an ad holds several, the
+        strongest decides its place (premium > gallery > push_up > highlight).
+      operationId: promotionsIndex
+      security: []
+      responses:
+        '200':
+          description: One entry per type
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PromotionOfferListEnvelope' }
+
+  /api/v1/ads/{id}/promotions:
+    post:
+      tags: [Promotions]
+      summary: The ad's owner buys a promotion
+      description: |
+        The price and duration are taken from the catalogue on the server and
+        frozen on the promotion. The ad must be live (`AD_002` otherwise).
+
+        - `wallet`: the price leaves the wallet (`promotion_purchased`: debit
+          `user:wallet`, credit `platform:revenue`) in the same database
+          transaction that starts the promotion; status `active`.
+          Not enough balance → `WALLET_001`; a price above the withdrawable
+          amount (wallet minus the commission owed, never below zero, the
+          same rule as withdrawals) → `WALLET_003` with
+          `error.details.withdrawable`. The debt is not netted; nothing is kept.
+        - `bank_transfer`: status `pending_payment` with nothing booked; an
+          admin confirms the transfer (`promotion_purchased`: debit
+          `platform:bank`, credit `platform:revenue`) and the promotion
+          starts then, for its full duration, or rejects it.
+
+        One open (pending or active) promotion per type per ad
+        (`PROMOTION_001`). Someone else's ad answers `AD_001`.
+      operationId: adsPromotionsStore
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PurchasePromotionRequest' }
+      responses:
+        '201':
+          description: The promotion, `active` (wallet) or `pending_payment` (bank transfer)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdPromotionEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The same idempotency key is still being processed (`REQUEST_IN_PROGRESS`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422':
+          description: Validation failed, the ad is not live (`AD_002`), the type is already open on the ad (`PROMOTION_001`) the wallet is short (`WALLET_001`) or the price is above the withdrawable amount (`WALLET_003`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/v1/account/promotions:
+    get:
+      tags: [Promotions]
+      summary: The caller's promotions, newest first
+      description: Cursor-paginated (`qbazaar.promotions.per_page`, 20).
+      operationId: accountPromotionsIndex
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema: { type: string }
+      responses:
+        '200':
+          description: A page of promotions
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdPromotionListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ──────────────────────────────────────────────────────────────────────────
   # Notifications inbox (Sprint 10)
   # ──────────────────────────────────────────────────────────────────────────
   /api/v1/account/notifications:
@@ -6460,6 +6554,11 @@ components:
         currency: { type: string, example: QAR }
         status: { $ref: '#/components/schemas/AdStatus' }
         is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
+        promotion:
+          oneOf:
+            - $ref: '#/components/schemas/PromotionType'
+            - type: 'null'
+          description: The strongest active paid promotion, for the badge or card style; null when none.
         ad_type: { $ref: '#/components/schemas/AdType' }
         shipping: { $ref: '#/components/schemas/AdShipping' }
         primary_image: { $ref: '#/components/schemas/Media', nullable: true }
@@ -6507,6 +6606,11 @@ components:
         show_full_address: { type: boolean }
         status: { $ref: '#/components/schemas/AdStatus' }
         is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
+        promotion:
+          oneOf:
+            - $ref: '#/components/schemas/PromotionType'
+            - type: 'null'
+          description: The strongest active paid promotion, for the badge or card style; null when none.
         reserved_at: { type: string, format: date-time, nullable: true }
         custom_fields:
           type: object
@@ -7652,6 +7756,87 @@ components:
             data:
               type: array
               items: { $ref: '#/components/schemas/WalletEntry' }
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    # ─── Paid promotion (M1b) ───────────────────────────────────────
+    PromotionType:
+      type: string
+      enum: [highlight, push_up, gallery, premium]
+      description: Strength when an ad holds several, weakest first.
+
+    PromotionOffer:
+      type: object
+      required: [type, price, currency, duration_days]
+      properties:
+        type: { $ref: '#/components/schemas/PromotionType' }
+        price: { $ref: '#/components/schemas/DecimalAmount' }
+        currency: { type: string, example: QAR }
+        duration_days: { type: integer, minimum: 1, maximum: 90 }
+
+    PromotionOfferListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/PromotionOffer' }
+
+    PurchasePromotionRequest:
+      type: object
+      required: [type, payment_method]
+      properties:
+        type: { $ref: '#/components/schemas/PromotionType' }
+        payment_method:
+          type: string
+          enum: [wallet, bank_transfer]
+        transfer_reference:
+          type: [string, 'null']
+          maxLength: 64
+          pattern: '^[A-Za-z0-9][A-Za-z0-9 /._-]*$'
+          description: The bank transfer's reference; required for `bank_transfer`.
+          example: TRX-204918
+
+    AdPromotion:
+      type: object
+      required: [id, ad_id, type, status, payment_method, price, currency, duration_days, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        ad_id: { oneOf: [{ $ref: '#/components/schemas/ULID' }, { type: 'null' }] }
+        ad_title: { type: [string, 'null'], description: Present in the account list. }
+        type: { $ref: '#/components/schemas/PromotionType' }
+        status:
+          type: string
+          enum: [pending_payment, active, expired, rejected]
+          description: pending_payment → active → expired; pending_payment → rejected.
+        payment_method:
+          type: string
+          enum: [wallet, bank_transfer]
+        price: { $ref: '#/components/schemas/DecimalAmount' }
+        currency: { type: string, example: QAR }
+        duration_days: { type: integer }
+        transfer_reference: { type: [string, 'null'] }
+        rejection_reason: { type: [string, 'null'] }
+        starts_at: { type: [string, 'null'], format: date-time }
+        ends_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+
+    AdPromotionEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/AdPromotion' }
+
+    AdPromotionListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/AdPromotion' }
             meta:
               $ref: '#/components/schemas/PaginationMeta'
 

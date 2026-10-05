@@ -18,7 +18,14 @@ use App\Events\Offers\OfferCreated;
 use App\Events\Offers\OfferExpired;
 use App\Events\Offers\OfferRejected;
 use App\Events\Offers\OfferWithdrawn;
+use App\Events\Orders\OrderAwaitingHandover;
+use App\Events\Orders\OrderCancelled;
 use App\Events\Orders\OrderCompleted;
+use App\Events\Orders\OrderCreated;
+use App\Events\Orders\OrderDisputed;
+use App\Events\Promotions\PromotionActivated;
+use App\Events\Promotions\PromotionExpired;
+use App\Events\Promotions\PromotionRejected;
 use App\Events\PurchaseRequests\PurchaseRequestAccepted;
 use App\Events\PurchaseRequests\PurchaseRequestCancelled;
 use App\Events\PurchaseRequests\PurchaseRequestCreated;
@@ -35,7 +42,10 @@ use App\Listeners\Messaging\ScreenChatMessage;
 use App\Listeners\Messaging\SendChatPushNotifications;
 use App\Listeners\Notifications\BroadcastDatabaseNotificationCreated;
 use App\Listeners\Notifications\PruneStaleDeviceTokens;
+use App\Listeners\Orders\SendOrderNotifications;
+use App\Listeners\Promotions\SendPromotionNotifications;
 use App\Listeners\PurchaseRequests\MarkPurchaseRequestPaid;
+use App\Listeners\PurchaseRequests\SendPurchaseRequestInboxNotifications;
 use App\Listeners\PurchaseRequests\SendPurchaseRequestPushNotifications;
 use App\Listeners\Reports\NotifyModeratorsOfReport;
 use App\Listeners\Search\NotifySavedSearchMatches;
@@ -93,11 +103,18 @@ it('wires each event to its listeners', function (string $event, array $listener
     'OfferWithdrawn' => [OfferWithdrawn::class, [SendChatPushNotifications::class]],
     'OfferExpired' => [OfferExpired::class, [SendChatPushNotifications::class]],
     'ReportCreated' => [ReportCreated::class, [NotifyModeratorsOfReport::class]],
-    'OrderCompleted' => [OrderCompleted::class, [MarkPurchaseRequestPaid::class]],
-    'PurchaseRequestCreated' => [PurchaseRequestCreated::class, [SendPurchaseRequestPushNotifications::class]],
-    'PurchaseRequestUpdated' => [PurchaseRequestUpdated::class, [SendPurchaseRequestPushNotifications::class]],
-    'PurchaseRequestAccepted' => [PurchaseRequestAccepted::class, [SendPurchaseRequestPushNotifications::class]],
-    'PurchaseRequestRejected' => [PurchaseRequestRejected::class, [SendPurchaseRequestPushNotifications::class]],
-    'PurchaseRequestCancelled' => [PurchaseRequestCancelled::class, [SendPurchaseRequestPushNotifications::class]],
+    'OrderAwaitingHandover' => [OrderAwaitingHandover::class, [SendOrderNotifications::class]],
+    'OrderCancelled' => [OrderCancelled::class, [SendOrderNotifications::class]],
+    'OrderCompleted' => [OrderCompleted::class, [MarkPurchaseRequestPaid::class, SendOrderNotifications::class]],
+    'OrderCreated' => [OrderCreated::class, [SendOrderNotifications::class]],
+    'OrderDisputed' => [OrderDisputed::class, [SendOrderNotifications::class]],
+    'PromotionActivated' => [PromotionActivated::class, [SendPromotionNotifications::class]],
+    'PromotionExpired' => [PromotionExpired::class, [SendPromotionNotifications::class]],
+    'PromotionRejected' => [PromotionRejected::class, [SendPromotionNotifications::class]],
+    'PurchaseRequestCreated' => [PurchaseRequestCreated::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
+    'PurchaseRequestUpdated' => [PurchaseRequestUpdated::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
+    'PurchaseRequestAccepted' => [PurchaseRequestAccepted::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
+    'PurchaseRequestRejected' => [PurchaseRequestRejected::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
+    'PurchaseRequestCancelled' => [PurchaseRequestCancelled::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
     'PurchaseRequestPaid' => [PurchaseRequestPaid::class, [SendPurchaseRequestPushNotifications::class]],
 ]);

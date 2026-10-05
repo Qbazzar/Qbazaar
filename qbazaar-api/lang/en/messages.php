@@ -256,4 +256,61 @@ return [
             'body' => 'Your withdrawal of :amount QAR was rejected and the amount is back in your wallet: :reason',
         ],
     ],
+
+    'activity_notifications' => [
+        'action' => 'View details',
+    ],
+
+    'order_notifications' => [
+        'created' => [
+            'title' => 'Your order is placed',
+            'body' => 'An order for ":title" was placed (:total :currency). Open it to see the next step.',
+        ],
+        'awaiting_handover' => [
+            'title' => 'Order ready for handover',
+            'body' => 'The buyer completed the checkout for ":title" (:total :currency). Arrange the handover.',
+        ],
+        'handed_over' => [
+            'title' => 'Order completed',
+            'body' => 'The seller confirmed the handover of ":title". Something wrong? You can report a problem for a limited time.',
+        ],
+        'cancelled' => [
+            'title' => 'Order cancelled',
+            'body' => 'The order for ":title" was cancelled.',
+        ],
+        'commission_due' => [
+            'title' => 'Commission due',
+            'body' => 'A commission of :commission :currency for ":title" was added to your balance due.',
+        ],
+        'dispute_opened' => [
+            'title' => 'Problem reported on an order',
+            'body' => 'The buyer reported a problem with ":title". Our team will review it.',
+        ],
+        'dispute_resolved' => [
+            'title' => 'Order dispute resolved',
+            'body' => 'Our team ruled on the reported problem with ":title". Open the order for the outcome.',
+        ],
+    ],
+
+    'promotion_types' => [
+        'highlight' => 'Highlight',
+        'push_up' => 'Push up',
+        'gallery' => 'Gallery',
+        'premium' => 'Premium',
+    ],
+
+    'promotion_notifications' => [
+        'activated' => [
+            'title' => 'Your promotion is live',
+            'body' => 'We received your transfer: ":title" is promoted (:type) for :days days.',
+        ],
+        'expired' => [
+            'title' => 'Your promotion ended',
+            'body' => 'The :type promotion of ":title" has ended. Promote it again to stay on top.',
+        ],
+        'rejected' => [
+            'title' => 'Promotion payment not confirmed',
+            'body' => 'We could not confirm your transfer of :price :currency for ":title". :reason',
+        ],
+    ],
 ];

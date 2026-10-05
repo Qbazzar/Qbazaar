@@ -178,6 +178,10 @@ enum ErrorCode: string
     case PURCHASE_QUANTITY_UNAVAILABLE = 'PURCHASE_007';
     case CHECKOUT_DELIVERY_UNAVAILABLE = 'CHECKOUT_001';
 
+    // ── Paid promotion (M1b) ───────────────────────────────────────────────
+    case PROMOTION_ALREADY_OPEN = 'PROMOTION_001';
+    case PROMOTION_INVALID_TRANSITION = 'PROMOTION_002';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -242,6 +246,8 @@ enum ErrorCode: string
             self::ORDER_SELLER_DEBT_CEILING,
             self::WALLET_INSUFFICIENT_BALANCE,
             self::WALLET_EXCEEDS_COMMISSION_DEBT,
+            self::PROMOTION_ALREADY_OPEN,
+            self::PROMOTION_INVALID_TRANSITION,
             self::WALLET_EXCEEDS_WITHDRAWABLE,
             self::SETTLEMENT_PENDING_EXISTS,
             self::SETTLEMENT_NOT_PENDING,
