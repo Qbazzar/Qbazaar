@@ -403,6 +403,7 @@ return [
             'commission' => [
                 'debt' => 'The amount is more than the commission you owe.',
             ],
+            'withdrawable' => 'You can withdraw only what is left of your balance after the commission you owe.',
         ],
     ],
 

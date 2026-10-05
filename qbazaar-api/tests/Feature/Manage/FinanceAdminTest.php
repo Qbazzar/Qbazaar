@@ -164,13 +164,13 @@ it('lets the ledger outcome key stop a second outcome even past the status check
 it('shows the queues and the statement, the full IBAN only to staff who pay', function (): void {
     $this->owesCommission($this->seller, '100.00');
     pendingTransfer($this->seller, '60.00');
-    $this->fundWallet($this->seller, '200.00');
+    $this->fundWallet($this->seller, '300.00');
     pendingWithdrawal($this->seller, '150.00');
 
     actingAs($this->admin)->get(route('admin.finance.settlements.index'))->assertOk()->assertSee('60.00')->assertSee('TRX-1');
     actingAs($this->admin)->get(route('admin.finance.withdrawals.index'))->assertOk()->assertSee('QA58DOHB00001234567890ABCDEFG');
     actingAs($this->admin)->get(route('admin.finance.disputes.index'))->assertOk();
-    actingAs($this->admin)->get(route('admin.finance.statements.show', $this->seller))->assertOk()->assertSee('50.00')->assertSee('100.00');
+    actingAs($this->admin)->get(route('admin.finance.statements.show', $this->seller))->assertOk()->assertSee('110.00')->assertSee('100.00');
 
     $viewer = User::factory()->create();
     $viewer->assignRole('support');

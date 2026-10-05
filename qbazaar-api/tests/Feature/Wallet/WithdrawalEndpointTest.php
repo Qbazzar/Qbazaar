@@ -5,10 +5,16 @@ declare(strict_types=1);
 use App\Enums\LedgerAccountType;
 use App\Enums\WithdrawalStatus;
 use App\Exceptions\ErrorCode;
+use App\Enums\LedgerTransactionType;
+use App\Enums\SettlementMethod;
+use App\Enums\SettlementStatus;
 use App\Models\BankAccount;
+use App\Models\CommissionSettlement;
+use App\Models\LedgerTransaction;
 use App\Models\User;
 use App\Models\Withdrawal;
 use App\Notifications\Finance\WalletActivityNotification;
+use App\Services\Ledger\LedgerReconciler;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\Concerns\ManagesMoney;
@@ -115,4 +121,63 @@ it('lists only the caller\'s withdrawals', function (): void {
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.iban_masked', 'QA** **** DEFG');
+});
+
+it('nets the commission debt from the wallet before paying out the rest', function (): void {
+    $this->fundWallet($this->seller, '300.00');
+    $this->owesCommission($this->seller, '40.00');
+    $this->addBankAccount($this->seller)->assertCreated();
+
+    requestWithdrawal($this->seller, '200.00')->assertCreated();
+
+    expect($this->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $this->seller))->toBe('0.00')
+        ->and($this->balanceOf(LedgerAccountType::USER_WALLET, $this->seller))->toBe('60.00')
+        ->and($this->balanceOf(LedgerAccountType::PLATFORM_PAYOUTS_PAYABLE))->toBe('200.00')
+        ->and(LedgerTransaction::query()->where('type', LedgerTransactionType::COMMISSION_SETTLED)->count())->toBe(1)
+        ->and(app(LedgerReconciler::class)->run()->isClean())->toBeTrue();
+});
+
+it('refuses more than the wallet minus the debt and reports what can be withdrawn', function (): void {
+    $this->fundWallet($this->seller, '100.00');
+    $this->owesCommission($this->seller, '40.00');
+    $this->addBankAccount($this->seller)->assertCreated();
+
+    requestWithdrawal($this->seller, '60.01')
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', ErrorCode::WALLET_EXCEEDS_WITHDRAWABLE->value)
+        ->assertJsonPath('error.details.withdrawable', '60.00');
+
+    expect(Withdrawal::query()->count())->toBe(0)
+        ->and($this->balanceOf(LedgerAccountType::USER_WALLET, $this->seller))->toBe('100.00')
+        ->and($this->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $this->seller))->toBe('40.00');
+
+    requestWithdrawal($this->seller, '60.00')->assertCreated();
+});
+
+it('refuses any withdrawal when the debt is at least the balance', function (): void {
+    $this->fundWallet($this->seller, '30.00');
+    $this->owesCommission($this->seller, '50.00');
+    $this->addBankAccount($this->seller)->assertCreated();
+
+    requestWithdrawal($this->seller, '1.00')
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', ErrorCode::WALLET_EXCEEDS_WITHDRAWABLE->value)
+        ->assertJsonPath('error.details.withdrawable', '0.00');
+});
+
+it('leaves debt covered by a pending bank transfer for that transfer', function (): void {
+    $this->fundWallet($this->seller, '100.00');
+    $this->owesCommission($this->seller, '40.00');
+    $this->addBankAccount($this->seller)->assertCreated();
+    (new CommissionSettlement)->forceFill([
+        'user_id' => $this->seller->id,
+        'method' => SettlementMethod::BANK_TRANSFER,
+        'status' => SettlementStatus::PENDING,
+        'amount' => '40.00',
+    ])->save();
+
+    requestWithdrawal($this->seller, '60.00')->assertCreated();
+
+    expect($this->balanceOf(LedgerAccountType::USER_COMMISSION_RECEIVABLE, $this->seller))->toBe('40.00')
+        ->and($this->balanceOf(LedgerAccountType::USER_WALLET, $this->seller))->toBe('40.00');
 });

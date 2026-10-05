@@ -82,7 +82,7 @@ class SubmitSettlementAction
      */
     public function fromWallet(User $seller, string $amount): CommissionSettlement
     {
-        $amount = $this->withinDebt($seller, $amount, $this->pendingTransferOf($seller));
+        $amount = $this->withinDebt($seller, $amount, CommissionSettlement::pendingTransferAmount($seller->id));
 
         $settlement = DB::transaction(function () use ($seller, $amount): CommissionSettlement {
             $settlement = $this->newSettlement($seller, SettlementMethod::WALLET, SettlementStatus::APPROVED, $amount);
@@ -122,13 +122,6 @@ class SubmitSettlementAction
         }
 
         return $amount;
-    }
-
-    private function pendingTransferOf(User $seller): string
-    {
-        $amount = CommissionSettlement::query()->where('pending_user_id', $seller->id)->value('amount');
-
-        return Money::of(is_string($amount) ? $amount : '0.00');
     }
 
     private function newSettlement(User $seller, SettlementMethod $method, SettlementStatus $status, string $amount): CommissionSettlement

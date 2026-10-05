@@ -8,6 +8,7 @@ final readonly class WalletSummary
 {
     public function __construct(
         public string $available,
+        public string $withdrawable,
         public string $commissionDebt,
         public string $debtCeiling,
         public bool $canAcceptOrders,

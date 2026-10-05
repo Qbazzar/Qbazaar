@@ -4212,7 +4212,8 @@ paths:
         Read from the double-entry ledger. `available_balance` is what the
         platform owes the user (sale proceeds of escrow orders, refunds,
         adjustments); `commission_debt` is the commission the user owes on
-        cash sales. Once the debt reaches `debt_ceiling` (an admin setting)
+        cash sales. `withdrawable_balance` is `available_balance` minus
+        `commission_debt`, never below zero: what can be withdrawn. Once the debt reaches `debt_ceiling` (an admin setting)
         `can_accept_orders` is false and accepting an offer answers
         `ORDER_004` until the debt is settled.
       operationId: accountWallet
@@ -4343,6 +4344,15 @@ paths:
         amount back in the wallet (`withdrawal_rejected`). The holder and
         IBAN are copied at request time. Pays into `bank_account_id`, or the
         default account when it is omitted.
+
+        A seller who owes commission cannot withdraw it away: the amount may
+        be at most `withdrawable_balance`. In the same transaction, before
+        the withdrawal, the commission debt is netted from the wallet
+        (`commission_settled`, keyed to the withdrawal: debit `user:wallet`,
+        credit `user:commission_receivable`), except for the part a bank
+        transfer awaiting review already covers. A request above the
+        withdrawable amount answers `WALLET_003` with
+        `error.details.withdrawable`.
       operationId: accountWalletWithdrawalsStore
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -4364,7 +4374,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
         '422':
-          description: VALIDATION_FAILED; WALLET_001 — more than the available balance; WITHDRAWAL_002 — no bank account.
+          description: VALIDATION_FAILED; WALLET_001 — more than the wallet balance; WALLET_003 — more than the withdrawable amount (`error.details.withdrawable`); WITHDRAWAL_002 — no bank account.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
@@ -7387,10 +7397,11 @@ components:
 
     Wallet:
       type: object
-      required: [currency, available_balance, commission_debt, debt_ceiling, can_accept_orders]
+      required: [currency, available_balance, withdrawable_balance, commission_debt, debt_ceiling, can_accept_orders]
       properties:
         currency: { type: string, example: QAR }
         available_balance: { $ref: '#/components/schemas/DecimalAmount' }
+        withdrawable_balance: { $ref: '#/components/schemas/DecimalAmount' }
         commission_debt: { $ref: '#/components/schemas/DecimalAmount' }
         debt_ceiling: { $ref: '#/components/schemas/DecimalAmount' }
         can_accept_orders: { type: boolean }

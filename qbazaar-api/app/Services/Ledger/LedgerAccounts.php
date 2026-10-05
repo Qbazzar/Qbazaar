@@ -68,6 +68,23 @@ class LedgerAccounts
             ->keyBy(fn (LedgerAccount $account): string => $account->type->value);
     }
 
+    /**
+     * Locks the user's existing accounts in id order (the ledger's lock
+     * order) and returns them with their current balances, keyed by type.
+     *
+     * @return Collection<string, LedgerAccount>
+     */
+    public function lockUserAccounts(string $userId): Collection
+    {
+        return LedgerAccount::query()
+            ->where('owner_type', LedgerOwnerType::USER->value)
+            ->where('owner_id', $userId)
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy(fn (LedgerAccount $account): string => $account->type->value);
+    }
+
     public function balanceOf(LedgerAccountType $type, ?string $ownerId = null): string
     {
         $balance = LedgerAccount::query()->where('code', $type->code($ownerId))->value('balance');

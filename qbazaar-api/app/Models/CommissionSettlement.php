@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\SettlementMethod;
 use App\Enums\SettlementStatus;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -101,5 +102,15 @@ class CommissionSettlement extends Model implements HasMedia
     public function scopeOwnedBy(Builder $query, User $user): Builder
     {
         return $query->where('user_id', $user->id);
+    }
+
+    /**
+     * What the seller's transfer awaiting review covers, or zero.
+     */
+    public static function pendingTransferAmount(string $userId): string
+    {
+        $amount = static::query()->where('pending_user_id', $userId)->value('amount');
+
+        return Money::of(is_string($amount) ? $amount : Money::ZERO);
     }
 }

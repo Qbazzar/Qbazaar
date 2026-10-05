@@ -150,6 +150,7 @@ enum ErrorCode: string
     // ── Wallet (M1b) ───────────────────────────────────────────────────────
     case WALLET_INSUFFICIENT_BALANCE = 'WALLET_001';
     case WALLET_EXCEEDS_COMMISSION_DEBT = 'WALLET_002';
+    case WALLET_EXCEEDS_WITHDRAWABLE = 'WALLET_003';
 
     // ── Settlements, withdrawals and bank accounts (M1b) ───────────────────
     case SETTLEMENT_PENDING_EXISTS = 'SETTLEMENT_001';
@@ -233,6 +234,7 @@ enum ErrorCode: string
             self::ORDER_SELLER_DEBT_CEILING,
             self::WALLET_INSUFFICIENT_BALANCE,
             self::WALLET_EXCEEDS_COMMISSION_DEBT,
+            self::WALLET_EXCEEDS_WITHDRAWABLE,
             self::SETTLEMENT_PENDING_EXISTS,
             self::SETTLEMENT_NOT_PENDING,
             self::WITHDRAWAL_NOT_PENDING,
