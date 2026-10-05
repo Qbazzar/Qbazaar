@@ -68,6 +68,27 @@ class LedgerAccounts
             ->keyBy(fn (LedgerAccount $account): string => $account->type->value);
     }
 
+    /**
+     * Locks the user's existing accounts, and optionally one platform
+     * account the caller is about to post to, in a single id-ordered
+     * statement (the ledger's lock order). Taking the platform account in
+     * the same pass keeps the later posting from locking a lower id while
+     * this transaction already holds a higher one.
+     *
+     * @return Collection<string, LedgerAccount> keyed by account type
+     */
+    public function lockUserAccounts(string $userId, ?LedgerAccountType $alongside = null): Collection
+    {
+        return LedgerAccount::query()
+            ->where(fn ($query) => $query
+                ->where(fn ($owned) => $owned->where('owner_type', LedgerOwnerType::USER->value)->where('owner_id', $userId))
+                ->when($alongside !== null, fn ($query) => $query->orWhere('code', $alongside?->code())))
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy(fn (LedgerAccount $account): string => $account->type->value);
+    }
+
     public function balanceOf(LedgerAccountType $type, ?string $ownerId = null): string
     {
         $balance = LedgerAccount::query()->where('code', $type->code($ownerId))->value('balance');

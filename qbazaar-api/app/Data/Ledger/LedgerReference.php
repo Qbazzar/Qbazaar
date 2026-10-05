@@ -22,6 +22,16 @@ final readonly class LedgerReference
         return new self(LedgerReferenceType::ORDER, $orderId);
     }
 
+    public static function settlement(string $settlementId): self
+    {
+        return new self(LedgerReferenceType::SETTLEMENT, $settlementId);
+    }
+
+    public static function withdrawal(string $withdrawalId): self
+    {
+        return new self(LedgerReferenceType::WITHDRAWAL, $withdrawalId);
+    }
+
     /**
      * The idempotency key of a flow on this record. Each record runs each
      * flow at most once, so a retried request or job finds the first posting.

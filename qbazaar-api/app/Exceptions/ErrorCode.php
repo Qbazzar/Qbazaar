@@ -142,6 +142,7 @@ enum ErrorCode: string
     case ACCOUNT_DEBT_OUTSTANDING = 'ACCOUNT_003';
     case ACCOUNT_HAS_OPEN_ORDER = 'ACCOUNT_004';
     case ACCOUNT_WALLET_NOT_EMPTY = 'ACCOUNT_005';
+    case ACCOUNT_PAYOUT_PENDING = 'ACCOUNT_006';
 
     // ── Orders (M1b) ───────────────────────────────────────────────────────
     case ORDER_NOT_FOUND = 'ORDER_001';
@@ -153,6 +154,19 @@ enum ErrorCode: string
     // ── Wallet (M1b) ───────────────────────────────────────────────────────
     case WALLET_INSUFFICIENT_BALANCE = 'WALLET_001';
     case WALLET_EXCEEDS_COMMISSION_DEBT = 'WALLET_002';
+    case WALLET_EXCEEDS_WITHDRAWABLE = 'WALLET_003';
+
+    // ── Settlements, withdrawals and bank accounts (M1b) ───────────────────
+    case SETTLEMENT_PENDING_EXISTS = 'SETTLEMENT_001';
+    case SETTLEMENT_NOT_PENDING = 'SETTLEMENT_002';
+    case WITHDRAWAL_NOT_PENDING = 'WITHDRAWAL_001';
+    case WITHDRAWAL_BANK_ACCOUNT_REQUIRED = 'WITHDRAWAL_002';
+    case BANK_ACCOUNT_NOT_FOUND = 'BANK_001';
+    case BANK_ACCOUNT_LIMIT_REACHED = 'BANK_002';
+    case BANK_ACCOUNT_DUPLICATE = 'BANK_003';
+
+    // ── Order disputes (M1b) ───────────────────────────────────────────────
+    case DISPUTE_WINDOW_CLOSED = 'DISPUTE_001';
 
     // ── Purchase requests and checkout (M1b) ───────────────────────────────
     case PURCHASE_REQUEST_NOT_FOUND = 'PURCHASE_001';
@@ -222,11 +236,20 @@ enum ErrorCode: string
             self::ACCOUNT_DEBT_OUTSTANDING,
             self::ACCOUNT_HAS_OPEN_ORDER,
             self::ACCOUNT_WALLET_NOT_EMPTY,
+            self::ACCOUNT_PAYOUT_PENDING,
             self::ORDER_INVALID_TRANSITION,
             self::ORDER_AD_HAS_ACTIVE_ORDER,
             self::ORDER_SELLER_DEBT_CEILING,
             self::WALLET_INSUFFICIENT_BALANCE,
             self::WALLET_EXCEEDS_COMMISSION_DEBT,
+            self::WALLET_EXCEEDS_WITHDRAWABLE,
+            self::SETTLEMENT_PENDING_EXISTS,
+            self::SETTLEMENT_NOT_PENDING,
+            self::WITHDRAWAL_NOT_PENDING,
+            self::WITHDRAWAL_BANK_ACCOUNT_REQUIRED,
+            self::BANK_ACCOUNT_LIMIT_REACHED,
+            self::BANK_ACCOUNT_DUPLICATE,
+            self::DISPUTE_WINDOW_CLOSED,
             self::PURCHASE_REQUEST_OPEN_EXISTS,
             self::PURCHASE_REQUEST_NOT_PENDING,
             self::PURCHASE_REQUEST_OWN_AD,
@@ -275,6 +298,7 @@ enum ErrorCode: string
             self::TICKET_NOT_FOUND,
             self::ADDRESS_NOT_FOUND,
             self::ORDER_NOT_FOUND,
+            self::BANK_ACCOUNT_NOT_FOUND,
             self::PURCHASE_REQUEST_NOT_FOUND,
             self::NOT_FOUND => 404,
 

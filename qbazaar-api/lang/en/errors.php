@@ -18,6 +18,7 @@ return [
         'failed' => 'The given data was invalid.',
         'no_markup' => 'The :attribute may not contain < or > characters.',
         'category_not_selectable' => 'Choose an active sub-category that has no further sub-categories.',
+        'iban' => 'This IBAN is not valid. Check the full number as it appears on your bank statement.',
     ],
 
     'rate' => [
@@ -361,6 +362,9 @@ return [
                 'empty' => 'You still have :amount QAR in your wallet. Withdraw it before deleting your account.',
             ],
         ],
+        'payout' => [
+            'pending' => 'You have a withdrawal or a settlement waiting for review. Wait until it is reviewed before deleting your account.',
+        ],
     ],
 
     'address' => [
@@ -415,6 +419,45 @@ return [
             'commission' => [
                 'debt' => 'The amount is more than the commission you owe.',
             ],
+            'withdrawable' => 'You can withdraw only what is left of your balance after the commission you owe.',
+        ],
+    ],
+
+    'settlement' => [
+        'pending' => [
+            'exists' => 'You already have a settlement waiting for review.',
+        ],
+        'not' => [
+            'pending' => 'This settlement has already been reviewed.',
+        ],
+    ],
+
+    'withdrawal' => [
+        'not' => [
+            'pending' => 'This withdrawal has already been reviewed.',
+        ],
+        'bank' => [
+            'account' => [
+                'required' => 'Add a bank account before requesting a withdrawal.',
+            ],
+        ],
+    ],
+
+    'bank' => [
+        'account' => [
+            'not' => [
+                'found' => 'Bank account not found.',
+            ],
+            'limit' => [
+                'reached' => 'You have reached the maximum number of bank accounts.',
+            ],
+            'duplicate' => 'This IBAN is already saved.',
+        ],
+    ],
+
+    'dispute' => [
+        'window' => [
+            'closed' => 'The time to report a problem with this order has passed.',
         ],
     ],
 

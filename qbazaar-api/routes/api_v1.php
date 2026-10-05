@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
 use App\Http\Controllers\Api\V1\Account\AddressController;
+use App\Http\Controllers\Api\V1\Account\BankAccountController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
 use App\Http\Controllers\Api\V1\Account\BusinessProfileController;
 use App\Http\Controllers\Api\V1\Account\ContactChangeController;
@@ -65,7 +66,9 @@ use App\Http\Controllers\Api\V1\Users\BlockController;
 use App\Http\Controllers\Api\V1\Users\FollowController;
 use App\Http\Controllers\Api\V1\Users\PublicProfileController;
 use App\Http\Controllers\Api\V1\Users\UserAdsController;
+use App\Http\Controllers\Api\V1\Wallet\SettlementController;
 use App\Http\Controllers\Api\V1\Wallet\WalletController;
+use App\Http\Controllers\Api\V1\Wallet\WithdrawalController;
 use App\Http\Middleware\EnsureApiDocsEnabled;
 use App\Http\Middleware\EnsurePasswordLoginEnabled;
 use Illuminate\Http\JsonResponse;
@@ -251,6 +254,13 @@ Route::prefix('account')
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/wallet', [WalletController::class, 'show'])->name('wallet.show');
         Route::get('/wallet/transactions', [WalletController::class, 'transactions'])->name('wallet.transactions');
+        Route::get('/wallet/settlements', [SettlementController::class, 'index'])->name('wallet.settlements.index');
+        Route::post('/wallet/settlements', [SettlementController::class, 'store'])->middleware(['throttle:uploads', 'idempotent'])->name('wallet.settlements.store');
+        Route::get('/wallet/withdrawals', [WithdrawalController::class, 'index'])->name('wallet.withdrawals.index');
+        Route::post('/wallet/withdrawals', [WithdrawalController::class, 'store'])->middleware('idempotent')->name('wallet.withdrawals.store');
+        Route::get('/bank-accounts', [BankAccountController::class, 'index'])->name('bank-accounts.index');
+        Route::post('/bank-accounts', [BankAccountController::class, 'store'])->name('bank-accounts.store');
+        Route::delete('/bank-accounts/{id}', [BankAccountController::class, 'destroy'])->name('bank-accounts.destroy');
 
         Route::get('/business-profile', [BusinessProfileController::class, 'show'])->name('business-profile.show');
         Route::put('/business-profile', [BusinessProfileController::class, 'update'])->name('business-profile.update');
@@ -556,6 +566,8 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
 //   GET  /orders/{id}                   — either participant (404 for anyone else)
 //   POST /orders/{id}/confirm-handover  — seller; completes the order and books the commission
 //   POST /orders/{id}/cancel            — either participant, before the handover
+//   POST /orders/{id}/report-problem    — buyer, within the window after the handover; opens a dispute
+//   POST /orders/{id}/confirm-receipt   — buyer of an escrow order; releases it before the window ends
 //   The list lives at GET /account/orders; orders are created by accepting an offer.
 Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])
     ->prefix('orders')
@@ -564,6 +576,8 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])
         Route::get('/{id}', [OrderController::class, 'show'])->name('show');
         Route::post('/{id}/confirm-handover', [OrderController::class, 'confirmHandover'])->middleware('idempotent')->name('confirm-handover');
         Route::post('/{id}/cancel', [OrderController::class, 'cancel'])->middleware('idempotent')->name('cancel');
+        Route::post('/{id}/report-problem', [OrderController::class, 'reportProblem'])->middleware('idempotent')->name('report-problem');
+        Route::post('/{id}/confirm-receipt', [OrderController::class, 'confirmReceipt'])->middleware('idempotent')->name('confirm-receipt');
         Route::get('/{id}/checkout', [OrderCheckoutController::class, 'show'])->name('checkout.show');
         Route::post('/{id}/checkout', [OrderCheckoutController::class, 'store'])->middleware('idempotent')->name('checkout.store');
     });

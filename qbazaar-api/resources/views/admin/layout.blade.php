@@ -43,6 +43,11 @@
                         ['route' => 'admin.users.index', 'label' => 'المستخدمون', 'match' => 'admin.users.*', 'icon' => 'users', 'permission' => 'users.view'],
                         ['route' => 'admin.roles.index', 'label' => 'الأدوار', 'match' => 'admin.roles.*', 'icon' => 'key', 'permission' => 'roles.manage'],
                     ],
+                    'المالية' => [
+                        ['route' => 'admin.finance.settlements.index', 'label' => 'تسويات العمولة', 'match' => 'admin.finance.settlements.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
+                        ['route' => 'admin.finance.withdrawals.index', 'label' => 'طلبات السحب', 'match' => 'admin.finance.withdrawals.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
+                        ['route' => 'admin.finance.disputes.index', 'label' => 'نزاعات الطلبات', 'match' => 'admin.finance.disputes.*', 'icon' => 'flag', 'permission' => 'finance.manage'],
+                    ],
                     'التواصل' => [
                         ['route' => 'admin.conversations.index', 'label' => 'المحادثات', 'match' => 'admin.conversations.*', 'icon' => 'chat', 'permission' => 'conversations.view'],
                         ['route' => 'admin.support.index', 'label' => 'الدعم الفني', 'match' => 'admin.support.*', 'icon' => 'lifebuoy', 'permission' => 'support.view'],

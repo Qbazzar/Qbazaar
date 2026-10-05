@@ -6,6 +6,7 @@ namespace App\Http\Resources\Api\V1\Orders;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Orders\OrderDisputeWindow;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -55,6 +56,16 @@ class OrderResource extends JsonResource
             'completed_at' => $this->completed_at?->toIso8601String(),
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),
             'disputed_at' => $this->disputed_at?->toIso8601String(),
+            'handed_over_at' => $this->handed_over_at?->toIso8601String(),
+            'report_problem_until' => $viewerRole === 'buyer'
+                ? app(OrderDisputeWindow::class)->closesAt($this->resource)?->toIso8601String()
+                : null,
+            'dispute' => $this->disputed_at === null ? null : [
+                'reason' => $this->dispute_reason,
+                'resolution' => $this->dispute_resolution?->value,
+                'resolution_note' => $this->dispute_resolution_note,
+                'resolved_at' => $this->dispute_resolved_at?->toIso8601String(),
+            ],
         ];
     }
 

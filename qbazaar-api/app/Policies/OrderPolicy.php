@@ -28,6 +28,16 @@ class OrderPolicy
         return $order->isParticipant($user);
     }
 
+    public function reportProblem(User $user, Order $order): bool
+    {
+        return $user->id === $order->buyer_id;
+    }
+
+    public function confirmReceipt(User $user, Order $order): bool
+    {
+        return $user->id === $order->buyer_id;
+    }
+
     public function checkout(User $user, Order $order): bool
     {
         return $user->id === $order->buyer_id;

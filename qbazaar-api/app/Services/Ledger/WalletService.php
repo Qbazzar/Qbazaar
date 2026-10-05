@@ -38,13 +38,26 @@ class WalletService
         $accounts = $this->accounts->ofUser($userId);
         $ceiling = $this->settings->decimal(PlatformSetting::COMMISSION_DEBT_CEILING);
         $debt = $accounts->get(LedgerAccountType::USER_COMMISSION_RECEIVABLE->value)->balance ?? Money::ZERO;
+        $available = $accounts->get(LedgerAccountType::USER_WALLET->value)->balance ?? Money::ZERO;
 
         return new WalletSummary(
-            available: $accounts->get(LedgerAccountType::USER_WALLET->value)->balance ?? Money::ZERO,
+            available: $available,
+            withdrawable: $this->withdrawable($available, $debt),
             commissionDebt: $debt,
             debtCeiling: $ceiling,
             canAcceptOrders: ! $this->isOverCeiling($debt, $ceiling),
         );
+    }
+
+    /**
+     * What a seller can take out of the wallet: the balance minus the
+     * commission they still owe, so a debt cannot be withdrawn away.
+     */
+    public function withdrawable(string $balance, string $debt): string
+    {
+        $left = Money::subtract($balance, $debt);
+
+        return Money::isPositive($left) ? $left : Money::ZERO;
     }
 
     /**

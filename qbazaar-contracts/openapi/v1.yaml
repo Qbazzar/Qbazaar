@@ -54,7 +54,7 @@ tags:
   - name: Orders
     description: Orders created from accepted offers and purchase requests; cash handover
   - name: Wallet
-    description: Wallet balance, commission debt and statement, read from the double-entry ledger
+    description: Wallet balance, commission debt and statement (from the double-entry ledger), commission settlements, withdrawals and payout bank accounts
   - name: Reports
     description: User reports on ads, users, conversations
   - name: Reviews
@@ -1815,7 +1815,9 @@ paths:
         Refused while the user owes commission (`ACCOUNT_003`, with the
         amount in `details`), has an order in progress as buyer or seller
         (`ACCOUNT_004`) or still has money in the wallet (`ACCOUNT_005`, with
-        the balance in `details`; withdraw it first). The job checks all of
+        the balance in `details`; withdraw it first) or has a withdrawal or
+        settlement waiting for review (`ACCOUNT_006`, with its id in
+        `details`). The job checks all of
         them again right before erasing: if one appeared during the grace
         period the account stays pending, the user is notified, and the daily
         sweep retries it.
@@ -1851,7 +1853,8 @@ paths:
           description: |
             Wrong password (USER_005), validation failure, commission still
             owed (ACCOUNT_003), an order in progress (ACCOUNT_004) or money
-            in the wallet (ACCOUNT_005)
+            in the wallet (ACCOUNT_005), or a withdrawal or settlement waiting
+            for review (ACCOUNT_006)
           content:
             application/json:
               schema:
@@ -1886,6 +1889,15 @@ paths:
                       details:
                         amount: '40.00'
                         currency: QAR
+                payoutPending:
+                  value:
+                    success: false
+                    error:
+                      code: ACCOUNT_006
+                      message_key: errors.account.payout.pending
+                      message: You have a withdrawal or a settlement waiting for review. Wait until it is reviewed before deleting your account.
+                      details:
+                        withdrawal_id: 01J9Z3K4M5N6P7Q8R9S0T1V2W4
 
   # ──────────────────────────────────────────────────────────────────────────
   # Uploads (Sprint 2 — Wave 2 ships avatar; Sprint 4 adds ad images)
@@ -4065,6 +4077,73 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorEnvelope' }
 
+  /api/v1/orders/{id}/report-problem:
+    post:
+      tags: [Orders]
+      summary: The buyer reports a problem after the handover, opening a dispute
+      description: |
+        Cash orders: allowed for `order_dispute_window_hours` (admin setting,
+        default 48) after the seller confirmed the handover. Escrow orders
+        (M7): allowed until the automatic release, `escrow_auto_release_days`
+        (admin setting, default 3) after the handover. `report_problem_until`
+        on the order says when the window closes. A problem is reported once;
+        an admin then rules on it (completes or cancels the sale, with a
+        written reason). Finance staff are notified.
+      operationId: ordersReportProblem
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReportOrderProblemRequest' }
+      responses:
+        '200':
+          description: The disputed order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            VALIDATION_FAILED — the reason is missing, too short or too long, or has markup;
+            DISPUTE_001 — the window is closed (not handed over yet, expired, or already reported);
+            ORDER_002 — the order cannot be disputed in its status.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/v1/orders/{id}/confirm-receipt:
+    post:
+      tags: [Orders]
+      summary: The buyer of an escrow order confirms receipt
+      description: |
+        Escrow orders only (bank transfer or card, M7): after the seller's
+        handover the buyer can release the held money to the seller before
+        the automatic release. Cash orders answer 403 `ORDER_005`: only the
+        seller confirms a cash handover.
+      operationId: ordersConfirmReceipt
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: The completed order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: The seller has not handed the order over yet, or it is disputed (`ORDER_002`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
   /api/v1/ads/{id}/purchase-requests:
     post:
       tags: [Purchase requests]
@@ -4186,7 +4265,8 @@ paths:
         Read from the double-entry ledger. `available_balance` is what the
         platform owes the user (sale proceeds of escrow orders, refunds,
         adjustments); `commission_debt` is the commission the user owes on
-        cash sales. Once the debt reaches `debt_ceiling` (an admin setting)
+        cash sales. `withdrawable_balance` is `available_balance` minus
+        `commission_debt`, never below zero: what can be withdrawn. Once the debt reaches `debt_ceiling` (an admin setting)
         `can_accept_orders` is false and accepting an offer answers
         `ORDER_004` until the debt is settled.
       operationId: accountWallet
@@ -4227,6 +4307,187 @@ paths:
               schema: { $ref: '#/components/schemas/WalletEntryListEnvelope' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /api/v1/account/wallet/settlements:
+    get:
+      tags: [Wallet]
+      summary: The caller's commission settlements, newest first
+      description: Cursor-paginated (`qbazaar.wallet.requests_per_page`, 20).
+      operationId: accountWalletSettlements
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema: { type: string }
+      responses:
+        '200':
+          description: A page of settlements
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SettlementListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Wallet]
+      summary: Pay off commission debt
+      description: |
+        `bank_transfer`: the seller sent money to QBazaar's bank account and
+        uploads the receipt (JPEG, PNG or WebP, up to 5 MB, stored on a
+        private disk under a server-generated name). The settlement stays
+        `pending` until finance staff match it against the bank statement;
+        approval posts `commission_settled` (debit `platform:bank`, credit
+        `user:commission_receivable`). One pending transfer per seller.
+        `wallet`: netting from the seller's own wallet, posted and approved
+        at once (debit `user:wallet`, credit `user:commission_receivable`).
+        The amount can never exceed what is owed.
+      operationId: accountWalletSettlementsStore
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/StoreSettlementRequest' }
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreSettlementRequest' }
+      responses:
+        '201':
+          description: The settlement
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SettlementEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: |
+            VALIDATION_FAILED; WALLET_001 — netting more than the wallet holds;
+            WALLET_002 — more than the commission owed (for netting, minus a
+            bank transfer still waiting for review); SETTLEMENT_001 — a
+            bank transfer is already waiting for review.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '429': { description: Too many uploads (`throttle:uploads`) }
+
+  /api/v1/account/wallet/withdrawals:
+    get:
+      tags: [Wallet]
+      summary: The caller's withdrawals, newest first
+      description: Cursor-paginated (`qbazaar.wallet.requests_per_page`, 20).
+      operationId: accountWalletWithdrawals
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque `meta.next_cursor` from the previous page.
+          schema: { type: string }
+      responses:
+        '200':
+          description: A page of withdrawals
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WithdrawalListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Wallet]
+      summary: Withdraw wallet balance to a bank account
+      description: |
+        The amount leaves the wallet at once (`withdrawal_requested`: debit
+        `user:wallet`, credit `platform:payouts_payable`) and waits for
+        finance staff, who either mark it paid with the bank transfer
+        reference (`withdrawal_paid`: debit `platform:payouts_payable`,
+        credit `platform:bank`) or reject it with a reason, which puts the
+        amount back in the wallet (`withdrawal_rejected`). The holder and
+        IBAN are copied at request time. Pays into `bank_account_id`, or the
+        default account when it is omitted.
+
+        A seller who owes commission cannot withdraw it away: the amount may
+        be at most `withdrawable_balance`. In the same transaction, before
+        the withdrawal, the commission debt is netted from the wallet
+        (`commission_settled`, keyed to the withdrawal: debit `user:wallet`,
+        credit `user:commission_receivable`), except for the part a bank
+        transfer awaiting review already covers. A request above the
+        withdrawable amount answers `WALLET_003` with
+        `error.details.withdrawable`.
+      operationId: accountWalletWithdrawalsStore
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreWithdrawalRequest' }
+      responses:
+        '201':
+          description: The pending withdrawal
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WithdrawalEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: The named bank account is not the caller's (`BANK_001`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422':
+          description: VALIDATION_FAILED; WALLET_001 — more than the wallet balance; WALLET_003 — more than the withdrawable amount (`error.details.withdrawable`); WITHDRAWAL_002 — no bank account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/v1/account/bank-accounts:
+    get:
+      tags: [Wallet]
+      summary: The caller's payout bank accounts, the default first
+      description: At most `qbazaar.wallet.max_bank_accounts` (5), so not paginated. The IBAN is only ever returned masked.
+      operationId: accountBankAccounts
+      responses:
+        '200':
+          description: The accounts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BankAccountListEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Wallet]
+      summary: Add a payout bank account
+      description: |
+        The IBAN is checked for its shape, the length registered for its
+        country and the ISO 13616 mod-97 checksum; spaces and dashes are
+        ignored. It is stored encrypted. The first account becomes the
+        default, and exactly one account is the default while any exist.
+      operationId: accountBankAccountsStore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StoreBankAccountRequest' }
+      responses:
+        '201':
+          description: The account
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BankAccountEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: VALIDATION_FAILED (e.g. an invalid IBAN); BANK_002 — account limit reached; BANK_003 — IBAN already saved.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/v1/account/bank-accounts/{id}:
+    delete:
+      tags: [Wallet]
+      summary: Remove a payout bank account
+      description: Deleting the default makes the newest remaining account the default. Pending withdrawals keep their own copy of the destination.
+      operationId: accountBankAccountsDestroy
+      parameters:
+        - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+      responses:
+        '204': { description: Removed }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: Not the caller's account (`BANK_001`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
 
   # ──────────────────────────────────────────────────────────────────────────
   # Notifications inbox (Sprint 10)
@@ -6946,6 +7207,7 @@ components:
       description: |
         created → awaiting_handover (checkout) → completed;
         created | awaiting_handover → cancelled; awaiting_handover → disputed;
+        completed → disputed (a cash order, within the report-a-problem window);
         disputed → completed | cancelled (admin ruling only).
 
     Order:
@@ -7008,6 +7270,37 @@ components:
         completed_at: { type: [string, 'null'], format: date-time }
         cancelled_at: { type: [string, 'null'], format: date-time }
         disputed_at: { type: [string, 'null'], format: date-time }
+        handed_over_at:
+          type: [string, 'null']
+          format: date-time
+          description: When the seller confirmed the handover; starts the report-a-problem window.
+        report_problem_until:
+          type: [string, 'null']
+          format: date-time
+          description: Buyer only; when the buyer can no longer report a problem. Null when reporting is not possible.
+        dispute:
+          description: Null unless the order was disputed.
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [reason, resolution, resolution_note, resolved_at]
+              properties:
+                reason: { type: [string, 'null'] }
+                resolution:
+                  type: [string, 'null']
+                  enum: [completed, cancelled, null]
+                resolution_note: { type: [string, 'null'] }
+                resolved_at: { type: [string, 'null'], format: date-time }
+
+    ReportOrderProblemRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          description: What went wrong, for the admin who rules on it. No `<` or `>`.
 
     OrderEnvelope:
       allOf:
@@ -7157,10 +7450,11 @@ components:
 
     Wallet:
       type: object
-      required: [currency, available_balance, commission_debt, debt_ceiling, can_accept_orders]
+      required: [currency, available_balance, withdrawable_balance, commission_debt, debt_ceiling, can_accept_orders]
       properties:
         currency: { type: string, example: QAR }
         available_balance: { $ref: '#/components/schemas/DecimalAmount' }
+        withdrawable_balance: { $ref: '#/components/schemas/DecimalAmount' }
         commission_debt: { $ref: '#/components/schemas/DecimalAmount' }
         debt_ceiling: { $ref: '#/components/schemas/DecimalAmount' }
         can_accept_orders: { type: boolean }
@@ -7186,6 +7480,136 @@ components:
         - promotion_purchased
         - adjustment
         - reversal
+        - commission_refunded
+
+    StoreSettlementRequest:
+      type: object
+      required: [method, amount]
+      properties:
+        method: { type: string, enum: [bank_transfer, wallet] }
+        amount:
+          $ref: '#/components/schemas/DecimalAmount'
+        bank_reference:
+          type: string
+          maxLength: 100
+          description: Required for `bank_transfer`, prohibited otherwise.
+        proof:
+          type: string
+          format: binary
+          description: Transfer receipt (JPEG, PNG or WebP, up to 5 MB). Required for `bank_transfer`, prohibited otherwise.
+
+    Settlement:
+      type: object
+      required: [id, method, status, currency, amount, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        method: { type: string, enum: [bank_transfer, wallet] }
+        status: { type: string, enum: [pending, approved, rejected] }
+        currency: { type: string, example: QAR }
+        amount: { $ref: '#/components/schemas/DecimalAmount' }
+        bank_reference: { type: [string, 'null'] }
+        rejection_reason: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        reviewed_at: { type: [string, 'null'], format: date-time }
+
+    SettlementEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Settlement' }
+
+    SettlementListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Settlement' }
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    StoreWithdrawalRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          $ref: '#/components/schemas/DecimalAmount'
+        bank_account_id:
+          description: The default account when omitted.
+          oneOf:
+            - $ref: '#/components/schemas/ULID'
+            - type: 'null'
+
+    Withdrawal:
+      type: object
+      required: [id, status, currency, amount, holder_name, iban_masked, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        status: { type: string, enum: [pending, paid, rejected] }
+        currency: { type: string, example: QAR }
+        amount: { $ref: '#/components/schemas/DecimalAmount' }
+        holder_name: { type: string }
+        iban_masked: { type: string, example: 'QA** **** DEFG' }
+        transfer_reference: { type: [string, 'null'] }
+        rejection_reason: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        reviewed_at: { type: [string, 'null'], format: date-time }
+
+    WithdrawalEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/Withdrawal' }
+
+    WithdrawalListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/Withdrawal' }
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    StoreBankAccountRequest:
+      type: object
+      required: [holder_name, iban]
+      properties:
+        holder_name: { type: string, minLength: 2, maxLength: 120 }
+        iban: { type: string, maxLength: 42, example: 'QA58 DOHB 0000 1234 5678 90AB CDEF G' }
+        bank_name: { type: [string, 'null'], maxLength: 120 }
+        is_default: { type: boolean }
+
+    BankAccount:
+      type: object
+      required: [id, holder_name, iban_masked, is_default, created_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        holder_name: { type: string }
+        iban_masked: { type: string, example: 'QA** **** DEFG' }
+        bank_name: { type: [string, 'null'] }
+        is_default: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    BankAccountEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data: { $ref: '#/components/schemas/BankAccount' }
+
+    BankAccountListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/BankAccount' }
 
     WalletEntry:
       type: object

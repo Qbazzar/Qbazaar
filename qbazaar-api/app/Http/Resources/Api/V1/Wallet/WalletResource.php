@@ -21,6 +21,7 @@ class WalletResource extends JsonResource
         return [
             'currency' => 'QAR',
             'available_balance' => $this->resource->available,
+            'withdrawable_balance' => $this->resource->withdrawable,
             'commission_debt' => $this->resource->commissionDebt,
             'debt_ceiling' => $this->resource->debtCeiling,
             'can_accept_orders' => $this->resource->canAcceptOrders,

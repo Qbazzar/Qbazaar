@@ -36,6 +36,7 @@ it('shows an empty wallet for a new user', function (): void {
         ->assertExactJson(['success' => true, 'data' => [
             'currency' => 'QAR',
             'available_balance' => '0.00',
+            'withdrawable_balance' => '0.00',
             'commission_debt' => '0.00',
             'debt_ceiling' => '50.00',
             'can_accept_orders' => true,
@@ -49,6 +50,7 @@ it('reports the balance and the commission debt from the ledger', function (): v
     $this->actingAs($this->seller, 'sanctum')->getJson('/api/v1/account/wallet')
         ->assertOk()
         ->assertJsonPath('data.available_balance', '120.50')
+        ->assertJsonPath('data.withdrawable_balance', '90.50')
         ->assertJsonPath('data.commission_debt', '30.00')
         ->assertJsonPath('data.can_accept_orders', true);
 });

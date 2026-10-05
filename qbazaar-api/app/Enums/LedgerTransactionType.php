@@ -21,6 +21,7 @@ enum LedgerTransactionType: string
     case PROMOTION_PURCHASED = 'promotion_purchased';
     case ADJUSTMENT = 'adjustment';
     case REVERSAL = 'reversal';
+    case COMMISSION_REFUNDED = 'commission_refunded';
 
     /**
      * The user-facing statement line, translated from lang/{locale}/ledger.php.

@@ -154,6 +154,7 @@ return [
             'body_debt' => 'We could not delete your account yet because you still owe :amount QAR in commission. Your request stays pending and goes ahead once the amount is settled.',
             'body_wallet' => 'We could not delete your account yet because you still have :amount QAR in your wallet. Your request stays pending and goes ahead once you withdraw it.',
             'body_open_order' => 'We could not delete your account yet because you have an order in progress. Your request stays pending and goes ahead once the order is completed or cancelled.',
+            'body_payout' => 'We could not delete your account yet because a withdrawal or a settlement of yours is waiting for review. Your request stays pending and goes ahead once it is reviewed.',
         ],
         'support_reply' => [
             'title' => 'Support replied to your ticket',
@@ -225,6 +226,34 @@ return [
         'ad_new_from_followed' => [
             'title' => 'New ad from :name',
             'body' => ':name just posted ":title".',
+        ],
+    ],
+
+    'finance_notifications' => [
+        'action' => 'Open my wallet',
+        'settlement_submitted' => [
+            'title' => 'Settlement received',
+            'body' => 'We received your commission payment of :amount QAR and will confirm it once it reaches our bank account.',
+        ],
+        'settlement_approved' => [
+            'title' => 'Settlement approved',
+            'body' => 'Your commission payment of :amount QAR was applied to your balance.',
+        ],
+        'settlement_rejected' => [
+            'title' => 'Settlement rejected',
+            'body' => 'Your commission payment of :amount QAR could not be confirmed: :reason',
+        ],
+        'withdrawal_requested' => [
+            'title' => 'Withdrawal requested',
+            'body' => 'Your withdrawal of :amount QAR is waiting for review.',
+        ],
+        'withdrawal_paid' => [
+            'title' => 'Withdrawal sent',
+            'body' => ':amount QAR was transferred to your bank account (reference :reference).',
+        ],
+        'withdrawal_rejected' => [
+            'title' => 'Withdrawal rejected',
+            'body' => 'Your withdrawal of :amount QAR was rejected and the amount is back in your wallet: :reason',
         ],
     ],
 ];

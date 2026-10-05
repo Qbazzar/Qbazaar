@@ -197,6 +197,7 @@ requested locale.
 | `ACCOUNT_003` | Account deletion refused: the user still owes commission to the platform. `details.amount` (decimal string) / `details.currency` carry the debt; settle it first | 422 |
 | `ACCOUNT_004` | Account deletion refused: the user has an order in progress (created, awaiting handover or disputed) as buyer or seller. `details.order_id` names one | 422 |
 | `ACCOUNT_005` | Account deletion refused: the user still has money in their wallet. `details.amount` / `details.currency` carry the balance; withdraw it first | 422 |
+| `ACCOUNT_006` | Account deletion refused: the user has a withdrawal or a commission settlement waiting for review. `details.withdrawal_id` or `details.settlement_id` names it; it clears once finance staff pay, approve or reject it | 422 |
 
 ## Orders (M1b)
 
@@ -214,6 +215,25 @@ requested locale.
 |------|---------|------|
 | `WALLET_001` | The wallet balance is not enough for this payment or withdrawal | 422 |
 | `WALLET_002` | The settlement is larger than the commission the seller owes | 422 |
+| `WALLET_003` | The withdrawal is larger than the withdrawable amount (wallet balance minus the commission owed, never below zero); `details.withdrawable` holds the amount that can be withdrawn | 422 |
+
+## Settlements, withdrawals and bank accounts (M1b, BE-14.39)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `SETTLEMENT_001` | The seller already has a bank-transfer settlement waiting for review | 422 |
+| `SETTLEMENT_002` | The settlement was already approved or rejected (admin) | 422 |
+| `WITHDRAWAL_001` | The withdrawal was already paid or rejected (admin) | 422 |
+| `WITHDRAWAL_002` | The caller has no bank account to pay into; add one first | 422 |
+| `BANK_001` | Bank account not found, or it belongs to someone else | 404 |
+| `BANK_002` | The caller already has the maximum number of bank accounts | 422 |
+| `BANK_003` | This IBAN is already saved on the caller's account | 422 |
+
+## Order disputes (M1b, BE-14.39)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `DISPUTE_001` | The buyer can no longer report a problem: the order was not handed over yet, the window (admin setting) has passed, or a problem was already reported | 422 |
 
 ## Purchase requests and checkout (M1b)
 
