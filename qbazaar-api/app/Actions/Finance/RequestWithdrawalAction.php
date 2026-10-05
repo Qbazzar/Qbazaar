@@ -88,7 +88,7 @@ class RequestWithdrawalAction
      */
     private function assertWithdrawable(User $seller, string $amount): string
     {
-        $owned = $this->accounts->lockUserAccounts($seller->id);
+        $owned = $this->accounts->lockUserAccounts($seller->id, LedgerAccountType::PLATFORM_PAYOUTS_PAYABLE);
         $wallet = $owned->get(LedgerAccountType::USER_WALLET->value)->balance ?? Money::ZERO;
         $debt = $owned->get(LedgerAccountType::USER_COMMISSION_RECEIVABLE->value)->balance ?? Money::ZERO;
 

@@ -69,16 +69,20 @@ class LedgerAccounts
     }
 
     /**
-     * Locks the user's existing accounts in id order (the ledger's lock
-     * order) and returns them with their current balances, keyed by type.
+     * Locks the user's existing accounts, and optionally one platform
+     * account the caller is about to post to, in a single id-ordered
+     * statement (the ledger's lock order). Taking the platform account in
+     * the same pass keeps the later posting from locking a lower id while
+     * this transaction already holds a higher one.
      *
-     * @return Collection<string, LedgerAccount>
+     * @return Collection<string, LedgerAccount> keyed by account type
      */
-    public function lockUserAccounts(string $userId): Collection
+    public function lockUserAccounts(string $userId, ?LedgerAccountType $alongside = null): Collection
     {
         return LedgerAccount::query()
-            ->where('owner_type', LedgerOwnerType::USER->value)
-            ->where('owner_id', $userId)
+            ->where(fn ($query) => $query
+                ->where(fn ($owned) => $owned->where('owner_type', LedgerOwnerType::USER->value)->where('owner_id', $userId))
+                ->when($alongside !== null, fn ($query) => $query->orWhere('code', $alongside?->code())))
             ->orderBy('id')
             ->lockForUpdate()
             ->get()

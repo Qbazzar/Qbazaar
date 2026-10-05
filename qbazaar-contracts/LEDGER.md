@@ -59,7 +59,7 @@ After 1 the seller owes 10.00; after 2 or 3 they owe nothing. 2 is posted when f
 
 A withdrawal is either paid or rejected, never both: 8 and 9 share one idempotency key (`withdrawal:{id}:outcome`). The seller requests 7 with `POST /account/wallet/withdrawals`; finance staff (`finance.manage`) post 8 or 9 from `/admin/finance/withdrawals`. The withdrawal row is locked before the ledger accounts and keeps its own encrypted copy of the IBAN, so the destination cannot change after the request.
 
-The **withdrawable amount** is the wallet balance minus the commission receivable, never below zero (`withdrawable_balance` in the wallet summary). A request above it is refused with `WALLET_003`, so a debt cannot be withdrawn away. 6a nets the whole debt, except the part a bank transfer awaiting review covers (that transfer must stay approvable), then 7 posts the requested amount. The seller's accounts are locked in id order before the check, so concurrent requests are checked one after the other.
+The **withdrawable amount** is the wallet balance minus the commission receivable, never below zero (`withdrawable_balance` in the wallet summary). A request above it is refused with `WALLET_003`, so a debt cannot be withdrawn away. 6a nets the whole debt, except the part a bank transfer awaiting review covers (that transfer must stay approvable), then 7 posts the requested amount. The seller's accounts and `platform:payouts_payable` are locked in one id-ordered pass before the check (so a request cannot deadlock with the rejection of another withdrawal), so concurrent requests are checked one after the other.
 
 ### Stage B: paid promotion
 
