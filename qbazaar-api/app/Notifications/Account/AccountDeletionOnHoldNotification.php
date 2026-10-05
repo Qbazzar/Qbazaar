@@ -15,9 +15,10 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Tells a user whose grace period is over that their account was not erased
- * because they still owe commission or have an order in progress. Mail is
- * the channel that reaches them: their sessions and push tokens were dropped
- * when they asked for the deletion.
+ * because they still owe commission, have an order in progress, hold money
+ * in the wallet or have a withdrawal or settlement waiting for review. Mail
+ * is the channel that reaches them: their sessions and push tokens were
+ * dropped when they asked for the deletion.
  */
 class AccountDeletionOnHoldNotification extends Notification implements ShouldQueue
 {
@@ -74,6 +75,7 @@ class AccountDeletionOnHoldNotification extends Notification implements ShouldQu
         return match ($this->reason) {
             ErrorCode::ACCOUNT_DEBT_OUTSTANDING => __('messages.notifications.account_deletion_on_hold.body_debt', $amount, $locale),
             ErrorCode::ACCOUNT_WALLET_NOT_EMPTY => __('messages.notifications.account_deletion_on_hold.body_wallet', $amount, $locale),
+            ErrorCode::ACCOUNT_PAYOUT_PENDING => __('messages.notifications.account_deletion_on_hold.body_payout', [], $locale),
             default => __('messages.notifications.account_deletion_on_hold.body_open_order', [], $locale),
         };
     }

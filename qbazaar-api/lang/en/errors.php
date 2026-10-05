@@ -362,6 +362,9 @@ return [
                 'empty' => 'You still have :amount QAR in your wallet. Withdraw it before deleting your account.',
             ],
         ],
+        'payout' => [
+            'pending' => 'You have a withdrawal or a settlement waiting for review. Wait until it is reviewed before deleting your account.',
+        ],
     ],
 
     'address' => [

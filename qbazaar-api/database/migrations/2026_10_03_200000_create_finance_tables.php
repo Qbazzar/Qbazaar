@@ -72,6 +72,7 @@ return new class extends Migration
 
             $table->index(['user_id', 'created_at'], 'withdrawals_user_created_idx');
             $table->index(['status', 'created_at'], 'withdrawals_status_created_idx');
+            $table->index(['user_id', 'status'], 'withdrawals_user_status_idx');
         });
     }
 

@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Data\Ledger\LedgerActor;
 use App\Data\Ledger\LedgerReference;
 use App\Enums\LedgerReferenceType;
+use App\Enums\SettlementStatus;
 use App\Enums\OrderStatus;
 use App\Enums\UserStatus;
+use App\Enums\WithdrawalStatus;
 use App\Jobs\DeleteAccountJob;
 use App\Models\Order;
 use App\Models\User;
@@ -16,10 +18,11 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use Tests\Concerns\ManagesMoney;
 
 use function Pest\Laravel\deleteJson;
 
-uses(RefreshDatabase::class);
+uses(RefreshDatabase::class, ManagesMoney::class);
 
 beforeEach(function (): void {
     $this->user = User::factory()->create([
@@ -180,6 +183,43 @@ it('refuses with ACCOUNT_005 and the balance while the wallet is not empty', fun
 it('allows the deletion once the wallet has been emptied', function (): void {
     adjustDeletionTestWallet($this->user, '40.00');
     adjustDeletionTestWallet($this->user, '-40.00');
+
+    deleteJson('/api/v1/account/delete-request', ['password' => 'Str0ng!Pass1'])->assertStatus(202);
+});
+
+it('refuses with ACCOUNT_006 while a withdrawal waits for review', function (): void {
+    $withdrawal = $this->withdrawalOf($this->user, WithdrawalStatus::PENDING);
+
+    deleteJson('/api/v1/account/delete-request', ['password' => 'Str0ng!Pass1'])
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', 'ACCOUNT_006')
+        ->assertJsonPath('error.details.withdrawal_id', $withdrawal->id);
+
+    Bus::assertNotDispatched(DeleteAccountJob::class);
+    expect($this->user->fresh()->status)->toBe(UserStatus::ACTIVE);
+});
+
+it('refuses with ACCOUNT_006 while a settlement waits for review', function (): void {
+    $settlement = $this->settlementOf($this->user, SettlementStatus::PENDING);
+
+    deleteJson('/api/v1/account/delete-request', ['password' => 'Str0ng!Pass1'])
+        ->assertStatus(422)
+        ->assertJsonPath('error.code', 'ACCOUNT_006')
+        ->assertJsonPath('error.details.settlement_id', $settlement->id);
+});
+
+it('allows the deletion once withdrawals and settlements are reviewed', function (): void {
+    $this->withdrawalOf($this->user, WithdrawalStatus::PAID);
+    $this->withdrawalOf($this->user, WithdrawalStatus::REJECTED);
+    $this->settlementOf($this->user, SettlementStatus::APPROVED);
+    $this->settlementOf($this->user, SettlementStatus::REJECTED);
+
+    deleteJson('/api/v1/account/delete-request', ['password' => 'Str0ng!Pass1'])->assertStatus(202);
+});
+
+it('ignores the pending payouts of other users', function (): void {
+    $this->withdrawalOf(User::factory()->create(), WithdrawalStatus::PENDING);
+    $this->settlementOf(User::factory()->create(), SettlementStatus::PENDING);
 
     deleteJson('/api/v1/account/delete-request', ['password' => 'Str0ng!Pass1'])->assertStatus(202);
 });

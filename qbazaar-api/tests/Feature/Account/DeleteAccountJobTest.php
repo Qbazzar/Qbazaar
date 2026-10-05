@@ -8,13 +8,16 @@ use App\Enums\DataExportStatus;
 use App\Enums\LedgerReferenceType;
 use App\Enums\OrderStatus;
 use App\Enums\OtpPurpose;
+use App\Enums\SettlementStatus;
 use App\Enums\QueueName;
 use App\Enums\UserStatus;
+use App\Enums\WithdrawalStatus;
 use App\Exceptions\ErrorCode;
 use App\Jobs\DeleteAccountJob;
 use App\Jobs\SweepDueAccountDeletionsJob;
 use App\Models\Ad;
 use App\Models\BusinessProfile;
+use App\Models\CommissionSettlement;
 use App\Models\Conversation;
 use App\Models\DataExport;
 use App\Models\Favorite;
@@ -43,8 +46,9 @@ use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\Engine;
 use Tests\Concerns\CreatesAds;
+use Tests\Concerns\ManagesMoney;
 
-uses(RefreshDatabase::class, CreatesAds::class);
+uses(RefreshDatabase::class, CreatesAds::class, ManagesMoney::class);
 
 beforeEach(function (): void {
     Storage::fake('public');
@@ -303,4 +307,26 @@ it('keeps a due account pending and tells the user when money reached the wallet
         return $notification->reason === ErrorCode::ACCOUNT_WALLET_NOT_EMPTY
             && str_contains($notification->toArray($user)['body'], '15.00');
     });
+});
+
+it('keeps a due account pending while a withdrawal or settlement waits for review, then erases it', function (): void {
+    Notification::fake();
+    $user = userPendingDeletionFor(31);
+    $withdrawal = $this->withdrawalOf($user, WithdrawalStatus::PENDING);
+
+    runDeleteJob($user);
+
+    expect($user->fresh()->status)->toBe(UserStatus::PENDING_DELETION);
+    Notification::assertSentTo($user, fn (AccountDeletionOnHoldNotification $notification): bool => $notification->reason === ErrorCode::ACCOUNT_PAYOUT_PENDING
+        && $notification->details === ['withdrawal_id' => $withdrawal->id]
+        && $notification->toArray($user)['body'] === __('messages.notifications.account_deletion_on_hold.body_payout', [], 'ar'));
+
+    $withdrawal->forceFill(['status' => WithdrawalStatus::PAID])->save();
+    $this->settlementOf($user, SettlementStatus::PENDING);
+    runDeleteJob($user);
+    expect($user->fresh()->status)->toBe(UserStatus::PENDING_DELETION);
+
+    CommissionSettlement::query()->firstOrFail()->forceFill(['status' => SettlementStatus::APPROVED])->save();
+    runDeleteJob($user);
+    expect(User::query()->find($user->id))->toBeNull();
 });

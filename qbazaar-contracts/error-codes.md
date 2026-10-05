@@ -197,6 +197,7 @@ requested locale.
 | `ACCOUNT_003` | Account deletion refused: the user still owes commission to the platform. `details.amount` (decimal string) / `details.currency` carry the debt; settle it first | 422 |
 | `ACCOUNT_004` | Account deletion refused: the user has an order in progress (created, awaiting handover or disputed) as buyer or seller. `details.order_id` names one | 422 |
 | `ACCOUNT_005` | Account deletion refused: the user still has money in their wallet. `details.amount` / `details.currency` carry the balance; withdraw it first | 422 |
+| `ACCOUNT_006` | Account deletion refused: the user has a withdrawal or a commission settlement waiting for review. `details.withdrawal_id` or `details.settlement_id` names it; it clears once finance staff pay, approve or reject it | 422 |
 
 ## Orders (M1b)
 

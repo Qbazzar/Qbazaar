@@ -154,6 +154,7 @@ return [
             'body_debt' => 'We could not delete your account yet because you still owe :amount QAR in commission. Your request stays pending and goes ahead once the amount is settled.',
             'body_wallet' => 'We could not delete your account yet because you still have :amount QAR in your wallet. Your request stays pending and goes ahead once you withdraw it.',
             'body_open_order' => 'We could not delete your account yet because you have an order in progress. Your request stays pending and goes ahead once the order is completed or cancelled.',
+            'body_payout' => 'We could not delete your account yet because a withdrawal or a settlement of yours is waiting for review. Your request stays pending and goes ahead once it is reviewed.',
         ],
         'support_reply' => [
             'title' => 'Support replied to your ticket',

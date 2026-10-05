@@ -142,6 +142,7 @@ enum ErrorCode: string
     case ACCOUNT_DEBT_OUTSTANDING = 'ACCOUNT_003';
     case ACCOUNT_HAS_OPEN_ORDER = 'ACCOUNT_004';
     case ACCOUNT_WALLET_NOT_EMPTY = 'ACCOUNT_005';
+    case ACCOUNT_PAYOUT_PENDING = 'ACCOUNT_006';
 
     // ── Orders (M1b) ───────────────────────────────────────────────────────
     case ORDER_NOT_FOUND = 'ORDER_001';
@@ -235,6 +236,7 @@ enum ErrorCode: string
             self::ACCOUNT_DEBT_OUTSTANDING,
             self::ACCOUNT_HAS_OPEN_ORDER,
             self::ACCOUNT_WALLET_NOT_EMPTY,
+            self::ACCOUNT_PAYOUT_PENDING,
             self::ORDER_INVALID_TRANSITION,
             self::ORDER_AD_HAS_ACTIVE_ORDER,
             self::ORDER_SELLER_DEBT_CEILING,

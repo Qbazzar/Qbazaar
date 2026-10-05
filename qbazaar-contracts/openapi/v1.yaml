@@ -1815,7 +1815,9 @@ paths:
         Refused while the user owes commission (`ACCOUNT_003`, with the
         amount in `details`), has an order in progress as buyer or seller
         (`ACCOUNT_004`) or still has money in the wallet (`ACCOUNT_005`, with
-        the balance in `details`; withdraw it first). The job checks all of
+        the balance in `details`; withdraw it first) or has a withdrawal or
+        settlement waiting for review (`ACCOUNT_006`, with its id in
+        `details`). The job checks all of
         them again right before erasing: if one appeared during the grace
         period the account stays pending, the user is notified, and the daily
         sweep retries it.
@@ -1851,7 +1853,8 @@ paths:
           description: |
             Wrong password (USER_005), validation failure, commission still
             owed (ACCOUNT_003), an order in progress (ACCOUNT_004) or money
-            in the wallet (ACCOUNT_005)
+            in the wallet (ACCOUNT_005), or a withdrawal or settlement waiting
+            for review (ACCOUNT_006)
           content:
             application/json:
               schema:
@@ -1886,6 +1889,15 @@ paths:
                       details:
                         amount: '40.00'
                         currency: QAR
+                payoutPending:
+                  value:
+                    success: false
+                    error:
+                      code: ACCOUNT_006
+                      message_key: errors.account.payout.pending
+                      message: You have a withdrawal or a settlement waiting for review. Wait until it is reviewed before deleting your account.
+                      details:
+                        withdrawal_id: 01J9Z3K4M5N6P7Q8R9S0T1V2W4
 
   # ──────────────────────────────────────────────────────────────────────────
   # Uploads (Sprint 2 — Wave 2 ships avatar; Sprint 4 adds ad images)

@@ -6,20 +6,24 @@ namespace App\Services\Account;
 
 use App\Enums\LedgerAccountType;
 use App\Enums\OrderStatus;
+use App\Enums\WithdrawalStatus;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
+use App\Models\CommissionSettlement;
 use App\Models\Order;
 use App\Models\User;
+use App\Models\Withdrawal;
 use App\Services\Ledger\LedgerAccounts;
 use App\Support\Money;
 
 /**
- * Decides whether an account may be erased. Three things stop it: commission
+ * Decides whether an account may be erased. Four things stop it: commission
  * the user still owes the platform (erasing would write the debt off), an
  * order still in progress (erasing would leave the other side with a trade
- * nobody can finish) and money still in their wallet (erasing would lose it). Checked when the deletion is requested and again by
- * DeleteAccountJob right before erasing, since either can appear during the
- * grace period.
+ * nobody can finish), money still in their wallet (erasing would lose it)
+ * and a withdrawal or settlement waiting for review (erasing would orphan
+ * it). Checked when the deletion is requested and again by DeleteAccountJob
+ * right before erasing, since any of them can appear during the grace period.
  */
 class AccountDeletionGuard
 {
@@ -95,14 +99,26 @@ class AccountDeletionGuard
 
     /**
      * A withdrawal debits the wallet when it is requested, so one waiting for
-     * review leaves the wallet at zero and needs its own check. Withdrawals
-     * and settlements arrive with the M1b settlements work; until then there
-     * is nothing pending to look for. Wire them in here.
+     * review leaves the wallet at zero and needs its own check; a settlement
+     * waiting for review would be left half done. Both are looked up by an
+     * index (`pending_user_id` is unique, `withdrawals_user_status_idx`).
      */
-    // @phpstan-ignore return.unusedType (nothing pending to find until #211's models exist)
     private function pendingPayoutBlocker(User $user): ?DomainException
     {
-        return null;
+        $settlementId = CommissionSettlement::query()->where('pending_user_id', $user->id)->value('id');
+
+        if ($settlementId !== null) {
+            return new DomainException(ErrorCode::ACCOUNT_PAYOUT_PENDING, details: ['settlement_id' => (string) $settlementId]);
+        }
+
+        $withdrawalId = Withdrawal::query()
+            ->where('user_id', $user->id)
+            ->where('status', WithdrawalStatus::PENDING->value)
+            ->value('id');
+
+        return $withdrawalId === null
+            ? null
+            : new DomainException(ErrorCode::ACCOUNT_PAYOUT_PENDING, details: ['withdrawal_id' => (string) $withdrawalId]);
     }
 
     private function currency(): string
