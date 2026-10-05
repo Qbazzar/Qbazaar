@@ -22,7 +22,7 @@ Promote with `git switch production && git merge --ff-only main && git push orig
 
 Changes that only touch `qbazaar-contracts/`, `DOCS/` or the READMEs don't deploy.
 
-**Repository secrets** (`Settings → Secrets and variables → Actions`): `DEPLOY_HOST`, `DEPLOY_USER` (`qbazaar`), `DEPLOY_PORT`, `DEPLOY_SSH_KEY` (private half of `keys/github-actions.pub`). `deploy-api.yml` also accepts `DEPLOY_PASSWORD` as a bootstrap fallback; it is not set.
+**Repository secrets** (`Settings → Secrets and variables → Actions`): `DEPLOY_HOST`, `DEPLOY_USER` (`qbazaar`), `DEPLOY_PORT`, `DEPLOY_SSH_KEY` (private half of `keys/github-actions.pub`). Key auth only; there is no password fallback.
 
 ## Server settings file
 
