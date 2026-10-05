@@ -24,14 +24,14 @@
 |---|---|---|---|---|---|
 | M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
 | M1 Closing the backend gaps | 14 | 73 | 70 | 3 | Performance batch merged (#199–#203); left: R2 test, new-device SMS, Google/Apple (waiting for credentials) |
-| M1b Orders and payments | 14 | 10 | 1 | 9 | Settings store done (#156); the rest after the M1 entry items below |
+| M1b Orders and payments | 14 | 10 | 10 | 0 | Backend done: ledger, orders, checkout, settlements, withdrawals, disputes, promotions, notifications (#207–#212); demo data in progress |
 | M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
-| M3 Web on the new design | 16 | 11 | 1 | 10 | Phone-verification flow done (#157); the rest once the M1 endpoints it needs exist |
-| M4 Admin additions | 17 | 15 | 0 | 15 | Waits for M1 (AD-17.7 waits for M1b) |
+| M3 Web on the new design | 16 | 11 | 2 | 9 | Phone verification (#157) and Turnstile (#206) done; FE-16.8 (orders on the web) can start now that M1b is in |
+| M4 Admin additions | 17 | 15 | 0 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, AD-17.7 still needs orders and the revenue report |
 | M5 Deployment on the new server | 18 | 18 | 0 | 18 | Waits for M1–M4 and the domain |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **179** | **90** | **89** | |
+| **Total** | | **179** | **100** | **79** | |
 
 ---
 
@@ -261,7 +261,9 @@
 |---|---|---|---|
 | AD-17.9 | Settings store + SettingsService + settings.manage permission; the commission debt ceiling, the settlement deadline and the ad-expiry warning days are admin-controlled settings (owner decision 2026-09-30) | [P0] | Fixes audit finding PRD-11 (DOCS/AUDIT-2026-09-30.md); each of the three values is editable in `/admin`, read through SettingsService, and defaults to the config value (expiry warning: 3 days) |
 
-### Open
+### Done — M1b backend (merged 2026-10-03 to 2026-10-05)
+
+> Status: ✅ done. #207 → BE-14.33, BE-14.35, BE-14.36, BE-14.38 · #209 → BE-14.34, BE-14.37 · #211 → BE-14.39 · #212 → BE-14.40, BE-14.41. Owner decisions on the way: withdrawable and wallet-paid promotions = wallet − commission owed (debt netted first on withdrawal); account deletion is blocked by commission owed, an open order, a wallet balance or a pending payout (#208, #211).
 
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
@@ -311,11 +313,12 @@
 
 ### Done (merged 2026-09-30)
 
-> Status: ✅ done. #157 → FE-16.10
+> Status: ✅ done. #157 → FE-16.10 · #206 → FE-16.9
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | FE-16.10 | Web phone-verification flow: route AUTH_003 and gated actions (post ad, chat, offers) to verification and back, all scenarios | [P0] | A user without a verified phone who publishes an ad, starts a chat, sends a message or makes an offer is taken to phone verification and returned to the same action; any `AUTH_003` response does the same; guests go to login first; tests for every entry point |
+| FE-16.9 | Turnstile on the web's registration and code-request pages | [P0] | The token goes with the request; clear error on failure |
 
 ### Open
 
@@ -325,7 +328,6 @@
 | FE-16.2 | Design system: the Figma tokens (colors, Poppins, spacing, shadows) in Tailwind + shared components | [P0] | Remove `qbfront.css` in stages without breaking anything |
 | FE-16.3 | Header, footer, home, categories, category page, search, product | [P0] | Matches the reference at 1440/744/390 |
 | FE-16.4 | Login, account, my ads, messages, notifications, favorites, saved searches, settings | [P0] | Matches the reference |
-| FE-16.9 | Turnstile on the web's registration and code-request pages | [P0] | The token goes with the request; clear error on failure |
 | FE-16.5 | Post-an-ad flow on the new design | [P0] | Draft → preview → publish |
 | FE-16.6 | Seller profile, companies, follows | [P1] | — |
 | FE-16.8 | Orders and payments on the web: request/offer cards, checkout (cash), orders, wallet, settlements | [P0] | Same cycle as the app |
