@@ -840,6 +840,7 @@
     }
   },
   "messaging": {
+    "thread_label": "Messages in this conversation",
     "chat_label": "Conversation",
     "unread_label": "unread messages",
     "safety_notice": "With “Safe Pay”, you don’t need to share your email, phone number, or bank details with anyone.",

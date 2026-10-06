@@ -21,7 +21,9 @@ import { MessageBubble } from './MessageBubble';
 import { OfferBubble } from './OfferBubble';
 import { dayBucketKey, formatDaySeparator } from './relative-time';
 import { Button } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { PanelState } from '@/components/account/PanelState';
+import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 import type { Message } from '@/lib/api/types';
 
@@ -102,7 +104,14 @@ export function MessageList({ conversationId }: Props) {
   return (
     <div
       ref={scrollRef}
-      className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-[21px] py-6 qb-tablet:px-6 qb-desktop:px-10"
+      // Focusable so the thread can be scrolled from the keyboard.
+      tabIndex={0}
+      aria-label={t('messaging.thread_label')}
+      className={cn(
+        'flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-[21px] py-6 qb-tablet:px-6 qb-desktop:px-10',
+        focusRing,
+        '-outline-offset-2',
+      )}
       aria-live="polite"
     >
       <SafetyNotice />
