@@ -2300,8 +2300,9 @@ paths:
         Visitors other than the owner share a rendering (one per language)
         cached for up to `qbazaar.ads.detail_cache_seconds` (60 seconds); any
         edit of the ad or its images drops it at once, so only `views_count`,
-        `favorites_count` and the seller block (its `location` included) can
-        trail by that long.
+        `favorites_count`, the seller block (its `location` included) and the
+        `category` block (field labels and card flags an admin just changed)
+        can trail by that long.
       operationId: adsShow
       security: [{}, {bearerAuth: []}]
       parameters:
@@ -2772,6 +2773,11 @@ paths:
         it has none; ads with neither never match a radius.
 
         An optional Bearer token sets `is_favorited` on each ad; guests get false.
+
+        Results are read back from the database, so an ad deleted or no longer
+        publicly listed since the index last saw it is left out, and a page
+        can then hold fewer ads than `per_page` while `meta.total` still
+        counts it.
 
         Limited to 60 requests per minute per user (per IP for guests) by the
         `search` rate limiter, on top of the general API limit.
@@ -6273,7 +6279,7 @@ components:
 
     CategoryField:
       type: object
-      required: [key, label, type, required]
+      required: [key, label, type, required, options_labeled, show_in_card]
       properties:
         key:
           type: string
@@ -6605,13 +6611,17 @@ components:
 
     AdSummary:
       type: object
-      required: [id, title, status, currency]
+      required: [id, title, summary, status, currency]
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         title: { type: string }
         summary:
           type: string
-          description: The description as one plain-text line, cut at a word to at most 120 characters plus "…" (`qbazaar.cards.summary_length`).
+          description: |
+            The description as one plain-text line, cut at a word to at most
+            120 characters plus "…" (`qbazaar.cards.summary_length`). Empty
+            when the caller may not open the ad (a saved, viewed or chatted
+            ad that went back to review or was hidden since).
           example: Single owner, full service history, new tyres…
         spec_chips:
           type: array
@@ -6621,11 +6631,13 @@ components:
             first, then the values of the category fields flagged
             `show_in_card`, in the category's order; select values carry their
             option label, booleans read Yes/No. At most 4
-            (`qbazaar.cards.max_spec_chips`); empty when the ad has none of
-            them. `key` is the custom-field key (or `condition`), so it is
-            stable across languages. Present on every ad list (home, search,
-            category page, `GET /ads` and `?ids=`, favorites, recently viewed,
-            seller ads); the ad preview inside a conversation may leave it out.
+            (`qbazaar.cards.max_spec_chips`), each `value` at most 40
+            characters (`qbazaar.cards.spec_chip_max_length`); empty when the
+            ad has none of them or the caller may not open the ad. `key` is
+            the custom-field key (or `condition`), so it is stable across
+            languages. Present on every ad list (home, search, category page,
+            `GET /ads` and `?ids=`, favorites, recently viewed, seller and own
+            ads, featured, similar) and on the ad of a conversation.
           items:
             type: object
             required: [key, label, value]
@@ -6752,6 +6764,12 @@ components:
           type: object
           additionalProperties: true
           nullable: true
+          description: |
+            `{key: value}` checked against the category's `custom_fields`:
+            `number` values between -999999999 and 999999999
+            (`qbazaar.ads.custom_field_number_max`); `text` values, and
+            `select` values of a field without options, at most 255
+            characters and without `<` or `>`.
 
     UpdateAdRequest:
       type: object
@@ -6776,6 +6794,12 @@ components:
           type: object
           additionalProperties: true
           nullable: true
+          description: |
+            `{key: value}` checked against the category's `custom_fields`:
+            `number` values between -999999999 and 999999999
+            (`qbazaar.ads.custom_field_number_max`); `text` values, and
+            `select` values of a field without options, at most 255
+            characters and without `<` or `>`.
 
     ReorderImagesRequest:
       type: object
