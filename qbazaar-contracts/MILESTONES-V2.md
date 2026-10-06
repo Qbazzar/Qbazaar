@@ -28,10 +28,10 @@
 | M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
 | M3 Web on the new design | 16 | 11 | 2 | 9 | Phone verification (#157) and Turnstile (#206) done; FE-16.8 (orders on the web) can start now that M1b is in |
 | M4 Admin additions | 17 | 15 | 0 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, AD-17.7 still needs orders and the revenue report |
-| M5 Deployment on the new server | 18 | 18 | 3 | 15 | Live on srv1977263 under sslip.io hosts until the real domain; push-to-deploy works (#215); left: secrets, backups, alerts, Cloudflare, tuning |
+| M5 Deployment on the new server | 18 | 18 | 4 | 14 | Live on qbazaar.qa through Cloudflare (Mumbai box); push-to-deploy works (#215); left: secrets, backups, alerts, the rest of Cloudflare, tuning |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **179** | **103** | **76** | |
+| **Total** | | **179** | **104** | **75** | |
 
 ---
 
@@ -396,12 +396,19 @@
 | OPS-18.2 | EA-PHP 8.4 + required extensions, MySQL, Redis | [P0] | `php artisan about` is clean |
 | OPS-18.6 | Point `deploy-api.yml` at the new server + unify the paths in `deploy/` | [P0] | A push to `production` deploys automatically |
 
+### Done — real domain on the Mumbai box (2026-10-06)
+
+> Status: ✅ done. #217 → OPS-18.4. `https://qbazaar.qa` serves the Next.js app (systemd `qbazaar-web` behind the Apache proxy, through Cloudflare); `www.` redirects to it.
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| OPS-18.4 | Next.js on systemd behind an Apache proxy; the static prototype moves off the root | [P0] | The real web on the domain |
+
 ### Server and runtime
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | OPS-18.3 | Meilisearch + Horizon + Reverb as systemd services + `mod_proxy_wstunnel` for Reverb | [P0] | WebSocket connects from mobile and web |
-| OPS-18.4 | Next.js on systemd behind an Apache proxy; the static prototype moves off the root | [P0] | The real web on the domain |
 | OPS-18.5 | Secrets: Twilio, Firebase, Sentry, Mail | [P0] | A real SMS arrives; a real push arrives |
 
 ### Resilience
@@ -425,6 +432,8 @@
 | OPS-18.17 | k6 load test on staging (100k ads, 1M media) and a capacity baseline before launch | [P0] | Report with p95 latencies and the breaking point for search, feed, chat and upload |
 | OPS-18.18 | Cloudflare cache rules for `cdn.` + rate-limit rules for expensive endpoints | [P1] | Image cache hit ratio reported; abusive bursts stopped at the edge |
 | OPS-18.9 | Move the domain to Cloudflare: DNS + proxy + SSL "Full (strict)" with an Origin Certificate + WAF and rate-limiting rules + caching static files + a custom domain for R2 images (`cdn.`) + WebSocket for Reverb + the server firewall only accepts Cloudflare IPs + real visitor IPs in Laravel (`TrustProxies`) | [P0] | The site and API go through Cloudflare; the server's IP address doesn't answer directly; the chat works; images come from `cdn.` |
+
+> OPS-18.9 progress (2026-10-06, #217): DNS on Cloudflare with `@`, `www` and `api` proxied; AutoSSL origin certificates for all three hosts (ready for SSL mode Full (strict) in the dashboard); the Reverb WebSocket works through Cloudflare; real visitor IPs reach Laravel (`mod_remoteip` with Cloudflare's ranges, plus `TrustProxies`). Still open: WAF and rate-limit rules, static caching, `cdn.` for R2, and the firewall that only accepts Cloudflare.
 
 ## Sprint 19 — M6 Releasing the mobile app
 

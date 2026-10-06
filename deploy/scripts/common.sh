@@ -20,8 +20,8 @@ load_deploy_env() {
 
 load_deploy_env
 
-API_HOST="${API_HOST:-api.qbazaar.187-53-139-138.sslip.io}"
-WEB_HOST="${WEB_HOST:-qbazaar.187-53-139-138.sslip.io}"
+API_HOST="${API_HOST:-api.qbazaar.qa}"
+WEB_HOST="${WEB_HOST:-qbazaar.qa}"
 REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 PHP_BIN_DIR="${PHP_BIN_DIR:-/opt/cpanel/ea-php84/root/usr/bin}"
 BRANCH="${DEPLOY_BRANCH:-production}"
