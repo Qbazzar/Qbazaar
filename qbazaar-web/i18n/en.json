@@ -913,7 +913,6 @@
     "contact": "Contact us"
   },
   "cms": {
-    "page_not_found": "We couldn't find this page",
     "last_updated": "Last updated"
   },
   "errors": {
@@ -949,7 +948,6 @@
     "feedback_thanks_yes": "Thanks! Glad it helped.",
     "feedback_thanks_no": "Thanks — we'll improve this article.",
     "back_to_help": "Back to help center",
-    "category_not_found": "We couldn't find this topic",
     "article_not_found": "We couldn't find this article",
     "hero_lead": "How can we",
     "hero_accent": "help you?",

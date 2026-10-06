@@ -11,7 +11,6 @@ import { t } from '@/lib/i18n/messages';
 import { HelpCategoryCard } from './HelpCategoryCard';
 import { HELP_TOPIC_GRID, HelpTopicsSkeleton } from './HelpSkeletons';
 
-/** Tiles of every help topic. */
 export function HelpTopics() {
   const { data: categories, isError, refetch, isFetching } = useHelpCategoriesQuery();
 

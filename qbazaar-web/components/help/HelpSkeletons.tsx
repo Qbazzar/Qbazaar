@@ -50,7 +50,6 @@ export function HelpTopicsSkeleton({ count = 8 }: { count?: number }) {
   );
 }
 
-/** Placeholder article rows. */
 export function HelpRowsSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div>

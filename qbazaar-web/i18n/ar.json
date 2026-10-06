@@ -913,7 +913,6 @@
     "contact": "تواصل معنا"
   },
   "cms": {
-    "page_not_found": "لم نعثر على هذه الصفحة",
     "last_updated": "آخر تحديث"
   },
   "errors": {
@@ -949,7 +948,6 @@
     "feedback_thanks_yes": "شكراً لك! يسعدنا أن المقال كان مفيداً",
     "feedback_thanks_no": "شكراً لإخبارنا — سنحاول تحسين المقال",
     "back_to_help": "العودة إلى مركز المساعدة",
-    "category_not_found": "لم نعثر على هذا الموضوع",
     "article_not_found": "لم نعثر على هذا المقال",
     "hero_lead": "كيف يمكننا",
     "hero_accent": "مساعدتك؟",
