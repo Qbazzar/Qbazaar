@@ -36,7 +36,7 @@ export function isPublishable(ad: Ad | null): boolean {
  * step change (which focuses the step heading) when the error sent the
  * seller back to the form.
  */
-export function focusField(name: AdFormField): void {
+function focusField(name: AdFormField): void {
   requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(fieldId(name))?.focus()));
 }
 

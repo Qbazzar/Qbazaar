@@ -86,7 +86,7 @@ export type AdFormField =
 export type AdFormErrors = Partial<Record<AdFormField, string>>;
 
 /** Order the fields appear on the page, so the first error gets focus. */
-export const FIELD_ORDER: readonly AdFormField[] = [
+const FIELD_ORDER: readonly AdFormField[] = [
   'title',
   'categoryId',
   'photos',

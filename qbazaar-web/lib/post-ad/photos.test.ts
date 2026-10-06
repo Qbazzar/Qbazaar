@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Media } from '@/lib/api/types';
 
-import { hasPendingPhotos, makeCover, movePhoto, photoDisplayUrl, photoFromMedia, sameOrder, uploadedMediaIds, type PhotoItem } from './photos';
+import { makeCover, movePhoto, photoDisplayUrl, photoFromMedia, sameOrder, uploadedMediaIds, type PhotoItem } from './photos';
 
 const media = (id: number, sizes: Partial<Media['sizes']> = {}): Media => ({
   id: String(id),
@@ -37,11 +37,9 @@ describe('photos', () => {
     expect(makeCover(list, 'missing')).toBe(list);
   });
 
-  it('lists uploaded media ids in screen order and spots pending work', () => {
+  it('lists uploaded media ids in screen order', () => {
     const list = [photoFromMedia(media(2)), local('x', 'uploading'), photoFromMedia(media(1))];
     expect(uploadedMediaIds(list)).toEqual(['2', '1']);
-    expect(hasPendingPhotos(list)).toBe(true);
-    expect(hasPendingPhotos([photoFromMedia(media(1)), local('f', 'failed')])).toBe(false);
   });
 
   it('compares orders', () => {

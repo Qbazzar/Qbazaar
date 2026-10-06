@@ -64,15 +64,6 @@ export function uploadedMediaIds(photos: PhotoItem[]): Media['id'][] {
   return photos.flatMap((photo) => (photo.status === 'uploaded' && photo.media ? [photo.media.id] : []));
 }
 
-/** Photos that count towards the ad: everything except failed ones. */
-export function countedPhotos(photos: PhotoItem[]): number {
-  return photos.filter((photo) => photo.status !== 'failed').length;
-}
-
-export function hasPendingPhotos(photos: PhotoItem[]): boolean {
-  return photos.some((photo) => photo.status === 'processing' || photo.status === 'ready' || photo.status === 'uploading');
-}
-
 export function sameOrder<T>(a: readonly T[], b: readonly T[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }

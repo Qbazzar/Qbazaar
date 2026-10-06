@@ -73,7 +73,7 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
         items={[
           { label: t('post_ad.breadcrumb.home'), href: '/' },
           ...categories.map((node) => ({ label: localized(node.name) })),
-          { label: title.length > 24 ? `${title.slice(0, 24)}…` : title },
+          { label: shortTitle(title) },
         ]}
       />
 
@@ -150,6 +150,14 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
       </div>
     </div>
   );
+}
+
+const BREADCRUMB_TITLE_LENGTH = 24;
+
+/** The ad title cut for the breadcrumb, by characters so an emoji is never split. */
+function shortTitle(title: string): string {
+  const characters = Array.from(title);
+  return characters.length > BREADCRUMB_TITLE_LENGTH ? `${characters.slice(0, BREADCRUMB_TITLE_LENGTH).join('')}…` : title;
 }
 
 function MetaRow({ icon, children }: { icon: ReactNode; children: ReactNode }) {
