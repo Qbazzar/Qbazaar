@@ -1,19 +1,11 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+
+import { CatalogPageSkeleton } from '@/components/catalog/CatalogPageSkeleton';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { t } from '@/lib/i18n/messages';
 import { AdsListClient } from './AdsListClient';
 
-/**
- * `/ads` — paginated public listing with optional category + location filters.
- *
- * Server component renders the shell; the filter sidebar + grid live in a
- * client island so they can read the URL search params and re-fetch on
- * change.
- *
- * The Suspense boundary is required by Next 16 because AdsListClient reads
- * `useSearchParams()` — without it, static prerendering bails the page.
- */
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
 
@@ -22,9 +14,14 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function AdsListPage() {
+/**
+ * `/ads` — paginated public listing. The listing reads the URL, so Next 16
+ * needs it inside a Suspense boundary to prerender the page shell.
+ */
+export default async function AdsListPage() {
+  await resolveServerLocale();
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<CatalogPageSkeleton title={t('ads.list.title', 'كل الإعلانات')} />}>
       <AdsListClient />
     </Suspense>
   );

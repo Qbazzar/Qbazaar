@@ -1,51 +1,48 @@
 'use client';
 
 /**
- * Search results client island.
- *
- * - Query string is the single source of truth (nuqs `useQueryStates`).
- * - The sidebar + sort dropdown patch the URL; the URL feeds the search query.
- * - Reuses `AdGrid` for the result list so the visual matches the home feed.
- * - The "Save search" button captures the current URL bag so it can be
- *   restored later from /account/saved-searches.
+ * Search results (492:20208): the query string is the single source of truth
+ * (nuqs), the filters patch it and the URL feeds `GET /search`. With no match
+ * the page switches to the "Search Not Found" layout with recommended ads
+ * (655:55973).
  */
 import { useMemo } from 'react';
-import Link from 'next/link';
-import {
-  useQueryStates,
-  parseAsString,
-  parseAsInteger,
-  parseAsStringEnum,
-} from 'nuqs';
-import { SlidersHorizontalIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { QbfListingCard } from '@/components/ads/QbfListingCard';
-import {
-  FilterSidebar,
-  type FilterValues,
-} from '@/components/search/FilterSidebar';
-import { SortDropdown } from '@/components/search/SortDropdown';
+import { useSearchParams } from 'next/navigation';
+import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
+import { SearchX } from 'lucide-react';
+
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { Icon } from '@/components/design-system/Icon';
+import { Pagination } from '@/components/design-system/Pagination';
+import { CatalogHeader, CatalogStats } from '@/components/catalog/CatalogHeader';
+import { CatalogLayout } from '@/components/catalog/CatalogLayout';
+import { FilterSheet, FilterSidebar } from '@/components/catalog/filters/CatalogFilters';
+import type { FilterGroupKey } from '@/components/catalog/filters/FilterPanel';
+import { AD_TYPES, CONDITIONS, SHIPPING_OPTIONS, countActiveFilters, type FilterValues } from '@/components/catalog/filters/filter-values';
+import { SORT_MODES, VIEW_MODES } from '@/components/catalog/listing-query';
+import { ListingResults } from '@/components/catalog/ListingResults';
+import { ListingToolbar } from '@/components/catalog/ListingToolbar';
+import { LoadError } from '@/components/catalog/LoadError';
 import { SaveSearchButton } from '@/components/search/SaveSearchButton';
-import { useSearchQuery } from '@/lib/queries/search';
+import { SearchNotFound } from '@/components/search/SearchNotFound';
+import { decodeCustomFields } from '@/components/search/search-params';
+import { formatNumber } from '@/lib/i18n/format';
+import { getLocale, localized } from '@/lib/i18n/locale';
+import { t } from '@/lib/i18n/messages';
+import { ApiClientError } from '@/lib/api/auth';
 import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
+import { useSearchQuery } from '@/lib/queries/search';
 import { findCategoryBySlug } from '@/store/categories';
-import { findLocationBySlug } from '@/store/locations';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
-import { ApiClientError } from '@/lib/api/auth';
-import type {
-  AdCondition,
-  CustomFieldsFilter,
-  SearchQueryParams,
-  SortMode,
-} from '@/lib/api/types';
+import type { SearchQueryParams } from '@/lib/api/types';
 
 const PER_PAGE = 24;
 
-const CONDITION_VALUES = ['new', 'like_new', 'used'] as const;
-const SORT_VALUES: SortMode[] = ['latest', 'oldest', 'price_asc', 'price_desc'];
+const GROUPS: FilterGroupKey[] = ['keyword', 'category', 'price', 'location', 'condition', 'adType', 'shipping', 'customFields'];
 
 export function SearchClient() {
+  const locale = getLocale();
+  const searchParams = useSearchParams();
   const [urlState, setUrlState] = useQueryStates(
     {
       q: parseAsString.withDefault(''),
@@ -53,263 +50,148 @@ export function SearchClient() {
       location_slug: parseAsString,
       price_min: parseAsInteger,
       price_max: parseAsInteger,
-      condition: parseAsStringEnum<AdCondition>([...CONDITION_VALUES]),
-      sort: parseAsStringEnum<SortMode>(SORT_VALUES).withDefault('latest'),
+      condition: parseAsStringEnum([...CONDITIONS]),
+      ad_type: parseAsStringEnum([...AD_TYPES]),
+      shipping: parseAsStringEnum([...SHIPPING_OPTIONS]),
+      sort: parseAsStringEnum([...SORT_MODES]).withDefault('latest'),
       page: parseAsInteger.withDefault(1),
-      // Category custom-field filters, JSON-encoded so the dynamic keys ride a
-      // single URL param.
+      // Category custom-field filters, JSON-encoded so the dynamic keys ride a single URL param.
       cf: parseAsString,
+      // A display preference: no history entry and no server round trip.
+      view: parseAsStringEnum([...VIEW_MODES]).withDefault('list').withOptions({ history: 'replace', shallow: true }),
     },
-    {
-      history: 'push',
-      shallow: false,
-    },
+    { history: 'push', shallow: false },
   );
 
   const { data: categoryTree } = useCategoryTreeQuery();
   const { data: locationTree } = useQatarLocationsQuery();
+  const selectedCategory = urlState.category_slug ? findCategoryBySlug(categoryTree, urlState.category_slug) : null;
+  const customFields = useMemo(() => decodeCustomFields(urlState.cf), [urlState.cf]);
 
-  const selectedCategory = useMemo(() => {
-    if (!urlState.category_slug || !categoryTree) return undefined;
-    return findCategoryBySlug(categoryTree, urlState.category_slug);
-  }, [categoryTree, urlState.category_slug]);
-
-  const categoryId = selectedCategory?.id;
-
-  // Decode the JSON custom-field filter bag from the URL (tolerant of junk).
-  const customFields = useMemo<CustomFieldsFilter>(() => {
-    if (!urlState.cf) return {};
-    try {
-      const parsed = JSON.parse(urlState.cf);
-      return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch {
-      return {};
-    }
-  }, [urlState.cf]);
-
-  const locationId = useMemo(() => {
-    if (!urlState.location_slug || !locationTree) return undefined;
-    return findLocationBySlug(locationTree, urlState.location_slug)?.id;
-  }, [locationTree, urlState.location_slug]);
-
-  // Build the API params bag from the URL state — only attach non-empty entries.
-  const apiParams: SearchQueryParams = useMemo(() => {
-    const params: SearchQueryParams = {
-      sort: urlState.sort,
-      page: urlState.page,
-      per_page: PER_PAGE,
-    };
+  // The set filters only, by slug: the API resolves slugs itself, so the first
+  // request does not wait for the trees and is not repeated once they load.
+  // Saved searches keep these, without the page.
+  const searchFilters: SearchQueryParams = useMemo(() => {
+    const params: SearchQueryParams = { sort: urlState.sort };
     if (urlState.q) params.q = urlState.q;
-    if (urlState.category_slug) {
-      params.category_slug = urlState.category_slug;
-      if (categoryId) params.category_id = categoryId;
-    }
-    if (urlState.location_slug) {
-      params.location_slug = urlState.location_slug;
-      if (locationId) params.location_id = locationId;
-    }
+    if (urlState.category_slug) params.category_slug = urlState.category_slug;
+    if (urlState.location_slug) params.location_slug = urlState.location_slug;
     if (urlState.price_min !== null) params.price_min = urlState.price_min;
     if (urlState.price_max !== null) params.price_max = urlState.price_max;
     if (urlState.condition) params.condition = urlState.condition;
-    if (Object.keys(customFields).length > 0) {
-      params.custom_fields = customFields;
-    }
+    if (urlState.ad_type) params.ad_type = urlState.ad_type;
+    if (urlState.shipping) params.shipping = urlState.shipping;
+    if (Object.keys(customFields).length > 0) params.custom_fields = customFields;
     return params;
-  }, [urlState, categoryId, locationId, customFields]);
+  }, [urlState, customFields]);
 
-  const { data, isLoading, isFetching, isError, error } =
-    useSearchQuery(apiParams);
+  const { data, isLoading, isFetching, isError, error, refetch } = useSearchQuery({ ...searchFilters, page: urlState.page, per_page: PER_PAGE });
 
-  const filterValues: FilterValues = {
-    category_slug: urlState.category_slug,
-    location_slug: urlState.location_slug,
-    price_min: urlState.price_min,
-    price_max: urlState.price_max,
+  const filters: FilterValues = {
+    keyword: urlState.q,
+    category: urlState.category_slug,
+    location: urlState.location_slug,
+    priceMin: urlState.price_min,
+    priceMax: urlState.price_max,
     condition: urlState.condition,
+    adType: urlState.ad_type,
+    shipping: urlState.shipping,
+    customFields,
   };
 
-  const handleFilterPatch = (patch: Partial<FilterValues>) => {
-    // Reset the page whenever any filter changes — otherwise we land on a
-    // page-3 that no longer exists with the new filter set.
-    setUrlState({ ...patch, page: 1 });
-  };
-
-  const handleClearAll = () => {
+  const applyFilters = (next: FilterValues) => {
+    // Back to page 1: the current page may not exist with the new filters.
     setUrlState({
-      category_slug: null,
-      location_slug: null,
-      price_min: null,
-      price_max: null,
-      condition: null,
-      cf: null,
+      q: next.keyword || null,
+      category_slug: next.category,
+      location_slug: next.location,
+      price_min: next.priceMin,
+      price_max: next.priceMax,
+      condition: next.condition,
+      ad_type: next.adType,
+      shipping: next.shipping,
+      cf: Object.keys(next.customFields).length > 0 ? JSON.stringify(next.customFields) : null,
       page: 1,
     });
   };
+  const resetFilters = () =>
+    setUrlState({ category_slug: null, location_slug: null, price_min: null, price_max: null, condition: null, ad_type: null, shipping: null, cf: null, page: 1 });
 
-  const handleCustomFieldsChange = (next: CustomFieldsFilter) => {
-    setUrlState({
-      cf: Object.keys(next).length > 0 ? JSON.stringify(next) : null,
-      page: 1,
-    });
-  };
+  const panel = { groups: GROUPS, values: filters, onApply: applyFilters, onReset: resetFilters, categories: categoryTree, locations: locationTree, facets: data?.facets };
 
-  const handleSort = (next: SortMode) => {
-    setUrlState({ sort: next, page: 1 });
-  };
-
-  const handlePage = (next: number) => {
-    setUrlState({ page: next });
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
+  const categoryName = selectedCategory ? localized(selectedCategory.name, locale) : null;
+  const title = urlState.q || categoryName || t('search.title_all', 'كل الإعلانات');
+  const breadcrumb = [{ label: t('home.breadcrumb', 'الرئيسية'), href: '/' }, { label: title }];
   const total = data?.meta.total ?? 0;
   const lastPage = data?.meta.last_page ?? 1;
+  const hasFilters = countActiveFilters(filters) > 0;
 
-  const headline = urlState.q
-    ? t('search.title_for', { query: urlState.q })
-    : t('search.title_all', 'كل الإعلانات');
+  if (!isLoading && !isError && total === 0) {
+    return (
+      <SearchNotFound
+        key={urlState.q}
+        query={urlState.q}
+        breadcrumb={breadcrumb}
+        onSearch={(q) => setUrlState({ q: q || null, page: 1 })}
+        onReset={hasFilters ? resetFilters : undefined}
+      />
+    );
+  }
+
+  const pageHref = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page > 1) params.set('page', String(page));
+    else params.delete('page');
+    const search = params.toString();
+    return search ? `/search?${search}` : '/search';
+  };
 
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
-      <div className="cat-page__head">
-        <div className="min-w-0">
-          <h1 className="cat-page__title">{headline}</h1>
-          {data ? (
-            <p className="cat-page__meta">
-              <strong>
-                {t('search.results_count', { count: String(total) }, `${total} نتيجة`)}
-              </strong>
-            </p>
-          ) : null}
-        </div>
-        <div className="cat-page__head-actions">
-          <SortDropdown value={urlState.sort} onChange={handleSort} />
-          <SaveSearchButton params={apiParams} />
-        </div>
-      </div>
-
-      <div className="cat-page">
-        <aside className="filters">
-          <details className="mb-3 lg:hidden">
-            <summary className="text-ink-700 flex cursor-pointer items-center gap-2 px-2 py-2 text-sm font-medium">
-              <SlidersHorizontalIcon className="size-4" aria-hidden />
-              {t('common.filters', 'الفلاتر')}
-            </summary>
-            <div className="px-2 pb-2">
-              <FilterSidebar
-                values={filterValues}
-                onChange={handleFilterPatch}
-                facets={data?.facets ?? null}
-                onClearAll={handleClearAll}
-                customFieldSchema={selectedCategory?.custom_fields ?? null}
-                customFields={customFields}
-                onCustomFieldsChange={handleCustomFieldsChange}
-              />
-            </div>
-          </details>
-          <div className="hidden lg:block">
-            <FilterSidebar
-              values={filterValues}
-              onChange={handleFilterPatch}
-              facets={data?.facets ?? null}
-              onClearAll={handleClearAll}
+    <CatalogLayout
+      header={
+        <CatalogHeader
+          title={title}
+          breadcrumb={breadcrumb}
+          stats={<CatalogStats items={data ? [{ value: formatNumber(total, locale), label: t('catalog.stats.results', 'نتيجة') }] : []} />}
+          actions={<SaveSearchButton params={searchFilters} />}
+        />
+      }
+      sidebar={<FilterSidebar {...panel} />}
+      toolbar={
+        <ListingToolbar
+          filters={<FilterSheet {...panel} />}
+          sort={{ value: urlState.sort, onChange: (sort) => setUrlState({ sort, page: 1 }) }}
+          view={{ value: urlState.view, onChange: (view) => setUrlState({ view }) }}
+          actions={<SaveSearchButton params={searchFilters} variant="toolbar" />}
+        />
+      }
+    >
+      <h2 className="sr-only">{t('catalog.results_heading', 'النتائج')}</h2>
+      {isError ? (
+        <LoadError headingLevel="h3" title={searchErrorMessage(error)} onRetry={() => refetch()} />
+      ) : (
+        <ListingResults
+          ads={data?.data ?? []}
+          view={urlState.view}
+          isLoading={isLoading}
+          isFetching={isFetching && !isLoading}
+          label={title}
+          empty={
+            <EmptyState
+              headingLevel="h3"
+              icon={<Icon icon={SearchX} size="lg" />}
+              title={t('ads.empty.no_ads', 'لا توجد إعلانات هنا بعد.')}
+              className="rounded-qb-2xl border border-qb-line bg-qb-surface"
             />
-          </div>
-        </aside>
-
-        <section className="min-w-0">
-          {isLoading ? (
-            <div className="cat-listings" aria-busy="true">
-              {Array.from({ length: 9 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="listing-card animate-pulse"
-                  style={{ height: 320 }}
-                />
-              ))}
-            </div>
-          ) : isError ? (
-            <p className="text-destructive py-12 text-center text-sm">
-              {error instanceof ApiClientError
-                ? translateMaybeKey(`search.errors.${error.code.toLowerCase()}`) ||
-                  translateMaybeKey('search.errors.load_failed') ||
-                  error.message
-                : t('search.errors.load_failed', 'تعذّر تحميل نتائج البحث')}
-            </p>
-          ) : !data || data.data.length === 0 ? (
-            <EmptyState onReset={handleClearAll} />
-          ) : (
-            <>
-              <div
-                className={`cat-listings ${
-                  isFetching ? 'opacity-70 transition-opacity' : 'transition-opacity'
-                }`}
-              >
-                {data.data.map((ad) => (
-                  <QbfListingCard key={ad.id} ad={ad} />
-                ))}
-              </div>
-              {lastPage > 1 ? (
-                <div className="pagination">
-                  <button
-                    type="button"
-                    className="pagination__num"
-                    onClick={() => handlePage(urlState.page - 1)}
-                    disabled={urlState.page <= 1}
-                    aria-label={t('search.prev', 'السابق')}
-                  >
-                    ‹
-                  </button>
-                  <span className="pagination__gap">
-                    {t(
-                      'search.page_of',
-                      { current: String(urlState.page), total: String(lastPage) },
-                      `${urlState.page} / ${lastPage}`,
-                    )}
-                  </span>
-                  <button
-                    type="button"
-                    className="pagination__num"
-                    onClick={() => handlePage(urlState.page + 1)}
-                    disabled={urlState.page >= lastPage}
-                    aria-label={t('search.next', 'التالي')}
-                  >
-                    ›
-                  </button>
-                </div>
-              ) : null}
-            </>
-          )}
-        </section>
-      </div>
-    </div>
+          }
+        />
+      )}
+      <Pagination page={urlState.page} totalPages={lastPage} getHref={pageHref} className="mt-6 qb-desktop:mt-8" />
+    </CatalogLayout>
   );
 }
 
-function EmptyState({ onReset }: { onReset: () => void }) {
-  return (
-    <div className="empty-state">
-      <div className="empty-state__title">
-        {t('search.no_results', 'لم نعثر على نتائج')}
-      </div>
-      <div className="empty-state__sub">
-        {t('search.try_other_filters', 'جرّب تغيير الفلاتر أو استعرض كل الأقسام.')}
-      </div>
-      <div className="mt-5 flex items-center justify-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onReset}
-          className="rounded-full"
-        >
-          {t('search.reset_filters', 'إعادة ضبط الفلاتر')}
-        </Button>
-        <Link href="/ads" className="btn btn--primary btn--pill">
-          {t('home.hero.cta_browse', 'تصفّح الإعلانات')}
-        </Link>
-      </div>
-    </div>
-  );
+function searchErrorMessage(error: unknown): string {
+  const byCode = error instanceof ApiClientError ? t(`search.errors.${error.code.toLowerCase()}`, '') : '';
+  return byCode || t('search.errors.load_failed', 'تعذّر تحميل نتائج البحث');
 }
