@@ -439,7 +439,10 @@
       },
       "tabs": {
         "ads": "Ads",
-        "about": "About"
+        "about": "About",
+        "company_ads": "Ads ({count})",
+        "about_us": "About us",
+        "legal": "Legal Info"
       },
       "send_message": "Send message",
       "send_message_soon": "Messaging is coming soon",
@@ -449,7 +452,44 @@
       "ads_empty_title": "No active ads",
       "ads_empty_body": "{name} doesn't have any active ads right now.",
       "not_found_title": "User not found",
-      "not_found_body": "The account may have been removed or the link is invalid."
+      "not_found_body": "The account may have been removed or the link is invalid.",
+      "verified": "Verified seller",
+      "seller_type": {
+        "private": "Private Seller",
+        "business": "Business Seller"
+      },
+      "info": "Info",
+      "followers": "Followers",
+      "member_since": "Member Since",
+      "ads_number": "Ads no.",
+      "highlights": "Seller Highlights",
+      "verified_phone": "Verified phone",
+      "verified_email": "Verified email",
+      "active_listings": "Active Listings",
+      "ads_available": "{count} Ads Available",
+      "load_more": "Load more ads",
+      "message": "Message",
+      "ads_label": "Ads",
+      "followers_label": "Followers",
+      "back_home": "Back to home",
+      "about_empty": "This company hasn't added a description yet.",
+      "legal_empty": "This company hasn't added its legal details yet.",
+      "contact": {
+        "phone": "Phone",
+        "email": "Email",
+        "website": "Website",
+        "address": "Address",
+        "hours": "Opening hours",
+        "closed": "Closed"
+      },
+      "legal": {
+        "imprint": "Imprint",
+        "registration": "Commercial registration",
+        "contact": "Contact"
+      },
+      "ads_available_one": "{count} Ad Available",
+      "ads_label_one": "Ad",
+      "followers_label_one": "Follower"
     },
     "block": {
       "button": "Block",
@@ -460,7 +500,36 @@
       "cancel": "Cancel",
       "success": "User blocked",
       "already_blocked": "This user is already blocked"
+    },
+    "follow": {
+      "follow": "Follow",
+      "follow_seller": "Follow Seller",
+      "following": "Following",
+      "errors": {
+        "self": "You can't follow yourself",
+        "blocked": "You can't follow this user"
+      }
     }
+  },
+  "reviews": {
+    "title": "Reviews",
+    "count": "{count} reviews",
+    "empty": "No reviews yet.",
+    "rate_seller": "Rate the seller",
+    "rating_label": "Your rating",
+    "stars": "{count} of 5 stars",
+    "stars_label": "{rating} out of 5",
+    "comment_label": "Your comment",
+    "comment_placeholder": "Share your experience with this seller (optional)",
+    "submit": "Submit review",
+    "submit_success": "Thanks, your review was sent",
+    "deleted_user": "Former member",
+    "errors": {
+      "not_eligible": "You can rate the seller only after a completed deal (an accepted offer) on this ad",
+      "already": "You have already rated this ad",
+      "own": "You can't rate your own ad"
+    },
+    "count_one": "{count} review"
   },
   "categories": {
     "all": "Categories",
@@ -528,7 +597,9 @@
       "error_size": "File is larger than 10 MB",
       "error_reorder": "Could not save the new order",
       "error_delete": "Could not delete the image"
-    }
+    },
+    "carousel": "carousel",
+    "slide": "slide"
   },
   "ads": {
     "list": {
@@ -576,7 +647,24 @@
       "safety_title": "Stay safe when meeting",
       "safety_body": "Meet in public, inspect goods before paying, and never wire money to strangers.",
       "ad_id": "Ad ID {id}",
-      "views": "{count} views"
+      "views": "{count} views",
+      "gallery": "Photos of {title}",
+      "slide": "Photo {current} of {total}",
+      "technical_data": "Technical Data",
+      "features": "Features & Extras",
+      "condition": "Condition",
+      "seller": "Seller",
+      "seller_ads": "{count} Ads",
+      "seller_rating": "{rating} · {count} reviews",
+      "facts": "Ad details",
+      "ad_id_label": "Ad ID",
+      "posted_on": "Posted on",
+      "share_ad": "Share Ad",
+      "report_ad": "Report Ad",
+      "map_label": "Map of {place}",
+      "views_one": "{count} view",
+      "seller_ads_one": "{count} Ad",
+      "seller_rating_one": "{rating} · {count} review"
     },
     "form": {
       "title": "Ad title",
@@ -594,7 +682,8 @@
       "negotiable": "Negotiable",
       "free": "Free",
       "contact": "Contact for price",
-      "formatted": "{amount} QAR"
+      "formatted": "{amount} QAR",
+      "amount": "QAR {amount}"
     },
     "status": {
       "draft": "Draft",
@@ -637,7 +726,9 @@
       "share": "Share",
       "share_copied": "Link copied",
       "report": "Report",
-      "report_soon": "Reporting lands soon"
+      "report_soon": "Reporting lands soon",
+      "make_offer": "Make an Offer",
+      "send_message": "Send Message"
     },
     "description": {
       "show_more": "Show more",

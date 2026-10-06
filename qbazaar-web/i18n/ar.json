@@ -439,7 +439,10 @@
       },
       "tabs": {
         "ads": "الإعلانات",
-        "about": "نبذة"
+        "about": "نبذة",
+        "company_ads": "الإعلانات ({count})",
+        "about_us": "من نحن",
+        "legal": "المعلومات القانونية"
       },
       "send_message": "أرسل رسالة",
       "send_message_soon": "ميزة المراسلة قادمة قريباً",
@@ -449,7 +452,44 @@
       "ads_empty_title": "لا توجد إعلانات",
       "ads_empty_body": "ليس لدى {name} أي إعلانات نشطة حالياً.",
       "not_found_title": "لم نعثر على هذا المستخدم",
-      "not_found_body": "ربما تم حذف الحساب أو الرابط غير صحيح."
+      "not_found_body": "ربما تم حذف الحساب أو الرابط غير صحيح.",
+      "verified": "بائع موثّق",
+      "seller_type": {
+        "private": "بائع فردي",
+        "business": "بائع تجاري"
+      },
+      "info": "معلومات",
+      "followers": "المتابعون",
+      "member_since": "عضو منذ",
+      "ads_number": "عدد الإعلانات",
+      "highlights": "مميزات البائع",
+      "verified_phone": "رقم هاتف موثّق",
+      "verified_email": "بريد إلكتروني موثّق",
+      "active_listings": "الإعلانات النشطة",
+      "ads_available": "{count} إعلان متاح",
+      "load_more": "تحميل المزيد من الإعلانات",
+      "message": "مراسلة",
+      "ads_label": "إعلان",
+      "followers_label": "متابع",
+      "back_home": "العودة إلى الرئيسية",
+      "about_empty": "لم تُضف هذه الشركة وصفاً بعد.",
+      "legal_empty": "لم تُضف هذه الشركة بياناتها القانونية بعد.",
+      "contact": {
+        "phone": "الهاتف",
+        "email": "البريد الإلكتروني",
+        "website": "الموقع الإلكتروني",
+        "address": "العنوان",
+        "hours": "ساعات العمل",
+        "closed": "مغلق"
+      },
+      "legal": {
+        "imprint": "بيانات الشركة",
+        "registration": "السجل التجاري",
+        "contact": "التواصل"
+      },
+      "ads_available_one": "{count} إعلان متاح",
+      "ads_label_one": "إعلان",
+      "followers_label_one": "متابع"
     },
     "block": {
       "button": "حظر",
@@ -460,7 +500,36 @@
       "cancel": "إلغاء",
       "success": "تم حظر المستخدم",
       "already_blocked": "هذا المستخدم محظور بالفعل"
+    },
+    "follow": {
+      "follow": "متابعة",
+      "follow_seller": "متابعة البائع",
+      "following": "تتابعه",
+      "errors": {
+        "self": "لا يمكنك متابعة نفسك",
+        "blocked": "لا يمكنك متابعة هذا المستخدم"
+      }
     }
+  },
+  "reviews": {
+    "title": "التقييمات",
+    "count": "{count} تقييم",
+    "empty": "لا توجد تقييمات بعد.",
+    "rate_seller": "قيّم البائع",
+    "rating_label": "تقييمك",
+    "stars": "{count} من 5 نجوم",
+    "stars_label": "{rating} من 5",
+    "comment_label": "تعليقك",
+    "comment_placeholder": "شارك تجربتك مع هذا البائع (اختياري)",
+    "submit": "إرسال التقييم",
+    "submit_success": "تم إرسال تقييمك، شكراً لك",
+    "deleted_user": "عضو سابق",
+    "errors": {
+      "not_eligible": "يمكنك تقييم البائع بعد إتمام صفقة (عرض مقبول) على هذا الإعلان فقط",
+      "already": "لقد قيّمت هذا الإعلان من قبل",
+      "own": "لا يمكنك تقييم إعلانك الخاص"
+    },
+    "count_one": "{count} تقييم"
   },
   "categories": {
     "all": "الأقسام",
@@ -528,7 +597,9 @@
       "error_size": "الملف أكبر من 10 ميغابايت",
       "error_reorder": "تعذّر حفظ الترتيب",
       "error_delete": "تعذّر حذف الصورة"
-    }
+    },
+    "carousel": "عرض صور",
+    "slide": "صورة"
   },
   "ads": {
     "list": {
@@ -576,7 +647,24 @@
       "safety_title": "ابقَ آمناً عند اللقاء",
       "safety_body": "التق في مكان عام، افحص البضاعة قبل الدفع، ولا ترسل أموالاً لأشخاص لم تقابلهم.",
       "ad_id": "رقم الإعلان {id}",
-      "views": "{count} مشاهدة"
+      "views": "{count} مشاهدة",
+      "gallery": "صور {title}",
+      "slide": "الصورة {current} من {total}",
+      "technical_data": "البيانات الفنية",
+      "features": "المزايا والإضافات",
+      "condition": "الحالة",
+      "seller": "البائع",
+      "seller_ads": "{count} إعلان",
+      "seller_rating": "{rating} · {count} تقييم",
+      "facts": "تفاصيل الإعلان",
+      "ad_id_label": "رقم الإعلان",
+      "posted_on": "تاريخ النشر",
+      "share_ad": "مشاركة الإعلان",
+      "report_ad": "الإبلاغ عن الإعلان",
+      "map_label": "خريطة {place}",
+      "views_one": "{count} مشاهدة",
+      "seller_ads_one": "{count} إعلان",
+      "seller_rating_one": "{rating} · {count} تقييم"
     },
     "form": {
       "title": "عنوان الإعلان",
@@ -594,7 +682,8 @@
       "negotiable": "قابل للتفاوض",
       "free": "مجاناً",
       "contact": "تواصل للسعر",
-      "formatted": "{amount} ر.ق"
+      "formatted": "{amount} ر.ق",
+      "amount": "{amount} ر.ق"
     },
     "status": {
       "draft": "مسودة",
@@ -637,7 +726,9 @@
       "share": "مشاركة",
       "share_copied": "تم نسخ الرابط",
       "report": "إبلاغ",
-      "report_soon": "الإبلاغ متاح قريباً"
+      "report_soon": "الإبلاغ متاح قريباً",
+      "make_offer": "قدّم عرضاً",
+      "send_message": "أرسل رسالة"
     },
     "description": {
       "show_more": "عرض المزيد",

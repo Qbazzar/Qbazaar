@@ -218,18 +218,48 @@ export interface BlockedUser {
   blocked_at: string;
 }
 
-export interface PublicUserProfile {
-  id: string;
-  full_name: string;
-  avatar_url: string | null;
-  account_type: AccountType;
-  email_verified: boolean;
-  phone_verified: boolean;
-  ads_count: number;
-  rating_avg: number;
-  rating_count: number;
-  joined_at: string;
-  bio: string | null;
+export type Weekday = 'sat' | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri';
+
+export interface OpeningHours {
+  day: Weekday;
+  closed: boolean;
+  /** "09:00"; null when `closed`. */
+  open: string | null;
+  /** May be earlier than `open` for hours past midnight. */
+  close: string | null;
+}
+
+/**
+ * Business details of a business account. In the public view the contact
+ * phone and email are null unless the owner's privacy settings show them.
+ */
+export interface BusinessProfile {
+  business_name: string | null;
+  about: string | null;
+  legal_name: string | null;
+  commercial_registration_number: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  website: string | null;
+  address: string | null;
+  opening_hours: OpeningHours[];
+  cover_url: string | null;
+  updated_at: string | null;
+}
+
+/** `GET /users/{id}/public-profile`. */
+export interface PublicUserProfile extends PublicUser {
+  /** Whether the caller follows this user; false for guests and for yourself. */
+  is_following: boolean;
+  /** Null for private accounts. */
+  business_profile: BusinessProfile | null;
+}
+
+/** Response of `POST` / `DELETE /users/{id}/follow`. */
+export interface FollowState {
+  following: boolean;
+  user_id: string;
+  followers_count: number;
 }
 
 /** A buyer's review of a seller. */
@@ -245,19 +275,6 @@ export interface Review {
 export interface CreateReviewRequest {
   rating: number;
   comment?: string | null;
-}
-
-/**
- * Minimal ad shape used by the public profile's "Ads" tab.
- * The real Ad schema lands in Sprint 4 — this is intentionally narrow.
- */
-export interface PublicUserAd {
-  id: string;
-  title: string;
-  price: number;
-  currency: string;
-  thumbnail_url: string | null;
-  created_at: string;
 }
 
 export interface PaginationMeta {
@@ -460,21 +477,34 @@ export interface Media {
   size_bytes: number;
 }
 
+export interface VerificationBadges {
+  email_verified: boolean;
+  phone_verified: boolean;
+  business_verified: boolean;
+}
+
 /**
- * Lean user shape embedded on the ad detail payload. The full `PublicUserProfile`
- * lives on the dedicated user-profile endpoint — this is the slice the ad-detail
- * sidebar needs.
+ * Public user card: embedded on the ad detail payload (`ad.user`) and the base
+ * of `PublicUserProfile`. `phone` and `email` are present only when the user's
+ * privacy settings show them.
  */
 export interface PublicUser {
   id: string;
   full_name: string;
   avatar_url: string | null;
-  avatar_thumb_url?: string | null;
   account_type: AccountType;
-  email_verified: boolean;
-  phone_verified: boolean;
+  /** Set for business accounts only. */
+  business_name: string | null;
   joined_at: string;
-  ads_count?: number;
+  verification_badges: VerificationBadges;
+  /** Stored count of the user's active ads. */
+  ads_count: number;
+  rating_avg: number;
+  rating_count: number;
+  followers_count: number;
+  following_count: number;
+  phone?: string;
+  email?: string;
 }
 
 export interface Ad {
