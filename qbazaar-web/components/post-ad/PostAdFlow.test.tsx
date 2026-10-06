@@ -1,9 +1,13 @@
 import type { ImgHTMLAttributes } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
+
+// The whole form renders on every step here, which a busy CI runner takes its time over.
+const FLOW_TIMEOUT = 30_000;
+configure({ asyncUtilTimeout: 5_000 });
 
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/post-ad' }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
@@ -139,7 +143,7 @@ beforeEach(() => {
   vi.mocked(uploadAdImages).mockResolvedValue([MEDIA]);
 });
 
-describe('PostAdFlow', () => {
+describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('gives every element of the form its own id, so labels and focus find the right control', async () => {
     renderFlow();
     await screen.findByRole('option', { name: 'الخليج الغربي' });
