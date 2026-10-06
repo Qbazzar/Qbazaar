@@ -8,6 +8,10 @@
 const DEFAULT_SITE_URL = 'https://qbazaar.fleeteye.de';
 const DEFAULT_API_URL = 'http://localhost:8000';
 
+// `next build` prerenders the sitemap and fails a page that takes over 60 s, so
+// a stalled API must cost only the API-backed entries, never the build.
+const API_TIMEOUT_MS = 5000;
+
 export function siteUrl(): string {
   return (process.env.NEXT_PUBLIC_APP_URL ?? DEFAULT_SITE_URL).replace(/\/+$/, '');
 }
@@ -23,8 +27,9 @@ function apiOrigin(): string {
 
 /**
  * Server-only fetch against the public API for SEO endpoints. Unwraps the
- * `{ success, data }` envelope and returns `null` on any failure so a missing
- * sitemap entry / OG tag degrades gracefully instead of 500-ing the route.
+ * `{ success, data }` envelope and returns `null` on any failure, including no
+ * answer within API_TIMEOUT_MS, so a missing sitemap entry / OG tag degrades
+ * gracefully instead of 500-ing or stalling the route.
  */
 export async function fetchApiData<T>(
   path: string,
@@ -34,6 +39,7 @@ export async function fetchApiData<T>(
     const res = await fetch(`${apiOrigin()}${path}`, {
       headers: { Accept: 'application/json' },
       next: { revalidate: revalidateSeconds },
+      signal: AbortSignal.timeout(API_TIMEOUT_MS),
     });
 
     if (!res.ok) return null;
