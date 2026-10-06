@@ -58,7 +58,8 @@ export function MapView({ lat, lng, label = 'map', className }: Props) {
     <div
       ref={containerRef}
       className={className ?? 'h-64 w-full overflow-hidden rounded-xl'}
-      role="img"
+      // A group, not an image: Leaflet puts focusable zoom buttons and links inside.
+      role="group"
       aria-label={label}
     />
   );
