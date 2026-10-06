@@ -47,3 +47,11 @@ it('defaults to the newest first, promoted ads leading', function (): void {
     expect((new AdSearchCriteria)->sort([]))->toBe(['promotion_rank:desc', 'published_at:desc'])
         ->and((new AdSearchCriteria)->sort(['sort' => 'price_asc']))->toBe(['price:asc']);
 });
+
+it('turns the largest allowed radius into 200 000 metres', function (): void {
+    $radiusKm = (int) config('qbazaar.search.geo_max_radius_km');
+
+    expect($radiusKm)->toBe(200)
+        ->and((new AdSearchCriteria)->filter(['lat' => 25.2, 'lng' => 51.5, 'radius_km' => $radiusKm]))
+        ->toBe('status = "active" AND _geoRadius(25.2, 51.5, 200000)');
+});
