@@ -35,13 +35,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # The production server runs Node 20 (deploy/NEW-SERVER-RUNBOOK.md).
+      # Same toolchain as the production server (deploy/NEW-SERVER-RUNBOOK.md):
+      # Node 20 with npm 11, because npm 10 rejects the lockfile in `npm ci`.
       - name: Set up Node 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
           cache-dependency-path: qbazaar-web/package-lock.json
+
+      - name: Use npm 11
+        run: npm install -g npm@11 && npm --version
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
