@@ -1,0 +1,66 @@
+name: Web CI
+
+on:
+  pull_request:
+    paths:
+      - 'qbazaar-web/**'
+      - '.github/workflows/web-ci.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'qbazaar-web/**'
+      - '.github/workflows/web-ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Web · typecheck + test + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: qbazaar-web
+
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Same toolchain as the production server (deploy/NEW-SERVER-RUNBOOK.md):
+      # Node 20 with npm 11, because npm 10 rejects the lockfile in `npm ci`.
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: qbazaar-web/package-lock.json
+
+      - name: Use npm 11
+        run: npm install -g npm@11 && npm --version
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Vitest
+        run: npm test
+
+      - name: Next.js build
+        run: npm run build
+        env:
+          # Production origins (deploy/web.env.production.template). Only
+          # sitemap.xml calls the API at build time, and it falls back to its
+          # static routes when the API is slow or down.
+          NEXT_PUBLIC_API_URL: https://api.qbazaar.qa
+          NEXT_PUBLIC_APP_URL: https://qbazaar.qa
