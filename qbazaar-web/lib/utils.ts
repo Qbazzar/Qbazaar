@@ -1,5 +1,32 @@
 import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
+
+/**
+ * Names of the `qb-` design tokens (styles/design-tokens.css) whose utilities
+ * tailwind-merge cannot classify on its own: without them `text-qb-body` would
+ * be read as a text colour and dropped next to `text-qb-ink`.
+ */
+export const QB_TOKEN_NAMES = {
+  text: [
+    "qb-display", "qb-h1", "qb-h2", "qb-h3", "qb-h4", "qb-h5", "qb-body-lg",
+    "qb-body", "qb-body-sm", "qb-caption", "qb-label", "qb-micro", "qb-tiny",
+  ],
+  radius: ["qb-xs", "qb-sm", "qb-md", "qb-lg", "qb-xl", "qb-2xl", "qb-pill"],
+  shadow: [
+    "qb-card", "qb-raised", "qb-soft", "qb-hover", "qb-brand", "qb-header",
+    "qb-popover",
+  ],
+} as const
+
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      text: [...QB_TOKEN_NAMES.text],
+      radius: [...QB_TOKEN_NAMES.radius],
+      shadow: [...QB_TOKEN_NAMES.shadow],
+    },
+  },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
