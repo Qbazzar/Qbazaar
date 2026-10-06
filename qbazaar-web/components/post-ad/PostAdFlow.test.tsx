@@ -217,6 +217,19 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     expect(await screen.findByRole('heading', { name: t('post_ad.basic.title') })).toBeInTheDocument();
   });
 
+  it('previews a live ad without saving it, since saving can send it back to review', async () => {
+    const live = ad({ status: 'active', images: [MEDIA] });
+    renderFlow(live);
+    await screen.findByRole('option', { name: 'الخليج الغربي' });
+
+    fireEvent.change(screen.getByLabelText(t('post_ad.basic.ad_title')), { target: { value: 'Toyota Land Cruiser 2021 GXR' } });
+    fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.preview') }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Toyota Land Cruiser 2021 GXR' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: t('post_ad.actions.publish') })).not.toBeInTheDocument();
+    expect(updateAd).not.toHaveBeenCalled();
+  });
+
   it('saves a live ad in place and returns to My Ads', async () => {
     const live = ad({ status: 'active', images: [MEDIA] });
     vi.mocked(updateAd).mockResolvedValue(live);

@@ -8,6 +8,7 @@ import { CircleAlert, GripVertical, LoaderCircle, RotateCw, Star, X } from 'luci
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { t } from '@/lib/i18n/messages';
+import { AD_LIMITS } from '@/lib/post-ad/form';
 import type { PhotoItem } from '@/lib/post-ad/photos';
 import { cn } from '@/lib/utils';
 
@@ -32,7 +33,7 @@ export function photoFailureText(photo: PhotoItem): string {
     case 'NETWORK_ERROR':
       return t('post_ad.photos.failed_network');
     case 'UPLOAD_003':
-      return t('post_ad.photos.failed_limit', { max: 20 });
+      return t('post_ad.photos.failed_limit', { max: AD_LIMITS.photosMax });
     case 'UPLOAD_001':
     case 'UPLOAD_002':
     case 'UPLOAD_004':

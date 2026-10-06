@@ -252,6 +252,79 @@ describe('createPhotoQueue', () => {
     expect(deps.removeMedia).toHaveBeenCalledWith(55);
   });
 
+  it('cancels the upload of a removed photo while its bytes are still going out', async () => {
+    let signal: AbortSignal | undefined;
+    const upload = vi.fn((_adId: string, _file: Blob, options: UploadOptions) => {
+      signal = options.signal;
+      options.onProgress(40);
+      return new Promise<Media>((_resolve, reject) => options.signal.addEventListener('abort', () => reject(new Error('aborted'))));
+    });
+    const { queue, deps, photos } = setup({ upload });
+    queue.add([jpeg('a.jpg')], 20);
+    queue.attach('ad-1');
+    await vi.waitFor(() => expect(upload).toHaveBeenCalled());
+
+    await queue.remove(photos()[0].key);
+    await queue.settle();
+
+    expect(signal?.aborted).toBe(true);
+    expect(photos()).toEqual([]);
+    expect(deps.removeMedia).not.toHaveBeenCalled();
+  });
+
+  it('lets a fully sent upload finish when its photo is removed, then deletes it', async () => {
+    let signal: AbortSignal | undefined;
+    let finish: (value: Media) => void = () => undefined;
+    const upload = vi.fn((_adId: string, _file: Blob, options: UploadOptions) => {
+      signal = options.signal;
+      options.onProgress(100);
+      return new Promise<Media>((resolve) => (finish = resolve));
+    });
+    const { queue, deps, photos } = setup({ upload });
+    queue.add([jpeg('a.jpg')], 20);
+    queue.attach('ad-1');
+    await vi.waitFor(() => expect(upload).toHaveBeenCalled());
+
+    await queue.remove(photos()[0].key);
+    expect(signal?.aborted).toBe(false);
+    finish(media(56));
+    await queue.settle();
+
+    expect(photos()).toEqual([]);
+    expect(deps.removeMedia).toHaveBeenCalledWith(56);
+  });
+
+  it('saves a cover picked while the batch was sending its own reorder', async () => {
+    let finishFirst: (value: Media) => void = () => undefined;
+    let finishReorder: () => void = () => undefined;
+    const upload = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise<Media>((resolve) => (finishFirst = resolve)))
+      .mockResolvedValueOnce(media(102))
+      .mockResolvedValueOnce(media(103));
+    const reorder = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise<void>((resolve) => (finishReorder = resolve)))
+      .mockResolvedValue(undefined);
+    const { queue, photos } = setup({ upload, reorder });
+    queue.add([jpeg('a.jpg'), jpeg('b.jpg'), jpeg('c.jpg')], 20);
+    queue.attach('ad-1');
+    await vi.waitFor(() => expect(upload).toHaveBeenCalledTimes(1));
+
+    queue.makeCover(photos()[1].key);
+    finishFirst(media(101));
+    await vi.waitFor(() => expect(reorder).toHaveBeenCalledTimes(1));
+    queue.makeCover(photos()[2].key);
+    finishReorder();
+    await queue.settle();
+
+    // a (101), b (102), c (103) went up in turn; b became the cover, then c.
+    expect(reorder.mock.calls).toEqual([
+      ['ad-1', [102, 101, 103]],
+      ['ad-1', [103, 102, 101]],
+    ]);
+  });
+
   it('starts over on reset and lets late results of the old form go', async () => {
     let finish: (value: Media) => void = () => undefined;
     const upload = vi.fn(() => new Promise<Media>((resolve) => (finish = resolve)));

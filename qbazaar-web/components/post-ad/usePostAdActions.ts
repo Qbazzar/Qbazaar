@@ -87,19 +87,26 @@ export function usePostAdActions(fields: readonly CategoryField[]) {
     focusField('photos');
   }
 
+  /** Checks the form, showing and focusing what is wrong; true when it is valid. */
+  function validate(requirePhoto: boolean): boolean {
+    const { values, photos } = store();
+    const errors = validateAdForm(values, { fields, photoCount: photos.length, requirePhoto });
+    if (Object.keys(errors).length > 0) {
+      showErrors(errors);
+      return false;
+    }
+    store().setErrors({});
+    return true;
+  }
+
   /**
    * Validates, saves the ad and waits for its photos. Resolves to the saved
    * ad, or null when the form is invalid; failed photos don't undo the save.
    */
   async function save(requirePhoto: boolean): Promise<{ ad: Ad; photosFailed: boolean } | null> {
-    const { values, photos, ad } = store();
-    const errors = validateAdForm(values, { fields, photoCount: photos.length, requirePhoto });
-    if (Object.keys(errors).length > 0) {
-      showErrors(errors);
-      return null;
-    }
-    store().setErrors({});
+    if (!validate(requirePhoto)) return null;
 
+    const { values, ad } = store();
     const payload = toAdPayload(values, fields);
     const saved = ad ? await updateAd.mutateAsync({ id: ad.id, payload }) : await createAd.mutateAsync(payload);
     store().setAd(saved);
@@ -130,6 +137,11 @@ export function usePostAdActions(fields: readonly CategoryField[]) {
 
   const preview = () =>
     run('preview', 'post_ad.toast.save_failed', async () => {
+      // Saving a live ad can send it back to review, so only "Save Changes" saves it.
+      if (!isPublishable(store().ad)) {
+        if (validate(true)) show('preview');
+        return;
+      }
       const result = await save(false);
       if (!result) return;
       if (result.photosFailed) warnFailedPhotos();

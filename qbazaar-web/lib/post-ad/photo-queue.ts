@@ -187,7 +187,12 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
       if (uploading === run) uploading = null;
       if (current !== generation) return;
       if (changed) imagesChanged(id);
-      if (waiting('ready')) upload();
+      if (waiting('ready')) {
+        upload();
+        return;
+      }
+      // A move made while the batch sent its own reorder is still unsaved.
+      saveOrderWhenIdle();
     });
   }
 
@@ -279,7 +284,10 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
       const index = photos.findIndex((photo) => photo.key === key);
       if (index === -1) return true;
       const photo = photos[index];
-      controllers.get(key)?.abort();
+      // Once every byte is sent the server keeps the photo even if the request
+      // is cancelled, so let it finish; the upload loop then deletes it again.
+      const fullySent = photo.status === 'uploading' && photo.progress >= 100;
+      if (!fullySent) controllers.get(key)?.abort();
       deps.setPhotos((current) => current.filter((item) => item.key !== key));
       if (photo.status !== 'uploaded' || !photo.media) {
         releaseUrl(photo);
