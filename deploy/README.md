@@ -18,7 +18,7 @@ Promote with `git switch production && git merge --ff-only main && git push orig
 | Workflow | Runs when | Does |
 |----------|-----------|------|
 | `deploy-api.yml` | Push to `production` touching `qbazaar-api/**`, `deploy/**` or the workflow | Runs `ci.yml` first; if it passes, SSH → `deploy/scripts/deploy-api.sh` |
-| `deploy-web.yml` | Push to `production` touching `qbazaar-web/**`, `deploy/**` or the workflow | SSH → `deploy/scripts/deploy-web.sh` (no CI gate: the web has no CI job yet) |
+| `deploy-web.yml` | Push to `production` touching `qbazaar-web/**`, `deploy/**` or the workflow | SSH → `deploy/scripts/deploy-web.sh` (no CI gate: `web-ci.yml` checks pull requests and `main`, not the deploy) |
 
 Changes that only touch `qbazaar-contracts/`, `DOCS/` or the READMEs don't deploy.
 

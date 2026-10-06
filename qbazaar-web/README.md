@@ -64,7 +64,7 @@ npm run typecheck   # tsc --noEmit
 npm test            # Vitest
 ```
 
-There is no CI job for the web yet; run `typecheck`, `test` and `build` before merging.
+CI (`.github/workflows/web-ci.yml`) runs `typecheck`, `test` and `build` on pull requests and on pushes to `main` and `develop` that touch this folder.
 
 ## Deploy
 
