@@ -17,6 +17,7 @@ use App\Notifications\PasswordResetNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -51,6 +52,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $following_count
  * @property int $active_ads_count
  * @property BusinessProfile|null $businessProfile
+ * @property Ad|null $latestListedAd
  * @property Language $language
  * @property string|null $avatar_url
  * @property PrivacySettings|null $privacy_settings
@@ -177,6 +179,30 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     public function ads(): HasMany
     {
         return $this->hasMany(Ad::class);
+    }
+
+    /**
+     * The newest publicly listed ad. Users store no location of their own, so
+     * this ad's place is where the seller is shown to sell from. Eager loading
+     * it reads the (user_id, status, published_at) index of the given users.
+     *
+     * @return HasOne<Ad, $this>
+     */
+    public function latestListedAd(): HasOne
+    {
+        return $this->hasOne(Ad::class)->ofMany(
+            ['published_at' => 'max', 'id' => 'max'],
+            fn (Builder $query) => $query->scopes('publiclyListed'),
+        );
+    }
+
+    /**
+     * City or area level only: the ad's own pin and street are never used.
+     * Needs `latestListedAd.location` loaded.
+     */
+    public function sellingLocation(): ?Location
+    {
+        return $this->latestListedAd?->location;
     }
 
     /* ──────────────────────────────────────────────────────────────────

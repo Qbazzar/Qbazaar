@@ -81,7 +81,7 @@ class AdController extends Controller
         }
 
         $render = function () use ($ad, $request): array {
-            $ad->loadMissing(['user', 'category', 'location', 'media']);
+            $ad->loadMissing(['user.latestListedAd.location', 'category', 'location', 'media']);
 
             return (new AdResource($ad))->toArray($request);
         };
