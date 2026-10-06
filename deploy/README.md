@@ -1,8 +1,8 @@
 # QBazaar — Production Deploy
 
-> **Production today (since 2026-10-05):** the new cPanel VPS `srv1977263.hstgr.cloud` (`187.53.139.138`, AlmaLinux 9), cPanel user `qbazaar`, repo clone at `/home/qbazaar/qbazaar`.
-> Web: `https://qbazaar.187-53-139-138.sslip.io` · API + admin: `https://api.qbazaar.187-53-139-138.sslip.io`. These are temporary [sslip.io](https://sslip.io) names until the real domain exists; see [Switching to the real domain](#switching-to-the-real-domain).
-> The old server (`fleeteye`, `qbazaar.fleeteye.de`) is retired. Cloudflare and the real domain follow in M5 (`OPS-18.x` in [MILESTONES-V2.md](../qbazaar-contracts/MILESTONES-V2.md)).
+> **Production today (since 2026-10-06):** the Hostinger VPS `srv1977263.hstgr.cloud` in Mumbai (`187.126.119.228`, AlmaLinux 9), cPanel user `qbazaar`, repo clone at `/home/qbazaar/qbazaar`.
+> Web: `https://qbazaar.qa` (`www.` redirects to it) · API + admin: `https://api.qbazaar.qa` · WebSocket: `wss://api.qbazaar.qa/app`. DNS and the proxy are on Cloudflare; the origin has AutoSSL certificates.
+> The Kuala Lumpur box (`187.53.139.138`, sslip.io names) and the old `fleeteye` server are retired. The rest of the Cloudflare work (firewall to Cloudflare only, WAF, `cdn.`) is `OPS-18.9` in [MILESTONES-V2.md](../qbazaar-contracts/MILESTONES-V2.md).
 
 First-time setup of this server is in [NEW-SERVER-RUNBOOK.md](NEW-SERVER-RUNBOOK.md). [CPANEL-FLEETEYE-RUNBOOK.md](CPANEL-FLEETEYE-RUNBOOK.md) (Arabic) is the older runbook for the retired server. Promoting `main` to `production`: follow [DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md). This file covers the day-to-day flow.
 
@@ -29,24 +29,25 @@ Changes that only touch `qbazaar-contracts/`, `DOCS/` or the READMEs don't deplo
 Hosts and paths live in one non-secret file on the server, `~qbazaar/.qbazaar-deploy.env`:
 
 ```bash
-API_HOST=api.qbazaar.187-53-139-138.sslip.io
-WEB_HOST=qbazaar.187-53-139-138.sslip.io
+API_HOST=api.qbazaar.qa
+WEB_HOST=qbazaar.qa
+WEB_ALIASES=www.qbazaar.qa
 URL_SCHEME=https
 REPO_DIR=/home/qbazaar/qbazaar
 PHP_BIN_DIR=/opt/cpanel/ea-php84/root/usr/bin
 ```
 
-The deploy scripts read it (an explicit environment variable wins, e.g. `HEALTH_HOST=… bash deploy/scripts/deploy-api.sh`), and the defaults in `common.sh` match it. `HEALTH_HOST` defaults to `API_HOST`. The root-only `/root/qbazaar-secrets/render-env.sh` builds both `.env` files from the templates, this file and the generated secrets in `/root/qbazaar-secrets/`.
+The deploy scripts read it (an explicit environment variable wins, e.g. `HEALTH_HOST=… bash deploy/scripts/deploy-api.sh`), and the defaults in `common.sh` match it. `HEALTH_HOST` defaults to `API_HOST`. `WEB_ALIASES` (space separated) lists extra web hosts allowed by CORS. `scripts/render-env.sh`, run as root, builds both `.env` files from the templates, this file and the secrets in `/root/qbazaar-secrets/` ([runbook §5](NEW-SERVER-RUNBOOK.md#5-environment-files-root)).
 
-## Switching to the real domain
+## Changing the domain
 
-1. DNS: `A` records for the web and `api.` hosts → `187.53.139.138` (or Cloudflare, OPS-18.9).
+1. DNS (Cloudflare): `A` records for the web host, `www` and `api` → the server, proxied. Keep "Always Use HTTPS" off until step 2 has a certificate.
 2. WHM: add the new domain to the `qbazaar` account (or `whmapi1 modifyacct user=qbazaar DNS=<domain>`), then add the `api` subdomain with docroot `qbazaar/qbazaar-api/public`. Run AutoSSL (`/usr/local/cpanel/bin/autossl_check --user=qbazaar`).
-3. Edit `API_HOST` / `WEB_HOST` in `~qbazaar/.qbazaar-deploy.env`.
-4. As root: `bash /root/qbazaar-secrets/render-env.sh` (rewrites `APP_URL`, `WEB_URL`, `CORS_ALLOWED_ORIGINS`, mail sender and the web `NEXT_PUBLIC_*` hosts).
+3. Edit `API_HOST`, `WEB_HOST` and `WEB_ALIASES` in `~qbazaar/.qbazaar-deploy.env`.
+4. As root: `bash ~qbazaar/qbazaar/deploy/scripts/render-env.sh` (rewrites `APP_URL`, `WEB_URL`, `CORS_ALLOWED_ORIGINS`, mail sender and the web `NEXT_PUBLIC_*` hosts).
 5. Install the Apache includes under the new host directories (commands in each file's header), `ensure_vhost_includes`, `configtest`, restart httpd.
-6. Redeploy both (`gh workflow run deploy-api.yml --ref production`, same for web): the web bundle inlines the hosts at build time.
-7. Behind Cloudflare, keep `TRUSTED_PROXIES` empty; see OPS-18.9.
+6. Redeploy both, one after the other (`gh workflow run deploy-api.yml --ref production`, then web): the web bundle inlines the hosts at build time.
+7. Cloudflare: SSL/TLS Full (strict), then Always Use HTTPS ([runbook §9](NEW-SERVER-RUNBOOK.md#9-cloudflare-dashboard)). Keep `TRUSTED_PROXIES` empty.
 
 ## What the deploy scripts do
 
@@ -159,7 +160,7 @@ php artisan scout:sync-index-settings
 php artisan scout:import "App\Models\Ad"
 ```
 
-Check with a typo, which only Meilisearch tolerates: `curl -s 'https://api.qbazaar.187-53-139-138.sslip.io/api/v1/search?q=iphnoe' | head -c 400`.
+Check with a typo, which only Meilisearch tolerates: `curl -s 'https://api.qbazaar.qa/api/v1/search?q=iphnoe' | head -c 400`.
 
 Run the same two commands after any release that changes the `ads` index settings in `config/scout.php` or the fields in `Ad::toSearchableArray()`. Each ad carries `category_path` and `location_path` (its ancestors), so also run `scout:import` after moving a category or location under a new parent in the admin; until then, filtering by the old parent still matches those ads.
 
@@ -211,7 +212,7 @@ The inbox and the unread badge read `conversation_participants` (one row per sid
 ## Manual deploy (if Actions is down)
 
 ```bash
-ssh qbazaar@187.53.139.138 "cd ~/qbazaar && bash deploy/scripts/deploy-api.sh"   # or deploy-web.sh
+ssh qbazaar@187.126.119.228 "cd ~/qbazaar && bash deploy/scripts/deploy-api.sh"   # or deploy-web.sh
 ```
 
 The scripts fetch and reset to `origin/production` themselves.
@@ -226,7 +227,7 @@ deploy/
 ├── CPANEL-FLEETEYE-RUNBOOK.md      first-time setup of the retired fleeteye server (Arabic)
 ├── env.production.template         API .env template
 ├── web.env.production.template     web .env.production template
-├── scripts/                        deploy-api.sh, deploy-web.sh (run by the workflows), common.sh
+├── scripts/                        deploy-api.sh, deploy-web.sh (run by the workflows), common.sh, render-env.sh (root, writes both .env files)
 ├── systemd/                        horizon, reverb, scheduler, web, meilisearch units
 ├── apache/                         web.include.conf (WEB_HOST) and api.include.conf (API_HOST)
 └── keys/github-actions.pub         public key for the deploy user
