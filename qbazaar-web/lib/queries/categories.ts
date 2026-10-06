@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import {
   getCategoryFields,
   getCategoryFilters,
+  getCategoryPage,
   getCategoryStats,
   getCategoryTree,
   getMainCategories,
@@ -21,16 +22,20 @@ import type {
   CategoryField,
   CategoryFilter,
   CategoryNode,
+  CategoryPage,
   CategoryStats,
 } from '@/lib/api/types';
 
 const HOUR = 60 * 60 * 1000;
 const FIVE_MIN = 5 * 60 * 1000;
+// The API caches each category page for two minutes.
+const TWO_MIN = 2 * 60 * 1000;
 
 export const categoryKeys = {
   all: ['categories'] as const,
   tree: () => [...categoryKeys.all, 'tree'] as const,
   main: () => [...categoryKeys.all, 'main'] as const,
+  page: (slug: string) => [...categoryKeys.all, 'page', slug] as const,
   stats: (slug: string) => [...categoryKeys.all, 'stats', slug] as const,
   filters: (slug: string) => [...categoryKeys.all, 'filters', slug] as const,
   fields: (slug: string) => [...categoryKeys.all, 'fields', slug] as const,
@@ -68,6 +73,18 @@ export function useMainCategoriesQuery(): UseQueryResult<Category[]> {
   }, [query.data, setMain]);
 
   return query;
+}
+
+/** Category page sections (newest ads per child); disabled until a slug is known. */
+export function useCategoryPageQuery(
+  slug: string | null | undefined,
+): UseQueryResult<CategoryPage> {
+  return useQuery({
+    queryKey: categoryKeys.page(slug ?? ''),
+    queryFn: () => getCategoryPage(slug as string),
+    enabled: Boolean(slug),
+    staleTime: TWO_MIN,
+  });
 }
 
 export function useCategoryStatsQuery(
