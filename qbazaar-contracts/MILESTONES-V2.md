@@ -397,7 +397,7 @@
 
 ### Done — real domain on the Mumbai box (2026-10-06)
 
-> Status: ✅ done. #PRNUM → OPS-18.4. `https://qbazaar.qa` serves the Next.js app (systemd `qbazaar-web` behind the Apache proxy, through Cloudflare); `www.` redirects to it.
+> Status: ✅ done. #217 → OPS-18.4. `https://qbazaar.qa` serves the Next.js app (systemd `qbazaar-web` behind the Apache proxy, through Cloudflare); `www.` redirects to it.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -433,7 +433,7 @@
 | OPS-18.18 | Cloudflare cache rules for `cdn.` + rate-limit rules for expensive endpoints | [P1] | Image cache hit ratio reported; abusive bursts stopped at the edge |
 | OPS-18.9 | Move the domain to Cloudflare: DNS + proxy + SSL "Full (strict)" with an Origin Certificate + WAF and rate-limiting rules + caching static files + a custom domain for R2 images (`cdn.`) + WebSocket for Reverb + the server firewall only accepts Cloudflare IPs + real visitor IPs in Laravel (`TrustProxies`) | [P0] | The site and API go through Cloudflare; the server's IP address doesn't answer directly; the chat works; images come from `cdn.` |
 
-> OPS-18.9 progress (2026-10-06, #PRNUM): DNS on Cloudflare with `@`, `www` and `api` proxied; AutoSSL origin certificates for all three hosts (ready for SSL mode Full (strict) in the dashboard); the Reverb WebSocket works through Cloudflare; real visitor IPs reach Laravel (`mod_remoteip` with Cloudflare's ranges, plus `TrustProxies`). Still open: WAF and rate-limit rules, static caching, `cdn.` for R2, and the firewall that only accepts Cloudflare.
+> OPS-18.9 progress (2026-10-06, #217): DNS on Cloudflare with `@`, `www` and `api` proxied; AutoSSL origin certificates for all three hosts (ready for SSL mode Full (strict) in the dashboard); the Reverb WebSocket works through Cloudflare; real visitor IPs reach Laravel (`mod_remoteip` with Cloudflare's ranges, plus `TrustProxies`). Still open: WAF and rate-limit rules, static caching, `cdn.` for R2, and the firewall that only accepts Cloudflare.
 
 ## Sprint 19 — M6 Releasing the mobile app
 
