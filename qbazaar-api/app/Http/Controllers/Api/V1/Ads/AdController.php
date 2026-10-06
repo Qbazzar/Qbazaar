@@ -62,8 +62,9 @@ class AdController extends Controller
      *
      * Visibility is governed by AdPolicy::view — public sees ACTIVE / SOLD,
      * owner sees their own drafts. Increments are tracked separately (Sprint 6).
-     * Visitors other than the seller share one cached rendering; the seller
-     * always gets a fresh one (it carries the private street).
+     * Visitors other than the seller share one cached rendering per
+     * language; the seller always gets a fresh one (it carries the private
+     * street).
      *
      * @unauthenticated
      *

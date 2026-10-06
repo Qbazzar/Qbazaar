@@ -9,7 +9,7 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
 use App\Services\Ads\AdLifecycleService;
-use App\Services\Catalog\CatalogCache;
+use App\Services\Catalog\HomeFeedCache;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,7 +91,7 @@ it('lists the cities with their live ad counts', function (): void {
 
 it('keeps serving the cached feed while ads change, and the warmer refreshes it', function (): void {
     getJson('/api/v1/home')->assertOk();
-    expect(Cache::has(CatalogCache::HOME_FEED_KEY))->toBeTrue();
+    expect(Cache::has(app(HomeFeedCache::class)->key(app()->getLocale())))->toBeTrue();
 
     $ad = Ad::factory()->create(['user_id' => $this->seller->id, 'status' => AdStatus::DRAFT->value]);
     $lifecycle = app(AdLifecycleService::class);

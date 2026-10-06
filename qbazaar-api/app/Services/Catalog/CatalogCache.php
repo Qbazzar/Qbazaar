@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
  */
 class CatalogCache
 {
+    /** Prefix: {@see HomeFeedCache::key()} adds the language. */
     public const HOME_FEED_KEY = 'home.feed';
 
     public const MAIN_CATEGORIES_KEY = 'categories.main';
@@ -32,6 +33,7 @@ class CatalogCache
         private readonly LocationAdCounts $locationCounts,
         private readonly CategorySchema $schema,
         private readonly CategoryPageCache $categoryPages,
+        private readonly HomeFeedCache $homeFeed,
     ) {}
 
     /**
@@ -49,7 +51,7 @@ class CatalogCache
         $this->categoryPages->flush();
         Cache::forget(self::MAIN_CATEGORIES_KEY);
         Cache::forget(self::LOCATION_TREE_KEY);
-        Cache::forget(self::HOME_FEED_KEY);
+        $this->homeFeed->flush();
 
         $this->featuredAdsChanged();
     }
