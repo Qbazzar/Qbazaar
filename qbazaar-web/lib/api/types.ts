@@ -423,6 +423,9 @@ export type ReferenceErrorCode = 'CATEGORY_NOT_FOUND' | 'LOCATION_NOT_FOUND';
 
 export type PriceType = 'fixed' | 'negotiable' | 'free' | 'contact';
 export type AdCondition = 'new' | 'like_new' | 'used';
+/** `offering` sells an item, `wanted` looks for one ("Looking for"). */
+export type AdType = 'offering' | 'wanted';
+export type AdShipping = 'pickup_only' | 'delivery';
 export type AdStatus =
   | 'draft'
   | 'pending'
@@ -490,6 +493,15 @@ export interface Ad {
   price_type: PriceType;
   currency: 'QAR';
   condition: AdCondition | null;
+  ad_type: AdType;
+  shipping: AdShipping;
+  /** Delivery fee as an exact decimal ("15.00"); null is free delivery. */
+  shipping_fee: string | null;
+  quantity: number;
+  postal_code: string | null;
+  /** Null for other viewers unless `show_full_address`; the seller always sees it. */
+  street: string | null;
+  show_full_address: boolean;
   status: AdStatus;
   /** Free-form bag keyed by `CategoryField.key` — values arrive verbatim. */
   custom_fields: Record<string, unknown>;
@@ -539,6 +551,12 @@ export interface CreateAdRequest {
   price_type: PriceType;
   condition: AdCondition | null;
   custom_fields: Record<string, unknown>;
+  ad_type?: AdType;
+  shipping?: AdShipping;
+  shipping_fee?: number | null;
+  postal_code?: string | null;
+  street?: string | null;
+  show_full_address?: boolean;
 }
 
 export type UpdateAdRequest = Partial<CreateAdRequest>;
