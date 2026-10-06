@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Ads;
 
 use App\Models\Category;
+use App\Rules\NoMarkup;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Support\Facades\Validator as ValidatorFactory;
 use Illuminate\Validation\ValidationException;
@@ -26,10 +27,10 @@ use Illuminate\Validation\ValidationException;
  * envelope surfaces them under the existing VALIDATION_FAILED code.
  *
  * Supported field types (from CategorySeeder):
- *   - text     → string, max 255
- *   - number   → numeric
+ *   - text     → string, max 255, no markup
+ *   - number   → numeric, within ±qbazaar.ads.custom_field_number_max
  *   - boolean  → boolean
- *   - select   → in:options[]
+ *   - select   → in:options[]; without options it is validated as text
  *   - range    → not used in custom_fields (filter-only); we accept any numeric
  *
  * Unknown types are accepted to keep the door open for future field shapes
@@ -84,6 +85,7 @@ class CustomFieldsValidator
             switch ($type) {
                 case 'number':
                     $fieldRules[] = 'numeric';
+                    $fieldRules[] = $this->numberBounds();
                     break;
                 case 'boolean':
                     $fieldRules[] = 'boolean';
@@ -95,7 +97,7 @@ class CustomFieldsValidator
                             $field['options'],
                         ));
                     } else {
-                        $fieldRules[] = 'string';
+                        array_push($fieldRules, ...$this->textRules());
                     }
                     break;
                 case 'range':
@@ -104,8 +106,7 @@ class CustomFieldsValidator
                     break;
                 case 'text':
                 default:
-                    $fieldRules[] = 'string';
-                    $fieldRules[] = 'max:255';
+                    array_push($fieldRules, ...$this->textRules());
                     break;
             }
 
@@ -128,5 +129,24 @@ class CustomFieldsValidator
         }
 
         return $submitted;
+    }
+
+    /**
+     * Field values are shown on listing cards, so a number may not be an
+     * endless digit string.
+     */
+    private function numberBounds(): string
+    {
+        $max = (int) config('qbazaar.ads.custom_field_number_max');
+
+        return "between:-{$max},{$max}";
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    private function textRules(): array
+    {
+        return ['string', 'max:255', new NoMarkup];
     }
 }

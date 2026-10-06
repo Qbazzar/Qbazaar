@@ -31,7 +31,7 @@ it('validates the distance search parameters', function (string $query, string $
     'radius without a point' => ['radius_km=5', 'lat'],
     'distance sort without a point' => ['sort=distance', 'lat'],
     'latitude out of range' => ['lat=91&lng=51.5', 'lat'],
-    'radius above the cap' => ['lat=25.3&lng=51.5&radius_km=101', 'radius_km'],
+    'radius above the cap' => ['lat=25.3&lng=51.5&radius_km=200.5', 'radius_km'],
 ]);
 
 it('accepts distance and popularity searches and degrades to an empty page without Meilisearch', function (string $query): void {
@@ -40,6 +40,7 @@ it('accepts distance and popularity searches and degrades to an empty page witho
         ->assertJsonPath('meta.total', 0);
 })->with([
     'radius' => ['lat=25.3&lng=51.5&radius_km=5'],
+    'the largest radius the app offers' => ['lat=25.3&lng=51.5&radius_km=200'],
     'distance sort' => ['lat=25.3&lng=51.5&sort=distance'],
     'most viewed' => ['sort=most_viewed'],
 ]);

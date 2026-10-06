@@ -43,6 +43,7 @@
         <x-admin.card title="إعدادات متقدمة (JSON)" description="مخطط الحقول والمرشحات المخصصة. اتركه فارغًا أو أدخل JSON صحيح.">
             <div class="space-y-4">
                 <x-admin.textarea name="custom_fields" label="الحقول المخصصة (custom_fields)" rows="6" dir="ltr" input-class="font-mono text-xs"
+                    hint="مفاتيح اختيارية لكل حقل: show_in_card: true لعرض قيمته على بطاقة الإعلان، و option_labels لأسماء خيارات القائمة بالشكل { القيمة: { ar, en } }."
                     :value="old('custom_fields', $category->custom_fields !== null ? json_encode($category->custom_fields, $jsonFlags) : '')" />
                 <x-admin.textarea name="custom_filters" label="المرشحات المخصصة (custom_filters)" rows="6" dir="ltr" input-class="font-mono text-xs"
                     :value="old('custom_filters', $category->custom_filters !== null ? json_encode($category->custom_filters, $jsonFlags) : '')" />

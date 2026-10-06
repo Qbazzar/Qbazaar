@@ -18,9 +18,10 @@ class HomeController extends Controller
     /**
      * GET /api/v1/home — every home-screen section in one response.
      *
-     * The payload is the same for every visitor, so it is served whole from
-     * {@see HomeFeedCache}, which the catalog warmer refreshes every couple of
-     * minutes. The viewer's favourite flags are laid over the cached cards.
+     * The payload is the same for every visitor of a language, so it is
+     * served whole from {@see HomeFeedCache}, which the catalog warmer
+     * refreshes every couple of minutes. The viewer's favourite flags are
+     * laid over the cached cards.
      *
      * @unauthenticated
      */
