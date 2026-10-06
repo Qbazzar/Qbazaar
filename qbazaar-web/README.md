@@ -25,6 +25,15 @@ Not there yet (V2): passwordless login, orders and wallet, follows, companies, T
 - Web push: Firebase JS SDK, loaded only when the `NEXT_PUBLIC_FCM_*` variables are set
 - Tests: Vitest + Testing Library (happy-dom)
 
+## Design system (M3)
+
+The new Figma design lives next to the old look until every page is reskinned. [DESIGN-MAP.md](DESIGN-MAP.md) maps each route to its reference page and Figma frames.
+
+- **Tokens** in `styles/design-tokens.css`, all prefixed `qb-`: colours (`bg-qb-brand`, `text-qb-ink`, `border-qb-line`...), type scale (`text-qb-h1` ... `text-qb-tiny`), radii (`rounded-qb-md`...), shadows (`shadow-qb-card`...), gutters (`px-qb-gutter`), content width (`max-w-qb-content`) and the reference breakpoints (`qb-tablet:` from 601 px, `qb-desktop:` from 1001 px).
+- **Fonts**: `font-qb` is Poppins, or IBM Plex Sans Arabic first under `dir="rtl"`.
+- **Components** in `components/design-system/`: `Button` (+ `buttonVariants` for links), `Field`, `Input`, `Select`, `Textarea`, `Badge`, `Chip`, `Card`, `AdCard`, `SectionHeader`, `Modal`, `Sheet`, `Tabs`, `Pagination`, `Breadcrumb`, `Avatar`, `Icon`, `EmptyState`. Import each from its own file. Only `Modal`/`Sheet` and `Tabs` are client components.
+- `styles/qbfront.css` is the old look and is being removed in stages; don't add to it. While it is loaded, its generic class names (`grid`, `container`, `card`, `chip`, `field`...) still apply, so new markup should not use them.
+
 ## Local setup
 
 ```bash

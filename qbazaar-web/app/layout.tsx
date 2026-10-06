@@ -1,5 +1,12 @@
 import type { Metadata } from 'next';
-import { Cairo, DM_Sans, Instrument_Serif, Geist_Mono } from 'next/font/google';
+import {
+  Cairo,
+  DM_Sans,
+  Geist_Mono,
+  IBM_Plex_Sans_Arabic,
+  Instrument_Serif,
+  Poppins,
+} from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
@@ -40,6 +47,23 @@ const geistMono = Geist_Mono({
   variable: '--font-mono',
 });
 
+// New design system faces (`font-qb`). Not preloaded while no page uses them
+// yet, so the old-design pages download nothing extra; turn preload on with the
+// FE-16.3 reskin.
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-poppins',
+  preload: false,
+});
+
+const ibmPlexArabic = IBM_Plex_Sans_Arabic({
+  subsets: ['arabic'],
+  weight: ['400', '500', '600'],
+  variable: '--font-ibm-plex-arabic',
+  preload: false,
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
@@ -66,7 +90,7 @@ export default async function RootLayout({
       lang={locale}
       dir={dirFor(locale)}
       suppressHydrationWarning
-      className={`${dmSans.variable} ${instrumentSerif.variable} ${cairo.variable} ${geistMono.variable}`}
+      className={`${dmSans.variable} ${instrumentSerif.variable} ${cairo.variable} ${geistMono.variable} ${poppins.variable} ${ibmPlexArabic.variable}`}
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale}>
