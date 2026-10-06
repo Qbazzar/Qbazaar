@@ -432,23 +432,14 @@
   "users": {
     "profile": {
       "joined": "عضو منذ {date}",
-      "ads_count": "{count} إعلان نشط",
-      "account_type": {
-        "private": "حساب شخصي",
-        "business": "حساب تجاري"
-      },
       "tabs": {
-        "ads": "الإعلانات",
-        "about": "نبذة",
         "company_ads": "الإعلانات ({count})",
         "about_us": "من نحن",
         "legal": "المعلومات القانونية"
       },
-      "send_message": "أرسل رسالة",
       "send_message_soon": "ميزة المراسلة قادمة قريباً",
       "report": "الإبلاغ",
       "report_soon": "ميزة الإبلاغ قادمة قريباً",
-      "no_bio": "لم يكتب هذا المستخدم نبذة بعد.",
       "ads_empty_title": "لا توجد إعلانات",
       "ads_empty_body": "ليس لدى {name} أي إعلانات نشطة حالياً.",
       "not_found_title": "لم نعثر على هذا المستخدم",
@@ -643,10 +634,6 @@
     },
     "detail": {
       "description": "الوصف",
-      "specs": "التفاصيل",
-      "safety_title": "ابقَ آمناً عند اللقاء",
-      "safety_body": "التق في مكان عام، افحص البضاعة قبل الدفع، ولا ترسل أموالاً لأشخاص لم تقابلهم.",
-      "ad_id": "رقم الإعلان {id}",
       "views": "{count} مشاهدة",
       "gallery": "صور {title}",
       "slide": "الصورة {current} من {total}",
@@ -721,9 +708,6 @@
       "save_for_later": "حفظ الإعلان",
       "save_soon": "الحفظ متاح قريباً",
       "contact_seller": "تواصل مع البائع",
-      "call": "إظهار الرقم",
-      "call_revealed": "اضغط للاتصال",
-      "share": "مشاركة",
       "share_copied": "تم نسخ الرابط",
       "report": "إبلاغ",
       "report_soon": "الإبلاغ متاح قريباً",
@@ -751,7 +735,6 @@
       "saved": "تم حفظ التعديلات"
     },
     "similar_section": {
-      "kicker": "مختار لك",
       "title": "إعلانات مشابهة"
     },
     "featured_section": {

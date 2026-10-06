@@ -20,7 +20,7 @@ import { VerifiedMark, isVerifiedSeller, sellerDisplayName } from './SellerBadge
 interface SellerProfileCardProps {
   profile: PublicUserProfile;
   locale: Locale;
-  /** Follow and message buttons. */
+  /** Follow and message buttons; none on your own profile. */
   actions: ReactNode;
   /** Report / block, shown under the buttons. */
   secondaryActions?: ReactNode;
@@ -65,7 +65,9 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
         </p>
       </div>
 
-      <div className="mt-[22px] [display:grid] grid-cols-2 gap-3 qb-tablet:gap-5 qb-desktop:mt-9 qb-desktop:gap-[11px]">{actions}</div>
+      {actions ? (
+        <div className="mt-[22px] [display:grid] grid-cols-2 gap-3 qb-tablet:gap-5 qb-desktop:mt-9 qb-desktop:gap-[11px]">{actions}</div>
+      ) : null}
       {secondaryActions ? <div className="mt-3 flex flex-wrap items-center justify-center gap-1">{secondaryActions}</div> : null}
 
       <section aria-labelledby={infoTitleId} className="mt-6 qb-desktop:mt-[29px]">

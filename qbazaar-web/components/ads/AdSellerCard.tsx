@@ -18,10 +18,10 @@ import { Icon } from '@/components/design-system/Icon';
 import { StartConversationButton } from '@/components/messaging/StartConversationButton';
 import { ReviewSellerButton } from '@/components/reviews/ReviewSellerButton';
 import { SellerTypeChip, VerifiedMark, isVerifiedSeller, sellerDisplayName } from '@/components/users/SellerBadges';
-import { formatCount, numberLocale, tCount } from '@/lib/ads/display';
+import { formatAdDate, formatCount, tCount } from '@/lib/ads/display';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
-import { cn, formatMonthYear } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import type { Ad, PublicUser } from '@/lib/api/types';
 
 import { detailCard, detailCardSide } from './detail-card';
@@ -84,7 +84,7 @@ function SellerSummary({ seller, locale }: { seller: PublicUser; locale: Locale 
           </InfoRow>
         ) : null}
         <InfoRow icon={LayoutGrid}>{tCount('ads.detail.seller_ads', seller.ads_count, locale)}</InfoRow>
-        <InfoRow icon={CalendarDays}>{t('users.profile.joined', { date: formatMonthYear(seller.joined_at, numberLocale(locale)) })}</InfoRow>
+        <InfoRow icon={CalendarDays}>{t('users.profile.joined', { date: formatAdDate(seller.joined_at, locale) })}</InfoRow>
       </ul>
     </>
   );

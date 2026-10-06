@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { setClientLocale } from '@/lib/i18n/locale';
 import type { Ad, Category } from '@/lib/api/types';
 
-import { buildAdSpecSheet, formatAdPriceLabel, labelFromSlug, tCount } from './display';
+import { buildAdSpecSheet, formatAdDate, formatAdPriceLabel, labelFromSlug, tCount } from './display';
 
 const category = {
   custom_fields: [
@@ -84,6 +84,13 @@ describe('buildAdSpecSheet', () => {
     setClientLocale('en');
     expect(sheetFor({ make: '', year: null }).specs).toEqual([]);
     expect(sheetFor(null)).toEqual({ specs: [], features: [] });
+  });
+});
+
+describe('formatAdDate', () => {
+  it('prints the day on Qatar time', () => {
+    expect(formatAdDate('2026-04-11T22:30:00+00:00', 'en')).toBe('Apr 12, 2026');
+    expect(formatAdDate(null, 'en')).toBe('');
   });
 });
 

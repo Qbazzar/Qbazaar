@@ -432,23 +432,14 @@
   "users": {
     "profile": {
       "joined": "Member since {date}",
-      "ads_count": "{count} active ads",
-      "account_type": {
-        "private": "Private account",
-        "business": "Business account"
-      },
       "tabs": {
-        "ads": "Ads",
-        "about": "About",
         "company_ads": "Ads ({count})",
         "about_us": "About us",
         "legal": "Legal Info"
       },
-      "send_message": "Send message",
       "send_message_soon": "Messaging is coming soon",
       "report": "Report",
       "report_soon": "Reporting is coming soon",
-      "no_bio": "This member hasn't written a bio yet.",
       "ads_empty_title": "No active ads",
       "ads_empty_body": "{name} doesn't have any active ads right now.",
       "not_found_title": "User not found",
@@ -643,10 +634,6 @@
     },
     "detail": {
       "description": "Description",
-      "specs": "Details",
-      "safety_title": "Stay safe when meeting",
-      "safety_body": "Meet in public, inspect goods before paying, and never wire money to strangers.",
-      "ad_id": "Ad ID {id}",
       "views": "{count} views",
       "gallery": "Photos of {title}",
       "slide": "Photo {current} of {total}",
@@ -721,9 +708,6 @@
       "save_for_later": "Save ad",
       "save_soon": "Saving lands soon",
       "contact_seller": "Contact seller",
-      "call": "Show phone",
-      "call_revealed": "Tap to call",
-      "share": "Share",
       "share_copied": "Link copied",
       "report": "Report",
       "report_soon": "Reporting lands soon",
@@ -751,7 +735,6 @@
       "saved": "Changes saved"
     },
     "similar_section": {
-      "kicker": "Suggested for you",
       "title": "Similar ads"
     },
     "featured_section": {

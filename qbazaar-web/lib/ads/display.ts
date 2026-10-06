@@ -33,12 +33,20 @@ export function formatAdPriceLabel(ad: Pick<AdSummary, 'price' | 'price_type'>, 
   return t('ads.price.amount', { amount: formatCount(ad.price, locale) });
 }
 
-/** "12 Apr 2026" in the page language; empty for a missing or broken date. */
+/**
+ * "12 Apr 2026" in the page language; empty for a missing or broken date.
+ * Always on Qatar time, so the server and the browser print the same day.
+ */
 export function formatAdDate(iso: string | null | undefined, locale: Locale): string {
   if (!iso) return '';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat(numberLocale(locale), { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat(numberLocale(locale), {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Qatar',
+  }).format(date);
 }
 
 /** "30 minutes ago"; older than a month falls back to the date. */
