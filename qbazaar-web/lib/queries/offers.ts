@@ -16,6 +16,7 @@ import {
 } from '@tanstack/react-query';
 import {
   acceptOffer,
+  counterOffer,
   listConversationOffers,
   makeOffer,
   rejectOffer,
@@ -133,6 +134,23 @@ export function useWithdrawOfferMutation(): UseMutationResult<
   const qc = useQueryClient();
   return useMutation<Offer, ApiClientError, string>({
     mutationFn: (offerId) => withdrawOffer(offerId),
+    onSuccess: (offer) => invalidateOfferCaches(qc, offer),
+  });
+}
+
+interface CounterOfferVars {
+  offerId: string;
+  payload: CreateOfferRequest;
+}
+
+export function useCounterOfferMutation(): UseMutationResult<
+  Offer,
+  ApiClientError,
+  CounterOfferVars
+> {
+  const qc = useQueryClient();
+  return useMutation<Offer, ApiClientError, CounterOfferVars>({
+    mutationFn: ({ offerId, payload }) => counterOffer(offerId, payload),
     onSuccess: (offer) => invalidateOfferCaches(qc, offer),
   });
 }

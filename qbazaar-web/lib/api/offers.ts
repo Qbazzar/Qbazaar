@@ -123,3 +123,19 @@ export async function withdrawOffer(offerId: string): Promise<Offer> {
     throw toApiClientError(err);
   }
 }
+
+/** The responder answers a pending offer with a new amount; the answered offer turns `countered`. */
+export async function counterOffer(
+  offerId: string,
+  payload: CreateOfferRequest,
+): Promise<Offer> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<Offer>>(
+      `${OFFERS_BASE}/${encodeURIComponent(offerId)}/counter`,
+      payload,
+    );
+    return normaliseOffer(data.data);
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}

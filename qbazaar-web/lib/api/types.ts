@@ -775,7 +775,8 @@ export interface Offer {
 }
 
 export interface CreateOfferRequest {
-  amount: number;
+  /** A decimal string ("1500.50") keeps the amount exact; the API accepts both. */
+  amount: number | string;
   note?: string | null;
 }
 
