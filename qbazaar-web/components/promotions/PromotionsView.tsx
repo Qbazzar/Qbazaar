@@ -1,0 +1,173 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import { Megaphone } from 'lucide-react';
+
+import { buttonVariants } from '@/components/design-system/Button';
+import { Icon } from '@/components/design-system/Icon';
+import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
+import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
+import { PageState } from '@/components/orders/PageState';
+import { StatusPill } from '@/components/orders/StatusPill';
+import { LoadMore, TableCard, tableClasses as tc } from '@/components/orders/TableCard';
+import type { AdPromotion, PromotionType } from '@/lib/api/commerce-types';
+import type { AdSummary } from '@/lib/api/types';
+import { t } from '@/lib/i18n/messages';
+import { formatDate, isoDate } from '@/lib/orders/dates';
+import { formatMoney } from '@/lib/orders/money';
+import { PROMOTION_TONE } from '@/lib/orders/status';
+import { isolate } from '@/lib/orders/text';
+import { useMyAdsQuery } from '@/lib/queries/ads';
+import { useMyPromotionsQuery } from '@/lib/queries/promotions';
+import { cn } from '@/lib/utils';
+
+/** `/account/promotions`: pick a live ad to promote, and follow the promotions bought. */
+export function PromotionsView() {
+  return (
+    <AccountPageFrame
+      breadcrumb={[{ label: t('orders.promotion.title') }]}
+      title={t('orders.promotion.title')}
+      description={t('orders.promotion.subtitle')}
+    >
+      <PromotableAds />
+      <PromotionsTable />
+    </AccountPageFrame>
+  );
+}
+
+type SummaryWithPromotion = AdSummary & { promotion?: PromotionType | null };
+
+function PromotableAds() {
+  const query = useMyAdsQuery({ status: 'active', per_page: 50 });
+  const ads = (query.data?.data ?? []) as SummaryWithPromotion[];
+
+  return (
+    <CheckoutPanel title={t('orders.promotion.pick_title')} titleId="promote-pick">
+      <p className="-mt-1 mb-4 text-qb-caption text-qb-ink-subtle">{t('orders.promotion.pick_body')}</p>
+      {query.isPending ? (
+        <PageState kind="loading" />
+      ) : query.isError ? (
+        <PageState kind="error" onRetry={() => query.refetch()} />
+      ) : ads.length === 0 ? (
+        <p className="text-qb-body text-qb-ink-secondary">{t('orders.promotion.no_live_ads')}</p>
+      ) : (
+        <ul className="flex flex-col">
+          {ads.map((ad) => {
+            const thumb = ad.primary_image?.sizes.thumbnail;
+            return (
+              <li key={ad.id} className="flex items-center gap-3 border-b border-qb-line py-3 first:pt-0 last:border-b-0 last:pb-0">
+                <span className="relative size-[50px] shrink-0 overflow-hidden rounded-qb-sm bg-qb-fill">
+                  {thumb ? <Image src={thumb} alt="" fill sizes="50px" className="object-cover" /> : null}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p dir="auto" className="truncate text-start text-qb-body font-semibold text-qb-ink-title">
+                    {ad.title}
+                  </p>
+                  {ad.promotion ? (
+                    <p className="mt-0.5 text-qb-micro text-qb-success">{t(`orders.promotion.types.${ad.promotion}`)}</p>
+                  ) : null}
+                </div>
+                <Link
+                  href={`/account/ads/${encodeURIComponent(ad.id)}/promote`}
+                  aria-label={t('orders.promotion.promote_label', { title: isolate(ad.title) })}
+                  className={cn(buttonVariants({ size: 'sm', variant: 'soft' }), 'rounded-qb-sm')}
+                >
+                  <Megaphone aria-hidden="true" />
+                  {t('orders.promotion.promote')}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </CheckoutPanel>
+  );
+}
+
+function PromotionsTable() {
+  const query = useMyPromotionsQuery();
+  const rows = query.data?.pages.flatMap((page) => page.data) ?? [];
+
+  return (
+    <TableCard title={t('orders.promotion.mine_title')} titleId="promotions-mine">
+      {query.isPending ? (
+        <PageState kind="loading" />
+      ) : query.isError ? (
+        <PageState kind="error" onRetry={() => query.refetch()} />
+      ) : rows.length === 0 ? (
+        <p className="flex items-center justify-center gap-2 border-t border-qb-line px-5 py-8 text-center text-qb-body text-qb-ink-secondary">
+          <Icon icon={Megaphone} className="text-qb-ink-subtle" />
+          {t('orders.promotion.empty')}
+        </p>
+      ) : (
+        <>
+          <table className={tc.table} aria-labelledby="promotions-mine">
+            <thead>
+              <tr className={tc.headRow}>
+                <th scope="col" className={tc.th}>
+                  {t('orders.promotion.columns.ad')}
+                </th>
+                <th scope="col" className={cn(tc.th, tc.wide)}>
+                  {t('orders.promotion.columns.period')}
+                </th>
+                <th scope="col" className={cn(tc.th, tc.wide)}>
+                  {t('orders.promotion.columns.status')}
+                </th>
+                <th scope="col" className={cn(tc.th, 'text-end')}>
+                  {t('orders.promotion.columns.price')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((promotion) => (
+                <PromotionRow key={promotion.id} promotion={promotion} />
+              ))}
+            </tbody>
+          </table>
+          {query.hasNextPage ? <LoadMore onClick={() => void query.fetchNextPage()} loading={query.isFetchingNextPage} /> : null}
+        </>
+      )}
+    </TableCard>
+  );
+}
+
+function PromotionRow({ promotion }: { promotion: AdPromotion }) {
+  const status = <StatusPill tone={PROMOTION_TONE[promotion.status]}>{t(`orders.status.promotion.${promotion.status}`)}</StatusPill>;
+  const period =
+    promotion.starts_at && promotion.ends_at ? (
+      <span className="whitespace-nowrap">
+        <time dateTime={isoDate(promotion.starts_at)}>{formatDate(promotion.starts_at)}</time>
+        {' – '}
+        <time dateTime={isoDate(promotion.ends_at)}>{formatDate(promotion.ends_at)}</time>
+      </span>
+    ) : (
+      t('orders.promotion.pending_period')
+    );
+
+  return (
+    <tr className={tc.row}>
+      <td className={tc.td}>
+        <p dir="auto" className="text-start font-semibold text-qb-ink-title">
+          {promotion.ad_title ?? t(`orders.promotion.types.${promotion.type}`)}
+        </p>
+        <p className="mt-0.5 text-qb-micro font-normal text-qb-ink-subtle qb-desktop:text-qb-caption">
+          {t(`orders.promotion.types.${promotion.type}`)} · {t('orders.promotion.duration', { count: promotion.duration_days })} ·{' '}
+          {t(`orders.promotion.paid_by.${promotion.payment_method}`)}
+          <span className="qb-tablet:hidden"> · {period}</span>
+        </p>
+        {promotion.rejection_reason ? (
+          <p className="mt-1 text-qb-micro font-normal text-qb-danger qb-desktop:text-qb-caption">
+            {t('orders.promotion.rejected_reason', { reason: promotion.rejection_reason })}
+          </p>
+        ) : null}
+      </td>
+      <td className={cn(tc.td, tc.wide)}>{period}</td>
+      <td className={cn(tc.td, tc.wide)}>{status}</td>
+      <td className={cn(tc.td, tc.amount)}>
+        {formatMoney(promotion.price, promotion.currency)}
+        <div className="mt-1 qb-tablet:hidden">{status}</div>
+      </td>
+    </tr>
+  );
+}
