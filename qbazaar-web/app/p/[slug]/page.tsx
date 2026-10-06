@@ -7,6 +7,7 @@
  * missing or unpublished page renders the 404 page; any other API failure
  * reaches the error boundary instead of posing as a missing page.
  */
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -25,9 +26,10 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-function fetchPage(slug: string): Promise<Page | null> {
-  return fetchPublicResource<Page>(`/api/v1/pages/${encodeURIComponent(slug)}`);
-}
+/** Memoized per request, so the metadata and the page share one read. */
+const fetchPage = cache(
+  (slug: string): Promise<Page | null> => fetchPublicResource<Page>(`/api/v1/pages/${encodeURIComponent(slug)}`),
+);
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

@@ -18,7 +18,7 @@ describe('fetchPublicResource', () => {
     await expect(fetchPublicResource('/api/v1/pages/terms', 600)).resolves.toEqual({ slug: 'terms' });
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringMatching(/\/api\/v1\/pages\/terms$/),
-      expect.objectContaining({ next: { revalidate: 600 } }),
+      expect.objectContaining({ next: { revalidate: 600 }, signal: expect.any(AbortSignal) }),
     );
   });
 
