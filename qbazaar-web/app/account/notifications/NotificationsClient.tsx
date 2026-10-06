@@ -1,20 +1,20 @@
 'use client';
 
 /**
- * Notifications index — QBFront port (source: QBFront/notifications.html).
- *
- * Layout: `.notif-page` container · `.notif-head` (title + mark-all CTA) ·
- * `.notif-filters` (chip tabs) · `.notif-list` (rows).
+ * Notifications index (455:14636, empty 461:14541): page title, the pill
+ * tabs, then one row per notification. `?tab=` keeps the filter in the URL.
  */
 import { useState } from 'react';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
-import {
-  BellIcon,
-  CheckCheckIcon,
-  Loader2Icon,
-} from 'lucide-react';
+import { Bell, CheckCheck, Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/design-system/Button';
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { Icon } from '@/components/design-system/Icon';
+import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
+import { AccountPage, scrollingTabListClass } from '@/components/account/AccountPage';
+import { PanelState } from '@/components/account/PanelState';
+import { Pager } from '@/components/account/Pager';
 import { EnablePushButton } from '@/components/notifications/EnablePushButton';
 import { NotificationRow } from '@/components/notifications/NotificationRow';
 import {
@@ -28,191 +28,127 @@ import { cn } from '@/lib/utils';
 
 const PER_PAGE = 20;
 
-type Tab = 'all' | 'unread';
+type NotificationTab = 'all' | 'unread';
+
+const TABS: NotificationTab[] = ['all', 'unread'];
 
 export function NotificationsClient() {
   const [tab, setTab] = useQueryState(
     'tab',
-    parseAsStringEnum<Tab>(['all', 'unread']).withDefault('all'),
+    parseAsStringEnum<NotificationTab>(TABS).withDefault('all'),
   );
   const [page, setPage] = useState(1);
-
-  const params =
-    tab === 'unread'
-      ? { page, per_page: PER_PAGE, unread: 1 as const }
-      : { page, per_page: PER_PAGE };
-
-  const { data, isLoading, isError, error } = useNotificationsQuery(params);
   const { data: unread } = useUnreadNotificationsCountQuery();
   const markAllRead = useMarkAllNotificationsReadMutation();
-
-  const lastPage = data?.meta.last_page ?? 1;
   const unreadCount = unread?.total ?? 0;
-  const items = data?.data ?? [];
 
-  const handleTabChange = (next: Tab) => {
+  const handleTabChange = (next: NotificationTab) => {
     void setTab(next);
     setPage(1);
   };
 
   return (
-    <div className="container notif-page" style={{ paddingTop: 24, paddingBottom: 48 }}>
-      <div className="notif-head">
-        <div>
-          <h1 className="notif-head__h">
-            {t('notifications.title', 'الإشعارات')}
-          </h1>
-          <p className="notif-head__sub">
-            {t(
-              'notifications.subtitle',
-              'كل الإشعارات الجديدة والقديمة في مكان واحد.',
-            )}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+    <AccountPage
+      title={t('notifications.title', 'الإشعارات')}
+      actions={
+        <>
           {/* Hidden entirely while FCM env vars are absent. */}
           <EnablePushButton />
           {unreadCount > 0 ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              className="rounded-full"
-              disabled={markAllRead.isPending}
-              onClick={() => markAllRead.mutate()}
-            >
+            <Button variant="outline" size="sm" disabled={markAllRead.isPending} onClick={() => markAllRead.mutate()}>
               {markAllRead.isPending ? (
-                <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
+                <Loader2 className="animate-spin" aria-hidden="true" />
               ) : (
-                <CheckCheckIcon className="size-3.5" aria-hidden />
+                <CheckCheck aria-hidden="true" />
               )}
               {t('notifications.mark_all_read', 'تعليم الكل كمقروء')}
             </Button>
           ) : null}
-        </div>
-      </div>
-
-      <div className="notif-filters" role="tablist" aria-label={t('notifications.title', 'الإشعارات')}>
-        <TabChip
-          active={tab === 'all'}
-          onClick={() => handleTabChange('all')}
-          label={t('notifications.tabs.all', 'الكل')}
-        />
-        <TabChip
-          active={tab === 'unread'}
-          onClick={() => handleTabChange('unread')}
-          label={t('notifications.tabs.unread', 'غير المقروء')}
-          badge={unreadCount > 0 ? unreadCount : undefined}
-        />
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12" role="status">
-          <Loader2Icon
-            className="text-muted-foreground size-6 animate-spin"
-            aria-hidden
-          />
-        </div>
-      ) : isError ? (
-        <p className="text-destructive py-12 text-center text-sm">
-          {error instanceof ApiClientError
-            ? translateMaybeKey(
-                `notifications.errors.${error.code.toLowerCase()}`,
-              ) || error.message
-            : t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-        </p>
-      ) : items.length === 0 ? (
-        <EmptyState tab={tab} />
-      ) : (
-        <>
-          <ul className="flex list-none flex-col gap-3 p-0">
-            {items.map((n) => (
-              <li key={n.id}>
-                <NotificationRow notification={n} />
-              </li>
-            ))}
-          </ul>
-
-          {lastPage > 1 ? (
-            <div className="pagination">
-              <button
-                type="button"
-                className="pagination__num"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                aria-label={t('ads.list.prev', 'السابق')}
-              >
-                ‹
-              </button>
-              <span className="pagination__gap">
-                {t(
-                  'ads.list.page_of',
-                  { current: String(page), total: String(lastPage) },
-                  `${page} / ${lastPage}`,
-                )}
-              </span>
-              <button
-                type="button"
-                className="pagination__num"
-                onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-                disabled={page >= lastPage}
-                aria-label={t('ads.list.next', 'التالي')}
-              >
-                ›
-              </button>
-            </div>
-          ) : null}
         </>
-      )}
-    </div>
-  );
-}
-
-function TabChip({
-  active,
-  onClick,
-  label,
-  badge,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  badge?: number;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={cn('chip', active && 'is-active')}
+      }
     >
-      <span>{label}</span>
-      {typeof badge === 'number' ? (
-        <span
-          className={cn(
-            'inline-flex min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-[18px]',
-            active ? 'bg-white text-coral' : 'bg-coral text-white',
-          )}
-        >
-          {badge > 99 ? '99+' : badge}
-        </span>
-      ) : null}
-    </button>
+      <Tabs value={tab} onValueChange={(value) => handleTabChange(value as NotificationTab)}>
+        <TabList aria-label={t('notifications.title', 'الإشعارات')} className={scrollingTabListClass}>
+          {TABS.map((key) => (
+            <Tab key={key} value={key} className="gap-2">
+              {t(`notifications.tabs.${key}`)}
+              {key === 'unread' && unreadCount > 0 ? (
+                <span
+                  className={cn(
+                    'inline-flex min-w-[22px] items-center justify-center rounded-qb-pill px-1.5 text-qb-micro leading-[22px] font-semibold',
+                    tab === 'unread' ? 'bg-qb-surface text-qb-ink' : 'bg-qb-brand text-white',
+                  )}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              ) : null}
+            </Tab>
+          ))}
+        </TabList>
+        {TABS.map((key) => (
+          <TabPanel key={key} value={key} className="mt-6 qb-tablet:mt-10">
+            <NotificationsList tab={key} page={page} onPageChange={setPage} />
+          </TabPanel>
+        ))}
+      </Tabs>
+    </AccountPage>
   );
 }
 
-function EmptyState({ tab }: { tab: Tab }) {
+function NotificationsList({
+  tab,
+  page,
+  onPageChange,
+}: {
+  tab: NotificationTab;
+  page: number;
+  onPageChange: (page: number) => void;
+}) {
+  const params =
+    tab === 'unread'
+      ? { page, per_page: PER_PAGE, unread: 1 as const }
+      : { page, per_page: PER_PAGE };
+  const { data, isLoading, isError, error } = useNotificationsQuery(params);
+  const items = data?.data ?? [];
+
+  if (isLoading) return <PanelState loading />;
+  if (isError) {
+    return (
+      <PanelState
+        loading={false}
+        message={
+          error instanceof ApiClientError
+            ? translateMaybeKey(`notifications.errors.${error.code.toLowerCase()}`) || error.message
+            : t('common.error', 'حدث خطأ، حاول مرة أخرى')
+        }
+      />
+    );
+  }
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        icon={<Icon icon={Bell} size="lg" />}
+        title={
+          tab === 'unread'
+            ? t('notifications.empty.unread', 'لا توجد إشعارات غير مقروءة')
+            : t('notifications.empty.all', 'لا توجد إشعارات بعد')
+        }
+        description={t('notifications.empty_body')}
+        className="rounded-qb-2xl border border-qb-line bg-qb-surface py-20 shadow-qb-card"
+      />
+    );
+  }
+
   return (
-    <div className="empty-state">
-      <div className="bg-coral/10 text-coral mx-auto grid size-12 place-items-center rounded-full">
-        <BellIcon className="size-5" aria-hidden />
-      </div>
-      <div className="empty-state__title">
-        {tab === 'unread'
-          ? t('notifications.empty.unread', 'لا توجد إشعارات غير مقروءة')
-          : t('notifications.empty.all', 'لا توجد إشعارات بعد')}
-      </div>
-    </div>
+    <>
+      <ul className="flex flex-col gap-4">
+        {items.map((n) => (
+          <li key={n.id}>
+            <NotificationRow notification={n} />
+          </li>
+        ))}
+      </ul>
+      <Pager page={page} lastPage={data?.meta.last_page ?? 1} onChange={onPageChange} />
+    </>
   );
 }

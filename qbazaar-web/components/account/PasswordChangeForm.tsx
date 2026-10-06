@@ -4,20 +4,19 @@
  * PasswordChangeForm — `PUT /account/password`.
  *
  * Reuses the same strength scoring + UI as registration so the standard
- * stays consistent. On success: success toast + reset form fields (we don't
- * navigate away — the user might want to tweak other security settings).
+ * stays consistent. On success: success toast + reset form fields, and the
+ * caller closes the "Edit Password" dialog (411:9755).
  */
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { EyeIcon, EyeOffIcon, Loader2Icon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { FieldError } from '@/components/auth/FieldError';
+import { Button } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { announcedError } from '@/components/auth/FieldError';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -29,10 +28,13 @@ import { changePassword } from '@/lib/api/account';
 import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode, UserErrorCode } from '@/lib/api/types';
 
-export function PasswordChangeForm() {
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
+export interface PasswordChangeFormProps {
+  /** Called after a successful change, e.g. to close the dialog. */
+  onDone?: () => void;
+  onCancel?: () => void;
+}
 
+export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps) {
   const form = useForm<ChangePasswordInput>({
     resolver: zodResolver(changePasswordSchema),
     mode: 'onBlur',
@@ -52,6 +54,7 @@ export function PasswordChangeForm() {
         new_password: '',
         password_confirmation: '',
       });
+      onDone?.();
     },
   });
 
@@ -68,153 +71,73 @@ export function PasswordChangeForm() {
   const newPasswordValue = form.watch('new_password');
 
   return (
-    <form onSubmit={onSubmit} noValidate className="max-w-md space-y-5">
-      <p className="border-coral/30 bg-coral/5 text-ink-700 rounded-xl border px-4 py-3 text-sm">
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6 text-start">
+      <p className="rounded-qb-md bg-qb-brand-soft px-4 py-3 text-qb-caption text-qb-ink-body">
         {t('account.security.sign_out_notice')}
       </p>
 
-      <PasswordField
-        id="current_password"
+      <Field
         label={t('account.security.current_password_label')}
-        autoComplete="current-password"
-        show={showCurrent}
-        onToggle={() => setShowCurrent((v) => !v)}
-        error={errors.current_password?.message}
-        register={form.register('current_password')}
-      />
+        required
+        error={announcedError(errors.current_password?.message)}
+      >
+        {(control) => (
+          <PasswordInput
+            {...control}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            {...form.register('current_password')}
+          />
+        )}
+      </Field>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="new_password">
-          {t('account.security.new_password_label')}
-        </Label>
-        <div className="relative" dir="ltr">
-          <Input
-            id="new_password"
-            type={showNew ? 'text' : 'password'}
+      <Field label={t('account.security.new_password_label')} required error={announcedError(errors.new_password?.message)}>
+        {(control) => (
+          <div className="flex flex-col gap-3">
+            <PasswordInput
+              {...control}
+              autoComplete="new-password"
+              placeholder="••••••••"
+              {...form.register('new_password')}
+            />
+            <PasswordStrengthIndicator password={newPasswordValue ?? ''} />
+          </div>
+        )}
+      </Field>
+
+      <Field
+        label={t('account.security.password_confirmation_label')}
+        required
+        error={announcedError(errors.password_confirmation?.message)}
+      >
+        {(control) => (
+          <PasswordInput
+            {...control}
             autoComplete="new-password"
             placeholder="••••••••"
-            aria-invalid={Boolean(errors.new_password)}
-            aria-describedby={
-              errors.new_password ? 'new_password-error' : undefined
-            }
-            className="h-10 pr-10"
-            {...form.register('new_password')}
+            {...form.register('password_confirmation')}
           />
-          <button
-            type="button"
-            onClick={() => setShowNew((v) => !v)}
-            className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors"
-            aria-label={showNew ? 'Hide password' : 'Show password'}
-            tabIndex={-1}
-          >
-            {showNew ? (
-              <EyeOffIcon className="size-4" />
-            ) : (
-              <EyeIcon className="size-4" />
-            )}
-          </button>
-        </div>
-        <PasswordStrengthIndicator password={newPasswordValue ?? ''} />
-        <FieldError
-          id="new_password-error"
-          message={errors.new_password?.message}
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="password_confirmation">
-          {t('account.security.password_confirmation_label')}
-        </Label>
-        <Input
-          id="password_confirmation"
-          type={showNew ? 'text' : 'password'}
-          autoComplete="new-password"
-          dir="ltr"
-          placeholder="••••••••"
-          aria-invalid={Boolean(errors.password_confirmation)}
-          aria-describedby={
-            errors.password_confirmation
-              ? 'password_confirmation-error'
-              : undefined
-          }
-          className="h-10"
-          {...form.register('password_confirmation')}
-        />
-        <FieldError
-          id="password_confirmation-error"
-          message={errors.password_confirmation?.message}
-        />
-      </div>
-
-      <Button
-        type="submit"
-        size="lg"
-        disabled={submitting}
-        className={cn(
-          'h-11 rounded-full px-6 text-sm font-semibold',
-          submitting && 'cursor-progress',
         )}
-      >
-        {submitting ? (
-          <>
-            <Loader2Icon className="size-4 animate-spin" aria-hidden />
-            {t('account.security.submitting')}
-          </>
-        ) : (
-          t('account.security.submit')
-        )}
-      </Button>
-    </form>
-  );
-}
+      </Field>
 
-function PasswordField({
-  id,
-  label,
-  autoComplete,
-  show,
-  onToggle,
-  error,
-  register,
-}: {
-  id: string;
-  label: string;
-  autoComplete: string;
-  show: boolean;
-  onToggle: () => void;
-  error?: string;
-  register: ReturnType<ReturnType<typeof useForm<ChangePasswordInput>>['register']>;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      <div className="relative" dir="ltr">
-        <Input
-          id={id}
-          type={show ? 'text' : 'password'}
-          autoComplete={autoComplete}
-          placeholder="••••••••"
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${id}-error` : undefined}
-          className="h-10 pr-10"
-          {...register}
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors"
-          aria-label={show ? 'Hide password' : 'Show password'}
-          tabIndex={-1}
-        >
-          {show ? (
-            <EyeOffIcon className="size-4" />
+      <div className="grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
+          {submitting ? (
+            <>
+              <Loader2 className="animate-spin" aria-hidden="true" />
+              {t('account.security.submitting')}
+            </>
           ) : (
-            <EyeIcon className="size-4" />
+            t('common.save')
           )}
-        </button>
+        </Button>
+        {onCancel ? (
+          <Button type="button" variant="muted" size="sm" onClick={onCancel} disabled={submitting}>
+            {t('common.cancel')}
+          </Button>
+        ) : null}
       </div>
-      <FieldError id={`${id}-error`} message={error} />
-    </div>
+    </form>
   );
 }
 

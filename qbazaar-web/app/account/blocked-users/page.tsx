@@ -1,24 +1,27 @@
 'use client';
 
 /**
- * FE-2.10 — Blocked users list.
+ * FE-2.10 — Blocked users. No frame: built from the Following cards of
+ * `users.html` (376:9268) with "Unblock" in place of "Following".
  *
- * Each row exposes an "Unblock" button calling `DELETE /users/{id}/block`.
- * On success the list is refetched so the row drops out.
+ * Each card exposes an "Unblock" button calling `DELETE /users/{id}/block`.
+ * On success the list is refetched so the card drops out.
  */
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2Icon } from 'lucide-react';
+import { Loader2, UserX } from 'lucide-react';
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Avatar } from '@/components/design-system/Avatar';
+import { Button } from '@/components/design-system/Button';
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { Icon } from '@/components/design-system/Icon';
+import { PanelState } from '@/components/account/PanelState';
+import { SettingsPanel } from '@/components/account/SettingsPanel';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
-import { formatRelativeTime } from '@/lib/utils';
+import { getLocale } from '@/lib/i18n/locale';
+import { cn, formatRelativeTime } from '@/lib/utils';
 import { listBlockedUsers } from '@/lib/api/account';
 import { unblockUser } from '@/lib/api/users';
 import { ApiClientError } from '@/lib/api/auth';
@@ -55,102 +58,68 @@ export default function BlockedUsersPage() {
   });
 
   return (
-    <section className="space-y-6">
-      <header className="space-y-1.5">
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-          {t('account.blocked_users.title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {t('account.blocked_users.subtitle')}
-        </p>
-      </header>
-
-      <div className="bg-card ring-foreground/10 rounded-2xl ring-1">
-        {isLoading ? (
-          <div className="flex justify-center py-10" role="status">
-            <Loader2Icon
-              className="text-muted-foreground size-5 animate-spin"
-              aria-hidden
-            />
-          </div>
-        ) : error ? (
-          <p className="text-destructive p-4 text-sm" role="alert">
-            {t('auth.errors.network')}
-          </p>
-        ) : blocked.length === 0 ? (
-          <div className="text-muted-foreground py-10 text-center">
-            <p className="font-display text-ink-900 text-lg">
-              {t('account.blocked_users.empty_title')}
-            </p>
-            <p className="mt-1 text-sm">
-              {t('account.blocked_users.empty_body')}
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-border divide-y">
-            {blocked.map((user: BlockedUser) => (
-              <li
-                key={user.id}
-                className="flex items-center gap-3 p-4 sm:p-5"
-              >
-                <Link
-                  href={`/u/${user.id}`}
-                  className="flex min-w-0 flex-1 items-center gap-3"
-                >
-                  <Avatar size="lg">
-                    {user.avatar_url ? (
-                      <AvatarImage src={user.avatar_url} alt={user.full_name} />
-                    ) : null}
-                    <AvatarFallback>
-                      {initials(user.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="text-ink-900 truncate text-sm font-semibold">
-                      {user.full_name}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {t('account.blocked_users.blocked_at', {
-                        when: formatRelativeTime(user.blocked_at),
-                      })}
-                    </p>
-                  </div>
-                </Link>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => mutation.mutate(user.id)}
-                  disabled={mutation.isPending}
-                  className="rounded-full px-3 text-xs font-semibold"
-                >
-                  {mutation.isPending &&
-                  mutation.variables === user.id ? (
-                    <>
-                      <Loader2Icon
-                        className="size-3.5 animate-spin"
-                        aria-hidden
-                      />
-                      {t('account.blocked_users.unblocking')}
-                    </>
-                  ) : (
-                    t('account.blocked_users.unblock')
-                  )}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </section>
+    <SettingsPanel title={t('account.blocked_users.title')} description={t('account.blocked_users.subtitle')}>
+      {isLoading || error ? (
+        <PanelState loading={isLoading} />
+      ) : blocked.length === 0 ? (
+        <EmptyState
+          icon={<Icon icon={UserX} size="lg" />}
+          title={t('account.blocked_users.empty_title')}
+          description={t('account.blocked_users.empty_body')}
+          className="rounded-qb-2xl border border-qb-line shadow-qb-card"
+        />
+      ) : (
+        <ul className="grid gap-4 qb-desktop:grid-cols-2">
+          {blocked.map((user) => (
+            <li key={user.id}>
+              <BlockedUserCard
+                user={user}
+                pending={mutation.isPending && mutation.variables === user.id}
+                disabled={mutation.isPending}
+                onUnblock={() => mutation.mutate(user.id)}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </SettingsPanel>
   );
 }
 
-function initials(fullName: string): string {
-  return fullName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
+function BlockedUserCard({
+  user,
+  pending,
+  disabled,
+  onUnblock,
+}: {
+  user: BlockedUser;
+  pending: boolean;
+  disabled: boolean;
+  onUnblock: () => void;
+}) {
+  return (
+    <article className="flex h-full flex-col gap-5 rounded-qb-2xl border border-qb-line bg-qb-surface p-4 shadow-qb-card qb-tablet:gap-8 qb-tablet:p-6">
+      <Link href={`/u/${user.id}`} className={cn('flex min-w-0 items-center gap-3.5 rounded-qb-md', focusRing)}>
+        <Avatar name={user.full_name} src={user.avatar_url} tone="brand" className="size-[42px] qb-tablet:size-[53px]" />
+        <span className="min-w-0">
+          <span className="block truncate text-qb-body font-semibold text-qb-ink qb-tablet:text-qb-h5">
+            {user.full_name}
+          </span>
+          <span className="mt-1 block text-qb-micro text-qb-ink-subtle qb-tablet:text-qb-caption">
+            {t('account.blocked_users.blocked_at', { when: formatRelativeTime(user.blocked_at, getLocale()) })}
+          </span>
+        </span>
+      </Link>
+      <Button variant="outline" fullWidth onClick={onUnblock} disabled={disabled} className="mt-auto h-11 qb-tablet:h-12">
+        {pending ? (
+          <>
+            <Loader2 className="animate-spin" aria-hidden="true" />
+            {t('account.blocked_users.unblocking')}
+          </>
+        ) : (
+          t('account.blocked_users.unblock')
+        )}
+      </Button>
+    </article>
+  );
 }

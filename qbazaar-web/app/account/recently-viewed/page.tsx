@@ -1,34 +1,26 @@
 'use client';
 
 /**
- * FE-7.x — Recently viewed index.
+ * FE-7.x — Recently viewed index. No frame: the wishlist rows of 376:8322
+ * with a "Clear" ghost button in place of the remove hearts.
  *
- * Auth-gated. Lists every ad the user has viewed (paginated). The "Clear all"
- * button opens a confirmation dialog and fires the clear mutation; on success
- * the query invalidates and the page falls back to the empty state.
+ * Auth-gated. Lists every ad the user has viewed (paginated). "Clear all"
+ * opens a confirmation dialog and fires the clear mutation; on success the
+ * query invalidates and the page falls back to the empty state.
  */
 import { useState } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ClockIcon,
-  Loader2Icon,
-  Trash2Icon,
-} from 'lucide-react';
+import Link from 'next/link';
+import { Clock, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { AdGrid } from '@/components/ads/AdGrid';
+import { Button, buttonVariants } from '@/components/design-system/Button';
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { Icon } from '@/components/design-system/Icon';
+import { Modal } from '@/components/design-system/Modal';
+import { AccountPage } from '@/components/account/AccountPage';
+import { PanelState } from '@/components/account/PanelState';
+import { Pager } from '@/components/account/Pager';
+import { SavedAdRow } from '@/components/account/SavedAdRow';
 import {
   useClearRecentlyViewedMutation,
   useRecentlyViewedQuery,
@@ -66,149 +58,72 @@ export default function RecentlyViewedPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <p className="text-coral text-xs font-bold uppercase tracking-[0.18em]">
-          {t('account.nav.recently_viewed', 'آخر ما شاهدت')}
-        </p>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="font-display text-ink-900 text-3xl md:text-4xl">
-            {t('recently_viewed.title', 'آخر ما شاهدت')}
-          </h1>
-          {hasItems ? (
-            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-              <DialogTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="default"
-                    className="rounded-full"
-                  />
-                }
-              >
-                <Trash2Icon className="size-3.5" aria-hidden="true" />
-                {t('recently_viewed.clear', 'مسح الكل')}
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {t('recently_viewed.clear_confirm.title', 'مسح السجل؟')}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {t(
-                      'recently_viewed.clear_confirm.body',
-                      'سيتم حذف جميع الإعلانات التي شاهدتها مؤخراً. لا يمكن التراجع عن هذا الإجراء.',
-                    )}
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <DialogClose
-                    render={
-                      <Button
-                        variant="outline"
-                        size="default"
-                        className="rounded-full"
-                      >
-                        {t('recently_viewed.clear_confirm.cancel', 'إلغاء')}
-                      </Button>
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="default"
-                    disabled={clearMutation.isPending}
-                    onClick={handleClear}
-                    className="rounded-full"
-                  >
-                    {clearMutation.isPending ? (
-                      <>
-                        <Loader2Icon
-                          className="size-3.5 animate-spin"
-                          aria-hidden="true"
-                        />
-                        {t('recently_viewed.clear_confirm.confirm', 'مسح')}
-                      </>
-                    ) : (
-                      t('recently_viewed.clear_confirm.confirm', 'مسح')
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          ) : null}
-        </div>
-      </header>
-
+    <AccountPage
+      title={t('recently_viewed.title', 'آخر ما شاهدت')}
+      actions={
+        hasItems ? (
+          <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(true)}>
+            <Trash2 aria-hidden="true" />
+            {t('recently_viewed.clear', 'مسح الكل')}
+          </Button>
+        ) : null
+      }
+    >
       {isLoading ? (
-        <div className="flex justify-center py-12" role="status">
-          <Loader2Icon
-            className="text-muted-foreground size-6 animate-spin"
-            aria-hidden="true"
-          />
-        </div>
+        <PanelState loading />
       ) : isError ? (
-        <p className="text-destructive py-12 text-center text-sm">
-          {error instanceof ApiClientError
-            ? error.message
-            : t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-        </p>
-      ) : !hasItems ? (
-        <EmptyState />
+        <PanelState
+          loading={false}
+          message={error instanceof ApiClientError ? error.message : t('common.error', 'حدث خطأ، حاول مرة أخرى')}
+        />
+      ) : !hasItems || !data ? (
+        <EmptyState
+          icon={<Icon icon={Clock} size="lg" />}
+          title={t('recently_viewed.empty', 'لا يوجد سجل مشاهدة بعد')}
+          description={t('recently_viewed.empty_body')}
+          action={
+            <Link href="/ads" className={buttonVariants({ size: 'sm' })}>
+              {t('favorites.empty.cta', 'تصفّح الإعلانات')}
+            </Link>
+          }
+          className="rounded-qb-2xl border border-qb-line bg-qb-surface py-20 shadow-qb-card"
+        />
       ) : (
         <>
-          <AdGrid ads={data!.data} />
-          {lastPage > 1 ? (
-            <nav className="mt-8 flex items-center justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-              >
-                <ChevronRight className="size-4" />
-                {t('ads.list.prev', 'السابق')}
-              </Button>
-              <span className="text-ink-500 text-sm">
-                {t(
-                  'ads.list.page_of',
-                  { current: String(page), total: String(lastPage) },
-                  `${page} / ${lastPage}`,
-                )}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-                disabled={page >= lastPage}
-              >
-                {t('ads.list.next', 'التالي')}
-                <ChevronLeft className="size-4" />
-              </Button>
-            </nav>
-          ) : null}
+          <ul className="flex flex-col gap-4 qb-tablet:gap-6">
+            {data.data.map((ad) => (
+              <li key={ad.id}>
+                <SavedAdRow ad={ad} at={ad.viewed_at} />
+              </li>
+            ))}
+          </ul>
+          <Pager page={page} lastPage={lastPage} onChange={setPage} />
         </>
       )}
-    </div>
-  );
-}
 
-function EmptyState() {
-  return (
-    <div className="border-ink-200 bg-card flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-12 text-center">
-      <div className="bg-cream-200 text-ink-700 grid size-14 place-items-center rounded-full">
-        <ClockIcon className="size-6" aria-hidden="true" />
-      </div>
-      <h2 className="font-display text-ink-900 text-xl">
-        {t('recently_viewed.empty', 'لا يوجد سجل مشاهدة بعد')}
-      </h2>
-      <p className="text-ink-500 max-w-sm text-sm">
-        {t(
-          'recently_viewed.empty_body',
-          'ستظهر الإعلانات التي تتصفحها هنا حتى تعود إليها بسهولة.',
-        )}
-      </p>
-    </div>
+      <Modal
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (!open && !clearMutation.isPending) setConfirmOpen(false);
+        }}
+        title={t('recently_viewed.clear_confirm.title', 'مسح السجل؟')}
+        description={t('recently_viewed.clear_confirm.body')}
+      >
+        <div className="mt-2 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+          <Button size="sm" disabled={clearMutation.isPending} onClick={handleClear}>
+            {clearMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {t('recently_viewed.clear_confirm.confirm', 'مسح')}
+          </Button>
+          <Button
+            variant="muted"
+            size="sm"
+            disabled={clearMutation.isPending}
+            onClick={() => setConfirmOpen(false)}
+          >
+            {t('recently_viewed.clear_confirm.cancel', 'إلغاء')}
+          </Button>
+        </div>
+      </Modal>
+    </AccountPage>
   );
 }

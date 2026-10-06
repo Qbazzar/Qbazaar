@@ -191,7 +191,7 @@ export function OtpInput({
       role="group"
       aria-label={ariaLabel ?? t('auth.verify_otp.code_label')}
       aria-describedby={ariaDescribedBy}
-      className={cn('flex items-center justify-center gap-2', className)}
+      className={cn('flex w-full items-center justify-center gap-2 font-qb qb-tablet:gap-3 qb-desktop:gap-3.5', className)}
       // OTP digits read left-to-right regardless of page direction.
       dir="ltr"
     >
@@ -217,11 +217,13 @@ export function OtpInput({
           )}
           aria-invalid={ariaInvalid}
           data-otp-box={index}
+          placeholder="0"
           className={cn(
-            'flex h-12 w-10 rounded-lg border border-input bg-background text-center text-lg font-semibold tracking-widest outline-none transition-colors sm:h-14 sm:w-12 sm:text-xl',
-            'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
+            'h-[52px] w-full max-w-12 min-w-0 flex-1 rounded-qb-md border border-qb-line bg-qb-surface text-center text-qb-h5 font-medium text-qb-ink outline-none transition-colors',
+            'qb-tablet:h-16 qb-tablet:max-w-[74px] qb-tablet:rounded-qb-lg qb-tablet:text-qb-h3 qb-desktop:h-[57px] qb-desktop:max-w-[93px] qb-desktop:text-qb-h5',
+            'placeholder:text-qb-line focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
             'disabled:pointer-events-none disabled:opacity-50',
-            'aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20',
+            'aria-invalid:border-qb-danger aria-invalid:ring-2 aria-invalid:ring-qb-danger/20',
           )}
         />
       ))}

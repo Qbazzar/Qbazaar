@@ -1,13 +1,11 @@
 /**
- * Compact status pill rendered inside `OfferBubble`.
- *
- * Colours follow the Bazzar palette:
- *  - pending   → coral fill (live, actionable)
- *  - accepted  → sage fill (success terminal)
- *  - rejected  → ink-500 fill (negative terminal)
- *  - withdrawn → ink-300 with strikethrough (silently cancelled)
- *  - expired   → ink-300 (timed out)
+ * Status chip of an offer card, bordered like the chat's "Pending" chip
+ * (667:30685): pending orange, accepted green, rejected red, withdrawn and
+ * expired grey.
  */
+import type { VariantProps } from 'class-variance-authority';
+
+import { Badge, type badgeVariants } from '@/components/design-system/Badge';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 import type { OfferStatus } from '@/lib/api/types';
@@ -17,12 +15,14 @@ interface Props {
   className?: string;
 }
 
-const STATUS_STYLES: Record<OfferStatus, string> = {
-  pending: 'bg-coral text-white',
-  accepted: 'bg-sage text-white',
-  rejected: 'bg-ink-500 text-white',
-  withdrawn: 'bg-ink-300 text-ink-700 line-through',
-  expired: 'bg-ink-300 text-ink-700',
+type Tone = NonNullable<VariantProps<typeof badgeVariants>['tone']>;
+
+const STATUS_TONES: Record<OfferStatus, Tone> = {
+  pending: 'brand',
+  accepted: 'success',
+  rejected: 'danger',
+  withdrawn: 'neutral',
+  expired: 'neutral',
 };
 
 const STATUS_FALLBACK: Record<OfferStatus, string> = {
@@ -36,14 +36,12 @@ const STATUS_FALLBACK: Record<OfferStatus, string> = {
 export function OfferStatusBadge({ status, className }: Props) {
   const label = t(`messaging.offer.status.${status}`, STATUS_FALLBACK[status]);
   return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold',
-        STATUS_STYLES[status],
-        className,
-      )}
+    <Badge
+      tone={STATUS_TONES[status]}
+      size="sm"
+      className={cn('border border-current font-qb-label', status === 'withdrawn' && 'line-through', className)}
     >
       {label}
-    </span>
+    </Badge>
   );
 }

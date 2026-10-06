@@ -3,7 +3,7 @@
 /**
  * Buyer-side offer composer.
  *
- * Renders a coral outline trigger ("اعرض سعر") that opens a Dialog with a
+ * Renders a brand outline trigger ("اعرض سعر") that opens a dialog with a
  * single amount + optional note form. On submit we call
  * `useMakeOfferMutation`; the resulting offer arrives in the timeline via
  * the messages query invalidation (the backend auto-creates an offer
@@ -15,22 +15,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { HandshakeIcon, Loader2Icon } from 'lucide-react';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { FieldError } from '@/components/auth/FieldError';
+import { Handshake, Loader2 } from 'lucide-react';
+
+import { Button } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { Input, Textarea } from '@/components/design-system/Input';
+import { Modal } from '@/components/design-system/Modal';
+import { announcedError } from '@/components/auth/FieldError';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { useMakeOfferMutation } from '@/lib/queries/offers';
 import { AuthErrorCode } from '@/lib/api/types';
@@ -138,105 +129,76 @@ export function OfferComposer({ conversationId }: Props) {
     );
   });
 
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogTrigger
-        render={
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="border-coral text-coral hover:bg-coral/10 shrink-0 rounded-full"
-            aria-label={t('messaging.offer.make', 'اعرض سعر')}
-          >
-            <HandshakeIcon className="size-4" aria-hidden />
-          </Button>
-        }
-      />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {t('messaging.offer.make', 'اعرض سعر')}
-          </DialogTitle>
-          <DialogDescription>
-            {t(
-              'messaging.offer.dialog_description',
-              'اقترح سعراً مناسباً، وسيقوم البائع بقبوله أو رفضه.',
-            )}
-          </DialogDescription>
-        </DialogHeader>
+  const errors = form.formState.errors;
 
-        <form
-          onSubmit={onSubmit}
-          className="flex flex-col gap-4"
-          aria-busy={mutation.isPending}
+  return (
+    <Modal
+      open={open}
+      onOpenChange={handleClose}
+      title={t('messaging.offer.make', 'اعرض سعر')}
+      description={t(
+        'messaging.offer.dialog_description',
+        'اقترح سعراً مناسباً، وسيقوم البائع بقبوله أو رفضه.',
+      )}
+      trigger={
+        <Button
+          variant="secondary"
+          size="icon"
+          className="size-10 shrink-0 rounded-qb-md"
+          aria-label={t('messaging.offer.make', 'اعرض سعر')}
         >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="offer-amount">
-              {t('messaging.offer.amount_label', 'المبلغ (QAR)')}
-            </Label>
+          <Handshake aria-hidden="true" />
+        </Button>
+      }
+    >
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5 text-start" aria-busy={mutation.isPending}>
+        <Field
+          id="offer-amount"
+          label={t('messaging.offer.amount_label', 'المبلغ (QAR)')}
+          required
+          error={announcedError(errors.amount?.message)}
+        >
+          {(control) => (
             <Input
-              id="offer-amount"
+              {...control}
               type="number"
               inputMode="decimal"
               step="1"
               min={1}
               autoFocus
-              placeholder={t(
-                'messaging.offer.amount_placeholder',
-                'مثلاً: 1500',
-              )}
-              aria-invalid={Boolean(form.formState.errors.amount)}
+              dir="ltr"
+              placeholder={t('messaging.offer.amount_placeholder', 'مثلاً: 1500')}
               {...form.register('amount', { valueAsNumber: true })}
             />
-            <FieldError
-              id="offer-amount-error"
-              message={form.formState.errors.amount?.message}
-            />
-          </div>
+          )}
+        </Field>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="offer-note">
-              {t('messaging.offer.note_label', 'ملاحظة (اختياري)')}
-            </Label>
+        <Field
+          id="offer-note"
+          label={t('messaging.offer.note_label', 'ملاحظة (اختياري)')}
+          error={announcedError(errors.note?.message)}
+        >
+          {(control) => (
             <Textarea
-              id="offer-note"
+              {...control}
               rows={3}
               maxLength={NOTE_MAX}
-              placeholder={t(
-                'messaging.offer.note_placeholder',
-                'أضف ملاحظة موجزة للبائع…',
-              )}
-              aria-invalid={Boolean(form.formState.errors.note)}
+              placeholder={t('messaging.offer.note_placeholder', 'أضف ملاحظة موجزة للبائع…')}
               {...form.register('note')}
             />
-            <FieldError
-              id="offer-note-error"
-              message={form.formState.errors.note?.message}
-            />
-          </div>
+          )}
+        </Field>
 
-          <DialogFooter>
-            <DialogClose
-              render={
-                <Button type="button" variant="outline" className="rounded-full">
-                  {t('messaging.offer.cancel', 'إلغاء')}
-                </Button>
-              }
-            />
-            <Button
-              type="submit"
-              disabled={mutation.isPending}
-              className="bg-coral hover:bg-coral/90 rounded-full text-white"
-            >
-              {mutation.isPending ? (
-                <Loader2Icon className="size-4 animate-spin" aria-hidden />
-              ) : null}
-              {t('messaging.offer.submit', 'إرسال العرض')}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="mt-1 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+          <Button type="submit" size="sm" disabled={mutation.isPending}>
+            {mutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {t('messaging.offer.submit', 'إرسال العرض')}
+          </Button>
+          <Button type="button" variant="muted" size="sm" onClick={() => handleClose(false)}>
+            {t('messaging.offer.cancel', 'إلغاء')}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

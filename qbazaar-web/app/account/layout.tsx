@@ -3,47 +3,33 @@
 /**
  * Account layout — wraps every authenticated `/account/...` page.
  *
- * - Sidebar on `lg+`, horizontal tabs on smaller screens (handled inside the
- *   sidebar component itself).
+ * - Settings sections render inside the "Settings" sidebar shell; My Ads,
+ *   messages, notifications and the saved lists are full-width pages.
  * - Client-side guard via `useRequireAuth`. While the store hydrates we paint
- *   a skeleton so the page doesn't flash empty.
- *
- * Wave 2 will move this guard to a server component once the bootstrap
- * refresh round-trip runs on the edge.
+ *   a spinner so the page doesn't flash empty.
  */
 import type { ReactNode } from 'react';
-import { Loader2Icon } from 'lucide-react';
-import { AccountSidebar } from '@/components/account/AccountSidebar';
+import { usePathname } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+
+import { SettingsShell } from '@/components/account/SettingsShell';
+import { isSettingsPath } from '@/components/account/account-nav';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { t } from '@/lib/i18n/messages';
 
 export default function AccountLayout({ children }: { children: ReactNode }) {
   const { user, isLoading } = useRequireAuth();
+  const pathname = usePathname() ?? '/account';
 
   if (isLoading || !user) {
     return (
-      <div
-        className="flex min-h-svh items-center justify-center"
-        role="status"
-        aria-live="polite"
-      >
-        <Loader2Icon
-          className="text-muted-foreground size-6 animate-spin"
-          aria-hidden="true"
-        />
+      <div className="flex min-h-svh items-center justify-center bg-qb-page" role="status">
+        <Loader2 className="size-6 animate-spin text-qb-ink-subtle motion-reduce:animate-none" aria-hidden="true" />
+        <span className="sr-only">{t('common.loading')}</span>
       </div>
     );
   }
 
-  return (
-    <div className="bg-cream-50 min-h-svh">
-      <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-10">
-        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-6 lg:self-start">
-            <AccountSidebar />
-          </aside>
-          <main className="min-w-0">{children}</main>
-        </div>
-      </div>
-    </div>
-  );
+  if (isSettingsPath(pathname)) return <SettingsShell>{children}</SettingsShell>;
+  return <div className="bg-qb-page font-qb text-qb-ink">{children}</div>;
 }

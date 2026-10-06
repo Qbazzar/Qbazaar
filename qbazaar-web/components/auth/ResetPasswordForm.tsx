@@ -1,16 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { EyeIcon, EyeOffIcon, Loader2Icon } from 'lucide-react';
+import { KeyRound, Loader2 } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button, buttonVariants } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import {
@@ -20,7 +18,10 @@ import {
 import { ApiClientError, login, resetPassword } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
-import { FieldError } from './FieldError';
+import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
+import { AuthHeading } from './AuthHeading';
+import { announcedError } from './FieldError';
+import { PasswordInput } from './PasswordInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 export function ResetPasswordForm() {
@@ -30,8 +31,6 @@ export function ResetPasswordForm() {
   const email = (search.get('email') ?? '').trim();
   const token = (search.get('token') ?? '').trim();
   const linkValid = Boolean(email) && Boolean(token);
-
-  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
@@ -75,31 +74,19 @@ export function ResetPasswordForm() {
 
   if (!linkValid) {
     return (
-      <div className="space-y-4">
-        <header className="space-y-2">
-          <h2 className="font-display text-2xl tracking-tight">
-            {t('auth.reset_password.missing_params_title')}
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            {t('auth.reset_password.missing_params_body')}
-          </p>
-        </header>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Link
-            href="/forgot-password"
-            className={cn(
-              buttonVariants(),
-              'h-11 rounded-full px-6 text-sm font-semibold',
-            )}
-          >
+      <div className="flex flex-col items-center gap-8">
+        <AuthHeading
+          icon={<KeyRound />}
+          title={t('auth.reset_password.missing_params_title')}
+          subtitle={t('auth.reset_password.missing_params_body')}
+        />
+        <div className="flex w-full max-w-[420px] flex-col gap-3">
+          <Link href="/forgot-password" className={cn(buttonVariants({ fullWidth: true }), authSubmitClass)}>
             {t('auth.reset_password.go_to_forgot')}
           </Link>
           <Link
             href="/login"
-            className={cn(
-              buttonVariants({ variant: 'outline' }),
-              'h-11 rounded-full px-6 text-sm font-semibold',
-            )}
+            className={cn(buttonVariants({ variant: 'outline', fullWidth: true }), authSubmitClass)}
           >
             {t('auth.reset_password.back_to_login')}
           </Link>
@@ -113,105 +100,71 @@ export function ResetPasswordForm() {
   const passwordValue = form.watch('password');
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-4">
-      <p className="text-muted-foreground text-sm">
-        {t('auth.reset_password.subtitle')}{' '}
-        <span className="text-foreground font-medium" dir="ltr">
-          {email}
-        </span>
-      </p>
-
-      {/* email + token are query-driven; we still register them so RHF posts
-          the full ResetPasswordRequest shape and validates them via Zod. */}
-      <input type="hidden" {...form.register('email')} />
-      <input type="hidden" {...form.register('token')} />
-
-      <div className="space-y-1.5">
-        <Label htmlFor="password">
-          {t('auth.reset_password.password_label')}
-        </Label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="new-password"
-            dir="ltr"
-            placeholder={t('auth.reset_password.password_placeholder')}
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={errors.password ? 'password-error' : undefined}
-            className="h-10 pe-10"
-            {...form.register('password')}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="text-muted-foreground hover:text-foreground absolute end-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            tabIndex={-1}
-          >
-            {showPassword ? (
-              <EyeOffIcon className="size-4" />
-            ) : (
-              <EyeIcon className="size-4" />
-            )}
-          </button>
-        </div>
-        <PasswordStrengthIndicator password={passwordValue ?? ''} />
-        <FieldError id="password-error" message={errors.password?.message} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="password_confirmation">
-          {t('auth.reset_password.password_confirmation_label')}
-        </Label>
-        <Input
-          id="password_confirmation"
-          type={showPassword ? 'text' : 'password'}
-          autoComplete="new-password"
-          dir="ltr"
-          placeholder={t(
-            'auth.reset_password.password_confirmation_placeholder',
-          )}
-          aria-invalid={Boolean(errors.password_confirmation)}
-          aria-describedby={
-            errors.password_confirmation
-              ? 'password_confirmation-error'
-              : undefined
-          }
-          className="h-10"
-          {...form.register('password_confirmation')}
-        />
-        <FieldError
-          id="password_confirmation-error"
-          message={errors.password_confirmation?.message}
-        />
-      </div>
-
-      <Button
-        type="submit"
-        size="lg"
-        disabled={submitting}
-        className={cn(
-          'h-11 w-full rounded-full text-sm font-semibold',
-          submitting && 'cursor-progress',
-        )}
-      >
-        {submitting ? (
+    <>
+      <AuthHeading
+        title={t('auth.reset_password.title')}
+        subtitle={
           <>
-            <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
-            {t('auth.reset_password.submitting')}
+            {t('auth.reset_password.subtitle')}{' '}
+            <span className="font-semibold text-qb-ink-body" dir="ltr">
+              {email}
+            </span>
           </>
-        ) : (
-          t('auth.reset_password.submit')
-        )}
-      </Button>
+        }
+      />
+      <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
+        {/* email + token are query-driven; we still register them so RHF posts
+            the full ResetPasswordRequest shape and validates them via Zod. */}
+        <input type="hidden" {...form.register('email')} />
+        <input type="hidden" {...form.register('token')} />
 
-      <p className="text-muted-foreground text-center text-sm">
-        <Link href="/login" className="text-coral font-medium hover:underline">
-          {t('auth.reset_password.back_to_login')}
-        </Link>
-      </p>
-    </form>
+        <Field label={t('auth.reset_password.password_label')} required error={announcedError(errors.password?.message)}>
+          {(control) => (
+            <div className="flex flex-col gap-3">
+              <PasswordInput
+                {...control}
+                autoComplete="new-password"
+                placeholder={t('auth.reset_password.password_placeholder')}
+                {...form.register('password')}
+              />
+              <PasswordStrengthIndicator password={passwordValue ?? ''} />
+            </div>
+          )}
+        </Field>
+
+        <Field
+          label={t('auth.reset_password.password_confirmation_label')}
+          required
+          error={announcedError(errors.password_confirmation?.message)}
+        >
+          {(control) => (
+            <PasswordInput
+              {...control}
+              autoComplete="new-password"
+              placeholder={t('auth.reset_password.password_confirmation_placeholder')}
+              {...form.register('password_confirmation')}
+            />
+          )}
+        </Field>
+
+        <Button type="submit" fullWidth disabled={submitting} className={cn(authSubmitClass, submitting && 'cursor-progress')}>
+          {submitting ? (
+            <>
+              <Loader2 className="animate-spin" aria-hidden="true" />
+              {t('auth.reset_password.submitting')}
+            </>
+          ) : (
+            t('auth.reset_password.submit')
+          )}
+        </Button>
+
+        <AuthFooter>
+          <Link href="/login" className={authLinkClass}>
+            {t('auth.reset_password.back_to_login')}
+          </Link>
+        </AuthFooter>
+      </form>
+    </>
   );
 }
 

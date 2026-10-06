@@ -14,13 +14,14 @@
  *   the user is already pinned near the bottom.
  */
 import { useEffect, useMemo, useRef } from 'react';
-import { Loader2Icon } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { useMessagesQuery } from '@/lib/queries/messaging';
 import { useAuth } from '@/hooks/useAuth';
 import { MessageBubble } from './MessageBubble';
 import { OfferBubble } from './OfferBubble';
 import { dayBucketKey, formatDaySeparator } from './relative-time';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/design-system/Button';
+import { PanelState } from '@/components/account/PanelState';
 import { t } from '@/lib/i18n/messages';
 import type { Message } from '@/lib/api/types';
 
@@ -91,47 +92,30 @@ export function MessageList({ conversationId }: Props) {
   }, [messages, user?.id]);
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center" role="status">
-        <Loader2Icon
-          className="text-muted-foreground size-5 animate-spin"
-          aria-hidden
-        />
-      </div>
-    );
+    return <PanelState loading className="flex flex-1 items-center" />;
   }
 
   if (isError) {
-    return (
-      <p className="text-destructive p-6 text-center text-sm">
-        {t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-      </p>
-    );
-  }
-
-  if (messages.length === 0) {
-    return (
-      <p className="text-ink-500 px-6 py-10 text-center text-sm">
-        {t('messaging.empty.view', 'ابدأ المحادثة بكتابة رسالتك الأولى.')}
-      </p>
-    );
+    return <PanelState loading={false} message={t('common.error', 'حدث خطأ، حاول مرة أخرى')} className="flex-1" />;
   }
 
   return (
     <div
       ref={scrollRef}
-      className="bg-cream-50 flex-1 space-y-2 overflow-y-auto p-4"
+      className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-[21px] py-6 qb-tablet:px-6 qb-desktop:px-10"
       aria-live="polite"
     >
+      <SafetyNotice />
+
+      {messages.length === 0 ? (
+        <p className="px-6 py-10 text-center text-qb-caption text-qb-ink-subtle">
+          {t('messaging.empty.view', 'ابدأ المحادثة بكتابة رسالتك الأولى.')}
+        </p>
+      ) : null}
+
       {hasNextPage ? (
-        <div className="flex justify-center pb-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-          >
+        <div className="flex justify-center">
+          <Button variant="ghost" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
             {isFetchingNextPage
               ? t('common.loading', 'جاري التحميل…')
               : t('messaging.load_older', 'عرض الرسائل الأقدم')}
@@ -156,15 +140,11 @@ export function MessageList({ conversationId }: Props) {
         const isOffer = message.type === 'offer' && message.offer;
 
         return (
-          <div key={message.id} className="space-y-2">
+          <div key={message.id} className="flex flex-col gap-4">
             {!sameDayAsPrev ? (
-              <div className="my-3 flex items-center gap-3">
-                <span className="bg-ink-200 h-px flex-1" />
-                <span className="text-ink-500 text-[11px]">
-                  {formatDaySeparator(message.created_at)}
-                </span>
-                <span className="bg-ink-200 h-px flex-1" />
-              </div>
+              <p className="self-center rounded-qb-xs bg-qb-fill px-4 py-2 font-qb-label text-qb-micro font-medium text-qb-ink-secondary qb-tablet:text-qb-body qb-desktop:text-qb-h5">
+                {formatDaySeparator(message.created_at)}
+              </p>
             ) : null}
             {isOffer && message.offer ? (
               <OfferBubble offer={message.offer} isMine={isMine} />
@@ -180,5 +160,15 @@ export function MessageList({ conversationId }: Props) {
         );
       })}
     </div>
+  );
+}
+
+/** "Safe Pay" reminder at the top of every chat (365:14788). */
+function SafetyNotice() {
+  return (
+    <p className="mx-auto flex max-w-[626px] items-start gap-3 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-label text-qb-brand qb-tablet:items-center qb-tablet:rounded-qb-md qb-tablet:px-6 qb-tablet:text-qb-body">
+      <ShieldCheck className="mt-0.5 size-5 shrink-0 qb-tablet:mt-0" aria-hidden="true" />
+      {t('messaging.safety_notice')}
+    </p>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * FE-2.6 — Privacy settings.
+ * FE-2.6 — Privacy settings, laid out as the Data Protection rows of 397:10175.
  *
  * 4 switches backed by `GET / PUT /account/privacy-settings`. Each toggle
  * optimistically flips the cached value, fires the PUT, and rolls back on
@@ -10,9 +10,10 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2Icon } from 'lucide-react';
 
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/design-system/Switch';
+import { PanelState } from '@/components/account/PanelState';
+import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import {
   getPrivacySettings,
@@ -105,56 +106,28 @@ export default function AccountPrivacyPage() {
   };
 
   return (
-    <section className="space-y-6">
-      <header className="space-y-1.5">
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-          {t('account.privacy.title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {t('account.privacy.subtitle')}
-        </p>
-      </header>
-
-      <div className="bg-card ring-foreground/10 rounded-2xl ring-1">
-        {isLoading ? (
-          <div className="flex justify-center py-10" role="status">
-            <Loader2Icon
-              className="text-muted-foreground size-5 animate-spin"
-              aria-hidden
-            />
-          </div>
-        ) : error ? (
-          <p className="text-destructive p-4 text-sm" role="alert">
-            {t('auth.errors.network')}
-          </p>
-        ) : (
-          <ul className="divide-border divide-y">
-            {FIELDS.map((field) => (
-              <li
-                key={field.key}
-                className="flex items-start gap-4 p-4 sm:p-5"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-ink-900 text-sm font-semibold">
-                    {t(field.titleKey)}
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 text-xs">
-                    {t(field.descriptionKey)}
-                  </p>
-                </div>
+    <SettingsPanel title={t('account.nav.data_protection')} description={t('account.privacy.subtitle')}>
+      {isLoading || error ? (
+        <PanelState loading={isLoading} />
+      ) : (
+        <SettingsList>
+          {FIELDS.map((field) => (
+            <SettingsRow
+              key={field.key}
+              value={<span id={`privacy-${field.key}`}>{t(field.titleKey)}</span>}
+              description={t(field.descriptionKey)}
+              action={
                 <Switch
                   checked={settings[field.key]}
-                  onCheckedChange={(value: boolean) =>
-                    handleToggle(field.key, value)
-                  }
+                  onCheckedChange={(value: boolean) => handleToggle(field.key, value)}
                   disabled={mutation.isPending}
-                  aria-label={t(field.titleKey)}
+                  aria-labelledby={`privacy-${field.key}`}
                 />
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </section>
+              }
+            />
+          ))}
+        </SettingsList>
+      )}
+    </SettingsPanel>
   );
 }

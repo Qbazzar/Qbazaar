@@ -150,13 +150,18 @@ export type AuthErrorCodeValue =
 
 /**
  * Counters surfaced on the authenticated account dashboard.
- * Backend: `GET /account/summary`.
+ * Backend: `GET /account/summary` (contract schema `AccountSummary`).
  */
 export interface AccountSummary {
-  ads_count: number;
-  drafts_count: number;
-  conversations_count: number;
-  unread_notifications_count: number;
+  /** Every listing that has left the draft stage. */
+  my_ads: number;
+  drafts: number;
+  ads_by_status: Record<AdStatus, number>;
+  conversations: number;
+  unread_messages: number;
+  unread_notifications: number;
+  favorites: number;
+  saved_searches: number;
 }
 
 /**

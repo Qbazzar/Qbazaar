@@ -1,44 +1,29 @@
 'use client';
 
 /**
- * One row on the notifications index page.
+ * One row on the notifications index page (455:14636).
  *
- * Renders the full-width version of a notification — icon, title, body,
- * timestamp, unread dot, and a kebab menu for the "delete" action with a
- * confirm dialog. The whole row is a button that marks the row read +
- * (if present) navigates to `cta_url`. The delete menu stops propagation
- * so clicking it doesn't also mark+navigate.
+ * Icon tile in the photo slot, title, body, timestamp and the orange unread
+ * dot. The whole row is a button that marks the row read + (if present)
+ * navigates to `cta_url`; the delete button sits above it and asks for
+ * confirmation first.
  */
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  Loader2Icon,
-  MoreHorizontalIcon,
-  Trash2Icon,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Clock, Loader2, Trash2 } from 'lucide-react';
+
+import { Button } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { Icon } from '@/components/design-system/Icon';
+import { Modal } from '@/components/design-system/Modal';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   useDeleteNotificationMutation,
   useMarkNotificationReadMutation,
 } from '@/lib/queries/notifications';
 import { formatRelativeTime } from '@/components/messaging/relative-time';
+import { lucideIconName } from './icon-name';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { ApiClientError } from '@/lib/api/auth';
@@ -53,9 +38,10 @@ export function NotificationRow({ notification: n }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const markRead = useMarkNotificationReadMutation();
   const deleteMutation = useDeleteNotificationMutation();
+  const unread = !n.read_at;
 
   const handleOpen = () => {
-    if (!n.read_at) markRead.mutate(n.id);
+    if (unread) markRead.mutate(n.id);
     if (n.cta_url) router.push(n.cta_url);
   };
 
@@ -76,107 +62,75 @@ export function NotificationRow({ notification: n }: Props) {
   };
 
   return (
-    <article
-      className={cn(
-        'border-ink-200 bg-card relative flex items-start gap-3 rounded-2xl border p-4 transition-colors',
-        !n.read_at && 'border-coral/30 bg-coral/5',
-      )}
-    >
+    <article className="relative flex items-center gap-2 rounded-qb-xl border border-qb-line bg-qb-surface p-[9px] font-qb shadow-qb-card qb-tablet:gap-4 qb-tablet:rounded-qb-2xl qb-tablet:p-[11px]">
       <button
         type="button"
         onClick={handleOpen}
-        className="absolute inset-0 rounded-2xl focus-visible:ring-2 focus-visible:ring-coral/50 focus-visible:outline-none"
-        aria-label={n.title}
+        className={cn('absolute inset-0 rounded-qb-xl qb-tablet:rounded-qb-2xl', focusRing)}
+        aria-label={unread ? t('notifications.open_unread', { title: n.title }) : n.title}
       />
 
       <span
+        aria-hidden="true"
         className={cn(
-          'bg-cream-200 text-ink-700 relative grid size-10 shrink-0 place-items-center rounded-full',
-          !n.read_at && 'bg-coral/15 text-coral',
+          'flex h-[86px] w-[108px] shrink-0 items-center justify-center rounded-qb-lg qb-tablet:h-40 qb-tablet:w-[191px] qb-tablet:rounded-qb-2xl',
+          unread ? 'bg-qb-brand-soft text-qb-brand' : 'bg-qb-fill text-qb-ink-secondary',
         )}
-        aria-hidden
       >
-        <DynamicIcon name={n.icon} className="size-5" />
+        <DynamicIcon name={lucideIconName(n.icon)} className="size-8 qb-tablet:size-12" strokeWidth={1.5} />
       </span>
 
-      <div className="relative min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="text-ink-900 truncate text-sm font-semibold">
-            {n.title}
-          </h3>
-          {!n.read_at ? (
-            <span
-              aria-hidden
-              className="bg-coral size-1.5 shrink-0 rounded-full"
-            />
-          ) : null}
-        </div>
-        <p className="text-ink-500 mt-1 text-sm">{n.body}</p>
-        <p className="text-ink-400 mt-1.5 text-xs">
+      <div className="min-w-0 flex-1 py-1 qb-tablet:py-3">
+        <h3 className="truncate text-qb-micro font-semibold tracking-normal text-qb-ink-body qb-tablet:text-qb-h5 qb-tablet:font-medium">
+          <bdi>{n.title}</bdi>
+        </h3>
+        <p className="mt-2 line-clamp-3 text-qb-tiny text-qb-ink-muted qb-tablet:mt-4 qb-tablet:line-clamp-2 qb-tablet:text-qb-body">
+          <bdi>{n.body}</bdi>
+        </p>
+        <p className="mt-2 flex items-center gap-1.5 text-qb-tiny text-qb-ink-subtle qb-tablet:mt-5 qb-tablet:text-qb-caption">
+          <Icon icon={Clock} size="sm" className="size-3 qb-tablet:size-4" />
           {formatRelativeTime(n.created_at)}
         </p>
       </div>
 
-      <div className="relative shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={t('common.edit', 'إجراءات')}
-              />
-            }
-          >
-            <MoreHorizontalIcon className="size-4" aria-hidden />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => setConfirmOpen(true)}
-            >
-              <Trash2Icon className="size-3.5" aria-hidden />
-              {t('notifications.delete', 'حذف')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {t('notifications.delete_confirm.title', 'حذف الإشعار؟')}
-              </DialogTitle>
-              <DialogDescription>
-                {t('notifications.delete_confirm.body', 'لا يمكن التراجع.')}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose
-                render={
-                  <Button variant="outline" size="default" className="rounded-full">
-                    {t('common.cancel', 'إلغاء')}
-                  </Button>
-                }
-              />
-              <Button
-                type="button"
-                variant="destructive"
-                size="default"
-                disabled={deleteMutation.isPending}
-                onClick={handleDelete}
-                className="rounded-full"
-              >
-                {deleteMutation.isPending ? (
-                  <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
-                ) : null}
-                {t('notifications.delete_confirm.confirm', 'حذف')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div className="relative flex shrink-0 flex-col items-center gap-3 self-stretch justify-between py-1 qb-tablet:flex-row qb-tablet:self-center qb-tablet:py-0 qb-tablet:pe-2">
+        {unread ? (
+          <span
+            aria-hidden="true"
+            className="size-2.5 rounded-full bg-qb-brand shadow-qb-brand qb-tablet:order-last qb-tablet:size-[19px]"
+          />
+        ) : (
+          <span aria-hidden="true" className="size-2.5 qb-tablet:hidden" />
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-9 text-qb-ink-subtle hover:text-qb-danger"
+          aria-label={t('notifications.delete_label', { title: n.title })}
+          onClick={() => setConfirmOpen(true)}
+        >
+          <Trash2 aria-hidden="true" />
+        </Button>
       </div>
+
+      <Modal
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setConfirmOpen(false);
+        }}
+        title={t('notifications.delete_confirm.title', 'حذف الإشعار؟')}
+        description={t('notifications.delete_confirm.body', 'لا يمكن التراجع.')}
+      >
+        <div className="mt-2 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+          <Button size="sm" disabled={deleteMutation.isPending} onClick={handleDelete}>
+            {deleteMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {t('notifications.delete_confirm.confirm', 'حذف')}
+          </Button>
+          <Button variant="muted" size="sm" disabled={deleteMutation.isPending} onClick={() => setConfirmOpen(false)}>
+            {t('common.cancel', 'إلغاء')}
+          </Button>
+        </div>
+      </Modal>
     </article>
   );
 }
