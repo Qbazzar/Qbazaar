@@ -490,7 +490,10 @@
       "confirm": "Block",
       "cancel": "Cancel",
       "success": "User blocked",
-      "already_blocked": "This user is already blocked"
+      "errors": {
+        "admin": "This account can't be blocked",
+        "self": "You can't block yourself"
+      }
     },
     "follow": {
       "follow": "Follow",

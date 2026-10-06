@@ -51,7 +51,10 @@ describe('CompanyTabs', () => {
     expect(screen.getByRole('heading', { name: 'Imprint' })).toBeInTheDocument();
     expect(screen.getByText('BonTon Real Estate W.L.L.')).toBeInTheDocument();
     expect(screen.getByText('78901')).toBeInTheDocument();
-    expect(screen.getByText('Email: legal@bonton.qa')).toBeInTheDocument();
+    const email = screen.getByText('legal@bonton.qa');
+    expect(email.closest('p')).toHaveTextContent('Email: legal@bonton.qa');
+    // Kept left-to-right inside Arabic text.
+    expect(email).toHaveAttribute('dir', 'ltr');
   });
 
   it('says when the company has not filled a tab in', async () => {

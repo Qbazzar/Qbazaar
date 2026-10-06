@@ -874,10 +874,8 @@ export interface MakeReportRequest {
   description?: string;
 }
 
-export type ReportErrorCode =
-  | 'REPORT_INVALID_TARGET'
-  | 'REPORT_SELF'
-  | 'REPORT_RECENT_DUPLICATE';
+/** REPORT_001 reporting yourself, REPORT_002 a repeat within the window, REPORT_003 an unknown target. */
+export type ReportErrorCode = 'REPORT_001' | 'REPORT_002' | 'REPORT_003';
 
 // ── CMS Pages / Help center / Support (Sprint 12) ──────────────────────────
 // Pages are admin-authored static content (about, terms, privacy, contact).

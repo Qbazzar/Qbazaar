@@ -3,7 +3,7 @@
  *
  * Reports are write-only from the client — there's no read endpoint surfaced
  * to end users, so we expose just the submit mutation. The mutation handles
- * the two soft-error codes (`REPORT_RECENT_DUPLICATE`, `REPORT_SELF`) by
+ * the two soft-error codes (`REPORT_002` duplicate, `REPORT_001` self) by
  * surfacing localised toasts rather than letting them bubble as red errors.
  */
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
@@ -21,11 +21,11 @@ export function useSubmitReportMutation(): UseMutationResult<
   return useMutation<Report, ApiClientError, MakeReportRequest>({
     mutationFn: (payload) => submitReport(payload),
     onError: (err) => {
-      if (err.code === 'REPORT_RECENT_DUPLICATE') {
+      if (err.code === 'REPORT_002') {
         toast.warning(t('reports.errors.recent_duplicate', 'تم الإبلاغ مسبقاً'));
         return;
       }
-      if (err.code === 'REPORT_SELF') {
+      if (err.code === 'REPORT_001') {
         // Silent UX: the dialog closes and the action is a no-op, matching
         // the spec — but we still log so devs notice repeated misuse.
         toast.info(t('reports.errors.self', 'لا يمكنك الإبلاغ عن نفسك'));

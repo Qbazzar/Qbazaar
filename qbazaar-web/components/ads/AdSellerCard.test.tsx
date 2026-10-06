@@ -95,11 +95,20 @@ describe('AdSellerCard', () => {
     expect(screen.queryByRole('button', { name: 'Make an Offer' })).toBeNull();
   });
 
-  it('marks a sold ad and takes no contact', () => {
+  it('marks a sold ad and takes no contact, but the buyer can still rate the seller', () => {
+    useAuthStore.setState({ user: { id: 'buyer', phone_verified: true } as User, accessToken: 'AT', isHydrated: true });
     renderCard({ ad: { ...ad, status: 'sold' } });
 
     expect(screen.getByText('Sold')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Send Message' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Rate the seller' })).toBeInTheDocument();
+  });
+
+  it('shows the owner of a sold ad that it is sold', () => {
+    renderCard({ ad: { ...ad, status: 'sold' }, isOwner: true });
+
+    expect(screen.getByText('Sold')).toBeInTheDocument();
+    expect(screen.queryByText('This is your ad')).toBeNull();
   });
 
   it('still offers the actions when the ad came without its seller', () => {

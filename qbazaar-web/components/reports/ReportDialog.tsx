@@ -4,7 +4,7 @@
  * Dialog form for submitting a polymorphic report.
  *
  * Uses RHF + Zod for client-side validation; the backend remains the source
- * of truth. The two soft-error codes (`REPORT_RECENT_DUPLICATE`, `REPORT_SELF`)
+ * of truth. The two soft-error codes (`REPORT_002` duplicate, `REPORT_001` self)
  * are handled in the mutation hook — this component only needs to close the
  * dialog on settle.
  */
@@ -100,10 +100,7 @@ export function ReportDialog({
         onError: (err) => {
           // Soft errors (duplicate / self) close the dialog — the mutation
           // hook surfaces its own toast. Hard errors stay inside the form.
-          if (
-            err.code === 'REPORT_RECENT_DUPLICATE' ||
-            err.code === 'REPORT_SELF'
-          ) {
+          if (err.code === 'REPORT_002' || err.code === 'REPORT_001') {
             onOpenChange(false);
           }
         },

@@ -22,6 +22,12 @@ import { t } from '@/lib/i18n/messages';
 
 const MAX_RATING = 5;
 
+const REVIEW_ERROR_KEYS: Record<string, string> = {
+  REVIEW_001: 'reviews.errors.not_eligible',
+  REVIEW_002: 'reviews.errors.already',
+  REVIEW_003: 'reviews.errors.own',
+};
+
 interface ReviewSellerButtonProps {
   adId: string;
   sellerId: string;
@@ -47,10 +53,7 @@ export function ReviewSellerButton({ adId, sellerId, className }: ReviewSellerBu
     },
     onError: (err: unknown) => {
       const code = (err as { code?: string } | null)?.code;
-      if (code === 'REVIEW_NOT_ELIGIBLE') toast.error(t('reviews.errors.not_eligible'));
-      else if (code === 'REVIEW_ALREADY_EXISTS') toast.error(t('reviews.errors.already'));
-      else if (code === 'REVIEW_OWN_AD') toast.error(t('reviews.errors.own'));
-      else toast.error(t('common.error'));
+      toast.error(t(REVIEW_ERROR_KEYS[code ?? ''] ?? 'common.error'));
     },
   });
 

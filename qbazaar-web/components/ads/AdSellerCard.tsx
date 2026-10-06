@@ -2,10 +2,12 @@
 
 /**
  * Seller panel of the ad detail: who sells, a few facts about them and the
- * contact actions. The actions follow the ad's state: the owner sees a "this
- * is your ad" note and a sold ad says so; everyone else gets "Make an Offer"
- * and "Send Message", which both open the conversation (offers are made
- * there). "Buy Now" joins them with the purchase flow (FE-16.8).
+ * contact actions. The actions follow the ad's state: a sold ad says so (to
+ * everyone, the owner included) and the owner sees a "this is your ad" note;
+ * everyone else gets "Make an Offer" and "Send Message", which both open the
+ * conversation (offers are made there). "Rate the seller" stays on a sold ad,
+ * since a review needs a completed deal. "Buy Now" joins them with the
+ * purchase flow (FE-16.8).
  */
 import Link from 'next/link';
 import { CalendarDays, LayoutGrid, MessageSquareText, Star, Tag, type LucideIcon } from 'lucide-react';
@@ -91,17 +93,22 @@ function SellerSummary({ seller, locale }: { seller: PublicUser; locale: Locale 
 }
 
 function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'>) {
+  const rateSeller = <ReviewSellerButton adId={ad.id} sellerId={ad.user_id} className="self-center" />;
+
+  if (ad.status === 'sold') {
+    return (
+      <>
+        <Badge tone="neutral" className="h-10 justify-center rounded-qb-md text-qb-caption">
+          {t('ads.status.sold')}
+        </Badge>
+        {rateSeller}
+      </>
+    );
+  }
   if (isOwner) {
     return (
       <Badge tone="brand" className="h-10 justify-center rounded-qb-md text-qb-caption">
         {t('messaging.own_ad_badge')}
-      </Badge>
-    );
-  }
-  if (ad.status === 'sold') {
-    return (
-      <Badge tone="neutral" className="h-10 justify-center rounded-qb-md text-qb-caption">
-        {t('ads.status.sold')}
       </Badge>
     );
   }
@@ -119,7 +126,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
       >
         {t('ads.actions.send_message')}
       </StartConversationButton>
-      <ReviewSellerButton adId={ad.id} sellerId={ad.user_id} className="self-center" />
+      {rateSeller}
     </>
   );
 }

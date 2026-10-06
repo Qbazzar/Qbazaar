@@ -28,7 +28,7 @@ function websiteLabel(website: string): string {
 export function hasCompanyContacts(business: BusinessProfile | null): business is BusinessProfile {
   return Boolean(
     business &&
-      (business.contact_phone || business.contact_email || business.website || business.address || business.opening_hours.length),
+      (business.contact_phone || business.contact_email || business.website || business.address || business.opening_hours?.length),
   );
 }
 

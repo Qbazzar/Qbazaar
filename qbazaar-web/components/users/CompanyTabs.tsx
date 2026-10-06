@@ -105,10 +105,10 @@ function LegalPanel({ business }: { business: BusinessProfile | null }) {
   const registration = business?.commercial_registration_number;
   const website = business?.website ? safeWebsiteHref(business.website) : null;
   const contact = [
-    business?.contact_phone ? `${t('users.profile.contact.phone')}: ${business.contact_phone}` : null,
-    business?.contact_email ? `${t('users.profile.contact.email')}: ${business.contact_email}` : null,
-    website ? `${t('users.profile.contact.website')}: ${website}` : null,
-  ].filter(Boolean) as string[];
+    business?.contact_phone ? { label: t('users.profile.contact.phone'), value: business.contact_phone } : null,
+    business?.contact_email ? { label: t('users.profile.contact.email'), value: business.contact_email } : null,
+    website ? { label: t('users.profile.contact.website'), value: website } : null,
+  ].filter((line): line is { label: string; value: string } => line !== null);
 
   if (!imprint.length && !registration && !contact.length) {
     return (
@@ -135,8 +135,9 @@ function LegalPanel({ business }: { business: BusinessProfile | null }) {
       {contact.length ? (
         <LegalSection title={t('users.profile.legal.contact')}>
           {contact.map((line) => (
-            <p key={line} className="break-all">
-              {line}
+            <p key={line.label} className="break-all">
+              {/* Phone numbers, emails and links stay left-to-right inside Arabic text. */}
+              {line.label}: <bdi dir="ltr">{line.value}</bdi>
             </p>
           ))}
         </LegalSection>

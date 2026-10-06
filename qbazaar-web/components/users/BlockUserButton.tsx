@@ -12,11 +12,17 @@ import { Ban, Loader2Icon } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Modal } from '@/components/design-system/Modal';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { t } from '@/lib/i18n/messages';
 import { blockUser } from '@/lib/api/users';
 import { ApiClientError } from '@/lib/api/auth';
-import { UserErrorCode } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
+
+/** Blocking is idempotent, so "already blocked" is never an error. */
+const BLOCK_ERROR_KEYS: Record<string, string> = {
+  USER_002: 'users.block.errors.admin',
+  USER_003: 'users.block.errors.self',
+  RATE_LIMIT_EXCEEDED: 'auth.errors.RATE_LIMIT_EXCEEDED',
+};
 
 export interface BlockUserButtonProps {
   userId: string;
@@ -39,18 +45,8 @@ export function BlockUserButton({ userId, userName, onBlocked, className }: Bloc
       onBlocked?.();
     },
     onError: (err) => {
-      if (err instanceof ApiClientError) {
-        if (err.code === UserErrorCode.AlreadyBlocked) {
-          toast.info(t('users.block.already_blocked'));
-          setOpen(false);
-          return;
-        }
-        toast.error(
-          translateMaybeKey(`account.errors.${err.code}`) || translateMaybeKey(`auth.errors.${err.code}`) || err.message,
-        );
-      } else {
-        toast.error(t('auth.errors.unknown'));
-      }
+      const key = err instanceof ApiClientError ? BLOCK_ERROR_KEYS[err.code] : undefined;
+      toast.error(t(key ?? 'common.error'));
     },
   });
 
