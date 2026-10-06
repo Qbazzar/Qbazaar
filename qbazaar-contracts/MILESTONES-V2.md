@@ -28,10 +28,10 @@
 | M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
 | M3 Web on the new design | 16 | 11 | 2 | 9 | Phone verification (#157) and Turnstile (#206) done; FE-16.8 (orders on the web) can start now that M1b is in |
 | M4 Admin additions | 17 | 15 | 0 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, AD-17.7 still needs orders and the revenue report |
-| M5 Deployment on the new server | 18 | 18 | 2 | 16 | Waits for M1–M4 and the domain |
+| M5 Deployment on the new server | 18 | 18 | 3 | 15 | Live on srv1977263 under sslip.io hosts until the real domain; push-to-deploy works (#215); left: secrets, backups, alerts, Cloudflare, tuning |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **179** | **102** | **77** | |
+| **Total** | | **179** | **103** | **76** | |
 
 ---
 
@@ -388,12 +388,13 @@
 
 ### Done — new server (2026-10-05)
 
-> Status: ✅ done. #215 → OPS-18.1, OPS-18.2
+> Status: ✅ done. #215 → OPS-18.1, OPS-18.2, OPS-18.6 (the push of `ca450f3` to `production` deployed by itself: API run 37352150188 and web run 37352840096, both green)
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | OPS-18.1 | cPanel account + domain (or the server name for now) + AutoSSL for `api.` and the main domain | [P0] | HTTPS works on both |
 | OPS-18.2 | EA-PHP 8.4 + required extensions, MySQL, Redis | [P0] | `php artisan about` is clean |
+| OPS-18.6 | Point `deploy-api.yml` at the new server + unify the paths in `deploy/` | [P0] | A push to `production` deploys automatically |
 
 ### Server and runtime
 
@@ -402,7 +403,6 @@
 | OPS-18.3 | Meilisearch + Horizon + Reverb as systemd services + `mod_proxy_wstunnel` for Reverb | [P0] | WebSocket connects from mobile and web |
 | OPS-18.4 | Next.js on systemd behind an Apache proxy; the static prototype moves off the root | [P0] | The real web on the domain |
 | OPS-18.5 | Secrets: Twilio, Firebase, Sentry, Mail | [P0] | A real SMS arrives; a real push arrives |
-| OPS-18.6 | Point `deploy-api.yml` at the new server + unify the paths in `deploy/` | [P0] | A push to `production` deploys automatically |
 
 ### Resilience
 

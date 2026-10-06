@@ -1,6 +1,6 @@
 # New server: first-time setup (srv1977263, 2026-10-05)
 
-How the current production server was set up, in order, so it can be repeated or audited. Day-to-day deploys are in [README.md](README.md); promoting a release is in [DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md) (written for the old server: read `fleeteye` as `qbazaar` and `/home/fleeteye` as `/home/qbazaar`).
+How the current production server was set up, in order, so it can be repeated or audited. Day-to-day deploys are in [README.md](README.md); promoting a release is in [DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md).
 
 | | |
 |---|---|
