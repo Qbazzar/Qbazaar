@@ -57,6 +57,18 @@ class CatalogCache
     }
 
     /**
+     * A seller was suspended or reactivated. That is rare, and the home feed
+     * shows sellers by name, so it is dropped instead of waiting for the
+     * warmer.
+     */
+    public function sellerVisibilityChanged(): void
+    {
+        $this->homeFeed->flush();
+
+        $this->featuredAdsChanged();
+    }
+
+    /**
      * The featured list caches ids only, so it is cheap to rebuild and is
      * dropped as soon as a featured ad changes.
      */

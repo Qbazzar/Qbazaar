@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 use function Pest\Laravel\getJson;
 
@@ -83,6 +84,18 @@ it('labels the options of the fields endpoint and of the ad category', function 
     expect(fieldByKey($detail, 'fuel_type')['options_labeled'][1])->toBe(['value' => 'diesel', 'label' => 'Diesel']);
 });
 
+it('labels the options of the category page sections in the request language', function (string $locale, string $label): void {
+    carsAd();
+
+    $sections = getJson('/api/v1/categories/vehicles', ['Accept-Language' => $locale])->assertOk()->json('data.sections');
+    $cars = collect($sections)->firstWhere('category.slug', 'cars')['category'];
+
+    expect(fieldByKey($cars['custom_fields'], 'transmission')['options_labeled'][0])->toBe(['value' => 'automatic', 'label' => $label]);
+})->with([
+    'english' => ['en', 'Automatic'],
+    'arabic' => ['ar', 'أوتوماتيك'],
+]);
+
 it('falls back to English and then to a readable value when a label is missing', function (): void {
     Category::query()->where('slug', 'cars')->firstOrFail()->update(['custom_fields' => [[
         'key' => 'body',
@@ -97,14 +110,25 @@ it('falls back to English and then to a readable value when a label is missing',
     expect(array_column($body['options_labeled'], 'label'))->toBe(['SUV', 'Pick up', 'كوبيه']);
 });
 
-it('keeps the cached ad detail per language', function (): void {
+it('caches the ad detail of every language from one render', function (): void {
     $id = carsAd()->id;
-    $label = fn (string $locale): string => fieldByKey(
-        getJson("/api/v1/ads/{$id}", ['Accept-Language' => $locale])->json('data.category.custom_fields'),
-        'fuel_type',
-    )['options_labeled'][0]['label'];
+    // Returns the first fuel label and the queries the request ran.
+    $detail = function (string $locale) use ($id): array {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $fields = getJson("/api/v1/ads/{$id}", ['Accept-Language' => $locale])->assertOk()->json('data.category.custom_fields');
+        DB::disableQueryLog();
 
-    expect([$label('en'), $label('ar'), $label('en')])->toBe(['Petrol', 'بنزين', 'Petrol']);
+        return [fieldByKey($fields, 'fuel_type')['options_labeled'][0]['label'], count(DB::getQueryLog())];
+    };
+
+    [$english, $coldQueries] = $detail('en');
+    [$arabic, $otherLanguageQueries] = $detail('ar');
+    [$cachedEnglish, $warmQueries] = $detail('en');
+
+    expect([$english, $arabic, $cachedEnglish])->toBe(['Petrol', 'بنزين', 'Petrol'])
+        ->and($otherLanguageQueries)->toBe($warmQueries)
+        ->and($coldQueries)->toBeGreaterThan($warmQueries);
 });
 
 it('adds the card flags and labels to categories that already exist', function (): void {
@@ -126,4 +150,24 @@ it('adds the card flags and labels to categories that already exist', function (
         ->and(fieldByKey($fields, 'year')['show_in_card'])->toBeFalse()
         ->and($cachedBefore['show_in_card'])->toBeFalse()
         ->and($servedAfter['show_in_card'])->toBeTrue();
+});
+
+it('rolls back only the values the migration added', function (): void {
+    $migration = require database_path('migrations/2026_10_06_100000_add_card_flags_and_option_labels_to_category_fields.php');
+    $cars = Category::query()->where('slug', 'cars')->firstOrFail();
+    $fields = collect($cars->custom_fields)->keyBy('key');
+    $fields['year'] = [...$fields['year'], 'show_in_card' => false];
+    $fields['transmission'] = [...$fields['transmission'], 'option_labels' => ['manual' => ['ar' => 'يدوي', 'en' => 'Manual']]];
+    // As MySQL hands JSON objects back, keys reordered.
+    $fields['fuel_type'] = [...$fields['fuel_type'], 'option_labels' => array_reverse($fields['fuel_type']['option_labels'], true)];
+    $cars->update(['custom_fields' => $fields->values()->all()]);
+
+    $migration->down();
+
+    $after = collect(Category::query()->where('slug', 'cars')->firstOrFail()->custom_fields)->keyBy('key');
+    expect($after['year']['show_in_card'])->toBeFalse()
+        ->and($after['transmission']['option_labels'])->toBe(['manual' => ['ar' => 'يدوي', 'en' => 'Manual']])
+        ->and($after['transmission'])->not->toHaveKey('show_in_card')
+        ->and($after['mileage_km'])->not->toHaveKey('show_in_card')
+        ->and($after['fuel_type'])->not->toHaveKey('option_labels');
 });

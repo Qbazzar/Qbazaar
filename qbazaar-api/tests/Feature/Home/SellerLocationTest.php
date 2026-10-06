@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Actions\Catalog\GetHomeFeedAction;
+use App\Enums\UserStatus;
 use App\Models\Ad;
 use App\Models\Location;
 use App\Models\User;
@@ -85,24 +85,37 @@ it('keeps the seller location at city or area level, without pin, street or cont
         ->and($user['location'])->toBe(locationSummary($this->newer));
 });
 
-it('loads the seller locations of the home feed with a constant number of queries', function (): void {
+it('renders the seller locations of the home feed with a constant number of queries', function (): void {
     listShopAd($this->shop, $this->older, now()->toDateTimeString());
-    $queries = function (): int {
+    // Returns the queries one cold home request ran and the sellers it showed with a place.
+    $measure = function (): array {
+        Cache::flush();
         DB::flushQueryLog();
         DB::enableQueryLog();
-        app(GetHomeFeedAction::class)->execute();
+        $sellers = getJson('/api/v1/home')->assertOk()->json('data.featured_sellers');
         DB::disableQueryLog();
 
-        return count(DB::getQueryLog());
+        return [count(DB::getQueryLog()), count(array_filter(array_column($sellers, 'location')))];
     };
 
-    $queries(); // the first run also fills the shared counters
-    $one = $queries();
+    $measure(); // the first run also fills the in-memory hierarchy memos
+    [$oneQueries, $oneSeller] = $measure();
     foreach (range(1, 4) as $unused) {
         listShopAd(User::factory()->business()->create(), $this->newer, now()->toDateTimeString());
     }
+    [$manyQueries, $manySellers] = $measure();
 
-    expect($queries())->toBe($one);
+    expect([$oneSeller, $manySellers])->toBe([1, 5])
+        ->and($manyQueries)->toBe($oneQueries);
+});
+
+it('drops a suspended seller from the cached home feed at once', function (): void {
+    listShopAd($this->shop, $this->older, now()->toDateTimeString());
+    expect(getJson('/api/v1/home')->json('data.featured_sellers.*.id'))->toBe([$this->shop->id]);
+
+    $this->shop->forceFill(['status' => UserStatus::SUSPENDED])->save();
+
+    expect(getJson('/api/v1/home')->json('data.featured_sellers'))->toBe([]);
 });
 
 it('adds the seller location to the user of the ad detail', function (): void {

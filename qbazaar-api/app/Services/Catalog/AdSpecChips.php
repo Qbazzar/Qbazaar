@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Catalog;
 
 use App\Models\Ad;
+use App\Rules\NoMarkup;
+use Illuminate\Container\Attributes\Scoped;
+use Illuminate\Support\Str;
 
 /**
  * The "spec chips" of a listing card: the ad's condition, then the values of
@@ -13,6 +16,7 @@ use App\Models\Ad;
  * set per category in its custom-field definitions. Reads only the ad and
  * its loaded category.
  */
+#[Scoped]
 class AdSpecChips
 {
     private const CONDITION_KEY = 'condition';
@@ -48,6 +52,8 @@ class AdSpecChips
     }
 
     /**
+     * Values saved before custom fields refused markup are left off the card.
+     *
      * @param array<string, mixed> $field
      * @param array<string, mixed> $values
      * @return array{key: string, label: string, value: string}|null
@@ -62,14 +68,14 @@ class AdSpecChips
 
         $value = $values[$key] ?? null;
 
-        if (! is_scalar($value) || $value === '') {
+        if (! is_scalar($value) || $value === '' || NoMarkup::isFoundIn($value)) {
             return null;
         }
 
         return [
             'key' => $key,
             'label' => $this->fields->label($field, $locale),
-            'value' => $this->display($field, $value, $locale),
+            'value' => Str::limit($this->display($field, $value, $locale), (int) config('qbazaar.cards.spec_chip_max_length'), '…'),
         ];
     }
 

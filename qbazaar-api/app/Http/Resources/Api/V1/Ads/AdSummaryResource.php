@@ -9,6 +9,7 @@ use App\Models\Ad;
 use App\Services\Catalog\AdSpecChips;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -27,6 +28,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *    `qbazaar.cards.summary_length` characters.
  *  - `spec_chips` are the localised label/value pairs a card shows under the
  *    title ({@see AdSpecChips}); present only where the category is loaded.
+ *  - Both stay empty for a viewer who may not open the ad (AdPolicy::view).
  *  - `price_formatted` carries the localised display string ("1,200 ر.ق")
  *    while `price` keeps the numeric value for client-side sorting.
  *
@@ -42,14 +44,15 @@ class AdSummaryResource extends JsonResource
         $primary = $this->resource->relationLoaded('primaryImage')
             ? $this->resource->primaryImage
             : null;
+        $showsDetails = $this->showsDetails($request);
 
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'summary' => $this->summary(),
+            'summary' => $showsDetails ? $this->summary() : '',
             'spec_chips' => $this->whenLoaded(
                 'category',
-                fn (): array => app(AdSpecChips::class)->for($this->resource, app()->getLocale()),
+                fn (): array => $showsDetails ? app(AdSpecChips::class)->for($this->resource, app()->getLocale()) : [],
             ),
             'price' => $this->price !== null ? (float) $this->price : null,
             'price_formatted' => $this->formatPrice(),
@@ -83,11 +86,34 @@ class AdSummaryResource extends JsonResource
         ];
     }
 
+    /**
+     * Favorites, recently viewed and chats keep ads that went back to review
+     * or were hidden since, and their description and field values may not
+     * be approved. Listed ads skip the policy so a page of cards does not
+     * resolve the viewer once per card.
+     */
+    private function showsDetails(Request $request): bool
+    {
+        return $this->resource->isPubliclyListed()
+            || Gate::forUser($request->user('sanctum'))->allows('view', $this->resource);
+    }
+
+    /**
+     * Cut at a word. Nothing is stripped: the description is plain text, so a
+     * "<" in it is part of what the seller wrote.
+     */
     private function summary(): string
     {
-        $text = Str::squish(strip_tags((string) $this->description));
+        $text = Str::squish((string) $this->description);
+        $limit = (int) config('qbazaar.cards.summary_length');
 
-        return Str::limit($text, (int) config('qbazaar.cards.summary_length'), '…', preserveWords: true);
+        if (mb_strlen($text) <= $limit) {
+            return $text;
+        }
+
+        $cut = mb_substr($text, 0, $limit + 1);
+
+        return mb_substr($cut, 0, mb_strrpos($cut, ' ') ?: $limit) . '…';
     }
 
     /**

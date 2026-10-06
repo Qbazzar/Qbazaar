@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Catalog;
 
+use Illuminate\Container\Attributes\Scoped;
 use Illuminate\Support\Str;
 
 /**
@@ -16,6 +17,7 @@ use Illuminate\Support\Str;
  * option without one falls back to English, then to the value itself made
  * readable. `option_labels` stays internal.
  */
+#[Scoped]
 class CategoryFieldPresenter
 {
     /**
@@ -56,12 +58,13 @@ class CategoryFieldPresenter
 
     /**
      * Whether the field's value is one of the spec chips on listing cards.
+     * Read leniently because admins type this JSON by hand: "false" is false.
      *
      * @param array<string, mixed> $field
      */
     public function showsInCard(array $field): bool
     {
-        return (bool) ($field['show_in_card'] ?? false);
+        return filter_var($field['show_in_card'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**

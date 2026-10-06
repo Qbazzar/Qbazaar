@@ -15,16 +15,39 @@ use Illuminate\Support\Facades\DB;
  */
 return new class extends Migration
 {
-    private const KEYS = ['show_in_card', 'option_labels'];
-
     public function up(): void
     {
         $this->patchFields(fn (array $field, array $patch): array => $field + $patch);
     }
 
+    /**
+     * Removes only the values this migration would have added, so a choice
+     * an admin made survives a rollback.
+     */
     public function down(): void
     {
-        $this->patchFields(fn (array $field): array => array_diff_key($field, array_flip(self::KEYS)));
+        $this->patchFields(fn (array $field, array $patch): array => array_diff_key(
+            $field,
+            array_filter(
+                $patch,
+                fn (mixed $value, string $key): bool => $this->sorted($field[$key] ?? null) === $this->sorted($value),
+                ARRAY_FILTER_USE_BOTH,
+            ),
+        ));
+    }
+
+    /**
+     * MySQL stores JSON objects with their keys reordered.
+     */
+    private function sorted(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        ksort($value);
+
+        return array_map($this->sorted(...), $value);
     }
 
     /**
