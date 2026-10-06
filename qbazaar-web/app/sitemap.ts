@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === '' ? 1 : 0.7,
   }));
 
-  const categories = await fetchApiData<CategoryNode[]>('/api/v1/categories');
+  const categories = await fetchApiData<CategoryNode[]>('/api/v1/categories/tree');
   for (const slug of flattenCategorySlugs(categories)) {
     entries.push({
       url: `${base}/c/${slug}`,
