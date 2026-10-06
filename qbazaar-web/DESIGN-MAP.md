@@ -60,6 +60,18 @@ Every route in `qbazaar-web/app` mapped to its pixel reference for the M3 reskin
 | `/account/support` | `app/account/support/page.tsx` | none | — | — | — | no reference | Closest: the rows of `my-ads.html` (518:20536) with a status Badge per ticket. |
 | `/account/support/[id]` | `app/account/support/[id]/page.tsx` | none | — | — | — | no reference | Closest: the chat thread of `messages.html` (365:14788); the ticket timeline is the message list. |
 
+## Orders, wallet and promotions
+
+The purchase-request and offer cards of the chat follow 667:30685, 667:31850, 721:41875 and 721:42157 (744: 721:39927, 390: 721:43079); `components/orders/DealCardForMessage` maps the message types to them.
+
+| Route | Next.js file | Reference | 1440 | 744 | 390 | Status | Notes |
+|---|---|---|---|---|---|---|---|
+| `/ads/[id]/buy` | `app/ads/[id]/buy/page.tsx` | `/ads/[id]/offer` | `app/ads/[id]/offer/page.tsx` | `/checkout/[orderId]` | `app/checkout/[orderId]/page.tsx` | `/account/orders` | `app/account/orders/page.tsx` | `/account/orders/[id]` | `app/account/orders/[id]/page.tsx` | none | — | — | — | no reference | Closest: the checkout panels and summary card (682:32513) for the progress, the actions and the totals. |
+| `/account/wallet` | `app/account/wallet/page.tsx` | `/account/wallet/settlements` | `app/account/wallet/settlements/page.tsx` | none | — | — | — | no reference | Closest: the checkout panels and option cards (682:32513) for the form, the "Transaction History" table of 502:22401 for the list. |
+| `/account/wallet/withdrawals` | `app/account/wallet/withdrawals/page.tsx` | none | — | — | — | no reference | Same as the settlements. |
+| `/account/wallet/bank-accounts` | `app/account/wallet/bank-accounts/page.tsx` | `/account/promotions` | `app/account/promotions/page.tsx` | none | — | — | — | no reference | Closest: the sales-overview frame (502:21437) with its table. |
+| `/account/ads/[id]/promote` | `app/account/ads/[id]/promote/page.tsx` | none | — | — | — | no reference | Closest: the checkout panels and option cards (682:32513). |
+
 ## Auth
 
 | Route | Next.js file | Reference | 1440 | 744 | 390 | Status | Notes |
@@ -91,10 +103,10 @@ Routes without UI, so nothing to design: `app/api/auth/refresh/route.ts`, `app/a
 
 | | Count |
 |---|---|
-| Rows (39 `page.tsx` routes, the error boundaries, the 404 page) | 41 |
-| matches | 15 |
-| partial | 11 |
-| no reference (closest reference proposed for each) | 15 |
+| Rows (50 `page.tsx` routes, the error boundaries, the 404 page) | 52 |
+| matches | 18 |
+| partial | 14 |
+| no reference (closest reference proposed for each) | 20 |
 
 Plus the 3 layouts, which all match.
 
