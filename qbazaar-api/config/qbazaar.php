@@ -204,6 +204,12 @@ return [
         'category_page_cache_seconds' => 120,
     ],
 
+    'cards' => [
+        // The one-line description and the spec chips shown on listing cards.
+        'summary_length' => 120,
+        'max_spec_chips' => 4,
+    ],
+
     'home' => [
         'cache_seconds' => 900,
         'recommended_limit' => 12,

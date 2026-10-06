@@ -6,8 +6,10 @@ namespace App\Http\Resources\Api\V1\Ads;
 
 use App\Http\Resources\Api\V1\Media\MediaResource;
 use App\Models\Ad;
+use App\Services\Catalog\AdSpecChips;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
@@ -21,6 +23,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *    breadcrumb / filter chips without a separate lookup.
  *  - `conversations_count` is present only where the query counted it
  *    (the seller's own list), as the "messages" stat of each card.
+ *  - `summary` is the description as one plain-text line, trimmed to
+ *    `qbazaar.cards.summary_length` characters.
+ *  - `spec_chips` are the localised label/value pairs a card shows under the
+ *    title ({@see AdSpecChips}); present only where the category is loaded.
  *  - `price_formatted` carries the localised display string ("1,200 ر.ق")
  *    while `price` keeps the numeric value for client-side sorting.
  *
@@ -40,6 +46,11 @@ class AdSummaryResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'summary' => $this->summary(),
+            'spec_chips' => $this->whenLoaded(
+                'category',
+                fn (): array => app(AdSpecChips::class)->for($this->resource, app()->getLocale()),
+            ),
             'price' => $this->price !== null ? (float) $this->price : null,
             'price_formatted' => $this->formatPrice(),
             'price_type' => $this->price_type->value,
@@ -70,6 +81,13 @@ class AdSummaryResource extends JsonResource
             'expires_at' => $this->expires_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
         ];
+    }
+
+    private function summary(): string
+    {
+        $text = Str::squish(strip_tags((string) $this->description));
+
+        return Str::limit($text, (int) config('qbazaar.cards.summary_length'), '…', preserveWords: true);
     }
 
     /**
