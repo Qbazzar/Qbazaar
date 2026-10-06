@@ -1,11 +1,9 @@
-import 'server-only';
-
 import type { SuccessEnvelope } from './types';
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4010').replace(/\/+$/, '');
 
 /**
- * Server-side read of a public API record for a page that answers 404 itself.
+ * Read of a public API record for a server component that answers 404 itself.
  * Resolves to `null` only when the API says the record does not exist; any
  * other failure throws, so the error boundary offers a retry instead of a
  * false "not found". Identical calls in one render (metadata and page) are
