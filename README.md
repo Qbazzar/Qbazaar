@@ -37,7 +37,7 @@ QB/
 ├── deploy/              Production deploy: scripts, systemd units, Apache includes, env templates, runbooks
 ├── DOCS/                PRD (PDF), the 2026-09-30 audit, the 2026-06-21 QA report, original (pre-build) plans, mockup assets
 ├── scripts/             progress.mjs (the progress block above)
-└── .github/workflows/   ci.yml (API quality gates), progress.yml, deploy-api.yml, deploy-web.yml
+└── .github/workflows/   ci.yml (API quality gates), web-ci.yml (web checks), progress.yml, deploy-api.yml, deploy-web.yml
 ```
 
 Related repos: [`Qbazzar/Qbazaar-mobile`](https://github.com/Qbazzar/Qbazaar-mobile) (Expo app) and [`Qbazzar/Qbazaar-front`](https://github.com/Qbazzar/Qbazaar-front) (static prototype of the new design, the pixel reference for the web reskin).
@@ -89,7 +89,7 @@ cd qbazaar-web
 npm run typecheck && npm test              # tsc + Vitest
 ```
 
-CI (`.github/workflows/ci.yml`) runs Pint, PHPStan and Pest for the API on every push and pull request to `main` and `develop`. `progress.yml` fails when the progress block is stale. The web has no CI job yet.
+CI (`.github/workflows/ci.yml`) runs Pint, PHPStan and Pest for the API on every push and pull request to `main` and `develop`. `progress.yml` fails when the progress block is stale. `web-ci.yml` runs the web typecheck, Vitest and `next build` on pull requests and on pushes to `main` and `develop` that touch `qbazaar-web/`.
 
 ## Deploy
 
