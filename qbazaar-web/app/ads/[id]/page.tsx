@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import type { Ad } from '@/lib/api/types';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 import { absoluteUrl, breadcrumbJsonLd, fetchApiData } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { AdDetailClient } from './AdDetailClient';
@@ -102,20 +103,22 @@ function adBreadcrumbJsonLd(ad: Ad): Record<string, unknown> {
 /**
  * Ad detail — `/ads/{id}`.
  *
- * The interactive detail (gallery, custom fields, seller card) is rendered by
- * the client island; the server entrypoint adds crawlable Product + Breadcrumb
- * JSON-LD when the ad can be fetched.
+ * The server fetches the public copy of the ad once: for the metadata, the
+ * crawlable Product + Breadcrumb JSON-LD and the first render of the client
+ * island, which then refetches with the viewer's session (the owner may be
+ * looking at an ad the public can't see).
  */
 export default async function AdDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const ad = await fetchApiData<Ad>(`/api/v1/ads/${id}`, 300);
+  // The page renders alongside the root layout, so the JSON-LD names need the request locale here too.
+  const [ad] = await Promise.all([fetchApiData<Ad>(`/api/v1/ads/${id}`, 300), resolveServerLocale()]);
 
   return (
     <>
       {ad ? (
         <JsonLd data={[adProductJsonLd(ad), adBreadcrumbJsonLd(ad)]} />
       ) : null}
-      <AdDetailClient id={id} />
+      <AdDetailClient id={id} initialAd={ad ?? undefined} />
     </>
   );
 }

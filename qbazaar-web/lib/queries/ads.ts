@@ -71,14 +71,22 @@ export function useAdsListQuery(
   });
 }
 
+/**
+ * `initialData` is the anonymous copy the page fetched on the server: it is
+ * shown at once and treated as stale, so the client still refetches on mount
+ * with the viewer's session, as it did without it.
+ */
 export function useAdQuery(
   id: string | null | undefined,
+  initialData?: Ad,
 ): UseQueryResult<Ad, ApiClientError> {
   return useQuery({
     queryKey: adKeys.detail(id ?? ''),
     queryFn: () => getAd(id as string),
     enabled: Boolean(id),
     staleTime: MINUTE,
+    initialData,
+    initialDataUpdatedAt: 0,
   });
 }
 

@@ -19,10 +19,12 @@ const markerIcon = L.icon({
 interface Props {
   lat: number;
   lng: number;
+  /** Accessible name of the map, e.g. "Map of Al Sadd". */
+  label?: string;
   className?: string;
 }
 
-export function MapView({ lat, lng, className }: Props) {
+export function MapView({ lat, lng, label = 'map', className }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -57,7 +59,7 @@ export function MapView({ lat, lng, className }: Props) {
       ref={containerRef}
       className={className ?? 'h-64 w-full overflow-hidden rounded-xl'}
       role="img"
-      aria-label="map"
+      aria-label={label}
     />
   );
 }

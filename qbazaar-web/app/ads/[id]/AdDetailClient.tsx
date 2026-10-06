@@ -1,46 +1,32 @@
 'use client';
 
 /**
- * Ad detail client island — QBFront port (source: QBFront/detail.html).
- *
- * Layout: breadcrumb · `.detail-grid` (main gallery + meta + description +
- * spec grid + safety band + similar)  ·  `.seller-card` sidebar (CTA stack
- * + favorite/share + report).
+ * Ad detail client island. It shows the copy the server already fetched at
+ * once, refetches with the viewer's session and records the view for
+ * "recently viewed".
  */
+import { useEffect } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { ChevronLeft, Phone, Share2, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { AdDescription } from '@/components/ads/AdDescription';
-import { AdGallery } from '@/components/ads/AdGallery';
-import { AdSimilar } from '@/components/ads/AdSimilar';
-import { AdStatusPill } from '@/components/ads/AdStatusPill';
-import { CustomFieldsList } from '@/components/ads/CustomFieldsList';
-import { FavoriteButton } from '@/components/ads/FavoriteButton';
-import { StartConversationButton } from '@/components/messaging/StartConversationButton';
-import { ReviewSellerButton } from '@/components/reviews/ReviewSellerButton';
-import { ReportButton } from '@/components/reports/ReportButton';
+import { SearchX } from 'lucide-react';
+
+import { AdDetailView } from '@/components/ads/AdDetailView';
+import { buttonVariants } from '@/components/design-system/Button';
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { Icon } from '@/components/design-system/Icon';
 import { useAdQuery } from '@/lib/queries/ads';
 import { useTrackAdViewMutation } from '@/lib/queries/recently-viewed';
-import { useAuth } from '@/hooks/useAuth';
-import { localized, getLocale } from '@/lib/i18n/locale';
+import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import type { Ad } from '@/lib/api/types';
 
-// Leaflet touches `window` at import time, so load the read-only map client-only.
-const MapView = dynamic(
-  () => import('@/components/locations/MapView').then((m) => m.MapView),
-  { ssr: false },
-);
-
-interface Props {
+interface AdDetailClientProps {
   id: string;
+  initialAd?: Ad;
 }
 
-export function AdDetailClient({ id }: Props) {
+export function AdDetailClient({ id, initialAd }: AdDetailClientProps) {
   const locale = getLocale();
-  const { data, isLoading, error } = useAdQuery(id);
+  const { data, isPending, error } = useAdQuery(id, initialAd);
   const trackView = useTrackAdViewMutation();
 
   useEffect(() => {
@@ -49,299 +35,43 @@ export function AdDetailClient({ id }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (isLoading) {
-    return (
-      <main>
-        <div className="container py-6">
-          <div className="bg-cream-200 mb-6 h-[18px] w-[220px] animate-pulse rounded-lg" />
-          <div className="detail-grid">
-            <div className="gallery animate-pulse" />
-            <div className="card min-h-[300px] animate-pulse" />
-          </div>
-        </div>
-      </main>
-    );
-  }
+  if (data) return <AdDetailView ad={data} locale={locale} />;
+  if (isPending) return <AdDetailSkeleton />;
 
-  if (error || !data) {
-    const isNotFound =
-      (error as { code?: string } | null)?.code === 'AD_NOT_FOUND';
-    return (
-      <main>
-        <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
-          <h1 className="empty-state__title">
-            {isNotFound
-              ? t('ads.errors.ad_not_found', 'لم نعثر على هذا الإعلان')
-              : t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-          </h1>
-          <p className="empty-state__sub">
-            {isNotFound
-              ? t(
-                  'ads.errors.ad_not_found_body',
-                  'الإعلان ربما تم حذفه أو الرابط غير صحيح.',
-                )
-              : t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-          </p>
-          <div style={{ marginTop: 24 }}>
-            <Link href="/ads" className="btn btn--primary btn--pill">
-              {t('ads.empty.go_browse', 'تصفّح الإعلانات')}
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  return <AdDetail ad={data} locale={locale} />;
+  const notFound = error?.status === 404;
+  return (
+    <main className="bg-qb-page px-4 py-16 font-qb">
+      <EmptyState
+        icon={<Icon icon={SearchX} size="lg" />}
+        title={notFound ? t('ads.errors.ad_not_found') : t('common.error')}
+        description={notFound ? t('ads.errors.ad_not_found_body') : undefined}
+        action={
+          <Link href="/ads" className={buttonVariants()}>
+            {t('ads.empty.go_browse')}
+          </Link>
+        }
+      />
+    </main>
+  );
 }
 
-function AdDetail({
-  ad,
-  locale,
-}: {
-  ad: import('@/lib/api/types').Ad;
-  locale: 'ar' | 'en';
-}) {
-  const [phoneShown, setPhoneShown] = useState(false);
-  const { user, isAuthenticated, isHydrated } = useAuth();
-  const categoryName = ad.category ? localized(ad.category.name, locale) : '';
-  const locationName = ad.location ? localized(ad.location.name, locale) : '';
-
-  // The owner can't contact themselves, and a sold ad takes no contact action —
-  // hide the phone CTA in both cases (the message button handles its own state).
-  const isOwner =
-    isHydrated && isAuthenticated && user?.id === ad.user_id;
-  const contactDisabled = isOwner || ad.status === 'sold';
-
-  const onRevealPhone = () => setPhoneShown(true);
-
-  const priceLabel =
-    ad.price_type === 'free'
-      ? t('ads.price.free', 'مجاناً')
-      : ad.price_type === 'contact' || ad.price == null
-        ? t('ads.price.contact', 'بالتواصل')
-        : new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-US').format(ad.price);
-
+/** Same frame as the page, so nothing jumps when the ad arrives. */
+function AdDetailSkeleton() {
+  const block = 'animate-pulse rounded-qb-2xl bg-qb-fill';
   return (
-    <main>
-      <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
-        {/* Breadcrumb */}
-        <nav className="breadcrumbs">
-          <Link href="/">{t('home.breadcrumb', 'الرئيسية')}</Link>
-          {ad.category ? (
-            <>
-              <ChevronLeft className="size-3 rtl:rotate-180" aria-hidden />
-              <Link href={`/c/${ad.category.slug}`}>{categoryName}</Link>
-            </>
-          ) : null}
-          <ChevronLeft className="size-3 rtl:rotate-180" aria-hidden />
-          <span className="breadcrumbs__current">{ad.title}</span>
-        </nav>
-
-        <div className="detail-grid">
-          {/* MAIN */}
-          <div>
-            <AdGallery images={ad.images ?? []} alt={ad.title} />
-
-            <header>
-              {ad.status !== 'active' ? (
-                <div style={{ marginTop: 16 }}>
-                  <AdStatusPill status={ad.status} />
-                </div>
-              ) : null}
-              <h1 className="detail-title">{ad.title}</h1>
-              <div className="detail-price">
-                {priceLabel}
-                <span className="detail-price__currency">
-                  {ad.price_type !== 'free' && ad.price != null
-                    ? t('common.currency', 'ر.ق')
-                    : null}
-                </span>
-              </div>
-              <div className="detail-meta">
-                {locationName ? (
-                  <span className="detail-meta__item">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22s7-7 7-13a7 7 0 1 0-14 0c0 6 7 13 7 13z" />
-                      <circle cx="12" cy="9" r="2.5" />
-                    </svg>
-                    {locationName}
-                  </span>
-                ) : null}
-                <span className="detail-meta__item">
-                  {t('ads.detail.ad_id', { id: ad.id }, `رقم الإعلان ${ad.id}`)}
-                </span>
-                <span className="detail-meta__item">
-                  {t(
-                    'ads.detail.views',
-                    { count: String(ad.views_count) },
-                    `${ad.views_count} مشاهدة`,
-                  )}
-                </span>
-              </div>
-            </header>
-
-            <section style={{ marginTop: 32 }}>
-              <h2 className="section-header__title">
-                {t('ads.detail.description', 'الوصف')}
-              </h2>
-              <AdDescription text={ad.description} className="mt-3" />
-            </section>
-
-            {ad.custom_fields && Object.keys(ad.custom_fields).length > 0 ? (
-              <section>
-                <h2 className="section-header__title" style={{ marginTop: 28, marginBottom: 12 }}>
-                  {t('ads.detail.specs', 'التفاصيل')}
-                </h2>
-                <CustomFieldsList
-                  values={ad.custom_fields}
-                  category={ad.category}
-                />
-              </section>
-            ) : null}
-
-            {/* Safety strip */}
-            <div className="safety-band">
-              <span className="safety-band__icon">
-                <ShieldCheck className="size-4" />
-              </span>
-              <div>
-                <div className="safety-band__title">
-                  {t('ads.detail.safety_title', 'ابقَ آمناً عند اللقاء')}
-                </div>
-                <div className="safety-band__body">
-                  {t(
-                    'ads.detail.safety_body',
-                    'التق في مكان عام، افحص البضاعة قبل الدفع، ولا ترسل أموالاً لأشخاص لم تقابلهم.',
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 40 }}>
-              <AdSimilar adId={ad.id} />
-            </div>
+    <main aria-busy="true" className="bg-qb-page pb-16">
+      <div className="mx-auto max-w-[1440px] px-4 qb-tablet:px-6 qb-tablet:pt-[72px] qb-desktop:px-10 qb-desktop:pt-[65px]">
+        <div className="hidden h-7 w-72 animate-pulse rounded-qb-sm bg-qb-fill qb-tablet:block" />
+        <div className="[display:grid] grid-cols-1 gap-4 qb-tablet:mt-[49px] qb-tablet:grid-cols-[minmax(0,1fr)_263px] qb-tablet:gap-x-[17px] qb-tablet:gap-y-6 qb-desktop:grid-cols-[minmax(0,1fr)_421px] qb-desktop:gap-x-8">
+          <div className={`-mx-4 h-80 qb-tablet:col-span-2 qb-tablet:mx-0 qb-tablet:h-[322px] qb-desktop:col-span-1 qb-desktop:h-[502px] ${block}`} />
+          <div className="flex flex-col gap-4 qb-tablet:col-start-1 qb-tablet:row-start-2 qb-desktop:gap-6">
+            <div className={`h-[176px] qb-desktop:h-[298px] ${block}`} />
+            <div className={`h-[280px] ${block}`} />
           </div>
-
-          {/* SIDEBAR */}
-          <aside>
-            <div className="card seller-card">
-              {ad.user ? (
-                <Link href={`/u/${ad.user.id}`} className="seller-card__head">
-                  <span className="seller-card__avatar">
-                    {ad.user.full_name?.charAt(0) ?? 'Q'}
-                  </span>
-                  <div>
-                    <div className="seller-card__name">{ad.user.full_name}</div>
-                    <div className="seller-card__since">
-                      {t(
-                        'users.profile.joined',
-                        { date: new Date(ad.user.joined_at).getFullYear().toString() },
-                        `عضو منذ ${new Date(ad.user.joined_at).getFullYear()}`,
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ) : null}
-
-              <div className="seller-card__actions">
-                <StartConversationButton
-                  ad={{ id: ad.id, user_id: ad.user_id, status: ad.status }}
-                />
-                {!contactDisabled ? (
-                  <Button
-                    type="button"
-                    size="lg"
-                    variant="outline"
-                    className="rounded-full"
-                    onClick={onRevealPhone}
-                  >
-                    <Phone className="size-4" />
-                    {phoneShown
-                      ? t('ads.actions.call_revealed', 'اضغط للاتصال')
-                      : t('ads.actions.call', 'إظهار الرقم')}
-                  </Button>
-                ) : null}
-                <ReviewSellerButton adId={ad.id} sellerId={ad.user_id} />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {!isOwner ? (
-                    <FavoriteButton
-                      adId={ad.id}
-                      size="md"
-                      withLabel
-                      className="h-10 flex-1 justify-center rounded-full bg-white text-ink-700 ring-ink-200 hover:text-coral"
-                    />
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="lg"
-                    className="flex-1 rounded-full"
-                    onClick={() => {
-                      const url =
-                        typeof window !== 'undefined'
-                          ? window.location.href
-                          : '';
-                      if (
-                        typeof navigator !== 'undefined' &&
-                        typeof navigator.share === 'function'
-                      ) {
-                        void navigator
-                          .share({ title: ad.title, url })
-                          .catch(() => undefined);
-                        return;
-                      }
-                      if (
-                        typeof navigator !== 'undefined' &&
-                        navigator.clipboard?.writeText
-                      ) {
-                        void navigator.clipboard
-                          .writeText(url)
-                          .then(() =>
-                            toast.success(
-                              t('ads.actions.share_copied', 'تم نسخ الرابط'),
-                            ),
-                          )
-                          .catch(() => undefined);
-                      }
-                    }}
-                  >
-                    <Share2 className="size-4" />
-                    {t('ads.actions.share', 'مشاركة')}
-                  </Button>
-                </div>
-              </div>
-
-              {!isOwner ? (
-                <div className="seller-card__foot">
-                  <ReportButton
-                    target_type="ad"
-                    target_id={ad.id}
-                    variant="ghost"
-                    className="text-ink-500 hover:text-coral inline-flex items-center gap-1.5 rounded-full"
-                  />
-                </div>
-              ) : null}
-            </div>
-
-            {locationName ? (
-              <div className="trust-card">
-                <div className="trust-card__title">
-                  {t('locations.pick', 'الموقع')}
-                </div>
-                <div className="trust-card__list">
-                  <div>{locationName}</div>
-                </div>
-                {ad.latitude != null && ad.longitude != null ? (
-                  <div style={{ marginTop: 12 }}>
-                    <MapView lat={ad.latitude} lng={ad.longitude} className="h-40 w-full overflow-hidden rounded-xl" />
-                  </div>
-                ) : (
-                  <div className="map-box" style={{ marginTop: 12, height: 160 }} aria-hidden="true" />
-                )}
-              </div>
-            ) : null}
-          </aside>
+          <div className="flex flex-col gap-4 qb-tablet:col-start-2 qb-tablet:row-start-2 qb-desktop:[grid-row:1/span_2] qb-desktop:gap-6">
+            <div className={`h-[374px] qb-desktop:h-[444px] ${block}`} />
+            <div className={`h-[200px] ${block}`} />
+          </div>
         </div>
       </div>
     </main>

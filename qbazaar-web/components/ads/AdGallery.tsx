@@ -1,171 +1,238 @@
 'use client';
 
 /**
- * Embla-powered gallery for the ad detail page.
- *
- * Renders the active slide as a BlurHash-backed image and a horizontal strip
- * of thumbnails underneath. Tapping a thumb scrolls the carousel to it; the
- * arrow buttons paginate one slide at a time.
- *
- * Fullscreen overlay opens on slide click and reuses the same carousel
- * instance so the user lands on whichever slide they tapped.
+ * Ad detail photo slider (88:776 / 547:39923 / 623:29490): one photo at a
+ * time with round arrows, a "1/7" counter and the favourite button on top.
+ * Tapping the photo opens it full screen.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { BlurHashImage } from '@/components/upload/BlurHashImage';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Dialog } from '@base-ui/react/dialog';
+import { ArrowLeft, ArrowRight, Image as ImageIcon, X, type LucideIcon } from 'lucide-react';
+
+import { focusRing } from '@/components/design-system/focus-ring';
+import { Icon } from '@/components/design-system/Icon';
+import { dirFor, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { cn } from '@/lib/utils';
 import type { Media } from '@/lib/api/types';
 
-interface Props {
+interface AdGalleryProps {
   images: Media[];
+  /** The ad title: the base of every photo's alt text. */
   alt: string;
+  /** Favourite toggle on the photo; omitted for the ad's owner. */
+  favorite?: ReactNode;
   className?: string;
 }
 
-export function AdGallery({ images, alt, className }: Props) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, direction: 'rtl' });
+const frame =
+  'relative overflow-hidden bg-qb-line h-80 qb-tablet:h-[322px] qb-tablet:rounded-qb-2xl qb-tablet:shadow-qb-card qb-desktop:h-[502px]';
+
+const slideSizes = '(min-width: 1001px) 907px, (min-width: 601px) 696px, 100vw';
+
+export function AdGallery({ images, alt, favorite, className }: AdGalleryProps) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, direction: dirFor(getLocale()) });
   const [selected, setSelected] = useState(0);
-  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const count = images.length;
 
   useEffect(() => {
     if (!emblaApi) return;
     const onSelect = () => setSelected(emblaApi.selectedScrollSnap());
     onSelect();
-    emblaApi.on('select', onSelect);
+    emblaApi.on('select', onSelect).on('reInit', onSelect);
     return () => {
-      emblaApi.off('select', onSelect);
+      emblaApi.off('select', onSelect).off('reInit', onSelect);
     };
   }, [emblaApi]);
 
-  const scrollTo = useCallback(
-    (idx: number) => emblaApi?.scrollTo(idx),
-    [emblaApi],
-  );
+  const closeLightbox = useCallback(() => {
+    // Keep the slider on the photo the visitor ended up on.
+    if (lightboxIndex !== null) emblaApi?.scrollTo(lightboxIndex, true);
+    setLightboxIndex(null);
+  }, [emblaApi, lightboxIndex]);
 
-  if (images.length === 0) {
+  if (count === 0) {
     return (
-      <div
-        className={cn(
-          'bg-cream-200 text-ink-500 flex w-full items-center justify-center rounded-2xl text-sm',
-          className,
-        )}
-        style={{ aspectRatio: '4 / 3' }}
-      >
-        {t('media.no_image', 'لا توجد صور')}
+      <div className={cn(frame, 'flex items-center justify-center text-qb-caption text-qb-ink-subtle', className)}>
+        {t('media.no_image')}
       </div>
     );
   }
 
   return (
-    <div className={cn('space-y-3', className)}>
-      <div className="relative overflow-hidden rounded-2xl ring-1 ring-foreground/10">
-        <div ref={emblaRef} className="overflow-hidden">
-          <div className="flex">
-            {images.map((media, idx) => (
-              <button
-                key={media.id}
-                type="button"
-                onClick={() => setOverlayOpen(true)}
-                className="relative min-w-0 flex-[0_0_100%] cursor-zoom-in"
-                aria-label={t('media.open_fullscreen', 'فتح بحجم كامل')}
-              >
-                <BlurHashImage
-                  src={media.sizes.large || media.url}
-                  alt={`${alt} — ${idx + 1}`}
-                  blurhash={media.blurhash}
-                  aspect="4 / 3"
-                  className="w-full"
-                  loading={idx === 0 ? 'eager' : 'lazy'}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {images.length > 1 ? (
-          <>
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="outline"
-              onClick={() => emblaApi?.scrollPrev()}
-              className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 shadow"
-              aria-label={t('media.prev', 'السابق')}
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="outline"
-              onClick={() => emblaApi?.scrollNext()}
-              className="absolute start-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 shadow"
-              aria-label={t('media.next', 'التالي')}
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <span className="bg-ink-900/70 absolute bottom-2 end-2 rounded-full px-2 py-0.5 text-[11px] font-medium text-white">
-              {selected + 1} / {images.length}
-            </span>
-          </>
-        ) : null}
-      </div>
-
-      {/* Thumb strip */}
-      {images.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {images.map((media, idx) => (
-            <button
+    <section
+      aria-roledescription={t('media.carousel')}
+      aria-label={t('ads.detail.gallery', { title: alt })}
+      className={cn(frame, className)}
+    >
+      <div ref={emblaRef} className="h-full overflow-hidden">
+        <div className="flex h-full">
+          {images.map((media, index) => (
+            <div
               key={media.id}
-              type="button"
-              onClick={() => scrollTo(idx)}
-              className={cn(
-                'relative size-16 shrink-0 overflow-hidden rounded-lg ring-2 transition-all',
-                idx === selected ? 'ring-coral' : 'ring-transparent hover:ring-ink-200',
-              )}
-              aria-label={`${alt} — ${idx + 1}`}
+              role="group"
+              aria-roledescription={t('media.slide')}
+              aria-label={t('ads.detail.slide', { current: index + 1, total: count })}
+              inert={index !== selected}
+              className="relative h-full min-w-0 flex-[0_0_100%]"
             >
-              <BlurHashImage
-                src={media.sizes.thumbnail || media.url}
-                alt=""
-                blurhash={media.blurhash}
-                aspect="1 / 1"
-                className="size-full"
-              />
-            </button>
+              <button
+                type="button"
+                onClick={() => setLightboxIndex(index)}
+                aria-label={t('media.open_fullscreen')}
+                className={cn('absolute inset-0 cursor-zoom-in', focusRing, 'focus-visible:-outline-offset-4')}
+              >
+                <Image
+                  src={media.sizes.large || media.url}
+                  alt={`${alt} — ${index + 1}`}
+                  fill
+                  sizes={slideSizes}
+                  preload={index === 0}
+                  fetchPriority={index === 0 ? 'high' : undefined}
+                  className="object-cover"
+                />
+                {/* The design lays a light shade over every photo. */}
+                <span aria-hidden="true" className="absolute inset-0 bg-qb-overlay/50" />
+              </button>
+            </div>
           ))}
         </div>
+      </div>
+
+      {count > 1 ? (
+        <>
+          <ArrowButton
+            icon={ArrowLeft}
+            label={t('media.prev')}
+            disabled={selected === 0}
+            onClick={() => emblaApi?.scrollPrev()}
+            className="start-3 qb-tablet:start-6"
+          />
+          <ArrowButton
+            icon={ArrowRight}
+            label={t('media.next')}
+            disabled={selected === count - 1}
+            onClick={() => emblaApi?.scrollNext()}
+            className="end-3 qb-tablet:end-6"
+          />
+          <Counter current={selected + 1} total={count} />
+        </>
       ) : null}
 
-      {/* Fullscreen overlay */}
-      {overlayOpen ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/90 p-4"
-          onClick={() => setOverlayOpen(false)}
+      {favorite ? <div className="absolute end-4 top-4 z-10 qb-tablet:end-6 qb-tablet:top-6">{favorite}</div> : null}
+
+      <Lightbox images={images} alt={alt} index={lightboxIndex} onIndexChange={setLightboxIndex} onClose={closeLightbox} />
+    </section>
+  );
+}
+
+interface ArrowButtonProps {
+  icon: LucideIcon;
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  className?: string;
+}
+
+function ArrowButton({ icon, label, disabled, onClick, className }: ArrowButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className={cn(
+        'absolute top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-qb-surface text-qb-brand transition-opacity',
+        'qb-tablet:size-10 qb-desktop:size-12 disabled:cursor-default disabled:opacity-60',
+        focusRing,
+        className,
+      )}
+    >
+      <Icon icon={icon} size="md" flipInRtl className="qb-desktop:size-6" />
+    </button>
+  );
+}
+
+function Counter({ current, total }: { current: number; total: number }) {
+  return (
+    <p
+      aria-hidden="true"
+      className={cn(
+        'absolute inset-x-0 bottom-4 mx-auto flex w-fit items-center gap-1.5 rounded-qb-md bg-qb-icon/45 px-3 py-1 text-qb-micro text-white',
+        'qb-tablet:bottom-[13px] qb-tablet:px-4 qb-tablet:py-[7px] qb-tablet:text-qb-caption qb-desktop:bottom-5 qb-desktop:gap-2 qb-desktop:px-[18px] qb-desktop:py-[7px] qb-desktop:text-qb-h5',
+      )}
+    >
+      <ImageIcon className="size-4 qb-desktop:size-5" strokeWidth={1.75} />
+      <span dir="ltr">
+        {current}/{total}
+      </span>
+    </p>
+  );
+}
+
+interface LightboxProps {
+  images: Media[];
+  alt: string;
+  index: number | null;
+  onIndexChange: (index: number) => void;
+  onClose: () => void;
+}
+
+function Lightbox({ images, alt, index, onIndexChange, onClose }: LightboxProps) {
+  const open = index !== null;
+  const current = index ?? 0;
+  const media = images[current];
+  const step = (delta: number) => onIndexChange(Math.min(images.length - 1, Math.max(0, current + delta)));
+  const rtl = dirFor(getLocale()) === 'rtl';
+
+  return (
+    <Dialog.Root open={open} onOpenChange={(next) => (next ? null : onClose())}>
+      <Dialog.Portal>
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-qb-icon/90" />
+        <Dialog.Popup
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowLeft') step(rtl ? 1 : -1);
+            if (event.key === 'ArrowRight') step(rtl ? -1 : 1);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none"
         >
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            className="absolute end-4 top-4 z-10 rounded-full bg-white/90"
-            onClick={() => setOverlayOpen(false)}
-            aria-label={t('media.close_fullscreen', 'إغلاق')}
+          <Dialog.Title className="sr-only">
+            {alt} — {t('ads.detail.slide', { current: current + 1, total: images.length })}
+          </Dialog.Title>
+          {media ? (
+            <div className="relative h-[85dvh] w-full max-w-[1200px]">
+              <Image
+                src={media.sizes.original_webp || media.url}
+                alt={`${alt} — ${current + 1}`}
+                fill
+                sizes="(min-width: 1232px) 1200px, 100vw"
+                className="object-contain"
+              />
+            </div>
+          ) : null}
+          <Dialog.Close
+            aria-label={t('media.close_fullscreen')}
+            className={cn('absolute end-4 top-4 flex size-11 items-center justify-center rounded-full bg-qb-surface text-qb-ink', focusRing)}
           >
-            <X className="size-4" />
-          </Button>
-          <img
-            src={images[selected]?.sizes.original_webp || images[selected]?.url}
-            alt={`${alt} — ${selected + 1}`}
-            className="max-h-[90vh] max-w-full object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      ) : null}
-    </div>
+            <Icon icon={X} size="lg" />
+          </Dialog.Close>
+          {images.length > 1 ? (
+            <>
+              <ArrowButton icon={ArrowLeft} label={t('media.prev')} disabled={current === 0} onClick={() => step(-1)} className="start-4" />
+              <ArrowButton
+                icon={ArrowRight}
+                label={t('media.next')}
+                disabled={current === images.length - 1}
+                onClick={() => step(1)}
+                className="end-4"
+              />
+            </>
+          ) : null}
+        </Dialog.Popup>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

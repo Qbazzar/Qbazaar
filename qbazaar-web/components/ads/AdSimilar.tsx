@@ -1,67 +1,54 @@
 'use client';
 
 /**
- * Similar-ads strip rendered at the bottom of the ad-detail page.
- *
- * Hidden entirely when the API returns an empty list — we never paint a
- * stub. While the request is in flight we render skeleton tiles so the page
- * height doesn't jump when results arrive.
+ * Similar ads under the ad detail, in the place and style of the design's
+ * "Another Ads From Seller" row. Hidden when the API has none; while loading,
+ * placeholders hold the row's height.
  */
-import { AdGrid } from '@/components/ads/AdGrid';
+import { AdSummaryGridCard } from '@/components/ads/AdSummaryCards';
+import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { useSimilarAdsQuery } from '@/lib/queries/ads';
 import { t } from '@/lib/i18n/messages';
 
-interface Props {
+interface AdSimilarProps {
   adId: string;
-  /** Cap how many to render. Defaults to 12 — matches the home feed. */
+  /** "View all" opens this category's listings. */
+  categorySlug?: string;
+  /** One row on desktop. */
   limit?: number;
 }
 
-export function AdSimilar({ adId, limit = 12 }: Props) {
-  const { data, isLoading, isError } = useSimilarAdsQuery(adId);
+const list = '[display:grid] grid-cols-1 gap-4 qb-tablet:grid-cols-2 qb-desktop:grid-cols-4 qb-desktop:gap-6';
+const cardSizes = '(min-width: 1001px) 321px, (min-width: 601px) 50vw, 100vw';
 
-  if (isLoading) {
-    return (
-      <section
-        className="border-ink-200 mt-6 border-t pt-6"
-        aria-busy="true"
-        aria-live="polite"
-      >
-        <SectionHeader />
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-cream-200 h-64 animate-pulse rounded-xl"
-              aria-hidden="true"
-            />
+export function AdSimilar({ adId, categorySlug, limit = 4 }: AdSimilarProps) {
+  const { data, isPending, isError } = useSimilarAdsQuery(adId);
+
+  if (isError || (!isPending && !data?.length)) return null;
+
+  return (
+    <section aria-labelledby="similar-ads-title" aria-busy={isPending || undefined} className="mt-8">
+      <SectionHeader
+        id="similar-ads-title"
+        title={t('ads.similar_section.title')}
+        action={categorySlug ? { href: `/c/${categorySlug}`, label: t('common.view_all') } : undefined}
+        className="mb-6"
+      />
+      {isPending ? (
+        <div aria-hidden="true" className={list}>
+          {Array.from({ length: limit }, (_, index) => (
+            <div key={index} className="h-[337px] animate-pulse rounded-qb-2xl bg-qb-fill" />
           ))}
         </div>
-      </section>
-    );
-  }
-
-  if (isError || !data || data.length === 0) return null;
-
-  return (
-    <section className="border-ink-200 mt-6 border-t pt-6">
-      <SectionHeader />
-      <div className="mt-4">
-        <AdGrid ads={data.slice(0, limit)} />
-      </div>
+      ) : (
+        <ul className={list}>
+          {data.slice(0, limit).map((ad) => (
+            <li key={ad.id}>
+              <AdSummaryGridCard ad={ad} imageSizes={cardSizes} className="h-full shadow-qb-card" />
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
-  );
-}
-
-function SectionHeader() {
-  return (
-    <div>
-      <p className="text-ink-500 text-xs font-bold uppercase tracking-[0.18em]">
-        {t('ads.similar_section.kicker', 'مختار لك')}
-      </p>
-      <h2 className="font-display mt-1 text-2xl italic text-ink-900 md:text-3xl">
-        {t('ads.similar_section.title', 'إعلانات مشابهة')}
-      </h2>
-    </div>
   );
 }

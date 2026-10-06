@@ -1,58 +1,62 @@
 'use client';
 
 /**
- * Collapsible long-form ad description.
- *
- * Renders the first ~6 lines clamped, with a "show more / show less" toggle
- * when the content actually overflows. The toggle is hidden if the
- * description is short enough to fit unclamped — measured client-side after
- * mount with a ResizeObserver-free trick (compare scrollHeight to clientHeight).
+ * "Description" panel of the ad detail. Long texts are clamped to six lines
+ * with a "show more / show less" toggle, which only appears when the text
+ * actually overflows (measured after mount).
  */
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useId, useRef, useState } from 'react';
+
+import { focusRing } from '@/components/design-system/focus-ring';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-interface Props {
+import { detailCard, detailCardMain, detailCardTitle } from './detail-card';
+
+interface AdDescriptionProps {
   text: string;
   className?: string;
 }
 
-export function AdDescription({ text, className }: Props) {
+export function AdDescription({ text, className }: AdDescriptionProps) {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
-  const ref = useRef<HTMLParagraphElement>(null);
+  const textRef = useRef<HTMLParagraphElement>(null);
+  const titleId = useId();
+  const textId = useId();
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    setOverflows(el.scrollHeight > el.clientHeight + 1);
+    const element = textRef.current;
+    if (!element) return;
+    setOverflows(element.scrollHeight > element.clientHeight + 1);
   }, [text]);
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <section aria-labelledby={titleId} className={cn(detailCard, detailCardMain, className)}>
+      <h2 id={titleId} className={detailCardTitle}>
+        {t('ads.detail.description')}
+      </h2>
       <p
-        ref={ref}
+        id={textId}
+        ref={textRef}
         className={cn(
-          'text-ink-700 whitespace-pre-line text-[15px] leading-relaxed',
+          'mt-4 text-qb-micro leading-[22px] break-words whitespace-pre-line text-qb-ink-subtle qb-tablet:leading-6 qb-desktop:text-qb-body',
           !expanded && 'line-clamp-6',
         )}
       >
         {text}
       </p>
       {overflows ? (
-        <Button
+        <button
           type="button"
-          variant="link"
-          size="sm"
-          onClick={() => setExpanded((v) => !v)}
-          className="text-coral px-0"
+          aria-expanded={expanded}
+          aria-controls={textId}
+          onClick={() => setExpanded((value) => !value)}
+          className={cn('mt-2 rounded-qb-xs text-qb-caption font-medium text-qb-brand hover:text-qb-brand-active', focusRing)}
         >
-          {expanded
-            ? t('ads.description.show_less', 'عرض أقل')
-            : t('ads.description.show_more', 'عرض المزيد')}
-        </Button>
+          {expanded ? t('ads.description.show_less') : t('ads.description.show_more')}
+        </button>
       ) : null}
-    </div>
+    </section>
   );
 }
