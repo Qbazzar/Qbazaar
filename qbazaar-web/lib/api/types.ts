@@ -262,6 +262,23 @@ export interface FollowState {
   followers_count: number;
 }
 
+/** A business account in the `GET /companies` directory (most followed first). */
+export interface Company {
+  id: string;
+  /** The business profile name, or the account name when none is set. */
+  business_name: string;
+  /** First 160 characters of the business description. */
+  about: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
+  followers_count: number;
+  active_ads_count: number;
+  rating_avg: number;
+  rating_count: number;
+  is_following: boolean;
+  joined_at: string;
+}
+
 /** A buyer's review of a seller. */
 export interface Review {
   id: string;

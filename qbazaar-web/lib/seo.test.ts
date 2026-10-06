@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchApiData } from './seo';
+import { fetchApiData, fetchApiPage } from './seo';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -41,5 +41,20 @@ describe('fetchApiData', () => {
     timeout.abort(new DOMException('The operation timed out.', 'TimeoutError'));
 
     await expect(pending).resolves.toBeNull();
+  });
+});
+
+describe('fetchApiPage', () => {
+  it('keeps the rows together with their meta', async () => {
+    const meta = { current_page: 2, per_page: 20, total: 41, last_page: 3 };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ success: true, data: [{ id: 'a' }], meta })));
+
+    await expect(fetchApiPage('/api/v1/companies?page=2')).resolves.toEqual({ success: true, data: [{ id: 'a' }], meta });
+  });
+
+  it('returns null for a body that is not a page', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ success: true, data: { id: 'a' } })));
+
+    await expect(fetchApiPage('/api/v1/companies')).resolves.toBeNull();
   });
 });

@@ -1098,5 +1098,26 @@
       "last": "Last page",
       "page": "Page {page}"
     }
+  },
+  "companies": {
+    "title": "Companies",
+    "count": "Local Companies in Qatar",
+    "count_one": "Local Company in Qatar",
+    "hero": "Find the Right {highlight}",
+    "hero_highlight": "Companies",
+    "subtitle": "Explore companies, discover their details, and easily search for the services or opportunities that match your needs.",
+    "search_label": "Search companies",
+    "search_placeholder": "Search Companies..",
+    "search": "Search",
+    "followers": "{count} followers",
+    "followers_one": "{count} follower",
+    "ads": "{count} Ads",
+    "ads_one": "{count} Ad",
+    "no_results_title": "No companies match “{query}”",
+    "no_results_body": "Check the spelling or try another name.",
+    "empty_title": "No companies to show here",
+    "show_all": "Show all companies",
+    "error_title": "Companies couldn't be loaded",
+    "error_body": "Please try again in a moment."
   }
 }

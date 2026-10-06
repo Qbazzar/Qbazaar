@@ -46,7 +46,11 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
   const name = sellerDisplayName(profile);
   const isSelf = user?.id === profile.id;
   const isBusiness = profile.account_type === 'business';
-  const crumbs = [{ label: t('home.breadcrumb'), href: '/' }, { label: name }];
+  const crumbs = [
+    { label: t('home.breadcrumb'), href: '/' },
+    ...(isBusiness ? [{ label: t('companies.title'), href: '/companies' }] : []),
+    { label: name },
+  ];
 
   const actions = isSelf ? null : (
     <>
