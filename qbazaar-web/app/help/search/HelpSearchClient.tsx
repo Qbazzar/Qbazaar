@@ -1,85 +1,111 @@
 'use client';
 
 /**
- * Help center search results — driven by the `?q=` query string via nuqs so
- * the page stays shareable. We re-render the same `HelpSearchBar` with the
- * suggestions panel suppressed (the body of the page already does the
- * full-list rendering).
+ * Help center search results, driven by `?q=` (nuqs) so the page stays
+ * shareable. No Figma frame: the search result / "Search Not Found" states of
+ * category.html (492:20208, 655:55973) with article rows.
  */
 import { parseAsString, useQueryState } from 'nuqs';
-import { Loader2Icon } from 'lucide-react';
-import Link from 'next/link';
+import { CircleAlert, Search, SearchX } from 'lucide-react';
 
-import { HelpSearchBar } from '@/components/help/HelpSearchBar';
+import { Button } from '@/components/design-system/Button';
+import { PageShell } from '@/components/design-system/PageShell';
+import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
+import { BrowseTopicsLink } from '@/components/help/BrowseTopicsLink';
 import { HelpArticleCard } from '@/components/help/HelpArticleCard';
+import { HelpContactCard } from '@/components/help/HelpContactCard';
+import { MIN_HELP_QUERY_LENGTH, HelpSearchBar } from '@/components/help/HelpSearchBar';
+import { HelpRowsSkeleton } from '@/components/help/HelpSkeletons';
+import type { HelpArticleListItem } from '@/lib/api/types';
 import { useHelpSearchQuery } from '@/lib/queries/help';
+import { tPlural } from '@/lib/i18n/intl';
 import { t } from '@/lib/i18n/messages';
 
 export function HelpSearchClient() {
   const [q] = useQueryState('q', parseAsString.withDefault(''));
-  const trimmed = q.trim();
-  const enabled = trimmed.length >= 2;
-  const { data: results, isFetching, isError } = useHelpSearchQuery(trimmed);
+  const query = q.trim();
+  const enabled = query.length >= MIN_HELP_QUERY_LENGTH;
+  const { data: results, isPending, isError, refetch, isFetching } = useHelpSearchQuery(query);
 
   return (
-    <main>
-      <div className="container" style={{ paddingTop: 32, paddingBottom: 64 }}>
-        <div className="help-hero">
-          <h1 className="help-hero__h">{t('help.title', 'مركز المساعدة')}</h1>
-          <p className="help-hero__sub">
-            {t('help.subtitle', 'ابحث في مركز المساعدة أو اختر موضوعاً.')}
-          </p>
-          <HelpSearchBar initialQuery={q} hideSuggestions />
-        </div>
+    <PageShell
+      breadcrumb={[
+        { label: t('home.breadcrumb'), href: '/' },
+        { label: t('help.title'), href: '/help' },
+        { label: t('help.search_title') },
+      ]}
+      title={t('help.search_title')}
+      meta={enabled ? (results ? tPlural('help.result_count', results.length) : '\u00a0') : undefined}
+    >
+      <HelpSearchBar initialQuery={q} hideSuggestions className="mb-6 qb-desktop:mb-10 qb-desktop:max-w-[1125px]" />
+      <SearchResults
+        enabled={enabled}
+        loading={isPending}
+        failed={isError}
+        results={results}
+        onRetry={() => refetch()}
+        retrying={isFetching}
+      />
+      <HelpContactCard className="mt-10 qb-desktop:mt-12" />
+    </PageShell>
+  );
+}
 
-        <section className="mt-10">
-          {!enabled ? (
-            <p className="text-ink-500 text-center text-sm">
-              {t(
-                'help.search_min_chars',
-                'اكتب حرفين على الأقل لبدء البحث',
-              )}
-            </p>
-          ) : isFetching && !results ? (
-            <div className="flex justify-center py-12" role="status">
-              <Loader2Icon
-                className="text-muted-foreground size-6 animate-spin"
-                aria-hidden
-              />
-            </div>
-          ) : isError ? (
-            <p className="text-destructive py-8 text-center text-sm">
-              {t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-            </p>
-          ) : !results || results.length === 0 ? (
-            <div className="card card--lg text-center">
-              <p className="text-ink-700 text-sm">
-                {t('help.no_results', 'لا توجد نتائج')}
-              </p>
-              <Link className="text-coral mt-3 inline-block text-sm underline" href="/help">
-                {t('help.back_to_help', 'العودة إلى مركز المساعدة')}
-              </Link>
-            </div>
-          ) : (
-            <>
-              <h2 className="text-h3 text-ink-900 mb-4">
-                {t(
-                  'help.search_results',
-                  { count: String(results.length) },
-                  `Found ${results.length} results`,
-                )}
-              </h2>
-              <ul className="flex flex-col gap-3">
-                {results.map((article) => (
-                  <li key={article.id} className="list-none">
-                    <HelpArticleCard article={article} />
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
-      </div>
-    </main>
+interface SearchResultsProps {
+  enabled: boolean;
+  loading: boolean;
+  failed: boolean;
+  results: HelpArticleListItem[] | undefined;
+  onRetry: () => void;
+  retrying: boolean;
+}
+
+function SearchResults({ enabled, loading, failed, results, onRetry, retrying }: SearchResultsProps) {
+  if (!enabled) {
+    return (
+      <StatePanel
+        icon={<StateIcon icon={Search} tone="muted" />}
+        title={t('help.search_prompt_title')}
+        description={t('help.search_min_chars')}
+        action={<BrowseTopicsLink />}
+      />
+    );
+  }
+
+  if (failed) {
+    return (
+      <StatePanel
+        icon={<StateIcon icon={CircleAlert} tone="muted" />}
+        title={t('common.error')}
+        action={
+          <Button size="sm" onClick={onRetry} disabled={retrying}>
+            {t('common.retry')}
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (loading || !results) return <HelpRowsSkeleton />;
+
+  if (results.length === 0) {
+    return (
+      <StatePanel
+        icon={<StateIcon icon={SearchX} tone="muted" />}
+        title={t('help.no_results')}
+        description={t('help.no_results_hint')}
+        action={<BrowseTopicsLink />}
+      />
+    );
+  }
+
+  return (
+    <ul aria-label={t('help.search_title')} className="flex flex-col gap-4">
+      {results.map((article) => (
+        <li key={article.id}>
+          <HelpArticleCard article={article} />
+        </li>
+      ))}
+    </ul>
   );
 }

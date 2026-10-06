@@ -8,13 +8,22 @@
  * No refresh token is issued for impersonation, so any refresh cookie left
  * from the admin's own session is cleared: the borrowed session ends when the
  * access token expires or the page is reloaded.
+ *
+ * No Figma frame: the status sits in the auth card (736:65208).
  */
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { CircleAlert, LoaderCircle } from 'lucide-react';
+
+import { buttonVariants } from '@/components/design-system/Button';
+import { Card } from '@/components/design-system/Card';
+import { StateIcon } from '@/components/design-system/StatePanel';
 import { getAccountProfile } from '@/lib/api/account';
 import { setAccessTokenNonReactive, useAuthStore } from '@/store/auth';
 import { t } from '@/lib/i18n/messages';
+import { cn } from '@/lib/utils';
 
 export default function ImpersonatePage() {
   const router = useRouter();
@@ -61,23 +70,32 @@ export default function ImpersonatePage() {
   }, [router]);
 
   return (
-    <main className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="text-center">
+    <main className="bg-qb-page px-qb-gutter py-12 font-qb text-qb-ink qb-tablet:py-16">
+      <Card large elevated className="mx-auto flex max-w-[714px] flex-col items-center px-6 py-12 text-center qb-tablet:px-10">
+        <div
+          aria-hidden="true"
+          className="mb-6 flex size-[76px] items-center justify-center rounded-qb-xl border border-qb-line bg-qb-surface text-qb-brand shadow-qb-brand qb-tablet:size-[92px] qb-tablet:rounded-qb-2xl"
+        >
+          <StateIcon
+            icon={error ? CircleAlert : LoaderCircle}
+            tone={error ? 'muted' : 'brand'}
+            className={error ? undefined : 'motion-safe:animate-spin'}
+          />
+        </div>
+        <div role="status">
+          <h1 className="font-qb text-qb-h5 font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h3">
+            {error ? t('impersonate.failed_title') : t('impersonate.loading')}
+          </h1>
+          {error ? (
+            <p className="mt-2 text-qb-body text-qb-ink-muted">{t('impersonate.failed')}</p>
+          ) : null}
+        </div>
         {error ? (
-          <>
-            <h1 className="empty-state__title">
-              {t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-            </h1>
-            <p className="empty-state__sub mt-2">
-              {t('impersonate.failed', 'تعذّر بدء جلسة الانتحال. الرابط ربما انتهت صلاحيته.')}
-            </p>
-          </>
-        ) : (
-          <p className="text-ink-500">
-            {t('impersonate.loading', 'جارٍ تسجيل الدخول…')}
-          </p>
-        )}
-      </div>
+          <Link href="/" className={cn(buttonVariants({ size: 'sm' }), 'mt-6')}>
+            {t('errors.back_home')}
+          </Link>
+        ) : null}
+      </Card>
     </main>
   );
 }

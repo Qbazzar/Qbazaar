@@ -45,14 +45,17 @@ export function useHelpCategoriesQuery(): UseQueryResult<
   });
 }
 
+/** `initialData` is the topic the page already read on the server, so the first render is complete. */
 export function useHelpCategoryQuery(
   slug: string,
+  initialData?: HelpCategoryWithArticles,
 ): UseQueryResult<HelpCategoryWithArticles, ApiClientError> {
   return useQuery<HelpCategoryWithArticles, ApiClientError>({
     queryKey: helpKeys.category(slug),
     queryFn: () => getHelpCategory(slug),
     staleTime: HOUR,
     enabled: Boolean(slug),
+    initialData,
   });
 }
 

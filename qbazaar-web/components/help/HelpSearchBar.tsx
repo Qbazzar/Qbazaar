@@ -1,132 +1,172 @@
 'use client';
 
 /**
- * Help center search input with debounced suggestions panel.
- *
- * - Local input state for snappy typing.
- * - 250ms debounce before pushing the value to `useHelpSearchQuery` so we
- *   don't blast the backend on every keystroke.
- * - "Search" button + Enter submit both route to `/help/search?q=…` so the
- *   results page becomes shareable.
- * - Suggestions panel only appears once the trimmed query reaches 2 chars
- *   and the input is focused; results link to the article detail page.
+ * Help center search: the search bar of the all-categories screen (185:6576)
+ * with debounced article suggestions under it. Submitting opens
+ * `/help/search?q=…` so results stay shareable.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Loader2Icon, SearchIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/design-system/Button';
+import { Icon } from '@/components/design-system/Icon';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { useHelpSearchQuery } from '@/lib/queries/help';
-import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/intl';
 import { localized } from '@/lib/i18n/locale';
+import { t } from '@/lib/i18n/messages';
+import { cn } from '@/lib/utils';
 
-interface Props {
+export const MIN_HELP_QUERY_LENGTH = 2;
+const SUGGESTION_LIMIT = 8;
+const DEBOUNCE_MS = 250;
+
+interface HelpSearchBarProps {
   initialQuery?: string;
-  /** When true the suggestions panel is suppressed (search results page). */
+  /** The results page lists every match itself, so it turns the suggestions off. */
   hideSuggestions?: boolean;
+  className?: string;
 }
 
-export function HelpSearchBar({
-  initialQuery = '',
-  hideSuggestions = false,
-}: Props) {
+export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, className }: HelpSearchBarProps) {
   const router = useRouter();
+  const inputId = useId();
+  const suggestionsId = useId();
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState(initialQuery);
   const [debounced, setDebounced] = useState(initialQuery);
-  const [focused, setFocused] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [syncedQuery, setSyncedQuery] = useState(initialQuery);
 
-  // Debounce the value used to fetch suggestions.
+  // Back/forward on the results page changes the query under a mounted field.
+  if (initialQuery !== syncedQuery) {
+    setSyncedQuery(initialQuery);
+    setValue(initialQuery);
+  }
+
   useEffect(() => {
-    const handle = window.setTimeout(() => setDebounced(value), 250);
+    const handle = window.setTimeout(() => setDebounced(value), DEBOUNCE_MS);
     return () => window.clearTimeout(handle);
   }, [value]);
 
-  // Close the suggestions panel when clicking outside.
+  // Closing on mousedown rather than blur keeps a clicked suggestion mounted
+  // until its click lands (Safari does not focus links on click).
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (!wrapperRef.current) return;
-      if (!wrapperRef.current.contains(e.target as Node)) setFocused(false);
+    if (!open) return;
+    const closeOutside = (event: MouseEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
     };
-    document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
-  }, []);
+    document.addEventListener('mousedown', closeOutside);
+    return () => document.removeEventListener('mousedown', closeOutside);
+  }, [open]);
 
-  const trimmed = debounced.trim();
-  const showSuggestions = !hideSuggestions && focused && trimmed.length >= 2;
-  const { data: suggestions, isFetching } = useHelpSearchQuery(
-    showSuggestions ? trimmed : '',
-  );
+  const query = debounced.trim();
+  const showSuggestions = !hideSuggestions && open && query.length >= MIN_HELP_QUERY_LENGTH;
+  const { data: suggestions, isFetching } = useHelpSearchQuery(showSuggestions ? query : '');
+  const visibleSuggestions = (suggestions ?? []).slice(0, SUGGESTION_LIMIT);
+  const loadingSuggestions = isFetching && !suggestions;
 
-  const submit = () => {
-    const q = value.trim();
-    if (q.length < 2) return;
-    router.push(`/help/search?q=${encodeURIComponent(q)}`);
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const term = value.trim();
+    if (term.length < MIN_HELP_QUERY_LENGTH) return;
+    setOpen(false);
+    router.push(`/help/search?q=${encodeURIComponent(term)}`);
+  };
+
+  const closeOnEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && open) {
+      event.stopPropagation();
+      setOpen(false);
+    }
   };
 
   return (
-    <div className="relative" ref={wrapperRef}>
-      <div className="help-search">
-        <div className="help-search__icon" aria-hidden>
-          <SearchIcon className="size-[18px]" />
-        </div>
+    <div
+      ref={wrapperRef}
+      className={cn('relative w-full font-qb', className)}
+      onKeyDown={closeOnEscape}
+      onBlur={(event) => {
+        // Tabbing out of the bar and its suggestions closes them.
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
+      <form
+        role="search"
+        aria-label={t('help.search_label')}
+        onSubmit={submit}
+        className={cn(
+          'flex h-11 items-center gap-2.5 rounded-qb-xl border border-qb-line bg-qb-surface ps-4 pe-1.5 shadow-qb-card transition-colors',
+          'focus-within:border-qb-brand focus-within:ring-2 focus-within:ring-qb-brand/20',
+          'qb-tablet:h-14 qb-tablet:gap-3 qb-tablet:pe-2 qb-desktop:ps-[22px]',
+        )}
+      >
+        <Icon icon={Search} className="size-5 text-qb-ink-muted qb-tablet:size-6" />
+        <label htmlFor={inputId} className="sr-only">
+          {t('help.search_label')}
+        </label>
         <input
+          id={inputId}
           type="search"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              submit();
-            }
+          onChange={(event) => {
+            setValue(event.target.value);
+            setOpen(true);
           }}
-          placeholder={t(
-            'help.search_placeholder',
-            'ابحث عن "كيفية النشر"، "الأمان"، …',
-          )}
-          aria-label={t('help.search_placeholder', 'بحث في مركز المساعدة')}
+          onFocus={() => setOpen(true)}
+          placeholder={t('help.search_placeholder')}
+          autoComplete="off"
+          enterKeyHint="search"
+          aria-controls={showSuggestions ? suggestionsId : undefined}
+          className="h-full min-w-0 flex-1 bg-transparent text-qb-body text-qb-ink outline-none placeholder:text-qb-placeholder qb-desktop:text-qb-h5"
         />
-        <Button
-          type="button"
-          onClick={submit}
-          className="bg-coral hover:bg-coral/90 h-9 rounded-full px-4 text-white"
+        <button
+          type="submit"
+          className={cn(buttonVariants({ size: 'sm' }), 'hidden px-6 text-qb-body qb-tablet:inline-flex')}
         >
-          {t('help.search_submit', 'بحث')}
-        </Button>
-      </div>
+          {t('help.search_submit')}
+        </button>
+      </form>
+
+      <p role="status" className="sr-only">
+        {showSuggestions && !loadingSuggestions ? tPlural('help.result_count', visibleSuggestions.length) : ''}
+      </p>
 
       {showSuggestions ? (
-        <div className="help-suggest" role="listbox">
-          {isFetching && !suggestions ? (
-            <div className="help-suggest__empty">
-              <Loader2Icon
-                className="mx-auto size-4 animate-spin"
-                aria-hidden
-              />
-            </div>
-          ) : suggestions && suggestions.length > 0 ? (
-            suggestions.slice(0, 8).map((article) => {
-              const excerpt = localized(article.excerpt);
-              return (
-                <Link
-                  key={article.id}
-                  href={`/help/articles/${article.slug}`}
-                  className="help-suggest__item"
-                  onClick={() => setFocused(false)}
-                >
-                  <span className="font-medium">{localized(article.title)}</span>
-                  {excerpt ? (
-                    <span className="help-suggest__excerpt">{excerpt}</span>
-                  ) : null}
-                </Link>
-              );
-            })
+        <div
+          id={suggestionsId}
+          className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-qb-xl border border-qb-line bg-qb-surface py-2 text-start shadow-qb-popover"
+        >
+          {loadingSuggestions ? (
+            <p aria-hidden="true" className="px-5 py-3 text-qb-caption text-qb-ink-subtle">
+              {t('common.loading')}
+            </p>
+          ) : visibleSuggestions.length > 0 ? (
+            <ul aria-label={t('help.suggestions_label')}>
+              {visibleSuggestions.map((article) => {
+                const excerpt = localized(article.excerpt);
+                return (
+                  <li key={article.id}>
+                    <Link
+                      href={`/help/articles/${article.slug}`}
+                      onClick={() => setOpen(false)}
+                      className={cn('block px-5 py-3 hover:bg-qb-hover', focusRing, 'focus-visible:-outline-offset-2')}
+                    >
+                      <span className="block text-qb-body font-medium text-qb-ink-body">{localized(article.title)}</span>
+                      {excerpt ? (
+                        <span className="mt-0.5 line-clamp-1 block text-qb-caption text-qb-ink-muted">{excerpt}</span>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
-            <div className="help-suggest__empty">
-              {t('help.no_results', 'لا توجد نتائج')}
-            </div>
+            <p aria-hidden="true" className="px-5 py-3 text-qb-caption text-qb-ink-subtle">
+              {t('help.no_results')}
+            </p>
           )}
         </div>
       ) : null}

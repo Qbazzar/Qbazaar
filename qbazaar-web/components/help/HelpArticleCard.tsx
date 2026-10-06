@@ -1,43 +1,42 @@
-/**
- * Compact help article row used by the category page + search results.
- *
- * Reuses the QBFront `.card` token for consistency with the rest of the
- * design system, then adds title + excerpt + a chevron pointing at detail.
- */
 import Link from 'next/link';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
-import { getLocale, localized } from '@/lib/i18n/locale';
+import { Icon } from '@/components/design-system/Icon';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { localized } from '@/lib/i18n/locale';
+import { cn } from '@/lib/utils';
 import type { HelpArticleListItem } from '@/lib/api/types';
 
-interface Props {
-  article: HelpArticleListItem;
-}
-
-export function HelpArticleCard({ article }: Props) {
-  const locale = getLocale();
-  const Chevron = locale === 'ar' ? ChevronLeftIcon : ChevronRightIcon;
-  const title = localized(article.title, locale);
-  const excerpt = localized(article.excerpt, locale);
+/** Help article as a text row in the notification-row style (455:14636), used by topic pages and search results. */
+export function HelpArticleCard({ article }: { article: HelpArticleListItem }) {
+  const excerpt = localized(article.excerpt);
 
   return (
     <Link
       href={`/help/articles/${article.slug}`}
-      className="card card--lg group flex items-start gap-4 transition-colors hover:border-coral"
+      className={cn(
+        'group flex items-center gap-4 rounded-qb-xl bg-qb-surface px-5 py-4 font-qb shadow-qb-card transition-colors hover:bg-qb-hover',
+        'qb-tablet:rounded-qb-2xl qb-tablet:px-6 qb-tablet:py-5 qb-desktop:py-6',
+        focusRing,
+      )}
     >
-      <div className="min-w-0 flex-1">
-        <h3 className="text-ink-900 text-base font-semibold leading-snug">
-          {title}
-        </h3>
+      <span className="min-w-0 flex-1">
+        <span className="block text-qb-body font-medium break-words text-qb-ink-body qb-desktop:text-qb-h5">
+          {localized(article.title)}
+        </span>
         {excerpt ? (
-          <p className="text-ink-700 mt-1.5 text-sm leading-relaxed">
-            {excerpt}
-          </p>
+          <>
+            {' '}
+            <span className="mt-1 line-clamp-2 block text-qb-caption text-qb-ink-muted qb-desktop:mt-2 qb-desktop:text-qb-body">
+              {excerpt}
+            </span>
+          </>
         ) : null}
-      </div>
-      <Chevron
-        className="text-ink-500 group-hover:text-coral mt-1 size-4 shrink-0 transition-colors"
-        aria-hidden
+      </span>
+      <Icon
+        icon={ChevronRight}
+        flipInRtl
+        className="text-qb-ink-subtle transition-colors group-hover:text-qb-brand"
       />
     </Link>
   );
