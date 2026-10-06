@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
 /**
  * Serialised category landing pages, identical for every visitor of the same
  * language. Served stale-while-revalidate, so a busy category is rebuilt at
- * most once per window and never by a crowd of requests at once. A taxonomy
+ * most once per window and never by a crowd of requests at once. One entry
+ * holds every language, so a rebuild runs the page queries once. A taxonomy
  * change moves every page to a new key version.
  */
 class CategoryPageCache
@@ -33,12 +34,10 @@ class CategoryPageCache
     {
         $fresh = (int) config('qbazaar.catalog.category_page_cache_seconds');
 
-        $locale = app()->getLocale();
+        /** @var array<string, array<string, mixed>> $pages */
+        $pages = Cache::flexible($this->key($slug), [$fresh, $fresh * 5], fn (): array => $this->render($slug));
 
-        /** @var array<string, mixed> $payload */
-        $payload = Cache::flexible($this->key($slug, $locale), [$fresh, $fresh * 5], fn (): array => $this->render($slug, $locale));
-
-        return $payload;
+        return Locales::pick($pages);
     }
 
     public function flush(): void
@@ -50,20 +49,18 @@ class CategoryPageCache
      * Rendered against a blank request so nothing about the visitor who
      * triggered a rebuild ends up in the shared payload.
      *
-     * @return array<string, mixed>
+     * @return array<string, array<string, mixed>> keyed by language
      */
-    private function render(string $slug, string $locale): array
+    private function render(string $slug): array
     {
         $page = $this->getCategoryPage->execute($slug);
+        $request = Request::create('/');
 
-        return Locales::within(
-            $locale,
-            fn (): array => (new CategoryPageResource($page))->toArray(Request::create('/')),
-        );
+        return Locales::each(fn (): array => (new CategoryPageResource($page))->toArray($request));
     }
 
-    private function key(string $slug, string $locale): string
+    private function key(string $slug): string
     {
-        return 'categories.page.' . Cache::get(self::VERSION_KEY, '0') . '.' . $locale . '.' . sha1($slug);
+        return 'categories.pages.' . Cache::get(self::VERSION_KEY, '0') . '.' . sha1($slug);
     }
 }

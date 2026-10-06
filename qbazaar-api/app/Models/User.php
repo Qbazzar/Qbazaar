@@ -184,7 +184,7 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     /**
      * The newest publicly listed ad. Users store no location of their own, so
      * this ad's place is where the seller is shown to sell from. Eager loading
-     * it reads the (user_id, status, published_at) index of the given users.
+     * it reads ads_user_listed_published_idx, a few entries per given user.
      *
      * @return HasOne<Ad, $this>
      */

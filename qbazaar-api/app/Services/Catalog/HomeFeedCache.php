@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Catalog;
 
 use App\Actions\Catalog\GetHomeFeedAction;
-use App\Data\Catalog\HomeFeed;
 use App\Http\Resources\Api\V1\Home\HomeFeedResource;
 use App\Support\Locales;
 use Illuminate\Http\Request;
@@ -13,7 +12,8 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * The serialised home feed, identical for every visitor of the same language.
- * The catalog warmer rebuilds it on a schedule; requests only read it.
+ * The catalog warmer rebuilds it on a schedule; requests only read it. Every
+ * rebuild renders all languages from one query pass.
  */
 class HomeFeedCache
 {
@@ -27,23 +27,30 @@ class HomeFeedCache
      */
     public function get(): array
     {
-        $locale = app()->getLocale();
-
         return $this->cache->get(
-            $this->key($locale),
+            $this->key(app()->getLocale()),
             $this->ttlSeconds(),
-            fn (): array => $this->render($this->getHomeFeed->execute(), $locale),
+            fn (): array => Locales::pick($this->refresh()),
         );
     }
 
-    /** One query pass feeds every language. */
-    public function refresh(): void
+    /**
+     * @return array<string, array<string, mixed>> the stored feed of each language
+     */
+    public function refresh(): array
     {
         $feed = $this->getHomeFeed->execute();
 
-        foreach (Locales::supported() as $locale) {
-            $this->cache->put($this->key($locale), $this->ttlSeconds(), fn (): array => $this->render($feed, $locale));
+        // Rendered against a blank request so nothing about the visitor who
+        // happened to trigger a rebuild can end up in the shared payload.
+        $request = Request::create('/');
+        $payloads = Locales::each(fn (): array => (new HomeFeedResource($feed))->toArray($request));
+
+        foreach ($payloads as $locale => $payload) {
+            $this->cache->put($this->key($locale), $this->ttlSeconds(), fn (): array => $payload);
         }
+
+        return $payloads;
     }
 
     public function flush(): void
@@ -56,20 +63,6 @@ class HomeFeedCache
     public function key(string $locale): string
     {
         return CatalogCache::HOME_FEED_KEY . '.' . $locale;
-    }
-
-    /**
-     * Rendered against a blank request so nothing about the visitor who
-     * happened to trigger a rebuild can end up in the shared payload.
-     *
-     * @return array<string, mixed>
-     */
-    private function render(HomeFeed $feed, string $locale): array
-    {
-        return Locales::within(
-            $locale,
-            fn (): array => (new HomeFeedResource($feed))->toArray(Request::create('/')),
-        );
     }
 
     private function ttlSeconds(): int
