@@ -14,9 +14,14 @@ use Illuminate\Contracts\Validation\ValidationRule;
  */
 class NoMarkup implements ValidationRule
 {
+    public static function isFoundIn(mixed $value): bool
+    {
+        return is_string($value) && strpbrk($value, '<>') !== false;
+    }
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (is_string($value) && strpbrk($value, '<>') !== false) {
+        if (self::isFoundIn($value)) {
             $fail('errors.validation.no_markup')->translate();
         }
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Api\V1\Users;
 
 use App\Enums\AccountType;
+use App\Http\Resources\Api\V1\Reference\LocationSummaryResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -19,6 +20,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * `business_name` is only populated when the account type is business; it
  * comes from the business profile when the caller loaded it.
  * `ads_count` is the stored count of the user's ACTIVE ads.
+ * `location`, the city or area the seller sells from, appears only when the
+ * caller loaded `latestListedAd.location`.
  *
  * @mixin User
  */
@@ -49,6 +52,10 @@ class PublicUserResource extends JsonResource
             'followers_count' => (int) $this->followers_count,
             'following_count' => (int) $this->following_count,
         ];
+
+        if ($this->resource->relationLoaded('latestListedAd')) {
+            $payload['location'] = LocationSummaryResource::orNull($this->resource->sellingLocation(), $request);
+        }
 
         if ($privacy->show_phone) {
             $payload['phone'] = $this->phone;
