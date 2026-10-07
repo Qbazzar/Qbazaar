@@ -103,7 +103,8 @@ export function ConversationView({ conversationId, onBack }: Props) {
 
   if (isError || !conversation) {
     const code = (error as { code?: string } | null)?.code;
-    const isNotFound = code === 'CONVERSATION_NOT_FOUND';
+    // MSG_004: no such conversation; MSG_005: the viewer is not part of it.
+    const isNotFound = code === 'MSG_004' || code === 'MSG_005';
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
         <p role="alert" className="text-qb-body text-qb-ink-body">
@@ -152,7 +153,7 @@ export function ConversationView({ conversationId, onBack }: Props) {
             </span>
             <span className="mt-1 flex min-w-0 items-center gap-2 text-qb-micro qb-tablet:mt-2 qb-tablet:text-qb-caption qb-desktop:text-qb-body">
               <span className="shrink-0 font-semibold text-qb-brand">
-                {formatAdPrice(conversation.ad.price, conversation.ad.price_type)}
+                {formatAdPrice(conversation.ad)}
               </span>
               <span aria-hidden="true" className="text-qb-ink-disabled">
                 •

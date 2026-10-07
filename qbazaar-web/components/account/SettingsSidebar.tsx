@@ -17,7 +17,7 @@ export function SettingsSidebar({ pathname }: { pathname: string }) {
 
   return (
     <nav aria-label={t('account.nav.settings')} className="flex h-full flex-col px-[17px] pt-8 pb-10 qb-desktop:px-6">
-      <p aria-hidden="true" className="text-[22px] leading-none font-semibold text-qb-ink qb-desktop:text-qb-h3">
+      <p aria-hidden="true" className="text-qb-h4 leading-none font-semibold text-qb-ink qb-desktop:text-qb-h3">
         {t('account.nav.settings')}
       </p>
       <ul className="mt-6 flex flex-col gap-2 qb-desktop:mt-9">
@@ -49,10 +49,10 @@ function SidebarLink({ item, active }: { item: AccountNavItem; active: boolean }
       href={item.href}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex min-h-12 items-center gap-1.5 rounded-qb-md text-qb-caption transition-colors qb-desktop:gap-2 qb-desktop:text-qb-body',
+        'flex min-h-12 items-center gap-1.5 rounded-qb-md transition-colors qb-desktop:gap-2',
         active
-          ? 'bg-qb-brand px-3 text-qb-label font-semibold text-white shadow-qb-brand qb-desktop:px-4 qb-desktop:text-qb-body'
-          : 'font-medium text-qb-ink-secondary hover:text-qb-brand',
+          ? 'bg-qb-brand px-3 text-qb-caption font-semibold text-white shadow-qb-brand qb-desktop:px-4 qb-desktop:text-qb-body'
+          : 'text-qb-body font-medium text-qb-ink-secondary hover:text-qb-brand',
         focusRing,
       )}
     >

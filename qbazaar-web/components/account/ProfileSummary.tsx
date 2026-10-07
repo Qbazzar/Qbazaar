@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
 import { CalendarDays } from 'lucide-react';
 
-import { Avatar } from '@/components/design-system/Avatar';
 import { Badge } from '@/components/design-system/Badge';
 import { Icon } from '@/components/design-system/Icon';
+import { intlLocale } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import type { AccountType } from '@/lib/api/types';
+
+import { NamedAvatar } from './NamedAvatar';
 
 export interface ProfileSummaryProps {
   name: string;
@@ -31,7 +33,7 @@ export function ProfileSummary({ name, avatarUrl, accountType, joinedAt, subtitl
       )}
     >
       <div className="flex items-center gap-2.5 qb-tablet:gap-4">
-        <Avatar name={name} src={avatarUrl} size="lg" tone="brand" className="size-[52px] qb-tablet:size-[78px]" />
+        <NamedAvatar name={name} src={avatarUrl} size="lg" className="size-[52px] qb-tablet:size-[78px]" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <p className="truncate text-qb-body font-medium text-qb-ink qb-tablet:text-qb-h3">{name}</p>
@@ -69,7 +71,7 @@ function formatJoinDate(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(getLocale() === 'ar' ? 'ar-EG' : 'en-GB', {
+  return new Intl.DateTimeFormat(getLocale() === 'ar' ? intlLocale('ar') : 'en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

@@ -73,7 +73,7 @@ export function RegisterForm() {
     <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
       <fieldset>
         <legend className={sectionTitle}>{t('auth.register.usage_question')}</legend>
-        <div className="mt-3.5 grid gap-3 qb-tablet:grid-cols-2 qb-tablet:gap-3.5">
+        <div className="mt-3.5 [display:grid] gap-3 qb-tablet:grid-cols-2 qb-tablet:gap-3.5">
           {ACCOUNT_TYPES.map(({ value, labelKey }) => (
             <label
               key={value}

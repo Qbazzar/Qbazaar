@@ -19,7 +19,8 @@ export function Switch({ className, ...props }: SwitchProps) {
   return (
     <SwitchPrimitive.Root
       className={cn(
-        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-qb-pill bg-qb-line p-0.5 transition-colors',
+        // The off track needs 3:1 against the white row (WCAG 1.4.11), which the light line grey does not reach.
+        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-qb-pill bg-qb-ink-muted p-0.5 transition-colors',
         'data-checked:bg-qb-success data-disabled:cursor-not-allowed data-disabled:opacity-50',
         focusRing,
         className,

@@ -20,19 +20,23 @@ import { cn } from '@/lib/utils';
 import { ApiClientError } from '@/lib/api/auth';
 import type { SavedSearch } from '@/lib/api/types';
 
+import { ModalActions } from './ModalActions';
 import { savedRowButtonClass } from './SavedAdRow';
 import { savedSearchChips, savedSearchHref } from './saved-search-params';
+import type { SlugLabels } from './useSlugLabels';
 
 interface Props {
   search: SavedSearch;
+  /** Names for the category and location slugs of the chips. */
+  labels: SlugLabels;
 }
 
-export function SavedSearchCard({ search }: Props) {
+export function SavedSearchCard({ search, labels }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteMutation = useDeleteSavedSearchMutation();
 
   const href = useMemo(() => savedSearchHref(search.query_params), [search]);
-  const chips = useMemo(() => savedSearchChips(search.query_params), [search]);
+  const chips = useMemo(() => savedSearchChips(search.query_params, labels), [search, labels]);
 
   const onDelete = () => {
     deleteMutation.mutate(search.id, {
@@ -66,9 +70,9 @@ export function SavedSearchCard({ search }: Props) {
           <Icon icon={Search} size="lg" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-qb-body font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5">
+          <h2 className="truncate text-qb-body font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5">
             <bdi>{search.name}</bdi>
-          </h3>
+          </h2>
           <p className="mt-2 text-qb-label font-medium text-qb-breadcrumb qb-tablet:text-qb-caption">
             {t('account.saved_searches.saved_ago', { when: formatRelativeTime(search.created_at) })}
           </p>
@@ -91,7 +95,7 @@ export function SavedSearchCard({ search }: Props) {
               className="inline-flex min-h-[33px] items-center gap-1 rounded-qb-sm bg-qb-fill px-2.5 text-qb-label qb-tablet:text-qb-caption"
             >
               <span className="text-qb-ink-subtle">{chip.label}:</span>
-              <span className="font-medium text-qb-ink-title capitalize">{chip.value}</span>
+              <span className="font-medium text-qb-ink-title">{chip.value}</span>
             </li>
           ))
         ) : (
@@ -113,7 +117,7 @@ export function SavedSearchCard({ search }: Props) {
         title={t('account.saved_searches.delete_confirm_title')}
         description={t('account.saved_searches.delete_confirm_body')}
       >
-        <div className="mt-2 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <ModalActions className="mt-2">
           <Button size="sm" disabled={deleteMutation.isPending} onClick={onDelete}>
             {deleteMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
             {t('account.saved_searches.delete', 'حذف')}
@@ -121,7 +125,7 @@ export function SavedSearchCard({ search }: Props) {
           <Button variant="muted" size="sm" disabled={deleteMutation.isPending} onClick={() => setConfirmOpen(false)}>
             {t('search.save_search.cancel', 'إلغاء')}
           </Button>
-        </div>
+        </ModalActions>
       </Modal>
     </article>
   );

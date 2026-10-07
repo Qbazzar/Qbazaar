@@ -12,15 +12,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2, UserX } from 'lucide-react';
 
-import { Avatar } from '@/components/design-system/Avatar';
 import { Button } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { NamedAvatar } from '@/components/account/NamedAvatar';
 import { PanelState } from '@/components/account/PanelState';
 import { SettingsPanel } from '@/components/account/SettingsPanel';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { intlLocale } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
+import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { listBlockedUsers } from '@/lib/api/account';
 import { unblockUser } from '@/lib/api/users';
@@ -69,7 +70,7 @@ export default function BlockedUsersPage() {
           className="rounded-qb-2xl border border-qb-line shadow-qb-card"
         />
       ) : (
-        <ul className="grid gap-4 qb-desktop:grid-cols-2">
+        <ul className="[display:grid] gap-4 qb-desktop:grid-cols-2">
           {blocked.map((user) => (
             <li key={user.id}>
               <BlockedUserCard
@@ -100,13 +101,13 @@ function BlockedUserCard({
   return (
     <article className="flex h-full flex-col gap-5 rounded-qb-2xl border border-qb-line bg-qb-surface p-4 shadow-qb-card qb-tablet:gap-8 qb-tablet:p-6">
       <Link href={`/u/${user.id}`} className={cn('flex min-w-0 items-center gap-3.5 rounded-qb-md', focusRing)}>
-        <Avatar name={user.full_name} src={user.avatar_url} tone="brand" className="size-[42px] qb-tablet:size-[53px]" />
+        <NamedAvatar name={user.full_name} src={user.avatar_url} className="size-[42px] qb-tablet:size-[53px]" />
         <span className="min-w-0">
           <span className="block truncate text-qb-body font-semibold text-qb-ink qb-tablet:text-qb-h5">
             {user.full_name}
           </span>
           <span className="mt-1 block text-qb-micro text-qb-ink-subtle qb-tablet:text-qb-caption">
-            {t('account.blocked_users.blocked_at', { when: formatRelativeTime(user.blocked_at, getLocale()) })}
+            {t('account.blocked_users.blocked_at', { when: formatRelativeTime(user.blocked_at, intlLocale(getLocale())) })}
           </span>
         </span>
       </Link>
@@ -117,7 +118,10 @@ function BlockedUserCard({
             {t('account.blocked_users.unblocking')}
           </>
         ) : (
-          t('account.blocked_users.unblock')
+          <>
+            {t('account.blocked_users.unblock')}
+            <span className="sr-only"> {user.full_name}</span>
+          </>
         )}
       </Button>
     </article>

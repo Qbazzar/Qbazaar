@@ -49,7 +49,7 @@ export function PasswordStrengthIndicator({
         </span>
       </div>
       {hideRules ? null : (
-        <ul className="grid grid-cols-1 gap-1 text-qb-label qb-tablet:grid-cols-2">
+        <ul className="[display:grid] grid-cols-1 gap-1 text-qb-label qb-tablet:grid-cols-2">
           <Rule passed={strength.matched.length} labelKey="auth.password_strength.rules.length" />
           <Rule passed={strength.matched.uppercase} labelKey="auth.password_strength.rules.uppercase" />
           <Rule passed={strength.matched.lowercase} labelKey="auth.password_strength.rules.lowercase" />

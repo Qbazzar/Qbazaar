@@ -115,13 +115,14 @@ export default function AccountPrivacyPage() {
             <SettingsRow
               key={field.key}
               value={<span id={`privacy-${field.key}`}>{t(field.titleKey)}</span>}
-              description={t(field.descriptionKey)}
+              description={<span id={`privacy-${field.key}-desc`}>{t(field.descriptionKey)}</span>}
               action={
                 <Switch
                   checked={settings[field.key]}
                   onCheckedChange={(value: boolean) => handleToggle(field.key, value)}
                   disabled={mutation.isPending}
                   aria-labelledby={`privacy-${field.key}`}
+                  aria-describedby={`privacy-${field.key}-desc`}
                 />
               }
             />

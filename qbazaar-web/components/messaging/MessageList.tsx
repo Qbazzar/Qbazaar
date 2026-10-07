@@ -12,8 +12,10 @@
  * - The container auto-scrolls to the bottom on first paint and when a new
  *   "mine" message arrives — for incoming messages we only auto-scroll if
  *   the user is already pinned near the bottom.
+ * - Screen readers hear each incoming message from a separate live region,
+ *   not from the thread itself, so loading older messages stays silent.
  */
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { useMessagesQuery } from '@/lib/queries/messaging';
 import { useAuth } from '@/hooks/useAuth';
@@ -93,6 +95,8 @@ export function MessageList({ conversationId }: Props) {
     lastSeenCountRef.current = currentCount;
   }, [messages, user?.id]);
 
+  const incoming = useIncomingAnnouncement(conversationId, messages, user?.id);
+
   if (isLoading) {
     return <PanelState loading className="flex flex-1 items-center" />;
   }
@@ -106,13 +110,13 @@ export function MessageList({ conversationId }: Props) {
       ref={scrollRef}
       // Focusable so the thread can be scrolled from the keyboard.
       tabIndex={0}
+      role="group"
       aria-label={t('messaging.thread_label')}
       className={cn(
         'flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-[21px] py-6 qb-tablet:px-6 qb-desktop:px-10',
         focusRing,
         '-outline-offset-2',
       )}
-      aria-live="polite"
     >
       <SafetyNotice />
 
@@ -168,15 +172,44 @@ export function MessageList({ conversationId }: Props) {
           </div>
         );
       })}
+      <p role="status" className="sr-only">
+        {incoming}
+      </p>
     </div>
   );
+}
+
+/**
+ * Text for the live region: the newest message, once, when someone else's
+ * lands at the end of the open thread. The first page and older pages are
+ * history, not news.
+ */
+function useIncomingAnnouncement(conversationId: string, messages: Message[], viewerId: string | undefined): string {
+  const [announcement, setAnnouncement] = useState('');
+  const newestRef = useRef<{ conversationId: string; messageId: string } | null>(null);
+
+  useEffect(() => {
+    const newest = messages[messages.length - 1];
+    if (!newest) return;
+    const previous = newestRef.current;
+    newestRef.current = { conversationId, messageId: newest.id };
+    if (previous?.conversationId !== conversationId) {
+      setAnnouncement('');
+      return;
+    }
+    if (previous.messageId !== newest.id && newest.sender_id !== viewerId) {
+      setAnnouncement(t('messaging.incoming_message', { name: newest.sender.full_name, message: newest.body }));
+    }
+  }, [conversationId, messages, viewerId]);
+
+  return announcement;
 }
 
 /** "Safe Pay" reminder at the top of every chat (365:14788). */
 function SafetyNotice() {
   return (
-    <p className="mx-auto flex max-w-[626px] items-start gap-3 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-label text-qb-brand qb-tablet:items-center qb-tablet:rounded-qb-md qb-tablet:px-6 qb-tablet:text-qb-body">
-      <ShieldCheck className="mt-0.5 size-5 shrink-0 qb-tablet:mt-0" aria-hidden="true" />
+    <p className="mx-auto flex max-w-[626px] items-start gap-3 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-label text-qb-brand-on-soft qb-tablet:items-center qb-tablet:rounded-qb-md qb-tablet:px-6 qb-tablet:text-qb-body">
+      <ShieldCheck className="mt-0.5 size-5 shrink-0 text-qb-brand qb-tablet:mt-0" aria-hidden="true" />
       {t('messaging.safety_notice')}
     </p>
   );

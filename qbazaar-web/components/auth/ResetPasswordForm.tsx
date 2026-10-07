@@ -102,6 +102,7 @@ export function ResetPasswordForm() {
   return (
     <>
       <AuthHeading
+        icon={<KeyRound />}
         title={t('auth.reset_password.title')}
         subtitle={
           <>

@@ -27,6 +27,7 @@ import {
 import { changePassword } from '@/lib/api/account';
 import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode, UserErrorCode } from '@/lib/api/types';
+import { ModalActions } from './ModalActions';
 
 export interface PasswordChangeFormProps {
   /** Called after a successful change, e.g. to close the dialog. */
@@ -120,7 +121,7 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
         )}
       </Field>
 
-      <div className="grid grid-cols-2 gap-3 qb-tablet:gap-5">
+      <ModalActions>
         <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
           {submitting ? (
             <>
@@ -136,7 +137,7 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
             {t('common.cancel')}
           </Button>
         ) : null}
-      </div>
+      </ModalActions>
     </form>
   );
 }

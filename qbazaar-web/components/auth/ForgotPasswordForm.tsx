@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2, MailCheck } from 'lucide-react';
+import { Loader2, Mail, MailCheck } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
@@ -50,7 +50,7 @@ export function ForgotPasswordForm() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center gap-8">
+      <div role="status" className="flex flex-col items-center gap-8">
         <AuthHeading
           icon={<MailCheck />}
           title={t('auth.forgot_password.success_title')}
@@ -68,16 +68,15 @@ export function ForgotPasswordForm() {
 
   return (
     <>
-      <AuthHeading title={t('auth.forgot_password.title')} subtitle={t('auth.forgot_password.subtitle')} />
+      <AuthHeading icon={<Mail />} title={t('auth.forgot_password.title')} subtitle={t('auth.forgot_password.subtitle')} />
       <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
-        <Field label={t('auth.forgot_password.email_label')} error={announcedError(emailError)}>
+        <Field label={t('auth.forgot_password.email_label')} required error={announcedError(emailError)}>
           {(control) => (
             <Input
               {...control}
               type="email"
               autoComplete="email"
               dir="ltr"
-              required
               placeholder={t('auth.forgot_password.email_placeholder')}
               {...form.register('email')}
             />

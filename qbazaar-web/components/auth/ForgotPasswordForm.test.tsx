@@ -38,7 +38,7 @@ async function submitWith(email: string) {
   await waitFor(() => expect(turnstileApi.render).toHaveBeenCalled());
   options.callback('tok-1');
 
-  const input = screen.getByLabelText(t('auth.forgot_password.email_label'));
+  const input = screen.getByRole('textbox', { name: t('auth.forgot_password.email_label') });
   fireEvent.change(input, { target: { value: email } });
   fireEvent.submit(input.closest('form')!);
   return input as HTMLInputElement;

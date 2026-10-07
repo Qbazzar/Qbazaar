@@ -20,7 +20,8 @@
     "theme": {
       "switch_to_dark": "Dark mode",
       "switch_to_light": "Light mode"
-    }
+    },
+    "currency": "QAR"
   },
   "auth": {
     "password": {
@@ -225,16 +226,25 @@
   },
   "account": {
     "price": {
-      "amount": "QAR {amount}"
+      "negotiable": "{price} · Negotiable"
     },
     "my_ads": {
       "tabs_label": "Ad status",
-      "total": "You have {count} ads",
+      "total": {
+        "one": "You have {count} ad",
+        "other": "You have {count} ads"
+      },
       "untitled": "(Untitled)",
       "without_photo": "Without Photo",
       "complete": "Complete",
-      "visitors": "{count} visitors",
-      "likes": "{count} likes",
+      "visitors": {
+        "one": "{count} visitor",
+        "other": "{count} visitors"
+      },
+      "likes": {
+        "one": "{count} like",
+        "other": "{count} likes"
+      },
       "published_on": "Published on: {date}",
       "empty_body": "Post an ad and it will show up here with its status and stats.",
       "delete_label": "Delete {title}"
@@ -841,6 +851,7 @@
   },
   "messaging": {
     "thread_label": "Messages in this conversation",
+    "incoming_message": "New message from {name}: {message}",
     "chat_label": "Conversation",
     "unread_label": "unread messages",
     "safety_notice": "With “Safe Pay”, you don’t need to share your email, phone number, or bank details with anyone.",
@@ -871,7 +882,6 @@
       "send_failed": "Couldn't send the message, please retry"
     },
     "offer": {
-      "card_title": "Offer",
       "make": "Make an offer",
       "dialog_description": "Propose a fair price — the seller can accept or reject it.",
       "amount_label": "Amount (QAR)",
@@ -913,6 +923,7 @@
   "notifications": {
     "open_unread": "Unread: {title}",
     "delete_label": "Delete notification: {title}",
+    "delete_success": "Notification deleted",
     "empty_body": "Updates about your ads, messages and saved searches will show up here.",
     "title": "Notifications",
     "header_label": "Notifications",
@@ -1081,7 +1092,10 @@
       "resolved": "Resolved"
     },
     "no_tickets": "No tickets in this tab",
-    "replies_count": "{count} replies",
+    "replies_count": {
+      "one": "{count} reply",
+      "other": "{count} replies"
+    },
     "back_to_list": "Back to my tickets",
     "you": "You",
     "staff_badge": "Support team",

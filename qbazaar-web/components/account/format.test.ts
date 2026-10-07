@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { setClientLocale } from '@/lib/i18n/locale';
 
-import { formatAdPrice, formatCount, labelFromSlug, maskPhone } from './format';
+import { formatAdPrice, formatCount, formatLongDate, labelFromSlug, maskPhone } from './format';
 
 afterEach(() => setClientLocale('ar'));
 
@@ -19,33 +19,44 @@ describe('maskPhone', () => {
 });
 
 describe('formatAdPrice', () => {
-  it('puts the currency before a grouped amount in English', () => {
+  it('uses the listing price wording and marks negotiable prices', () => {
     setClientLocale('en');
-    expect(formatAdPrice(287000, 'fixed')).toBe('QAR 287,000');
-    expect(formatAdPrice(955.4, 'negotiable')).toBe('QAR 955');
+    expect(formatAdPrice({ price: 287000, price_type: 'fixed' })).toBe('QAR 287,000');
+    expect(formatAdPrice({ price: 955, price_type: 'negotiable' })).toBe('QAR 955 · Negotiable');
   });
 
   it('names free and contact-for-price ads instead of a number', () => {
     setClientLocale('en');
-    expect(formatAdPrice(0, 'free')).toBe('Free');
-    expect(formatAdPrice(null, 'fixed')).toBe('Contact for price');
-    expect(formatAdPrice(500, 'contact')).toBe('Contact for price');
+    expect(formatAdPrice({ price: 0, price_type: 'free' })).toBe('Free');
+    expect(formatAdPrice({ price: null, price_type: 'fixed' })).toBe('Contact for price');
+    expect(formatAdPrice({ price: null, price_type: 'negotiable' })).toBe('Contact for price');
+    expect(formatAdPrice({ price: 500, price_type: 'contact' })).toBe('Contact for price');
   });
 
-  it('uses Arabic digits and the riyal sign in Arabic', () => {
+  it('keeps Latin digits and uses the riyal sign in Arabic', () => {
     setClientLocale('ar');
-    expect(formatAdPrice(1200, 'fixed')).toBe('١٬٢٠٠ ر.ق');
+    expect(formatAdPrice({ price: 1200, price_type: 'fixed' })).toBe('ر.ق 1,200');
+    expect(formatAdPrice({ price: 1200, price_type: 'negotiable' })).toBe('ر.ق 1,200 · قابل للتفاوض');
   });
 });
 
-describe('formatCount and labelFromSlug', () => {
-  it('groups counts in the active locale', () => {
+describe('formatCount, formatLongDate and labelFromSlug', () => {
+  it('groups counts with Latin digits in both languages', () => {
     setClientLocale('en');
+    expect(formatCount(1525)).toBe('1,525');
+    setClientLocale('ar');
     expect(formatCount(1525)).toBe('1,525');
   });
 
-  it('turns a slug into words', () => {
-    expect(labelFromSlug('health-and-beauty')).toBe('health and beauty');
+  it('writes the long date of the My Ads meta line', () => {
+    setClientLocale('en');
+    expect(formatLongDate('2026-06-01T10:00:00Z')).toBe('June 01, 2026');
+    expect(formatLongDate(null)).toBe('');
+    expect(formatLongDate('not a date')).toBe('');
+  });
+
+  it('turns a slug into capitalised words', () => {
+    expect(labelFromSlug('health-and-beauty')).toBe('Health And Beauty');
     expect(labelFromSlug(undefined)).toBe('');
   });
 });

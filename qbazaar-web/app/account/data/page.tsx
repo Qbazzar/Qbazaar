@@ -30,6 +30,7 @@ import { Textarea } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
 import { announcedError } from '@/components/auth/FieldError';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import { ModalActions } from '@/components/account/ModalActions';
 import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -327,7 +328,7 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
           </Field>
         ) : null}
 
-        <div className="mt-1 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <ModalActions className="mt-1">
           <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
             {submitting ? (
               <>
@@ -341,7 +342,7 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
           <Button type="button" variant="muted" size="sm" disabled={submitting} onClick={() => onOpenChange(false)}>
             {t(`account.data.${flow}.cancel`)}
           </Button>
-        </div>
+        </ModalActions>
       </form>
     </Modal>
   );

@@ -196,36 +196,48 @@ export function OtpInput({
       dir="ltr"
     >
       {digits.map((digit, index) => (
-        <input
+        <span
           key={`${groupId}-${index}`}
-          ref={(el) => {
-            inputsRef.current[index] = el;
-          }}
-          type="text"
-          inputMode="numeric"
-          autoComplete={index === 0 ? 'one-time-code' : 'off'}
-          maxLength={1}
-          value={digit}
-          onChange={(event) => handleChange(index, event.target.value)}
-          onKeyDown={(event) => handleKeyDown(index, event)}
-          onPaste={(event) => handlePaste(index, event)}
-          onFocus={(event) => event.currentTarget.select()}
-          disabled={disabled}
-          aria-label={t('auth.verify_otp.code_aria_box').replace(
-            '{index}',
-            String(index + 1),
+          className="relative flex h-[52px] w-full max-w-12 min-w-0 flex-1 qb-tablet:h-16 qb-tablet:max-w-[74px] qb-desktop:h-[57px] qb-desktop:max-w-[93px]"
+        >
+          <input
+            ref={(el) => {
+              inputsRef.current[index] = el;
+            }}
+            type="text"
+            inputMode="numeric"
+            autoComplete={index === 0 ? 'one-time-code' : 'off'}
+            maxLength={1}
+            value={digit}
+            onChange={(event) => handleChange(index, event.target.value)}
+            onKeyDown={(event) => handleKeyDown(index, event)}
+            onPaste={(event) => handlePaste(index, event)}
+            onFocus={(event) => event.currentTarget.select()}
+            disabled={disabled}
+            aria-label={t('auth.verify_otp.code_aria_box').replace(
+              '{index}',
+              String(index + 1),
+            )}
+            aria-invalid={ariaInvalid}
+            data-otp-box={index}
+            className={cn(
+              'peer size-full min-w-0 rounded-qb-md border border-qb-line bg-qb-surface text-center text-qb-h5 font-medium text-qb-ink outline-none transition-colors',
+              'qb-tablet:rounded-qb-lg qb-tablet:text-qb-h3 qb-desktop:text-qb-h5',
+              'focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
+              'disabled:pointer-events-none disabled:opacity-50',
+              'aria-invalid:border-qb-danger aria-invalid:ring-2 aria-invalid:ring-qb-danger/20',
+            )}
+          />
+          {/* The faint "0" of the design's empty boxes; a placeholder would be read out as if a digit were filled in. */}
+          {digit ? null : (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 flex items-center justify-center text-qb-h5 font-medium text-qb-line peer-disabled:opacity-50 qb-tablet:text-qb-h3 qb-desktop:text-qb-h5"
+            >
+              0
+            </span>
           )}
-          aria-invalid={ariaInvalid}
-          data-otp-box={index}
-          placeholder="0"
-          className={cn(
-            'h-[52px] w-full max-w-12 min-w-0 flex-1 rounded-qb-md border border-qb-line bg-qb-surface text-center text-qb-h5 font-medium text-qb-ink outline-none transition-colors',
-            'qb-tablet:h-16 qb-tablet:max-w-[74px] qb-tablet:rounded-qb-lg qb-tablet:text-qb-h3 qb-desktop:h-[57px] qb-desktop:max-w-[93px] qb-desktop:text-qb-h5',
-            'placeholder:text-qb-line focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
-            'disabled:pointer-events-none disabled:opacity-50',
-            'aria-invalid:border-qb-danger aria-invalid:ring-2 aria-invalid:ring-qb-danger/20',
-          )}
-        />
+        </span>
       ))}
     </div>
   );

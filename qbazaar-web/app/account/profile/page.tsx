@@ -55,7 +55,7 @@ export default function AccountProfilePage() {
         }}
       />
 
-      <h2 className="mt-10 text-qb-body-lg font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5">
+      <h2 className="mt-10 text-qb-body font-semibold tracking-normal text-qb-ink qb-tablet:font-medium qb-desktop:text-qb-h5 qb-desktop:font-semibold">
         {t('account.profile.personal_info')}
       </h2>
       {isLoading || error || !profile ? (
@@ -85,6 +85,7 @@ export default function AccountProfilePage() {
             if (!open) setEditing(null);
           }}
           title={t('account.profile.edit_title')}
+          showCloseButton
           className="max-w-[538px]"
         >
           <ProfileForm

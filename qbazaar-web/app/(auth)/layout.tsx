@@ -47,7 +47,8 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
           />
         </div>
       </header>
-      <main className="flex flex-1 justify-center px-4 pt-10 pb-12 qb-tablet:px-20 qb-tablet:pt-28 qb-desktop:pt-[58px]">
+      {/* Centred in the space under the bar, as auth.css does: short cards (forgot password) sit lower than long ones. */}
+      <main className="flex flex-1 items-center justify-center px-4 py-10 qb-tablet:px-20">
         <AuthCard>{children}</AuthCard>
       </main>
     </div>

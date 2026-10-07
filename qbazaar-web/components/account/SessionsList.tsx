@@ -18,13 +18,15 @@ import { Button } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Modal } from '@/components/design-system/Modal';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { intlLocale } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
+import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { formatRelativeTime } from '@/lib/utils';
 import { revokeSession } from '@/lib/api/account';
 import { ApiClientError } from '@/lib/api/auth';
 import type { UserSession } from '@/lib/api/types';
 
+import { ModalActions } from './ModalActions';
 import { SettingsList, SettingsRow } from './SettingsPanel';
 
 export interface SessionsListProps {
@@ -87,6 +89,7 @@ export function SessionsList({ sessions }: SessionsListProps) {
               session.is_current ? null : (
                 <Button variant="ghost" size="sm" onClick={() => setConfirming(session)}>
                   {t('account.sessions.revoke')}
+                  <span className="sr-only"> {deviceLabel(session)}</span>
                 </Button>
               )
             }
@@ -102,7 +105,7 @@ export function SessionsList({ sessions }: SessionsListProps) {
         title={t('account.sessions.confirm_title')}
         description={confirming ? t('account.sessions.confirm_body', { device: deviceLabel(confirming) }) : undefined}
       >
-        <div className="mt-2 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <ModalActions className="mt-2">
           <Button
             size="sm"
             disabled={mutation.isPending}
@@ -120,7 +123,7 @@ export function SessionsList({ sessions }: SessionsListProps) {
           <Button variant="muted" size="sm" disabled={mutation.isPending} onClick={() => setConfirming(null)}>
             {t('common.cancel')}
           </Button>
-        </div>
+        </ModalActions>
       </Modal>
     </>
   );
@@ -141,7 +144,7 @@ function SessionMeta({ session }: { session: UserSession }) {
         </span>
       ) : null}
       {lastUsed ? (
-        <span>{t('account.sessions.last_used', { when: formatRelativeTime(lastUsed, getLocale()) })}</span>
+        <span>{t('account.sessions.last_used', { when: formatRelativeTime(lastUsed, intlLocale(getLocale())) })}</span>
       ) : null}
     </span>
   );

@@ -17,7 +17,7 @@ export function FieldError({
 }) {
   if (!message) return null;
   return (
-    <p id={id} role="alert" className="text-destructive text-xs leading-snug">
+    <p id={id} role="alert" className="text-qb-caption text-qb-danger">
       {translateMaybeKey(message)}
     </p>
   );

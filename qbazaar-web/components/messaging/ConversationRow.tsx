@@ -8,8 +8,8 @@
  * Pure presentational — selection state is controlled by the parent so the
  * URL stays the source of truth.
  */
-import { Avatar } from '@/components/design-system/Avatar';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { NamedAvatar } from '@/components/account/NamedAvatar';
 import { cn } from '@/lib/utils';
 import type { ConversationListItem } from '@/lib/api/types';
 import { formatRelativeTime } from './relative-time';
@@ -27,12 +27,15 @@ export function ConversationRow({ conversation, active, onSelect }: Props) {
   const preview = last_message_preview ?? t('messaging.empty.preview', 'لا توجد رسائل بعد');
   const when = formatRelativeTime(last_message_at);
   const unread = unread_count > 0;
+  // The muted grey falls just under 4.5:1 on the active row's soft orange fill.
+  const mutedText = active ? 'text-qb-ink-secondary' : 'text-qb-ink-muted';
 
   return (
     <button
       type="button"
       onClick={() => onSelect(conversation.id)}
       aria-current={active ? 'true' : undefined}
+      data-conversation-id={conversation.id}
       className={cn(
         'relative flex w-full items-start gap-3.5 px-[17px] py-3 text-start transition-colors qb-desktop:px-6',
         active
@@ -42,10 +45,9 @@ export function ConversationRow({ conversation, active, onSelect }: Props) {
         '-outline-offset-2',
       )}
     >
-      <Avatar
+      <NamedAvatar
         name={other_participant.full_name}
         src={other_participant.avatar_thumb_url}
-        tone="brand"
         className="size-12 qb-desktop:size-[47px]"
       />
       <span className="min-w-0 flex-1">
@@ -53,13 +55,13 @@ export function ConversationRow({ conversation, active, onSelect }: Props) {
           <span className="truncate text-qb-body font-semibold text-qb-ink">
             <bdi>{other_participant.full_name}</bdi>
           </span>
-          {when ? <span className="shrink-0 text-qb-micro text-qb-ink-subtle">{when}</span> : null}
+          {when ? <span className={cn('shrink-0 text-qb-micro', mutedText)}>{when}</span> : null}
         </span>
         <span className="mt-0.5 block truncate text-qb-micro font-medium text-qb-ink-body">
           <bdi>{ad.title}</bdi>
         </span>
         <span className="mt-1 flex items-center justify-between gap-2">
-          <span className={cn('truncate text-qb-micro', unread ? 'font-semibold text-qb-ink' : 'text-qb-ink-muted')}>
+          <span className={cn('truncate text-qb-micro', unread ? 'font-semibold text-qb-ink' : mutedText)}>
             <bdi>{preview}</bdi>
           </span>
           {unread ? (

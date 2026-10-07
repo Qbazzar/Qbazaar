@@ -22,21 +22,25 @@ import {
   useRenewAdMutation,
 } from '@/lib/queries/ads';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { cn } from '@/lib/utils';
 import type { AdSummary } from '@/lib/api/types';
 
 import { AdPhoto } from './AdPhoto';
 import { AdStatusBadge } from './AdStatusBadge';
-import { formatAdPrice, formatCount, formatLongDate, labelFromSlug } from './format';
+import { ModalActions } from './ModalActions';
+import { formatAdPrice, formatLongDate } from './format';
 
 interface Props {
   ad: AdSummary;
+  /** Name of the ad's category in the active language. */
+  category: string;
 }
 
 /** Montserrat 14 px row buttons of the design ("Complete", "Reserve"). */
 const rowButton = 'h-[34px] gap-1.5 rounded-qb-sm px-3 font-qb-label text-qb-caption font-medium [&_svg]:size-4';
 
-export function MyAdsRow({ ad }: Props) {
+export function MyAdsRow({ ad, category }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deleteMutation = useDeleteAdMutation();
   const markSoldMutation = useMarkSoldMutation();
@@ -87,7 +91,7 @@ export function MyAdsRow({ ad }: Props) {
       >
         {isDraft ? null : (
           <Badge tone="solid" className="absolute start-2.5 top-2.5 rounded-qb-xs px-1.5 text-qb-caption">
-            {formatAdPrice(ad.price, ad.price_type)}
+            {formatAdPrice(ad)}
           </Badge>
         )}
       </AdPhoto>
@@ -95,25 +99,23 @@ export function MyAdsRow({ ad }: Props) {
       <div className="flex min-w-0 flex-1 flex-col gap-4 qb-desktop:flex-row qb-desktop:items-center qb-desktop:gap-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h3 className="min-w-0 text-qb-h5 font-semibold tracking-normal text-qb-ink-title qb-tablet:text-qb-h2">
+            <h3 className="min-w-0 text-qb-h5 font-semibold tracking-normal text-qb-ink-title qb-desktop:text-qb-h2">
               <Link href={`/ads/${ad.id}`} className={cn('rounded-qb-xs hover:text-qb-brand', focusRing)}>
                 <bdi>{title}</bdi>
               </Link>
             </h3>
             <AdStatusBadge status={ad.status} />
           </div>
-          <p className="mt-2 text-qb-caption text-qb-ink-subtle capitalize qb-tablet:mt-3 qb-tablet:text-qb-body">
-            {labelFromSlug(ad.category_slug)}
-          </p>
+          <p className="mt-2 text-qb-caption text-qb-ink-subtle qb-tablet:mt-3 qb-desktop:text-qb-body">{category}</p>
           {isDraft ? null : (
-            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-qb-caption text-qb-ink-subtle qb-tablet:text-qb-body">
+            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-qb-caption text-qb-ink-subtle qb-desktop:text-qb-body">
               <li className="flex items-center gap-1.5">
                 <Icon icon={Eye} />
-                {t('account.my_ads.visitors', { count: formatCount(ad.views_count) })}
+                {tPlural('account.my_ads.visitors', ad.views_count)}
               </li>
               <li className="flex items-center gap-1.5">
                 <Icon icon={Heart} />
-                {t('account.my_ads.likes', { count: formatCount(ad.favorites_count) })}
+                {tPlural('account.my_ads.likes', ad.favorites_count)}
               </li>
               {published ? (
                 <li className="flex items-center gap-1.5">
@@ -180,7 +182,7 @@ export function MyAdsRow({ ad }: Props) {
           'سيتم حذف الإعلان نهائياً. لا يمكن التراجع عن هذا الإجراء.',
         )}
       >
-        <div className="mt-2 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <ModalActions className="mt-2">
           <Button size="sm" disabled={deleteMutation.isPending} onClick={() => void onDelete()}>
             {deleteMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
             {t('common.delete', 'حذف')}
@@ -188,7 +190,7 @@ export function MyAdsRow({ ad }: Props) {
           <Button variant="muted" size="sm" disabled={deleteMutation.isPending} onClick={() => setConfirmDelete(false)}>
             {t('common.cancel', 'إلغاء')}
           </Button>
-        </div>
+        </ModalActions>
       </Modal>
     </article>
   );

@@ -17,14 +17,15 @@ import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
-import { AccountPage, scrollingTabListClass } from '@/components/account/AccountPage';
+import { AccountPage, pillTabClass, scrollingTabListClass } from '@/components/account/AccountPage';
 import { MyAdsRow } from '@/components/account/MyAdsRow';
 import { PanelState } from '@/components/account/PanelState';
 import { ProfileSummary } from '@/components/account/ProfileSummary';
-import { formatCount } from '@/components/account/format';
+import { useSlugLabels } from '@/components/account/useSlugLabels';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyAdsQuery } from '@/lib/queries/ads';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import type { AdStatus } from '@/lib/api/types';
 
 type TabKey = 'all' | AdStatus;
@@ -53,7 +54,7 @@ export default function MyAdsPage() {
           avatarUrl={user.avatar_url}
           accountType={user.account_type}
           joinedAt={user.created_at}
-          subtitle={allAds ? t('account.my_ads.total', { count: formatCount(allAds.meta.total) }) : undefined}
+          subtitle={allAds ? tPlural('account.my_ads.total', allAds.meta.total) : undefined}
         />
       ) : null}
 
@@ -64,7 +65,7 @@ export default function MyAdsPage() {
       <Tabs value={tab} onValueChange={(value) => setTab(value as TabKey)} className="mt-6">
         <TabList aria-label={t('account.my_ads.tabs_label')} className={scrollingTabListClass}>
           {TABS.map((key) => (
-            <Tab key={key} value={key}>
+            <Tab key={key} value={key} className={pillTabClass}>
               {t(`ads.my.tabs.${key}`, key)}
             </Tab>
           ))}
@@ -81,6 +82,7 @@ export default function MyAdsPage() {
 
 function MyAdsTab({ status }: { status?: AdStatus }) {
   const { data, isLoading, isError } = useMyAdsQuery({ status });
+  const labels = useSlugLabels();
 
   if (isLoading) return <PanelState loading />;
   if (isError || !data) return <PanelState loading={false} message={t('common.error', 'حدث خطأ، حاول مرة أخرى')} />;
@@ -105,7 +107,7 @@ function MyAdsTab({ status }: { status?: AdStatus }) {
     <ul className="flex flex-col gap-4 qb-tablet:gap-6 qb-desktop:gap-7">
       {data.data.map((ad) => (
         <li key={ad.id}>
-          <MyAdsRow ad={ad} />
+          <MyAdsRow ad={ad} category={labels.category(ad.category_slug)} />
         </li>
       ))}
     </ul>

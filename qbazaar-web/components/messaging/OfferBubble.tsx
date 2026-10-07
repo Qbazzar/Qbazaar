@@ -1,8 +1,7 @@
 'use client';
 
 /**
- * Inline offer card rendered for `Message.type === 'offer'`, in the layout of
- * the chat's purchase-request card (667:30685).
+ * Inline offer card rendered for `Message.type === 'offer'`.
  *
  * Behaviour is driven by `offer.viewer_role` + `offer.status`:
  *   - buyer  + pending → "withdraw" button (with confirm dialog)
@@ -13,11 +12,18 @@
  * surfaces a countdown so users know to act quickly.
  */
 import { useMemo, useState } from 'react';
-import { Check, Handshake, Loader2, X } from 'lucide-react';
+import { CheckIcon, HandshakeIcon, Loader2Icon, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
-
-import { Button } from '@/components/design-system/Button';
-import { Modal } from '@/components/design-system/Modal';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import {
@@ -169,52 +175,75 @@ export function OfferBubble({ offer, isMine }: Props) {
       : null;
 
   return (
-    <div className={cn('flex w-full', isMine ? 'justify-end' : 'justify-start')}>
+    <div
+      className={cn(
+        'flex w-full',
+        isMine ? 'justify-end' : 'justify-start',
+      )}
+    >
       <div
+        className={cn(
+          'flex w-full max-w-[88%] flex-col gap-3 rounded-2xl border p-4',
+          'border-coral/40 bg-cream-50',
+          'shadow-[inset_4px_0_0_0_var(--color-sage,_#7BB591)] rtl:shadow-[inset_-4px_0_0_0_var(--color-sage,_#7BB591)]',
+        )}
         role="group"
-        aria-label={t('messaging.offer.card_title')}
-        className="flex w-full max-w-[534px] flex-col gap-4 rounded-qb-md border border-qb-line bg-qb-surface p-4 font-qb shadow-qb-soft qb-tablet:px-[22px] qb-tablet:py-5"
+        aria-label={t('messaging.offer.make', 'اعرض سعر')}
       >
         <div className="flex items-center justify-between gap-3">
-          <p className="flex items-center gap-2 text-qb-body font-medium text-qb-ink">
-            <Handshake className="size-5 shrink-0 text-qb-brand" aria-hidden="true" />
-            {t('messaging.offer.card_title')}
-          </p>
+          <div className="flex min-w-0 items-center gap-2">
+            <HandshakeIcon className="text-coral size-5 shrink-0" aria-hidden />
+            <div className="flex flex-col">
+              <span className="text-ink-900 font-display text-2xl font-bold leading-tight">
+                {formatCurrency(offer.amount)}{' '}
+                <span className="text-ink-700 text-sm font-medium">
+                  {offer.currency}
+                </span>
+              </span>
+            </div>
+          </div>
           <OfferStatusBadge status={offer.status} />
         </div>
 
-        <p className="text-qb-h3 leading-none font-semibold text-qb-ink" dir="ltr">
-          {formatCurrency(offer.amount)}{' '}
-          <span className="text-qb-caption font-medium text-qb-ink-secondary">{offer.currency}</span>
-        </p>
-
         {offer.note ? (
-          <div className="relative border border-qb-line px-3 py-3 before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:rounded-qb-pill before:bg-qb-brand">
-            <p className="text-qb-tiny text-qb-ink-subtle">{t('messaging.offer.note_label', 'ملاحظة (اختياري)')}</p>
-            <p dir="auto" className="mt-2 text-qb-label leading-relaxed whitespace-pre-wrap break-words text-qb-ink">
-              {offer.note}
-            </p>
-          </div>
+          <p className="text-ink-700 border-coral/20 border-s-2 ps-3 text-sm leading-relaxed whitespace-pre-wrap break-words">
+            {offer.note}
+          </p>
         ) : null}
 
-        {expiryHint ? <p className="text-qb-label font-semibold text-qb-danger">{expiryHint}</p> : null}
+        {expiryHint ? (
+          <p className="text-destructive text-xs font-bold">{expiryHint}</p>
+        ) : null}
 
         {/* Action row — buyer / seller / terminal */}
         {isPending && isSeller ? (
-          <div className="grid grid-cols-2 gap-2">
-            <Button size="sm" onClick={onAccept} disabled={busy}>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={onAccept}
+              disabled={busy}
+              className="bg-coral hover:bg-coral/90 rounded-full text-white"
+            >
               {acceptMutation.isPending ? (
-                <Loader2 className="animate-spin" aria-hidden="true" />
+                <Loader2Icon className="size-4 animate-spin" aria-hidden />
               ) : (
-                <Check aria-hidden="true" />
+                <CheckIcon className="size-4" aria-hidden />
               )}
               {t('messaging.offer.accept', 'قبول')}
             </Button>
-            <Button variant="muted" size="sm" onClick={onReject} disabled={busy}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onReject}
+              disabled={busy}
+              className="border-ink-300 rounded-full"
+            >
               {rejectMutation.isPending ? (
-                <Loader2 className="animate-spin" aria-hidden="true" />
+                <Loader2Icon className="size-4 animate-spin" aria-hidden />
               ) : (
-                <X aria-hidden="true" />
+                <XIcon className="size-4" aria-hidden />
               )}
               {t('messaging.offer.reject', 'رفض')}
             </Button>
@@ -222,35 +251,66 @@ export function OfferBubble({ offer, isMine }: Props) {
         ) : null}
 
         {isPending && isBuyer ? (
-          <Button variant="muted" size="sm" onClick={() => setConfirmOpen(true)} disabled={busy} className="self-start">
-            {t('messaging.offer.withdraw', 'سحب العرض')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setConfirmOpen(true)}
+              disabled={busy}
+              className="border-ink-300 rounded-full"
+            >
+              {t('messaging.offer.withdraw', 'سحب العرض')}
+            </Button>
+          </div>
         ) : null}
 
-        {terminalLabel ? <p className="text-qb-label text-qb-ink-subtle">{terminalLabel}</p> : null}
+        {terminalLabel ? (
+          <p className="text-ink-500 text-xs">{terminalLabel}</p>
+        ) : null}
       </div>
 
-      <Modal
-        open={confirmOpen}
-        onOpenChange={(open) => {
-          if (!open && !withdrawMutation.isPending) setConfirmOpen(false);
-        }}
-        title={t('messaging.offer.withdraw_confirm.title', 'سحب العرض؟')}
-        description={t(
-          'messaging.offer.withdraw_confirm.body',
-          'لن يتمكن البائع من قبول هذا العرض بعد سحبه.',
-        )}
-      >
-        <div className="mt-2 grid grid-cols-2 gap-3 qb-tablet:gap-5">
-          <Button size="sm" onClick={onWithdraw} disabled={withdrawMutation.isPending}>
-            {withdrawMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
-            {t('messaging.offer.withdraw_confirm.confirm', 'تأكيد السحب')}
-          </Button>
-          <Button variant="muted" size="sm" onClick={() => setConfirmOpen(false)} disabled={withdrawMutation.isPending}>
-            {t('messaging.offer.cancel', 'إلغاء')}
-          </Button>
-        </div>
-      </Modal>
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t(
+                'messaging.offer.withdraw_confirm.title',
+                'سحب العرض؟',
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {t(
+                'messaging.offer.withdraw_confirm.body',
+                'لن يتمكن البائع من قبول هذا العرض بعد سحبه.',
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose
+              render={
+                <Button type="button" variant="outline" className="rounded-full">
+                  {t('messaging.offer.cancel', 'إلغاء')}
+                </Button>
+              }
+            />
+            <Button
+              type="button"
+              onClick={onWithdraw}
+              disabled={withdrawMutation.isPending}
+              className="bg-coral hover:bg-coral/90 rounded-full text-white"
+            >
+              {withdrawMutation.isPending ? (
+                <Loader2Icon className="size-4 animate-spin" aria-hidden />
+              ) : null}
+              {t(
+                'messaging.offer.withdraw_confirm.confirm',
+                'تأكيد السحب',
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 /**
  * Account layout — wraps every authenticated `/account/...` page.
  *
+ * - Owns the `<main>` landmark, so the pages inside render none of their own.
  * - Settings sections render inside the "Settings" sidebar shell; My Ads,
  *   messages, notifications and the saved lists are full-width pages.
  * - Client-side guard via `useRequireAuth`. While the store hydrates we paint
@@ -20,16 +21,16 @@ import { t } from '@/lib/i18n/messages';
 export default function AccountLayout({ children }: { children: ReactNode }) {
   const { user, isLoading } = useRequireAuth();
   const pathname = usePathname() ?? '/account';
+  const page = isSettingsPath(pathname) ? <SettingsShell>{children}</SettingsShell> : children;
 
-  if (isLoading || !user) {
-    return (
-      <div className="flex min-h-svh items-center justify-center bg-qb-page" role="status">
-        <Loader2 className="size-6 animate-spin text-qb-ink-subtle motion-reduce:animate-none" aria-hidden="true" />
-        <span className="sr-only">{t('common.loading')}</span>
-      </div>
-    );
-  }
+  return <main className="bg-qb-page font-qb text-qb-ink">{isLoading || !user ? <AccountLoading /> : page}</main>;
+}
 
-  if (isSettingsPath(pathname)) return <SettingsShell>{children}</SettingsShell>;
-  return <div className="bg-qb-page font-qb text-qb-ink">{children}</div>;
+function AccountLoading() {
+  return (
+    <div className="flex min-h-svh items-center justify-center" role="status">
+      <Loader2 className="size-6 animate-spin text-qb-ink-subtle motion-reduce:animate-none" aria-hidden="true" />
+      <span className="sr-only">{t('common.loading')}</span>
+    </div>
+  );
 }

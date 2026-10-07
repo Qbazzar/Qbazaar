@@ -49,15 +49,18 @@ describe('SessionsList', () => {
     renderList();
 
     expect(screen.getByText(t('account.sessions.current_badge'))).toBeInTheDocument();
-    expect(screen.getByText(t('account.sessions.unknown_device'))).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: t('account.sessions.revoke') })).toHaveLength(1);
+    expect(screen.getAllByText(t('account.sessions.unknown_device'))[0]).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: new RegExp(t('account.sessions.revoke')) })).toHaveLength(1);
   });
 
   it('asks for confirmation before signing a device out', async () => {
     mockRevoke.mockResolvedValue(undefined as never);
     renderList();
 
-    fireEvent.click(screen.getByRole('button', { name: t('account.sessions.revoke') }));
+    // The row button names the device it signs out.
+    fireEvent.click(
+      screen.getByRole('button', { name: `${t('account.sessions.revoke')} ${t('account.sessions.unknown_device')}` }),
+    );
     expect(mockRevoke).not.toHaveBeenCalled();
 
     const dialog = await screen.findByRole('dialog');

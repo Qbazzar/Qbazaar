@@ -26,6 +26,7 @@ import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { useMakeOfferMutation } from '@/lib/queries/offers';
 import { AuthErrorCode } from '@/lib/api/types';
 import { ApiClientError } from '@/lib/api/auth';
+import { ModalActions } from '@/components/account/ModalActions';
 
 const NOTE_MAX = 280;
 
@@ -189,7 +190,7 @@ export function OfferComposer({ conversationId }: Props) {
           )}
         </Field>
 
-        <div className="mt-1 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <ModalActions className="mt-1">
           <Button type="submit" size="sm" disabled={mutation.isPending}>
             {mutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
             {t('messaging.offer.submit', 'إرسال العرض')}
@@ -197,7 +198,7 @@ export function OfferComposer({ conversationId }: Props) {
           <Button type="button" variant="muted" size="sm" onClick={() => handleClose(false)}>
             {t('messaging.offer.cancel', 'إلغاء')}
           </Button>
-        </div>
+        </ModalActions>
       </form>
     </Modal>
   );

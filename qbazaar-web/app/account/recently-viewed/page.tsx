@@ -18,9 +18,11 @@ import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Modal } from '@/components/design-system/Modal';
 import { AccountPage } from '@/components/account/AccountPage';
+import { ModalActions } from '@/components/account/ModalActions';
 import { PanelState } from '@/components/account/PanelState';
 import { Pager } from '@/components/account/Pager';
 import { SavedAdRow } from '@/components/account/SavedAdRow';
+import { useSlugLabels } from '@/components/account/useSlugLabels';
 import {
   useClearRecentlyViewedMutation,
   useRecentlyViewedQuery,
@@ -38,6 +40,7 @@ export default function RecentlyViewedPage() {
     per_page: PER_PAGE,
   });
   const clearMutation = useClearRecentlyViewedMutation();
+  const labels = useSlugLabels();
 
   const lastPage = data?.meta.last_page ?? 1;
   const hasItems = (data?.data.length ?? 0) > 0;
@@ -60,6 +63,7 @@ export default function RecentlyViewedPage() {
   return (
     <AccountPage
       title={t('recently_viewed.title', 'آخر ما شاهدت')}
+      titleClassName="qb-desktop:text-[44px]"
       actions={
         hasItems ? (
           <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(true)}>
@@ -93,7 +97,7 @@ export default function RecentlyViewedPage() {
           <ul className="flex flex-col gap-4 qb-tablet:gap-6">
             {data.data.map((ad) => (
               <li key={ad.id}>
-                <SavedAdRow ad={ad} at={ad.viewed_at} />
+                <SavedAdRow ad={ad} labels={labels} at={ad.viewed_at} />
               </li>
             ))}
           </ul>
@@ -109,7 +113,7 @@ export default function RecentlyViewedPage() {
         title={t('recently_viewed.clear_confirm.title', 'مسح السجل؟')}
         description={t('recently_viewed.clear_confirm.body')}
       >
-        <div className="mt-2 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <ModalActions className="mt-2">
           <Button size="sm" disabled={clearMutation.isPending} onClick={handleClear}>
             {clearMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
             {t('recently_viewed.clear_confirm.confirm', 'مسح')}
@@ -122,7 +126,7 @@ export default function RecentlyViewedPage() {
           >
             {t('recently_viewed.clear_confirm.cancel', 'إلغاء')}
           </Button>
-        </div>
+        </ModalActions>
       </Modal>
     </AccountPage>
   );

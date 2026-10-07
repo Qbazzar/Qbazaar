@@ -28,6 +28,7 @@ import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { ApiClientError } from '@/lib/api/auth';
 import type { Notification } from '@/lib/api/types';
+import { ModalActions } from '@/components/account/ModalActions';
 
 interface Props {
   notification: Notification;
@@ -48,7 +49,7 @@ export function NotificationRow({ notification: n }: Props) {
   const handleDelete = () => {
     deleteMutation.mutate(n.id, {
       onSuccess: () => {
-        toast.success(t('common.delete', 'حذف'));
+        toast.success(t('notifications.delete_success'));
         setConfirmOpen(false);
       },
       onError: (err) => {
@@ -81,13 +82,13 @@ export function NotificationRow({ notification: n }: Props) {
       </span>
 
       <div className="min-w-0 flex-1 py-1 qb-tablet:py-3">
-        <h3 className="truncate text-qb-micro font-semibold tracking-normal text-qb-ink-body qb-tablet:text-qb-h5 qb-tablet:font-medium">
+        <h2 className="truncate text-qb-micro font-semibold tracking-normal text-qb-ink-body qb-tablet:text-qb-body qb-tablet:font-medium qb-desktop:text-qb-h5">
           <bdi>{n.title}</bdi>
-        </h3>
-        <p className="mt-2 line-clamp-3 text-qb-tiny text-qb-ink-muted qb-tablet:mt-4 qb-tablet:line-clamp-2 qb-tablet:text-qb-body">
+        </h2>
+        <p className="mt-2 line-clamp-3 text-qb-tiny text-qb-ink-muted qb-tablet:mt-4 qb-tablet:line-clamp-2 qb-tablet:text-qb-caption qb-desktop:text-qb-body">
           <bdi>{n.body}</bdi>
         </p>
-        <p className="mt-2 flex items-center gap-1.5 text-qb-tiny text-qb-ink-subtle qb-tablet:mt-5 qb-tablet:text-qb-caption">
+        <p className="mt-2 flex items-center gap-1.5 text-qb-tiny text-qb-ink-subtle qb-tablet:mt-5 qb-tablet:text-qb-micro qb-desktop:text-qb-caption">
           <Icon icon={Clock} size="sm" className="size-3 qb-tablet:size-4" />
           {formatRelativeTime(n.created_at)}
         </p>
@@ -121,7 +122,7 @@ export function NotificationRow({ notification: n }: Props) {
         title={t('notifications.delete_confirm.title', 'حذف الإشعار؟')}
         description={t('notifications.delete_confirm.body', 'لا يمكن التراجع.')}
       >
-        <div className="mt-2 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <ModalActions className="mt-2">
           <Button size="sm" disabled={deleteMutation.isPending} onClick={handleDelete}>
             {deleteMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
             {t('notifications.delete_confirm.confirm', 'حذف')}
@@ -129,7 +130,7 @@ export function NotificationRow({ notification: n }: Props) {
           <Button variant="muted" size="sm" disabled={deleteMutation.isPending} onClick={() => setConfirmOpen(false)}>
             {t('common.cancel', 'إلغاء')}
           </Button>
-        </div>
+        </ModalActions>
       </Modal>
     </article>
   );

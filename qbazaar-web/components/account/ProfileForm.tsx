@@ -30,6 +30,7 @@ import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import type { AccountProfile, Language } from '@/lib/api/types';
 import { useAuthStore } from '@/store/auth';
+import { ModalActions } from './ModalActions';
 
 export type ProfileField = keyof ProfileInput;
 
@@ -140,7 +141,7 @@ export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileF
         )}
       </Field>
 
-      <div className="grid grid-cols-2 gap-3 qb-tablet:gap-5">
+      <ModalActions>
         <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
           {submitting ? (
             <>
@@ -156,7 +157,7 @@ export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileF
             {t('common.cancel')}
           </Button>
         ) : null}
-      </div>
+      </ModalActions>
     </form>
   );
 }

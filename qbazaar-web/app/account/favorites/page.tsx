@@ -3,7 +3,8 @@
 /**
  * Favorites index — the wishlist of 376:8322 (rows), stacked into the
  * category grid cards on tablets and phones, which have no frame of their
- * own. Auth gated by `account/layout`.
+ * own. Auth gated by `account/layout`. The heart on the photo only marks the
+ * ad as saved; the trash button is the one control that removes it.
  */
 import { useState } from 'react';
 import Link from 'next/link';
@@ -13,11 +14,11 @@ import { toast } from 'sonner';
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
-import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { AccountPage } from '@/components/account/AccountPage';
 import { PanelState } from '@/components/account/PanelState';
 import { Pager } from '@/components/account/Pager';
 import { SavedAdRow, savedRowButtonClass } from '@/components/account/SavedAdRow';
+import { useSlugLabels } from '@/components/account/useSlugLabels';
 import { useFavoritesQuery, useToggleFavoriteMutation } from '@/lib/queries/favorites';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { ApiClientError } from '@/lib/api/auth';
@@ -31,6 +32,7 @@ export default function FavoritesPage() {
     per_page: PER_PAGE,
   });
   const toggle = useToggleFavoriteMutation();
+  const labels = useSlugLabels();
 
   const remove = (adId: string) => {
     toggle.mutate(adId, {
@@ -44,7 +46,7 @@ export default function FavoritesPage() {
   const lastPage = data?.meta.last_page ?? 1;
 
   return (
-    <AccountPage title={t('favorites.wishlist_title')}>
+    <AccountPage title={t('favorites.wishlist_title')} titleClassName="qb-desktop:text-[44px]">
       {isLoading ? (
         <PanelState loading />
       ) : isError ? (
@@ -71,12 +73,14 @@ export default function FavoritesPage() {
               <li key={ad.id}>
                 <SavedAdRow
                   ad={ad}
-                  photoAction={
-                    <FavoriteButton
-                      adId={ad.id}
-                      initialFavorited
-                      className="size-[30px] bg-qb-surface text-qb-danger shadow-qb-soft ring-0 backdrop-blur-none [&_svg]:size-4"
-                    />
+                  labels={labels}
+                  photoBadge={
+                    <span
+                      aria-hidden="true"
+                      className="flex size-[30px] items-center justify-center rounded-full bg-qb-surface text-qb-danger shadow-qb-soft"
+                    >
+                      <Heart className="size-4 fill-current" />
+                    </span>
                   }
                   action={
                     <button

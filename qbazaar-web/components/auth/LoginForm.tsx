@@ -77,6 +77,7 @@ export function LoginForm() {
             type="text"
             autoComplete="username"
             dir="ltr"
+            className="rtl:placeholder:text-right"
             placeholder={t('auth.login.identifier_placeholder')}
             {...form.register('identifier')}
           />

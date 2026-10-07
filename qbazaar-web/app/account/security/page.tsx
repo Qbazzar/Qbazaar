@@ -61,6 +61,7 @@ export default function AccountSecurityPage() {
         open={editingPassword}
         onOpenChange={setEditingPassword}
         title={t('account.security.edit_password')}
+        showCloseButton
         className="max-w-[668px]"
       >
         <PasswordChangeForm onDone={() => setEditingPassword(false)} onCancel={() => setEditingPassword(false)} />

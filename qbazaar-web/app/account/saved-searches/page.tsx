@@ -16,15 +16,17 @@ import { Icon } from '@/components/design-system/Icon';
 import { AccountPage } from '@/components/account/AccountPage';
 import { PanelState } from '@/components/account/PanelState';
 import { SavedSearchCard } from '@/components/account/SavedSearchCard';
+import { useSlugLabels } from '@/components/account/useSlugLabels';
 import { useSavedSearchesQuery } from '@/lib/queries/search';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { ApiClientError } from '@/lib/api/auth';
 
 export default function SavedSearchesPage() {
   const { data, isLoading, isError, error } = useSavedSearchesQuery();
+  const labels = useSlugLabels();
 
   return (
-    <AccountPage title={t('account.saved_searches.title', 'عمليات البحث المحفوظة')}>
+    <AccountPage title={t('account.saved_searches.title', 'عمليات البحث المحفوظة')} titleClassName="qb-desktop:text-[44px]">
       {isLoading ? (
         <PanelState loading />
       ) : isError ? (
@@ -54,7 +56,7 @@ export default function SavedSearchesPage() {
         <ul className="flex flex-col gap-4 qb-tablet:gap-6">
           {data.map((search) => (
             <li key={search.id}>
-              <SavedSearchCard search={search} />
+              <SavedSearchCard search={search} labels={labels} />
             </li>
           ))}
         </ul>

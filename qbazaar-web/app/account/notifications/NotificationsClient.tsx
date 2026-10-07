@@ -12,7 +12,7 @@ import { Button } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
-import { AccountPage, scrollingTabListClass } from '@/components/account/AccountPage';
+import { AccountPage, pillTabClass, scrollingTabListClass } from '@/components/account/AccountPage';
 import { PanelState } from '@/components/account/PanelState';
 import { Pager } from '@/components/account/Pager';
 import { EnablePushButton } from '@/components/notifications/EnablePushButton';
@@ -70,7 +70,7 @@ export function NotificationsClient() {
       <Tabs value={tab} onValueChange={(value) => handleTabChange(value as NotificationTab)}>
         <TabList aria-label={t('notifications.title', 'الإشعارات')} className={scrollingTabListClass}>
           {TABS.map((key) => (
-            <Tab key={key} value={key} className="gap-2">
+            <Tab key={key} value={key} className={cn('gap-2', pillTabClass)}>
               {t(`notifications.tabs.${key}`)}
               {key === 'unread' && unreadCount > 0 ? (
                 <span

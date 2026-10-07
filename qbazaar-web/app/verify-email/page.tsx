@@ -18,8 +18,9 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * Standalone landing page reached from the Laravel signed verification email.
  *
- * Lives OUTSIDE the `(auth)` group on purpose: this is a result page, not an
- * auth form, so it keeps the site header and shows the auth card on the page.
+ * The design puts it in the auth shell (send-code.html), but it stays outside
+ * the `(auth)` group until the site header and footer gates also skip
+ * `/verify-email`; inside the group it would show both headers.
  */
 export default function VerifyEmailPage() {
   return (

@@ -27,11 +27,12 @@ import {
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
-import { Avatar } from '@/components/design-system/Avatar';
 import { Badge } from '@/components/design-system/Badge';
 import { Icon } from '@/components/design-system/Icon';
+import { NamedAvatar } from '@/components/account/NamedAvatar';
 import { AccountTypeBadge, ProfileSummary } from '@/components/account/ProfileSummary';
 import { ACTIVITY_NAV, SETTINGS_NAV, type AccountNavItem } from '@/components/account/account-nav';
+import { formatCount } from '@/components/account/format';
 import { useSignOut } from '@/components/account/useSignOut';
 import { useAuth } from '@/hooks/useAuth';
 import { getAccountSummary } from '@/lib/api/account';
@@ -109,7 +110,7 @@ export default function AccountHubPage() {
           joinedAt={user.created_at}
           subtitle={<span dir="ltr">{user.email}</span>}
         />
-        <ul aria-busy={isFetching} className="mt-6 grid grid-cols-2 gap-4 qb-desktop:grid-cols-3">
+        <ul aria-busy={isFetching} className="mt-6 [display:grid] grid-cols-2 gap-4 qb-desktop:grid-cols-3">
           {STAT_TILES.map((tile) => (
             <li key={tile.labelKey}>
               <StatTileLink tile={tile} value={summary ? tile.value(summary) : null} />
@@ -148,7 +149,9 @@ function StatTileLink({ tile, value }: { tile: StatTile; value: number | null })
         <Icon icon={tile.icon} size="lg" />
       </span>
       <span className="mt-3 text-qb-body text-qb-ink-subtle">{t(tile.labelKey)}</span>
-      <span className="mt-3 text-qb-h2 leading-none font-semibold text-qb-ink-title">{value ?? '—'}</span>
+      <span className="mt-3 text-qb-h2 leading-none font-semibold text-qb-ink-title">
+        {value === null ? '—' : formatCount(value)}
+      </span>
     </Link>
   );
 }
@@ -160,7 +163,7 @@ function PhoneHub({ user, summary }: { user: User; summary?: AccountSummary }) {
   return (
     <div className="qb-tablet:hidden">
       <div className="flex items-center gap-4 px-2 pt-4">
-        <Avatar name={user.full_name} src={user.avatar_url} size="lg" tone="neutral" className="size-[63px] bg-qb-fill" />
+        <NamedAvatar name={user.full_name} src={user.avatar_url} size="lg" tone="neutral" className="size-[63px] bg-qb-fill" />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-qb-h5 font-semibold text-qb-ink">{user.full_name}</p>
@@ -219,7 +222,7 @@ function HubGroup({
               <span className="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
               {count ? (
                 <Badge tone="brand" size="sm" className="rounded-qb-pill font-semibold">
-                  {count > 99 ? '99+' : count}
+                  {count > 99 ? `${formatCount(99)}+` : formatCount(count)}
                 </Badge>
               ) : null}
               {item.danger ? null : <Icon icon={ChevronRight} flipInRtl className="text-qb-ink-subtle" />}

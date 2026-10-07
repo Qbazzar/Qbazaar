@@ -22,7 +22,7 @@
  * store. We do NOT touch React Query directly here; the consumer can pass
  * `onUploaded` if it wants to invalidate a specific query.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Camera, Loader2, ZoomIn } from 'lucide-react';
@@ -37,6 +37,8 @@ import { uploadAvatar } from '@/lib/api/uploads';
 import { ApiClientError } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import type { AvatarUploadResponse } from '@/lib/api/types';
+
+import { ModalActions } from './ModalActions';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -148,6 +150,7 @@ export function AvatarUploader({
   const currentAvatar =
     user?.avatar_medium_url ?? user?.avatar_url ?? null;
 
+  const hintId = useId();
   const [dragOver, setDragOver] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
 
@@ -278,7 +281,8 @@ export function AvatarUploader({
           className="sr-only"
           onChange={handleFileChange}
           disabled={uploading}
-          aria-label={t('account.avatar.change')}
+          aria-label={t('account.avatar.change_photo')}
+          aria-describedby={hintId}
         />
         <span className="relative">
           <Avatar
@@ -301,7 +305,9 @@ export function AvatarUploader({
           {t('account.avatar.change_photo')}
         </span>
       </label>
-      <p className="mt-1 text-qb-label text-qb-ink-subtle">{t('account.avatar.supported')}</p>
+      <p id={hintId} className="mt-1 text-qb-label text-qb-ink-subtle">
+        {t('account.avatar.supported')}
+      </p>
 
       {inlineError ? (
         <p role="alert" className="mt-3 rounded-qb-md bg-qb-danger-soft px-3 py-2 text-qb-caption text-qb-danger">
@@ -351,7 +357,7 @@ export function AvatarUploader({
           />
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 qb-tablet:gap-5">
+        <ModalActions className="mt-6">
           <Button size="sm" onClick={handleConfirmCrop} disabled={uploading || !croppedArea}>
             {uploading ? (
               <>
@@ -365,7 +371,7 @@ export function AvatarUploader({
           <Button variant="muted" size="sm" onClick={closeCropModal} disabled={uploading}>
             {t('account.avatar.crop_cancel')}
           </Button>
-        </div>
+        </ModalActions>
       </Modal>
     </div>
   );

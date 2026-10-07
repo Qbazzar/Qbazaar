@@ -20,7 +20,8 @@
     "min": "الأدنى",
     "max": "الأعلى",
     "filters": "الفلاتر",
-    "view_all": "عرض الكل"
+    "view_all": "عرض الكل",
+    "currency": "ر.ق"
   },
   "auth": {
     "password": {
@@ -46,7 +47,7 @@
       "title": "أهلاً بعودتك",
       "subtitle": "سجّل دخولك إلى حساب QBazaar.",
       "identifier_label": "البريد الإلكتروني أو رقم الهاتف",
-      "identifier_placeholder": "you@example.com أو +97455123456",
+      "identifier_placeholder": "\u2066you@example.com\u2069 أو \u2066+97455123456\u2069",
       "password_label": "كلمة المرور",
       "password_placeholder": "••••••••",
       "remember_me": "ابقني مسجلاً",
@@ -97,7 +98,7 @@
       "good": "جيدة",
       "strong": "قوية",
       "rules": {
-        "length": "٨ أحرف على الأقل",
+        "length": "8 أحرف على الأقل",
         "uppercase": "حرف كبير (A-Z)",
         "lowercase": "حرف صغير (a-z)",
         "number": "رقم (0-9)",
@@ -225,16 +226,37 @@
   },
   "account": {
     "price": {
-      "amount": "{amount} ر.ق"
+      "negotiable": "{price} · قابل للتفاوض"
     },
     "my_ads": {
       "tabs_label": "حالة الإعلان",
-      "total": "لديك {count} إعلان",
+      "total": {
+        "zero": "لديك {count} إعلان",
+        "one": "لديك {count} إعلان",
+        "two": "لديك {count} إعلان",
+        "few": "لديك {count} إعلانات",
+        "many": "لديك {count} إعلانًا",
+        "other": "لديك {count} إعلان"
+      },
       "untitled": "(بدون عنوان)",
       "without_photo": "بدون صورة",
       "complete": "إكمال",
-      "visitors": "{count} زائر",
-      "likes": "{count} إعجاب",
+      "visitors": {
+        "zero": "{count} زائر",
+        "one": "{count} زائر",
+        "two": "{count} زائر",
+        "few": "{count} زوار",
+        "many": "{count} زائرًا",
+        "other": "{count} زائر"
+      },
+      "likes": {
+        "zero": "{count} إعجاب",
+        "one": "{count} إعجاب",
+        "two": "{count} إعجاب",
+        "few": "{count} إعجابات",
+        "many": "{count} إعجابًا",
+        "other": "{count} إعجاب"
+      },
       "published_on": "نُشر في: {date}",
       "empty_body": "انشر إعلاناً وسيظهر هنا مع حالته وإحصاءاته.",
       "delete_label": "حذف {title}"
@@ -487,9 +509,9 @@
       "saved_ago": "• حُفظ {when}",
       "view_results": "عرض النتائج",
       "delete_label": "حذف البحث المحفوظ {name}",
-      "price_range": "{min} – {max} ر.ق",
-      "price_max": "حتى {max} ر.ق",
-      "price_min": "من {min} ر.ق",
+      "price_range": "ر.ق {min} – {max}",
+      "price_max": "حتى ر.ق {max}",
+      "price_min": "من ر.ق {min}",
       "params": {
         "keyword": "الكلمة",
         "category": "الفئة",
@@ -841,6 +863,7 @@
   },
   "messaging": {
     "thread_label": "رسائل هذه المحادثة",
+    "incoming_message": "رسالة جديدة من {name}: {message}",
     "chat_label": "المحادثة",
     "unread_label": "رسائل غير مقروءة",
     "safety_notice": "مع «الدفع الآمن» لا تحتاج إلى مشاركة بريدك أو رقم هاتفك أو بياناتك البنكية مع أي أحد.",
@@ -871,7 +894,6 @@
       "send_failed": "تعذّر إرسال الرسالة، حاول مرة أخرى"
     },
     "offer": {
-      "card_title": "عرض سعر",
       "make": "اعرض سعر",
       "dialog_description": "اقترح سعراً مناسباً، وسيقوم البائع بقبوله أو رفضه.",
       "amount_label": "المبلغ (ر.ق)",
@@ -913,6 +935,7 @@
   "notifications": {
     "open_unread": "غير مقروء: {title}",
     "delete_label": "حذف الإشعار: {title}",
+    "delete_success": "تم حذف الإشعار",
     "empty_body": "ستظهر هنا تحديثات إعلاناتك ورسائلك وعمليات البحث المحفوظة.",
     "title": "الإشعارات",
     "header_label": "الإشعارات",
@@ -1081,7 +1104,14 @@
       "resolved": "المنتهية"
     },
     "no_tickets": "لا توجد تذاكر في هذا التبويب",
-    "replies_count": "{count} ردود",
+    "replies_count": {
+      "zero": "{count} رد",
+      "one": "{count} رد",
+      "two": "{count} رد",
+      "few": "{count} ردود",
+      "many": "{count} ردًا",
+      "other": "{count} رد"
+    },
     "back_to_list": "العودة إلى تذاكري",
     "you": "أنت",
     "staff_badge": "فريق الدعم",
