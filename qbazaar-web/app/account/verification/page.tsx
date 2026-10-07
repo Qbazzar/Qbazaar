@@ -3,28 +3,24 @@
 /**
  * FE-2.5 — Verification status page.
  *
- * Shows the four verification channels (email / phone / business / KYC) with
- * checkmark icons. Email + phone are actionable today; business + KYC are
- * placeholders for later sprints. Phone-gated actions land here with a
- * `continue` path so the user returns to them after verifying.
+ * Shows the four verification channels (email / phone / business / KYC) as
+ * Account Settings rows with a status chip. Email + phone are actionable
+ * today; business + KYC are placeholders for later sprints. Phone-gated
+ * actions land here with a `continue` path so the user returns to them after
+ * verifying.
  */
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  CheckCircle2Icon,
-  CircleIcon,
-  Loader2Icon,
-  MailIcon,
-  PhoneIcon,
-  BriefcaseIcon,
-  BadgeCheckIcon,
-} from 'lucide-react';
+import { BadgeCheck, Briefcase, Loader2, Mail, Phone } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/components/design-system/Badge';
+import { Button, buttonVariants } from '@/components/design-system/Button';
+import { PanelState } from '@/components/account/PanelState';
+import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
+import { VerifiedBadge } from '@/components/account/VerifiedBadge';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { getVerificationStatus } from '@/lib/api/account';
 import { sendEmailVerification, ApiClientError } from '@/lib/api/auth';
@@ -122,48 +118,26 @@ function VerificationContent() {
   };
 
   return (
-    <section className="space-y-6">
-      <header className="space-y-1.5">
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-          {t('account.verification.title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {t('account.verification.subtitle')}
-        </p>
-      </header>
-
+    <SettingsPanel title={t('account.verification.title')} description={t('account.verification.subtitle')}>
       {continueTarget && !isLoading ? (
-        <PhoneGateBanner
-          verified={status.phone_verified}
-          continueTarget={continueTarget}
-        />
+        <PhoneGateBanner verified={status.phone_verified} continueTarget={continueTarget} />
       ) : null}
 
       {isLoading ? (
-        <LoadingState />
+        <PanelState loading />
       ) : (
-        <ul className="grid gap-3">
+        <SettingsList>
           <VerificationRow
-            icon={MailIcon}
+            icon={<Mail />}
             title={t('account.verification.channels.email')}
             value={user?.email ?? ''}
             verified={status.email_verified}
             action={
               status.email_verified ? null : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSendEmail}
-                  disabled={sendingEmail}
-                  className="rounded-full px-3 text-xs font-semibold"
-                >
+                <Button variant="outline" size="sm" onClick={handleSendEmail} disabled={sendingEmail}>
                   {sendingEmail ? (
                     <>
-                      <Loader2Icon
-                        className="size-3.5 animate-spin"
-                        aria-hidden
-                      />
+                      <Loader2 className="animate-spin" aria-hidden="true" />
                       {t('account.verification.ctas.sending_email')}
                     </>
                   ) : (
@@ -175,81 +149,58 @@ function VerificationContent() {
           />
 
           <VerificationRow
-            icon={PhoneIcon}
+            icon={<Phone />}
             title={t('account.verification.channels.phone')}
             value={user?.phone ?? ''}
             verified={status.phone_verified}
+            note={
+              !status.phone_verified && phoneMissing ? (
+                <>
+                  <span className="block font-semibold text-qb-ink">{t('auth.phone_gate.missing_phone_title')}</span>
+                  {t('auth.phone_gate.missing_phone_body')}
+                </>
+              ) : null
+            }
             action={
               status.phone_verified ? null : phoneMissing ? (
-                <Link
-                  href="/support/new"
-                  className={cn(
-                    buttonVariants({ variant: 'outline', size: 'sm' }),
-                    'rounded-full px-3 text-xs font-semibold',
-                  )}
-                >
+                <Link href="/support/new" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
                   {t('auth.phone_gate.contact_support')}
                 </Link>
               ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleVerifyPhone}
-                  className="rounded-full px-3 text-xs font-semibold"
-                >
+                <Button size="sm" onClick={handleVerifyPhone}>
                   {t('account.verification.ctas.verify_phone')}
                 </Button>
               )
             }
           />
-          {!status.phone_verified && phoneMissing ? (
-            <li className="text-muted-foreground px-1 text-xs leading-relaxed">
-              <span className="text-ink-900 block font-semibold">
-                {t('auth.phone_gate.missing_phone_title')}
-              </span>
-              {t('auth.phone_gate.missing_phone_body')}
-            </li>
-          ) : null}
 
           <VerificationRow
-            icon={BriefcaseIcon}
+            icon={<Briefcase />}
             title={t('account.verification.channels.business')}
             value={null}
             verified={status.business_verified}
-            action={
-              status.business_verified ? null : (
-                <span className="text-muted-foreground text-xs">
-                  {t('account.verification.ctas.business_soon')}
-                </span>
-              )
-            }
+            action={status.business_verified ? null : <ComingSoon label={t('account.verification.ctas.business_soon')} />}
           />
 
           <VerificationRow
-            icon={BadgeCheckIcon}
+            icon={<BadgeCheck />}
             title={t('account.verification.channels.kyc')}
             value={null}
             verified={status.kyc_verified}
-            action={
-              status.kyc_verified ? null : (
-                <span className="text-muted-foreground text-xs">
-                  {t('account.verification.ctas.kyc_soon')}
-                </span>
-              )
-            }
+            action={status.kyc_verified ? null : <ComingSoon label={t('account.verification.ctas.kyc_soon')} />}
           />
-        </ul>
+        </SettingsList>
       )}
-    </section>
+    </SettingsPanel>
   );
 }
 
 function LoadingState() {
-  return (
-    <div className="flex justify-center py-10" role="status">
-      <Loader2Icon className="text-muted-foreground size-5 animate-spin" aria-hidden />
-    </div>
-  );
+  return <PanelState loading />;
+}
+
+function ComingSoon({ label }: { label: string }) {
+  return <span className="text-qb-label text-qb-ink-subtle">{label}</span>;
 }
 
 function PhoneGateBanner({
@@ -262,29 +213,20 @@ function PhoneGateBanner({
   return (
     <div
       role="status"
-      className="bg-coral/10 flex flex-col items-start gap-3 rounded-2xl p-4 sm:flex-row sm:items-center"
+      className="mb-6 flex flex-col items-start gap-3 rounded-qb-xl border border-qb-brand/30 bg-qb-brand-soft p-4 qb-tablet:flex-row qb-tablet:items-center qb-tablet:px-6"
     >
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-ink-900 text-sm font-semibold">
-          {verified
-            ? t('auth.phone_gate.verified_title')
-            : t('auth.phone_gate.title')}
+      <div className="min-w-0 flex-1">
+        <p className="text-qb-body font-semibold text-qb-ink">
+          {verified ? t('auth.phone_gate.verified_title') : t('auth.phone_gate.title')}
         </p>
         {verified ? null : (
-          <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
-            {t('auth.phone_gate.body.generic')}{' '}
-            {t('auth.phone_gate.body.returning')}
+          <p className="mt-1 text-qb-caption text-qb-ink-body">
+            {t('auth.phone_gate.body.generic')} {t('auth.phone_gate.body.returning')}
           </p>
         )}
       </div>
       {verified ? (
-        <Link
-          href={continueTarget}
-          className={cn(
-            buttonVariants({ size: 'sm' }),
-            'shrink-0 rounded-full px-4 text-xs font-semibold',
-          )}
-        >
+        <Link href={continueTarget} className={buttonVariants({ size: 'sm' })}>
           {t('auth.phone_gate.resume')}
         </Link>
       ) : null}
@@ -293,56 +235,42 @@ function PhoneGateBanner({
 }
 
 function VerificationRow({
-  icon: Icon,
+  icon,
   title,
   value,
   verified,
+  note,
   action,
 }: {
-  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+  icon: ReactNode;
   title: string;
   value: string | null;
   verified: boolean;
-  action: React.ReactNode;
+  note?: ReactNode;
+  action: ReactNode;
 }) {
   return (
-    <li className="bg-card ring-foreground/10 flex flex-col items-start gap-3 rounded-2xl p-4 ring-1 sm:flex-row sm:items-center">
-      <span className="bg-muted text-ink-700 inline-flex size-10 shrink-0 items-center justify-center rounded-xl">
-        <Icon className="size-5" aria-hidden />
-      </span>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-ink-900 text-sm font-semibold">{title}</span>
+    <SettingsRow
+      icon={icon}
+      label={title}
+      value={
+        <span className="flex flex-wrap items-center gap-2">
+          {value ? (
+            <span dir="ltr" className="break-all">
+              {value}
+            </span>
+          ) : null}
           {verified ? (
-            <span
-              className="text-sage inline-flex items-center gap-1 text-xs font-medium"
-              aria-label={t('account.verification.status.verified')}
-            >
-              <CheckCircle2Icon className="size-3.5" aria-hidden />
-              <span>{t('account.verification.status.verified')}</span>
-            </span>
+            <VerifiedBadge />
           ) : (
-            <span
-              className="text-muted-foreground inline-flex items-center gap-1 text-xs"
-              aria-label={t('account.verification.status.not_verified')}
-            >
-              <CircleIcon className="size-3.5" aria-hidden />
-              <span>{t('account.verification.status.not_verified')}</span>
-            </span>
+            <Badge tone="neutral" size="sm" className="font-qb-label">
+              {t('account.verification.status.not_verified')}
+            </Badge>
           )}
-        </div>
-        {value ? (
-          <span
-            className="text-muted-foreground mt-0.5 block truncate text-xs"
-            dir="ltr"
-          >
-            {value}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="shrink-0">{action}</div>
-    </li>
+        </span>
+      }
+      description={note}
+      action={action}
+    />
   );
 }

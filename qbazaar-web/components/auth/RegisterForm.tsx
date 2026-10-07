@@ -1,32 +1,40 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { EyeIcon, EyeOffIcon, Loader2Icon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { registerSchema, type RegisterInput } from '@/lib/validation/auth';
 import { ApiClientError, register as apiRegister } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
-import { FieldError } from './FieldError';
+import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
+import { FieldError, announcedError } from './FieldError';
+import { PasswordInput } from './PasswordInput';
 import { PhoneInput } from './PhoneInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { Turnstile, type TurnstileHandle } from './Turnstile';
+
+const ACCOUNT_TYPES = [
+  { value: 'private', labelKey: 'auth.register.account_type_private' },
+  { value: 'business', labelKey: 'auth.register.account_type_business' },
+] as const;
+
+const sectionTitle = 'text-qb-body-lg font-medium text-qb-ink-title qb-tablet:text-qb-h5';
 
 export function RegisterForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
   const setHydrated = useAuthStore((s) => s.setHydrated);
-  const [showPassword, setShowPassword] = useState(false);
   const turnstile = useRef<TurnstileHandle>(null);
 
   const form = useForm<RegisterInput>({
@@ -62,130 +70,109 @@ export function RegisterForm() {
   const passwordValue = form.watch('password');
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="full_name">{t('auth.register.full_name_label')}</Label>
-        <Input
-          id="full_name"
-          type="text"
-          autoComplete="name"
-          placeholder={t('auth.register.full_name_placeholder')}
-          aria-invalid={Boolean(errors.full_name)}
-          aria-describedby={errors.full_name ? 'full_name-error' : undefined}
-          className="h-10"
-          {...form.register('full_name')}
-        />
-        <FieldError id="full_name-error" message={errors.full_name?.message} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="email">{t('auth.register.email_label')}</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          dir="ltr"
-          placeholder={t('auth.register.email_placeholder')}
-          aria-invalid={Boolean(errors.email)}
-          aria-describedby={errors.email ? 'email-error' : undefined}
-          className="h-10"
-          {...form.register('email')}
-        />
-        <FieldError id="email-error" message={errors.email?.message} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="phone">{t('auth.register.phone_label')}</Label>
-        <Controller
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <PhoneInput
-              id="phone"
-              name={field.name}
-              value={field.value}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              ariaInvalid={Boolean(errors.phone)}
-              ariaDescribedBy={errors.phone ? 'phone-error' : undefined}
-              placeholder={t('auth.register.phone_placeholder')}
-            />
-          )}
-        />
-        <FieldError id="phone-error" message={errors.phone?.message} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="password">{t('auth.register.password_label')}</Label>
-        <div className="relative" dir="ltr">
-          <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="new-password"
-            placeholder={t('auth.register.password_placeholder')}
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={errors.password ? 'password-error' : undefined}
-            className="h-10 pr-10"
-            {...form.register('password')}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            tabIndex={-1}
-          >
-            {showPassword ? (
-              <EyeOffIcon className="size-4" />
-            ) : (
-              <EyeIcon className="size-4" />
-            )}
-          </button>
+    <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
+      <fieldset>
+        <legend className={sectionTitle}>{t('auth.register.usage_question')}</legend>
+        <div className="mt-3.5 [display:grid] gap-3 qb-tablet:grid-cols-2 qb-tablet:gap-3.5">
+          {ACCOUNT_TYPES.map(({ value, labelKey }) => (
+            <label
+              key={value}
+              className={cn(
+                'flex h-11 cursor-pointer items-center gap-2.5 rounded-qb-md border border-qb-line bg-qb-surface px-4 text-qb-caption text-qb-ink transition-colors',
+                'has-[:checked]:border-qb-brand has-[:checked]:bg-qb-brand-soft',
+                'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
+              )}
+            >
+              <input type="radio" value={value} className="size-[18px] accent-qb-brand" {...form.register('account_type')} />
+              {t(labelKey)}
+            </label>
+          ))}
         </div>
-        <PasswordStrengthIndicator password={passwordValue ?? ''} />
-        <FieldError id="password-error" message={errors.password?.message} />
-      </div>
-
-      <fieldset className="space-y-1.5">
-        <legend className="text-sm font-medium leading-none">
-          {t('auth.register.account_type_label')}
-        </legend>
-        <Controller
-          control={form.control}
-          name="account_type"
-          render={({ field }) => (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <RadioCard
-                checked={field.value === 'private'}
-                onSelect={() => field.onChange('private')}
-                label={t('auth.register.account_type_private')}
-              />
-              <RadioCard
-                checked={field.value === 'business'}
-                onSelect={() => field.onChange('business')}
-                label={t('auth.register.account_type_business')}
-              />
-            </div>
-          )}
-        />
       </fieldset>
 
-      <div className="space-y-1.5">
-        <label className="flex items-start gap-2.5 text-sm leading-relaxed text-foreground">
+      <fieldset>
+        <legend className={cn(sectionTitle, 'mb-5')}>{t('auth.register.login_details')}</legend>
+        <div className="flex flex-col gap-6">
+          <Field label={t('auth.register.full_name_label')} required error={announcedError(errors.full_name?.message)}>
+            {(control) => (
+              <Input
+                {...control}
+                type="text"
+                autoComplete="name"
+                placeholder={t('auth.register.full_name_placeholder')}
+                {...form.register('full_name')}
+              />
+            )}
+          </Field>
+
+          <Field label={t('auth.register.email_label')} required error={announcedError(errors.email?.message)}>
+            {(control) => (
+              <Input
+                {...control}
+                type="email"
+                autoComplete="email"
+                dir="ltr"
+                placeholder={t('auth.register.email_placeholder')}
+                {...form.register('email')}
+              />
+            )}
+          </Field>
+
+          <Field label={t('auth.register.phone_label')} required error={announcedError(errors.phone?.message)}>
+            {(control) => (
+              <Controller
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <PhoneInput
+                    ref={field.ref}
+                    id={control.id}
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    required
+                    ariaInvalid={control['aria-invalid']}
+                    ariaDescribedBy={control['aria-describedby']}
+                    placeholder={t('auth.register.phone_placeholder')}
+                  />
+                )}
+              />
+            )}
+          </Field>
+
+          <Field label={t('auth.register.password_label')} required error={announcedError(errors.password?.message)}>
+            {(control) => (
+              <div className="flex flex-col gap-3">
+                <PasswordInput
+                  {...control}
+                  autoComplete="new-password"
+                  placeholder={t('auth.register.password_placeholder')}
+                  {...form.register('password')}
+                />
+                <PasswordStrengthIndicator password={passwordValue ?? ''} />
+              </div>
+            )}
+          </Field>
+        </div>
+      </fieldset>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="flex items-start gap-2.5 text-qb-caption leading-relaxed text-qb-ink-subtle qb-tablet:text-qb-body-sm">
           <input
             type="checkbox"
-            className="accent-coral mt-0.5 size-4 rounded border-input"
-            {...form.register('accepted_terms')}
-            aria-invalid={Boolean(errors.accepted_terms)}
+            className="mt-1 size-[17px] shrink-0 accent-qb-ink"
+            aria-invalid={errors.accepted_terms ? true : undefined}
             aria-describedby={errors.accepted_terms ? 'terms-error' : undefined}
+            {...form.register('accepted_terms')}
           />
-          <span className="text-muted-foreground">
+          <span>
             {t('auth.register.terms_prefix')}{' '}
-            <Link href="/terms" className="text-coral hover:underline">
+            <Link href="/terms" className={authLinkClass}>
               {t('auth.register.terms_link')}
             </Link>{' '}
             {t('auth.register.terms_and')}{' '}
-            <Link href="/privacy" className="text-coral hover:underline">
+            <Link href="/privacy" className={authLinkClass}>
               {t('auth.register.privacy_link')}
             </Link>
             .
@@ -196,58 +183,24 @@ export function RegisterForm() {
 
       <Turnstile ref={turnstile} />
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={submitting}
-        className={cn(
-          'h-11 w-full rounded-full text-sm font-semibold',
-          submitting && 'cursor-progress',
-        )}
-      >
+      <Button type="submit" fullWidth disabled={submitting} className={cn(authSubmitClass, submitting && 'cursor-progress')}>
         {submitting ? (
           <>
-            <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
+            <Loader2 className="animate-spin" aria-hidden="true" />
             {t('auth.register.submitting')}
           </>
         ) : (
-          t('auth.register.submit')
+          t('auth.register.submit_free')
         )}
       </Button>
 
-      <p className="text-muted-foreground text-center text-sm">
+      <AuthFooter>
         {t('auth.register.have_account')}{' '}
-        <Link href="/login" className="text-coral font-medium hover:underline">
+        <Link href="/login" className={authLinkClass}>
           {t('auth.register.go_to_login')}
         </Link>
-      </p>
+      </AuthFooter>
     </form>
-  );
-}
-
-function RadioCard({
-  checked,
-  onSelect,
-  label,
-}: {
-  checked: boolean;
-  onSelect: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={checked}
-      className={cn(
-        'h-10 rounded-lg border text-sm font-medium transition-colors',
-        checked
-          ? 'border-coral bg-coral/10 text-foreground'
-          : 'border-input bg-background text-muted-foreground hover:bg-muted',
-      )}
-    >
-      {label}
-    </button>
   );
 }
 

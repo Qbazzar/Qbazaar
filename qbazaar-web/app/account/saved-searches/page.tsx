@@ -1,86 +1,66 @@
 'use client';
 
 /**
- * FE-6.x — Saved searches index.
+ * FE-6.x — Saved searches index (381:8815, empty 381:8657).
  *
  * Auth-gated by the wrapping `app/account/layout.tsx`. Lists every saved
- * search the user owns as a card with two actions: Run (route restoration)
- * and Delete (confirm dialog handled inside the card component).
+ * search the user owns as a card with two actions: View Result (route
+ * restoration) and Delete (confirm dialog handled inside the card component).
  */
-import { Loader2Icon, SearchIcon } from 'lucide-react';
 import Link from 'next/link';
+import { Search } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/design-system/Button';
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { Icon } from '@/components/design-system/Icon';
+import { AccountPage } from '@/components/account/AccountPage';
+import { PanelState } from '@/components/account/PanelState';
 import { SavedSearchCard } from '@/components/account/SavedSearchCard';
+import { useSlugLabels } from '@/components/account/useSlugLabels';
 import { useSavedSearchesQuery } from '@/lib/queries/search';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { ApiClientError } from '@/lib/api/auth';
 
 export default function SavedSearchesPage() {
   const { data, isLoading, isError, error } = useSavedSearchesQuery();
+  const labels = useSlugLabels();
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <p className="text-coral text-xs font-bold uppercase tracking-[0.18em]">
-          {t('account.saved_searches.title', 'عمليات البحث المحفوظة')}
-        </p>
-        <h1 className="font-display text-ink-900 text-3xl md:text-4xl">
-          {t('account.saved_searches.title', 'عمليات البحث المحفوظة')}
-        </h1>
-        <p className="text-ink-500 text-sm">
-          {t('account.saved_searches.subtitle')}
-        </p>
-      </header>
-
+    <AccountPage title={t('account.saved_searches.title', 'عمليات البحث المحفوظة')} titleClassName="qb-desktop:text-[44px]">
       {isLoading ? (
-        <div className="flex justify-center py-12" role="status">
-          <Loader2Icon
-            className="text-muted-foreground size-6 animate-spin"
-            aria-hidden
-          />
-        </div>
+        <PanelState loading />
       ) : isError ? (
-        <p className="text-destructive py-12 text-center text-sm">
-          {error instanceof ApiClientError
-            ? translateMaybeKey(`search.errors.${error.code.toLowerCase()}`) ||
-              translateMaybeKey('search.errors.load_failed') ||
-              error.message
-            : t('search.errors.load_failed', 'تعذّر تحميل البيانات')}
-        </p>
+        <PanelState
+          loading={false}
+          message={
+            error instanceof ApiClientError
+              ? translateMaybeKey(`search.errors.${error.code.toLowerCase()}`) ||
+                translateMaybeKey('search.errors.load_failed') ||
+                error.message
+              : t('search.errors.load_failed', 'تعذّر تحميل البيانات')
+          }
+        />
       ) : !data || data.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          icon={<Icon icon={Search} size="lg" />}
+          title={t('account.saved_searches.empty_title', 'لا توجد عمليات بحث محفوظة بعد')}
+          description={t('account.saved_searches.empty_body')}
+          action={
+            <Link href="/search" className={buttonVariants({ size: 'sm' })}>
+              {t('home.hero.cta_browse', 'تصفّح الإعلانات')}
+            </Link>
+          }
+          className="rounded-qb-2xl border border-qb-line bg-qb-surface py-20 shadow-qb-card"
+        />
       ) : (
-        <ul className="space-y-3">
+        <ul className="flex flex-col gap-4 qb-tablet:gap-6">
           {data.map((search) => (
             <li key={search.id}>
-              <SavedSearchCard search={search} />
+              <SavedSearchCard search={search} labels={labels} />
             </li>
           ))}
         </ul>
       )}
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="border-ink-200 bg-card flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-12 text-center">
-      <div className="bg-coral/10 text-coral grid size-12 place-items-center rounded-full">
-        <SearchIcon className="size-5" aria-hidden />
-      </div>
-      <h2 className="font-display text-ink-900 text-xl">
-        {t('account.saved_searches.empty_title', 'لا توجد عمليات بحث محفوظة بعد')}
-      </h2>
-      <p className="text-ink-500 max-w-sm text-sm">
-        {t('account.saved_searches.empty_body')}
-      </p>
-      <Button
-        asChild
-        className="bg-coral hover:bg-coral/90 mt-2 rounded-full text-white"
-      >
-        <Link href="/search">{t('home.hero.cta_browse', 'تصفّح الإعلانات')}</Link>
-      </Button>
-    </div>
+    </AccountPage>
   );
 }

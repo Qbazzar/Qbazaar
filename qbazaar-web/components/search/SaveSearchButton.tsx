@@ -1,12 +1,9 @@
 'use client';
 
 /**
- * "Save this search" button + dialog.
- *
- * Pops a dialog with a single name input (validated by Zod) and persists the
- * current query-params bag through `useSaveSearchMutation`. The button is
- * gated on auth — when signed out it nudges the user to log in instead of
- * silently failing the request.
+ * "Save Search" pill and its dialog. Signed-out visitors get a link to the
+ * login page instead of a request that would fail; until the auth store
+ * hydrates the button renders but is disabled, so the layout does not jump.
  */
 import { useState } from 'react';
 import Link from 'next/link';
@@ -14,187 +11,134 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { BookmarkPlusIcon, Loader2Icon } from 'lucide-react';
+import { Search } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { FieldError } from '@/components/auth/FieldError';
+import { Button } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { Icon } from '@/components/design-system/Icon';
+import { Input } from '@/components/design-system/Input';
+import { Modal } from '@/components/design-system/Modal';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { headingFont, toolbarPill } from '@/components/catalog/layout';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useSaveSearchMutation } from '@/lib/queries/search';
 import { ApiClientError } from '@/lib/api/auth';
 import type { SearchQueryParams } from '@/lib/api/types';
 
-const SAVED_SEARCH_LIMIT = 'SAVED_SEARCH_LIMIT';
+/** `SaveSearchRequest.name` in the contract. */
+const NAME_MAX_LENGTH = 60;
 
 const schema = z.object({
-  name: z
-    .string()
-    .min(1, 'search.save_search.name_required')
-    .max(60, 'search.save_search.name_max'),
+  name: z.string().trim().min(1, 'search.save_search.name_required').max(NAME_MAX_LENGTH, 'search.save_search.name_max'),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-interface Props {
+const TRIGGER = {
+  /** Beside the page title on desktop (69:467). */
+  header: 'h-14 gap-3 px-5 text-qb-h5 [&_svg]:size-6',
+  /** Toolbar of tablets (text pill, 544:38513) and phones (icon only, 623:30012). */
+  toolbar: 'h-10 w-11 justify-center qb-tablet:h-11 qb-tablet:w-auto qb-tablet:gap-2 qb-tablet:px-4 qb-tablet:text-qb-body [&_svg]:size-5',
+} as const;
+
+interface SaveSearchButtonProps {
   params: SearchQueryParams;
+  variant?: keyof typeof TRIGGER;
   className?: string;
 }
 
-export function SaveSearchButton({ params, className }: Props) {
+export function SaveSearchButton({ params, variant = 'header', className }: SaveSearchButtonProps) {
   const { isAuthenticated, isHydrated } = useAuth();
   const [open, setOpen] = useState(false);
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { name: '' },
-  });
   const mutation = useSaveSearchMutation();
+  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { name: '' } });
+
+  const label = t('catalog.save_search', 'احفظ البحث');
+  const triggerClass = cn(
+    toolbarPill,
+    'shrink-0 cursor-pointer font-qb transition-colors hover:bg-qb-hover disabled:pointer-events-none disabled:opacity-50',
+    TRIGGER[variant],
+    focusRing,
+    className,
+  );
+  const content = (
+    <>
+      <Icon icon={Search} />
+      <span className={cn(variant === 'toolbar' && 'sr-only qb-tablet:not-sr-only')}>{label}</span>
+    </>
+  );
+
+  if (isHydrated && !isAuthenticated) {
+    return (
+      <Link href="/login" className={triggerClass}>
+        {content}
+      </Link>
+    );
+  }
 
   const onSubmit = form.handleSubmit((values) => {
     mutation.mutate(
-      { name: values.name.trim(), query_params: params },
+      { name: values.name, query_params: params },
       {
         onSuccess: () => {
           toast.success(t('search.save_search.success_toast', 'تم حفظ البحث'));
           form.reset();
           setOpen(false);
         },
-        onError: (err) => {
-          if (err instanceof ApiClientError && err.code === SAVED_SEARCH_LIMIT) {
-            toast.error(
-              t('search.save_search.limit_error', 'وصلت إلى الحد الأقصى'),
-            );
-            return;
-          }
-          if (err instanceof ApiClientError) {
-            toast.error(
-              translateMaybeKey(`search.errors.${err.code.toLowerCase()}`) ||
-                translateMaybeKey('search.errors.save_failed') ||
-                err.message,
-            );
-            return;
-          }
-          toast.error(t('search.errors.save_failed', 'تعذّر حفظ البحث'));
-        },
+        onError: (err) => toast.error(saveErrorMessage(err)),
       },
     );
   });
 
-  // Until the auth store hydrates we render the button but disabled — keeps
-  // the layout stable and avoids a flash.
-  if (isHydrated && !isAuthenticated) {
-    return (
-      <Button
-        asChild
-        type="button"
-        variant="outline"
-        size="default"
-        className={`text-coral border-coral hover:bg-coral/10 rounded-full ${className ?? ''}`}
-      >
-        <Link href="/login">
-          <BookmarkPlusIcon className="size-3.5" aria-hidden />
-          {t('search.save_search.button', 'احفظ البحث')}
-        </Link>
-      </Button>
-    );
-  }
+  const nameError = form.formState.errors.name?.message;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button
-            type="button"
-            variant="outline"
-            size="default"
-            className={`text-coral border-coral hover:bg-coral/10 rounded-full ${className ?? ''}`}
-          />
-        }
-      >
-        <BookmarkPlusIcon className="size-3.5" aria-hidden />
-        {t('search.save_search.button', 'احفظ البحث')}
-      </DialogTrigger>
-
-      <DialogContent>
-        <form onSubmit={onSubmit} noValidate>
-          <DialogHeader>
-            <DialogTitle>
-              {t('search.save_search.dialog_title', 'احفظ هذا البحث')}
-            </DialogTitle>
-            <DialogDescription>
-              {t(
-                'search.save_search.dialog_subtitle',
-                'سنحفظ الفلاتر الحالية لتعيد تشغيلها متى شئت.',
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-1.5 py-4">
-            <Label htmlFor="saved-search-name">
-              {t('search.save_search.name_label', 'اسم البحث')}
-            </Label>
+    <Modal
+      open={open}
+      onOpenChange={setOpen}
+      showCloseButton
+      className={headingFont}
+      title={t('search.save_search.dialog_title', 'احفظ هذا البحث')}
+      description={t('search.save_search.dialog_subtitle', 'سنحفظ الفلاتر الحالية لتعيد تشغيلها متى شئت.')}
+      trigger={
+        <button type="button" disabled={!isHydrated} className={triggerClass}>
+          {content}
+        </button>
+      }
+    >
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
+        <Field
+          label={t('search.save_search.name_label', 'اسم البحث')}
+          error={nameError ? <span role="alert">{translateMaybeKey(nameError)}</span> : undefined}
+          required
+        >
+          {(control) => (
             <Input
-              id="saved-search-name"
-              type="text"
+              {...control}
               autoComplete="off"
-              maxLength={80}
+              maxLength={NAME_MAX_LENGTH}
               placeholder={t('search.save_search.name_placeholder')}
-              aria-invalid={form.formState.errors.name ? 'true' : 'false'}
-              aria-describedby={
-                form.formState.errors.name ? 'saved-search-name-error' : undefined
-              }
-              className="h-10"
               {...form.register('name')}
             />
-            <FieldError
-              id="saved-search-name-error"
-              message={form.formState.errors.name?.message}
-            />
-          </div>
-
-          <DialogFooter>
-            <DialogClose
-              render={
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="default"
-                  className="rounded-full"
-                >
-                  {t('search.save_search.cancel', 'إلغاء')}
-                </Button>
-              }
-            />
-            <Button
-              type="submit"
-              size="default"
-              disabled={mutation.isPending}
-              className="bg-coral hover:bg-coral/90 rounded-full text-white"
-            >
-              {mutation.isPending ? (
-                <>
-                  <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
-                  {t('search.save_search.saving', 'جاري الحفظ…')}
-                </>
-              ) : (
-                t('search.save_search.save', 'حفظ')
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          )}
+        </Field>
+        <div className="flex flex-col-reverse gap-3 qb-tablet:flex-row qb-tablet:justify-end">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            {t('search.save_search.cancel', 'إلغاء')}
+          </Button>
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? t('search.save_search.saving', 'جاري الحفظ…') : t('search.save_search.save', 'حفظ')}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
+}
+
+/** Messages are keyed by the contract code, e.g. `SEARCH_004` (saved-search limit). */
+function saveErrorMessage(err: unknown): string {
+  const byCode = err instanceof ApiClientError ? t(`search.errors.${err.code.toLowerCase()}`, '') : '';
+  return byCode || t('search.errors.save_failed', 'تعذّر حفظ البحث');
 }

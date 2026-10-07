@@ -1,9 +1,9 @@
 /**
  * Typed client for the help center domain (Sprint 12).
  *
- * Read-only public endpoints: list categories, fetch a category with its
- * articles, fetch an article, search by free-form query. All payloads ride
- * the standard `SuccessEnvelope<T>` shape.
+ * Read-only public endpoints read in the browser: a category with its
+ * articles, an article, and a free-form search. All payloads ride the
+ * standard `SuccessEnvelope<T>` shape.
  */
 import { isAxiosError } from 'axios';
 import { api } from './client';
@@ -44,17 +44,6 @@ function toApiClientError(err: unknown): ApiClientError {
     messageKey: 'errors.unknown',
     message: 'Unknown error',
   });
-}
-
-export async function listHelpCategories(): Promise<HelpCategory[]> {
-  try {
-    const { data } = await api.get<SuccessEnvelope<HelpCategory[]>>(
-      `${HELP_BASE}/categories`,
-    );
-    return data.data;
-  } catch (err) {
-    throw toApiClientError(err);
-  }
 }
 
 export interface HelpCategoryWithArticles extends HelpCategory {

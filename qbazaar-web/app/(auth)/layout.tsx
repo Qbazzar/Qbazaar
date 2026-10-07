@@ -1,73 +1,56 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Logo } from '@/components/ui/logo';
+
+import { AuthCard } from '@/components/auth/AuthCard';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { pageGutter } from '@/components/design-system/page-gutter';
+import { LocaleSwitcher } from '@/components/i18n/LocaleSwitcher';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
+import { cn } from '@/lib/utils';
 
 /**
- * Split auth layout — QBFront port (source: QBFront/signin.html `.auth-card`).
- *
- * Two-column card: terracotta `.auth-card__pitch` on one side, the form on
- * the other. Hidden below 900px so mobile gets the form full-width (rule
- * lives in qbfront.css).
+ * Auth shell of the new design (`.qb-ahead` + `.qb-card`, frames 736:65208,
+ * 779:39974, 779:40299): logo and language button on a white bar, the form in
+ * one centred card.
  */
-export default function AuthLayout({ children }: { children: ReactNode }) {
+export default async function AuthLayout({ children }: { children: ReactNode }) {
+  // Segments render in parallel with the root layout, so prime the locale here too.
+  await resolveServerLocale();
+
   return (
-    <div className="container py-10 md:py-20">
-      <div className="auth-card">
-        <div className="auth-card__pitch">
-          <Link href="/" className="logo" aria-label={t('brand.name', 'QBazaar')}>
-            <Logo inverted />
+    <div className="flex min-h-svh flex-col bg-qb-page font-qb text-qb-ink">
+      <header className="sticky top-0 z-10 bg-qb-surface shadow-qb-raised">
+        <div
+          className={cn(
+            'mx-auto flex h-[72px] max-w-[1440px] items-center justify-between qb-tablet:h-[98px] qb-desktop:h-[105px]',
+            pageGutter,
+          )}
+        >
+          {/* The box sets the size: the old stylesheet's unlayered `img { height: auto }` beats utilities on the img. */}
+          <Link
+            href="/"
+            aria-label={t('brand.name')}
+            className={cn(
+              'block h-[43px] w-[114px] rounded-qb-sm qb-tablet:h-[50px] qb-tablet:w-[133px] qb-desktop:h-[66px] qb-desktop:w-[175px]',
+              focusRing,
+            )}
+          >
+            <Image src="/brand/qb-logo.svg" alt="" width={175} height={66} preload unoptimized className="size-full" />
           </Link>
-          <div>
-            <h2 className="auth-card__pitch-h">
-              {t('auth.hero.title_line1', 'سوقك المحلي')}
-              <br />
-              <em>{t('auth.hero.title_line2', 'بانتظارك')}</em>
-            </h2>
-            <p className="auth-card__pitch-body">
-              {t(
-                'auth.hero.subtitle',
-                'انضم لآلاف القطريين الذين يبيعون ويشترون ويكتشفون كل يوم.',
-              )}
-            </p>
-            <div className="auth-card__pitch-list">
-              <div>
-                <CheckGlyph />
-                {t('auth.hero.bullet_free', 'النشر مجاني — دائماً')}
-              </div>
-              <div>
-                <CheckGlyph />
-                {t('auth.hero.bullet_verified', 'بائعون موثّقون وتقييمات حقيقية')}
-              </div>
-              <div>
-                <CheckGlyph />
-                {t('auth.hero.bullet_local', 'مصمّم لقطر، بتوقيتك المحلي')}
-              </div>
-            </div>
-          </div>
-          <div />
+          <LocaleSwitcher
+            className={cn(
+              'inline-flex h-[37px] min-w-[82px] items-center justify-center rounded-qb-sm border border-qb-line bg-qb-surface px-4 font-qb text-qb-caption font-medium text-qb-ink-body hover:bg-qb-hover qb-tablet:h-[45px] qb-tablet:min-w-[97px]',
+              focusRing,
+            )}
+          />
         </div>
-
-        <div className="auth-card__form">{children}</div>
-      </div>
+      </header>
+      {/* Centred in the space under the bar, as auth.css does: short cards (forgot password) sit lower than long ones. */}
+      <main className="flex flex-1 items-center justify-center px-4 py-10 qb-tablet:px-20">
+        <AuthCard>{children}</AuthCard>
+      </main>
     </div>
-  );
-}
-
-function CheckGlyph() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="m5 12 5 5 9-11" />
-    </svg>
   );
 }

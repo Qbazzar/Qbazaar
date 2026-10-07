@@ -20,9 +20,13 @@
     "min": "الأدنى",
     "max": "الأعلى",
     "filters": "الفلاتر",
-    "view_all": "عرض الكل"
+    "view_all": "عرض الكل",
+    "currency": "ر.ق"
   },
   "auth": {
+    "password": {
+      "toggle": "إظهار أو إخفاء كلمة المرور"
+    },
     "hero": {
       "eyebrow": "سوق قطر",
       "title_line1": "حيّك القريب",
@@ -37,10 +41,13 @@
       "register": "إنشاء حساب"
     },
     "login": {
+      "welcome_prefix": "مرحباً بك في",
+      "welcome_brand": "كيو بازار",
+      "tagline": "اكتشف واشترِ وبِع بسهولة. تواصل مع مجتمع متنوّع واستكشف آلاف المنتجات في مكان واحد.",
       "title": "أهلاً بعودتك",
       "subtitle": "سجّل دخولك إلى حساب QBazaar.",
       "identifier_label": "البريد الإلكتروني أو رقم الهاتف",
-      "identifier_placeholder": "you@example.com أو +97455123456",
+      "identifier_placeholder": "\u2066you@example.com\u2069 أو \u2066+97455123456\u2069",
       "password_label": "كلمة المرور",
       "password_placeholder": "••••••••",
       "remember_me": "ابقني مسجلاً",
@@ -54,6 +61,11 @@
       "deleted_notice": "حسابك مجدول للحذف. سجّل الدخول خلال 30 يوماً لإلغاء الحذف."
     },
     "register": {
+      "heading": "إنشاء حساب",
+      "tagline": "انضم إلى بازار لتشتري وتبيع محلياً.",
+      "usage_question": "كيف تريد استخدام الإعلانات المبوّبة؟",
+      "login_details": "بيانات تسجيل الدخول",
+      "submit_free": "سجّل مجاناً",
       "title": "أنشئ حسابك",
       "subtitle": "لن يستغرق الأمر دقيقة.",
       "full_name_label": "الاسم الكامل",
@@ -86,7 +98,7 @@
       "good": "جيدة",
       "strong": "قوية",
       "rules": {
-        "length": "٨ أحرف على الأقل",
+        "length": "8 أحرف على الأقل",
         "uppercase": "حرف كبير (A-Z)",
         "lowercase": "حرف صغير (a-z)",
         "number": "رقم (0-9)",
@@ -97,6 +109,9 @@
       "country_prefix": "🇶🇦 +974"
     },
     "verify_otp": {
+      "heading": "تحقّق من هويتك",
+      "enter_below": "أدخل الرمز أدناه للمتابعة.",
+      "no_code": "لم يصلك أي رمز؟",
       "title": "تأكيد رقم الهاتف",
       "subtitle": "أرسلنا رمزاً مكوناً من 6 أرقام إلى",
       "code_label": "رمز التحقق",
@@ -210,7 +225,51 @@
     }
   },
   "account": {
+    "price": {
+      "negotiable": "{price} · قابل للتفاوض"
+    },
+    "my_ads": {
+      "tabs_label": "حالة الإعلان",
+      "total": {
+        "zero": "لديك {count} إعلان",
+        "one": "لديك {count} إعلان",
+        "two": "لديك {count} إعلان",
+        "few": "لديك {count} إعلانات",
+        "many": "لديك {count} إعلانًا",
+        "other": "لديك {count} إعلان"
+      },
+      "untitled": "(بدون عنوان)",
+      "without_photo": "بدون صورة",
+      "complete": "إكمال",
+      "visitors": {
+        "zero": "{count} زائر",
+        "one": "{count} زائر",
+        "two": "{count} زائر",
+        "few": "{count} زوار",
+        "many": "{count} زائرًا",
+        "other": "{count} زائر"
+      },
+      "likes": {
+        "zero": "{count} إعجاب",
+        "one": "{count} إعجاب",
+        "two": "{count} إعجاب",
+        "few": "{count} إعجابات",
+        "many": "{count} إعجابًا",
+        "other": "{count} إعجاب"
+      },
+      "published_on": "نُشر في: {date}",
+      "empty_body": "انشر إعلاناً وسيظهر هنا مع حالته وإحصاءاته.",
+      "delete_label": "حذف {title}"
+    },
     "nav": {
+      "overview": "حسابي",
+      "settings": "الإعدادات",
+      "back_to_settings": "العودة إلى الإعدادات",
+      "activity": "نشاطي",
+      "profile_settings": "إعدادات الملف الشخصي",
+      "account_settings": "إعدادات الحساب",
+      "data_protection": "حماية البيانات",
+      "my_ads": "إعلاناتي",
       "title": "حسابي",
       "dashboard": "اللوحة الرئيسية",
       "profile": "الملف الشخصي",
@@ -233,6 +292,9 @@
       "greeting": "أهلاً بعودتك، {name}",
       "subtitle": "نظرة سريعة على نشاطك في QBazaar.",
       "stats": {
+        "unread_messages": "رسائل غير مقروءة",
+        "favorites": "الإعلانات المحفوظة",
+        "saved_searches": "عمليات البحث المحفوظة",
         "my_ads": "إعلاناتي",
         "drafts": "المسودات",
         "conversations": "المحادثات",
@@ -251,6 +313,14 @@
       }
     },
     "profile": {
+      "settings_title": "إعدادات الملف الشخصي",
+      "settings_subtitle": "أضف معلومات عن نفسك",
+      "personal_info": "المعلومات الشخصية",
+      "bio_empty": "لم تُضف نبذة بعد.",
+      "edit_title": "تعديل الملف الشخصي",
+      "active_since": "نشط منذ {date}",
+      "private_seller": "بائع فردي",
+      "business_seller": "بائع تجاري",
       "title": "الملف الشخصي",
       "subtitle": "حدّث المعلومات التي يراها الزوّار على ملفك العام.",
       "full_name_label": "الاسم الكامل",
@@ -266,6 +336,13 @@
       "success": "تم تحديث ملفك الشخصي"
     },
     "security": {
+      "settings_subtitle": "عدّل إعدادات حسابك وغيّر كلمة المرور من هنا.",
+      "verified_phone": "رقم الهاتف الموثّق",
+      "phone": "رقم الهاتف",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "verify": "توثيق",
+      "edit_password": "تعديل كلمة المرور",
       "title": "الأمان",
       "subtitle": "غيّر كلمة المرور بانتظام لحماية حسابك.",
       "current_password_label": "كلمة المرور الحالية",
@@ -277,6 +354,8 @@
       "sign_out_notice": "سيتم تسجيل الخروج من جميع الأجهزة الأخرى بعد التحديث."
     },
     "sessions": {
+      "confirm_title": "تسجيل الخروج من هذا الجهاز؟",
+      "confirm_body": "سيحتاج {device} إلى تسجيل الدخول من جديد لاستخدام حسابك.",
       "title": "الجلسات النشطة",
       "subtitle": "الأجهزة التي سُجّل الدخول منها إلى حسابك حالياً.",
       "current_badge": "الجهاز الحالي",
@@ -365,6 +444,15 @@
         "cancel": "إلغاء"
       },
       "delete": {
+        "reason_question": "لماذا تغادرنا؟",
+        "reasons": {
+          "not_using": "لا أستخدم هذا الموقع",
+          "other_account": "لدي حساب آخر",
+          "problems": "الموقع فيه بعض المشاكل",
+          "privacy": "مخاوف تتعلق بالخصوصية",
+          "prefer_not": "أفضّل عدم الإفصاح",
+          "something_else": "سبب آخر"
+        },
         "title": "حذف حسابي",
         "body": "سيُجدول حسابك للحذف النهائي خلال 30 يوماً. بعد ذلك نحذف الملف والإعلانات والرسائل. يمكنك إلغاء الحذف بتسجيل الدخول خلال المهلة.",
         "submit": "حذف الحساب",
@@ -380,6 +468,7 @@
       }
     },
     "avatar": {
+      "change_photo": "تغيير الصورة الشخصية",
       "title": "صورة الملف الشخصي",
       "subtitle": "صورة واضحة تساعد المشترين على الثقة بك. الصور المربعة هي الأنسب.",
       "drop_label": "اسحب صورة هنا أو",
@@ -417,6 +506,20 @@
       "USER_010": "حجم الصورة كبير جداً (الحد الأقصى 5 ميغابايت)"
     },
     "saved_searches": {
+      "saved_ago": "• حُفظ {when}",
+      "view_results": "عرض النتائج",
+      "delete_label": "حذف البحث المحفوظ {name}",
+      "price_range": "ر.ق {min} – {max}",
+      "price_max": "حتى ر.ق {max}",
+      "price_min": "من ر.ق {min}",
+      "params": {
+        "keyword": "الكلمة",
+        "category": "الفئة",
+        "location": "الموقع",
+        "condition": "الحالة",
+        "price": "السعر",
+        "sort": "الترتيب"
+      },
       "title": "عمليات البحث المحفوظة",
       "subtitle": "احفظ فلاترك المفضّلة وأعد تشغيلها بضغطة زر.",
       "empty_title": "لا توجد عمليات بحث محفوظة بعد",
@@ -474,6 +577,168 @@
     "errors": {
       "not_found": "لم نعثر على هذا القسم"
     }
+  },
+  "catalog": {
+    "card": {
+      "top_ad": "إعلان مميز"
+    },
+    "results_heading": "النتائج",
+    "view_all": "عرض الكل",
+    "view_more": "عرض المزيد",
+    "view_less": "عرض أقل",
+    "hub": {
+      "categories": "الأقسام"
+    },
+    "stats": {
+      "ads": {
+        "zero": "إعلان",
+        "one": "إعلان",
+        "two": "إعلان",
+        "few": "إعلانات",
+        "many": "إعلانًا",
+        "other": "إعلان"
+      },
+      "today": "اليوم",
+      "ads_today": {
+        "zero": "إعلان اليوم",
+        "one": "إعلان اليوم",
+        "two": "إعلان اليوم",
+        "few": "إعلانات اليوم",
+        "many": "إعلانًا اليوم",
+        "other": "إعلان اليوم"
+      },
+      "categories": {
+        "zero": "قسم",
+        "one": "قسم",
+        "two": "قسم",
+        "few": "أقسام",
+        "many": "قسمًا",
+        "other": "قسم"
+      },
+      "subcategories": {
+        "zero": "قسم فرعي",
+        "one": "قسم فرعي",
+        "two": "قسم فرعي",
+        "few": "أقسام فرعية",
+        "many": "قسمًا فرعيًا",
+        "other": "قسم فرعي"
+      },
+      "results": {
+        "zero": "نتيجة",
+        "one": "نتيجة",
+        "two": "نتيجة",
+        "few": "نتائج",
+        "many": "نتيجة",
+        "other": "نتيجة"
+      }
+    },
+    "index": {
+      "discover_start": "اكتشف",
+      "discover_accent": "الأقسام",
+      "discover_text": "تصفّح الأقسام المختلفة واعثر بسرعة على ما تحتاجه في مكان واحد.",
+      "search_label": "ابحث في الأقسام",
+      "search_placeholder": "ابحث في الأقسام…",
+      "search_submit": "بحث",
+      "matches": {
+        "zero": "لا توجد أقسام",
+        "one": "قسم واحد",
+        "two": "قسمان",
+        "few": "{count} أقسام",
+        "many": "{count} قسمًا",
+        "other": "{count} قسم"
+      },
+      "no_matches_title": "لا توجد أقسام مطابقة",
+      "no_matches": "لم نجد قسماً باسم «{query}»."
+    },
+    "view": {
+      "label": "طريقة العرض",
+      "grid": "عرض شبكي",
+      "list": "عرض قائمة"
+    },
+    "empty": {
+      "try_filters": "جرّب تعديل الفلاتر أو تصفّح كل الأقسام.",
+      "no_ads_in_category": "لا توجد إعلانات في هذا القسم حتى الآن.",
+      "load_failed": "تعذّر تحميل الإعلانات. حاول مرة أخرى."
+    },
+    "not_found": {
+      "heading": "لم نعثر على نتائج",
+      "title": "لا توجد نتائج",
+      "text": "لم نعثر على أي شيء يطابق بحثك.",
+      "recommended": "مقترحة لك",
+      "load_more": "تحميل المزيد من الإعلانات"
+    },
+    "filters": {
+      "title": "الفلتر",
+      "sheet_title": "فلاتر متقدمة",
+      "open": "فلتر",
+      "active_suffix": {
+        "zero": "فلتر مفعّل",
+        "one": "فلتر مفعّل",
+        "two": "فلتر مفعّل",
+        "few": "فلاتر مفعّلة",
+        "many": "فلترًا مفعّلًا",
+        "other": "فلتر مفعّل"
+      },
+      "apply": "تطبيق الفلتر",
+      "reset_all": "إعادة ضبط الكل",
+      "any": "الكل",
+      "category": "القسم",
+      "all_categories": "كل الأقسام",
+      "price": "السعر",
+      "price_min_label": "أقل سعر (ر.ق)",
+      "price_max_label": "أعلى سعر (ر.ق)",
+      "price_range_error": "لا يمكن أن يكون أعلى سعر أقل من أقل سعر.",
+      "location": "الموقع",
+      "city": "المدينة / المنطقة",
+      "district": "الحي",
+      "all_regions": "كل المناطق",
+      "all_districts": "كل الأحياء",
+      "condition": "الحالة",
+      "offer": "نوع الإعلان",
+      "ad_type": {
+        "offering": "معروض",
+        "wanted": "مطلوب"
+      },
+      "shipping": "الشحن والتوصيل",
+      "shipping_options": {
+        "delivery": "الشحن متاح",
+        "pickup_only": "استلام محلي فقط"
+      },
+      "details": "التفاصيل",
+      "range_min": "{label} من",
+      "range_max": "{label} إلى",
+      "keyword": "البحث",
+      "keyword_placeholder": "ابحث…",
+      "applied": "الفلاتر المطبّقة",
+      "remove": "إزالة {label}",
+      "range_between": "{min} – {max}",
+      "range_from": "من {min}",
+      "range_to": "حتى {max}",
+      "range_error": "لا يمكن أن يكون الحد الأعلى أقل من الحد الأدنى."
+    },
+    "ads_count": {
+      "zero": "{count} إعلان",
+      "one": "{count} إعلان",
+      "two": "{count} إعلان",
+      "few": "{count} إعلانات",
+      "many": "{count} إعلانًا",
+      "other": "{count} إعلان"
+    },
+    "results_count": {
+      "zero": "لا توجد نتائج",
+      "one": "نتيجة واحدة",
+      "two": "نتيجتان",
+      "few": "{count} نتائج",
+      "many": "{count} نتيجة",
+      "other": "{count} نتيجة"
+    },
+    "sort": {
+      "latest": "الأحدث",
+      "oldest": "الأقدم",
+      "price_asc": "السعر: من الأقل للأعلى",
+      "price_desc": "السعر: من الأعلى للأقل"
+    },
+    "save_search": "احفظ البحث"
   },
   "locations": {
     "all": "كل قطر",
@@ -913,19 +1178,21 @@
       "saving": "جاري الحفظ…",
       "cancel": "إلغاء",
       "success_toast": "تم حفظ البحث",
-      "limit_error": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
       "sign_in_required": "سجّل دخولك لحفظ البحث"
     },
     "errors": {
-      "search_invalid_params": "أحد الفلاتر غير صالح، حاول مرة أخرى",
-      "saved_search_limit": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
-      "saved_search_not_found": "لم نعثر على البحث المحفوظ",
+      "search_001": "البحث غير متاح الآن، حاول بعد قليل",
+      "search_002": "لم نعثر على البحث المحفوظ",
+      "search_003": "أحد الفلاتر غير صالح، حاول مرة أخرى",
+      "search_004": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
       "load_failed": "تعذّر تحميل نتائج البحث",
       "save_failed": "تعذّر حفظ البحث",
       "delete_failed": "تعذّر حذف البحث"
     }
   },
   "favorites": {
+    "wishlist_title": "قائمتي المفضلة",
+    "remove_label": "إزالة {title} من المفضلة",
     "title": "الإعلانات المحفوظة",
     "count": "{count} إعلان",
     "empty": {
@@ -957,6 +1224,11 @@
     }
   },
   "messaging": {
+    "thread_label": "رسائل هذه المحادثة",
+    "incoming_message": "رسالة جديدة من {name}: {message}",
+    "chat_label": "المحادثة",
+    "unread_label": "رسائل غير مقروءة",
+    "safety_notice": "مع «الدفع الآمن» لا تحتاج إلى مشاركة بريدك أو رقم هاتفك أو بياناتك البنكية مع أي أحد.",
     "title": "صندوق رسائلي",
     "empty": {
       "list": "ابدأ محادثة بالتواصل مع بائع",
@@ -1023,6 +1295,10 @@
     }
   },
   "notifications": {
+    "open_unread": "غير مقروء: {title}",
+    "delete_label": "حذف الإشعار: {title}",
+    "delete_success": "تم حذف الإشعار",
+    "empty_body": "ستظهر هنا تحديثات إعلاناتك ورسائلك وعمليات البحث المحفوظة.",
     "title": "الإشعارات",
     "header_label": "الإشعارات",
     "tabs": {
@@ -1113,8 +1389,22 @@
     "contact": "تواصل معنا"
   },
   "cms": {
-    "page_not_found": "لم نعثر على هذه الصفحة",
     "last_updated": "آخر تحديث"
+  },
+  "errors": {
+    "generic_title": "حدث خطأ ما",
+    "generic_heading": "تعذّر تحميل هذه الصفحة",
+    "generic_body": "واجهنا مشكلة مؤقتة أثناء تحميل هذه الصفحة. حاول مرة أخرى.",
+    "retry": "إعادة المحاولة",
+    "not_found_title": "الصفحة غير موجودة",
+    "not_found_heading": "لم نعثر على هذه الصفحة",
+    "not_found_body": "ربما الرابط غير صحيح، أو نُقلت الصفحة أو حُذفت.",
+    "back_home": "العودة إلى الرئيسية"
+  },
+  "impersonate": {
+    "loading": "جارٍ تسجيل الدخول…",
+    "failed_title": "تعذّر بدء الجلسة",
+    "failed": "ربما انتهت صلاحية رابط الدخول. افتحه مجددًا من لوحة الإدارة."
   },
   "help": {
     "title": "مركز المساعدة",
@@ -1123,11 +1413,9 @@
     "search_submit": "بحث",
     "search_min_chars": "اكتب حرفين على الأقل لبدء البحث",
     "categories_title": "تصفّح حسب الموضوع",
-    "no_categories": "لا توجد فئات مساعدة بعد",
-    "articles_in_category": "المقالات في هذه الفئة",
-    "articles_count_arrow": "{count} مقالات ←",
-    "no_articles": "لا توجد مقالات في هذه الفئة بعد",
-    "search_results": "تم العثور على {count} نتائج",
+    "no_categories": "لا توجد مواضيع مساعدة بعد",
+    "articles_in_category": "المقالات في هذا الموضوع",
+    "no_articles": "لا توجد مقالات في هذا الموضوع بعد",
     "no_results": "لا توجد نتائج",
     "related_articles": "مقالات ذات صلة",
     "helpful_question": "هل كان هذا المقال مفيداً؟",
@@ -1135,10 +1423,52 @@
     "helpful_no": "لا",
     "feedback_thanks_yes": "شكراً لك! يسعدنا أن المقال كان مفيداً",
     "feedback_thanks_no": "شكراً لإخبارنا — سنحاول تحسين المقال",
-    "views_count": "{count} مشاهدة",
     "back_to_help": "العودة إلى مركز المساعدة",
-    "category_not_found": "لم نعثر على هذه الفئة",
-    "article_not_found": "لم نعثر على هذا المقال"
+    "article_not_found": "لم نعثر على هذا المقال",
+    "hero_lead": "كيف يمكننا",
+    "hero_accent": "مساعدتك؟",
+    "search_label": "ابحث في مركز المساعدة",
+    "search_title": "نتائج البحث",
+    "search_prompt_title": "عمّ تبحث؟",
+    "suggestions_label": "مقالات مقترحة",
+    "no_results_hint": "جرّب كلمات أخرى، أو تصفّح مواضيع المساعدة.",
+    "browse_topics": "تصفّح مواضيع المساعدة",
+    "not_found_body": "ربما نُقل أو حُذف. تصفّح مواضيع المساعدة لتجد ما تحتاجه.",
+    "contact_title": "ما زلت بحاجة إلى مساعدة؟",
+    "contact_body": "يرد فريق الدعم خلال ساعات قليلة.",
+    "contact_action": "تواصل مع الدعم",
+    "topic_count": {
+      "zero": "لا توجد مواضيع",
+      "one": "موضوع واحد",
+      "two": "موضوعان",
+      "few": "{count} مواضيع",
+      "many": "{count} موضوعًا",
+      "other": "{count} موضوع"
+    },
+    "article_count": {
+      "zero": "لا توجد مقالات",
+      "one": "مقال واحد",
+      "two": "مقالان",
+      "few": "{count} مقالات",
+      "many": "{count} مقالًا",
+      "other": "{count} مقال"
+    },
+    "result_count": {
+      "zero": "لا توجد نتائج",
+      "one": "نتيجة واحدة",
+      "two": "نتيجتان",
+      "few": "{count} نتائج",
+      "many": "{count} نتيجة",
+      "other": "{count} نتيجة"
+    },
+    "view_count": {
+      "zero": "لا توجد مشاهدات",
+      "one": "مشاهدة واحدة",
+      "two": "مشاهدتان",
+      "few": "{count} مشاهدات",
+      "many": "{count} مشاهدة",
+      "other": "{count} مشاهدة"
+    }
   },
   "support": {
     "title": "الدعم الفني",
@@ -1160,6 +1490,7 @@
     "submit_success_toast": "تم استلام طلبك، سنرد قريباً",
     "submit_success_title": "تم استلام رسالتك",
     "submit_success_body": "سنرد على البريد الذي زوّدتنا به خلال ساعات قليلة. احتفظ برقم التذكرة التالي للمراجعة:",
+    "ticket_reference": "رقم التذكرة",
     "categories": {
       "general": "استفسار عام",
       "billing": "الفوترة والمدفوعات",
@@ -1190,7 +1521,14 @@
       "resolved": "المنتهية"
     },
     "no_tickets": "لا توجد تذاكر في هذا التبويب",
-    "replies_count": "{count} ردود",
+    "replies_count": {
+      "zero": "{count} رد",
+      "one": "{count} رد",
+      "two": "{count} رد",
+      "few": "{count} ردود",
+      "many": "{count} ردًا",
+      "other": "{count} رد"
+    },
     "back_to_list": "العودة إلى تذاكري",
     "you": "أنت",
     "staff_badge": "فريق الدعم",
@@ -1205,6 +1543,7 @@
       "body_required": "اكتب نص الرد",
       "body_min": "التفاصيل قصيرة جداً (10 أحرف على الأقل)",
       "body_max": "التفاصيل طويلة جداً (4000 حرف كحد أقصى)",
+      "email_required": "أدخل بريدك الإلكتروني لنتمكّن من الرد عليك",
       "ticket_not_found": "لم نعثر على هذه التذكرة",
       "ticket_forbidden": "ليس لديك صلاحية الوصول إلى هذه التذكرة",
       "invalid_transition": "لا يمكن الرد على تذكرة مغلقة. افتح تذكرة جديدة."

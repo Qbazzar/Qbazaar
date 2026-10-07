@@ -58,12 +58,15 @@ export const adKeys = {
 
 // ── Queries ────────────────────────────────────────────────────────────────
 
+/** `enabled: false` holds the request while a filter in the URL is still being resolved to an id. */
 export function useAdsListQuery(
   params: ListAdsParams = {},
+  { enabled = true }: { enabled?: boolean } = {},
 ): UseQueryResult<PaginatedResponse<AdSummary>, ApiClientError> {
   return useQuery({
     queryKey: adKeys.list(params),
     queryFn: () => listAds(params),
+    enabled,
     staleTime: MINUTE,
     // The home feed paginates manually — keep the previous page visible
     // while the next page is in flight to avoid a flash of empty state.
