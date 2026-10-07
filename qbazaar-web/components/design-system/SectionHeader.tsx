@@ -21,10 +21,10 @@ export function SectionHeader({ title, subtitle, action, headingLevel: Heading =
   return (
     <div className={cn('flex items-end justify-between gap-4 font-qb', className)}>
       <div className="min-w-0">
-        <Heading id={id} className="text-qb-h4 font-semibold tracking-normal text-qb-ink qb-desktop:text-qb-h2">
+        <Heading id={id} className="font-qb text-[clamp(22px,3vw,28px)] font-semibold tracking-normal text-qb-ink">
           {title}
         </Heading>
-        {subtitle ? <p className="mt-1 text-qb-body-sm text-qb-ink-subtle">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1.5 text-qb-body-sm text-qb-ink-subtle">{subtitle}</p> : null}
       </div>
       {action ? (
         <Link
@@ -35,7 +35,7 @@ export function SectionHeader({ title, subtitle, action, headingLevel: Heading =
           )}
         >
           {action.label}
-          <Icon icon={ArrowRight} size="sm" flipInRtl />
+          <Icon icon={ArrowRight} size="sm" flipInRtl className="size-[18px]" />
         </Link>
       ) : null}
     </div>

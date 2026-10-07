@@ -4,13 +4,13 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 export const badgeVariants = cva(
-  'inline-flex items-center gap-1 rounded-qb-sm font-qb font-medium whitespace-nowrap [&_svg]:size-3.5 [&_svg]:shrink-0',
+  'inline-flex items-center gap-1 rounded-qb-sm font-medium whitespace-nowrap [&_svg]:size-3.5 [&_svg]:shrink-0',
   {
     variants: {
       tone: {
         /** Price and "Top Ad" labels on listing images. */
-        solid: 'bg-qb-brand text-white',
-        brand: 'bg-qb-brand-soft text-qb-brand',
+        solid: 'bg-qb-brand text-qb-on-brand',
+        brand: 'bg-qb-brand-soft text-qb-brand-on-soft',
         success: 'bg-qb-success-soft text-qb-success',
         danger: 'bg-qb-danger-soft text-qb-danger',
         info: 'bg-qb-info-soft text-qb-info',
@@ -20,16 +20,21 @@ export const badgeVariants = cva(
         sm: 'px-2.5 py-1 text-qb-micro',
         md: 'px-3.5 py-[5px] text-qb-label',
       },
+      /** Status and seller-type labels are set in Montserrat in the design; counts and prices in Poppins. */
+      font: {
+        body: 'font-qb',
+        label: 'font-qb-label',
+      },
     },
-    defaultVariants: { tone: 'brand', size: 'md' },
+    defaultVariants: { tone: 'brand', size: 'md', font: 'body' },
   },
 );
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
 
 /** Status and label pill (Draft / Publish / Reserved, "Private Seller", price tag). */
-export function Badge({ className, tone, size, ...props }: BadgeProps) {
-  return <span className={cn(badgeVariants({ tone, size }), className)} {...props} />;
+export function Badge({ className, tone, size, font, ...props }: BadgeProps) {
+  return <span className={cn(badgeVariants({ tone, size, font }), className)} {...props} />;
 }
 
 export const chipVariants = cva(

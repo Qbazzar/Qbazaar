@@ -64,7 +64,7 @@ export function Modal(props: DialogShellProps) {
         )}
       >
         {showCloseButton ? <CloseButton className="absolute end-3 top-3" /> : null}
-        <Dialog.Title className="text-center text-qb-h3 font-semibold tracking-normal">{title}</Dialog.Title>
+        <Dialog.Title className="text-center font-qb text-qb-h3 font-semibold tracking-normal">{title}</Dialog.Title>
         {description ? (
           <Dialog.Description className="mt-2.5 text-center text-qb-body text-qb-ink-secondary">{description}</Dialog.Description>
         ) : null}
@@ -74,26 +74,53 @@ export function Modal(props: DialogShellProps) {
   );
 }
 
-/** Bottom sheet used under 1000 px for filters and pickers (618:26974). */
-export function Sheet(props: DialogShellProps) {
-  const { title, description, children, showCloseButton = true, className } = props;
+const SHEET_SIDES = {
+  bottom: {
+    popup:
+      'inset-x-0 bottom-0 max-h-[90dvh] rounded-t-qb-2xl px-6 pt-3 pb-6 data-starting-style:translate-y-full data-ending-style:translate-y-full',
+    header: '',
+    close: '-me-2',
+    body: 'mt-4',
+  },
+  start: {
+    popup:
+      'inset-y-0 start-0 w-[86vw] max-w-[340px] data-starting-style:-translate-x-full data-ending-style:-translate-x-full rtl:data-starting-style:translate-x-full rtl:data-ending-style:translate-x-full',
+    header: 'border-b border-qb-line px-5 py-[18px]',
+    close: 'size-[34px] rounded-full border border-qb-line text-qb-ink-body [&_svg]:size-4',
+    body: 'flex flex-col',
+  },
+} as const;
+
+export interface SheetProps extends DialogShellProps {
+  /** `bottom` for filters and pickers (618:26974), `start` for the phone menu drawer (648:47458). */
+  side?: keyof typeof SHEET_SIDES;
+  /** Visible content in place of the title (e.g. the logo); the title then names the dialog for screen readers only. */
+  heading?: ReactNode;
+}
+
+/** Sheet that slides in from the bottom or the start edge. */
+export function Sheet(props: SheetProps) {
+  const { title, heading, description, children, showCloseButton = true, side = 'bottom', className } = props;
+  const layout = SHEET_SIDES[side];
   return (
     <Shell {...props}>
       <Dialog.Popup
         className={cn(
-          'fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-qb-2xl bg-qb-surface px-6 pt-3 pb-6 font-qb text-qb-ink',
-          'transition-transform duration-300 data-starting-style:translate-y-full data-ending-style:translate-y-full motion-reduce:transition-none',
+          'fixed z-50 flex flex-col overflow-y-auto bg-qb-surface font-qb text-qb-ink',
+          'transition-transform duration-300 motion-reduce:transition-none',
+          layout.popup,
           focusRing,
           className,
         )}
       >
-        <div aria-hidden="true" className="mx-auto mb-4 h-1 w-12 rounded-qb-pill bg-qb-line" />
-        <div className="flex items-center justify-between gap-4">
-          <Dialog.Title className="text-qb-h5 font-medium tracking-normal">{title}</Dialog.Title>
-          {showCloseButton ? <CloseButton className="-me-2" /> : null}
+        {side === 'bottom' ? <div aria-hidden="true" className="mx-auto mb-4 h-1 w-12 shrink-0 rounded-qb-pill bg-qb-line" /> : null}
+        <div className={cn('flex items-center justify-between gap-4', layout.header)}>
+          <Dialog.Title className={cn('font-qb text-qb-h5 font-medium tracking-normal', heading ? 'sr-only' : null)}>{title}</Dialog.Title>
+          {heading}
+          {showCloseButton ? <CloseButton className={layout.close} /> : null}
         </div>
         {description ? <Dialog.Description className="mt-1 text-qb-caption text-qb-ink-subtle">{description}</Dialog.Description> : null}
-        {children ? <div className="mt-4">{children}</div> : null}
+        {children ? <div className={cn('flex-1', layout.body)}>{children}</div> : null}
       </Dialog.Popup>
     </Shell>
   );

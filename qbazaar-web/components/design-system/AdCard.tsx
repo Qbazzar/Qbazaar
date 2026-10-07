@@ -75,7 +75,7 @@ function AdMedia({ media, price, badge, favorite, isList }: PartProps) {
     >
       {media}
       {label ? (
-        <Badge tone="solid" size={isList ? 'sm' : 'md'} className="absolute start-3 top-3">
+        <Badge tone="solid" size={isList ? 'sm' : 'md'} className={cn('absolute start-3 top-3', !isList && 'px-3')}>
           {label}
         </Badge>
       ) : null}
@@ -86,16 +86,16 @@ function AdMedia({ media, price, badge, favorite, isList }: PartProps) {
 
 function AdHeading({ href, title, price, headingLevel: Heading = 'h3', isList }: PartProps) {
   const link = (
-    <Link href={href} className="outline-none after:absolute after:inset-0">
+    <Link href={href} dir="auto" className="outline-none after:absolute after:inset-0">
       {title}
     </Link>
   );
   if (!isList) {
-    return <Heading className="line-clamp-2 text-qb-body leading-[1.3] font-medium tracking-normal text-qb-ink">{link}</Heading>;
+    return <Heading className="line-clamp-2 min-h-[2.6em] font-qb text-qb-body leading-[1.3] font-medium tracking-normal text-qb-ink">{link}</Heading>;
   }
   return (
     <div className="flex items-start justify-between gap-5">
-      <Heading className="min-w-0 text-qb-h4 font-semibold tracking-normal text-qb-ink">{link}</Heading>
+      <Heading className="min-w-0 font-qb text-qb-h4 font-semibold tracking-normal text-qb-ink">{link}</Heading>
       {price ? <span className="shrink-0 text-qb-h4 font-semibold text-qb-ink">{price}</span> : null}
     </div>
   );
@@ -105,8 +105,9 @@ function AdTags({ tags, isList }: { tags?: string[]; isList: boolean }) {
   if (!tags?.length) return null;
   return (
     <ul className={cn('mt-3 flex flex-wrap', isList ? 'gap-2' : 'gap-1.5')}>
-      {tags.map((tag) => (
-        <li key={tag}>
+      {tags.map((tag, index) => (
+        // Two yes/no specs can read the same.
+        <li key={`${index}-${tag}`}>
           <Chip size={isList ? 'md' : 'sm'}>{tag}</Chip>
         </li>
       ))}

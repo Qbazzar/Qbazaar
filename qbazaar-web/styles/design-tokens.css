@@ -1,29 +1,39 @@
 /* QBazaar design system tokens (Figma file Cvn7hexeu07FIOyJhDDCLd).
    Values are measured from Qbazaar-front (assets/*.css and computed styles)
    and the per-frame Figma renders. Everything is namespaced `qb-` so it can
-   live next to the old QBFront tokens until qbfront.css is gone. */
+   live next to the old QBFront tokens until qbfront.css is gone.
+
+   Text and button colours are the Figma hues darkened just enough to meet
+   WCAG AA, 4.5:1 against every background each one sits on (white, the page,
+   the chip fill or its soft tint); lib/design-tokens.test.ts checks each pair.
+   The Figma value is noted next to each one that changed; decorative tints
+   keep the Figma values. */
 
 @theme {
   /* Brand */
-  --color-qb-brand: #f38057;
-  --color-qb-brand-hover: #e96c3f;
-  --color-qb-brand-active: #d3664c;
+  --color-qb-brand: #cf410f; /* Figma #f38057 */
+  --color-qb-brand-hover: #b73a0d; /* Figma #e96c3f */
+  --color-qb-brand-active: #9f320c; /* Figma #d3664c */
+  --color-qb-brand-on-soft: #c83f0f; /* brand text on brand-soft */
   --color-qb-brand-soft: #fff0ea;
+  --color-qb-on-brand: #ffffff; /* text and icons on brand fills */
+  --color-qb-brand-tint: #f9c7b2; /* decorative: inactive slider dots */
 
   /* Text */
   --color-qb-ink: #212121;
   --color-qb-ink-title: #333333;
   --color-qb-ink-body: #4b4b4b;
   --color-qb-ink-secondary: #616161;
-  --color-qb-ink-muted: #757575;
-  --color-qb-ink-subtle: #9e9e9e;
-  --color-qb-ink-faint: #9e9696;
-  --color-qb-ink-disabled: #bdbdbd;
-  --color-qb-placeholder: #bfbfbf;
+  --color-qb-ink-muted: #707070; /* Figma #757575 */
+  --color-qb-ink-subtle: #707070; /* Figma #9e9e9e: meta lines, subtitles */
+  --color-qb-ink-faint: #776e6e; /* Figma #9e9696: chip text */
+  --color-qb-ink-disabled: #737373; /* Figma #bdbdbd: empty-state description */
+  --color-qb-placeholder: #767676; /* Figma #bfbfbf */
   --color-qb-icon: #231f20;
   --color-qb-navy: #000640;
-  --color-qb-breadcrumb: #a4adba;
-  --color-qb-breadcrumb-separator: #cfd1d5;
+  --color-qb-black: #000000;
+  --color-qb-breadcrumb: #677488; /* Figma #a4adba */
+  --color-qb-breadcrumb-separator: #cfd1d5; /* decorative, hidden from assistive tech */
 
   /* Surfaces and lines */
   --color-qb-page: #f9f9f9;
@@ -32,14 +42,16 @@
   --color-qb-fill-strong: #f4f4f4;
   --color-qb-hover: #fafafa;
   --color-qb-line: #ededed;
+  --color-qb-line-strong: #d4d4d4;
+  --color-qb-divider: rgb(0 0 0 / 0.09);
   --color-qb-overlay: rgb(0 0 0 / 0.3);
 
   /* Status */
-  --color-qb-success: #1bad07;
+  --color-qb-success: #158505; /* Figma #1bad07 */
   --color-qb-success-soft: #e8ffec;
-  --color-qb-danger: #e64646;
+  --color-qb-danger: #d61d1d; /* Figma #e64646 */
   --color-qb-danger-soft: #ffebeb;
-  --color-qb-info: #2b6fdb;
+  --color-qb-info: #256ad9; /* Figma #2b6fdb */
   --color-qb-info-soft: #ebf2ff;
 
   /* Type scale */
@@ -84,12 +96,16 @@
   --shadow-qb-raised: 0 4px 30px 0 rgb(161 161 161 / 0.2);
   --shadow-qb-soft: 0 4px 25px 0 rgb(188 188 188 / 0.1);
   --shadow-qb-hover: 0 4px 40px 0 rgb(161 161 161 / 0.25);
-  --shadow-qb-brand: 0 4px 40px 0 rgb(243 128 87 / 0.2);
+  --shadow-qb-brand: 0 4px 40px 0 rgb(243 128 87 / 0.2); /* decorative glow keeps the Figma orange */
   --shadow-qb-header: 0 2px 12px 0 rgb(161 161 161 / 0.18);
   --shadow-qb-popover: 0 16px 40px 0 rgb(0 0 0 / 0.14);
+  --shadow-qb-float: 0 4px 20px 0 rgb(161 161 161 / 0.1);
+  --shadow-qb-control: 0 2px 10px 0 rgb(0 0 0 / 0.06);
+  --shadow-qb-lift: 0 6px 18px 0 rgb(0 0 0 / 0.14);
 
-  /* Layout: page gutter per breakpoint and the 1440 frame's content width */
-  --spacing-qb-gutter: 40px;
+  /* Layout: page gutter (40 px at 1440, 30 at 744, 16 at 390, fluid between)
+     and the 1440 frame's content width */
+  --spacing-qb-gutter: clamp(16px, 4vw, 40px);
   --spacing-qb-gutter-tablet: 30px;
   --spacing-qb-gutter-phone: 16px;
   --container-qb-content: 1360px;
@@ -97,21 +113,34 @@
   /* The reference switches layouts at 600 px and 1000 px */
   --breakpoint-qb-tablet: 601px;
   --breakpoint-qb-desktop: 1001px;
+
+  /* Families as Qbazaar-front uses them: Poppins for everything, Montserrat
+     for status labels and notes, Story Script for the big "Location" word
+     (Dancing Script where the reference shrinks it), Acme for the "Q BAZAAR"
+     wordmark. Arabic glyphs come from IBM Plex Sans Arabic, the Arabic face of
+     the Figma file, so Latin text and digits keep the reference face in both
+     directions.
+
+     The names are the faces app/fonts declares (next/font names each family
+     after its const). The stacks list them instead of the font variables
+     because each variable ends in a metric-matched Arial fallback, which has
+     Arabic glyphs and would win over the Arabic face. */
+  --font-qb: "poppins", "ibmPlexArabic", "poppins Fallback", system-ui, sans-serif;
+  --font-qb-label: "montserrat", "ibmPlexArabic", "montserrat Fallback", system-ui, sans-serif;
+  --font-qb-script: "storyScript", "ibmPlexArabic", "storyScript Fallback", cursive;
+  --font-qb-script-compact: "dancingScript", "ibmPlexArabic", "dancingScript Fallback", cursive;
+  --font-qb-brand: "acme", "acme Fallback", sans-serif;
 }
 
-/* Inline so `font-qb` resolves --qb-font-family on each element and follows a
-   nested dir="ltr" / dir="rtl". */
-@theme inline {
-  --font-qb: var(--qb-font-family);
-}
-
-:root,
-[dir="ltr"] {
-  --qb-font-family: var(--font-poppins), system-ui, sans-serif;
-}
-
-/* Poppins has no Arabic glyphs and the fallback fonts do, so Arabic pages put
-   the Arabic face first instead of relying on per-glyph fallback. */
-[dir="rtl"] {
-  --qb-font-family: var(--font-ibm-plex-arabic), var(--font-poppins), system-ui, sans-serif;
+/* globals.css gives every heading the old look (family, weight, tracking,
+   line height). Headings inside new-design markup take their type from the
+   font-qb container and the design-system classes instead. */
+@layer components {
+  .font-qb :where(h1, h2, h3, h4, h5, h6) {
+    font-family: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    text-wrap: inherit;
+  }
 }

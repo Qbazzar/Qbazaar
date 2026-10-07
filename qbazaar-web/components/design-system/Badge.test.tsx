@@ -7,7 +7,7 @@ describe('Badge', () => {
   it('defaults to the soft brand tone', () => {
     render(<Badge>Private Seller</Badge>);
 
-    expect(screen.getByText('Private Seller')).toHaveClass('bg-qb-brand-soft', 'text-qb-brand', 'rounded-qb-sm');
+    expect(screen.getByText('Private Seller')).toHaveClass('bg-qb-brand-soft', 'text-qb-brand-on-soft', 'rounded-qb-sm', 'font-qb');
   });
 
   it.each([
@@ -19,6 +19,13 @@ describe('Badge', () => {
     render(<Badge tone={tone}>Status</Badge>);
 
     expect(screen.getByText('Status')).toHaveClass(expected);
+  });
+
+  it('sets status labels in the label face', () => {
+    render(<Badge tone="success" font="label">Published</Badge>);
+
+    expect(screen.getByText('Published')).toHaveClass('font-qb-label');
+    expect(screen.getByText('Published')).not.toHaveClass('font-qb');
   });
 });
 

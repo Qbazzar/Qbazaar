@@ -14,7 +14,7 @@ export const QB_TOKEN_NAMES = {
   radius: ["qb-xs", "qb-sm", "qb-md", "qb-lg", "qb-xl", "qb-2xl", "qb-pill"],
   shadow: [
     "qb-card", "qb-raised", "qb-soft", "qb-hover", "qb-brand", "qb-header",
-    "qb-popover",
+    "qb-popover", "qb-float", "qb-control", "qb-lift",
   ],
 } as const
 

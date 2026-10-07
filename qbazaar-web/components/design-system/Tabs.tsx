@@ -34,7 +34,7 @@ export function Tab({ className, ...props }: WithClassName<TabsPrimitive.Tab.Pro
       className={cn(
         'inline-flex h-10 cursor-pointer items-center justify-center rounded-qb-pill border border-qb-line bg-qb-hover px-4 text-qb-caption whitespace-nowrap text-qb-ink shadow-qb-card transition-colors',
         'qb-tablet:h-[53px] qb-tablet:px-8 qb-tablet:text-qb-body-lg qb-desktop:h-14 qb-desktop:text-qb-h5',
-        'hover:bg-qb-surface data-active:border-qb-brand data-active:bg-qb-brand data-active:font-semibold data-active:text-white',
+        'hover:bg-qb-surface data-active:border-qb-brand data-active:bg-qb-brand data-active:font-semibold data-active:text-qb-on-brand',
         'disabled:pointer-events-none disabled:opacity-50',
         focusRing,
         className,

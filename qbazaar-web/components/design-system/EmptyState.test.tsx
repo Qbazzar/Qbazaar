@@ -17,7 +17,7 @@ describe('EmptyState', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Found something interesting?' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Found something interesting?' })).toHaveClass('font-qb');
     expect(screen.getByText('Click the heart on a listing to save it here.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Browse Ads' })).toBeInTheDocument();
   });

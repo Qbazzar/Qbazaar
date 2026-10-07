@@ -1,12 +1,4 @@
 import type { Metadata } from 'next';
-import {
-  Cairo,
-  DM_Sans,
-  Geist_Mono,
-  IBM_Plex_Sans_Arabic,
-  Instrument_Serif,
-  Poppins,
-} from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
@@ -16,53 +8,10 @@ import { LocaleProvider } from '@/components/i18n/LocaleProvider';
 import { dirFor } from '@/lib/i18n/locale';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { siteUrl } from '@/lib/seo';
+import { fontVariables } from './fonts';
 import { Providers } from './providers';
 import './globals.css';
 import '../styles/qbfront.css';
-
-// Brand Latin faces (design system): DM Sans for body/UI, Instrument Serif for
-// large display headings. Arabic always uses Cairo.
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-dm-sans',
-});
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ['latin'],
-  weight: ['400'],
-  style: ['normal', 'italic'],
-  variable: '--font-instrument-serif',
-});
-
-// Cairo for all Arabic text (body + headings). User preference.
-const cairo = Cairo({
-  subsets: ['arabic'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  variable: '--font-cairo',
-});
-
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
-});
-
-// New design system faces (`font-qb`). Not preloaded while no page uses them
-// yet, so the old-design pages download nothing extra; turn preload on with the
-// FE-16.3 reskin.
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-poppins',
-  preload: false,
-});
-
-const ibmPlexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ['arabic'],
-  weight: ['400', '500', '600'],
-  variable: '--font-ibm-plex-arabic',
-  preload: false,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -90,7 +39,7 @@ export default async function RootLayout({
       lang={locale}
       dir={dirFor(locale)}
       suppressHydrationWarning
-      className={`${dmSans.variable} ${instrumentSerif.variable} ${cairo.variable} ${geistMono.variable} ${poppins.variable} ${ibmPlexArabic.variable}`}
+      className={fontVariables}
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale}>

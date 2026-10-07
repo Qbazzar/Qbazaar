@@ -23,7 +23,7 @@ export function EmptyState({ icon, title, description, action, headingLevel: Hea
       >
         {icon}
       </div>
-      <Heading className="text-qb-body-lg font-medium tracking-normal text-qb-ink-muted qb-tablet:text-qb-h4">{title}</Heading>
+      <Heading className="font-qb text-qb-body-lg font-medium tracking-normal text-qb-ink-muted qb-tablet:text-qb-h4">{title}</Heading>
       {description ? (
         <p className="mt-2 max-w-[806px] text-qb-body text-qb-ink-disabled qb-tablet:text-qb-h5">{description}</p>
       ) : null}
