@@ -9,6 +9,7 @@ import { Button, buttonVariants } from '@/components/design-system/Button';
 import type { DealCardAd, DealOffer, DealRole } from '@/lib/api/commerce-types';
 import { payloadField, useDealEvents } from '@/lib/echo/useDealEvents';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { dealErrorMessage, isHandledGlobally } from '@/lib/orders/errors';
 import { formatMoney } from '@/lib/orders/money';
 import { OFFER_TONE, type StatusTone } from '@/lib/orders/status';
@@ -41,7 +42,7 @@ export function offerOutcome(offer: DealOffer, role: DealRole, now: number): { t
       const left = Date.parse(offer.expires_at) - now;
       if (role === offer.proposed_by) return null;
       return left > 0 && left < 24 * HOUR
-        ? { tone: 'brand', text: t('orders.card.expires_soon', { hours: Math.max(1, Math.ceil(left / HOUR)) }) }
+        ? { tone: 'brand', text: tPlural('orders.card.expires_soon', Math.max(1, Math.ceil(left / HOUR))) }
         : null;
     }
     case 'accepted':
@@ -160,7 +161,7 @@ export function OfferCard({ offer, role, ad, listedPrice, align, now = Date.now(
             title={t('orders.card.accept_offer_confirm.title')}
             description={t('orders.card.accept_offer_confirm.description', { amount })}
             confirmLabel={t('orders.card.accept_offer_confirm.confirm')}
-            cancelLabel={t('orders.common.cancel')}
+            cancelLabel={t('common.cancel')}
             busy={accept.isPending}
             onConfirm={() => run(() => accept.mutateAsync(offer.id), t('orders.card.toast.offer_accepted'))}
           />

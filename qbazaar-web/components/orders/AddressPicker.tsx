@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment } from 'react';
 import { MapPin, Plus } from 'lucide-react';
 
 import { Field } from '@/components/design-system/Field';
@@ -58,7 +59,14 @@ export function AddressPicker({
               icon={<MapPin />}
               label={
                 <span className="flex flex-wrap items-center gap-2">
-                  <span>{saved.label ? `${saved.label} · ${saved.full_name}` : saved.full_name}</span>
+                  <span>
+                    {saved.label ? (
+                      <>
+                        <bdi>{saved.label}</bdi> ·{' '}
+                      </>
+                    ) : null}
+                    <bdi>{saved.full_name}</bdi>
+                  </span>
                   {saved.is_default ? (
                     <span className="rounded-qb-xs bg-qb-fill px-2 py-0.5 text-qb-micro font-normal text-qb-ink-secondary">
                       {t('orders.checkout.default_address')}
@@ -66,7 +74,12 @@ export function AddressPicker({
                   ) : null}
                 </span>
               }
-              description={addressLines(saved).join(' · ')}
+              description={addressLines(saved).map((line, index) => (
+                <Fragment key={line}>
+                  {index > 0 ? ' · ' : null}
+                  <bdi>{line}</bdi>
+                </Fragment>
+              ))}
             />
           ))}
           <RadioCard

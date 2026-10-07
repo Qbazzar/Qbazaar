@@ -22,6 +22,7 @@ import type { PromotionOffer, PromotionPaymentMethod, PromotionType, Wallet } fr
 import { errorDetail } from '@/lib/api/request';
 import type { Ad } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { formatDate } from '@/lib/orders/dates';
 import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/errors';
 import { compareAmounts, formatMoney, normalizeAmountInput } from '@/lib/orders/money';
@@ -175,7 +176,7 @@ function PromoteForm({ ad, offers, wallet }: { ad: Ad; offers: PromotionOffer[];
                   <span className="flex flex-wrap items-baseline justify-between gap-x-3">
                     <span>{t(`orders.promotion.types.${candidate.type}`)}</span>
                     <span className="text-qb-caption font-semibold text-qb-ink">
-                      {formatMoney(candidate.price, candidate.currency)} · {t('orders.promotion.duration', { count: candidate.duration_days })}
+                      {formatMoney(candidate.price, candidate.currency)} · {tPlural('orders.promotion.duration', candidate.duration_days)}
                     </span>
                   </span>
                 }

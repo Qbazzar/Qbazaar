@@ -8,7 +8,7 @@ import { Badge } from '@/components/design-system/Badge';
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
-import { AccountPageHeader } from '@/components/orders/AccountPageHeader';
+import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { ConfirmDialog } from '@/components/orders/ConfirmDialog';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
@@ -28,13 +28,8 @@ export function BankAccountsView() {
   const query = useBankAccountsQuery();
 
   return (
-    <div className="flex flex-col gap-6 font-qb">
-      <AccountPageHeader
-        title={t('orders.bank.title')}
-        description={t('orders.bank.subtitle')}
-        breadcrumb={walletTrail(t('orders.bank.title'))}
-      />
-      <CheckoutPanel title={t('orders.bank.title')} titleId="bank-accounts">
+    <AccountPageFrame breadcrumb={walletTrail(t('orders.bank.title'))} title={t('orders.bank.title')} description={t('orders.bank.subtitle')}>
+      <CheckoutPanel title={t('orders.bank.saved_title')} titleId="bank-accounts">
         {query.isPending ? (
           <PageState kind="loading" />
         ) : query.isError ? (
@@ -50,7 +45,7 @@ export function BankAccountsView() {
         )}
       </CheckoutPanel>
       <AddBankAccountForm isFirst={query.data?.length === 0} />
-    </div>
+    </AccountPageFrame>
   );
 }
 
@@ -92,7 +87,12 @@ function BankAccountRow({ account }: { account: BankAccount }) {
           <span dir="ltr" className="font-medium tracking-wide">
             {account.iban_masked}
           </span>
-          {account.bank_name ? ` · ${account.bank_name}` : null}
+          {account.bank_name ? (
+            <>
+              {' · '}
+              <bdi>{account.bank_name}</bdi>
+            </>
+          ) : null}
         </p>
       </div>
       <Button

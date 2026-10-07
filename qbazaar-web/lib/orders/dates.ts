@@ -1,6 +1,5 @@
+import { intlLocale } from '@/lib/i18n/format';
 import { getLocale, type Locale } from '@/lib/i18n/locale';
-
-import { numberLocale } from './money';
 
 function parse(iso: string | null | undefined): Date | null {
   if (!iso) return null;
@@ -8,11 +7,11 @@ function parse(iso: string | null | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** "June 2, 2026" (Arabic: "٢ يونيو ٢٠٢٦"), in Qatar time. */
+/** "June 2, 2026" (Arabic: "2 يونيو 2026"), in Qatar time. */
 export function formatDate(iso: string | null | undefined, locale: Locale = getLocale()): string {
   const date = parse(iso);
   if (!date) return '';
-  return new Intl.DateTimeFormat(numberLocale(locale), {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -24,7 +23,7 @@ export function formatDate(iso: string | null | undefined, locale: Locale = getL
 export function formatDateTime(iso: string | null | undefined, locale: Locale = getLocale()): string {
   const date = parse(iso);
   if (!date) return '';
-  return new Intl.DateTimeFormat(numberLocale(locale), {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

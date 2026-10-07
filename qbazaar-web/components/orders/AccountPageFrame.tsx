@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
 
 import { Breadcrumb, type BreadcrumbItem } from '@/components/design-system/Breadcrumb';
+import { pageGutter } from '@/components/design-system/page-gutter';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-/** Page width and side gutters of the frames: 40 px at 1440, 30 at 744, 16 at 390. */
-export const pageFrame = 'mx-auto w-full max-w-[1440px] px-4 qb-tablet:px-[30px] qb-desktop:px-qb-gutter';
+/** Page width and the shared side gutters of the frames (16 px on phones, 30 on tablets, 40 at 1440). */
+export const pageFrame = cn('mx-auto w-full max-w-[1440px]', pageGutter);
 
 export interface AccountPageFrameProps {
   /** Trail after "Home"; the last item is this page. */
@@ -27,11 +28,11 @@ export interface AccountPageFrameProps {
 export function AccountPageFrame({ breadcrumb, title, description, actions, children }: AccountPageFrameProps) {
   return (
     <div className={cn(pageFrame, 'pt-8 pb-16 font-qb text-qb-ink qb-tablet:pt-[72px] qb-desktop:pt-[65px] qb-desktop:pb-24')}>
-      <Breadcrumb items={[{ label: t('orders.common.home'), href: '/' }, ...breadcrumb]} className="hidden qb-tablet:block" />
+      <Breadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, ...breadcrumb]} className="hidden qb-tablet:block" />
       {title ? (
         <div className="flex flex-wrap items-center justify-between gap-4 qb-tablet:mt-[60px] qb-desktop:mt-20">
           <div className="min-w-0">
-            <h1 className="text-qb-h2 leading-tight font-semibold tracking-normal text-qb-ink qb-tablet:text-[32px] qb-desktop:text-qb-h1">
+            <h1 className="font-qb text-qb-h2 leading-tight font-semibold tracking-normal text-qb-ink qb-tablet:text-[32px] qb-desktop:text-qb-h1">
               {title}
             </h1>
             {description ? (

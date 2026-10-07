@@ -92,7 +92,7 @@ describe('BuyNowForm', () => {
 
   it.each([
     ['own ad', { user_id: 'buyer-1' }, "This is your ad, so you can't buy it or make an offer on it."],
-    ['negotiable price', { price_type: 'negotiable' as const }, "Buy Now isn't available"],
+    ['ad without a price', { price_type: 'contact' as const, price: null }, "Buy Now isn't available"],
     ['reserved item', { is_reserved: true }, 'This item is reserved for another buyer at the moment.'],
   ])('explains instead of showing the form for an %s', (_case, overrides, text) => {
     renderWithClient(<BuyNowForm ad={{ ...ad, ...overrides } as DealAd} />);

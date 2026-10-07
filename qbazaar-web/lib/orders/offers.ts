@@ -40,12 +40,18 @@ export function suggestedOffers(askingPrice: number | null | undefined): Suggest
 
 export type DealBlocker = 'own_ad' | 'not_buyable' | 'not_offerable' | 'reserved';
 
-/** Why the viewer cannot send a Buy Now request for this ad, or null when they can. */
+/** Price types that never carry a price, so there is nothing to buy at (the API's `requiresNullPrice`). */
+const PRICELESS_TYPES: ReadonlySet<string> = new Set(['free', 'contact']);
+
+/**
+ * Why the viewer cannot send a Buy Now request for this ad, or null when they
+ * can. Mirrors the API's `assertAdIsPurchasable`: a live offering with a
+ * positive price, fixed or negotiable, and no open order.
+ */
 export function buyNowBlocker(ad: DealAd, viewerId: string | undefined): DealBlocker | null {
   if (viewerId && viewerId === ad.user_id) return 'own_ad';
-  if (ad.status !== 'active' || ad.price_type !== 'fixed' || ad.price == null || ad.ad_type === 'wanted') {
-    return 'not_buyable';
-  }
+  const hasPrice = ad.price != null && ad.price > 0 && !PRICELESS_TYPES.has(ad.price_type);
+  if (ad.status !== 'active' || ad.ad_type === 'wanted' || !hasPrice) return 'not_buyable';
   if (ad.is_reserved) return 'reserved';
   return null;
 }

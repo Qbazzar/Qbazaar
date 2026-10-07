@@ -33,14 +33,17 @@ describe('suggestedOffers', () => {
 });
 
 describe('deal blockers', () => {
-  it('lets anyone but the owner buy a live fixed-price ad', () => {
+  it('lets anyone but the owner buy a live ad with a price, fixed or negotiable', () => {
     expect(buyNowBlocker(ad, 'buyer-1')).toBeNull();
     expect(buyNowBlocker(ad, undefined)).toBeNull();
+    expect(buyNowBlocker({ ...ad, price_type: 'negotiable' }, 'buyer-1')).toBeNull();
     expect(buyNowBlocker(ad, 'seller-1')).toBe('own_ad');
   });
 
-  it('refuses Buy Now without a fixed price, on wanted or reserved ads', () => {
-    expect(buyNowBlocker({ ...ad, price_type: 'negotiable' }, 'buyer-1')).toBe('not_buyable');
+  it('refuses Buy Now without a price, on wanted or reserved ads', () => {
+    expect(buyNowBlocker({ ...ad, price_type: 'free', price: null }, 'buyer-1')).toBe('not_buyable');
+    expect(buyNowBlocker({ ...ad, price_type: 'contact', price: null }, 'buyer-1')).toBe('not_buyable');
+    expect(buyNowBlocker({ ...ad, price: 0 }, 'buyer-1')).toBe('not_buyable');
     expect(buyNowBlocker({ ...ad, ad_type: 'wanted' }, 'buyer-1')).toBe('not_buyable');
     expect(buyNowBlocker({ ...ad, status: 'sold' }, 'buyer-1')).toBe('not_buyable');
     expect(buyNowBlocker({ ...ad, is_reserved: true }, 'buyer-1')).toBe('reserved');

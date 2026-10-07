@@ -23,9 +23,12 @@ import {
   withdrawOffer,
 } from '@/lib/api/offers';
 import type { ApiClientError } from '@/lib/api/auth';
+import type { DealOffer } from '@/lib/api/commerce-types';
 import type { CreateOfferRequest, Offer } from '@/lib/api/types';
 import { useAuthStore } from '@/store/auth';
+import { adKeys } from './ads';
 import { messagingKeys } from './messaging';
+import { orderKeys } from './orders';
 
 const SECOND = 1000;
 
@@ -91,7 +94,7 @@ export function useMakeOfferMutation(): UseMutationResult<
  */
 function invalidateOfferCaches(
   qc: ReturnType<typeof useQueryClient>,
-  offer: Offer,
+  offer: Pick<Offer, 'conversation_id'>,
 ) {
   qc.invalidateQueries({
     queryKey: offersKeys.byConversation(offer.conversation_id),
@@ -110,7 +113,12 @@ export function useAcceptOfferMutation(): UseMutationResult<
   const qc = useQueryClient();
   return useMutation<Offer, ApiClientError, string>({
     mutationFn: (offerId) => acceptOffer(offerId),
-    onSuccess: (offer) => invalidateOfferCaches(qc, offer),
+    onSuccess: (offer) => {
+      invalidateOfferCaches(qc, offer);
+      // Accepting places an order and reserves the ad.
+      qc.invalidateQueries({ queryKey: orderKeys.lists() });
+      qc.invalidateQueries({ queryKey: adKeys.detail(offer.ad_id) });
+    },
   });
 }
 
@@ -144,12 +152,12 @@ interface CounterOfferVars {
 }
 
 export function useCounterOfferMutation(): UseMutationResult<
-  Offer,
+  DealOffer,
   ApiClientError,
   CounterOfferVars
 > {
   const qc = useQueryClient();
-  return useMutation<Offer, ApiClientError, CounterOfferVars>({
+  return useMutation<DealOffer, ApiClientError, CounterOfferVars>({
     mutationFn: ({ offerId, payload }) => counterOffer(offerId, payload),
     onSuccess: (offer) => invalidateOfferCaches(qc, offer),
   });

@@ -122,13 +122,14 @@ export function PurchaseRequestCard({ request, role, ad, align }: PurchaseReques
       );
     }
     if (request.status === 'pending') {
+      // 721:42157 gives the buyer one outlined "Cancel"; editing stays available as a quieter action.
       return (
         <>
-          <Button size="sm" className={cardButton} disabled={busy} onClick={() => setDialog('edit')}>
-            {t('orders.card.edit_request')}
-          </Button>
-          <Button size="sm" variant="muted" className={cardButton} disabled={busy} onClick={() => setDialog('cancel')}>
+          <Button size="sm" variant="secondary" className={cardButton} disabled={busy} onClick={() => setDialog('cancel')}>
             {t('orders.card.cancel_request')}
+          </Button>
+          <Button size="sm" variant="ghost" className={cardButton} disabled={busy} onClick={() => setDialog('edit')}>
+            {t('orders.card.edit_request')}
           </Button>
         </>
       );
@@ -182,7 +183,7 @@ export function PurchaseRequestCard({ request, role, ad, align }: PurchaseReques
           title={t('orders.card.accept_request_confirm.title')}
           description={t('orders.card.accept_request_confirm.description', { total })}
           confirmLabel={t('orders.card.accept_request_confirm.confirm')}
-          cancelLabel={t('orders.common.cancel')}
+          cancelLabel={t('common.cancel')}
           busy={accept.isPending}
           onConfirm={() =>
             run(() => accept.mutateAsync({ id: request.id, idempotencyKey: acceptKey }), t('orders.card.toast.request_accepted'), renewAcceptKey)

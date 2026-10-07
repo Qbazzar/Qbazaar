@@ -1,19 +1,22 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Megaphone } from 'lucide-react';
 
+import { Pager } from '@/components/account/Pager';
 import { buttonVariants } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { PageState } from '@/components/orders/PageState';
 import { StatusPill } from '@/components/orders/StatusPill';
-import { LoadMore, TableCard, tableClasses as tc } from '@/components/orders/TableCard';
+import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
 import type { AdPromotion, PromotionType } from '@/lib/api/commerce-types';
 import type { AdSummary } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { formatDate, isoDate } from '@/lib/orders/dates';
 import { formatMoney } from '@/lib/orders/money';
 import { PROMOTION_TONE } from '@/lib/orders/status';
@@ -38,8 +41,10 @@ export function PromotionsView() {
 
 type SummaryWithPromotion = AdSummary & { promotion?: PromotionType | null };
 
+/** The seller's live ads, a page at a time as `GET /account/ads` serves them. */
 function PromotableAds() {
-  const query = useMyAdsQuery({ status: 'active', per_page: 50 });
+  const [page, setPage] = useState(1);
+  const query = useMyAdsQuery({ status: 'active', page });
   const ads = (query.data?.data ?? []) as SummaryWithPromotion[];
 
   return (
@@ -52,36 +57,41 @@ function PromotableAds() {
       ) : ads.length === 0 ? (
         <p className="text-qb-body text-qb-ink-secondary">{t('orders.promotion.no_live_ads')}</p>
       ) : (
-        <ul className="flex flex-col">
-          {ads.map((ad) => {
-            const thumb = ad.primary_image?.sizes.thumbnail;
-            return (
-              <li key={ad.id} className="flex items-center gap-3 border-b border-qb-line py-3 first:pt-0 last:border-b-0 last:pb-0">
-                <span className="relative size-[50px] shrink-0 overflow-hidden rounded-qb-sm bg-qb-fill">
-                  {thumb ? <Image src={thumb} alt="" fill sizes="50px" className="object-cover" /> : null}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p dir="auto" className="truncate text-start text-qb-body font-semibold text-qb-ink-title">
-                    {ad.title}
-                  </p>
-                  {ad.promotion ? (
-                    <p className="mt-0.5 text-qb-micro text-qb-success">{t(`orders.promotion.types.${ad.promotion}`)}</p>
-                  ) : null}
-                </div>
-                <Link
-                  href={`/account/ads/${encodeURIComponent(ad.id)}/promote`}
-                  aria-label={t('orders.promotion.promote_label', { title: isolate(ad.title) })}
-                  className={cn(buttonVariants({ size: 'sm', variant: 'soft' }), 'rounded-qb-sm')}
-                >
-                  <Megaphone aria-hidden="true" />
-                  {t('orders.promotion.promote')}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <>
+          <ul className="flex flex-col" aria-busy={query.isPlaceholderData}>
+            {ads.map((ad) => (
+              <PromotableAd key={ad.id} ad={ad} />
+            ))}
+          </ul>
+          <Pager page={page} lastPage={query.data.meta.last_page} onChange={setPage} />
+        </>
       )}
     </CheckoutPanel>
+  );
+}
+
+function PromotableAd({ ad }: { ad: SummaryWithPromotion }) {
+  const thumb = ad.primary_image?.sizes.thumbnail;
+  return (
+    <li className="flex items-center gap-3 border-b border-qb-line py-3 first:pt-0 last:border-b-0 last:pb-0">
+      <span className="relative size-[50px] shrink-0 overflow-hidden rounded-qb-sm bg-qb-fill">
+        {thumb ? <Image src={thumb} alt="" fill sizes="50px" className="object-cover" /> : null}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p dir="auto" className="truncate text-start text-qb-body font-semibold text-qb-ink-title">
+          {ad.title}
+        </p>
+        {ad.promotion ? <p className="mt-0.5 text-qb-micro text-qb-success">{t(`orders.promotion.types.${ad.promotion}`)}</p> : null}
+      </div>
+      <Link
+        href={`/account/ads/${encodeURIComponent(ad.id)}/promote`}
+        aria-label={t('orders.promotion.promote_label', { title: isolate(ad.title) })}
+        className={cn(buttonVariants({ size: 'sm', variant: 'soft' }), 'rounded-qb-sm')}
+      >
+        <Megaphone aria-hidden="true" />
+        {t('orders.promotion.promote')}
+      </Link>
+    </li>
   );
 }
 
@@ -105,18 +115,10 @@ function PromotionsTable() {
           <table className={tc.table} aria-labelledby="promotions-mine">
             <thead>
               <tr className={tc.headRow}>
-                <th scope="col" className={tc.th}>
-                  {t('orders.promotion.columns.ad')}
-                </th>
-                <th scope="col" className={cn(tc.th, tc.wide)}>
-                  {t('orders.promotion.columns.period')}
-                </th>
-                <th scope="col" className={cn(tc.th, tc.wide)}>
-                  {t('orders.promotion.columns.status')}
-                </th>
-                <th scope="col" className={cn(tc.th, 'text-end')}>
-                  {t('orders.promotion.columns.price')}
-                </th>
+                <Th>{t('orders.promotion.columns.ad')}</Th>
+                <Th className={tc.wide}>{t('orders.promotion.columns.period')}</Th>
+                <Th className={tc.wide}>{t('orders.promotion.columns.status')}</Th>
+                <Th className="text-end">{t('orders.promotion.columns.price')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -133,7 +135,8 @@ function PromotionsTable() {
 }
 
 function PromotionRow({ promotion }: { promotion: AdPromotion }) {
-  const status = <StatusPill tone={PROMOTION_TONE[promotion.status]}>{t(`orders.status.promotion.${promotion.status}`)}</StatusPill>;
+  const tone = PROMOTION_TONE[promotion.status];
+  const label = t(`orders.status.promotion.${promotion.status}`);
   const period =
     promotion.starts_at && promotion.ends_at ? (
       <span className="whitespace-nowrap">
@@ -152,21 +155,27 @@ function PromotionRow({ promotion }: { promotion: AdPromotion }) {
           {promotion.ad_title ?? t(`orders.promotion.types.${promotion.type}`)}
         </p>
         <p className="mt-0.5 text-qb-micro font-normal text-qb-ink-subtle qb-desktop:text-qb-caption">
-          {t(`orders.promotion.types.${promotion.type}`)} · {t('orders.promotion.duration', { count: promotion.duration_days })} ·{' '}
+          {t(`orders.promotion.types.${promotion.type}`)} · {tPlural('orders.promotion.duration', promotion.duration_days)} ·{' '}
           {t(`orders.promotion.paid_by.${promotion.payment_method}`)}
           <span className="qb-tablet:hidden"> · {period}</span>
         </p>
         {promotion.rejection_reason ? (
           <p className="mt-1 text-qb-micro font-normal text-qb-danger qb-desktop:text-qb-caption">
-            {t('orders.promotion.rejected_reason', { reason: promotion.rejection_reason })}
+            {t('orders.promotion.rejected_reason', { reason: isolate(promotion.rejection_reason) })}
           </p>
         ) : null}
       </td>
       <td className={cn(tc.td, tc.wide)}>{period}</td>
-      <td className={cn(tc.td, tc.wide)}>{status}</td>
+      <td className={cn(tc.td, tc.wide)}>
+        <StatusPill tone={tone}>{label}</StatusPill>
+      </td>
       <td className={cn(tc.td, tc.amount)}>
         {formatMoney(promotion.price, promotion.currency)}
-        <div className="mt-1 qb-tablet:hidden">{status}</div>
+        <div className="mt-1 qb-tablet:hidden">
+          <StatusPill tone={tone} compact>
+            {label}
+          </StatusPill>
+        </div>
       </td>
     </tr>
   );

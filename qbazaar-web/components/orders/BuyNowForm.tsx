@@ -91,7 +91,7 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
       <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div>
           <p className="text-qb-body text-qb-ink-body">{t('orders.deal.contact_details')}</p>
-          <p className="mt-2 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-caption text-qb-brand-active">
+          <p className="mt-2 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-caption text-qb-brand-on-soft">
             {t('orders.deal.contact_chat')}
           </p>
         </div>
@@ -135,8 +135,9 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
         <DealActions
           submitLabel={t('orders.deal.send_request')}
           busy={create.isPending || gateStatus === 'loading'}
-          cancelLabel={t('orders.common.cancel')}
+          cancelLabel={t('common.cancel')}
           cancelHref={adHref}
+          outlinedCancel
         />
       </form>
     </DealPanel>

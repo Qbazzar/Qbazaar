@@ -4,26 +4,27 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Landmark, Upload, Wallet as WalletIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/design-system/Button';
+import { Button, buttonVariants } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { Notice } from '@/components/design-system/Notice';
 import { RadioCard } from '@/components/design-system/RadioCard';
-import { AccountPageHeader } from '@/components/orders/AccountPageHeader';
+import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { AmountField } from '@/components/orders/AmountField';
 import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
 import { FormError } from '@/components/orders/NoteField';
 import { PageState } from '@/components/orders/PageState';
 import { StatusPill } from '@/components/orders/StatusPill';
-import { LoadMore, TableCard, tableClasses as tc } from '@/components/orders/TableCard';
+import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
 import { useIdempotencyKey } from '@/hooks/useIdempotencyKey';
 import type { Settlement, SettlementPayload, Wallet } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
 import { formatDate, isoDate } from '@/lib/orders/dates';
 import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/errors';
-import { formatMoney, isPositiveAmount, minAmount } from '@/lib/orders/money';
+import { formatMoney, isPositiveAmount, minAmount, remainingAmount } from '@/lib/orders/money';
 import { REVIEW_TONE } from '@/lib/orders/status';
+import { isolate } from '@/lib/orders/text';
 import { LIMITS, validateAmount, validateText } from '@/lib/orders/validation';
 import { useCreateSettlementMutation, useSettlementsQuery, useWalletQuery } from '@/lib/queries/wallet';
 import { cn } from '@/lib/utils';
@@ -38,26 +39,31 @@ type Method = SettlementPayload['method'];
 export function SettlementView() {
   const wallet = useWalletQuery();
   const settlements = useSettlementsQuery();
-  const pendingTransfer = settlements.data?.pages
-    .flatMap((page) => page.data)
-    .find((settlement) => settlement.method === 'bank_transfer' && settlement.status === 'pending');
+  const pendingTransfer =
+    settlements.data?.pages
+      .flatMap((page) => page.data)
+      .find((settlement) => settlement.method === 'bank_transfer' && settlement.status === 'pending') ?? null;
 
   return (
-    <div className="flex flex-col gap-6 font-qb">
-      <AccountPageHeader
-        title={t('orders.settlement.title')}
-        description={t('orders.settlement.subtitle')}
-        breadcrumb={walletTrail(t('orders.settlement.title'))}
-      />
+    <AccountPageFrame
+      breadcrumb={walletTrail(t('orders.settlement.title'))}
+      title={t('orders.settlement.title')}
+      description={t('orders.settlement.subtitle')}
+    >
       {wallet.isPending || settlements.isPending ? (
         <PageState kind="loading" />
       ) : wallet.isError ? (
         <PageState kind="error" onRetry={() => wallet.refetch()} />
       ) : (
-        <SettlementForm wallet={wallet.data} pendingTransfer={pendingTransfer ?? null} />
+        <SettlementForm
+          // A settlement changes the debt and the balance; the form starts over from the new figures.
+          key={[wallet.data.commission_debt, wallet.data.available_balance, pendingTransfer?.id ?? ''].join(':')}
+          wallet={wallet.data}
+          pendingTransfer={pendingTransfer}
+        />
       )}
       <SettlementsTable />
-    </div>
+    </AccountPageFrame>
   );
 }
 
@@ -74,12 +80,14 @@ function SettlementForm({ wallet, pendingTransfer }: { wallet: Wallet; pendingTr
   const formRef = useRef<HTMLFormElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const owed = wallet.commission_debt;
-  const walletCap = minAmount(owed, wallet.available_balance);
-  const canUseWallet = isPositiveAmount(wallet.available_balance);
+  // The API does not let the wallet pay debt that a transfer awaiting review already covers.
+  const walletCap = minAmount(remainingAmount(owed, pendingTransfer?.amount ?? '0.00'), wallet.available_balance);
+  const canUseWallet = isPositiveAmount(walletCap);
   const canTransfer = pendingTransfer === null;
+  const initialMethod: Method = canTransfer || !canUseWallet ? 'bank_transfer' : 'wallet';
 
-  const [method, setMethod] = useState<Method>(canTransfer || !canUseWallet ? 'bank_transfer' : 'wallet');
-  const [amount, setAmount] = useState(owed);
+  const [method, setMethod] = useState<Method>(initialMethod);
+  const [amount, setAmount] = useState(initialMethod === 'wallet' ? walletCap : owed);
   const [reference, setReference] = useState('');
   const [receipt, setReceipt] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -225,20 +233,26 @@ function SettlementForm({ wallet, pendingTransfer }: { wallet: Wallet; pendingTr
                   required
                 >
                   {(control) => (
-                    <div className="flex items-center gap-3">
+                    // The browser's own file button speaks the browser's language, so it is replaced by a translated one.
+                    <div className="flex">
                       <input
                         {...control}
                         ref={fileRef}
                         type="file"
                         accept={RECEIPT_TYPES.join(',')}
                         onChange={onReceipt}
-                        className={cn(
-                          'w-full max-w-md cursor-pointer rounded-qb-md border border-dashed border-qb-line bg-qb-surface p-3 text-qb-caption text-qb-ink-body',
-                          'file:me-3 file:cursor-pointer file:rounded-qb-sm file:border-0 file:bg-qb-brand-soft file:px-3 file:py-2 file:font-qb file:text-qb-caption file:font-medium file:text-qb-brand-active',
-                          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-qb-brand-active aria-invalid:border-qb-danger',
-                        )}
+                        className="peer sr-only"
                       />
-                      <Upload aria-hidden="true" className="hidden size-5 text-qb-ink-subtle qb-tablet:block" />
+                      <label
+                        htmlFor={control.id}
+                        className={cn(
+                          buttonVariants({ variant: 'secondary', size: 'sm' }),
+                          'rounded-qb-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-solid peer-focus-visible:outline-qb-brand-active peer-aria-invalid:border-qb-danger',
+                        )}
+                      >
+                        <Upload aria-hidden="true" />
+                        {t(receipt ? 'orders.settlement.change_file' : 'orders.settlement.choose_file')}
+                      </label>
                     </div>
                   )}
                 </Field>
@@ -274,18 +288,10 @@ function SettlementsTable() {
           <table className={tc.table} aria-labelledby="settlements">
             <thead>
               <tr className={tc.headRow}>
-                <th scope="col" className={tc.th}>
-                  {t('orders.settlement.columns.method')}
-                </th>
-                <th scope="col" className={cn(tc.th, tc.wide)}>
-                  {t('orders.settlement.columns.date')}
-                </th>
-                <th scope="col" className={cn(tc.th, tc.wide)}>
-                  {t('orders.settlement.columns.status')}
-                </th>
-                <th scope="col" className={cn(tc.th, 'text-end')}>
-                  {t('orders.settlement.columns.amount')}
-                </th>
+                <Th>{t('orders.settlement.columns.method')}</Th>
+                <Th className={tc.wide}>{t('orders.settlement.columns.date')}</Th>
+                <Th className={tc.wide}>{t('orders.settlement.columns.status')}</Th>
+                <Th className="text-end">{t('orders.settlement.columns.amount')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -302,7 +308,8 @@ function SettlementsTable() {
 }
 
 function SettlementRow({ settlement }: { settlement: Settlement }) {
-  const status = <StatusPill tone={REVIEW_TONE[settlement.status]}>{t(`orders.status.review.${settlement.status}`)}</StatusPill>;
+  const tone = REVIEW_TONE[settlement.status];
+  const label = t(`orders.status.review.${settlement.status}`);
   const date = (
     <time dateTime={isoDate(settlement.created_at)} className="whitespace-nowrap">
       {formatDate(settlement.created_at)}
@@ -324,15 +331,21 @@ function SettlementRow({ settlement }: { settlement: Settlement }) {
         </p>
         {settlement.rejection_reason ? (
           <p className="mt-1 text-qb-micro font-normal text-qb-danger qb-desktop:text-qb-caption">
-            {t('orders.settlement.rejected_reason', { reason: settlement.rejection_reason })}
+            {t('orders.settlement.rejected_reason', { reason: isolate(settlement.rejection_reason) })}
           </p>
         ) : null}
       </td>
       <td className={cn(tc.td, tc.wide)}>{date}</td>
-      <td className={cn(tc.td, tc.wide)}>{status}</td>
+      <td className={cn(tc.td, tc.wide)}>
+        <StatusPill tone={tone}>{label}</StatusPill>
+      </td>
       <td className={cn(tc.td, tc.amount)}>
         {formatMoney(settlement.amount, settlement.currency)}
-        <div className="mt-1 qb-tablet:hidden">{status}</div>
+        <div className="mt-1 qb-tablet:hidden">
+          <StatusPill tone={tone} compact>
+            {label}
+          </StatusPill>
+        </div>
       </td>
     </tr>
   );

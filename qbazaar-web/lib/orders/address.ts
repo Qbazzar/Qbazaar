@@ -73,9 +73,13 @@ export function toAddressPayload(address: CheckoutAddressInput): CheckoutAddress
   };
 }
 
-/** Display lines of an address: name, street, city and phone. */
+/**
+ * Display lines of an address: street, city and phone. The phone is isolated
+ * left to right, so its leading "+" stays in front in Arabic text.
+ */
 export function addressLines(address: DeliveryAddress): string[] {
   const street = [address.house_number, address.street].filter(Boolean).join(', ');
   const city = [address.city, address.postal_code].filter(Boolean).join(' ');
-  return [street, address.supplement ?? '', city, address.phone ?? ''].filter((line) => line.trim() !== '');
+  const phone = address.phone?.trim() ? `\u2066${address.phone}\u2069` : '';
+  return [street, address.supplement ?? '', city, phone].filter((line) => line.trim() !== '');
 }

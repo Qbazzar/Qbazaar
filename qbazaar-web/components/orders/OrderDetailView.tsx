@@ -12,11 +12,12 @@ import { addressLines } from '@/lib/orders/address';
 import { formatDate, formatDateTime } from '@/lib/orders/dates';
 import { formatMoney, formatRate, isPositiveAmount } from '@/lib/orders/money';
 import { ORDER_STATUS_TONE, orderActions } from '@/lib/orders/status';
+import { isolate } from '@/lib/orders/text';
 import { useOrderQuery } from '@/lib/queries/orders';
 import { cn } from '@/lib/utils';
 
 import { AccountPageFrame } from './AccountPageFrame';
-import { CheckoutPanel } from './CheckoutPanel';
+import { CheckoutPanel, panelClass } from './CheckoutPanel';
 import { OrderActionsBar } from './OrderActionsBar';
 import { orderNumber } from './order-number';
 import { OrderTimeline } from './OrderTimeline';
@@ -78,7 +79,7 @@ function OrderDetail({ order }: { order: Order }) {
     <>
       <header className="flex flex-col gap-3 qb-tablet:flex-row qb-tablet:items-start qb-tablet:justify-between">
         <div className="min-w-0">
-          <h1 className="text-qb-h4 font-semibold tracking-normal text-qb-ink qb-desktop:text-qb-h2">
+          <h1 className="font-qb text-qb-h4 font-semibold tracking-normal text-qb-ink qb-desktop:text-qb-h2">
             <bdi>{order.ad.title}</bdi>
           </h1>
           <p className="mt-2 text-qb-caption text-qb-ink-subtle">
@@ -103,7 +104,7 @@ function OrderDetail({ order }: { order: Order }) {
               </Notice>
               {order.cancellation_reason && !order.dispute ? (
                 <p className="text-qb-caption text-qb-ink-secondary">
-                  {t('orders.detail.cancellation_reason', { reason: order.cancellation_reason })}
+                  {t('orders.detail.cancellation_reason', { reason: isolate(order.cancellation_reason) })}
                 </p>
               ) : null}
               <OrderActionsBar order={order} />
@@ -155,7 +156,7 @@ function DisputePanel({ order }: { order: Order }) {
               {dispute.resolution_note ? (
                 <p>
                   <span className="font-medium">{t('orders.detail.ruling_note')}: </span>
-                  {dispute.resolution_note}
+                  <bdi>{dispute.resolution_note}</bdi>
                 </p>
               ) : null}
               {dispute.resolved_at ? <p className="mt-1 text-qb-ink-subtle">{formatDateTime(dispute.resolved_at)}</p> : null}
@@ -190,11 +191,8 @@ function OrderSummaryPanel({ order }: { order: Order }) {
   rows.push({ label: t('orders.detail.payment'), value: t('orders.detail.payment_cash') });
 
   return (
-    <section
-      aria-labelledby="order-summary"
-      className="rounded-qb-2xl border border-qb-line bg-qb-surface p-4 font-qb shadow-qb-card qb-tablet:p-6 qb-desktop:w-[380px] qb-desktop:shrink-0"
-    >
-      <h2 id="order-summary" className="text-qb-body-lg font-medium tracking-normal text-qb-ink-title">
+    <section aria-labelledby="order-summary" className={cn(panelClass, 'p-4 qb-tablet:p-6 qb-desktop:w-[380px] qb-desktop:shrink-0')}>
+      <h2 id="order-summary" className="font-qb text-qb-body-lg font-medium tracking-normal text-qb-ink-title">
         {t('orders.detail.summary')}
       </h2>
       <dl className="mt-4 flex flex-col gap-3 text-qb-caption">
@@ -209,23 +207,24 @@ function OrderSummaryPanel({ order }: { order: Order }) {
           <dd className="text-qb-body font-semibold text-qb-ink">{formatMoney(order.total, order.currency)}</dd>
         </div>
         {order.commission ? (
-          <div className="rounded-qb-md bg-qb-fill p-3">
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-qb-ink-secondary">{t('orders.detail.commission', { rate: formatRate(order.commission.rate) })}</dt>
-              <dd className="font-semibold text-qb-ink">{formatMoney(order.commission.amount, order.currency)}</dd>
-            </div>
-            <p className="mt-1 text-qb-micro text-qb-ink-subtle">{t('orders.detail.commission_hint')}</p>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-qb-md bg-qb-fill p-3">
+            <dt className="text-qb-ink-secondary">{t('orders.detail.commission', { rate: formatRate(order.commission.rate) })}</dt>
+            <dd className="font-semibold text-qb-ink">{formatMoney(order.commission.amount, order.currency)}</dd>
+            <dd className="basis-full text-qb-micro text-qb-ink-subtle">{t('orders.detail.commission_hint')}</dd>
           </div>
         ) : null}
       </dl>
       {order.delivery_address ? (
         <div className="mt-4 border-t border-qb-line pt-4">
-          <h3 className="text-qb-caption font-medium tracking-normal text-qb-ink-subtle">{t('orders.detail.address')}</h3>
-          <address dir="auto" className="mt-2 text-start text-qb-caption leading-relaxed text-qb-ink not-italic">
-            <span className="block font-semibold">{order.delivery_address.full_name}</span>
+          <h3 className="font-qb text-qb-caption font-medium tracking-normal text-qb-ink-subtle">{t('orders.detail.address')}</h3>
+          {/* Each line keeps its own direction; the block keeps the page's alignment. */}
+          <address className="mt-2 text-start text-qb-caption leading-relaxed text-qb-ink not-italic">
+            <span className="block font-semibold">
+              <bdi>{order.delivery_address.full_name}</bdi>
+            </span>
             {addressLines(order.delivery_address).map((line) => (
               <span key={line} className="block">
-                {line}
+                <bdi>{line}</bdi>
               </span>
             ))}
           </address>

@@ -14,7 +14,7 @@ import { StatusPill } from './StatusPill';
 const OUTCOME_TONE: Record<StatusTone, string> = {
   success: 'bg-qb-success-soft text-qb-success',
   danger: 'bg-qb-danger-soft text-qb-danger',
-  brand: 'bg-qb-brand-soft text-qb-brand-active',
+  brand: 'bg-qb-brand-soft text-qb-brand-on-soft',
   info: 'bg-qb-info-soft text-qb-info',
   neutral: 'bg-qb-fill text-qb-ink-secondary',
 };
@@ -33,7 +33,7 @@ export interface DealCardProps {
   /** One line saying where the deal stands, shown under the content. */
   outcome?: { tone: StatusTone; text: string } | null;
   actions?: ReactNode;
-  /** Own cards sit at the end of the thread, the other side's at the start. */
+  /** Own cards sit at the end of the thread, the other side's at the start, next to the avatar. */
   align: 'start' | 'end';
 }
 
@@ -63,18 +63,20 @@ export function DealCard({
         aria-labelledby={headingId}
         className={cn(
           'w-full max-w-[534px] rounded-qb-md border border-qb-line bg-qb-surface p-4 font-qb shadow-qb-card',
-          align === 'end' ? 'rounded-ee-none' : 'rounded-es-none',
+          align === 'end' ? 'rounded-ee-none' : 'rounded-ss-none',
         )}
       >
         <header className="flex items-center justify-between gap-3">
-          <h3
+          <h2
             id={headingId}
-            className="flex min-w-0 items-center gap-1 text-qb-body leading-6 font-medium tracking-normal text-qb-ink"
+            className="flex min-w-0 items-center gap-1 font-qb text-qb-body leading-6 font-medium tracking-normal text-qb-ink"
           >
             <Icon icon={kind === 'offer' ? Handshake : Store} size="sm" className="size-[18px] text-qb-brand" />
             <span className="truncate">{title}</span>
-          </h3>
-          <StatusPill tone={status.tone}>{status.label}</StatusPill>
+          </h2>
+          <StatusPill tone={status.tone} className="qb-tablet:text-qb-micro">
+            {status.label}
+          </StatusPill>
         </header>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-2 border-t border-qb-line pt-4">

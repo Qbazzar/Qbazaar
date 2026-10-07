@@ -7,6 +7,7 @@ import { Banknote, CheckCircle2, Loader2, Store, Truck, XCircle } from 'lucide-r
 
 import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { Button, buttonVariants } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { Modal } from '@/components/design-system/Modal';
 import { Notice } from '@/components/design-system/Notice';
@@ -34,6 +35,12 @@ import { orderNumber } from './order-number';
 
 const ctaButton = 'h-10 rounded-qb-sm text-qb-caption';
 
+/** The compact result dialog of 684:33194 and 689:33489: 421 px wide, a 20 px title and a 14 px grey line. */
+const resultDialog = 'max-w-[421px] pt-[100px] [&_h2]:text-qb-h5 [&_h2]:font-medium [&_p]:text-qb-caption [&_p]:text-qb-ink-subtle';
+
+/** Plain text link under a notice. */
+const noticeLink = cn('mt-2 inline-block rounded-qb-xs font-semibold text-qb-ink underline underline-offset-2', focusRing);
+
 /** `/checkout/{orderId}`: the buyer picks pickup or delivery and confirms a cash order (682:32513). */
 export function CheckoutView({ orderId }: { orderId: string }) {
   const router = useRouter();
@@ -43,56 +50,58 @@ export function CheckoutView({ orderId }: { orderId: string }) {
   const orderHref = `/account/orders/${encodeURIComponent(orderId)}`;
 
   return (
-    <div className={cn(pageFrame, 'pt-6 pb-16 font-qb qb-tablet:pt-[35px] qb-desktop:pt-16 qb-desktop:pb-24')}>
-      <Breadcrumb
-        items={[
-          { label: t('orders.common.home'), href: '/' },
-          { label: t('orders.checkout.orders'), href: '/account/orders' },
-          { label: t('orders.checkout.title') },
-        ]}
-        className="hidden text-qb-caption qb-tablet:block qb-desktop:text-qb-h5"
-      />
-      <h1 className="text-qb-h2 font-semibold tracking-normal text-qb-ink qb-tablet:mt-5 qb-tablet:text-[32px] qb-desktop:sr-only">
-        {t('orders.checkout.title')}
-      </h1>
-      <div className="mt-6 qb-desktop:mt-[62px]">
-        {!user || query.isPending ? (
-          <PageState kind="loading" />
-        ) : query.isError ? (
-          <CheckoutError error={query.error} orderHref={orderHref} onRetry={() => query.refetch()} />
-        ) : query.data.order.status !== 'created' ? (
-          <Notice tone="info" role="status" className="max-w-2xl">
-            <p>{t(query.data.order.status === 'awaiting_handover' ? 'orders.checkout.already_done' : 'orders.checkout.closed')}</p>
-            <Link href={orderHref} className="mt-2 inline-block font-semibold text-qb-ink underline underline-offset-2">
+    <main className="bg-qb-page font-qb text-qb-ink">
+      <div className={cn(pageFrame, 'pt-6 pb-16 qb-tablet:pt-[35px] qb-desktop:pt-16 qb-desktop:pb-24')}>
+        <Breadcrumb
+          items={[
+            { label: t('home.breadcrumb'), href: '/' },
+            { label: t('orders.checkout.orders'), href: '/account/orders' },
+            { label: t('orders.checkout.title') },
+          ]}
+          className="hidden text-qb-caption qb-tablet:block qb-desktop:text-qb-h5"
+        />
+        <h1 className="font-qb text-qb-h2 font-semibold tracking-normal text-qb-ink qb-tablet:mt-5 qb-tablet:text-[32px] qb-desktop:sr-only">
+          {t('orders.checkout.title')}
+        </h1>
+        <div className="mt-6 qb-desktop:mt-[62px]">
+          {!user || query.isPending ? (
+            <PageState kind="loading" />
+          ) : query.isError ? (
+            <CheckoutError error={query.error} orderHref={orderHref} onRetry={() => query.refetch()} />
+          ) : query.data.order.status !== 'created' ? (
+            <Notice tone="info" role="status" className="max-w-2xl">
+              <p>{t(query.data.order.status === 'awaiting_handover' ? 'orders.checkout.already_done' : 'orders.checkout.closed')}</p>
+              <Link href={orderHref} className={noticeLink}>
+                {t('orders.checkout.view_order')}
+              </Link>
+            </Notice>
+          ) : (
+            <CheckoutForm checkout={query.data} onPlaced={() => setPlaced(true)} />
+          )}
+        </div>
+
+        {/* Lives here, not in the form: the order refetch after the checkout swaps the form for the "already done" notice. */}
+        <Modal
+          open={placed}
+          onOpenChange={(open) => {
+            if (!open) router.push(orderHref);
+          }}
+          title={t('orders.checkout.success_title')}
+          description={t('orders.checkout.success_body')}
+          className={resultDialog}
+        >
+          <ResultIcon tone="success" />
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <Link href={orderHref} className={cn(buttonVariants({ fullWidth: true }), ctaButton)}>
               {t('orders.checkout.view_order')}
             </Link>
-          </Notice>
-        ) : (
-          <CheckoutForm checkout={query.data} onPlaced={() => setPlaced(true)} />
-        )}
+            <Link href="/" className={cn(buttonVariants({ variant: 'ghost' }), 'text-qb-brand')}>
+              {t('orders.checkout.back_home')}
+            </Link>
+          </div>
+        </Modal>
       </div>
-
-      {/* Lives here, not in the form: the order refetch after the checkout swaps the form for the "already done" notice. */}
-      <Modal
-        open={placed}
-        onOpenChange={(open) => {
-          if (!open) router.push(orderHref);
-        }}
-        title={t('orders.checkout.success_title')}
-        description={t('orders.checkout.success_body')}
-        className="pt-[100px]"
-      >
-        <ResultIcon tone="success" />
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <Link href={orderHref} className={cn(buttonVariants({ fullWidth: true }), ctaButton)}>
-            {t('orders.checkout.view_order')}
-          </Link>
-          <Link href="/" className={cn(buttonVariants({ variant: 'ghost' }), 'text-qb-brand')}>
-            {t('orders.checkout.back_home')}
-          </Link>
-        </div>
-      </Modal>
-    </div>
+    </main>
   );
 }
 
@@ -101,7 +110,7 @@ function CheckoutError({ error, orderHref, onRetry }: { error: ApiClientError; o
     return (
       <Notice tone="info" role="status" className="max-w-2xl">
         <p>{t('orders.checkout.seller_view')}</p>
-        <Link href={orderHref} className="mt-2 inline-block font-semibold text-qb-ink underline underline-offset-2">
+        <Link href={orderHref} className={noticeLink}>
           {t('orders.checkout.view_order')}
         </Link>
       </Notice>
@@ -263,7 +272,8 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
         </CheckoutPanel>
       </div>
 
-      <div className="qb-tablet:w-[278px] qb-tablet:shrink-0 qb-desktop:sticky qb-desktop:top-6 qb-desktop:w-[421px]">
+      {/* Sticks 24 px under the 88 px site header. */}
+      <div className="qb-tablet:w-[278px] qb-tablet:shrink-0 qb-desktop:sticky qb-desktop:top-[112px] qb-desktop:w-[421px]">
         <OrderSummaryCard
           title={order.ad.title}
           subtitle={t('orders.common.order_number', { number: orderNumber(order.id) })}
@@ -291,7 +301,7 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
         onOpenChange={(open) => !open && setFailure(null)}
         title={t('orders.checkout.failure_title')}
         description={failure ?? undefined}
-        className="pt-[100px]"
+        className={resultDialog}
       >
         <ResultIcon tone="danger" />
         <div className="mt-6 flex flex-col items-center gap-3">

@@ -13,15 +13,16 @@ export interface RadioCardProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 /**
  * Selectable option card of the checkout payment methods (682:32513): a
  * native radio inside the label, so arrow keys, focus and form submission
- * work without script. Group the cards in a `role="radiogroup"` labelled
- * by the section heading, or in a `fieldset` with a `legend`.
+ * work without script. The card stays white when chosen; only the radio
+ * turns brand, as in the reference. Group the cards in a `role="radiogroup"`
+ * labelled by the section heading, or in a `fieldset` with a `legend`.
  */
 export function RadioCard({ label, description, icon, className, ...input }: RadioCardProps) {
   return (
     <label
       className={cn(
         'relative flex min-h-14 cursor-pointer items-center gap-3 rounded-qb-md border border-qb-line bg-qb-surface px-4 py-3 font-qb transition-colors',
-        'hover:bg-qb-hover has-[input:checked]:border-qb-brand has-[input:checked]:bg-qb-brand-soft',
+        'hover:bg-qb-hover',
         'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active',
         'has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50',
         className,

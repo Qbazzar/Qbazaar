@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { Field } from '@/components/design-system/Field';
 import { Textarea } from '@/components/design-system/Input';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 
 export interface NoteFieldProps {
   label: ReactNode;
@@ -26,7 +27,7 @@ const COUNTER_FROM = 40;
 /** Free-text field for messages, reasons and notes, with the characters left near the limit. */
 export function NoteField({ label, value, onChange, max, error, placeholder, hint, required, rows, className }: NoteFieldProps) {
   const remaining = Math.max(0, max - value.length);
-  const left = remaining <= COUNTER_FROM ? t('orders.common.chars_left', { count: remaining }) : null;
+  const left = remaining <= COUNTER_FROM ? tPlural('orders.common.chars_left', remaining) : null;
   return (
     <Field
       label={

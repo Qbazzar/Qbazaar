@@ -12,6 +12,7 @@ import { LIMITS, validateAmount, validateText } from '@/lib/orders/validation';
 import { useCounterOfferMutation } from '@/lib/queries/offers';
 
 import { AmountField } from './AmountField';
+import { DialogActions } from './ConfirmDialog';
 import { focusFirstInvalid } from './focus-invalid';
 import { FormError, NoteField } from './NoteField';
 
@@ -92,14 +93,14 @@ function CounterOfferForm({ offer, onDone }: { offer: DealOffer; onDone: () => v
         error={errors.note}
       />
       <FormError>{errors.form}</FormError>
-      <div className="mt-2 flex flex-col-reverse gap-3 qb-tablet:flex-row">
-        <Button variant="muted" fullWidth onClick={onDone}>
-          {t('orders.common.cancel')}
-        </Button>
-        <Button type="submit" fullWidth disabled={counter.isPending} aria-busy={counter.isPending}>
+      <DialogActions className="mt-2">
+        <Button type="submit" disabled={counter.isPending} aria-busy={counter.isPending}>
           {t('orders.card.counter_dialog.submit')}
         </Button>
-      </div>
+        <Button variant="muted" onClick={onDone}>
+          {t('common.cancel')}
+        </Button>
+      </DialogActions>
     </form>
   );
 }

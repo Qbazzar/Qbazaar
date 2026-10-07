@@ -14,6 +14,7 @@ import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/e
 import { LIMITS, validateQuantity, validateText } from '@/lib/orders/validation';
 import { useUpdatePurchaseRequestMutation } from '@/lib/queries/purchase-requests';
 
+import { DialogActions } from './ConfirmDialog';
 import { focusFirstInvalid } from './focus-invalid';
 import { FormError, NoteField } from './NoteField';
 
@@ -98,14 +99,14 @@ function EditRequestForm({ request, onDone }: { request: PurchaseRequest; onDone
         error={errors.note}
       />
       <FormError>{errors.form}</FormError>
-      <div className="mt-2 flex flex-col-reverse gap-3 qb-tablet:flex-row">
-        <Button variant="muted" fullWidth onClick={onDone}>
-          {t('orders.common.cancel')}
-        </Button>
-        <Button type="submit" fullWidth disabled={update.isPending} aria-busy={update.isPending}>
+      <DialogActions className="mt-2">
+        <Button type="submit" disabled={update.isPending} aria-busy={update.isPending}>
           {t('orders.card.edit_dialog.save')}
         </Button>
-      </div>
+        <Button variant="muted" onClick={onDone}>
+          {t('common.cancel')}
+        </Button>
+      </DialogActions>
     </form>
   );
 }

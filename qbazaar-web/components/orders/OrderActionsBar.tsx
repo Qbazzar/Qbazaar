@@ -119,7 +119,7 @@ export function OrderActionsBar({ order, now }: { order: Order; now?: number }) 
         title={t('orders.detail.confirm_dialog.title')}
         description={t('orders.detail.confirm_dialog.description', { total, commission })}
         confirmLabel={t('orders.detail.confirm_dialog.confirm')}
-        cancelLabel={t('orders.common.cancel')}
+        cancelLabel={t('common.cancel')}
         busy={confirm.isPending}
         onConfirm={() =>
           void run(
@@ -158,7 +158,7 @@ export function OrderActionsBar({ order, now }: { order: Order; now?: number }) 
         title={t('orders.detail.report_dialog.title')}
         description={t('orders.detail.report_dialog.description')}
         confirmLabel={t('orders.detail.report_dialog.submit')}
-        cancelLabel={t('orders.common.cancel')}
+        cancelLabel={t('common.cancel')}
         busy={report.isPending}
         onConfirm={submitReport}
       >

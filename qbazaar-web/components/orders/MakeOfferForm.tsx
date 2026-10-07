@@ -116,7 +116,7 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
                   onClick={() => setAmount(suggestion.amount.replace(/\.00$/, ''))}
                   className={cn(
                     'h-[47px] rounded-qb-lg border border-qb-line bg-qb-surface px-4 text-qb-caption font-medium text-qb-ink transition-colors hover:bg-qb-hover qb-desktop:px-6 qb-desktop:text-qb-body',
-                    'aria-pressed:border-qb-brand aria-pressed:bg-qb-brand-soft aria-pressed:text-qb-brand-active',
+                    'aria-pressed:border-qb-brand aria-pressed:bg-qb-brand-soft aria-pressed:text-qb-brand-on-soft',
                     focusRing,
                   )}
                 >
@@ -143,7 +143,7 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
         />
 
         <FormError>{errors.form}</FormError>
-        <DealActions submitLabel={t('orders.deal.send_offer')} busy={busy} cancelLabel={t('orders.common.cancel')} cancelHref={adHref} />
+        <DealActions submitLabel={t('orders.deal.send_offer')} busy={busy} cancelLabel={t('common.cancel')} cancelHref={adHref} />
       </form>
     </DealPanel>
   );

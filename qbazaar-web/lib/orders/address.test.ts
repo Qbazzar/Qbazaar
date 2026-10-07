@@ -78,6 +78,6 @@ describe('addressLines', () => {
         city: 'Doha',
         postal_code: null,
       }),
-    ).toEqual(['Villa 24, Al Waab Street', 'Zone 55', 'Doha', '+97455123456']);
+    ).toEqual(['Villa 24, Al Waab Street', 'Zone 55', 'Doha', '\u2066+97455123456\u2069']);
   });
 });

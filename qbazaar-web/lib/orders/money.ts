@@ -1,3 +1,4 @@
+import { intlLocale } from '@/lib/i18n/format';
 import { getLocale, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 
@@ -25,16 +26,12 @@ function parseDecimal(amount: string): ParsedDecimal | null {
   };
 }
 
-export function numberLocale(locale: Locale): string {
-  return locale === 'ar' ? 'ar-EG' : 'en-US';
-}
-
-/** "1234.5" → "1,234.50" (or "١٬٢٣٤٫٥٠" in Arabic). Unparseable input is returned untouched. */
+/** "1234.5" → "1,234.50", with Latin digits in both languages. Unparseable input is returned untouched. */
 export function formatAmount(amount: string, locale: Locale = getLocale()): string {
   const parsed = parseDecimal(amount);
   if (!parsed) return amount;
 
-  const lang = numberLocale(locale);
+  const lang = intlLocale(locale);
   const grouped = new Intl.NumberFormat(lang).format(BigInt(parsed.integer));
   const separator =
     new Intl.NumberFormat(lang, { minimumFractionDigits: 1 }).formatToParts(1.5).find((part) => part.type === 'decimal')
@@ -63,14 +60,14 @@ export function formatMoney(amount: string, currency = 'QAR', locale: Locale = g
 
 /** An ad's listed price, which the API sends as a JSON number: "QAR 1,550" (decimals only when present). */
 export function formatListPrice(price: number, currency = 'QAR', locale: Locale = getLocale()): string {
-  return `${currencyLabel(currency)} ${new Intl.NumberFormat(numberLocale(locale), { maximumFractionDigits: 2 }).format(price)}`;
+  return `${currencyLabel(currency)} ${new Intl.NumberFormat(intlLocale(locale), { maximumFractionDigits: 2 }).format(price)}`;
 }
 
-/** A rate such as "5.00" as "5" (Arabic digits in Arabic). Rates are not money, so a plain number is fine. */
+/** A rate such as "5.00" as "5". Rates are not money, so a plain number is fine. */
 export function formatRate(rate: string, locale: Locale = getLocale()): string {
   const value = Number(rate);
   if (!Number.isFinite(value)) return rate;
-  return new Intl.NumberFormat(numberLocale(locale), { maximumFractionDigits: 2 }).format(value);
+  return new Intl.NumberFormat(intlLocale(locale), { maximumFractionDigits: 2 }).format(value);
 }
 
 /** Exact cents of a decimal string, or null when it is not a 0–2 place decimal. */
@@ -107,6 +104,12 @@ export function minAmount(a: string, b: string): string {
   return compareAmounts(a, b) <= 0 ? a : b;
 }
 
+/** `amount` minus what is already `covered`, never below zero. */
+export function remainingAmount(amount: string, covered: string): string {
+  const left = (toCents(amount) ?? BigInt(0)) - (toCents(covered) ?? BigInt(0));
+  return fromCents(left > BigInt(0) ? left : BigInt(0));
+}
+
 const DIGIT_OFFSETS: Array<[number, number]> = [
   [0x0660, 0x0669], // Arabic-Indic
   [0x06f0, 0x06f9], // Extended Arabic-Indic (Persian/Urdu keyboards)
@@ -125,15 +128,23 @@ export function toAsciiDigits(input: string): string {
     .join('');
 }
 
+const GROUPED_INPUT = /^\d{1,3}(,\d{3})+(\.\d{1,2})?$/;
+const DECIMAL_COMMA_INPUT = /^\d+,\d{1,2}$/;
+const PLAIN_INPUT = /^\d+(\.\d{1,2})?$/;
+
 /**
  * What the user typed into an amount field, as an API decimal string or null.
- * Accepts Arabic-Indic digits, the Arabic decimal mark and group separators,
- * so "١٬٥٠٠٫٥" becomes "1500.50".
+ * Accepts Arabic-Indic digits and the Arabic marks, commas that group
+ * thousands ("1,500.50") and a single decimal comma ("1500,50"), which
+ * comma-decimal keypads type. Anything ambiguous ("1.500,50") is refused
+ * rather than guessed.
  */
 export function normalizeAmountInput(input: string): string | null {
-  const ascii = toAsciiDigits(input.trim()).replace(/[,\s٬']/g, '');
+  let ascii = toAsciiDigits(input.trim()).replace(/[\s']/g, '').replace(/٬/g, ',');
+  if (GROUPED_INPUT.test(ascii)) ascii = ascii.replace(/,/g, '');
+  else if (DECIMAL_COMMA_INPUT.test(ascii)) ascii = ascii.replace(',', '.');
 
-  if (!/^\d+(\.\d{1,2})?$/.test(ascii)) return null;
+  if (!PLAIN_INPUT.test(ascii)) return null;
   const cents = toCents(ascii);
   return cents === null ? null : fromCents(cents);
 }

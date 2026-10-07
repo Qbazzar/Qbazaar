@@ -6,16 +6,17 @@ import { Landmark } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Notice } from '@/components/design-system/Notice';
 import { RadioCard } from '@/components/design-system/RadioCard';
-import { AccountPageHeader } from '@/components/orders/AccountPageHeader';
+import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { AmountField } from '@/components/orders/AmountField';
 import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
 import { FormError } from '@/components/orders/NoteField';
 import { PageState } from '@/components/orders/PageState';
 import { StatusPill } from '@/components/orders/StatusPill';
-import { LoadMore, TableCard, tableClasses as tc } from '@/components/orders/TableCard';
+import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
 import { useIdempotencyKey } from '@/hooks/useIdempotencyKey';
 import { ApiClientError } from '@/lib/api/auth';
 import type { BankAccount, Wallet, Withdrawal } from '@/lib/api/commerce-types';
@@ -25,11 +26,14 @@ import { formatDate, isoDate } from '@/lib/orders/dates';
 import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/errors';
 import { formatMoney, isPositiveAmount, normalizeAmountInput } from '@/lib/orders/money';
 import { REVIEW_TONE } from '@/lib/orders/status';
+import { isolate } from '@/lib/orders/text';
 import { validateAmount } from '@/lib/orders/validation';
 import { useBankAccountsQuery, useCreateWithdrawalMutation, useWalletQuery, useWithdrawalsQuery } from '@/lib/queries/wallet';
 import { cn } from '@/lib/utils';
 
 import { walletTrail } from './wallet-trail';
+
+const ACCOUNT_ERROR_ID = 'withdraw-account-error';
 
 /** `/account/wallet/withdrawals`: send the withdrawable balance to a payout IBAN and follow the requests. */
 export function WithdrawalView() {
@@ -37,12 +41,11 @@ export function WithdrawalView() {
   const accounts = useBankAccountsQuery();
 
   return (
-    <div className="flex flex-col gap-6 font-qb">
-      <AccountPageHeader
-        title={t('orders.withdrawal.title')}
-        description={t('orders.withdrawal.subtitle')}
-        breadcrumb={walletTrail(t('orders.withdrawal.title'))}
-      />
+    <AccountPageFrame
+      breadcrumb={walletTrail(t('orders.withdrawal.title'))}
+      title={t('orders.withdrawal.title')}
+      description={t('orders.withdrawal.subtitle')}
+    >
       {wallet.isPending || accounts.isPending ? (
         <PageState kind="loading" />
       ) : wallet.isError || accounts.isError ? (
@@ -57,7 +60,7 @@ export function WithdrawalView() {
         <WithdrawalForm wallet={wallet.data} accounts={accounts.data} />
       )}
       <WithdrawalsTable />
-    </div>
+    </AccountPageFrame>
   );
 }
 
@@ -138,7 +141,14 @@ function WithdrawalForm({ wallet, accounts }: { wallet: Wallet; accounts: BankAc
             required
             className="max-w-md"
           />
-          <div role="radiogroup" aria-labelledby="withdraw-account" className="flex flex-col gap-3">
+          <div
+            role="radiogroup"
+            aria-labelledby="withdraw-account"
+            aria-describedby={errors.account ? ACCOUNT_ERROR_ID : undefined}
+            aria-invalid={errors.account ? true : undefined}
+            tabIndex={errors.account ? -1 : undefined}
+            className="flex flex-col gap-3 outline-none"
+          >
             <p id="withdraw-account" className="text-qb-body text-qb-ink-body">
               {t('orders.withdrawal.account')}
             </p>
@@ -150,17 +160,29 @@ function WithdrawalForm({ wallet, accounts }: { wallet: Wallet; accounts: BankAc
                 checked={accountId === account.id}
                 onChange={() => setAccountId(account.id)}
                 icon={<Landmark />}
-                label={account.holder_name}
+                label={<bdi>{account.holder_name}</bdi>}
                 description={
                   <>
                     <span dir="ltr">{account.iban_masked}</span>
-                    {account.bank_name ? ` · ${account.bank_name}` : null}
+                    {account.bank_name ? (
+                      <>
+                        {' · '}
+                        <bdi>{account.bank_name}</bdi>
+                      </>
+                    ) : null}
                   </>
                 }
               />
             ))}
-            {errors.account ? <p className="text-qb-caption text-qb-danger">{errors.account}</p> : null}
-            <Link href="/account/wallet/bank-accounts" className="self-start text-qb-caption font-medium text-qb-brand underline underline-offset-2">
+            {errors.account ? (
+              <p id={ACCOUNT_ERROR_ID} role="alert" className="text-qb-caption text-qb-danger">
+                {errors.account}
+              </p>
+            ) : null}
+            <Link
+              href="/account/wallet/bank-accounts"
+              className={cn('self-start rounded-qb-xs text-qb-caption font-medium text-qb-brand underline underline-offset-2', focusRing)}
+            >
               {t('orders.withdrawal.manage_accounts')}
             </Link>
           </div>
@@ -193,18 +215,10 @@ function WithdrawalsTable() {
           <table className={tc.table} aria-labelledby="withdrawals">
             <thead>
               <tr className={tc.headRow}>
-                <th scope="col" className={tc.th}>
-                  {t('orders.withdrawal.columns.account')}
-                </th>
-                <th scope="col" className={cn(tc.th, tc.wide)}>
-                  {t('orders.withdrawal.columns.date')}
-                </th>
-                <th scope="col" className={cn(tc.th, tc.wide)}>
-                  {t('orders.withdrawal.columns.status')}
-                </th>
-                <th scope="col" className={cn(tc.th, 'text-end')}>
-                  {t('orders.withdrawal.columns.amount')}
-                </th>
+                <Th>{t('orders.withdrawal.columns.account')}</Th>
+                <Th className={tc.wide}>{t('orders.withdrawal.columns.date')}</Th>
+                <Th className={tc.wide}>{t('orders.withdrawal.columns.status')}</Th>
+                <Th className="text-end">{t('orders.withdrawal.columns.amount')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -221,22 +235,25 @@ function WithdrawalsTable() {
 }
 
 function WithdrawalRow({ withdrawal }: { withdrawal: Withdrawal }) {
-  const status = <StatusPill tone={REVIEW_TONE[withdrawal.status]}>{t(`orders.status.review.${withdrawal.status}`)}</StatusPill>;
+  const tone = REVIEW_TONE[withdrawal.status];
+  const label = t(`orders.status.review.${withdrawal.status}`);
   const date = (
     <time dateTime={isoDate(withdrawal.created_at)} className="whitespace-nowrap">
       {formatDate(withdrawal.created_at)}
     </time>
   );
   const note = withdrawal.rejection_reason
-    ? t('orders.withdrawal.rejected_reason', { reason: withdrawal.rejection_reason })
+    ? t('orders.withdrawal.rejected_reason', { reason: isolate(withdrawal.rejection_reason) })
     : withdrawal.transfer_reference
-      ? t('orders.withdrawal.transfer_reference', { reference: withdrawal.transfer_reference })
+      ? t('orders.withdrawal.transfer_reference', { reference: isolate(withdrawal.transfer_reference) })
       : null;
 
   return (
     <tr className={tc.row}>
       <td className={tc.td}>
-        <p className="font-semibold text-qb-ink-title">{withdrawal.holder_name}</p>
+        <p className="font-semibold text-qb-ink-title">
+          <bdi>{withdrawal.holder_name}</bdi>
+        </p>
         <p className="mt-0.5 text-qb-micro font-normal text-qb-ink-subtle qb-desktop:text-qb-caption">
           <span dir="ltr">{withdrawal.iban_masked}</span>
           <span className="qb-tablet:hidden"> · {date}</span>
@@ -244,10 +261,16 @@ function WithdrawalRow({ withdrawal }: { withdrawal: Withdrawal }) {
         {note ? <p className="mt-1 text-qb-micro font-normal text-qb-ink-secondary qb-desktop:text-qb-caption">{note}</p> : null}
       </td>
       <td className={cn(tc.td, tc.wide)}>{date}</td>
-      <td className={cn(tc.td, tc.wide)}>{status}</td>
+      <td className={cn(tc.td, tc.wide)}>
+        <StatusPill tone={tone}>{label}</StatusPill>
+      </td>
       <td className={cn(tc.td, tc.amount)}>
         {formatMoney(withdrawal.amount, withdrawal.currency)}
-        <div className="mt-1 qb-tablet:hidden">{status}</div>
+        <div className="mt-1 qb-tablet:hidden">
+          <StatusPill tone={tone} compact>
+            {label}
+          </StatusPill>
+        </div>
       </td>
     </tr>
   );

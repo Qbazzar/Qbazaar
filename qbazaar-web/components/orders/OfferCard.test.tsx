@@ -16,6 +16,7 @@ vi.mock('@/lib/api/offers', () => ({
 import { toast } from 'sonner';
 
 import { acceptOffer, counterOffer, withdrawOffer } from '@/lib/api/offers';
+import type { DealOffer } from '@/lib/api/commerce-types';
 import type { Offer } from '@/lib/api/types';
 import { setClientLocale } from '@/lib/i18n/locale';
 import { buildOffer } from '@/lib/orders/test-fixtures';
@@ -25,7 +26,8 @@ import { renderWithClient } from './test-utils';
 
 const ad = { title: 'Sony WH-1000XM5', thumbUrl: null };
 const NOW = Date.parse('2026-10-06T10:00:00Z');
-const answered = { conversation_id: 'conv-1' } as Offer;
+const answered = { conversation_id: 'conv-1', ad_id: 'ad-1' } as Offer;
+const countered = { conversation_id: 'conv-1' } as DealOffer;
 
 beforeEach(() => {
   setClientLocale('en');
@@ -48,7 +50,7 @@ describe('OfferCard', () => {
   });
 
   it('sends a validated counter-offer as an exact decimal', async () => {
-    vi.mocked(counterOffer).mockResolvedValue(answered);
+    vi.mocked(counterOffer).mockResolvedValue(countered);
     renderWithClient(<OfferCard offer={buildOffer()} role="seller" ad={ad} listedPrice={null} align="start" now={NOW} />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Counter' }));
@@ -108,7 +110,7 @@ describe('OfferCard', () => {
       />,
     );
 
-    expect(screen.getByText('Expires in 6 h')).toBeInTheDocument();
+    expect(screen.getByText('Expires in 6 hours')).toBeInTheDocument();
   });
 
   it('links an accepted offer to the orders of the viewer', () => {

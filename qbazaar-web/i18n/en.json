@@ -255,9 +255,12 @@
       "back_to_settings": "Back to settings",
       "activity": "My activity",
       "profile_settings": "Profile Settings",
+      "wallet": "Wallet",
       "account_settings": "Account Settings",
       "data_protection": "Data Protection",
       "my_ads": "My Ads",
+      "orders": "My orders",
+      "promotions": "Promotions",
       "title": "Account",
       "dashboard": "Dashboard",
       "profile": "Profile",
@@ -966,14 +969,14 @@
       "QAR": "QAR"
     },
     "common": {
-      "home": "Home",
       "load_more": "Load more",
-      "loading": "Loading…",
       "retry": "Try again",
       "load_error": "We couldn't load this. Check your connection and try again.",
-      "cancel": "Cancel",
       "optional": "(optional)",
-      "chars_left": "{count} characters left",
+      "chars_left": {
+        "one": "{count} character left",
+        "other": "{count} characters left"
+      },
       "order_number": "Order #{number}",
       "cash": "Cash",
       "pickup": "Pickup",
@@ -1090,7 +1093,10 @@
       "counter": "Counter",
       "reject": "Reject",
       "withdraw": "Withdraw offer",
-      "expires_soon": "Expires in {hours} h",
+      "expires_soon": {
+        "one": "Expires in {count} hour",
+        "other": "Expires in {count} hours"
+      },
       "outcome": {
         "request_accepted_buyer": "Accepted. Complete the checkout to confirm your order.",
         "request_accepted_seller": "Accepted. Waiting for the buyer to check out.",
@@ -1182,7 +1188,7 @@
       "asking_price": "Asking price:",
       "verified": "Verified",
       "own_ad": "This is your ad, so you can't buy it or make an offer on it.",
-      "not_buyable": "Buy Now isn't available for this ad: it needs a fixed price and must be live. You can still message the seller.",
+      "not_buyable": "Buy Now isn't available for this ad: it needs a price and must be live. You can still message the seller.",
       "not_offerable": "This ad isn't taking offers right now.",
       "reserved": "This item is reserved for another buyer at the moment.",
       "back_to_ad": "Back to the ad",
@@ -1424,6 +1430,8 @@
       "reference_placeholder": "e.g. TRF-204918",
       "receipt": "Transfer receipt",
       "receipt_hint": "A photo or screenshot of the receipt: JPEG, PNG or WebP, up to 5 MB.",
+      "choose_file": "Choose file",
+      "change_file": "Change file",
       "receipt_selected": "Selected: {name}",
       "receipt_required": "Attach the transfer receipt.",
       "receipt_type": "Use a JPEG, PNG or WebP image.",
@@ -1469,6 +1477,7 @@
     },
     "bank": {
       "title": "Payout accounts",
+      "saved_title": "Saved accounts",
       "subtitle": "The bank accounts your withdrawals are paid into. IBANs are stored encrypted and only ever shown masked.",
       "add_title": "Add a bank account",
       "holder": "Account holder name",
@@ -1507,7 +1516,10 @@
         "premium": "Premium",
         "premium_body": "The strongest lift: top of search and of the home feed."
       },
-      "duration": "{count} days",
+      "duration": {
+        "one": "{count} day",
+        "other": "{count} days"
+      },
       "choose": "Choose a promotion",
       "pay_with": "Pay with",
       "wallet": "Wallet",

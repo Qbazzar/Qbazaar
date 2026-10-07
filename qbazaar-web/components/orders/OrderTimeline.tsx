@@ -31,7 +31,7 @@ export function OrderTimeline({ order }: { order: Order }) {
               aria-hidden="true"
               className={cn(
                 'relative flex size-7 shrink-0 items-center justify-center rounded-full border-2',
-                step.state === 'done' && 'border-qb-brand bg-qb-brand text-white',
+                step.state === 'done' && 'border-qb-brand bg-qb-brand text-qb-on-brand',
                 step.state === 'current' && 'border-qb-brand bg-qb-surface',
                 step.state === 'upcoming' && 'border-qb-line bg-qb-surface',
               )}

@@ -10,7 +10,7 @@ import { Icon } from '@/components/design-system/Icon';
 import { Select } from '@/components/design-system/Input';
 import { orderNumber } from '@/components/orders/order-number';
 import { PageState } from '@/components/orders/PageState';
-import { LoadMore, TableCard, tableClasses as tc } from '@/components/orders/TableCard';
+import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
 import type { WalletAccount, WalletEntry } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
 import { formatDate, isoDate } from '@/lib/orders/dates';
@@ -65,21 +65,11 @@ export function StatementTable() {
           <table className={tc.table} aria-labelledby="wallet-history">
             <thead>
               <tr className={tc.headRow}>
-                <th scope="col" className={tc.th}>
-                  {t('orders.wallet.columns.transaction')}
-                </th>
-                <th scope="col" className={cn(tc.th, tc.wide)}>
-                  {t('orders.wallet.columns.date')}
-                </th>
-                <th scope="col" className={cn(tc.th, 'hidden qb-desktop:table-cell')}>
-                  {t('orders.wallet.columns.account')}
-                </th>
-                <th scope="col" className={cn(tc.th, 'text-end')}>
-                  {t('orders.wallet.columns.amount')}
-                </th>
-                <th scope="col" className={cn(tc.th, 'hidden text-end qb-desktop:table-cell')}>
-                  {t('orders.wallet.columns.balance')}
-                </th>
+                <Th>{t('orders.wallet.columns.transaction')}</Th>
+                <Th className={tc.wide}>{t('orders.wallet.columns.date')}</Th>
+                <Th className="hidden qb-desktop:table-cell">{t('orders.wallet.columns.account')}</Th>
+                <Th className="text-end">{t('orders.wallet.columns.amount')}</Th>
+                <Th className="hidden text-end qb-desktop:table-cell">{t('orders.wallet.columns.balance')}</Th>
               </tr>
             </thead>
             <tbody>

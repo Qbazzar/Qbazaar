@@ -21,10 +21,11 @@ import { cn } from '@/lib/utils';
 
 import { AccountPageFrame } from './AccountPageFrame';
 import { HeaderButtonLabel, headerButton } from './AccountPageHeader';
+import { panelClass } from './CheckoutPanel';
 import { orderNumber } from './order-number';
 import { PageState } from './PageState';
 import { StatusPill } from './StatusPill';
-import { LoadMore, TableCard, tableClasses as tc } from './TableCard';
+import { LoadMore, TableCard, Th, tableClasses as tc } from './TableCard';
 
 const ROLES: DealRole[] = ['buyer', 'seller'];
 const STATUSES: OrderStatus[] = ['created', 'awaiting_handover', 'completed', 'cancelled', 'disputed'];
@@ -91,21 +92,11 @@ function OrdersTable({ role, status }: { role: DealRole; status?: OrderStatus })
       <table className={tc.table} aria-labelledby={`orders-${role}`}>
         <thead>
           <tr className={tc.headRow}>
-            <th scope="col" className={tc.th}>
-              {t('orders.list.columns.item')}
-            </th>
-            <th scope="col" className={cn(tc.th, tc.wide)}>
-              {t('orders.list.columns.date')}
-            </th>
-            <th scope="col" className={cn(tc.th, 'hidden qb-desktop:table-cell')}>
-              {t('orders.list.columns.payment')}
-            </th>
-            <th scope="col" className={cn(tc.th, tc.wide)}>
-              {t('orders.list.columns.status')}
-            </th>
-            <th scope="col" className={cn(tc.th, 'text-end')}>
-              {t('orders.list.columns.total')}
-            </th>
+            <Th>{t('orders.list.columns.item')}</Th>
+            <Th className={tc.wide}>{t('orders.list.columns.date')}</Th>
+            <Th className="hidden qb-desktop:table-cell">{t('orders.list.columns.payment')}</Th>
+            <Th className={tc.wide}>{t('orders.list.columns.status')}</Th>
+            <Th className="text-end">{t('orders.list.columns.total')}</Th>
           </tr>
         </thead>
         <tbody>
@@ -120,7 +111,8 @@ function OrdersTable({ role, status }: { role: DealRole; status?: OrderStatus })
 }
 
 function OrderRow({ order }: { order: Order }) {
-  const status = <StatusPill tone={ORDER_STATUS_TONE[order.status]}>{t(`orders.status.order.${order.status}`)}</StatusPill>;
+  const tone = ORDER_STATUS_TONE[order.status];
+  const label = t(`orders.status.order.${order.status}`);
   const number = orderNumber(order.id);
   const date = (
     <time dateTime={isoDate(order.created_at)} className="whitespace-nowrap">
@@ -160,10 +152,16 @@ function OrderRow({ order }: { order: Order }) {
         {t('orders.common.cash')}
         {fulfillment}
       </td>
-      <td className={cn(tc.td, tc.wide)}>{status}</td>
+      <td className={cn(tc.td, tc.wide)}>
+        <StatusPill tone={tone}>{label}</StatusPill>
+      </td>
       <td className={cn(tc.td, tc.amount)}>
         {formatMoney(order.total, order.currency)}
-        <div className="mt-1 qb-tablet:hidden">{status}</div>
+        <div className="mt-1 qb-tablet:hidden">
+          <StatusPill tone={tone} compact>
+            {label}
+          </StatusPill>
+        </div>
       </td>
     </tr>
   );
@@ -172,7 +170,7 @@ function OrderRow({ order }: { order: Order }) {
 function OrdersEmpty({ role }: { role: DealRole }) {
   const isBuyer = role === 'buyer';
   return (
-    <div className="rounded-qb-2xl border border-qb-line bg-qb-surface shadow-qb-card">
+    <div className={panelClass}>
       <EmptyState
         icon={<Icon icon={isBuyer ? ShoppingBag : Package} size="lg" />}
         title={t(isBuyer ? 'orders.list.empty_purchases' : 'orders.list.empty_sales')}

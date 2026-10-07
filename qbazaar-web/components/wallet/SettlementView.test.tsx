@@ -89,6 +89,19 @@ describe('SettlementView', () => {
     expect(screen.getByText('TRF-1')).toBeInTheDocument();
   });
 
+  it('lets the wallet pay only what a pending transfer does not cover', async () => {
+    vi.mocked(getWallet).mockResolvedValue(buildWallet({ available_balance: '300.00' }));
+    vi.mocked(listSettlements).mockResolvedValue(page([pendingTransfer]));
+    renderWithClient(<SettlementView />);
+
+    expect(await screen.findByRole('radio', { name: /From my wallet/ })).toBeChecked();
+    expect(screen.getByLabelText(/Amount/)).toHaveValue('177.50');
+    expect(screen.getByText('Up to QAR 177.50.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Submit payment' }));
+
+    await waitFor(() => expect(createSettlement).toHaveBeenCalledWith({ method: 'wallet', amount: '177.50' }, expect.any(String)));
+  });
+
   it('thanks a seller who owes nothing', async () => {
     vi.mocked(getWallet).mockResolvedValue(buildWallet({ commission_debt: '0.00' }));
     vi.mocked(listSettlements).mockResolvedValue(page());

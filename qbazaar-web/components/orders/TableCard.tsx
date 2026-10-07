@@ -5,6 +5,8 @@ import { Button } from '@/components/design-system/Button';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
+import { panelClass } from './CheckoutPanel';
+
 export interface TableCardProps {
   title: string;
   titleId: string;
@@ -17,14 +19,11 @@ export interface TableCardProps {
 /** The "Transaction History" card (502:21437) that holds a table or a list. */
 export function TableCard({ title, titleId, action, children, className }: TableCardProps) {
   return (
-    <section
-      aria-labelledby={titleId}
-      className={cn('rounded-qb-2xl border border-qb-line bg-qb-surface font-qb shadow-qb-card', className)}
-    >
+    <section aria-labelledby={titleId} className={cn(panelClass, className)}>
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-4 qb-tablet:px-[18px] qb-desktop:px-8 qb-desktop:pt-8 qb-desktop:pb-6">
         <h2
           id={titleId}
-          className="text-qb-body-lg font-semibold tracking-normal text-qb-ink-title qb-tablet:text-qb-body qb-desktop:text-qb-h3"
+          className="font-qb text-qb-body-lg font-semibold tracking-normal text-qb-ink-title qb-tablet:text-qb-body qb-desktop:text-qb-h3"
         >
           {title}
         </h2>
@@ -38,14 +37,26 @@ export function TableCard({ title, titleId, action, children, className }: Table
 /** Header cell, data cell and row classes shared by the order and wallet tables. */
 export const tableClasses = {
   table: 'w-full border-collapse text-start',
-  headRow: 'border-y border-qb-line',
-  th: 'px-3 py-4 text-start text-qb-caption font-medium whitespace-nowrap text-qb-ink-muted first:ps-5 last:pe-5 qb-desktop:text-qb-body qb-desktop:first:ps-8 qb-desktop:last:pe-8',
+  headRow: 'border-y border-qb-line max-qb-tablet:border-b-0',
+  th: 'px-3 py-4 text-start text-qb-caption font-medium whitespace-nowrap text-qb-ink-muted first:ps-5 last:pe-5 max-qb-tablet:py-0 qb-desktop:text-qb-body qb-desktop:first:ps-8 qb-desktop:last:pe-8',
   row: 'border-b border-qb-line last:border-b-0',
   td: 'px-3 py-4 align-middle text-qb-caption font-medium text-qb-ink-muted first:ps-5 last:pe-5 qb-desktop:text-qb-body qb-desktop:first:ps-8 qb-desktop:last:pe-8',
   /** Columns the phone layout folds into the first and last cells. */
   wide: 'hidden qb-tablet:table-cell',
   amount: 'text-end font-semibold whitespace-nowrap text-qb-ink',
 } as const;
+
+/**
+ * Column header. The phone lists have no header line (600:30639, 613:31879),
+ * so under 601 px the text is only read out.
+ */
+export function Th({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <th scope="col" className={cn(tableClasses.th, className)}>
+      <span className="max-qb-tablet:sr-only">{children}</span>
+    </th>
+  );
+}
 
 /** "Load more" under a cursor-paginated list. */
 export function LoadMore({ onClick, loading }: { onClick: () => void; loading: boolean }) {

@@ -6,6 +6,8 @@ import { t } from '@/lib/i18n/messages';
 import { formatMoney } from '@/lib/orders/money';
 import { cn } from '@/lib/utils';
 
+import { panelClass } from './CheckoutPanel';
+
 export interface SummaryLine {
   label: string;
   /** Exact decimal string, or already formatted text such as "Free". */
@@ -30,10 +32,7 @@ export interface OrderSummaryCardProps {
  */
 export function OrderSummaryCard({ title, subtitle, currency, lines, total, footer, className }: OrderSummaryCardProps) {
   return (
-    <section
-      aria-labelledby="order-summary-title"
-      className={cn('rounded-qb-2xl border border-qb-line bg-qb-surface p-4 font-qb shadow-qb-card', className)}
-    >
+    <section aria-labelledby="order-summary-title" className={cn(panelClass, 'p-4', className)}>
       <div className="flex items-center gap-2.5 border-b border-qb-line pb-4">
         <span
           aria-hidden="true"
@@ -49,7 +48,7 @@ export function OrderSummaryCard({ title, subtitle, currency, lines, total, foot
         </div>
       </div>
 
-      <h2 id="order-summary-title" className="mt-4 text-qb-body font-medium tracking-normal text-qb-ink-body">
+      <h2 id="order-summary-title" className="mt-4 font-qb text-qb-body font-medium tracking-normal text-qb-ink-body">
         {t('orders.checkout.summary_title')}
       </h2>
       <dl className="mt-4 flex flex-col gap-4 text-qb-caption">

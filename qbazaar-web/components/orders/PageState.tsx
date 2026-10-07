@@ -14,7 +14,7 @@ export function PageState(props: PageStateProps) {
     return (
       <div role="status" className="flex min-h-48 items-center justify-center font-qb text-qb-ink-subtle">
         <Loader2 className="size-6 animate-spin motion-reduce:animate-none" aria-hidden="true" />
-        <span className="sr-only">{t('orders.common.loading')}</span>
+        <span className="sr-only">{t('common.loading')}</span>
       </div>
     );
   }

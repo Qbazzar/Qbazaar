@@ -10,6 +10,7 @@ import {
   isPositiveAmount,
   minAmount,
   normalizeAmountInput,
+  remainingAmount,
   toCents,
 } from './money';
 
@@ -24,8 +25,8 @@ describe('formatAmount', () => {
     expect(formatAmount('9007199254740993.99', 'en')).toBe('9,007,199,254,740,993.99');
   });
 
-  it('uses Arabic digits and separators in Arabic', () => {
-    expect(formatAmount('1550.00', 'ar')).toBe('١٬٥٥٠٫٠٠');
+  it('writes Latin digits in Arabic too, as the rest of the site does', () => {
+    expect(formatAmount('1550.00', 'ar')).toBe('1,550.00');
   });
 
   it('signs negative amounts but never a zero', () => {
@@ -47,7 +48,7 @@ describe('formatMoney', () => {
 
   it('labels the riyal in Arabic', () => {
     setClientLocale('ar');
-    expect(formatMoney('70', 'QAR', 'ar')).toBe('ر.ق ٧٠٫٠٠');
+    expect(formatMoney('70', 'QAR', 'ar')).toBe('ر.ق 70.00');
   });
 });
 
@@ -68,17 +69,37 @@ describe('cents helpers', () => {
     expect(isPositiveAmount('0.00')).toBe(false);
     expect(isPositiveAmount('0.01')).toBe(true);
   });
+
+  it('subtracts what is covered without going below zero', () => {
+    expect(remainingAmount('277.50', '100.00')).toBe('177.50');
+    expect(remainingAmount('100.00', '277.50')).toBe('0.00');
+    expect(remainingAmount('0.30', '0.10')).toBe('0.20');
+  });
 });
 
 describe('normalizeAmountInput', () => {
   it('accepts plain and grouped input', () => {
     expect(normalizeAmountInput('1500')).toBe('1500.00');
     expect(normalizeAmountInput(' 1,500.5 ')).toBe('1500.50');
+    expect(normalizeAmountInput('1,500')).toBe('1500.00');
+    expect(normalizeAmountInput('1 500.50')).toBe('1500.50');
+  });
+
+  it('reads a single comma before one or two digits as the decimal mark', () => {
+    expect(normalizeAmountInput('1500,50')).toBe('1500.50');
+    expect(normalizeAmountInput('1,5')).toBe('1.50');
+    expect(normalizeAmountInput('1 500,5')).toBe('1500.50');
   });
 
   it('accepts Arabic digits and separators', () => {
     expect(normalizeAmountInput('١٬٥٠٠٫٥')).toBe('1500.50');
     expect(normalizeAmountInput('۲۵۰')).toBe('250.00');
+  });
+
+  it('refuses ambiguous or malformed grouping instead of guessing', () => {
+    expect(normalizeAmountInput('1.500,50')).toBeNull();
+    expect(normalizeAmountInput('1,50,000')).toBeNull();
+    expect(normalizeAmountInput('15,00,0')).toBeNull();
   });
 
   it('rejects anything that is not a two-place decimal', () => {
