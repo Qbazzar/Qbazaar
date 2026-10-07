@@ -9,11 +9,12 @@
 - Home, categories (`/c/...`, `/categories`), ad list and detail (`/ads`), search with facets and saved searches
 - Post-an-ad wizard (`/post-ad`) and ad editing
 - Account (`/account/...`): profile, security, sessions, verification, privacy, blocked users, data export, my ads, messages (live chat and offers, typing indicator), notifications, favorites, recently viewed, saved searches, support
+- Cash order cycle: Buy Now and Make an Offer pages (`/ads/{id}/buy`, `/ads/{id}/offer`), purchase-request and offer cards in the chat, checkout (`/checkout/{orderId}`), orders (`/account/orders`), wallet, commission settlements, withdrawals and payout accounts (`/account/wallet/...`), paid promotions (`/account/promotions`)
 - Public seller profiles (`/u/...`), CMS pages (`/p/...`), help center, support
 - Auth: register, login, OTP, password reset, email verification
 - Arabic/English switch (cookie based), SEO/PWA (sitemap, robots, manifest, Open Graph, JSON-LD), web push when the FCM variables are set
 
-Not there yet (V2): passwordless login, orders and wallet, follows, companies, Turnstile, the new design.
+Not there yet (V2): passwordless login, online payments, follows, companies, Turnstile, the new design.
 
 ## Stack
 

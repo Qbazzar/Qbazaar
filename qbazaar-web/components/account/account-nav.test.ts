@@ -10,7 +10,7 @@ describe('account navigation', () => {
   });
 
   it('renders the activity pages full width', () => {
-    for (const path of ['/account/ads', '/account/ads/1/edit', '/account/messages', '/account/favorites', '/account/support/7']) {
+    for (const path of ['/account/ads', '/account/ads/1/edit', '/account/orders/9', '/account/promotions', '/account/messages', '/account/support/7']) {
       expect(isSettingsPath(path)).toBe(false);
     }
   });
@@ -20,6 +20,14 @@ describe('account navigation', () => {
     expect(isNavItemActive('/account/sessions/9', '/account/sessions')).toBe(true);
     expect(isNavItemActive('/account/profile', '/account')).toBe(false);
     expect(isNavItemActive('/account/profile-extra', '/account/profile')).toBe(false);
+  });
+
+  it('puts the wallet in the shell but opens its sub-pages full width', () => {
+    expect(isSettingsPath('/account/wallet')).toBe(true);
+    expect(settingsSectionFor('/account/wallet').labelKey).toBe('account.nav.wallet');
+    for (const path of ['/account/wallet/settlements', '/account/wallet/withdrawals', '/account/wallet/bank-accounts']) {
+      expect(isSettingsPath(path)).toBe(false);
+    }
   });
 
   it('names the section a path belongs to, the hub otherwise', () => {

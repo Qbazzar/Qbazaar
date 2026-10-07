@@ -20,7 +20,7 @@ import { ShieldCheck } from 'lucide-react';
 import { useMessagesQuery } from '@/lib/queries/messaging';
 import { useAuth } from '@/hooks/useAuth';
 import { MessageBubble } from './MessageBubble';
-import { OfferBubble } from './OfferBubble';
+import { DealCardForMessage, isDealMessage } from '@/components/orders/DealCardForMessage';
 import { dayBucketKey, formatDaySeparator } from './relative-time';
 import { Button } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
@@ -147,10 +147,8 @@ export function MessageList({ conversationId }: Props) {
         const sameDayAsPrev =
           prev && dayBucketKey(prev.created_at) === dayBucketKey(message.created_at);
 
-        // Offer messages render as a richer card. The backend always sets
-        // `body` to a short summary ("اعرض X QAR") which we keep underneath
-        // for screen-readers and timeline continuity.
-        const isOffer = message.type === 'offer' && message.offer;
+        // Offer and purchase-request messages render as cards.
+        const isDeal = isDealMessage(message);
 
         return (
           <div key={message.id} className="flex flex-col gap-4">
@@ -159,8 +157,8 @@ export function MessageList({ conversationId }: Props) {
                 {formatDaySeparator(message.created_at)}
               </p>
             ) : null}
-            {isOffer && message.offer ? (
-              <OfferBubble offer={message.offer} isMine={isMine} />
+            {isDeal ? (
+              <DealCardForMessage message={message} isMine={isMine} />
             ) : (
               <MessageBubble
                 message={message}
