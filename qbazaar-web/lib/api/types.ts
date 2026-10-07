@@ -150,13 +150,18 @@ export type AuthErrorCodeValue =
 
 /**
  * Counters surfaced on the authenticated account dashboard.
- * Backend: `GET /account/summary`.
+ * Backend: `GET /account/summary` (contract schema `AccountSummary`).
  */
 export interface AccountSummary {
-  ads_count: number;
-  drafts_count: number;
-  conversations_count: number;
-  unread_notifications_count: number;
+  /** Every listing that has left the draft stage. */
+  my_ads: number;
+  drafts: number;
+  ads_by_status: Record<AdStatus, number>;
+  conversations: number;
+  unread_messages: number;
+  unread_notifications: number;
+  favorites: number;
+  saved_searches: number;
 }
 
 /**
@@ -779,11 +784,20 @@ export interface UnreadCountResponse {
   total: number;
 }
 
+/**
+ * Messaging codes of qbazaar-contracts/error-codes.md: blocked, rate limit,
+ * flagged content, conversation not found, not a participant, own ad,
+ * message not found, seller does not accept chat.
+ */
 export type MessagingErrorCode =
-  | 'CONVERSATION_NOT_FOUND'
-  | 'CONVERSATION_BLOCKED'
-  | 'CONVERSATION_OWN_AD'
-  | 'MESSAGE_NOT_FOUND';
+  | 'MSG_001'
+  | 'MSG_002'
+  | 'MSG_003'
+  | 'MSG_004'
+  | 'MSG_005'
+  | 'MSG_006'
+  | 'MSG_007'
+  | 'MSG_008';
 
 // ── Offers (Sprint 9) ──────────────────────────────────────────────────────
 // Buyer-initiated price offers attached to a conversation. The lifecycle is
@@ -1003,6 +1017,9 @@ export type CmsErrorCode = 'CMS_001';
 export type HelpErrorCode = 'HELP_001' | 'HELP_002';
 
 export type SupportErrorCode =
-  | 'TICKET_NOT_FOUND'
-  | 'TICKET_FORBIDDEN'
-  | 'TICKET_INVALID_TRANSITION';
+  /** Ticket not found. */
+  | 'TICKET_001'
+  /** Not allowed to act on this ticket. */
+  | 'TICKET_002'
+  /** Invalid status change, e.g. a reply to a closed ticket. */
+  | 'TICKET_003';

@@ -24,6 +24,9 @@
     "currency": "ر.ق"
   },
   "auth": {
+    "password": {
+      "toggle": "إظهار أو إخفاء كلمة المرور"
+    },
     "hero": {
       "eyebrow": "سوق قطر",
       "title_line1": "حيّك القريب",
@@ -38,10 +41,13 @@
       "register": "إنشاء حساب"
     },
     "login": {
+      "welcome_prefix": "مرحباً بك في",
+      "welcome_brand": "كيو بازار",
+      "tagline": "اكتشف واشترِ وبِع بسهولة. تواصل مع مجتمع متنوّع واستكشف آلاف المنتجات في مكان واحد.",
       "title": "أهلاً بعودتك",
       "subtitle": "سجّل دخولك إلى حساب QBazaar.",
       "identifier_label": "البريد الإلكتروني أو رقم الهاتف",
-      "identifier_placeholder": "you@example.com أو +97455123456",
+      "identifier_placeholder": "\u2066you@example.com\u2069 أو \u2066+97455123456\u2069",
       "password_label": "كلمة المرور",
       "password_placeholder": "••••••••",
       "remember_me": "ابقني مسجلاً",
@@ -55,6 +61,11 @@
       "deleted_notice": "حسابك مجدول للحذف. سجّل الدخول خلال 30 يوماً لإلغاء الحذف."
     },
     "register": {
+      "heading": "إنشاء حساب",
+      "tagline": "انضم إلى بازار لتشتري وتبيع محلياً.",
+      "usage_question": "كيف تريد استخدام الإعلانات المبوّبة؟",
+      "login_details": "بيانات تسجيل الدخول",
+      "submit_free": "سجّل مجاناً",
       "title": "أنشئ حسابك",
       "subtitle": "لن يستغرق الأمر دقيقة.",
       "full_name_label": "الاسم الكامل",
@@ -87,7 +98,7 @@
       "good": "جيدة",
       "strong": "قوية",
       "rules": {
-        "length": "٨ أحرف على الأقل",
+        "length": "8 أحرف على الأقل",
         "uppercase": "حرف كبير (A-Z)",
         "lowercase": "حرف صغير (a-z)",
         "number": "رقم (0-9)",
@@ -98,6 +109,9 @@
       "country_prefix": "🇶🇦 +974"
     },
     "verify_otp": {
+      "heading": "تحقّق من هويتك",
+      "enter_below": "أدخل الرمز أدناه للمتابعة.",
+      "no_code": "لم يصلك أي رمز؟",
       "title": "تأكيد رقم الهاتف",
       "subtitle": "أرسلنا رمزاً مكوناً من 6 أرقام إلى",
       "code_label": "رمز التحقق",
@@ -211,7 +225,51 @@
     }
   },
   "account": {
+    "price": {
+      "negotiable": "{price} · قابل للتفاوض"
+    },
+    "my_ads": {
+      "tabs_label": "حالة الإعلان",
+      "total": {
+        "zero": "لديك {count} إعلان",
+        "one": "لديك {count} إعلان",
+        "two": "لديك {count} إعلان",
+        "few": "لديك {count} إعلانات",
+        "many": "لديك {count} إعلانًا",
+        "other": "لديك {count} إعلان"
+      },
+      "untitled": "(بدون عنوان)",
+      "without_photo": "بدون صورة",
+      "complete": "إكمال",
+      "visitors": {
+        "zero": "{count} زائر",
+        "one": "{count} زائر",
+        "two": "{count} زائر",
+        "few": "{count} زوار",
+        "many": "{count} زائرًا",
+        "other": "{count} زائر"
+      },
+      "likes": {
+        "zero": "{count} إعجاب",
+        "one": "{count} إعجاب",
+        "two": "{count} إعجاب",
+        "few": "{count} إعجابات",
+        "many": "{count} إعجابًا",
+        "other": "{count} إعجاب"
+      },
+      "published_on": "نُشر في: {date}",
+      "empty_body": "انشر إعلاناً وسيظهر هنا مع حالته وإحصاءاته.",
+      "delete_label": "حذف {title}"
+    },
     "nav": {
+      "overview": "حسابي",
+      "settings": "الإعدادات",
+      "back_to_settings": "العودة إلى الإعدادات",
+      "activity": "نشاطي",
+      "profile_settings": "إعدادات الملف الشخصي",
+      "account_settings": "إعدادات الحساب",
+      "data_protection": "حماية البيانات",
+      "my_ads": "إعلاناتي",
       "title": "حسابي",
       "dashboard": "اللوحة الرئيسية",
       "profile": "الملف الشخصي",
@@ -234,6 +292,9 @@
       "greeting": "أهلاً بعودتك، {name}",
       "subtitle": "نظرة سريعة على نشاطك في QBazaar.",
       "stats": {
+        "unread_messages": "رسائل غير مقروءة",
+        "favorites": "الإعلانات المحفوظة",
+        "saved_searches": "عمليات البحث المحفوظة",
         "my_ads": "إعلاناتي",
         "drafts": "المسودات",
         "conversations": "المحادثات",
@@ -252,6 +313,14 @@
       }
     },
     "profile": {
+      "settings_title": "إعدادات الملف الشخصي",
+      "settings_subtitle": "أضف معلومات عن نفسك",
+      "personal_info": "المعلومات الشخصية",
+      "bio_empty": "لم تُضف نبذة بعد.",
+      "edit_title": "تعديل الملف الشخصي",
+      "active_since": "نشط منذ {date}",
+      "private_seller": "بائع فردي",
+      "business_seller": "بائع تجاري",
       "title": "الملف الشخصي",
       "subtitle": "حدّث المعلومات التي يراها الزوّار على ملفك العام.",
       "full_name_label": "الاسم الكامل",
@@ -267,6 +336,13 @@
       "success": "تم تحديث ملفك الشخصي"
     },
     "security": {
+      "settings_subtitle": "عدّل إعدادات حسابك وغيّر كلمة المرور من هنا.",
+      "verified_phone": "رقم الهاتف الموثّق",
+      "phone": "رقم الهاتف",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "verify": "توثيق",
+      "edit_password": "تعديل كلمة المرور",
       "title": "الأمان",
       "subtitle": "غيّر كلمة المرور بانتظام لحماية حسابك.",
       "current_password_label": "كلمة المرور الحالية",
@@ -278,6 +354,8 @@
       "sign_out_notice": "سيتم تسجيل الخروج من جميع الأجهزة الأخرى بعد التحديث."
     },
     "sessions": {
+      "confirm_title": "تسجيل الخروج من هذا الجهاز؟",
+      "confirm_body": "سيحتاج {device} إلى تسجيل الدخول من جديد لاستخدام حسابك.",
       "title": "الجلسات النشطة",
       "subtitle": "الأجهزة التي سُجّل الدخول منها إلى حسابك حالياً.",
       "current_badge": "الجهاز الحالي",
@@ -366,6 +444,15 @@
         "cancel": "إلغاء"
       },
       "delete": {
+        "reason_question": "لماذا تغادرنا؟",
+        "reasons": {
+          "not_using": "لا أستخدم هذا الموقع",
+          "other_account": "لدي حساب آخر",
+          "problems": "الموقع فيه بعض المشاكل",
+          "privacy": "مخاوف تتعلق بالخصوصية",
+          "prefer_not": "أفضّل عدم الإفصاح",
+          "something_else": "سبب آخر"
+        },
         "title": "حذف حسابي",
         "body": "سيُجدول حسابك للحذف النهائي خلال 30 يوماً. بعد ذلك نحذف الملف والإعلانات والرسائل. يمكنك إلغاء الحذف بتسجيل الدخول خلال المهلة.",
         "submit": "حذف الحساب",
@@ -381,6 +468,7 @@
       }
     },
     "avatar": {
+      "change_photo": "تغيير الصورة الشخصية",
       "title": "صورة الملف الشخصي",
       "subtitle": "صورة واضحة تساعد المشترين على الثقة بك. الصور المربعة هي الأنسب.",
       "drop_label": "اسحب صورة هنا أو",
@@ -418,6 +506,20 @@
       "USER_010": "حجم الصورة كبير جداً (الحد الأقصى 5 ميغابايت)"
     },
     "saved_searches": {
+      "saved_ago": "• حُفظ {when}",
+      "view_results": "عرض النتائج",
+      "delete_label": "حذف البحث المحفوظ {name}",
+      "price_range": "ر.ق {min} – {max}",
+      "price_max": "حتى ر.ق {max}",
+      "price_min": "من ر.ق {min}",
+      "params": {
+        "keyword": "الكلمة",
+        "category": "الفئة",
+        "location": "الموقع",
+        "condition": "الحالة",
+        "price": "السعر",
+        "sort": "الترتيب"
+      },
       "title": "عمليات البحث المحفوظة",
       "subtitle": "احفظ فلاترك المفضّلة وأعد تشغيلها بضغطة زر.",
       "empty_title": "لا توجد عمليات بحث محفوظة بعد",
@@ -908,6 +1010,8 @@
     }
   },
   "favorites": {
+    "wishlist_title": "قائمتي المفضلة",
+    "remove_label": "إزالة {title} من المفضلة",
     "title": "الإعلانات المحفوظة",
     "count": "{count} إعلان",
     "empty": {
@@ -939,6 +1043,11 @@
     }
   },
   "messaging": {
+    "thread_label": "رسائل هذه المحادثة",
+    "incoming_message": "رسالة جديدة من {name}: {message}",
+    "chat_label": "المحادثة",
+    "unread_label": "رسائل غير مقروءة",
+    "safety_notice": "مع «الدفع الآمن» لا تحتاج إلى مشاركة بريدك أو رقم هاتفك أو بياناتك البنكية مع أي أحد.",
     "title": "صندوق رسائلي",
     "empty": {
       "list": "ابدأ محادثة بالتواصل مع بائع",
@@ -1005,6 +1114,10 @@
     }
   },
   "notifications": {
+    "open_unread": "غير مقروء: {title}",
+    "delete_label": "حذف الإشعار: {title}",
+    "delete_success": "تم حذف الإشعار",
+    "empty_body": "ستظهر هنا تحديثات إعلاناتك ورسائلك وعمليات البحث المحفوظة.",
     "title": "الإشعارات",
     "header_label": "الإشعارات",
     "tabs": {
@@ -1223,7 +1336,14 @@
       "resolved": "المنتهية"
     },
     "no_tickets": "لا توجد تذاكر في هذا التبويب",
-    "replies_count": "{count} ردود",
+    "replies_count": {
+      "zero": "{count} رد",
+      "one": "{count} رد",
+      "two": "{count} رد",
+      "few": "{count} ردود",
+      "many": "{count} ردًا",
+      "other": "{count} رد"
+    },
     "back_to_list": "العودة إلى تذاكري",
     "you": "أنت",
     "staff_badge": "فريق الدعم",

@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { translateMaybeKey } from '@/lib/i18n/messages';
 
 /**
@@ -15,8 +17,13 @@ export function FieldError({
 }) {
   if (!message) return null;
   return (
-    <p id={id} role="alert" className="text-destructive text-xs leading-snug">
+    <p id={id} role="alert" className="text-qb-caption text-qb-danger">
       {translateMaybeKey(message)}
     </p>
   );
+}
+
+/** Error for the design-system `Field`: translated, and announced when it appears. */
+export function announcedError(message?: string): ReactNode {
+  return message ? <span role="alert">{translateMaybeKey(message)}</span> : undefined;
 }

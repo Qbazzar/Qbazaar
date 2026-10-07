@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { CheckIcon, CircleIcon } from 'lucide-react';
+import { Check, Circle } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { scorePassword } from '@/lib/validation/auth';
 import { t } from '@/lib/i18n/messages';
@@ -14,11 +15,11 @@ export interface PasswordStrengthIndicatorProps {
 }
 
 const BAR_TONES: Record<0 | 1 | 2 | 3 | 4, string> = {
-  0: 'bg-ink-200',
-  1: 'bg-destructive',
-  2: 'bg-coral',
-  3: 'bg-coral',
-  4: 'bg-sage',
+  0: 'bg-qb-line',
+  1: 'bg-qb-danger',
+  2: 'bg-qb-brand',
+  3: 'bg-qb-brand',
+  4: 'bg-qb-success',
 };
 
 export function PasswordStrengthIndicator({
@@ -29,31 +30,26 @@ export function PasswordStrengthIndicator({
   const strength = useMemo(() => scorePassword(password), [password]);
 
   return (
-    <div className={cn('space-y-2', className)} aria-live="polite">
+    <div className={cn('flex flex-col gap-2 font-qb', className)} aria-live="polite">
       <div className="flex gap-1.5" role="img" aria-label={t(strength.labelKey)}>
         {[1, 2, 3, 4].map((seg) => (
           <span
             key={seg}
             className={cn(
-              'h-1.5 flex-1 rounded-full transition-colors',
-              seg <= strength.score ? BAR_TONES[strength.score] : 'bg-ink-200',
+              'h-1.5 flex-1 rounded-qb-pill transition-colors',
+              seg <= strength.score ? BAR_TONES[strength.score] : 'bg-qb-line',
             )}
           />
         ))}
       </div>
-      <div className="text-muted-foreground flex items-center justify-between text-xs">
+      <div className="flex items-center justify-between text-qb-label text-qb-ink-subtle">
         <span>{t('auth.password_strength.label')}</span>
-        <span
-          className={cn(
-            'font-medium',
-            strength.score >= 4 ? 'text-sage' : 'text-foreground',
-          )}
-        >
+        <span className={cn('font-medium', strength.score >= 4 ? 'text-qb-success' : 'text-qb-ink')}>
           {t(strength.labelKey)}
         </span>
       </div>
       {hideRules ? null : (
-        <ul className="grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
+        <ul className="[display:grid] grid-cols-1 gap-1 text-qb-label qb-tablet:grid-cols-2">
           <Rule passed={strength.matched.length} labelKey="auth.password_strength.rules.length" />
           <Rule passed={strength.matched.uppercase} labelKey="auth.password_strength.rules.uppercase" />
           <Rule passed={strength.matched.lowercase} labelKey="auth.password_strength.rules.lowercase" />
@@ -66,18 +62,10 @@ export function PasswordStrengthIndicator({
 }
 
 function Rule({ passed, labelKey }: { passed: boolean; labelKey: string }) {
+  const Glyph = passed ? Check : Circle;
   return (
-    <li
-      className={cn(
-        'flex items-center gap-2',
-        passed ? 'text-sage' : 'text-muted-foreground',
-      )}
-    >
-      {passed ? (
-        <CheckIcon className="size-3.5" aria-hidden="true" />
-      ) : (
-        <CircleIcon className="size-3.5" aria-hidden="true" />
-      )}
+    <li className={cn('flex items-center gap-2', passed ? 'text-qb-success' : 'text-qb-ink-subtle')}>
+      <Glyph className="size-3.5 shrink-0" aria-hidden="true" />
       <span>{t(labelKey)}</span>
     </li>
   );

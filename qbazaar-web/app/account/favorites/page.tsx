@@ -1,16 +1,26 @@
 'use client';
 
 /**
- * Favorites index — QBFront port. Renders saved ads as `.cat-listings` grid
- * with the prototype's header + pill counter. Auth gated by `account/layout`.
+ * Favorites index — the wishlist of 376:8322 (rows), stacked into the
+ * category grid cards on tablets and phones, which have no frame of their
+ * own. Auth gated by `account/layout`. The heart on the photo only marks the
+ * ad as saved; the trash button is the one control that removes it.
  */
 import { useState } from 'react';
-import { Loader2Icon } from 'lucide-react';
+import Link from 'next/link';
+import { Heart, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { QbfListingCard } from '@/components/ads/QbfListingCard';
-import { FavoritesEmptyState } from '@/components/account/FavoritesEmptyState';
-import { useFavoritesQuery } from '@/lib/queries/favorites';
-import { t } from '@/lib/i18n/messages';
+import { buttonVariants } from '@/components/design-system/Button';
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { Icon } from '@/components/design-system/Icon';
+import { AccountPage } from '@/components/account/AccountPage';
+import { PanelState } from '@/components/account/PanelState';
+import { Pager } from '@/components/account/Pager';
+import { SavedAdRow, savedRowButtonClass } from '@/components/account/SavedAdRow';
+import { useSlugLabels } from '@/components/account/useSlugLabels';
+import { useFavoritesQuery, useToggleFavoriteMutation } from '@/lib/queries/favorites';
+import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { ApiClientError } from '@/lib/api/auth';
 
 const PER_PAGE = 24;
@@ -21,80 +31,75 @@ export default function FavoritesPage() {
     page,
     per_page: PER_PAGE,
   });
+  const toggle = useToggleFavoriteMutation();
+  const labels = useSlugLabels();
 
-  const total = data?.meta.total ?? 0;
+  const remove = (adId: string) => {
+    toggle.mutate(adId, {
+      onError: (err) => {
+        const code = err instanceof ApiClientError ? err.code : '';
+        toast.error(translateMaybeKey(`favorites.errors.${code.toLowerCase()}`) || t('common.error'));
+      },
+    });
+  };
+
   const lastPage = data?.meta.last_page ?? 1;
 
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
-      <div className="saved-head">
-        <div>
-          <h1 className="cat-page__title">
-            {t('favorites.title', 'الإعلانات المحفوظة')}
-          </h1>
-          {data ? (
-            <p className="cat-page__meta">
-              <strong>
-                {t('favorites.count', { count: String(total) }, `${total} إعلان`)}
-              </strong>
-            </p>
-          ) : null}
-        </div>
-      </div>
-
+    <AccountPage title={t('favorites.wishlist_title')} titleClassName="qb-desktop:text-[44px]">
       {isLoading ? (
-        <div className="flex justify-center py-12" role="status">
-          <Loader2Icon
-            className="text-muted-foreground size-6 animate-spin"
-            aria-hidden="true"
-          />
-        </div>
+        <PanelState loading />
       ) : isError ? (
-        <p className="text-destructive py-12 text-center text-sm">
-          {error instanceof ApiClientError
-            ? error.message
-            : t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-        </p>
+        <PanelState
+          loading={false}
+          message={error instanceof ApiClientError ? error.message : t('common.error', 'حدث خطأ، حاول مرة أخرى')}
+        />
       ) : !data || data.data.length === 0 ? (
-        <FavoritesEmptyState />
+        <EmptyState
+          icon={<Icon icon={Heart} size="lg" />}
+          title={t('favorites.empty.title', 'لم تحفظ أي إعلان بعد')}
+          description={t('favorites.empty.description')}
+          action={
+            <Link href="/ads" className={buttonVariants({ size: 'sm' })}>
+              {t('favorites.empty.cta', 'تصفّح الإعلانات')}
+            </Link>
+          }
+          className="rounded-qb-2xl border border-qb-line bg-qb-surface py-20 shadow-qb-card"
+        />
       ) : (
         <>
-          <div className="cat-listings">
+          <ul className="flex flex-col gap-4 qb-tablet:gap-6">
             {data.data.map((ad) => (
-              <QbfListingCard key={ad.id} ad={ad} />
+              <li key={ad.id}>
+                <SavedAdRow
+                  ad={ad}
+                  labels={labels}
+                  photoBadge={
+                    <span
+                      aria-hidden="true"
+                      className="flex size-[30px] items-center justify-center rounded-full bg-qb-surface text-qb-danger shadow-qb-soft"
+                    >
+                      <Heart className="size-4 fill-current" />
+                    </span>
+                  }
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => remove(ad.id)}
+                      disabled={toggle.isPending && toggle.variables === ad.id}
+                      aria-label={t('favorites.remove_label', { title: ad.title })}
+                      className={savedRowButtonClass}
+                    >
+                      <Trash2 aria-hidden="true" />
+                    </button>
+                  }
+                />
+              </li>
             ))}
-          </div>
-          {lastPage > 1 ? (
-            <div className="pagination">
-              <button
-                type="button"
-                className="pagination__num"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                aria-label={t('ads.list.prev', 'السابق')}
-              >
-                ‹
-              </button>
-              <span className="pagination__gap">
-                {t(
-                  'ads.list.page_of',
-                  { current: String(page), total: String(lastPage) },
-                  `${page} / ${lastPage}`,
-                )}
-              </span>
-              <button
-                type="button"
-                className="pagination__num"
-                onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-                disabled={page >= lastPage}
-                aria-label={t('ads.list.next', 'التالي')}
-              >
-                ›
-              </button>
-            </div>
-          ) : null}
+          </ul>
+          <Pager page={page} lastPage={lastPage} onChange={setPage} />
         </>
       )}
-    </div>
+    </AccountPage>
   );
 }

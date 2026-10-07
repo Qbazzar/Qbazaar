@@ -1,6 +1,8 @@
 'use client';
 
 import { forwardRef, useCallback } from 'react';
+
+import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 
@@ -23,6 +25,7 @@ export interface PhoneInputProps {
   placeholder?: string;
   ariaInvalid?: boolean;
   ariaDescribedBy?: string;
+  required?: boolean;
   disabled?: boolean;
   className?: string;
 }
@@ -47,6 +50,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       placeholder,
       ariaInvalid,
       ariaDescribedBy,
+      required,
       disabled,
       className,
     },
@@ -65,44 +69,32 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
     );
 
     return (
-      <div
-        className={cn(
-          'flex items-stretch gap-2',
-          // The prefix sits to the start in both LTR and RTL thanks to flex order.
-          className,
-        )}
-        dir="ltr"
-      >
+      // Phone numbers read left to right in both languages.
+      <div className={cn('flex items-stretch gap-2', className)} dir="ltr">
         <span
           aria-hidden="true"
-          className="inline-flex h-10 select-none items-center gap-1 rounded-lg border border-input bg-muted/40 px-3 text-sm font-medium text-foreground"
+          className="inline-flex h-[52px] shrink-0 select-none items-center rounded-qb-md border border-qb-line bg-qb-fill px-4 font-qb text-qb-body text-qb-ink-body"
         >
           {t('auth.phone.country_prefix', '+974')}
         </span>
-        <input
-          ref={ref}
+        <Input
+          // Input passes every prop to <input>; its props type just doesn't declare ref yet.
+          {...{ ref }}
           id={id}
           name={name}
           type="tel"
           inputMode="numeric"
           autoComplete="tel-national"
-          dir="ltr"
           value={localDigits}
           onChange={(e) => handleChange(e.target.value)}
           onBlur={onBlur}
           placeholder={placeholder ?? '5512 4488'}
-          aria-invalid={ariaInvalid}
+          aria-invalid={ariaInvalid || undefined}
           aria-describedby={ariaDescribedBy}
+          required={required}
           disabled={disabled}
           maxLength={8}
-          className={cn(
-            'flex h-10 w-full min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-base tracking-wide outline-none transition-colors',
-            'placeholder:text-muted-foreground',
-            'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
-            'disabled:pointer-events-none disabled:opacity-50',
-            'aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20',
-            'md:text-sm',
-          )}
+          className="min-w-0 tracking-wide"
         />
       </div>
     );
