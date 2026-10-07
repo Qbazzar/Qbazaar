@@ -24,6 +24,9 @@
     "currency": "QAR"
   },
   "auth": {
+    "password": {
+      "toggle": "Show or hide password"
+    },
     "hero": {
       "eyebrow": "Qatar marketplace",
       "title_line1": "Your neighbourhood",
@@ -38,6 +41,9 @@
       "register": "Create account"
     },
     "login": {
+      "welcome_prefix": "Welcome to",
+      "welcome_brand": "QBAZAAR",
+      "tagline": "Discover, buy, and sell with ease. Connect with a diverse community and explore thousands of products all in one place.",
       "title": "Welcome back",
       "subtitle": "Sign in to your QBazaar account.",
       "identifier_label": "Email or phone",
@@ -55,6 +61,11 @@
       "deleted_notice": "Your account is scheduled for deletion. Sign in within 30 days to cancel."
     },
     "register": {
+      "heading": "Create an account",
+      "tagline": "Join Bazaar to buy and sell locally.",
+      "usage_question": "How would you like to use classifieds?",
+      "login_details": "Your login details",
+      "submit_free": "Register For Free",
       "title": "Create your account",
       "subtitle": "It takes less than a minute.",
       "full_name_label": "Full name",
@@ -98,6 +109,9 @@
       "country_prefix": "🇶🇦 +974"
     },
     "verify_otp": {
+      "heading": "Verify Your Identity",
+      "enter_below": "Enter the code below to continue.",
+      "no_code": "You haven't received any code?",
       "title": "Verify your phone",
       "subtitle": "We sent a 6-digit code to",
       "code_label": "Verification code",
@@ -211,7 +225,39 @@
     }
   },
   "account": {
+    "price": {
+      "negotiable": "{price} · Negotiable"
+    },
+    "my_ads": {
+      "tabs_label": "Ad status",
+      "total": {
+        "one": "You have {count} ad",
+        "other": "You have {count} ads"
+      },
+      "untitled": "(Untitled)",
+      "without_photo": "Without Photo",
+      "complete": "Complete",
+      "visitors": {
+        "one": "{count} visitor",
+        "other": "{count} visitors"
+      },
+      "likes": {
+        "one": "{count} like",
+        "other": "{count} likes"
+      },
+      "published_on": "Published on: {date}",
+      "empty_body": "Post an ad and it will show up here with its status and stats.",
+      "delete_label": "Delete {title}"
+    },
     "nav": {
+      "overview": "My account",
+      "settings": "Settings",
+      "back_to_settings": "Back to settings",
+      "activity": "My activity",
+      "profile_settings": "Profile Settings",
+      "account_settings": "Account Settings",
+      "data_protection": "Data Protection",
+      "my_ads": "My Ads",
       "title": "Account",
       "dashboard": "Dashboard",
       "profile": "Profile",
@@ -234,6 +280,9 @@
       "greeting": "Welcome back, {name}",
       "subtitle": "A quick snapshot of your QBazaar activity.",
       "stats": {
+        "unread_messages": "Unread messages",
+        "favorites": "Saved ads",
+        "saved_searches": "Saved searches",
         "my_ads": "My ads",
         "drafts": "Drafts",
         "conversations": "Conversations",
@@ -252,6 +301,14 @@
       }
     },
     "profile": {
+      "settings_title": "Profile Settings",
+      "settings_subtitle": "Add information about yourself",
+      "personal_info": "Personal Information",
+      "bio_empty": "No bio added yet.",
+      "edit_title": "Edit profile",
+      "active_since": "Active since {date}",
+      "private_seller": "Private Seller",
+      "business_seller": "Business Seller",
       "title": "Profile",
       "subtitle": "Update the information visitors see on your public profile.",
       "full_name_label": "Full name",
@@ -267,6 +324,13 @@
       "success": "Profile updated"
     },
     "security": {
+      "settings_subtitle": "Edit your account settings and change your password here.",
+      "verified_phone": "Verified Phone Number",
+      "phone": "Phone Number",
+      "email": "Email",
+      "password": "Password",
+      "verify": "Verify",
+      "edit_password": "Edit Password",
       "title": "Security",
       "subtitle": "Change your password regularly to keep your account safe.",
       "current_password_label": "Current password",
@@ -278,6 +342,8 @@
       "sign_out_notice": "This will sign you out from other devices."
     },
     "sessions": {
+      "confirm_title": "Sign out this device?",
+      "confirm_body": "{device} will need to sign in again to use your account.",
       "title": "Active sessions",
       "subtitle": "Devices currently signed in to your account.",
       "current_badge": "This device",
@@ -366,6 +432,15 @@
         "cancel": "Cancel"
       },
       "delete": {
+        "reason_question": "Why are you leaving?",
+        "reasons": {
+          "not_using": "I don't use this website",
+          "other_account": "I have another account",
+          "problems": "The website has some problems",
+          "privacy": "Privacy concerns",
+          "prefer_not": "Prefer not to tell",
+          "something_else": "Something else"
+        },
         "title": "Delete my account",
         "body": "Schedules your account for permanent deletion in 30 days. After that we erase your profile, ads, and messages. Sign in again within the window to cancel.",
         "submit": "Delete account",
@@ -381,6 +456,7 @@
       }
     },
     "avatar": {
+      "change_photo": "Change Profile photo",
       "title": "Profile photo",
       "subtitle": "A clear photo helps buyers trust you. Square images work best.",
       "drop_label": "Drop a photo here or",
@@ -418,6 +494,20 @@
       "USER_010": "The image is too large (max 5 MB)"
     },
     "saved_searches": {
+      "saved_ago": "• Saved {when}",
+      "view_results": "View Result",
+      "delete_label": "Delete saved search {name}",
+      "price_range": "QAR {min} – {max}",
+      "price_max": "Up to QAR {max}",
+      "price_min": "From QAR {min}",
+      "params": {
+        "keyword": "Keyword",
+        "category": "Category",
+        "location": "Location",
+        "condition": "Condition",
+        "price": "Price",
+        "sort": "Sort"
+      },
       "title": "Saved searches",
       "subtitle": "Save your favourite filters and rerun them in one click.",
       "empty_title": "No saved searches yet",
@@ -853,6 +943,8 @@
     }
   },
   "favorites": {
+    "wishlist_title": "My Wishlist",
+    "remove_label": "Remove {title} from your wishlist",
     "title": "Saved ads",
     "count": "{count} ads",
     "empty": {
@@ -884,6 +976,11 @@
     }
   },
   "messaging": {
+    "thread_label": "Messages in this conversation",
+    "incoming_message": "New message from {name}: {message}",
+    "chat_label": "Conversation",
+    "unread_label": "unread messages",
+    "safety_notice": "With “Safe Pay”, you don’t need to share your email, phone number, or bank details with anyone.",
     "title": "My inbox",
     "empty": {
       "list": "Start a conversation by reaching out to a seller",
@@ -950,6 +1047,10 @@
     }
   },
   "notifications": {
+    "open_unread": "Unread: {title}",
+    "delete_label": "Delete notification: {title}",
+    "delete_success": "Notification deleted",
+    "empty_body": "Updates about your ads, messages and saved searches will show up here.",
     "title": "Notifications",
     "header_label": "Notifications",
     "tabs": {
@@ -1156,7 +1257,10 @@
       "resolved": "Resolved"
     },
     "no_tickets": "No tickets in this tab",
-    "replies_count": "{count} replies",
+    "replies_count": {
+      "one": "{count} reply",
+      "other": "{count} replies"
+    },
     "back_to_list": "Back to my tickets",
     "you": "You",
     "staff_badge": "Support team",

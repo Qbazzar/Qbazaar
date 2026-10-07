@@ -1,16 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { EyeIcon, EyeOffIcon, Loader2Icon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { loginSchema, type LoginInput } from '@/lib/validation/auth';
@@ -18,14 +18,15 @@ import { ApiClientError, login } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { safeReturnTo } from '@/lib/navigation/safe-return-to';
-import { FieldError } from './FieldError';
+import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
+import { announcedError } from './FieldError';
+import { PasswordInput } from './PasswordInput';
 
 export function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
   const setHydrated = useAuthStore((s) => s.setHydrated);
-  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -46,8 +47,7 @@ export function LoginForm() {
     }
   });
 
-  const idError = form.formState.errors.identifier?.message;
-  const passwordError = form.formState.errors.password?.message;
+  const errors = form.formState.errors;
   const submitting = form.formState.isSubmitting;
 
   // Sticky lifecycle banner — set when the user just deactivated or deleted
@@ -60,83 +60,56 @@ export function LoginForm() {
         : null;
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-4">
+    <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
       {lifecycleNotice ? (
         <p
           role="status"
-          aria-live="polite"
-          className="border-coral/30 bg-coral/5 text-ink-700 rounded-xl border px-4 py-3 text-sm"
+          className="rounded-qb-md border border-qb-brand/30 bg-qb-brand-soft px-4 py-3 text-qb-caption text-qb-ink-body"
         >
           {lifecycleNotice}
         </p>
       ) : null}
 
-      <div className="space-y-1.5">
-        <Label htmlFor="identifier">{t('auth.login.identifier_label')}</Label>
-        <Input
-          id="identifier"
-          type="text"
-          autoComplete="username"
-          dir="ltr"
-          placeholder={t('auth.login.identifier_placeholder')}
-          aria-invalid={Boolean(idError)}
-          aria-describedby={idError ? 'identifier-error' : undefined}
-          className="h-10"
-          {...form.register('identifier')}
-        />
-        <FieldError id="identifier-error" message={idError} />
-      </div>
-
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">{t('auth.login.password_label')}</Label>
-          <Link
-            href="/forgot-password"
-            className="text-coral text-xs font-medium hover:underline"
-          >
-            {t('auth.login.forgot')}
-          </Link>
-        </div>
-        <div className="relative" dir="ltr">
+      <Field label={t('auth.login.identifier_label')} required error={announcedError(errors.identifier?.message)}>
+        {(control) => (
           <Input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="current-password"
-            placeholder={t('auth.login.password_placeholder')}
-            aria-invalid={Boolean(passwordError)}
-            aria-describedby={passwordError ? 'password-error' : undefined}
-            className="h-10 pr-10"
-            {...form.register('password')}
+            {...control}
+            type="text"
+            autoComplete="username"
+            dir="ltr"
+            className="rtl:placeholder:text-right"
+            placeholder={t('auth.login.identifier_placeholder')}
+            {...form.register('identifier')}
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-colors"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            tabIndex={-1}
-          >
-            {showPassword ? (
-              <EyeOffIcon className="size-4" />
-            ) : (
-              <EyeIcon className="size-4" />
-            )}
-          </button>
-        </div>
-        <FieldError id="password-error" message={passwordError} />
+        )}
+      </Field>
+
+      <div className="flex flex-col gap-4">
+        <Field label={t('auth.login.password_label')} required error={announcedError(errors.password?.message)}>
+          {(control) => (
+            <PasswordInput
+              {...control}
+              autoComplete="current-password"
+              placeholder={t('auth.login.password_placeholder')}
+              {...form.register('password')}
+            />
+          )}
+        </Field>
+        <Link
+          href="/forgot-password"
+          className={cn(
+            'self-end rounded-qb-xs text-qb-caption font-medium text-qb-danger hover:underline qb-tablet:text-qb-body',
+            focusRing,
+          )}
+        >
+          {t('auth.login.forgot')}
+        </Link>
       </div>
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={submitting}
-        className={cn(
-          'h-11 w-full rounded-full text-sm font-semibold',
-          submitting && 'cursor-progress',
-        )}
-      >
+      <Button type="submit" fullWidth disabled={submitting} className={cn(authSubmitClass, submitting && 'cursor-progress')}>
         {submitting ? (
           <>
-            <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
+            <Loader2 className="animate-spin" aria-hidden="true" />
             {t('auth.login.submitting')}
           </>
         ) : (
@@ -144,12 +117,12 @@ export function LoginForm() {
         )}
       </Button>
 
-      <p className="text-muted-foreground text-center text-sm">
+      <AuthFooter>
         {t('auth.login.no_account')}{' '}
-        <Link href="/register" className="text-coral font-medium hover:underline">
+        <Link href="/register" className={authLinkClass}>
           {t('auth.login.go_to_register')}
         </Link>
-      </p>
+      </AuthFooter>
     </form>
   );
 }

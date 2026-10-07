@@ -1,29 +1,71 @@
 'use client';
 
 /**
- * FE-2.3 — Account security page.
- *
- * Just hosts the `PasswordChangeForm` for now. Two-factor + recovery codes
- * land in a later wave.
+ * FE-2.3 — Account settings (394:9270): verified phone, email and password
+ * rows. "Edit" on the password opens the change-password dialog (411:9755).
  */
-import { t } from '@/lib/i18n/messages';
+import { useState } from 'react';
+import Link from 'next/link';
+
+import { Modal } from '@/components/design-system/Modal';
 import { PasswordChangeForm } from '@/components/account/PasswordChangeForm';
+import { SettingsList, SettingsPanel, SettingsRow, settingsActionClass } from '@/components/account/SettingsPanel';
+import { VerifiedBadge } from '@/components/account/VerifiedBadge';
+import { maskPhone } from '@/components/account/format';
+import { useAuth } from '@/hooks/useAuth';
+import { PHONE_VERIFICATION_PATH } from '@/lib/auth/phone-gate';
+import { t } from '@/lib/i18n/messages';
 
 export default function AccountSecurityPage() {
-  return (
-    <section className="space-y-6">
-      <header className="space-y-1.5">
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-          {t('account.security.title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {t('account.security.subtitle')}
-        </p>
-      </header>
+  const { user } = useAuth();
+  const [editingPassword, setEditingPassword] = useState(false);
 
-      <div className="bg-card ring-foreground/10 rounded-2xl p-5 sm:p-7 ring-1">
-        <PasswordChangeForm />
-      </div>
-    </section>
+  if (!user) return null;
+
+  const verifyLink = (
+    <Link href={PHONE_VERIFICATION_PATH} className={settingsActionClass}>
+      {t('account.security.verify')}
+    </Link>
+  );
+
+  return (
+    <SettingsPanel title={t('account.nav.account_settings')} description={t('account.security.settings_subtitle')}>
+      <SettingsList>
+        <SettingsRow
+          label={t(user.phone_verified ? 'account.security.verified_phone' : 'account.security.phone')}
+          value={<span dir="ltr">{maskPhone(user.phone)}</span>}
+          action={user.phone_verified ? <VerifiedBadge /> : verifyLink}
+        />
+        <SettingsRow
+          label={t('account.security.email')}
+          value={
+            <span dir="ltr" className="break-all">
+              {user.email}
+            </span>
+          }
+          action={user.email_verified ? <VerifiedBadge /> : verifyLink}
+        />
+        <SettingsRow
+          label={t('account.security.password')}
+          value={<span aria-hidden="true">••••••••••••</span>}
+          action={
+            <button type="button" onClick={() => setEditingPassword(true)} className={settingsActionClass}>
+              {t('common.edit')}
+              <span className="sr-only"> {t('account.security.password')}</span>
+            </button>
+          }
+        />
+      </SettingsList>
+
+      <Modal
+        open={editingPassword}
+        onOpenChange={setEditingPassword}
+        title={t('account.security.edit_password')}
+        showCloseButton
+        className="max-w-[668px]"
+      >
+        <PasswordChangeForm onDone={() => setEditingPassword(false)} onCancel={() => setEditingPassword(false)} />
+      </Modal>
+    </SettingsPanel>
   );
 }
