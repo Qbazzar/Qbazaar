@@ -36,6 +36,8 @@ export function AdSummaryCard({ ad, layout = 'grid', eager = false, className }:
       title={ad.title}
       layout={layout}
       price={formatAdPrice(ad, locale)}
+      badge={ad.promotion ? t('catalog.card.top_ad', 'إعلان مميز') : undefined}
+      description={ad.summary || undefined}
       tags={ad.spec_chips?.map((chip) => chip.value)}
       location={placeLabel(ad.location_slug, locale, place)}
       postedAt={formatAdAge(ad.published_at, locale)}

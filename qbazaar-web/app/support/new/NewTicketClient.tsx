@@ -1,45 +1,37 @@
 'use client';
 
 /**
- * New support ticket form.
+ * New support ticket form. No Figma frame: the add/edit form of the account
+ * Billing Info panel (412:10263, 563:27380, 614:28114) in a white panel.
  *
- * - Auth users: subject + category + body (the backend reads email + name
- *   from the session). On success the mutation hook navigates to the new
- *   ticket detail.
- * - Anonymous users: same fields plus an email input. On success we render
- *   a confirmation card with the assigned ticket id so they can reference it
- *   when replying via email.
+ * - Signed-in users: subject, category and details (the backend reads email
+ *   and name from the session); the mutation hook opens the new ticket.
+ * - Guests: the same plus an email, then a confirmation with the ticket id to
+ *   quote when they reply by email.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2Icon } from 'lucide-react';
+import { CircleCheck, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { FieldError } from '@/components/auth/FieldError';
+import { Button, buttonVariants } from '@/components/design-system/Button';
+import { Card } from '@/components/design-system/Card';
+import { Field } from '@/components/design-system/Field';
+import { Icon } from '@/components/design-system/Icon';
+import { Input, Select, Textarea } from '@/components/design-system/Input';
+import { PageShell } from '@/components/design-system/PageShell';
+import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import { Turnstile, type TurnstileHandle } from '@/components/auth/Turnstile';
 import { useCreateTicketMutation } from '@/lib/queries/support';
 import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth';
-import type {
-  MakeSupportTicketRequest,
-  SupportTicket,
-  SupportTicketCategory,
-} from '@/lib/api/types';
+import type { MakeSupportTicketRequest, SupportTicket, SupportTicketCategory } from '@/lib/api/types';
 
 const CATEGORIES: readonly SupportTicketCategory[] = [
   'general',
@@ -65,16 +57,26 @@ const baseSchema = z.object({
     .trim()
     .min(10, 'support.errors.body_min')
     .max(4000, 'support.errors.body_max'),
-  email: z
-    .string()
-    .trim()
-    .email('auth.errors.email_invalid')
-    .optional()
-    .or(z.literal('')),
+  // Members are answered through their account, so only guests must give an email.
+  email: z.string().trim().email('auth.errors.email_invalid').or(z.literal('')),
+});
+
+const guestSchema = baseSchema.extend({
+  email: z.string().trim().min(1, 'support.errors.email_required').email('auth.errors.email_invalid'),
 });
 
 type FormInput = z.input<typeof baseSchema>;
 type FormOutput = z.output<typeof baseSchema>;
+
+/** Billing Info form controls (412:10263, 614:28114): 44 px fields with a 12 px radius and 14 px placeholders. */
+const controlClass = 'rounded-qb-lg placeholder:text-qb-caption';
+const singleLineControlClass = cn(controlClass, 'h-11');
+const actionClass = 'h-[46px] rounded-qb-lg qb-tablet:h-11 qb-tablet:rounded-qb-sm';
+
+/** Error text announced as soon as it appears; Field links it to the control. */
+function fieldError(message?: string) {
+  return message ? <span role="alert">{translateMaybeKey(message)}</span> : undefined;
+}
 
 export function NewTicketClient() {
   const isAuthenticated = useAuthStore((s) => Boolean(s.user && s.accessToken));
@@ -83,7 +85,7 @@ export function NewTicketClient() {
   const turnstile = useRef<TurnstileHandle>(null);
 
   const form = useForm<FormInput, unknown, FormOutput>({
-    resolver: zodResolver(baseSchema),
+    resolver: zodResolver(isAuthenticated ? baseSchema : guestSchema),
     mode: 'onBlur',
     defaultValues: {
       subject: '',
@@ -94,6 +96,7 @@ export function NewTicketClient() {
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
+    if (mutation.isPending) return;
     const payload: MakeSupportTicketRequest = {
       subject: values.subject,
       category: values.category,
@@ -104,8 +107,7 @@ export function NewTicketClient() {
     try {
       const turnstileToken = await turnstile.current?.getToken();
       const ticket = await mutation.mutateAsync({ payload, turnstileToken });
-      // Auth users: the mutation hook routes to /account/support/{id}.
-      // Anonymous users stay on this page and see the success card.
+      // Signed-in users are sent to /account/support/{id} by the mutation hook.
       if (!isAuthenticated) setAnonResult(ticket);
     } catch (err) {
       handleError(err, form);
@@ -114,154 +116,139 @@ export function NewTicketClient() {
     }
   });
 
+  const breadcrumb = [
+    { label: t('home.breadcrumb'), href: '/' },
+    { label: t('support.title'), href: '/support' },
+    { label: t('support.new_ticket') },
+  ];
+
   if (anonResult) {
-    return <AnonymousSuccessCard ticket={anonResult} />;
+    return (
+      <PageShell breadcrumb={breadcrumb} title={t('support.new_ticket')}>
+        <TicketReceived ticket={anonResult} />
+      </PageShell>
+    );
   }
 
-  const errors = form.formState.errors;
+  const { errors } = form.formState;
   const submitting = mutation.isPending;
-  const selectedCategory = form.watch('category');
 
   return (
-    <main>
-      <div className="container" style={{ maxWidth: 720, paddingTop: 32, paddingBottom: 64 }}>
-        <header className="mb-8">
-          <h1 className="text-h2 text-ink-900">
-            {t('support.new_ticket', 'تواصل مع الدعم')}
-          </h1>
-          <p className="text-ink-700 mt-2 text-sm leading-relaxed">
-            {t(
-              'support.new_ticket_subtitle',
-              'صف مشكلتك بتفصيل بسيط وسيرد فريق الدعم خلال ساعات قليلة.',
+    <PageShell breadcrumb={breadcrumb} title={t('support.new_ticket')} meta={t('support.new_ticket_subtitle')}>
+      <Card large elevated className="max-w-[760px] qb-desktop:p-8">
+        <form onSubmit={onSubmit} noValidate aria-busy={submitting} className="flex flex-col gap-5">
+          <Field label={t('support.subject_label')} required error={fieldError(errors.subject?.message)} className="gap-3">
+            {(control) => (
+              <Input
+                {...control}
+                className={singleLineControlClass}
+                maxLength={160}
+                placeholder={t('support.subject_placeholder')}
+                {...form.register('subject')}
+              />
             )}
-          </p>
-        </header>
+          </Field>
 
-        <form onSubmit={onSubmit} noValidate className="space-y-5">
-          <div className="space-y-1.5">
-            <Label htmlFor="subject">
-              {t('support.subject_label', 'الموضوع')}
-            </Label>
-            <Input
-              id="subject"
-              maxLength={160}
-              placeholder={t('support.subject_placeholder', 'مثلاً: لم أتمكن من نشر إعلان')}
-              aria-invalid={Boolean(errors.subject)}
-              {...form.register('subject')}
-            />
-            <FieldError id="subject-error" message={errors.subject?.message} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="category">
-              {t('support.category_label', 'التصنيف')}
-            </Label>
-            <Select
-              value={selectedCategory}
-              onValueChange={(v) => {
-                if (!v) return;
-                form.setValue(
-                  'category',
-                  v as SupportTicketCategory,
-                  { shouldValidate: true },
-                );
-              }}
-            >
-              <SelectTrigger
-                id="category"
-                className="w-full rounded-lg"
-                aria-invalid={Boolean(errors.category)}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {t(`support.categories.${c}`)}
-                  </SelectItem>
+          <Field label={t('support.category_label')} required error={fieldError(errors.category?.message)} className="gap-3">
+            {(control) => (
+              <Select {...control} className={singleLineControlClass} {...form.register('category')}>
+                {CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {t(`support.categories.${category}`)}
+                  </option>
                 ))}
-              </SelectContent>
-            </Select>
-            <FieldError id="category-error" message={errors.category?.message} />
-          </div>
+              </Select>
+            )}
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="body">{t('support.body_label', 'تفاصيل المشكلة')}</Label>
-            <Textarea
-              id="body"
-              rows={6}
-              maxLength={4000}
-              placeholder={t(
-                'support.body_placeholder',
-                'صف المشكلة بدقة. الخطوات التي قمت بها، رسائل الخطأ إن وجدت، ومتى بدأت تواجهها.',
-              )}
-              aria-invalid={Boolean(errors.body)}
-              {...form.register('body')}
-            />
-            <FieldError id="body-error" message={errors.body?.message} />
-          </div>
+          <Field label={t('support.body_label')} required error={fieldError(errors.body?.message)} className="gap-3">
+            {(control) => (
+              <Textarea
+                {...control}
+                className={controlClass}
+                rows={6}
+                maxLength={4000}
+                placeholder={t('support.body_placeholder')}
+                {...form.register('body')}
+              />
+            )}
+          </Field>
 
           {!isAuthenticated ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="email">
-                {t('support.email_label', 'بريدك الإلكتروني')}
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                placeholder={t('support.email_placeholder', 'you@example.com')}
-                aria-invalid={Boolean(errors.email)}
-                {...form.register('email')}
-              />
-              <FieldError id="email-error" message={errors.email?.message} />
-              <p className="text-ink-500 text-xs">
-                {t(
-                  'support.email_hint',
-                  'سنتواصل معك على هذا البريد. سجّل الدخول لمتابعة تذاكرك من حسابك.',
-                )}
-              </p>
-            </div>
+            <Field
+              label={t('support.email_label')}
+              required
+              hint={t('support.email_hint')}
+              error={fieldError(errors.email?.message)}
+              className="gap-3"
+            >
+              {(control) => (
+                <Input
+                  {...control}
+                  className={singleLineControlClass}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  dir="ltr"
+                  placeholder={t('support.email_placeholder')}
+                  {...form.register('email')}
+                />
+              )}
+            </Field>
           ) : null}
 
           <Turnstile ref={turnstile} />
 
-          <Button
-            type="submit"
-            size="lg"
-            disabled={submitting}
-            className="bg-coral hover:bg-coral/90 h-11 rounded-full px-6 text-sm font-semibold text-white"
-          >
-            {submitting ? (
-              <Loader2Icon className="size-4 animate-spin" aria-hidden />
-            ) : null}
-            {t('support.submit', 'إرسال')}
-          </Button>
+          {/* `[display:grid]`, not `grid`: the old stylesheet's unlayered `.grid` rule would override the gap. */}
+          <div className="mt-1 [display:grid] grid-cols-2 gap-3 qb-tablet:gap-[22px]">
+            {/* aria-disabled rather than disabled keeps keyboard focus on the button while the ticket is sent. */}
+            <Button type="submit" aria-disabled={submitting || undefined} className={actionClass}>
+              {submitting ? <Icon icon={LoaderCircle} className="motion-safe:animate-spin" /> : null}
+              {t('support.submit')}
+            </Button>
+            <Link href="/support" className={cn(buttonVariants({ variant: 'muted' }), actionClass)}>
+              {t('common.cancel')}
+            </Link>
+          </div>
         </form>
-      </div>
-    </main>
+      </Card>
+    </PageShell>
   );
 }
 
-function AnonymousSuccessCard({ ticket }: { ticket: SupportTicket }) {
+/** Guest confirmation: focus moves here so screen readers hear that the form went through. */
+function TicketReceived({ ticket }: { ticket: SupportTicket }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => ref.current?.focus(), []);
+
   return (
-    <main>
-      <div className="container" style={{ maxWidth: 560, paddingTop: 64, paddingBottom: 64 }}>
-        <div className="card card--lg text-center">
-          <h1 className="text-h2 text-ink-900">
-            {t('support.submit_success_title', 'تم استلام رسالتك')}
-          </h1>
-          <p className="text-ink-700 mt-3 text-sm leading-relaxed">
-            {t(
-              'support.submit_success_body',
-              'سنرد على البريد الذي زوّدتنا به خلال ساعات قليلة. احتفظ برقم التذكرة التالي للمراجعة:',
-            )}
-          </p>
-          <p className="text-ink-900 mt-4 text-sm font-mono">{ticket.id}</p>
-        </div>
-      </div>
-    </main>
+    <div ref={ref} tabIndex={-1} role="region" aria-label={t('support.submit_success_title')} className="outline-none">
+      <StatePanel
+        icon={<StateIcon icon={CircleCheck} tone="success" />}
+        title={t('support.submit_success_title')}
+        description={
+          <>
+            {t('support.submit_success_body')}
+            <span className="mt-3 block text-qb-body text-qb-ink">
+              {t('support.ticket_reference')}:{' '}
+              <span dir="ltr" className="font-medium break-all select-all">
+                {ticket.id}
+              </span>
+            </span>
+          </>
+        }
+        action={
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/help" className={buttonVariants({ size: 'sm' })}>
+              {t('help.back_to_help')}
+            </Link>
+            <Link href="/" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+              {t('errors.back_home')}
+            </Link>
+          </div>
+        }
+      />
+    </div>
   );
 }
 
@@ -276,12 +263,15 @@ function handleError(
   }
   if (err.code === 'VALIDATION_FAILED' && err.details) {
     const known: (keyof FormInput)[] = ['subject', 'category', 'body', 'email'];
+    let focused = false;
     for (const [field, messages] of Object.entries(err.details)) {
       if ((known as string[]).includes(field) && messages?.length) {
-        form.setError(field as keyof FormInput, {
-          type: 'server',
-          message: translateMaybeKey(messages[0]) || messages[0],
-        });
+        form.setError(
+          field as keyof FormInput,
+          { type: 'server', message: translateMaybeKey(messages[0]) || messages[0] },
+          { shouldFocus: !focused },
+        );
+        focused = true;
       }
     }
   }

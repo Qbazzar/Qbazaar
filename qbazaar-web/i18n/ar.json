@@ -476,6 +476,168 @@
       "not_found": "لم نعثر على هذا القسم"
     }
   },
+  "catalog": {
+    "card": {
+      "top_ad": "إعلان مميز"
+    },
+    "results_heading": "النتائج",
+    "view_all": "عرض الكل",
+    "view_more": "عرض المزيد",
+    "view_less": "عرض أقل",
+    "hub": {
+      "categories": "الأقسام"
+    },
+    "stats": {
+      "ads": {
+        "zero": "إعلان",
+        "one": "إعلان",
+        "two": "إعلان",
+        "few": "إعلانات",
+        "many": "إعلانًا",
+        "other": "إعلان"
+      },
+      "today": "اليوم",
+      "ads_today": {
+        "zero": "إعلان اليوم",
+        "one": "إعلان اليوم",
+        "two": "إعلان اليوم",
+        "few": "إعلانات اليوم",
+        "many": "إعلانًا اليوم",
+        "other": "إعلان اليوم"
+      },
+      "categories": {
+        "zero": "قسم",
+        "one": "قسم",
+        "two": "قسم",
+        "few": "أقسام",
+        "many": "قسمًا",
+        "other": "قسم"
+      },
+      "subcategories": {
+        "zero": "قسم فرعي",
+        "one": "قسم فرعي",
+        "two": "قسم فرعي",
+        "few": "أقسام فرعية",
+        "many": "قسمًا فرعيًا",
+        "other": "قسم فرعي"
+      },
+      "results": {
+        "zero": "نتيجة",
+        "one": "نتيجة",
+        "two": "نتيجة",
+        "few": "نتائج",
+        "many": "نتيجة",
+        "other": "نتيجة"
+      }
+    },
+    "index": {
+      "discover_start": "اكتشف",
+      "discover_accent": "الأقسام",
+      "discover_text": "تصفّح الأقسام المختلفة واعثر بسرعة على ما تحتاجه في مكان واحد.",
+      "search_label": "ابحث في الأقسام",
+      "search_placeholder": "ابحث في الأقسام…",
+      "search_submit": "بحث",
+      "matches": {
+        "zero": "لا توجد أقسام",
+        "one": "قسم واحد",
+        "two": "قسمان",
+        "few": "{count} أقسام",
+        "many": "{count} قسمًا",
+        "other": "{count} قسم"
+      },
+      "no_matches_title": "لا توجد أقسام مطابقة",
+      "no_matches": "لم نجد قسماً باسم «{query}»."
+    },
+    "view": {
+      "label": "طريقة العرض",
+      "grid": "عرض شبكي",
+      "list": "عرض قائمة"
+    },
+    "empty": {
+      "try_filters": "جرّب تعديل الفلاتر أو تصفّح كل الأقسام.",
+      "no_ads_in_category": "لا توجد إعلانات في هذا القسم حتى الآن.",
+      "load_failed": "تعذّر تحميل الإعلانات. حاول مرة أخرى."
+    },
+    "not_found": {
+      "heading": "لم نعثر على نتائج",
+      "title": "لا توجد نتائج",
+      "text": "لم نعثر على أي شيء يطابق بحثك.",
+      "recommended": "مقترحة لك",
+      "load_more": "تحميل المزيد من الإعلانات"
+    },
+    "filters": {
+      "title": "الفلتر",
+      "sheet_title": "فلاتر متقدمة",
+      "open": "فلتر",
+      "active_suffix": {
+        "zero": "فلتر مفعّل",
+        "one": "فلتر مفعّل",
+        "two": "فلتر مفعّل",
+        "few": "فلاتر مفعّلة",
+        "many": "فلترًا مفعّلًا",
+        "other": "فلتر مفعّل"
+      },
+      "apply": "تطبيق الفلتر",
+      "reset_all": "إعادة ضبط الكل",
+      "any": "الكل",
+      "category": "القسم",
+      "all_categories": "كل الأقسام",
+      "price": "السعر",
+      "price_min_label": "أقل سعر (ر.ق)",
+      "price_max_label": "أعلى سعر (ر.ق)",
+      "price_range_error": "لا يمكن أن يكون أعلى سعر أقل من أقل سعر.",
+      "location": "الموقع",
+      "city": "المدينة / المنطقة",
+      "district": "الحي",
+      "all_regions": "كل المناطق",
+      "all_districts": "كل الأحياء",
+      "condition": "الحالة",
+      "offer": "نوع الإعلان",
+      "ad_type": {
+        "offering": "معروض",
+        "wanted": "مطلوب"
+      },
+      "shipping": "الشحن والتوصيل",
+      "shipping_options": {
+        "delivery": "الشحن متاح",
+        "pickup_only": "استلام محلي فقط"
+      },
+      "details": "التفاصيل",
+      "range_min": "{label} من",
+      "range_max": "{label} إلى",
+      "keyword": "البحث",
+      "keyword_placeholder": "ابحث…",
+      "applied": "الفلاتر المطبّقة",
+      "remove": "إزالة {label}",
+      "range_between": "{min} – {max}",
+      "range_from": "من {min}",
+      "range_to": "حتى {max}",
+      "range_error": "لا يمكن أن يكون الحد الأعلى أقل من الحد الأدنى."
+    },
+    "ads_count": {
+      "zero": "{count} إعلان",
+      "one": "{count} إعلان",
+      "two": "{count} إعلان",
+      "few": "{count} إعلانات",
+      "many": "{count} إعلانًا",
+      "other": "{count} إعلان"
+    },
+    "results_count": {
+      "zero": "لا توجد نتائج",
+      "one": "نتيجة واحدة",
+      "two": "نتيجتان",
+      "few": "{count} نتائج",
+      "many": "{count} نتيجة",
+      "other": "{count} نتيجة"
+    },
+    "sort": {
+      "latest": "الأحدث",
+      "oldest": "الأقدم",
+      "price_asc": "السعر: من الأقل للأعلى",
+      "price_desc": "السعر: من الأعلى للأقل"
+    },
+    "save_search": "احفظ البحث"
+  },
   "locations": {
     "all": "كل قطر",
     "pick": "الموقع",
@@ -733,13 +895,13 @@
       "saving": "جاري الحفظ…",
       "cancel": "إلغاء",
       "success_toast": "تم حفظ البحث",
-      "limit_error": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
       "sign_in_required": "سجّل دخولك لحفظ البحث"
     },
     "errors": {
-      "search_invalid_params": "أحد الفلاتر غير صالح، حاول مرة أخرى",
-      "saved_search_limit": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
-      "saved_search_not_found": "لم نعثر على البحث المحفوظ",
+      "search_001": "البحث غير متاح الآن، حاول بعد قليل",
+      "search_002": "لم نعثر على البحث المحفوظ",
+      "search_003": "أحد الفلاتر غير صالح، حاول مرة أخرى",
+      "search_004": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
       "load_failed": "تعذّر تحميل نتائج البحث",
       "save_failed": "تعذّر حفظ البحث",
       "delete_failed": "تعذّر حذف البحث"
@@ -929,8 +1091,22 @@
     }
   },
   "cms": {
-    "page_not_found": "لم نعثر على هذه الصفحة",
     "last_updated": "آخر تحديث"
+  },
+  "errors": {
+    "generic_title": "حدث خطأ ما",
+    "generic_heading": "تعذّر تحميل هذه الصفحة",
+    "generic_body": "واجهنا مشكلة مؤقتة أثناء تحميل هذه الصفحة. حاول مرة أخرى.",
+    "retry": "إعادة المحاولة",
+    "not_found_title": "الصفحة غير موجودة",
+    "not_found_heading": "لم نعثر على هذه الصفحة",
+    "not_found_body": "ربما الرابط غير صحيح، أو نُقلت الصفحة أو حُذفت.",
+    "back_home": "العودة إلى الرئيسية"
+  },
+  "impersonate": {
+    "loading": "جارٍ تسجيل الدخول…",
+    "failed_title": "تعذّر بدء الجلسة",
+    "failed": "ربما انتهت صلاحية رابط الدخول. افتحه مجددًا من لوحة الإدارة."
   },
   "help": {
     "title": "مركز المساعدة",
@@ -939,11 +1115,9 @@
     "search_submit": "بحث",
     "search_min_chars": "اكتب حرفين على الأقل لبدء البحث",
     "categories_title": "تصفّح حسب الموضوع",
-    "no_categories": "لا توجد فئات مساعدة بعد",
-    "articles_in_category": "المقالات في هذه الفئة",
-    "articles_count_arrow": "{count} مقالات ←",
-    "no_articles": "لا توجد مقالات في هذه الفئة بعد",
-    "search_results": "تم العثور على {count} نتائج",
+    "no_categories": "لا توجد مواضيع مساعدة بعد",
+    "articles_in_category": "المقالات في هذا الموضوع",
+    "no_articles": "لا توجد مقالات في هذا الموضوع بعد",
     "no_results": "لا توجد نتائج",
     "related_articles": "مقالات ذات صلة",
     "helpful_question": "هل كان هذا المقال مفيداً؟",
@@ -951,10 +1125,52 @@
     "helpful_no": "لا",
     "feedback_thanks_yes": "شكراً لك! يسعدنا أن المقال كان مفيداً",
     "feedback_thanks_no": "شكراً لإخبارنا — سنحاول تحسين المقال",
-    "views_count": "{count} مشاهدة",
     "back_to_help": "العودة إلى مركز المساعدة",
-    "category_not_found": "لم نعثر على هذه الفئة",
-    "article_not_found": "لم نعثر على هذا المقال"
+    "article_not_found": "لم نعثر على هذا المقال",
+    "hero_lead": "كيف يمكننا",
+    "hero_accent": "مساعدتك؟",
+    "search_label": "ابحث في مركز المساعدة",
+    "search_title": "نتائج البحث",
+    "search_prompt_title": "عمّ تبحث؟",
+    "suggestions_label": "مقالات مقترحة",
+    "no_results_hint": "جرّب كلمات أخرى، أو تصفّح مواضيع المساعدة.",
+    "browse_topics": "تصفّح مواضيع المساعدة",
+    "not_found_body": "ربما نُقل أو حُذف. تصفّح مواضيع المساعدة لتجد ما تحتاجه.",
+    "contact_title": "ما زلت بحاجة إلى مساعدة؟",
+    "contact_body": "يرد فريق الدعم خلال ساعات قليلة.",
+    "contact_action": "تواصل مع الدعم",
+    "topic_count": {
+      "zero": "لا توجد مواضيع",
+      "one": "موضوع واحد",
+      "two": "موضوعان",
+      "few": "{count} مواضيع",
+      "many": "{count} موضوعًا",
+      "other": "{count} موضوع"
+    },
+    "article_count": {
+      "zero": "لا توجد مقالات",
+      "one": "مقال واحد",
+      "two": "مقالان",
+      "few": "{count} مقالات",
+      "many": "{count} مقالًا",
+      "other": "{count} مقال"
+    },
+    "result_count": {
+      "zero": "لا توجد نتائج",
+      "one": "نتيجة واحدة",
+      "two": "نتيجتان",
+      "few": "{count} نتائج",
+      "many": "{count} نتيجة",
+      "other": "{count} نتيجة"
+    },
+    "view_count": {
+      "zero": "لا توجد مشاهدات",
+      "one": "مشاهدة واحدة",
+      "two": "مشاهدتان",
+      "few": "{count} مشاهدات",
+      "many": "{count} مشاهدة",
+      "other": "{count} مشاهدة"
+    }
   },
   "support": {
     "title": "الدعم الفني",
@@ -976,6 +1192,7 @@
     "submit_success_toast": "تم استلام طلبك، سنرد قريباً",
     "submit_success_title": "تم استلام رسالتك",
     "submit_success_body": "سنرد على البريد الذي زوّدتنا به خلال ساعات قليلة. احتفظ برقم التذكرة التالي للمراجعة:",
+    "ticket_reference": "رقم التذكرة",
     "categories": {
       "general": "استفسار عام",
       "billing": "الفوترة والمدفوعات",
@@ -1021,6 +1238,7 @@
       "body_required": "اكتب نص الرد",
       "body_min": "التفاصيل قصيرة جداً (10 أحرف على الأقل)",
       "body_max": "التفاصيل طويلة جداً (4000 حرف كحد أقصى)",
+      "email_required": "أدخل بريدك الإلكتروني لنتمكّن من الرد عليك",
       "ticket_not_found": "لم نعثر على هذه التذكرة",
       "ticket_forbidden": "ليس لديك صلاحية الوصول إلى هذه التذكرة",
       "invalid_transition": "لا يمكن الرد على تذكرة مغلقة. افتح تذكرة جديدة."
