@@ -55,4 +55,13 @@ describe('activeFilters', () => {
 
     expect(chip.label).toBe('الدوحة');
   });
+
+  it('shows the label of a select option, not its stored value', () => {
+    setClientLocale('ar');
+    const fuel = { key: 'fuel', label: { en: 'Fuel', ar: 'الوقود' }, type: 'select' as const, required: false, options: ['petrol'], options_labeled: [{ value: 'petrol', label: 'بنزين' }] };
+    const values = { ...EMPTY_FILTERS, category: 'cars', customFields: { fuel: 'petrol' } };
+    const chips = activeFilters(values, { categories: [{ ...cars, custom_fields: [fuel] }], locale: 'ar' });
+
+    expect(chips.at(-1)?.label).toBe('الوقود: بنزين');
+  });
 });

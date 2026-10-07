@@ -66,7 +66,10 @@ export function activeFilters(values: FilterValues, { categories, locations, loc
   for (const [key, value] of Object.entries(values.customFields)) {
     const field = category?.custom_fields?.find((candidate) => candidate.key === key);
     const name = field ? localized(field.label, locale) : key;
-    const shown = typeof value === 'string' ? value : range(value.min, value.max, (number) => formatNumber(number, locale));
+    const shown =
+      typeof value === 'string'
+        ? (field?.options_labeled?.find((option) => option.value === value)?.label ?? value)
+        : range(value.min, value.max, (number) => formatNumber(number, locale));
     const rest = { ...values.customFields };
     delete rest[key];
     chips.push({ key: `field-${key}`, label: `${name}: ${shown}`, without: { ...values, customFields: rest } });

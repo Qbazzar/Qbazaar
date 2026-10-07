@@ -2,7 +2,7 @@
  * TanStack Query hooks for the public categories endpoints.
  *
  * Reference data changes rarely, so we use a long `staleTime` (1h) for the
- * tree/main/filters/fields queries and a short one (5m) for live stats. Each
+ * tree/main/fields queries and a short one (5m) for live stats. Each
  * hook also syncs the result into the shared Zustand store so non-query
  * consumers (server-friendly helpers, breadcrumb lookup) can stay in sync.
  */
@@ -10,7 +10,6 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import {
   getCategoryFields,
-  getCategoryFilters,
   getCategoryPage,
   getCategoryStats,
   getCategoryTree,
@@ -20,7 +19,6 @@ import { useCategoriesStore } from '@/store/categories';
 import type {
   Category,
   CategoryField,
-  CategoryFilter,
   CategoryNode,
   CategoryPage,
   CategoryStats,
@@ -37,7 +35,6 @@ export const categoryKeys = {
   main: () => [...categoryKeys.all, 'main'] as const,
   page: (slug: string) => [...categoryKeys.all, 'page', slug] as const,
   stats: (slug: string) => [...categoryKeys.all, 'stats', slug] as const,
-  filters: (slug: string) => [...categoryKeys.all, 'filters', slug] as const,
   fields: (slug: string) => [...categoryKeys.all, 'fields', slug] as const,
 };
 
@@ -95,17 +92,6 @@ export function useCategoryStatsQuery(
     queryFn: () => getCategoryStats(slug as string),
     enabled: Boolean(slug),
     staleTime: FIVE_MIN,
-  });
-}
-
-export function useCategoryFiltersQuery(
-  slug: string | null | undefined,
-): UseQueryResult<CategoryFilter[]> {
-  return useQuery({
-    queryKey: categoryKeys.filters(slug ?? ''),
-    queryFn: () => getCategoryFilters(slug as string),
-    enabled: Boolean(slug),
-    staleTime: HOUR,
   });
 }
 

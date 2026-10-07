@@ -37,6 +37,8 @@ export function AdSummaryCard({ ad, layout = 'grid', eager = false, className }:
       layout={layout}
       price={formatAdPrice(ad, locale)}
       badge={ad.promotion ? t('catalog.card.top_ad', 'إعلان مميز') : undefined}
+      description={ad.summary || undefined}
+      tags={ad.spec_chips?.map((chip) => chip.value)}
       location={placeLabel(ad.location_slug, locale, place)}
       postedAt={formatAdAge(ad.published_at, locale)}
       className={className}
@@ -52,7 +54,7 @@ export function AdSummaryCard({ ad, layout = 'grid', eager = false, className }:
       favorite={
         <FavoriteButton
           adId={ad.id}
-          className="size-[30px] bg-qb-surface text-qb-ink shadow-qb-soft ring-0 backdrop-blur-none hover:text-qb-brand focus-visible:ring-qb-brand-active [&_svg]:size-[17px]"
+          className="size-8 bg-qb-surface text-qb-ink-muted shadow-qb-soft ring-0 backdrop-blur-none hover:text-qb-brand focus-visible:ring-qb-brand-active [&_svg]:size-[17px]"
         />
       }
     />

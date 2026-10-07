@@ -12,7 +12,6 @@ import { api } from './client';
 import type {
   Category,
   CategoryField,
-  CategoryFilter,
   CategoryNode,
   CategoryPage,
   CategoryStats,
@@ -44,15 +43,6 @@ export async function getCategoryPage(slug: string): Promise<CategoryPage> {
 export async function getCategoryStats(slug: string): Promise<CategoryStats> {
   const { data } = await api.get<SuccessEnvelope<CategoryStats>>(
     `${BASE}/${encodeURIComponent(slug)}/stats`,
-  );
-  return data.data;
-}
-
-export async function getCategoryFilters(
-  slug: string,
-): Promise<CategoryFilter[]> {
-  const { data } = await api.get<SuccessEnvelope<CategoryFilter[]>>(
-    `${BASE}/${encodeURIComponent(slug)}/filters`,
   );
   return data.data;
 }

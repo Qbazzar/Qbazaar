@@ -11,9 +11,9 @@ describe('formatAdPrice', () => {
     expect(formatAdPrice({ price: 285000, price_type: 'fixed' }, 'en')).toBe('QAR 285,000');
   });
 
-  it('uses Arabic digits and currency in Arabic', () => {
+  it('uses the Arabic currency with Latin digits in Arabic', () => {
     setClientLocale('ar');
-    expect(formatAdPrice({ price: 2350, price_type: 'fixed' }, 'ar')).toBe('ر.ق ٢٬٣٥٠');
+    expect(formatAdPrice({ price: 2350, price_type: 'fixed' }, 'ar')).toBe('ر.ق 2,350');
   });
 
   it.each([

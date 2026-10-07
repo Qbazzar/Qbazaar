@@ -54,6 +54,6 @@ describe('todayStat', () => {
   });
 
   it('uses Arabic digits in Arabic', () => {
-    expect(todayStat(3840, 'اليوم', 'ar')).toEqual([{ value: '+٣٬٨٤٠', label: 'اليوم', positive: true }]);
+    expect(todayStat(3840, 'اليوم', 'ar')).toEqual([{ value: '+3,840', label: 'اليوم', positive: true }]);
   });
 });

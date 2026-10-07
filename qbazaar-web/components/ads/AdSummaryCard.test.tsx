@@ -75,6 +75,18 @@ describe('AdSummaryCard', () => {
     expect(screen.getByText('QAR 285,000')).not.toHaveClass('bg-qb-brand');
   });
 
+  it('shows the summary and the spec chips in the list layout', () => {
+    const chips = [
+      { key: 'condition', label: 'Condition', value: 'Used' },
+      { key: 'year', label: 'Year', value: '2019' },
+    ];
+    render(<AdSummaryCard ad={{ ...ad, summary: 'Single owner, full service history…', spec_chips: chips }} layout="list" />);
+
+    expect(screen.getByText('Single owner, full service history…')).toBeInTheDocument();
+    expect(screen.getByText('Used')).toBeInTheDocument();
+    expect(screen.getByText('2019')).toBeInTheDocument();
+  });
+
   it('labels a missing photo', () => {
     render(<AdSummaryCard ad={{ ...ad, primary_image: null }} />);
 
