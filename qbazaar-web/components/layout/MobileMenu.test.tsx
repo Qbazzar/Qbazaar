@@ -19,8 +19,9 @@ import { logout } from '@/lib/api/auth';
 import { MobileMenu } from './MobileMenu';
 
 describe('MobileMenu', () => {
-  // The drawer is code-split; load it once up front so the first test does not wait on the transform.
-  beforeAll(() => import('./MobileMenuDrawer'));
+  // The drawer is code-split; load it once up front so the first test does not wait on the transform,
+  // which can pass the default hook timeout while the whole suite runs in parallel.
+  beforeAll(() => import('./MobileMenuDrawer'), 60_000);
 
   beforeEach(() => {
     setClientLocale('en');

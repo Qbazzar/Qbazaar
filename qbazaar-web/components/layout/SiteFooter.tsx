@@ -94,7 +94,7 @@ function FooterBrand() {
       <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('mb-4 inline-block rounded-qb-sm', focusRing)}>
         <SiteLogo width={123} height={46} />
       </Link>
-      <p className="mb-5 leading-6 text-qb-ink-secondary">{t('layout.footer.tagline', 'نربط البائعين بالمشترين في قطر بأمان وثقة')}</p>
+      <p className="mb-5 leading-6 text-qb-ink-secondary">{t('layout.footer.tagline', 'نربط العلامات التجارية بجمهورها عبر رسائل وتفاعل مدروس')}</p>
       {/* Not links until the brand's profile URLs exist. */}
       <div aria-hidden="true" className="flex gap-3">
         {SOCIALS.map((social, i) => (

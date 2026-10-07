@@ -20,7 +20,7 @@ describe('Avatar', () => {
     const avatar = screen.getByRole('img', { name: 'Farah Alzinati' });
 
     expect(avatar).toHaveTextContent('FA');
-    expect(avatar).toHaveClass('bg-qb-brand-soft', 'size-[66px]');
+    expect(avatar).toHaveClass('bg-qb-brand-soft', 'text-qb-brand-on-soft', 'size-[66px]');
   });
 
   it('shows the photo when there is one', () => {

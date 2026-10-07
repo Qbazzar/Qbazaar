@@ -2,8 +2,12 @@
 
 /** The first eight main categories of the home feed as the "Browse Categories" tiles. */
 import Link from 'next/link';
+import { CircleAlert } from 'lucide-react';
 
+import { Button } from '@/components/design-system/Button';
+import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { Icon } from '@/components/design-system/Icon';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
 import { formatNumber } from '@/lib/i18n/format';
 import { localized, getLocale } from '@/lib/i18n/locale';
@@ -19,7 +23,7 @@ const tile = 'flex flex-col gap-[22px] rounded-qb-xl border border-qb-line bg-qb
 
 export function HomeCategoryStrip() {
   const locale = getLocale();
-  const { data, isLoading, isError } = useHomeFeedQuery();
+  const { data, isLoading, isError, refetch } = useHomeFeedQuery();
 
   if (isLoading) {
     return (
@@ -30,11 +34,21 @@ export function HomeCategoryStrip() {
       </div>
     );
   }
+  // The other home sections hide when the feed fails, so this one says so and retries the whole feed.
   if (isError || !data) {
     return (
-      <p className="py-8 text-center text-qb-caption text-qb-ink-subtle">
-        {t('categories.errors.not_found', 'تعذّر تحميل الأقسام')}
-      </p>
+      <div role="alert" className="rounded-qb-2xl border border-qb-line bg-qb-surface">
+        <EmptyState
+          icon={<Icon icon={CircleAlert} size="lg" />}
+          title={t('common.error', 'حدث خطأ، حاول مرة أخرى')}
+          headingLevel="h3"
+          action={
+            <Button variant="secondary" size="sm" onClick={() => refetch()}>
+              {t('common.retry', 'إعادة المحاولة')}
+            </Button>
+          }
+        />
+      </div>
     );
   }
 

@@ -23,14 +23,12 @@ import { useUnreadNotificationsCountQuery } from '@/lib/queries/notifications';
 import { cn } from '@/lib/utils';
 
 import { MobileMenu, mobileIconButton } from './MobileMenu';
+import { hasOwnChrome } from './own-chrome';
 import { SiteLogo } from './SiteLogo';
-
-const HIDE_HEADER_PREFIXES = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-otp', '/post-ad'];
 
 export function SiteHeaderGate() {
   const pathname = usePathname() ?? '/';
-  if (HIDE_HEADER_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return null;
-  return <SiteHeader />;
+  return hasOwnChrome(pathname) ? null : <SiteHeader />;
 }
 
 export function SiteHeader() {

@@ -15,7 +15,7 @@ export const avatarVariants = cva(
         /** Header account button. */
         neutral: 'bg-qb-fill-strong text-qb-ink-body',
         /** Profile headers and seller cards. */
-        brand: 'bg-qb-brand-soft text-qb-brand',
+        brand: 'bg-qb-brand-soft text-qb-brand-on-soft',
       },
     },
     defaultVariants: { size: 'sm', tone: 'neutral' },

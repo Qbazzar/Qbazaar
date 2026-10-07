@@ -44,7 +44,7 @@ export function AdSummaryCard({ ad, layout = 'grid', eager = false, className }:
         imageUrl ? (
           <Image src={imageUrl} alt="" fill sizes={IMAGE_SIZES[layout]} loading={eager ? 'eager' : 'lazy'} className="object-cover" />
         ) : (
-          <span className="flex size-full items-center justify-center text-qb-micro text-qb-ink-subtle">
+          <span className="flex size-full items-center justify-center text-qb-micro text-qb-ink-secondary">
             {t('media.no_image', 'بدون صورة')}
           </span>
         )
