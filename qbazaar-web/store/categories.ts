@@ -28,6 +28,19 @@ export function findCategoryBySlug(
   return null;
 }
 
+/** Root-to-node chain for a slug (the breadcrumb trail), or null when absent. */
+export function findCategoryPath(
+  nodes: CategoryNode[] | null | undefined,
+  slug: string,
+): CategoryNode[] | null {
+  for (const node of nodes ?? []) {
+    if (node.slug === slug) return [node];
+    const rest = findCategoryPath(node.children, slug);
+    if (rest) return [node, ...rest];
+  }
+  return null;
+}
+
 export interface CategoriesState {
   tree: CategoryNode[] | null;
   mainCategories: Category[] | null;
