@@ -113,6 +113,7 @@ class GetHomeFeedAction
             ->orderByDesc('active_ads_count')
             ->orderBy('id')
             ->limit((int) config('qbazaar.home.featured_sellers_limit'))
+            ->with('latestListedAd.location')
             ->get();
     }
 

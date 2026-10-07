@@ -148,6 +148,8 @@ return [
         'description_min_length' => 20,
         'description_max_length' => 5000,
         'price_max' => 9_999_999,
+        // Largest magnitude of a `number` custom field (year, mileage, rooms...).
+        'custom_field_number_max' => 999_999_999,
         // Delivery fee the seller may charge on an ad, and units one ad may offer.
         'shipping_fee_max' => 10_000,
         'quantity_max' => 999,
@@ -183,7 +185,7 @@ return [
         'saved_search_check_interval_minutes' => 60,
         // GET /ads?ids= — favourites synced from another device, recently viewed on the web.
         'ids_lookup_max' => 50,
-        'geo_max_radius_km' => 100,
+        'geo_max_radius_km' => 200,
         // View counters change on every visit, so they reach the index in batches instead of per view.
         'views_sync_minutes' => 15,
     ],
@@ -202,6 +204,13 @@ return [
         // Category landing pages are shared by every visitor and served
         // stale-while-revalidate: fresh this long, stale for up to 5x.
         'category_page_cache_seconds' => 120,
+    ],
+
+    'cards' => [
+        // The one-line description and the spec chips shown on listing cards.
+        'summary_length' => 120,
+        'max_spec_chips' => 4,
+        'spec_chip_max_length' => 40,
     ],
 
     'home' => [

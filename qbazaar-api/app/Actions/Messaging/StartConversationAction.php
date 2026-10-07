@@ -96,7 +96,7 @@ class StartConversationAction
      */
     private function result(Conversation $conversation, bool $created): array
     {
-        $conversation->load(['ad.user', 'ad.primaryImage', 'buyer', 'seller']);
+        $conversation->load(['ad.user', 'ad.category', 'ad.location', 'ad.primaryImage', 'buyer', 'seller']);
 
         return ['conversation' => $conversation, 'created' => $created];
     }
