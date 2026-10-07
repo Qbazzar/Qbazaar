@@ -16,16 +16,18 @@ import { HelpContactCard } from '@/components/help/HelpContactCard';
 import { HelpSearchBar } from '@/components/help/HelpSearchBar';
 import { HelpRowsSkeleton } from '@/components/help/HelpSkeletons';
 import { RetryPanel } from '@/components/status/RetryPanel';
+import { useRetry } from '@/hooks/useRetry';
 import type { HelpArticleListItem } from '@/lib/api/types';
 import { MIN_HELP_QUERY_LENGTH, useHelpSearchQuery } from '@/lib/queries/help';
-import { tPlural } from '@/lib/i18n/intl';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 
 export function HelpSearchClient() {
   const [q] = useQueryState('q', parseAsString.withDefault(''));
   const query = q.trim();
   const enabled = query.length >= MIN_HELP_QUERY_LENGTH;
-  const { data: results, isPending, isPlaceholderData, isError, refetch, isFetching } = useHelpSearchQuery(query);
+  const { data: results, isPending, isPlaceholderData, isError, refetch } = useHelpSearchQuery(query);
+  const { retrying, retry } = useRetry(refetch);
   const resultCount = enabled && results ? tPlural('help.result_count', results.length) : '';
   // The previous query's results stay on screen while the next loads; only the settled count is announced.
   const announcement = enabled && isError ? t('errors.generic_heading') : isPlaceholderData ? '' : resultCount;
@@ -47,10 +49,10 @@ export function HelpSearchClient() {
       <SearchResults
         enabled={enabled}
         loading={isPending}
-        failed={isError}
+        failed={isError || retrying}
         results={results}
-        onRetry={() => refetch()}
-        retrying={isFetching}
+        onRetry={retry}
+        retrying={retrying}
       />
       <HelpContactCard className="mt-10 qb-desktop:mt-12" />
     </PageShell>

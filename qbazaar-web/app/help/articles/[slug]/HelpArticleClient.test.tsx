@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/queries/help', () => ({ useHelpArticleQuery: vi.fn(), useHelpCategoryQuery: vi.fn() }));
@@ -83,11 +83,33 @@ describe('HelpArticleClient', () => {
     expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
   });
 
-  it('offers a retry for any other failure', () => {
+  it('offers a retry for any other failure', async () => {
     articleQuery({ isError: true, error: apiError('SERVER_ERROR', 500) });
     render(<HelpArticleClient slug="making-an-offer" />);
-    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Try again' })));
 
     expect(refetch).toHaveBeenCalled();
+  });
+
+  it('keeps the retry button, and the focus on it, while the retry runs', async () => {
+    let settle = () => {};
+    refetch.mockReturnValue(new Promise<void>((resolve) => (settle = resolve)));
+    articleQuery({ isError: true, error: apiError('SERVER_ERROR', 500) });
+    const { rerender } = render(<HelpArticleClient slug="making-an-offer" />);
+    const button = screen.getByRole('button', { name: 'Try again' });
+    button.focus();
+    fireEvent.click(button);
+
+    // A refetching query without data reports pending, not failed.
+    articleQuery({});
+    rerender(<HelpArticleClient slug="making-an-offer" />);
+    expect(screen.getByRole('button', { name: 'Try again' })).toBe(button);
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    expect(button).toHaveFocus();
+
+    articleQuery({ isError: true, error: apiError('SERVER_ERROR', 500) });
+    await act(async () => settle());
+    expect(button).not.toHaveAttribute('aria-disabled');
+    expect(button).toHaveFocus();
   });
 });

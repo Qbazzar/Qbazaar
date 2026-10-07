@@ -97,6 +97,17 @@ describe('HelpSearchBar', () => {
     expect(input).toHaveFocus();
   });
 
+  it('leaves Escape to the browser while no list is showing', () => {
+    render(<HelpSearchBar />);
+    const input = type('a');
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    act(() => {
+      input.dispatchEvent(escape);
+    });
+
+    expect(escape.defaultPrevented).toBe(false);
+  });
+
   it('says so when nothing matches', () => {
     searchReturns([]);
     render(<HelpSearchBar />);

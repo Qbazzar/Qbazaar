@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { formatNumber } from '@/lib/i18n/format';
 import { setClientLocale } from '@/lib/i18n/locale';
 import type { HelpCategory } from '@/lib/api/types';
 
@@ -43,7 +44,25 @@ describe('HelpTopics', () => {
 });
 
 describe('helpTopicsSummary', () => {
+  const topicsWith = (...articleCounts: number[]) =>
+    articleCounts.map((articles, index) => topic(`topic-${index}`, `Topic ${index}`, articles));
+
   it('counts the topics and their articles', () => {
     expect(helpTopicsSummary([topic('buying', 'Buying', 3), topic('selling', 'Selling', 2)])).toBe('2 topics · 5 articles');
+  });
+
+  it('uses the plural form for zero in English', () => {
+    expect(helpTopicsSummary([])).toBe('0 topics · 0 articles');
+  });
+
+  it('agrees both counts with every Arabic plural form', () => {
+    setClientLocale('ar');
+
+    expect(helpTopicsSummary([])).toBe('لا توجد مواضيع · لا توجد مقالات');
+    expect(helpTopicsSummary(topicsWith(1))).toBe('موضوع واحد · مقال واحد');
+    expect(helpTopicsSummary(topicsWith(1, 1))).toBe('موضوعان · مقالان');
+    expect(helpTopicsSummary(topicsWith(1, 1, 1))).toBe(`${formatNumber(3, 'ar')} مواضيع · ${formatNumber(3, 'ar')} مقالات`);
+    expect(helpTopicsSummary(topicsWith(11))).toBe(`موضوع واحد · ${formatNumber(11, 'ar')} مقالًا`);
+    expect(helpTopicsSummary(topicsWith(100))).toBe(`موضوع واحد · ${formatNumber(100, 'ar')} مقال`);
   });
 });

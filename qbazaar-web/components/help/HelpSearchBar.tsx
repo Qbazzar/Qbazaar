@@ -14,9 +14,9 @@ import { buttonVariants } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { MIN_HELP_QUERY_LENGTH, useHelpSearchQuery } from '@/lib/queries/help';
-import { tPlural } from '@/lib/i18n/intl';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { cn } from '@/lib/utils';
 
 const SUGGESTION_LIMIT = 8;
@@ -76,10 +76,10 @@ export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, clas
     router.push(`/help/search?q=${encodeURIComponent(term)}`);
   };
 
-  // The first Escape only closes the list (the browser would also clear a search field), and focus
-  // returns to the field rather than falling to the page when it sat on a suggestion.
+  // While the list shows, Escape only closes it (the browser would also clear a search field), and
+  // focus returns to the field rather than falling to the page when it sat on a suggestion.
   const closeOnEscape = (event: KeyboardEvent) => {
-    if (event.key !== 'Escape' || !open) return;
+    if (event.key !== 'Escape' || !showSuggestions) return;
     event.preventDefault();
     event.stopPropagation();
     inputRef.current?.focus();

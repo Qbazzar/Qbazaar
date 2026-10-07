@@ -2,8 +2,8 @@ import { LifeBuoy } from 'lucide-react';
 
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import type { HelpCategory } from '@/lib/api/types';
-import { tPlural } from '@/lib/i18n/intl';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 
 import { HelpCategoryCard } from './HelpCategoryCard';
 

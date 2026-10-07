@@ -1,7 +1,7 @@
 import { LinkTile } from '@/components/design-system/LinkTile';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
-import { tPlural } from '@/lib/i18n/intl';
 import { localized } from '@/lib/i18n/locale';
+import { tPlural } from '@/lib/i18n/plural';
 import type { HelpCategory } from '@/lib/api/types';
 
 /** Help topic as an all-categories tile; admins pick the Lucide icon in the CMS. */

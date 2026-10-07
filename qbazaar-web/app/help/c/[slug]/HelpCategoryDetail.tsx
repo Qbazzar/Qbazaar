@@ -10,9 +10,9 @@ import { BrowseTopicsLink } from '@/components/help/BrowseTopicsLink';
 import { HelpArticleCard } from '@/components/help/HelpArticleCard';
 import { HelpContactCard } from '@/components/help/HelpContactCard';
 import type { HelpCategoryWithArticles } from '@/lib/api/help';
-import { tPlural } from '@/lib/i18n/intl';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 
 export function HelpCategoryDetail({ category }: { category: HelpCategoryWithArticles }) {
   const name = localized(category.name);

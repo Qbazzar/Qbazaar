@@ -9,13 +9,17 @@ vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 import { ApiClientError } from '@/lib/api/auth';
 import { setClientLocale } from '@/lib/i18n/locale';
-import type { SupportTicket } from '@/lib/api/types';
+import type { SupportTicket, User } from '@/lib/api/types';
+import { useAuthStore } from '@/store/auth';
 
 import { NewTicketClient } from './NewTicketClient';
 
 const ticket = { id: '01m48b0qnwrvz1kbzws8tqxrzm' } as SupportTicket;
 
-beforeEach(() => setClientLocale('en'));
+beforeEach(() => {
+  setClientLocale('en');
+  useAuthStore.setState({ user: null, accessToken: null });
+});
 afterEach(() => vi.clearAllMocks());
 
 function fill(label: string, value: string) {
@@ -68,6 +72,24 @@ describe('NewTicketClient', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'Your message has been received' })).toBeInTheDocument();
     expect(screen.getByText(ticket.id)).toHaveAttribute('dir', 'ltr');
     expect(document.activeElement).toContainElement(screen.getByText(ticket.id));
+  });
+
+  it('asks members for no email', async () => {
+    useAuthStore.setState({ user: { id: 'u1' } as User, accessToken: 'AT' });
+    mutateAsync.mockResolvedValue(ticket);
+    render(<NewTicketClient />);
+
+    expect(screen.queryByLabelText('Your email', { exact: false })).toBeNull();
+    fill('Subject', 'Cannot publish my ad');
+    fill('Issue details', 'The publish button does nothing on step three.');
+    submit();
+
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        payload: { subject: 'Cannot publish my ad', category: 'general', body: 'The publish button does nothing on step three.' },
+        turnstileToken: undefined,
+      }),
+    );
   });
 
   it('shows server-side field errors next to the field', async () => {

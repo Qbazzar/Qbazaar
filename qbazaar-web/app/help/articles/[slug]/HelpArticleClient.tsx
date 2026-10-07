@@ -14,26 +14,28 @@ import { HelpFeedback } from '@/components/help/HelpFeedback';
 import { SkeletonLine, SkeletonText } from '@/components/help/HelpSkeletons';
 import { ErrorView } from '@/components/status/ErrorView';
 import { NotFoundView } from '@/components/status/NotFoundView';
+import { useRetry } from '@/hooks/useRetry';
 import type { HelpErrorCode } from '@/lib/api/types';
 import { useHelpArticleQuery, useHelpCategoryQuery } from '@/lib/queries/help';
-import { tPlural } from '@/lib/i18n/intl';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 
 const ARTICLE_NOT_FOUND: HelpErrorCode = 'HELP_001';
 const RELATED_LIMIT = 5;
 
 export function HelpArticleClient({ slug }: { slug: string }) {
-  const { data: article, isError, error, refetch, isFetching } = useHelpArticleQuery(slug);
+  const { data: article, isError, error, refetch } = useHelpArticleQuery(slug);
+  const { retrying, retry } = useRetry(refetch);
   const { data: category } = useHelpCategoryQuery(article?.category.slug ?? '');
   const helpCrumbs = [
     { label: t('home.breadcrumb'), href: '/' },
     { label: t('help.title'), href: '/help' },
   ];
 
-  if (!article && isError) {
+  if (!article && (isError || retrying)) {
     const trail = [{ label: t('help.title'), href: '/help' }];
-    if (error.code === ARTICLE_NOT_FOUND) {
+    if (error?.code === ARTICLE_NOT_FOUND) {
       // The page answered 200 before the browser learnt the article is gone, so keep it out of the index.
       return (
         <>
@@ -48,7 +50,7 @@ export function HelpArticleClient({ slug }: { slug: string }) {
         </>
       );
     }
-    return <ErrorView trail={trail} onRetry={() => refetch()} retrying={isFetching} />;
+    return <ErrorView trail={trail} onRetry={retry} retrying={retrying} />;
   }
 
   if (!article) {

@@ -71,8 +71,6 @@ export function ImpersonateClient() {
 
   return (
     <main className="bg-qb-page px-qb-gutter py-12 font-qb text-qb-ink qb-tablet:py-16">
-      {/* Failure is only known in the browser; the server titles the page "Signing you in". */}
-      {error ? <title>{`${t('impersonate.failed_title')} · QBazaar`}</title> : null}
       <Card
         large
         elevated
