@@ -23,7 +23,7 @@ Every route in `qbazaar-web/app` mapped to its pixel reference for the M3 reskin
 
 | Route | Next.js file | Reference | 1440 | 744 | 390 | Status | Notes |
 |---|---|---|---|---|---|---|---|
-| `/` | `app/page.tsx` | `index.html` | 728:44663 · guest 741:38067 · search open 489:14809 | 561:22024 · guest 741:47591 | 584:25249 · guest 741:48614 | partial | The recently viewed strip has no frame: build it as one more "Best Selling" style slider section of the same page. "Featured Companies" waits for the companies API (FE-16.6). |
+| `/` | `app/page.tsx` | `index.html` | 728:44663 · guest 741:38067 · search open 489:14809 | 561:22024 · guest 741:47591 | 584:25249 · guest 741:48614 | partial | The recently viewed strip has no frame: build it as one more "Best Selling" style slider section of the same page. Every section reads `GET /api/v1/home` (Recommended, Featured Companies, Best Selling). |
 | `/categories` | `app/categories/page.tsx` | `all-categories.html` | 185:6576 | 536:32620 | 621:27193 | matches | |
 | `/c/[slug]` | `app/c/[slug]/page.tsx` | `parent-category.html` (sub-category tiles) + `category.html` (its listings) | 69:467 · 81:1629 | 539:35503 · 544:38513 | 623:28688 · 623:30012 | matches | |
 | `/ads` | `app/ads/page.tsx` | `category.html` (list/grid + filter sidebar) | 18:912 · filter 250:4405 · filter open 264:4818 | 655:54431 · filters 244:3508 | 654:50760 · filter sheet 618:26974 | matches | Filters become a bottom sheet under 1000 px. |

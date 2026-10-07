@@ -1,99 +1,101 @@
 'use client';
 
 /**
- * Home page "find places" word cloud — driven by the live Qatar locations
- * tree instead of a hardcoded list.
- *
- * Pulls top-level cities + a small slice of their districts so the cloud
- * stays varied even after we add more cities. Each chip deep-links into the
- * search surface filtered by `location_slug`, matching how the rest of the
- * app navigates location-scoped browsing.
+ * "Find places" collage of the home page, driven by the live Qatar locations
+ * tree. Each pill opens the search filtered by `location_slug`.
  */
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { useMemo } from 'react';
+
+import { focusRing } from '@/components/design-system/focus-ring';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
-import { localized, getLocale } from '@/lib/i18n/locale';
+import { localized, getLocale, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { cn } from '@/lib/utils';
 import type { Location } from '@/lib/api/types';
 
-const MAX_CHIPS = 10;
-const SIZES = ['lg', 'md', 'sm'] as const;
+/**
+ * Where the reference scatters its pills on desktop: the horizontal centre
+ * (from the start edge), the top offset and the tilt of each one.
+ */
+const DESKTOP_SLOTS = [
+  ['5%', '66px', '-16deg'],
+  ['15%', '22px', '-9deg'],
+  ['12%', '104px', '-5deg'],
+  ['26%', '14px', '-4deg'],
+  ['21%', '78px', '-12deg'],
+  ['31%', '92px', '-13deg'],
+  ['39%', '24px', '9deg'],
+  ['43%', '104px', '-3deg'],
+  ['51%', '18px', '-2deg'],
+  ['57%', '104px', '0deg'],
+  ['66%', '22px', '11deg'],
+  ['78%', '26px', '-5deg'],
+  ['68%', '104px', '2deg'],
+  ['81%', '104px', '-2deg'],
+  ['91%', '20px', '13deg'],
+  ['94%', '104px', '-2deg'],
+] as const;
 
-interface Chip {
+/** Under 1000 px the pills wrap in rows and tilt in groups of three. */
+const ROW_TILTS = ['-rotate-7', 'mt-2 rotate-5', 'mt-[3px] -rotate-3'] as const;
+
+const pill =
+  'inline-block rounded-qb-pill border border-qb-line bg-qb-surface px-5 py-2.5 text-qb-h5 leading-[23px] font-medium whitespace-nowrap text-qb-black shadow-qb-float';
+
+interface Place {
   slug: string;
   label: string;
-  size: (typeof SIZES)[number];
-  accent: boolean;
-  row: number;
 }
 
-/**
- * Flatten the tree to a city-first ordering then trim. The first node in
- * each city group is the city itself, followed by its districts — this gives
- * a natural visual mix of large + small chips when paired with sizes.
- */
-function buildChips(nodes: Location[], locale: 'ar' | 'en'): Chip[] {
-  const flat: Pick<Chip, 'slug' | 'label'>[] = [];
-  for (const city of nodes) {
-    flat.push({ slug: city.slug, label: localized(city.name, locale) });
-    for (const child of city.children) {
-      flat.push({ slug: child.slug, label: localized(child.name, locale) });
-    }
-  }
-  return flat.slice(0, MAX_CHIPS).map((item, i) => ({
-    ...item,
-    size: SIZES[i % SIZES.length],
-    accent: i % 4 === 0,
-    row: i + 1,
-  }));
+/** Cities first, then their districts, up to one place per collage slot. */
+export function collagePlaces(cities: Location[], locale: Locale): Place[] {
+  const districts = cities.flatMap((city) => city.children);
+  return [...cities, ...districts]
+    .slice(0, DESKTOP_SLOTS.length)
+    .map((node) => ({ slug: node.slug, label: localized(node.name, locale) }));
 }
+
+function slotStyle(index: number): CSSProperties {
+  const [x, y, tilt] = DESKTOP_SLOTS[index];
+  return { '--slot-x': x, '--slot-y': y, '--slot-tilt': tilt } as CSSProperties;
+}
+
+const collage =
+  'relative mx-auto flex max-w-[1400px] flex-wrap justify-center gap-3 py-1.5 qb-desktop:block qb-desktop:h-[200px] qb-desktop:py-0';
+const slot =
+  'qb-desktop:absolute qb-desktop:start-(--slot-x) qb-desktop:top-(--slot-y) qb-desktop:mt-0 qb-desktop:-translate-x-1/2 qb-desktop:rotate-(--slot-tilt) rtl:qb-desktop:translate-x-1/2';
 
 export function HomeCityTags() {
   const locale = getLocale();
   const { data, isLoading, isError } = useQatarLocationsQuery();
-
-  const chips = useMemo(
-    () => (data ? buildChips(data, locale) : []),
-    [data, locale],
-  );
+  const places = useMemo(() => (data ? collagePlaces(data, locale) : []), [data, locale]);
 
   if (isLoading) {
     return (
-      <div className="city-tags" aria-busy="true">
-        {Array.from({ length: MAX_CHIPS }).map((_, i) => (
-          <span
-            key={i}
-            className={`city-tag city-tag--${SIZES[i % SIZES.length]} animate-pulse bg-cream-200/60`}
-            style={{ minWidth: 80, height: 28 }}
-            aria-hidden
-          />
+      <div className={collage} aria-busy="true">
+        {DESKTOP_SLOTS.map((_, i) => (
+          <span key={i} aria-hidden="true" style={slotStyle(i)} className={cn(pill, ROW_TILTS[i % 3], slot, 'h-[45px] w-28 animate-pulse')} />
         ))}
       </div>
     );
   }
-
-  if (isError || chips.length === 0) {
-    return null;
-  }
+  if (isError || places.length === 0) return null;
 
   return (
-    <div className="city-tags">
-      {chips.map((chip) => (
-        <Link
-          key={chip.slug}
-          href={`/search?location_slug=${encodeURIComponent(chip.slug)}`}
-          className={`city-tag city-tag--${chip.size}${
-            chip.accent ? ' city-tag--accent' : ''
-          } city-tag--r${chip.row}`}
-          aria-label={t(
-            'home.cities.browse_aria',
-            { city: chip.label },
-            `تصفح الإعلانات في ${chip.label}`,
-          )}
-        >
-          {chip.label}
-        </Link>
+    <ul className={collage}>
+      {places.map((place, i) => (
+        <li key={place.slug} style={slotStyle(i)} className={cn(ROW_TILTS[i % 3], slot)}>
+          <Link
+            href={`/search?location_slug=${encodeURIComponent(place.slug)}`}
+            aria-label={t('home.cities.browse_aria', { city: place.label }, `تصفح الإعلانات في ${place.label}`)}
+            className={cn(pill, 'hover:border-qb-brand', focusRing)}
+          >
+            {place.label}
+          </Link>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

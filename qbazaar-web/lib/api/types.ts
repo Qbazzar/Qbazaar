@@ -526,6 +526,15 @@ export interface AdSummary {
   category_slug: string;
   published_at: string | null;
   created_at: string;
+  /** Up to four key specs in the request language: the condition, then the category's card fields. */
+  spec_chips?: AdSpecChip[];
+}
+
+/** One spec of a listing card; `key` is the custom-field key (or `condition`), stable across languages. */
+export interface AdSpecChip {
+  key: string;
+  label: string;
+  value: string;
 }
 
 export interface CreateAdRequest {

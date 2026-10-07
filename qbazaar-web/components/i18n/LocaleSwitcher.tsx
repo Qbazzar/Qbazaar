@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import {
   LOCALE_COOKIE,
   getLocale,
@@ -12,7 +14,7 @@ import {
  * cookie and reloads so the server re-renders with the new locale (html
  * lang/dir + any server-rendered text).
  */
-export function LocaleSwitcher({ className }: { className?: string }) {
+export function LocaleSwitcher({ className, children }: { className?: string; children?: ReactNode }) {
   const next: Locale = getLocale() === 'ar' ? 'en' : 'ar';
 
   function switchLocale() {
@@ -32,7 +34,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
         'inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-bold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
       }
     >
-      {next === 'en' ? 'EN' : 'ع'}
+      {children ?? (next === 'en' ? 'EN' : 'ع')}
     </button>
   );
 }

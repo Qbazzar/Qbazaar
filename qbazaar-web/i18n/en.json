@@ -20,7 +20,8 @@
     "theme": {
       "switch_to_dark": "Dark mode",
       "switch_to_light": "Light mode"
-    }
+    },
+    "currency": "QAR"
   },
   "auth": {
     "hero": {
@@ -489,20 +490,43 @@
     "hero": {
       "eyebrow": "Qatar marketplace",
       "headline": "Qatar's friendly classifieds marketplace",
-      "subtitle": "Buy, sell, and discover near you — from a used car in West Bay to a kitten in Al Khor. Free, safe, and built for Qatar.",
-      "cta_post": "Post an ad",
-      "cta_browse": "Browse ads"
+      "cta_browse": "Browse ads",
+      "title_start": "Find Anything",
+      "title_accent": "Near",
+      "title_end": "You",
+      "tagline": "Buy and sell locally — cars, apartments, electronics, furniture & more. Trusted by millions."
     },
     "sections": {
       "top_categories": "Top categories",
-      "top_categories_title": "Every market in Qatar",
       "latest_ads": "Latest ads",
-      "latest_ads_title": "Trending now",
-      "view_more": "View all"
+      "categories_title": "Browse Categories",
+      "categories_sub": "Explore top items in your area",
+      "view_all": "View All",
+      "recommended_title": "Recommended for you",
+      "recommended_sub": "Hand-picked deals near you",
+      "companies_title": "Featured Companies",
+      "companies_sub": "Find trusted businesses near you.",
+      "best_selling_title": "Best Selling",
+      "best_selling_sub": "Trending items people love."
     },
     "trust": {
       "verified": "Verified sellers",
       "free_to_post": "Free to post"
+    },
+    "search": {
+      "keyword": "Search",
+      "category": "Choose Category",
+      "location": "Location",
+      "distance": "Distance",
+      "submit": "Search"
+    },
+    "places": {
+      "title_start": "Find Places",
+      "title_middle": "Around Your",
+      "title_accent": "Location"
+    },
+    "cities": {
+      "browse_aria": "Browse ads in {city}"
     }
   },
   "media": {
@@ -662,10 +686,6 @@
     "similar_section": {
       "kicker": "Suggested for you",
       "title": "Similar ads"
-    },
-    "featured_section": {
-      "kicker": "Hand-picked",
-      "title": "Featured ads"
     }
   },
   "search": {
@@ -908,10 +928,6 @@
       "description_max": "Description is too long"
     }
   },
-  "footer": {
-    "support": "Support",
-    "contact": "Contact us"
-  },
   "cms": {
     "page_not_found": "We couldn't find this page",
     "last_updated": "Last updated"
@@ -1020,6 +1036,45 @@
       "next": "Next page",
       "last": "Last page",
       "page": "Page {page}"
+    },
+    "rail": {
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "layout": {
+    "header": {
+      "add_ad": "Add Ads",
+      "login": "Login",
+      "sign_up": "Sign Up",
+      "unread": "{label} ({count} unread)"
+    },
+    "menu": {
+      "title": "Menu",
+      "open": "Open menu",
+      "home": "Home",
+      "categories": "Categories",
+      "my_ads": "My Ads",
+      "account": "Account Settings"
+    },
+    "footer": {
+      "tagline": "Connecting brands with audiences through strategic messaging and engagement",
+      "col_classifieds": "Classifieds",
+      "col_information": "Information",
+      "col_account": "Account",
+      "col_discover": "Discover",
+      "about": "About Us",
+      "browse": "Browse ads",
+      "categories": "All categories",
+      "help": "Help",
+      "support": "Support",
+      "contact": "Contact us",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Use",
+      "search": "Search",
+      "latest": "Latest ads",
+      "wordmark": "Q BAZAAR",
+      "copyright": "Q BAZAAR Inc. All rights reserved"
     }
   }
 }

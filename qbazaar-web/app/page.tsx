@@ -1,115 +1,93 @@
-import Link from 'next/link';
+import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { HomeCategoryStrip } from '@/components/home/HomeCategoryStrip';
 import { HomeCityTags } from '@/components/home/HomeCityTags';
-import { HomeFeaturedAds } from '@/components/home/HomeFeaturedAds';
-import { HomeLatestAds } from '@/components/home/HomeLatestAds';
-import { RecentlyViewedStrip } from '@/components/account/RecentlyViewedStrip';
+import { HomeFeaturedCompanies } from '@/components/home/HomeFeaturedCompanies';
+import { HomeFeedAds } from '@/components/home/HomeFeedAds';
+import { HomeRecentlyViewed } from '@/components/home/HomeRecentlyViewed';
 import { HomeSearchBar } from '@/components/home/HomeSearchBar';
 import { t } from '@/lib/i18n/messages';
+import { resolveServerLocale } from '@/lib/i18n/server';
 
 /**
- * Homepage — QBFront port (source: QBFront/index.html + QBFront/ar/index.html).
- *
- * Hero → category grid → featured ads → recently viewed → latest ads →
- * find-places word cloud. Each data-driven section is a client island so
- * we keep TanStack Query + Echo wiring untouched.
+ * Home page on the new design (728:44663 / 561:22024 / 584:25249). The page
+ * is a server component; each data-driven section is a client island reading
+ * the one cached home feed query.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  // Pages render in parallel with the root layout, so prime the request
+  // locale here too before the server-side t() calls below.
+  await resolveServerLocale();
   return (
-    <main>
-      {/* HERO */}
-      <section className="hero">
-        <div className="hero__inner container">
-          <h1 className="hero__title">
-            {t('home.hero.headline_a', 'اعثر على أي شيء')}{' '}
-            <span className="text-accent">
-              {t('home.hero.headline_b', 'قريباً منك')}
-            </span>
-          </h1>
-          <p className="hero__sub">
-            {t(
-              'home.hero.subtitle',
-              'بيع واشترِ في قطر — سيارات، عقارات، إلكترونيات، أثاث والمزيد. بثقة من الآلاف.',
-            )}
-          </p>
-          <HomeSearchBar />
-        </div>
-      </section>
-
-      {/* BROWSE CATEGORIES */}
-      <section className="container pt-12">
-        <div className="section-header">
-          <div>
-            <h2 className="section-header__title">
-              {t('home.sections.top_categories_title', 'تصفّح الأقسام')}
-            </h2>
-            <p className="section-header__sub">
-              {t('home.sections.top_categories_sub', 'أهم ما يُعرض في منطقتك')}
-            </p>
-          </div>
-          <Link href="/categories" className="section-header__action">
-            {t('home.sections.view_more', 'عرض الكل')}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </Link>
-        </div>
+    <main className="bg-qb-page font-qb text-qb-ink">
+      <HomeHero />
+      <section aria-labelledby="home-categories" className="mx-auto max-w-[1440px] px-qb-gutter py-5">
+        <SectionHeader
+          id="home-categories"
+          title={t('home.sections.categories_title', 'تصفّح الأقسام')}
+          subtitle={t('home.sections.categories_sub', 'أهم ما يُعرض في منطقتك')}
+          action={{ href: '/categories', label: t('home.sections.view_all', 'عرض الكل') }}
+          className="mb-[22px]"
+        />
         <HomeCategoryStrip />
       </section>
-
-      {/* FEATURED ADS — auto-hidden when empty */}
-      <HomeFeaturedAds />
-
-      {/* RECENTLY VIEWED — auth-only, auto-hidden when empty */}
-      <section className="container pt-12">
-        <RecentlyViewedStrip />
-      </section>
-
-      {/* LATEST ADS */}
-      <section className="container pt-12">
-        <div className="section-header">
-          <div>
-            <h2 className="section-header__title">
-              {t('home.sections.latest_ads_title', 'أحدث الإعلانات')}
-            </h2>
-            <p className="section-header__sub">
-              {t('home.sections.latest_ads_sub', 'إعلانات منشورة في آخر 24 ساعة')}
-            </p>
-          </div>
-          <Link href="/ads" className="section-header__action">
-            {t('home.sections.view_more', 'عرض الكل')}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </Link>
-        </div>
-        <HomeLatestAds />
-        <div className="mt-6 flex justify-center">
-          <Link href="/ads" className="btn btn--primary btn--pill">
-            {t('ads.list.load_more', 'تحميل المزيد')}
-          </Link>
-        </div>
-      </section>
-
-      {/* FIND PLACES */}
-      <section className="find-places container">
-        <h2 className="find-places__title">
-          {t('home.find_places.title', 'استكشف الأماكن')}
-        </h2>
-        <div className="find-places__title">
-          {t('home.find_places.subtitle_a', 'حول')}{' '}
-          <em>{t('home.find_places.subtitle_b', 'موقعك')}</em>
-        </div>
-        <div className="mt-7">
-          <Link href="/ads" className="btn btn--primary btn--pill">
-            {t('home.sections.view_more', 'عرض الكل')}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </Link>
-        </div>
-        <HomeCityTags />
-      </section>
+      <HomeFeedAds
+        list="recommended"
+        id="home-recommended"
+        title={t('home.sections.recommended_title', 'مختارة لك')}
+        subtitle={t('home.sections.recommended_sub', 'عروض منتقاة قريبة منك')}
+        eager
+      />
+      <HomeRecentlyViewed />
+      <HomeFeaturedCompanies />
+      <HomeFeedAds
+        list="best_selling"
+        id="home-best-selling"
+        title={t('home.sections.best_selling_title', 'الأكثر مبيعاً')}
+        subtitle={t('home.sections.best_selling_sub', 'منتجات رائجة يحبها الناس.')}
+        className="pb-10"
+      />
+      <FindPlaces />
     </main>
+  );
+}
+
+function HomeHero() {
+  return (
+    <section className="px-qb-gutter pt-[clamp(36px,6vw,58px)] pb-[30px] text-center">
+      <div className="mx-auto flex max-w-[1000px] flex-col items-center gap-3.5">
+        <h1 className="text-[clamp(24px,5vw,48px)] leading-[1.05] font-semibold text-qb-black">
+          {t('home.hero.title_start', 'اعثر على أي شيء')}{' '}
+          <span className="text-qb-brand">{t('home.hero.title_accent', 'قريب')}</span>{' '}
+          {t('home.hero.title_end', 'منك')}
+        </h1>
+        <p className="max-w-[760px] text-[clamp(14px,2.2vw,24px)] text-qb-ink-muted">
+          {t('home.hero.tagline', 'بيع واشترِ محلياً — سيارات، شقق، إلكترونيات، أثاث والمزيد. يثق بنا الملايين.')}
+        </p>
+      </div>
+      <HomeSearchBar />
+    </section>
+  );
+}
+
+function FindPlaces() {
+  return (
+    // Skipped until it nears the viewport, so the script fonts of the heading are not fetched during page load.
+    <section
+      aria-labelledby="home-places"
+      className="mx-auto max-w-[1440px] px-qb-gutter pt-[30px] text-center [contain-intrinsic-size:auto_560px] [content-visibility:auto]"
+    >
+      <h2 id="home-places" className="mb-9 text-[clamp(32px,5vw,56px)] leading-none font-semibold text-qb-icon">
+        {t('home.places.title_start', 'استكشف الأماكن')}
+        <br />
+        {t('home.places.title_middle', 'حول')}{' '}
+        {/* The reference sets this word in Story Script once the heading reaches 36 px (720 px wide) and in Dancing Script below.
+            Arabic has neither script, so it keeps the heading's weight there. */}
+        <span className="font-qb-script-compact font-bold text-qb-brand italic rtl:font-semibold rtl:not-italic min-[720px]:font-qb-script min-[720px]:text-[64px] min-[720px]:leading-[64px] min-[720px]:font-normal min-[720px]:not-italic">
+          {t('home.places.title_accent', 'موقعك')}
+        </span>
+      </h2>
+      <HomeCityTags />
+      <div aria-hidden="true" className="mt-[34px] h-[22px] bg-qb-brand" />
+    </section>
   );
 }

@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
-import { SiteFooterGate } from '@/components/layout/SiteFooter';
+import { SiteFooter } from '@/components/layout/SiteFooter';
+import { SiteFooterGate } from '@/components/layout/SiteFooterGate';
 import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner';
 import { LocaleProvider } from '@/components/i18n/LocaleProvider';
 import { dirFor } from '@/lib/i18n/locale';
@@ -48,7 +49,9 @@ export default async function RootLayout({
             <Providers>
               <SiteHeaderGate />
               <div className="flex-1">{children}</div>
-              <SiteFooterGate />
+              <SiteFooterGate>
+                <SiteFooter />
+              </SiteFooterGate>
               <ImpersonationBanner />
             </Providers>
             <Toaster richColors closeButton position="top-center" />

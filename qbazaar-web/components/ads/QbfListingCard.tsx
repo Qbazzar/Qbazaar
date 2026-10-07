@@ -14,33 +14,12 @@ import { BlurHashImage } from '@/components/upload/BlurHashImage';
 import { localized, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import type { AdSummary } from '@/lib/api/types';
+import { formatAdAge, formatAdPrice, placeLabel } from '@/lib/ads/format';
 
 interface Props {
   ad: AdSummary;
   showFavorite?: boolean;
   className?: string;
-}
-
-function formatPrice(ad: AdSummary, locale: 'ar' | 'en'): string {
-  if (ad.price_type === 'free') return t('ads.price.free', 'مجاناً');
-  if (ad.price_type === 'contact') return t('ads.price.contact', 'بالتواصل');
-  if (ad.price == null) return t('ads.price.contact', 'بالتواصل');
-  const lang = locale === 'ar' ? 'ar-EG' : 'en-US';
-  return `${t('common.currency', 'ر.ق')} ${new Intl.NumberFormat(lang).format(ad.price)}`;
-}
-
-function formatRelativeTime(iso: string | null, locale: 'ar' | 'en'): string {
-  if (!iso) return '';
-  const date = new Date(iso);
-  const diff = Date.now() - date.getTime();
-  const minutes = Math.round(diff / 60_000);
-  const lang = locale === 'ar' ? 'ar-EG' : 'en-US';
-  const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
-  if (minutes < 60) return rtf.format(-minutes, 'minute');
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return rtf.format(-hours, 'hour');
-  const days = Math.round(hours / 24);
-  return rtf.format(-days, 'day');
 }
 
 export function QbfListingCard({ ad, showFavorite = true, className }: Props) {
@@ -66,7 +45,7 @@ export function QbfListingCard({ ad, showFavorite = true, className }: Props) {
             {t('media.no_image', 'بدون صورة')}
           </div>
         )}
-        <div className="price-pill">{formatPrice(ad, locale)}</div>
+        <div className="price-pill">{formatAdPrice(ad, locale)}</div>
         {showFavorite ? (
           <FavoriteButton adId={ad.id} size="sm" className="save-btn" />
         ) : null}
@@ -88,12 +67,12 @@ export function QbfListingCard({ ad, showFavorite = true, className }: Props) {
               <path d="M12 22s7-7 7-13a7 7 0 1 0-14 0c0 6 7 13 7 13z" />
               <circle cx="12" cy="9" r="2.5" />
             </svg>
-            {ad.location_slug.replace(/-/g, ' ')}
+            {placeLabel(ad.location_slug, locale)}
           </span>
           {ad.published_at ? (
             <>
               <span>·</span>
-              <span>{formatRelativeTime(ad.published_at, locale)}</span>
+              <span>{formatAdAge(ad.published_at, locale)}</span>
             </>
           ) : null}
         </div>
