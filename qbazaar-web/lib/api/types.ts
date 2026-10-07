@@ -150,13 +150,18 @@ export type AuthErrorCodeValue =
 
 /**
  * Counters surfaced on the authenticated account dashboard.
- * Backend: `GET /account/summary`.
+ * Backend: `GET /account/summary` (contract schema `AccountSummary`).
  */
 export interface AccountSummary {
-  ads_count: number;
-  drafts_count: number;
-  conversations_count: number;
-  unread_notifications_count: number;
+  /** Every listing that has left the draft stage. */
+  my_ads: number;
+  drafts: number;
+  ads_by_status: Record<AdStatus, number>;
+  conversations: number;
+  unread_messages: number;
+  unread_notifications: number;
+  favorites: number;
+  saved_searches: number;
 }
 
 /**
@@ -390,6 +395,8 @@ export interface Category {
   custom_filters: CategoryFilter[] | null;
   /** Cached count surfaced by the API; zero until Sprint 5 ships ads. */
   ads_count: number;
+  /** Of `ads_count`, the ads published since local midnight (Asia/Qatar). */
+  today_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -439,6 +446,21 @@ export interface CategoryFieldOption {
 export interface CategoryStats {
   ads_count: number;
   sub_ads_count: number;
+  today_count: number;
+}
+
+/** One child category of a category page with its newest ads (up to 6). */
+export interface CategorySection {
+  category: Category;
+  ads: AdSummary[];
+}
+
+/** `GET /api/v1/categories/{slug}`: one section per active child, in display order. */
+export interface CategoryPage {
+  category: Category;
+  parent: Category | null;
+  sub_category_count: number;
+  sections: CategorySection[];
 }
 
 export type LocationType = 'city' | 'district' | 'area';
@@ -467,6 +489,9 @@ export type ReferenceErrorCode = 'CATEGORY_NOT_FOUND' | 'LOCATION_NOT_FOUND';
 
 export type PriceType = 'fixed' | 'negotiable' | 'free' | 'contact';
 export type AdCondition = 'new' | 'like_new' | 'used';
+/** `offering` sells an item, `wanted` looks for one ("Looking for"). */
+export type AdType = 'offering' | 'wanted';
+export type AdShipping = 'pickup_only' | 'delivery';
 export type AdStatus =
   | 'draft'
   | 'pending'
@@ -565,6 +590,9 @@ export interface Ad {
   images?: Media[];
 }
 
+/** Paid promotion of an ad (contract `PromotionType`), weakest first. */
+export type PromotionType = 'highlight' | 'push_up' | 'gallery' | 'premium';
+
 /**
  * Trimmed shape returned by the public list endpoint — keeps payloads small
  * for the home feed. The full ad is fetched on the detail page.
@@ -583,6 +611,8 @@ export interface AdSummary {
   primary_image: Media | null;
   location_slug: string;
   category_slug: string;
+  /** The strongest active paid promotion, null when none. */
+  promotion?: PromotionType | null;
   published_at: string | null;
   created_at: string;
   /** Up to four key specs in the request language: the condition, then the category's card fields. */
@@ -661,6 +691,8 @@ export interface SearchQueryParams extends Record<string, unknown> {
   price_max?: number;
   condition?: AdCondition;
   price_type?: PriceType;
+  ad_type?: AdType;
+  shipping?: AdShipping;
   sort?: SortMode;
   page?: number;
   per_page?: number;
@@ -705,10 +737,8 @@ export interface SavedSearch {
   created_at: string;
 }
 
-export type SearchErrorCode =
-  | 'SEARCH_INVALID_PARAMS'
-  | 'SAVED_SEARCH_LIMIT'
-  | 'SAVED_SEARCH_NOT_FOUND';
+/** `qbazaar-contracts/error-codes.md`: index down, saved search missing, invalid filters, saved-search limit. */
+export type SearchErrorCode = 'SEARCH_001' | 'SEARCH_002' | 'SEARCH_003' | 'SEARCH_004';
 
 // ── Favorites + Recently Viewed (Sprint 7) ─────────────────────────────────
 // Favorites are a per-user toggle on an ad. The backend returns the new
@@ -801,11 +831,20 @@ export interface UnreadCountResponse {
   total: number;
 }
 
+/**
+ * Messaging codes of qbazaar-contracts/error-codes.md: blocked, rate limit,
+ * flagged content, conversation not found, not a participant, own ad,
+ * message not found, seller does not accept chat.
+ */
 export type MessagingErrorCode =
-  | 'CONVERSATION_NOT_FOUND'
-  | 'CONVERSATION_BLOCKED'
-  | 'CONVERSATION_OWN_AD'
-  | 'MESSAGE_NOT_FOUND';
+  | 'MSG_001'
+  | 'MSG_002'
+  | 'MSG_003'
+  | 'MSG_004'
+  | 'MSG_005'
+  | 'MSG_006'
+  | 'MSG_007'
+  | 'MSG_008';
 
 // ── Offers (Sprint 9) ──────────────────────────────────────────────────────
 // Buyer-initiated price offers attached to a conversation. The lifecycle is
@@ -1016,13 +1055,16 @@ export interface MakeSupportTicketRequest {
   email?: string;
 }
 
-export type CmsErrorCode = 'PAGE_NOT_FOUND';
+/** Page not found (qbazaar-contracts/error-codes.md). */
+export type CmsErrorCode = 'CMS_001';
 
-export type HelpErrorCode =
-  | 'HELP_CATEGORY_NOT_FOUND'
-  | 'HELP_ARTICLE_NOT_FOUND';
+/** Article not found, help category not found. */
+export type HelpErrorCode = 'HELP_001' | 'HELP_002';
 
 export type SupportErrorCode =
-  | 'TICKET_NOT_FOUND'
-  | 'TICKET_FORBIDDEN'
-  | 'TICKET_INVALID_TRANSITION';
+  /** Ticket not found. */
+  | 'TICKET_001'
+  /** Not allowed to act on this ticket. */
+  | 'TICKET_002'
+  /** Invalid status change, e.g. a reply to a closed ticket. */
+  | 'TICKET_003';

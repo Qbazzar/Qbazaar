@@ -1,79 +1,42 @@
 'use client';
 
 /**
- * One saved-search row on the account saved-searches page.
- *
- * Renders the name + a chips summary of the persisted params + two actions:
- * Run (routes to /search with the restored params) and Delete (confirm dialog).
+ * One saved search (381:8815): search tile, name, when it was saved, one chip
+ * per kept filter, then "View Result" (route restoration) and delete with a
+ * confirmation.
  */
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import {
-  BookmarkIcon,
-  Loader2Icon,
-  PlayCircleIcon,
-  Trash2Icon,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Loader2, Search, Trash2 } from 'lucide-react';
+
+import { Button, buttonVariants } from '@/components/design-system/Button';
+import { Icon } from '@/components/design-system/Icon';
+import { Modal } from '@/components/design-system/Modal';
+import { formatRelativeTime } from '@/components/messaging/relative-time';
 import { useDeleteSavedSearchMutation } from '@/lib/queries/search';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { cn } from '@/lib/utils';
 import { ApiClientError } from '@/lib/api/auth';
-import type { SavedSearch, SearchQueryParams } from '@/lib/api/types';
+import type { SavedSearch } from '@/lib/api/types';
+
+import { ModalActions } from './ModalActions';
+import { savedRowButtonClass } from './SavedAdRow';
+import { savedSearchChips, savedSearchHref } from './saved-search-params';
+import type { SlugLabels } from './useSlugLabels';
 
 interface Props {
   search: SavedSearch;
+  /** Names for the category and location slugs of the chips. */
+  labels: SlugLabels;
 }
 
-/**
- * Build the `/search?...` href from the persisted params. We drop keys with
- * `null`/`undefined` so the URL stays clean.
- */
-function buildHref(params: SearchQueryParams): string {
-  const sp = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === null || value === '') continue;
-    sp.set(key, String(value));
-  }
-  const qs = sp.toString();
-  return qs ? `/search?${qs}` : '/search';
-}
-
-function summariseParams(params: SearchQueryParams): string[] {
-  const chips: string[] = [];
-  if (params.q) chips.push(`"${params.q}"`);
-  if (params.category_slug) chips.push(params.category_slug);
-  if (params.location_slug) chips.push(params.location_slug);
-  if (params.condition) chips.push(t(`ads.condition.${params.condition}`));
-  if (params.price_min !== undefined || params.price_max !== undefined) {
-    const min = params.price_min ?? 0;
-    const max = params.price_max ?? '∞';
-    chips.push(`${min} – ${max} QAR`);
-  }
-  if (params.sort) chips.push(t(`search.sort.${params.sort}`));
-  return chips;
-}
-
-export function SavedSearchCard({ search }: Props) {
+export function SavedSearchCard({ search, labels }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteMutation = useDeleteSavedSearchMutation();
 
-  const href = useMemo(() => buildHref(search.query_params), [search]);
-  const chips = useMemo(() => summariseParams(search.query_params), [search]);
-  const createdAt = useMemo(
-    () => new Date(search.created_at).toLocaleDateString(),
-    [search.created_at],
-  );
+  const href = useMemo(() => savedSearchHref(search.query_params), [search]);
+  const chips = useMemo(() => savedSearchChips(search.query_params, labels), [search, labels]);
 
   const onDelete = () => {
     deleteMutation.mutate(search.id, {
@@ -98,99 +61,72 @@ export function SavedSearchCard({ search }: Props) {
   };
 
   return (
-    <article className="border-ink-200 bg-card flex flex-col gap-3 rounded-2xl border p-5 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0 flex-1">
-        <h3 className="font-display text-coral flex items-center gap-2 text-2xl leading-tight">
-          <BookmarkIcon className="size-5 shrink-0" aria-hidden />
-          <span className="truncate">{search.name}</span>
-        </h3>
-
-        {chips.length > 0 ? (
-          <ul className="mt-3 flex flex-wrap gap-1.5">
-            {chips.map((chip, index) => (
-              <li
-                key={`${chip}-${index}`}
-                className="bg-cream-200 text-ink-700 inline-flex items-center rounded-full px-2.5 py-1 text-[11px]"
-              >
-                {chip}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-ink-500 mt-2 text-xs">
-            {t('search.title_all', 'كل الإعلانات')}
-          </p>
-        )}
-
-        <p className="text-ink-500 mt-3 text-[11px]">
-          {t('account.saved_searches.created_at', { date: createdAt })}
-        </p>
-      </div>
-
-      <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-stretch">
-        <Button
-          asChild
-          size="default"
-          className="bg-coral hover:bg-coral/90 rounded-full text-white"
+    <article className="rounded-qb-2xl border border-qb-line bg-qb-surface p-4 font-qb shadow-qb-card qb-tablet:p-6">
+      <div className="flex items-start gap-3.5">
+        <span
+          aria-hidden="true"
+          className="flex size-12 shrink-0 items-center justify-center rounded-qb-xl border border-qb-line bg-qb-surface text-qb-ink-body shadow-qb-card qb-tablet:size-[60px]"
         >
-          <Link href={href}>
-            <PlayCircleIcon className="size-3.5" aria-hidden />
-            {t('account.saved_searches.run', 'تشغيل البحث')}
-          </Link>
-        </Button>
-
-        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <DialogTrigger
-            render={
-              <Button
-                type="button"
-                variant="destructive"
-                size="default"
-                className="rounded-full"
-              />
-            }
-          >
-            <Trash2Icon className="size-3.5" aria-hidden />
-            {t('account.saved_searches.delete', 'حذف')}
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {t('account.saved_searches.delete_confirm_title')}
-              </DialogTitle>
-              <DialogDescription>
-                {t('account.saved_searches.delete_confirm_body')}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose
-                render={
-                  <Button variant="outline" size="default" className="rounded-full">
-                    {t('search.save_search.cancel', 'إلغاء')}
-                  </Button>
-                }
-              />
-              <Button
-                type="button"
-                variant="destructive"
-                size="default"
-                disabled={deleteMutation.isPending}
-                onClick={onDelete}
-                className="rounded-full"
-              >
-                {deleteMutation.isPending ? (
-                  <>
-                    <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
-                    {t('account.saved_searches.delete', 'حذف')}
-                  </>
-                ) : (
-                  t('account.saved_searches.delete', 'حذف')
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <Icon icon={Search} size="lg" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-qb-body font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5">
+            <bdi>{search.name}</bdi>
+          </h2>
+          <p className="mt-2 text-qb-label font-medium text-qb-breadcrumb qb-tablet:text-qb-caption">
+            {t('account.saved_searches.saved_ago', { when: formatRelativeTime(search.created_at) })}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          aria-label={t('account.saved_searches.delete_label', { name: search.name })}
+          className={savedRowButtonClass}
+        >
+          <Trash2 aria-hidden="true" />
+        </button>
       </div>
+
+      <ul className="mt-4 flex flex-wrap gap-2.5 qb-tablet:mt-5 qb-tablet:gap-[15px]">
+        {chips.length > 0 ? (
+          chips.map((chip) => (
+            <li
+              key={chip.label}
+              className="inline-flex min-h-[33px] items-center gap-1 rounded-qb-sm bg-qb-fill px-2.5 text-qb-label qb-tablet:text-qb-caption"
+            >
+              <span className="text-qb-ink-subtle">{chip.label}:</span>
+              <span className="font-medium text-qb-ink-title">{chip.value}</span>
+            </li>
+          ))
+        ) : (
+          <li className="text-qb-label text-qb-ink-subtle">{t('search.title_all', 'كل الإعلانات')}</li>
+        )}
+      </ul>
+
+      <div className="mt-4 flex items-center justify-end border-t border-qb-line pt-4 qb-tablet:mt-[17px] qb-tablet:pt-[17px]">
+        <Link href={href} className={cn(buttonVariants({ size: 'sm' }), 'h-10 rounded-qb-sm px-4')}>
+          {t('account.saved_searches.view_results')}
+        </Link>
+      </div>
+
+      <Modal
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setConfirmOpen(false);
+        }}
+        title={t('account.saved_searches.delete_confirm_title')}
+        description={t('account.saved_searches.delete_confirm_body')}
+      >
+        <ModalActions className="mt-2">
+          <Button size="sm" disabled={deleteMutation.isPending} onClick={onDelete}>
+            {deleteMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {t('account.saved_searches.delete', 'حذف')}
+          </Button>
+          <Button variant="muted" size="sm" disabled={deleteMutation.isPending} onClick={() => setConfirmOpen(false)}>
+            {t('search.save_search.cancel', 'إلغاء')}
+          </Button>
+        </ModalActions>
+      </Modal>
     </article>
   );
 }

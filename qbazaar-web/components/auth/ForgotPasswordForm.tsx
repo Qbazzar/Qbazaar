@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2Icon, MailCheckIcon } from 'lucide-react';
+import { Loader2, Mail, MailCheck } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button, buttonVariants } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import {
@@ -18,7 +18,9 @@ import {
 } from '@/lib/validation/auth';
 import { ApiClientError, forgotPassword } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
-import { FieldError } from './FieldError';
+import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
+import { AuthHeading } from './AuthHeading';
+import { announcedError } from './FieldError';
 import { Turnstile, type TurnstileHandle } from './Turnstile';
 
 export function ForgotPasswordForm() {
@@ -48,25 +50,13 @@ export function ForgotPasswordForm() {
 
   if (submitted) {
     return (
-      <div className="space-y-5">
-        <div className="bg-cream-50 border-border flex flex-col items-center gap-3 rounded-2xl border p-6 text-center">
-          <span className="bg-coral/15 text-coral inline-flex size-12 items-center justify-center rounded-full">
-            <MailCheckIcon className="size-6" aria-hidden="true" />
-          </span>
-          <h2 className="font-display text-2xl tracking-tight">
-            {t('auth.forgot_password.success_title')}
-          </h2>
-          <p className="text-muted-foreground max-w-xs text-sm leading-relaxed">
-            {t('auth.forgot_password.success_body')}
-          </p>
-        </div>
-        <Link
-          href="/login"
-          className={cn(
-            buttonVariants({ size: 'lg' }),
-            'h-11 w-full rounded-full text-sm font-semibold',
-          )}
-        >
+      <div role="status" className="flex flex-col items-center gap-8">
+        <AuthHeading
+          icon={<MailCheck />}
+          title={t('auth.forgot_password.success_title')}
+          subtitle={t('auth.forgot_password.success_body')}
+        />
+        <Link href="/login" className={cn(buttonVariants({ fullWidth: true }), authSubmitClass, 'max-w-[420px]')}>
           {t('auth.forgot_password.back_to_login')}
         </Link>
       </div>
@@ -77,52 +67,42 @@ export function ForgotPasswordForm() {
   const submitting = form.formState.isSubmitting;
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="email">
-          {t('auth.forgot_password.email_label')}
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          dir="ltr"
-          placeholder={t('auth.forgot_password.email_placeholder')}
-          aria-invalid={Boolean(emailError)}
-          aria-describedby={emailError ? 'email-error' : undefined}
-          className="h-10"
-          {...form.register('email')}
-        />
-        <FieldError id="email-error" message={emailError} />
-      </div>
+    <>
+      <AuthHeading icon={<Mail />} title={t('auth.forgot_password.title')} subtitle={t('auth.forgot_password.subtitle')} />
+      <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
+        <Field label={t('auth.forgot_password.email_label')} required error={announcedError(emailError)}>
+          {(control) => (
+            <Input
+              {...control}
+              type="email"
+              autoComplete="email"
+              dir="ltr"
+              placeholder={t('auth.forgot_password.email_placeholder')}
+              {...form.register('email')}
+            />
+          )}
+        </Field>
 
-      <Turnstile ref={turnstile} />
+        <Turnstile ref={turnstile} />
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={submitting}
-        className={cn(
-          'h-11 w-full rounded-full text-sm font-semibold',
-          submitting && 'cursor-progress',
-        )}
-      >
-        {submitting ? (
-          <>
-            <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
-            {t('auth.forgot_password.submitting')}
-          </>
-        ) : (
-          t('auth.forgot_password.submit')
-        )}
-      </Button>
+        <Button type="submit" fullWidth disabled={submitting} className={cn(authSubmitClass, submitting && 'cursor-progress')}>
+          {submitting ? (
+            <>
+              <Loader2 className="animate-spin" aria-hidden="true" />
+              {t('auth.forgot_password.submitting')}
+            </>
+          ) : (
+            t('auth.forgot_password.submit')
+          )}
+        </Button>
 
-      <p className="text-muted-foreground text-center text-sm">
-        <Link href="/login" className="text-coral font-medium hover:underline">
-          {t('auth.forgot_password.back_to_login')}
-        </Link>
-      </p>
-    </form>
+        <AuthFooter>
+          <Link href="/login" className={authLinkClass}>
+            {t('auth.forgot_password.back_to_login')}
+          </Link>
+        </AuthFooter>
+      </form>
+    </>
   );
 }
 

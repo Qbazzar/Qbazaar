@@ -13,20 +13,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2Icon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { FieldError } from '@/components/auth/FieldError';
+import { Button } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { Input, Select, Textarea } from '@/components/design-system/Input';
+import { announcedError } from '@/components/auth/FieldError';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import {
@@ -38,12 +30,19 @@ import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import type { AccountProfile, Language } from '@/lib/api/types';
 import { useAuthStore } from '@/store/auth';
+import { ModalActions } from './ModalActions';
+
+export type ProfileField = keyof ProfileInput;
 
 export interface ProfileFormProps {
   initial: AccountProfile;
+  /** Field to focus when the form opens from its "Edit" row. */
+  focusField?: ProfileField;
+  onSaved?: () => void;
+  onCancel?: () => void;
 }
 
-export function ProfileForm({ initial }: ProfileFormProps) {
+export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileFormProps) {
   const queryClient = useQueryClient();
   const setUser = useAuthStore((s) => s.setUser);
   const currentUser = useAuthStore((s) => s.user);
@@ -67,10 +66,14 @@ export function ProfileForm({ initial }: ProfileFormProps) {
     });
   }, [initial.full_name, initial.language, initial.bio, form]);
 
+  useEffect(() => {
+    if (focusField) form.setFocus(focusField);
+  }, [focusField, form]);
+
   const mutation = useMutation({
     mutationFn: updateAccountProfile,
     onSuccess: (updated) => {
-      // Keep auth store in sync so the sidebar/dashboard greeting refresh.
+      // Keep auth store in sync so the header and the hub refresh.
       if (currentUser) {
         setUser({
           ...currentUser,
@@ -80,6 +83,7 @@ export function ProfileForm({ initial }: ProfileFormProps) {
       }
       queryClient.setQueryData(['account', 'profile'], updated);
       toast.success(t('account.profile.success'));
+      onSaved?.();
     },
   });
 
@@ -97,90 +101,63 @@ export function ProfileForm({ initial }: ProfileFormProps) {
 
   const errors = form.formState.errors;
   const submitting = form.formState.isSubmitting || mutation.isPending;
-  const languageValue = form.watch('language');
 
   return (
-    <form onSubmit={onSubmit} noValidate className="max-w-2xl space-y-5">
-      <div className="space-y-1.5">
-        <Label htmlFor="full_name">
-          {t('account.profile.full_name_label')}
-        </Label>
-        <Input
-          id="full_name"
-          type="text"
-          autoComplete="name"
-          placeholder={t('account.profile.full_name_placeholder')}
-          aria-invalid={Boolean(errors.full_name)}
-          aria-describedby={
-            errors.full_name ? 'full_name-error' : undefined
-          }
-          className="h-10"
-          {...form.register('full_name')}
-        />
-        <FieldError id="full_name-error" message={errors.full_name?.message} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="language">{t('account.profile.language_label')}</Label>
-        <Select
-          value={languageValue}
-          onValueChange={(value) =>
-            form.setValue('language', value as Language, {
-              shouldDirty: true,
-              shouldValidate: true,
-            })
-          }
-        >
-          <SelectTrigger id="language" className="h-10 w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ar">
-              {t('account.profile.language_ar')}
-            </SelectItem>
-            <SelectItem value="en">
-              {t('account.profile.language_en')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <FieldError id="language-error" message={errors.language?.message} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="bio">{t('account.profile.bio_label')}</Label>
-        <Textarea
-          id="bio"
-          rows={4}
-          maxLength={280}
-          placeholder={t('account.profile.bio_placeholder')}
-          aria-invalid={Boolean(errors.bio)}
-          aria-describedby={errors.bio ? 'bio-error' : 'bio-hint'}
-          {...form.register('bio')}
-        />
-        <p id="bio-hint" className="text-muted-foreground text-xs">
-          {t('account.profile.bio_hint')}
-        </p>
-        <FieldError id="bio-error" message={errors.bio?.message} />
-      </div>
-
-      <Button
-        type="submit"
-        size="lg"
-        disabled={submitting}
-        className={cn(
-          'h-11 rounded-full px-6 text-sm font-semibold',
-          submitting && 'cursor-progress',
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6 text-start">
+      <Field label={t('account.profile.full_name_label')} required error={announcedError(errors.full_name?.message)}>
+        {(control) => (
+          <Input
+            {...control}
+            type="text"
+            autoComplete="name"
+            placeholder={t('account.profile.full_name_placeholder')}
+            {...form.register('full_name')}
+          />
         )}
+      </Field>
+
+      <Field label={t('account.profile.language_label')} error={announcedError(errors.language?.message)}>
+        {(control) => (
+          <Select {...control} {...form.register('language')}>
+            <option value="ar">{t('account.profile.language_ar')}</option>
+            <option value="en">{t('account.profile.language_en')}</option>
+          </Select>
+        )}
+      </Field>
+
+      <Field
+        label={t('account.profile.bio_label')}
+        hint={t('account.profile.bio_hint')}
+        error={announcedError(errors.bio?.message)}
       >
-        {submitting ? (
-          <>
-            <Loader2Icon className="size-4 animate-spin" aria-hidden />
-            {t('account.profile.submitting')}
-          </>
-        ) : (
-          t('account.profile.submit')
+        {(control) => (
+          <Textarea
+            {...control}
+            rows={4}
+            maxLength={280}
+            placeholder={t('account.profile.bio_placeholder')}
+            {...form.register('bio')}
+          />
         )}
-      </Button>
+      </Field>
+
+      <ModalActions>
+        <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
+          {submitting ? (
+            <>
+              <Loader2 className="animate-spin" aria-hidden="true" />
+              {t('account.profile.submitting')}
+            </>
+          ) : (
+            t('common.save')
+          )}
+        </Button>
+        {onCancel ? (
+          <Button type="button" variant="muted" size="sm" onClick={onCancel} disabled={submitting}>
+            {t('common.cancel')}
+          </Button>
+        ) : null}
+      </ModalActions>
     </form>
   );
 }

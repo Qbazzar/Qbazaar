@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ShieldCheckIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ShieldCheck } from 'lucide-react';
+
+import { Button } from '@/components/design-system/Button';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 import { phoneVerificationHref } from '@/lib/auth/phone-gate';
@@ -29,32 +30,25 @@ export function PhoneVerificationNotice({ context, compact = false, className }:
     <div
       role="status"
       className={cn(
-        'bg-card flex gap-3',
+        'flex gap-3 bg-qb-surface font-qb',
         compact
-          ? 'border-ink-200 items-center border-t p-3'
-          : 'ring-foreground/10 flex-col items-start rounded-2xl p-5 ring-1 sm:flex-row sm:items-center',
+          ? 'items-center border-t border-qb-line p-3'
+          : 'flex-col items-start rounded-qb-xl border border-qb-line p-5 shadow-qb-card qb-tablet:flex-row qb-tablet:items-center',
         className,
       )}
     >
-      <span className="bg-coral/10 text-coral inline-flex size-10 shrink-0 items-center justify-center rounded-xl">
-        <ShieldCheckIcon className="size-5" aria-hidden />
+      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-qb-md bg-qb-brand-soft text-qb-brand">
+        <ShieldCheck className="size-5" aria-hidden="true" />
       </span>
-      <div className="min-w-0 flex-1 space-y-1">
+      <div className="min-w-0 flex-1">
         {compact ? null : (
-          <p className="text-ink-900 text-sm font-semibold">
-            {t('auth.phone_gate.title')}
-          </p>
+          <p className="text-qb-body font-semibold text-qb-ink">{t('auth.phone_gate.title')}</p>
         )}
-        <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
+        <p className={cn('text-qb-label text-qb-ink-secondary qb-tablet:text-qb-caption', compact ? null : 'mt-1')}>
           {t(`auth.phone_gate.body.${context}`)}
         </p>
       </div>
-      <Button
-        type="button"
-        size="sm"
-        onClick={goToVerification}
-        className="shrink-0 rounded-full px-4 text-xs font-semibold"
-      >
+      <Button size="sm" onClick={goToVerification}>
         {t('auth.phone_gate.cta')}
       </Button>
     </div>

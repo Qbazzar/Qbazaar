@@ -9,13 +9,17 @@
  * actually seen the thread.
  */
 import { useCallback, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeftIcon, ImageIcon, Loader2Icon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { PriceTag } from '@/components/ads/PriceTag';
+
+import { Button } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { Icon } from '@/components/design-system/Icon';
+import { AdPhoto } from '@/components/account/AdPhoto';
+import { PanelState } from '@/components/account/PanelState';
+import { formatAdPrice } from '@/components/account/format';
+import { cn } from '@/lib/utils';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import {
@@ -94,46 +98,26 @@ export function ConversationView({ conversationId, onBack }: Props) {
   }, [conversationId, conversation?.unread_count]);
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center" role="status">
-        <Loader2Icon
-          className="text-muted-foreground size-5 animate-spin"
-          aria-hidden
-        />
-      </div>
-    );
+    return <PanelState loading className="flex h-full items-center" />;
   }
 
   if (isError || !conversation) {
     const code = (error as { code?: string } | null)?.code;
-    const isNotFound = code === 'CONVERSATION_NOT_FOUND';
+    // MSG_004: no such conversation; MSG_005: the viewer is not part of it.
+    const isNotFound = code === 'MSG_004' || code === 'MSG_005';
     return (
-      <div className="text-ink-700 flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
-        <p>
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+        <p role="alert" className="text-qb-body text-qb-ink-body">
           {isNotFound
-            ? t(
-                'messaging.errors.conversation_not_found',
-                'لم نعثر على المحادثة',
-              )
+            ? t('messaging.errors.conversation_not_found', 'لم نعثر على المحادثة')
             : t('common.error', 'حدث خطأ، حاول مرة أخرى')}
         </p>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onBack}
-          className="rounded-full"
-        >
+        <Button variant="outline" size="sm" onClick={onBack}>
           {t('messaging.back', 'العودة')}
         </Button>
       </div>
     );
   }
-
-  const adImage =
-    conversation.ad.primary_image?.sizes.thumbnail ??
-    conversation.ad.primary_image?.url ??
-    null;
 
   // Buyer vs seller view drives the offer affordances: only buyers see the
   // "Make offer" button, only sellers see accept/reject on a pending offer.
@@ -141,83 +125,52 @@ export function ConversationView({ conversationId, onBack }: Props) {
     user?.id === conversation.seller_id ? 'seller' : 'buyer';
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Top bar */}
-      <header className="border-ink-200 bg-card flex items-center gap-3 border-b px-3 py-2.5">
+    <div className="flex h-full min-h-0 flex-col">
+      <header className="flex items-center gap-3 border-b border-qb-line px-[17px] py-4 qb-tablet:gap-4 qb-tablet:px-8 qb-tablet:py-6">
         <Button
-          type="button"
           variant="ghost"
           size="icon"
           onClick={onBack}
-          className="lg:hidden"
+          className="-ms-2 qb-desktop:hidden"
           aria-label={t('messaging.back', 'العودة')}
         >
-          <ArrowLeftIcon className="size-5 rtl:rotate-180" aria-hidden />
+          <Icon icon={ArrowLeft} size="lg" flipInRtl />
         </Button>
 
         <Link
           href={`/ads/${conversation.ad.id}`}
-          className="flex min-w-0 flex-1 items-center gap-3"
+          className={cn('flex min-w-0 flex-1 items-center gap-3 rounded-qb-md qb-tablet:gap-4', focusRing)}
         >
-          <div className="bg-cream-200 relative size-10 shrink-0 overflow-hidden rounded-lg">
-            {adImage ? (
-              <Image
-                src={adImage}
-                alt={conversation.ad.title}
-                fill
-                sizes="40px"
-                className="object-cover"
-              />
-            ) : (
-              <div className="text-ink-500 flex size-full items-center justify-center">
-                <ImageIcon className="size-4" aria-hidden />
-              </div>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-ink-900 truncate text-sm font-bold">
-              {conversation.ad.title}
-            </p>
-            <div className="text-ink-500 truncate text-[11px]">
-              <PriceTag
-                price={conversation.ad.price}
-                priceType={conversation.ad.price_type}
-                size="sm"
-              />
-            </div>
-          </div>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <span className="text-ink-700 hidden text-xs sm:inline">
-            {conversation.other_participant.full_name}
+          <AdPhoto
+            image={conversation.ad.primary_image}
+            sizes="67px"
+            compact
+            className="size-10 rounded-full qb-tablet:size-[61px] qb-desktop:size-[67px]"
+          />
+          <span className="min-w-0">
+            <span className="block truncate text-qb-body font-semibold text-qb-ink qb-tablet:text-qb-h5 qb-tablet:font-medium qb-desktop:text-qb-h3">
+              <bdi>{conversation.ad.title}</bdi>
+            </span>
+            <span className="mt-1 flex min-w-0 items-center gap-2 text-qb-micro qb-tablet:mt-2 qb-tablet:text-qb-caption qb-desktop:text-qb-body">
+              <span className="shrink-0 font-semibold text-qb-brand">
+                {formatAdPrice(conversation.ad)}
+              </span>
+              <span aria-hidden="true" className="text-qb-ink-disabled">
+                •
+              </span>
+              <span className="truncate text-qb-ink-subtle">
+                <bdi>{conversation.other_participant.full_name}</bdi>
+              </span>
+            </span>
           </span>
-          <Avatar className="size-9">
-            {conversation.other_participant.avatar_thumb_url ? (
-              <Image
-                src={conversation.other_participant.avatar_thumb_url}
-                alt={conversation.other_participant.full_name}
-                width={36}
-                height={36}
-                className="size-full rounded-full object-cover"
-              />
-            ) : (
-              <AvatarFallback>
-                {conversation.other_participant.full_name.charAt(0) || '?'}
-              </AvatarFallback>
-            )}
-          </Avatar>
-        </div>
+        </Link>
       </header>
 
       <MessageList conversationId={conversationId} />
 
       {/* Height is always reserved (min-h-5) so the indicator appearing or
           decaying never shifts the message list / input. */}
-      <p
-        className="text-ink-500 min-h-5 shrink-0 px-4 text-[11px]"
-        aria-live="polite"
-      >
+      <p className="min-h-5 shrink-0 px-6 text-qb-micro text-qb-ink-subtle" aria-live="polite">
         {isPeerTyping ? t('messaging.typing', 'يكتب الآن…') : null}
       </p>
 

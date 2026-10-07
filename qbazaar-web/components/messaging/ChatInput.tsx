@@ -9,9 +9,9 @@
  *   accidental duplicates (the optimistic insert already shows on screen).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { SendIcon, Loader2Icon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Loader2, Send } from 'lucide-react';
+
+import { focusRing } from '@/components/design-system/focus-ring';
 import { cn } from '@/lib/utils';
 import { useSendMessageMutation } from '@/lib/queries/messaging';
 import { t } from '@/lib/i18n/messages';
@@ -31,7 +31,7 @@ interface Props {
 }
 
 const MAX_ROWS = 6;
-const LINE_HEIGHT_PX = 22; // matches text-sm leading
+const LINE_HEIGHT_PX = 21; // matches the 14 px text's normal leading
 
 export function ChatInput({ conversationId, viewerRole, onTyping }: Props) {
   const [body, setBody] = useState('');
@@ -88,39 +88,42 @@ export function ChatInput({ conversationId, viewerRole, onTyping }: Props) {
         e.preventDefault();
         void submit();
       }}
-      className="border-ink-200 bg-card flex items-end gap-2 border-t p-3"
+      className="flex items-end gap-2.5 border-t border-qb-line bg-qb-surface px-[21px] py-3 qb-tablet:border-t-0 qb-tablet:px-6 qb-tablet:pb-6 qb-desktop:px-6 qb-desktop:pb-8"
     >
-      <Textarea
-        ref={textareaRef}
-        value={body}
-        onChange={(e) => {
-          setBody(e.target.value);
-          onTyping?.();
-        }}
-        onKeyDown={onKeyDown}
-        placeholder={t('messaging.placeholder', 'اكتب رسالتك…')}
-        rows={1}
-        className={cn(
-          'bg-cream-100 border-none flex-1 resize-none rounded-2xl px-4 py-2 text-sm',
-        )}
-        aria-label={t('messaging.placeholder', 'اكتب رسالتك…')}
-      />
+      <div className="flex min-w-0 flex-1 items-end gap-2 rounded-qb-md border border-qb-line bg-qb-surface py-1.5 ps-4 pe-2 shadow-qb-soft focus-within:border-qb-brand qb-desktop:rounded-qb-sm">
+        <textarea
+          ref={textareaRef}
+          value={body}
+          onChange={(e) => {
+            setBody(e.target.value);
+            onTyping?.();
+          }}
+          onKeyDown={onKeyDown}
+          placeholder={t('messaging.placeholder', 'اكتب رسالتك…')}
+          rows={1}
+          className="max-h-[148px] min-h-9 flex-1 resize-none bg-transparent py-2 font-qb text-qb-caption text-qb-ink outline-none placeholder:text-qb-placeholder"
+          aria-label={t('messaging.placeholder', 'اكتب رسالتك…')}
+        />
+        <button
+          type="submit"
+          disabled={mutation.isPending || body.trim().length === 0}
+          className={cn(
+            'mb-0.5 inline-flex h-[29px] w-[31px] shrink-0 items-center justify-center rounded-qb-xs bg-qb-brand text-white shadow-qb-soft transition-colors hover:bg-qb-brand-hover',
+            'disabled:cursor-not-allowed disabled:bg-qb-line disabled:text-qb-surface',
+            focusRing,
+          )}
+          aria-label={t('messaging.send', 'إرسال')}
+        >
+          {mutation.isPending ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Send className="size-4 rtl:-scale-x-100" aria-hidden="true" />
+          )}
+        </button>
+      </div>
       {viewerRole === 'buyer' ? (
         <OfferComposer conversationId={conversationId} />
       ) : null}
-      <Button
-        type="submit"
-        size="icon"
-        disabled={mutation.isPending || body.trim().length === 0}
-        className="bg-coral hover:bg-coral/90 shrink-0 rounded-full text-white"
-        aria-label={t('messaging.send', 'إرسال')}
-      >
-        {mutation.isPending ? (
-          <Loader2Icon className="size-4 animate-spin" aria-hidden />
-        ) : (
-          <SendIcon className="size-4 rtl:rotate-180" aria-hidden />
-        )}
-      </Button>
     </form>
   );
 }

@@ -2,50 +2,24 @@
 
 import { useEffect } from 'react';
 
-import { t } from '@/lib/i18n/messages';
+import { ErrorView } from '@/components/status/ErrorView';
 
 /**
- * Route-level error boundary. Catches render/runtime errors in any page so the
- * user sees a recoverable message instead of a blank screen.
+ * Route-level error boundary: a recoverable message instead of a blank
+ * screen. No Figma frame: built like "Search Not Found" (655:55973).
  */
 export default function Error({
   error,
-  reset,
+  unstable_retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  /** Re-fetches and re-renders the segment (Next.js 16.2), so server errors can recover too. */
+  unstable_retry: () => void;
 }) {
   useEffect(() => {
     // Surface to the console (and any wired error tracker) for diagnosis.
     console.error(error);
   }, [error]);
 
-  return (
-    <main
-      style={{
-        minHeight: '60vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 14,
-        padding: '48px 16px',
-        textAlign: 'center',
-      }}
-    >
-      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800 }}>
-        {t('errors.generic_title', 'حدث خطأ ما')}
-      </h1>
-      <p style={{ margin: 0, maxWidth: 460, color: 'var(--ink-700)' }}>
-        {t('errors.generic_body', 'واجهنا مشكلة غير متوقعة. حاول مرة أخرى.')}
-      </p>
-      <button
-        type="button"
-        onClick={reset}
-        className="btn btn--primary btn--pill"
-      >
-        {t('errors.retry', 'إعادة المحاولة')}
-      </button>
-    </main>
-  );
+  return <ErrorView onRetry={unstable_retry} />;
 }

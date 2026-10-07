@@ -1,10 +1,11 @@
 /**
  * TanStack Query hooks for the help center domain (Sprint 12).
  *
+ * The topic list and topic pages are read on the server (lib/api/help-server).
+ *
  * Caching strategy:
- * - Categories list: 1h — the catalogue rarely changes.
  * - Category / article detail: 1h — instant back-navigation on the same hop.
- * - Search: 5m, and only fires when `q.trim().length >= 2` so the user
+ * - Search: 5m, and only fires from MIN_HELP_QUERY_LENGTH characters so the user
  *   doesn't trigger a query on every keystroke. Debouncing happens upstream
  *   in `HelpSearchBar`; we also guard here to avoid surprise refetches.
  */
@@ -12,38 +13,24 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import {
   getHelpArticle,
   getHelpCategory,
-  listHelpCategories,
   searchHelp,
   type HelpCategoryWithArticles,
 } from '@/lib/api/help';
 import type { ApiClientError } from '@/lib/api/auth';
-import type {
-  HelpArticle,
-  HelpArticleListItem,
-  HelpCategory,
-} from '@/lib/api/types';
+import type { HelpArticle, HelpArticleListItem } from '@/lib/api/types';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
 
+/** Shortest help search the API is asked for. */
+export const MIN_HELP_QUERY_LENGTH = 2;
+
 export const helpKeys = {
   all: ['help'] as const,
-  categories: () => [...helpKeys.all, 'categories'] as const,
   category: (slug: string) => [...helpKeys.all, 'category', slug] as const,
   article: (slug: string) => [...helpKeys.all, 'article', slug] as const,
   search: (q: string) => [...helpKeys.all, 'search', q] as const,
 };
-
-export function useHelpCategoriesQuery(): UseQueryResult<
-  HelpCategory[],
-  ApiClientError
-> {
-  return useQuery<HelpCategory[], ApiClientError>({
-    queryKey: helpKeys.categories(),
-    queryFn: () => listHelpCategories(),
-    staleTime: HOUR,
-  });
-}
 
 export function useHelpCategoryQuery(
   slug: string,
@@ -75,7 +62,7 @@ export function useHelpSearchQuery(
     queryKey: helpKeys.search(trimmed),
     queryFn: () => searchHelp(trimmed),
     staleTime: 5 * MINUTE,
-    enabled: trimmed.length >= 2,
+    enabled: trimmed.length >= MIN_HELP_QUERY_LENGTH,
     placeholderData: (prev) => prev,
   });
 }

@@ -1,51 +1,37 @@
 'use client';
 
 /**
- * FE-2.7 — Data & account.
- *
- * Three stacked cards, each a self-contained action:
+ * FE-2.7 — Data & account (Delete Account, 401:10866 / 438:18762).
  *
  *   1. Export my data           POST  /account/data-export-request
  *   2. Deactivate my account    POST  /account/deactivate
  *   3. Delete my account        DELETE /account/delete-request
  *
  * Steps 2 & 3 both require the current password (so a hijacked session
- * can't kill an account) and accept an optional reason. After success
- * we sign the user out + redirect to `/login` with a sticky notice
- * (`?deactivated=1` or `?deleted=1`) so the login page can explain what
- * happened next.
+ * can't kill an account) and accept an optional reason; the delete reason is
+ * picked from the design's list. After success we sign the user out +
+ * redirect to `/login` with a sticky notice (`?deactivated=1` or
+ * `?deleted=1`) so the login page can explain what happened next.
  *
  * The export action keeps the user on this page — the actual file is
  * delivered out-of-band over email.
  */
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  DatabaseIcon,
-  DownloadCloudIcon,
-  Loader2Icon,
-  PowerIcon,
-  Trash2Icon,
-} from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { FieldError } from '@/components/auth/FieldError';
+import { Button } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { Textarea } from '@/components/design-system/Input';
+import { Modal } from '@/components/design-system/Modal';
+import { announcedError } from '@/components/auth/FieldError';
+import { PasswordInput } from '@/components/auth/PasswordInput';
+import { ModalActions } from '@/components/account/ModalActions';
+import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import {
@@ -63,30 +49,27 @@ import {
 } from '@/lib/validation/account';
 import { useAuth } from '@/hooks/useAuth';
 
+type LifecycleInput = DeactivateInput | DeleteAccountInput;
+type LifecycleFlow = 'deactivate' | 'delete';
+
+const DELETE_REASONS = ['not_using', 'other_account', 'problems', 'privacy', 'prefer_not', 'something_else'] as const;
+type DeleteReason = (typeof DELETE_REASONS)[number];
+
 export default function AccountDataPage() {
   return (
-    <section className="space-y-6">
-      <header className="space-y-1.5">
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-          {t('account.data.title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {t('account.data.subtitle')}
-        </p>
-      </header>
-
-      <div className="space-y-5">
-        <ExportDataCard />
-        <DeactivateAccountCard />
-        <DeleteAccountCard />
-      </div>
-    </section>
+    <SettingsPanel title={t('account.data.title')} description={t('account.data.subtitle')}>
+      <SettingsList>
+        <ExportDataRow />
+        <DeactivateAccountRow />
+      </SettingsList>
+      <DeleteAccountSection />
+    </SettingsPanel>
   );
 }
 
 // ── 1. Export ─────────────────────────────────────────────────────────────
 
-function ExportDataCard() {
+function ExportDataRow() {
   const [queued, setQueued] = useState(false);
 
   const mutation = useMutation({
@@ -106,31 +89,23 @@ function ExportDataCard() {
   });
 
   return (
-    <article
-      aria-labelledby="export-data-title"
-      className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1 sm:p-7"
-    >
-      <CardHeading
-        id="export-data-title"
-        icon={<DatabaseIcon className="text-coral size-5" aria-hidden />}
-        title={t('account.data.export.title')}
-        body={t('account.data.export.body')}
-      />
-
-      {queued ? (
-        <div
-          role="status"
-          className="bg-sage/10 border-sage/30 text-ink-700 mt-4 space-y-2 rounded-xl border px-4 py-3 text-sm"
-        >
-          <p className="text-ink-900 font-semibold">
-            {t('account.data.export.queued_title')}
-          </p>
-          <p>{t('account.data.export.queued_body')}</p>
+    <SettingsRow
+      value={t('account.data.export.title')}
+      description={
+        queued ? (
+          <span role="status">
+            <span className="block font-semibold text-qb-success">{t('account.data.export.queued_title')}</span>
+            {t('account.data.export.queued_body')}
+          </span>
+        ) : (
+          t('account.data.export.body')
+        )
+      }
+      action={
+        queued ? (
           <Button
-            type="button"
             variant="outline"
-            size="default"
-            className="rounded-full"
+            size="sm"
             onClick={() => {
               setQueued(false);
               mutation.reset();
@@ -138,394 +113,253 @@ function ExportDataCard() {
           >
             {t('account.data.export.request_again')}
           </Button>
-        </div>
-      ) : (
-        <Button
-          type="button"
-          size="default"
-          className="mt-4 rounded-full"
-          onClick={() => mutation.mutate()}
-          disabled={mutation.isPending}
-        >
-          {mutation.isPending ? (
-            <>
-              <Loader2Icon className="size-4 animate-spin" aria-hidden />
-              {t('account.data.export.submitting')}
-            </>
-          ) : (
-            <>
-              <DownloadCloudIcon className="size-4" aria-hidden />
-              {t('account.data.export.submit')}
-            </>
-          )}
-        </Button>
-      )}
-    </article>
+        ) : (
+          <Button variant="outline" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="animate-spin" aria-hidden="true" />
+                {t('account.data.export.submitting')}
+              </>
+            ) : (
+              t('account.data.export.submit')
+            )}
+          </Button>
+        )
+      }
+    />
   );
 }
 
 // ── 2. Deactivate ─────────────────────────────────────────────────────────
 
-function DeactivateAccountCard() {
+function DeactivateAccountRow() {
   const router = useRouter();
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
 
-  const form = useForm<DeactivateInput>({
-    resolver: zodResolver(deactivateSchema),
-    mode: 'onBlur',
-    defaultValues: { password: '', reason: '' },
-  });
-
-  const mutation = useMutation({
-    mutationFn: deactivateAccount,
-    onSuccess: async () => {
-      // Sign the user out locally so the deactivated session can't keep poking
-      // protected endpoints; the toast is the user-visible confirmation.
-      await logout();
-      router.replace('/login?deactivated=1');
-    },
-  });
-
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      await mutation.mutateAsync({
-        password: values.password,
-        reason: values.reason ?? null,
-      });
-    } catch (err) {
-      handleLifecycleError(err, form, 'deactivate');
-    }
-  });
-
-  const submitting = form.formState.isSubmitting || mutation.isPending;
-  const errors = form.formState.errors;
-
   return (
-    <article
-      aria-labelledby="deactivate-account-title"
-      className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1 sm:p-7"
-    >
-      <CardHeading
-        id="deactivate-account-title"
-        icon={<PowerIcon className="text-coral size-5" aria-hidden />}
-        title={t('account.data.deactivate.title')}
-        body={t('account.data.deactivate.body')}
+    <>
+      <SettingsRow
+        value={t('account.data.deactivate.title')}
+        description={t('account.data.deactivate.body')}
+        action={
+          <Button variant="danger" size="sm" onClick={() => setOpen(true)}>
+            {t('account.data.deactivate.submit')}
+          </Button>
+        }
       />
-
-      <Dialog
+      <LifecycleDialog
+        flow="deactivate"
         open={open}
-        onOpenChange={(next) => {
-          if (!next && submitting) return;
-          if (!next) form.reset({ password: '', reason: '' });
-          setOpen(next);
+        onOpenChange={setOpen}
+        title={t('account.data.deactivate.dialog_title')}
+        description={t('account.data.deactivate.dialog_body')}
+        withReason
+        onConfirm={async (values) => {
+          await deactivateAccount({ password: values.password, reason: values.reason ?? null });
+          // Sign the user out locally so the deactivated session can't keep poking
+          // protected endpoints; the login notice is the user-visible confirmation.
+          await logout();
+          router.replace('/login?deactivated=1');
         }}
-      >
-        <Button
-          type="button"
-          variant="outline"
-          size="default"
-          className="border-coral/40 text-coral hover:bg-coral/10 mt-4 rounded-full"
-          onClick={() => setOpen(true)}
-        >
-          {t('account.data.deactivate.submit')}
-        </Button>
-
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {t('account.data.deactivate.dialog_title')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('account.data.deactivate.dialog_body')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={onSubmit} noValidate className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="deactivate-password">
-                {t('account.data.deactivate.password_label')}
-              </Label>
-              <Input
-                id="deactivate-password"
-                type="password"
-                autoComplete="current-password"
-                dir="ltr"
-                placeholder="••••••••"
-                aria-invalid={Boolean(errors.password)}
-                aria-describedby={
-                  errors.password ? 'deactivate-password-error' : undefined
-                }
-                className="h-10"
-                {...form.register('password')}
-              />
-              <FieldError
-                id="deactivate-password-error"
-                message={errors.password?.message}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="deactivate-reason">
-                {t('account.data.deactivate.reason_label')}
-              </Label>
-              <Textarea
-                id="deactivate-reason"
-                rows={3}
-                maxLength={280}
-                placeholder={t('account.data.deactivate.reason_placeholder')}
-                aria-invalid={Boolean(errors.reason)}
-                aria-describedby={
-                  errors.reason ? 'deactivate-reason-error' : undefined
-                }
-                {...form.register('reason')}
-              />
-              <FieldError
-                id="deactivate-reason-error"
-                message={errors.reason?.message}
-              />
-            </div>
-
-            <DialogFooter>
-              <DialogClose
-                render={
-                  <Button
-                    variant="outline"
-                    size="default"
-                    className="rounded-full"
-                    type="button"
-                  >
-                    {t('account.data.deactivate.cancel')}
-                  </Button>
-                }
-              />
-              <Button
-                type="submit"
-                size="default"
-                disabled={submitting}
-                className={cn(
-                  'border-coral/40 text-coral hover:bg-coral/10 rounded-full border bg-transparent',
-                  submitting && 'cursor-progress',
-                )}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2Icon className="size-4 animate-spin" aria-hidden />
-                    {t('account.data.deactivate.confirming')}
-                  </>
-                ) : (
-                  t('account.data.deactivate.confirm')
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </article>
+      />
+    </>
   );
 }
 
 // ── 3. Delete ─────────────────────────────────────────────────────────────
 
-function DeleteAccountCard() {
+function DeleteAccountSection() {
   const router = useRouter();
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState<DeleteReason | null>(null);
+  const [otherReason, setOtherReason] = useState('');
 
-  const form = useForm<DeleteAccountInput>({
-    resolver: zodResolver(deleteAccountSchema),
+  const reasonText =
+    reason === null || reason === 'prefer_not'
+      ? null
+      : reason === 'something_else'
+        ? otherReason.trim() || null
+        : t(`account.data.delete.reasons.${reason}`);
+
+  return (
+    <section aria-labelledby="delete-account-title" className="mt-10 qb-desktop:mt-12">
+      <h2 id="delete-account-title" className="text-qb-body-lg font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5">
+        {t('account.data.delete.title')}
+      </h2>
+      <p className="mt-2 text-qb-caption text-qb-ink-subtle">{t('account.data.delete.body')}</p>
+
+      <fieldset className="mt-6">
+        <legend className="text-qb-body font-medium text-qb-ink-body">{t('account.data.delete.reason_question')}</legend>
+        <div className="mt-4 flex flex-col gap-3 qb-desktop:gap-4">
+          {DELETE_REASONS.map((key) => (
+            <label
+              key={key}
+              className={cn(
+                'flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-qb-lg border border-qb-line bg-qb-surface px-4 text-qb-caption font-semibold text-qb-ink-title transition-colors qb-tablet:px-6 qb-desktop:min-h-[72px] qb-desktop:text-qb-body',
+                'has-[:checked]:border-qb-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
+              )}
+            >
+              {t(`account.data.delete.reasons.${key}`)}
+              <input
+                type="radio"
+                name="delete-reason"
+                value={key}
+                checked={reason === key}
+                onChange={() => setReason(key)}
+                className="size-[19px] shrink-0 accent-qb-brand"
+              />
+            </label>
+          ))}
+        </div>
+        {reason === 'something_else' ? (
+          <Field label={t('account.data.delete.reason_label')} className="mt-4">
+            {(control) => (
+              <Textarea
+                {...control}
+                rows={3}
+                maxLength={280}
+                value={otherReason}
+                onChange={(event) => setOtherReason(event.target.value)}
+                placeholder={t('account.data.delete.reason_placeholder')}
+              />
+            )}
+          </Field>
+        ) : null}
+      </fieldset>
+
+      <Button fullWidth onClick={() => setOpen(true)} className="mt-8 h-14 rounded-qb-xl qb-desktop:mt-[44px]">
+        <Trash2 aria-hidden="true" />
+        {t('account.data.delete.submit')}
+      </Button>
+
+      <LifecycleDialog
+        flow="delete"
+        open={open}
+        onOpenChange={setOpen}
+        title={t('account.data.delete.dialog_title')}
+        description={t('account.data.delete.dialog_body')}
+        reason={reasonText}
+        onConfirm={async (values) => {
+          await requestAccountDeletion({ password: values.password, reason: values.reason ?? null });
+          toast.success(t('account.data.delete.scheduled_toast'));
+          await logout();
+          router.replace('/login?deleted=1');
+        }}
+      />
+    </section>
+  );
+}
+
+// ── Shared confirmation dialog ────────────────────────────────────────────
+
+interface LifecycleDialogProps {
+  flow: LifecycleFlow;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  /** Show the free-text reason field (deactivate). */
+  withReason?: boolean;
+  /** Reason picked outside the dialog (delete). */
+  reason?: string | null;
+  onConfirm: (values: LifecycleInput) => Promise<void>;
+}
+
+/** "Delete Account?" confirmation of 438:18762, with the password the API requires. */
+function LifecycleDialog({ flow, open, onOpenChange, title, description, withReason, reason, onConfirm }: LifecycleDialogProps) {
+  const form = useForm<LifecycleInput>({
+    resolver: zodResolver(flow === 'delete' ? deleteAccountSchema : deactivateSchema),
     mode: 'onBlur',
     defaultValues: { password: '', reason: '' },
   });
 
-  const mutation = useMutation({
-    mutationFn: requestAccountDeletion,
-    onSuccess: async () => {
-      toast.success(t('account.data.delete.scheduled_toast'));
-      await logout();
-      router.replace('/login?deleted=1');
-    },
-  });
-
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await mutation.mutateAsync({
-        password: values.password,
-        reason: values.reason ?? null,
-      });
+      await onConfirm(withReason ? values : { password: values.password, reason });
     } catch (err) {
-      handleLifecycleError(err, form, 'delete');
+      handleLifecycleError(err, form, flow);
     }
   });
 
-  const submitting = form.formState.isSubmitting || mutation.isPending;
+  const submitting = form.formState.isSubmitting;
   const errors = form.formState.errors;
+  const prefix = `${flow}-account`;
 
   return (
-    <article
-      aria-labelledby="delete-account-title"
-      className="bg-card ring-destructive/20 rounded-2xl p-5 ring-1 sm:p-7"
+    <Modal
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && submitting) return;
+        if (!next) form.reset({ password: '', reason: '' });
+        onOpenChange(next);
+      }}
+      title={title}
+      description={description}
     >
-      <CardHeading
-        id="delete-account-title"
-        icon={<Trash2Icon className="text-destructive size-5" aria-hidden />}
-        title={t('account.data.delete.title')}
-        body={t('account.data.delete.body')}
-      />
-
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          if (!next && submitting) return;
-          if (!next) form.reset({ password: '', reason: '' });
-          setOpen(next);
-        }}
-      >
-        <Button
-          type="button"
-          size="default"
-          className="bg-destructive text-destructive-foreground hover:bg-destructive/90 mt-4 rounded-full"
-          onClick={() => setOpen(true)}
+      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5 text-start">
+        <Field
+          id={`${prefix}-password`}
+          label={t(`account.data.${flow}.password_label`)}
+          required
+          error={announcedError(errors.password?.message)}
         >
-          <Trash2Icon className="size-4" aria-hidden />
-          {t('account.data.delete.submit')}
-        </Button>
+          {(control) => (
+            <PasswordInput {...control} autoComplete="current-password" placeholder="••••••••" {...form.register('password')} />
+          )}
+        </Field>
 
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {t('account.data.delete.dialog_title')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('account.data.delete.dialog_body')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={onSubmit} noValidate className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="delete-password">
-                {t('account.data.delete.password_label')}
-              </Label>
-              <Input
-                id="delete-password"
-                type="password"
-                autoComplete="current-password"
-                dir="ltr"
-                placeholder="••••••••"
-                aria-invalid={Boolean(errors.password)}
-                aria-describedby={
-                  errors.password ? 'delete-password-error' : undefined
-                }
-                className="h-10"
-                {...form.register('password')}
-              />
-              <FieldError
-                id="delete-password-error"
-                message={errors.password?.message}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="delete-reason">
-                {t('account.data.delete.reason_label')}
-              </Label>
+        {withReason ? (
+          <Field
+            id={`${prefix}-reason`}
+            label={t(`account.data.${flow}.reason_label`)}
+            error={announcedError(errors.reason?.message)}
+          >
+            {(control) => (
               <Textarea
-                id="delete-reason"
+                {...control}
                 rows={3}
                 maxLength={280}
-                placeholder={t('account.data.delete.reason_placeholder')}
-                aria-invalid={Boolean(errors.reason)}
-                aria-describedby={
-                  errors.reason ? 'delete-reason-error' : undefined
-                }
+                placeholder={t(`account.data.${flow}.reason_placeholder`)}
                 {...form.register('reason')}
               />
-              <FieldError
-                id="delete-reason-error"
-                message={errors.reason?.message}
-              />
-            </div>
+            )}
+          </Field>
+        ) : null}
 
-            <DialogFooter>
-              <DialogClose
-                render={
-                  <Button
-                    variant="outline"
-                    size="default"
-                    className="rounded-full"
-                    type="button"
-                  >
-                    {t('account.data.delete.cancel')}
-                  </Button>
-                }
-              />
-              <Button
-                type="submit"
-                size="default"
-                disabled={submitting}
-                className={cn(
-                  'bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full',
-                  submitting && 'cursor-progress',
-                )}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2Icon className="size-4 animate-spin" aria-hidden />
-                    {t('account.data.delete.confirming')}
-                  </>
-                ) : (
-                  t('account.data.delete.confirm')
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </article>
+        <ModalActions className="mt-1">
+          <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
+            {submitting ? (
+              <>
+                <Loader2 className="animate-spin" aria-hidden="true" />
+                {t(`account.data.${flow}.confirming`)}
+              </>
+            ) : (
+              t(`account.data.${flow}.confirm`)
+            )}
+          </Button>
+          <Button type="button" variant="muted" size="sm" disabled={submitting} onClick={() => onOpenChange(false)}>
+            {t(`account.data.${flow}.cancel`)}
+          </Button>
+        </ModalActions>
+      </form>
+    </Modal>
   );
 }
-
-// ── Shared helpers ────────────────────────────────────────────────────────
-
-function CardHeading({
-  id,
-  icon,
-  title,
-  body,
-}: {
-  id: string;
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-}) {
-  return (
-    <header className="space-y-1.5">
-      <h2
-        id={id}
-        className="font-display text-ink-900 inline-flex items-center gap-2 text-xl tracking-tight sm:text-2xl"
-      >
-        {icon}
-        {title}
-      </h2>
-      <p className="text-muted-foreground text-sm">{body}</p>
-    </header>
-  );
-}
-
-type LifecycleForm = DeactivateInput | DeleteAccountInput;
 
 function handleLifecycleError(
   err: unknown,
-  form: ReturnType<typeof useForm<LifecycleForm>>,
-  flow: 'deactivate' | 'delete',
+  form: ReturnType<typeof useForm<LifecycleInput>>,
+  flow: LifecycleFlow,
 ) {
   if (err instanceof ApiClientError) {
     if (err.code === AuthErrorCode.ValidationFailed && err.details) {
-      const known: (keyof LifecycleForm)[] = ['password', 'reason'];
+      const known: (keyof LifecycleInput)[] = ['password', 'reason'];
       let mapped = false;
       for (const [field, messages] of Object.entries(err.details)) {
         if ((known as string[]).includes(field) && messages?.length) {
-          form.setError(field as keyof LifecycleForm, {
+          form.setError(field as keyof LifecycleInput, {
             type: 'server',
             message: messages[0],
           });

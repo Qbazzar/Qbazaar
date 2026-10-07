@@ -23,7 +23,7 @@ export function absoluteUrl(path = ''): string {
   return `${siteUrl()}${suffix}`;
 }
 
-function apiOrigin(): string {
+export function apiOrigin(): string {
   return (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL).replace(/\/+$/, '');
 }
 

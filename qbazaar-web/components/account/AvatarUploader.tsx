@@ -3,7 +3,8 @@
 /**
  * AvatarUploader (FE-2.13)
  *
- * A reusable card that owns the entire avatar-upload journey:
+ * The avatar + "Change Profile photo" control of 393:8828; it owns the whole
+ * upload journey:
  *
  *   pick a file  →  client-side validate  →  crop 1:1 modal  →
  *   POST /uploads/avatar  →  patch the auth store so the new photo
@@ -21,33 +22,23 @@
  * store. We do NOT touch React Query directly here; the consumer can pass
  * `onUploaded` if it wants to invalidate a specific query.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  Loader2Icon,
-  UploadCloudIcon,
-  CameraIcon,
-  ZoomInIcon,
-} from 'lucide-react';
+import { Camera, Loader2, ZoomIn } from 'lucide-react';
 import Cropper, { type Area } from 'react-easy-crop';
 
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Avatar } from '@/components/design-system/Avatar';
+import { Button } from '@/components/design-system/Button';
+import { Modal } from '@/components/design-system/Modal';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { uploadAvatar } from '@/lib/api/uploads';
 import { ApiClientError } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import type { AvatarUploadResponse } from '@/lib/api/types';
+
+import { ModalActions } from './ModalActions';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -146,13 +137,6 @@ async function cropToBlob(
   });
 }
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
-}
-
 export function AvatarUploader({
   fullName,
   onUploaded,
@@ -166,6 +150,7 @@ export function AvatarUploader({
   const currentAvatar =
     user?.avatar_medium_url ?? user?.avatar_url ?? null;
 
+  const hintId = useId();
   const [dragOver, setDragOver] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
 
@@ -275,182 +260,119 @@ export function AvatarUploader({
   const uploading = mutation.isPending;
 
   return (
-    <section
-      aria-labelledby="avatar-uploader-title"
-      className={cn(
-        'bg-card ring-foreground/10 rounded-2xl p-5 ring-1 sm:p-7',
-        className,
-      )}
-    >
-      <header className="mb-4 space-y-1">
-        <h2
-          id="avatar-uploader-title"
-          className="font-display text-ink-900 text-xl tracking-tight sm:text-2xl"
-        >
-          {t('account.avatar.title')}
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          {t('account.avatar.subtitle')}
-        </p>
-      </header>
-
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <Avatar
-          size="lg"
-          className="size-20 ring-1 ring-foreground/10 sm:size-24"
-        >
-          {currentAvatar ? (
-            <AvatarImage
-              src={currentAvatar}
-              alt={fullName}
-              className="object-cover"
-            />
-          ) : null}
-          <AvatarFallback className="font-display text-coral bg-cream-200 text-2xl">
-            {initials(fullName)}
-          </AvatarFallback>
-        </Avatar>
-
-        <label
-          onDragOver={(event) => {
-            event.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          className={cn(
-            'group/avatar-drop relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed px-4 py-6 text-center transition-colors',
-            dragOver
-              ? 'border-coral bg-coral/5'
-              : 'border-border bg-muted/30 hover:border-coral/50 hover:bg-coral/5',
-            uploading && 'pointer-events-none opacity-60',
-          )}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept={acceptAttr}
-            className="sr-only"
-            onChange={handleFileChange}
-            disabled={uploading}
-            aria-label={t('account.avatar.change')}
-          />
-          <UploadCloudIcon
+    <div className={cn('flex flex-col items-center font-qb', className)}>
+      <label
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        className={cn(
+          'group flex cursor-pointer flex-col items-center gap-[18px] rounded-qb-lg p-2',
+          'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
+          uploading && 'pointer-events-none opacity-60',
+        )}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept={acceptAttr}
+          className="sr-only"
+          onChange={handleFileChange}
+          disabled={uploading}
+          aria-label={t('account.avatar.change_photo')}
+          aria-describedby={hintId}
+        />
+        <span className="relative">
+          <Avatar
+            name={fullName}
+            src={currentAvatar}
+            size="lg"
             className={cn(
-              'text-muted-foreground size-6 transition-colors',
-              dragOver && 'text-coral',
+              'size-[95px] bg-qb-fill text-[36px] font-medium text-qb-ink',
+              dragOver && 'ring-2 ring-qb-brand',
             )}
-            aria-hidden
           />
-          <p className="text-ink-700 text-sm font-medium">
-            {t('account.avatar.drop_label')}{' '}
-            <span className="text-coral underline-offset-2 group-hover/avatar-drop:underline">
-              {t('account.avatar.browse')}
-            </span>
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {t('account.avatar.supported')}
-          </p>
-
-          {currentAvatar ? (
-            <span className="text-muted-foreground mt-2 inline-flex items-center gap-1.5 text-xs">
-              <CameraIcon className="size-3.5" aria-hidden />
-              {t('account.avatar.change')}
-            </span>
-          ) : null}
-        </label>
-      </div>
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 flex items-center justify-center rounded-full bg-qb-overlay text-white opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            {uploading ? <Loader2 className="size-6 animate-spin" /> : <Camera className="size-6" />}
+          </span>
+        </span>
+        <span className="text-qb-body font-medium text-qb-brand group-hover:underline">
+          {t('account.avatar.change_photo')}
+        </span>
+      </label>
+      <p id={hintId} className="mt-1 text-qb-label text-qb-ink-subtle">
+        {t('account.avatar.supported')}
+      </p>
 
       {inlineError ? (
-        <p
-          role="alert"
-          className="border-destructive/30 bg-destructive/5 text-destructive mt-4 rounded-xl border px-3 py-2 text-sm"
-        >
+        <p role="alert" className="mt-3 rounded-qb-md bg-qb-danger-soft px-3 py-2 text-qb-caption text-qb-danger">
           {inlineError}
         </p>
       ) : null}
 
-      <Dialog
+      <Modal
         open={pickedImage !== null}
         onOpenChange={(open) => {
           if (!open && !uploading) closeCropModal();
         }}
+        title={t('account.avatar.crop_title')}
+        description={t('account.avatar.crop_subtitle')}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('account.avatar.crop_title')}</DialogTitle>
-            <DialogDescription>
-              {t('account.avatar.crop_subtitle')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="bg-ink-900 relative aspect-square w-full overflow-hidden rounded-xl">
-            {pickedImage ? (
-              <Cropper
-                image={pickedImage}
-                crop={crop}
-                zoom={zoom}
-                aspect={1}
-                cropShape="round"
-                showGrid={false}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
-              />
-            ) : null}
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="avatar-zoom"
-              className="text-muted-foreground flex items-center gap-2 text-xs font-medium"
-            >
-              <ZoomInIcon className="size-3.5" aria-hidden />
-              {t('account.avatar.crop_zoom_label')}
-            </label>
-            <input
-              id="avatar-zoom"
-              type="range"
-              min={1}
-              max={3}
-              step={0.01}
-              value={zoom}
-              onChange={(event) => setZoom(Number(event.target.value))}
-              className="accent-coral w-full"
-              disabled={uploading}
+        <div className="relative aspect-square w-full overflow-hidden rounded-qb-lg bg-qb-icon">
+          {pickedImage ? (
+            <Cropper
+              image={pickedImage}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
             />
-          </div>
+          ) : null}
+        </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              className="rounded-full"
-              onClick={closeCropModal}
-              disabled={uploading}
-            >
-              {t('account.avatar.crop_cancel')}
-            </Button>
-            <Button
-              type="button"
-              size="default"
-              className="rounded-full"
-              onClick={handleConfirmCrop}
-              disabled={uploading || !croppedArea}
-            >
-              {uploading ? (
-                <>
-                  <Loader2Icon className="size-4 animate-spin" aria-hidden />
-                  {t('account.avatar.uploading')}
-                </>
-              ) : (
-                t('account.avatar.crop_confirm')
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </section>
+        <div className="mt-4 flex flex-col gap-2">
+          <label htmlFor="avatar-zoom" className="flex items-center gap-2 text-qb-label font-medium text-qb-ink-secondary">
+            <ZoomIn className="size-3.5" aria-hidden="true" />
+            {t('account.avatar.crop_zoom_label')}
+          </label>
+          <input
+            id="avatar-zoom"
+            type="range"
+            min={1}
+            max={3}
+            step={0.01}
+            value={zoom}
+            onChange={(event) => setZoom(Number(event.target.value))}
+            className="w-full accent-qb-brand"
+            disabled={uploading}
+          />
+        </div>
+
+        <ModalActions className="mt-6">
+          <Button size="sm" onClick={handleConfirmCrop} disabled={uploading || !croppedArea}>
+            {uploading ? (
+              <>
+                <Loader2 className="animate-spin" aria-hidden="true" />
+                {t('account.avatar.uploading')}
+              </>
+            ) : (
+              t('account.avatar.crop_confirm')
+            )}
+          </Button>
+          <Button variant="muted" size="sm" onClick={closeCropModal} disabled={uploading}>
+            {t('account.avatar.crop_cancel')}
+          </Button>
+        </ModalActions>
+      </Modal>
+    </div>
   );
 }

@@ -5,6 +5,7 @@
  * we just pick the right unit per delta. For deltas older than a week we
  * fall back to a short date so timestamps stay readable.
  */
+import { intlLocale } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 
 const MINUTE = 60_000;
@@ -17,8 +18,7 @@ export function formatRelativeTime(iso: string | null): string {
   const ts = new Date(iso).getTime();
   if (Number.isNaN(ts)) return '';
 
-  const locale = getLocale();
-  const lang = locale === 'ar' ? 'ar-EG' : 'en-US';
+  const lang = intlLocale(getLocale());
   const now = Date.now();
   const diff = now - ts;
 
@@ -36,9 +36,7 @@ export function formatRelativeTime(iso: string | null): string {
 }
 
 export function formatClockTime(iso: string): string {
-  const locale = getLocale();
-  const lang = locale === 'ar' ? 'ar-EG' : 'en-US';
-  return new Intl.DateTimeFormat(lang, {
+  return new Intl.DateTimeFormat(intlLocale(getLocale()), {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(iso));
@@ -46,7 +44,7 @@ export function formatClockTime(iso: string): string {
 
 export function formatDaySeparator(iso: string): string {
   const locale = getLocale();
-  const lang = locale === 'ar' ? 'ar-EG' : 'en-US';
+  const lang = intlLocale(locale);
   const ts = new Date(iso);
   const today = new Date();
   const yesterday = new Date();
