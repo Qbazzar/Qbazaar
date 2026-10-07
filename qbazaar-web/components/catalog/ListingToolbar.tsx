@@ -32,7 +32,7 @@ export function ListingToolbar({ filters, sort, view, actions }: ListingToolbarP
       {filters || sort ? (
         <div className={cn(toolbarPill, 'h-10 qb-tablet:h-11 qb-desktop:h-14 qb-desktop:rounded-qb-sm', !sort && 'qb-desktop:hidden')}>
           {filters ? <div className="flex h-full qb-desktop:hidden">{filters}</div> : null}
-          {filters && sort ? <span aria-hidden="true" className="h-5 w-px bg-qb-line qb-desktop:hidden" /> : null}
+          {filters && sort ? <span aria-hidden="true" className="w-px self-stretch bg-qb-line qb-desktop:hidden" /> : null}
           {sort ? <SortSelect {...sort} /> : null}
         </div>
       ) : (
@@ -58,14 +58,14 @@ function SortSelect({ value, onChange }: { value: SortMode; onChange: (next: Sor
         value={value}
         onChange={(event) => onChange(SORT_MODES.find((mode) => mode === event.target.value) ?? 'latest')}
         className={cn(
-          'h-full cursor-pointer appearance-none rounded-qb-md bg-transparent ps-3 pe-8 font-qb text-qb-micro text-qb-ink',
+          'field-sizing-content h-full cursor-pointer appearance-none rounded-qb-md bg-transparent ps-3 pe-8 font-qb text-qb-micro text-qb-ink',
           'qb-tablet:ps-4 qb-tablet:pe-10 qb-tablet:text-qb-body qb-desktop:min-w-[221px] qb-desktop:pe-12 qb-desktop:text-qb-h5',
           focusRing,
         )}
       >
         {SORT_MODES.map((mode) => (
           <option key={mode} value={mode}>
-            {t(`search.sort.${mode}`)}
+            {t(`catalog.sort.${mode}`)}
           </option>
         ))}
       </select>

@@ -7,10 +7,12 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { Input } from '@/components/design-system/Input';
 import { Pagination } from '@/components/design-system/Pagination';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { useMainCategoriesQuery } from '@/lib/queries/categories';
 import type { Category } from '@/lib/api/types';
 
@@ -43,8 +45,8 @@ export function CategoryIndexStats() {
   return (
     <CatalogStats
       items={[
-        { value: formatNumber(data.length, locale), label: t('catalog.stats.categories', 'قسم') },
-        ...todayStat(today, t('catalog.stats.ads_today', 'إعلان اليوم'), locale),
+        { value: formatNumber(data.length, locale), label: tPlural('catalog.stats.categories', data.length) },
+        ...todayStat(today, tPlural('catalog.stats.ads_today', today), locale),
       ]}
     />
   );
@@ -93,14 +95,14 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-4 flex items-center text-qb-ink-subtle qb-tablet:start-5">
           <Icon icon={Search} className="size-5 qb-tablet:size-6" />
         </span>
-        <input
+        <Input
           id="category-search"
           type="search"
           value={query}
           onChange={(event) => changeQuery(event.target.value)}
           placeholder={t('catalog.index.search_placeholder', 'ابحث في الأقسام…')}
           autoComplete="off"
-          className="h-11 w-full rounded-[14px] border border-qb-line bg-qb-surface ps-11 pe-4 text-qb-caption text-qb-ink shadow-qb-card outline-none placeholder:text-qb-placeholder focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20 qb-tablet:h-14 qb-tablet:rounded-qb-xl qb-tablet:ps-14 qb-tablet:pe-32 qb-tablet:text-qb-body qb-desktop:text-qb-h5 [&::-webkit-search-cancel-button]:appearance-none"
+          className="h-11 rounded-[14px] ps-11 pe-4 text-qb-caption shadow-qb-card qb-tablet:h-14 qb-tablet:rounded-qb-xl qb-tablet:ps-14 qb-tablet:pe-32 qb-tablet:text-qb-body qb-desktop:text-qb-h5 [&::-webkit-search-cancel-button]:appearance-none"
         />
         <Button type="submit" size="sm" className="absolute inset-y-2 end-2 hidden h-auto rounded-qb-sm px-[30px] text-qb-body qb-tablet:inline-flex">
           {t('catalog.index.search_submit', 'بحث')}
@@ -108,7 +110,7 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
       </form>
 
       <p aria-live="polite" className="sr-only">
-        {data && query ? t('catalog.index.matches', { count: formatNumber(matches.length, locale) }, '{count} قسم') : ''}
+        {data && query ? tPlural('catalog.index.matches', matches.length) : ''}
       </p>
 
       {isLoading ? (
@@ -129,7 +131,7 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
                     href={`/c/${category.slug}`}
                     name={localized(category.name, locale)}
                     icon={category.icon}
-                    count={t('categories.ads_count', { count: formatNumber(category.ads_count, locale) }, `${formatNumber(category.ads_count, locale)} إعلان`)}
+                    count={tPlural('catalog.ads_count', category.ads_count)}
                   />
                 </li>
               ))}

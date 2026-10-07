@@ -44,8 +44,16 @@ export function parsePrice(raw: string | null | undefined): number | null {
 }
 
 /** True when both bounds are set and the maximum is below the minimum. */
-export function isPriceRangeInvalid(min: number | null, max: number | null): boolean {
-  return min !== null && max !== null && max < min;
+export function isRangeInvalid(min: number | null | undefined, max: number | null | undefined): boolean {
+  return min != null && max != null && max < min;
+}
+
+/** True when the price range or a numeric custom-field range is reversed; such filters cannot apply. */
+export function hasInvalidRange(values: FilterValues): boolean {
+  return (
+    isRangeInvalid(values.priceMin, values.priceMax) ||
+    Object.values(values.customFields).some((value) => typeof value === 'object' && isRangeInvalid(value.min, value.max))
+  );
 }
 
 function sameCustomFields(a: CustomFieldsFilter, b: CustomFieldsFilter): boolean {

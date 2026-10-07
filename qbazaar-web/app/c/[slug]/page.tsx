@@ -10,6 +10,7 @@ import { findCategoryPath } from '@/store/categories';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { CatalogPageSkeleton } from '@/components/catalog/CatalogPageSkeleton';
 import { resolveCategoryPath } from '@/components/catalog/resolved-category';
+import { ResultsFocusProvider } from '@/components/catalog/results-focus';
 import { CategoryDetailClient } from './CategoryDetailClient';
 
 interface PageProps {
@@ -62,7 +63,9 @@ export default async function CategoryDetailPage({ params }: PageProps) {
     <>
       <JsonLd data={breadcrumb} />
       <Suspense fallback={<CatalogPageSkeleton title={category?.trail.at(-1)?.name} />}>
-        <CategoryDetailClient slug={slug} initial={category} />
+        <ResultsFocusProvider>
+          <CategoryDetailClient slug={slug} initial={category} />
+        </ResultsFocusProvider>
       </Suspense>
     </>
   );

@@ -488,12 +488,47 @@
       "categories": "الأقسام"
     },
     "stats": {
-      "ads": "إعلان",
+      "ads": {
+        "zero": "إعلان",
+        "one": "إعلان",
+        "two": "إعلان",
+        "few": "إعلانات",
+        "many": "إعلانًا",
+        "other": "إعلان"
+      },
       "today": "اليوم",
-      "ads_today": "إعلان اليوم",
-      "categories": "قسم",
-      "subcategories": "قسم فرعي",
-      "results": "نتيجة"
+      "ads_today": {
+        "zero": "إعلان اليوم",
+        "one": "إعلان اليوم",
+        "two": "إعلان اليوم",
+        "few": "إعلانات اليوم",
+        "many": "إعلانًا اليوم",
+        "other": "إعلان اليوم"
+      },
+      "categories": {
+        "zero": "قسم",
+        "one": "قسم",
+        "two": "قسم",
+        "few": "أقسام",
+        "many": "قسمًا",
+        "other": "قسم"
+      },
+      "subcategories": {
+        "zero": "قسم فرعي",
+        "one": "قسم فرعي",
+        "two": "قسم فرعي",
+        "few": "أقسام فرعية",
+        "many": "قسمًا فرعيًا",
+        "other": "قسم فرعي"
+      },
+      "results": {
+        "zero": "نتيجة",
+        "one": "نتيجة",
+        "two": "نتيجة",
+        "few": "نتائج",
+        "many": "نتيجة",
+        "other": "نتيجة"
+      }
     },
     "index": {
       "discover_start": "اكتشف",
@@ -502,7 +537,14 @@
       "search_label": "ابحث في الأقسام",
       "search_placeholder": "ابحث في الأقسام…",
       "search_submit": "بحث",
-      "matches": "{count} قسم",
+      "matches": {
+        "zero": "لا توجد أقسام",
+        "one": "قسم واحد",
+        "two": "قسمان",
+        "few": "{count} أقسام",
+        "many": "{count} قسمًا",
+        "other": "{count} قسم"
+      },
       "no_matches_title": "لا توجد أقسام مطابقة",
       "no_matches": "لم نجد قسماً باسم «{query}»."
     },
@@ -520,13 +562,21 @@
       "heading": "لم نعثر على نتائج",
       "title": "لا توجد نتائج",
       "text": "لم نعثر على أي شيء يطابق بحثك.",
-      "recommended": "مقترحة لك"
+      "recommended": "مقترحة لك",
+      "load_more": "تحميل المزيد من الإعلانات"
     },
     "filters": {
       "title": "الفلتر",
-      "sheet_title": "الفلاتر",
+      "sheet_title": "فلاتر متقدمة",
       "open": "فلتر",
-      "active_suffix": "فلاتر مفعّلة",
+      "active_suffix": {
+        "zero": "فلتر مفعّل",
+        "one": "فلتر مفعّل",
+        "two": "فلتر مفعّل",
+        "few": "فلاتر مفعّلة",
+        "many": "فلترًا مفعّلًا",
+        "other": "فلتر مفعّل"
+      },
       "apply": "تطبيق الفلتر",
       "reset_all": "إعادة ضبط الكل",
       "any": "الكل",
@@ -561,8 +611,32 @@
       "remove": "إزالة {label}",
       "range_between": "{min} – {max}",
       "range_from": "من {min}",
-      "range_to": "حتى {max}"
-    }
+      "range_to": "حتى {max}",
+      "range_error": "لا يمكن أن يكون الحد الأعلى أقل من الحد الأدنى."
+    },
+    "ads_count": {
+      "zero": "{count} إعلان",
+      "one": "{count} إعلان",
+      "two": "{count} إعلان",
+      "few": "{count} إعلانات",
+      "many": "{count} إعلانًا",
+      "other": "{count} إعلان"
+    },
+    "results_count": {
+      "zero": "لا توجد نتائج",
+      "one": "نتيجة واحدة",
+      "two": "نتيجتان",
+      "few": "{count} نتائج",
+      "many": "{count} نتيجة",
+      "other": "{count} نتيجة"
+    },
+    "sort": {
+      "latest": "الأحدث",
+      "oldest": "الأقدم",
+      "price_asc": "السعر: من الأقل للأعلى",
+      "price_desc": "السعر: من الأعلى للأقل"
+    },
+    "save_search": "احفظ البحث"
   },
   "locations": {
     "all": "كل قطر",

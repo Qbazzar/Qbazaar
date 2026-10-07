@@ -488,12 +488,27 @@
       "categories": "Categories"
     },
     "stats": {
-      "ads": "Ads",
+      "ads": {
+        "one": "Ad",
+        "other": "Ads"
+      },
       "today": "Today",
-      "ads_today": "Ads Today",
-      "categories": "Categories",
-      "subcategories": "Sub Categories",
-      "results": "Results"
+      "ads_today": {
+        "one": "Ad Today",
+        "other": "Ads Today"
+      },
+      "categories": {
+        "one": "Category",
+        "other": "Categories"
+      },
+      "subcategories": {
+        "one": "Sub Category",
+        "other": "Sub Categories"
+      },
+      "results": {
+        "one": "Result",
+        "other": "Results"
+      }
     },
     "index": {
       "discover_start": "Discover",
@@ -502,7 +517,10 @@
       "search_label": "Search categories",
       "search_placeholder": "Search categories…",
       "search_submit": "Search",
-      "matches": "{count} categories",
+      "matches": {
+        "one": "{count} category",
+        "other": "{count} categories"
+      },
       "no_matches_title": "No matching categories",
       "no_matches": "We couldn’t find a category called “{query}”."
     },
@@ -520,13 +538,17 @@
       "heading": "No results found",
       "title": "Search Not Found",
       "text": "We couldn’t find anything matching your search.",
-      "recommended": "Recommended for you"
+      "recommended": "Recommended for you",
+      "load_more": "Load More Ads"
     },
     "filters": {
       "title": "Filter",
-      "sheet_title": "Filters",
+      "sheet_title": "Advanced Filters",
       "open": "Filter",
-      "active_suffix": "filters applied",
+      "active_suffix": {
+        "one": "filter applied",
+        "other": "filters applied"
+      },
       "apply": "Apply Filter",
       "reset_all": "Reset All",
       "any": "Any",
@@ -561,8 +583,24 @@
       "remove": "Remove {label}",
       "range_between": "{min} – {max}",
       "range_from": "From {min}",
-      "range_to": "Up to {max}"
-    }
+      "range_to": "Up to {max}",
+      "range_error": "The maximum can’t be lower than the minimum."
+    },
+    "ads_count": {
+      "one": "{count} Ad",
+      "other": "{count} Ads"
+    },
+    "results_count": {
+      "one": "{count} result",
+      "other": "{count} results"
+    },
+    "sort": {
+      "latest": "Newest",
+      "oldest": "Oldest",
+      "price_asc": "Price: Low to High",
+      "price_desc": "Price: High to Low"
+    },
+    "save_search": "Save Search"
   },
   "locations": {
     "all": "All Qatar",

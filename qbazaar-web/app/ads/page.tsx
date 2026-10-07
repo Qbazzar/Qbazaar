@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
 import { CatalogPageSkeleton } from '@/components/catalog/CatalogPageSkeleton';
+import { ResultsFocusProvider } from '@/components/catalog/results-focus';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { t } from '@/lib/i18n/messages';
 import { AdsListClient } from './AdsListClient';
@@ -22,7 +23,9 @@ export default async function AdsListPage() {
   await resolveServerLocale();
   return (
     <Suspense fallback={<CatalogPageSkeleton title={t('ads.list.title', 'كل الإعلانات')} />}>
-      <AdsListClient />
+      <ResultsFocusProvider>
+        <AdsListClient />
+      </ResultsFocusProvider>
     </Suspense>
   );
 }

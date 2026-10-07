@@ -66,7 +66,7 @@ describe('CategoryIndex', () => {
     render(<CategoryIndex page={1} />);
 
     expect(screen.getByRole('link', { name: /Vehicles/ })).toHaveAttribute('href', '/c/vehicles');
-    expect(screen.getAllByText('1,200 ads')).toHaveLength(3);
+    expect(screen.getAllByText('1,200 Ads')).toHaveLength(3);
   });
 
   it('filters the cards while typing and says when nothing matches', async () => {

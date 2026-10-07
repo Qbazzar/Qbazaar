@@ -21,10 +21,12 @@ import { hasListingParams, listingSearch, parseListingQuery } from '@/components
 import { ListingToolbar } from '@/components/catalog/ListingToolbar';
 import { LoadError } from '@/components/catalog/LoadError';
 import { resolveCategoryPath, type ResolvedCategory } from '@/components/catalog/resolved-category';
+import { useResultsFocusTarget } from '@/components/catalog/results-focus';
 import { SaveSearchButton } from '@/components/search/SaveSearchButton';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { useCategoryPageQuery, useCategoryTreeQuery } from '@/lib/queries/categories';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { findCategoryPath } from '@/store/categories';
@@ -48,7 +50,8 @@ export function CategoryDetailClient({ slug, initial }: Props) {
   const treeQuery = useCategoryTreeQuery();
   const path = findCategoryPath(treeQuery.data, slug);
 
-  if (treeQuery.data && !path) notFound();
+  // The server's tree can be newer than the cached one here, so only a miss on both is a 404.
+  if (treeQuery.data && !path && !initial) notFound();
 
   const node = path?.at(-1) ?? null;
   const category = path ? resolveCategoryPath(path) : initial;
@@ -83,6 +86,8 @@ function CategoryOverview({ slug, title, breadcrumb, node }: OverviewProps) {
   const pageQuery = useCategoryPageQuery(slug);
   const { data: locations } = useQatarLocationsQuery();
   const { filters } = parseListingQuery(searchParams);
+  // Clearing the last filter turns the listing back into this overview, and its controls go with it.
+  const titleRef = useResultsFocusTarget<HTMLHeadingElement>({ onlyIfFocusLost: true });
 
   const applyFilters = (next: FilterValues) => router.push(`${pathname}${listingSearch(searchParams, { filters: next })}`, { scroll: false });
   const groups: FilterGroupKey[] = ['price', 'location'];
@@ -100,8 +105,8 @@ function CategoryOverview({ slug, title, breadcrumb, node }: OverviewProps) {
   const stats =
     counts && subCount !== undefined
       ? [
-          { value: formatNumber(counts.ads_count, locale), label: t('catalog.stats.ads', 'إعلان') },
-          { value: formatNumber(subCount, locale), label: t('catalog.stats.subcategories', 'قسم فرعي') },
+          { value: formatNumber(counts.ads_count, locale), label: tPlural('catalog.stats.ads', counts.ads_count) },
+          { value: formatNumber(subCount, locale), label: tPlural('catalog.stats.subcategories', subCount) },
           ...todayStat(counts.today_count, t('catalog.stats.today', 'اليوم'), locale),
         ]
       : [];
@@ -112,6 +117,7 @@ function CategoryOverview({ slug, title, breadcrumb, node }: OverviewProps) {
       header={
         <CatalogHeader
           title={title}
+          titleRef={titleRef}
           breadcrumb={breadcrumb}
           stats={<CatalogStats items={stats} />}
           actions={<SaveSearchButton params={saveParams} />}

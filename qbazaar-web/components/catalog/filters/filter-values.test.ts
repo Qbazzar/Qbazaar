@@ -5,7 +5,8 @@ import {
   EMPTY_FILTERS,
   countActiveFilters,
   filtersEqual,
-  isPriceRangeInvalid,
+  hasInvalidRange,
+  isRangeInvalid,
   normalizeFilters,
   parseNonNegative,
   parsePrice,
@@ -35,12 +36,18 @@ describe('parsePrice', () => {
   });
 });
 
-describe('isPriceRangeInvalid', () => {
+describe('isRangeInvalid', () => {
   it('only flags a maximum below the minimum', () => {
-    expect(isPriceRangeInvalid(500, 100)).toBe(true);
-    expect(isPriceRangeInvalid(100, 100)).toBe(false);
-    expect(isPriceRangeInvalid(null, 100)).toBe(false);
-    expect(isPriceRangeInvalid(500, null)).toBe(false);
+    expect(isRangeInvalid(500, 100)).toBe(true);
+    expect(isRangeInvalid(100, 100)).toBe(false);
+    expect(isRangeInvalid(null, 100)).toBe(false);
+    expect(isRangeInvalid(500, null)).toBe(false);
+  });
+
+  it('blocks reversed custom-field ranges as well as prices', () => {
+    expect(hasInvalidRange({ ...EMPTY_FILTERS, priceMin: 900, priceMax: 100 })).toBe(true);
+    expect(hasInvalidRange({ ...EMPTY_FILTERS, customFields: { year: { min: 2020, max: 2015 } } })).toBe(true);
+    expect(hasInvalidRange({ ...EMPTY_FILTERS, customFields: { year: { min: 2015 }, make: 'BMW' } })).toBe(false);
   });
 });
 

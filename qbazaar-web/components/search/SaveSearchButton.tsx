@@ -20,15 +20,18 @@ import { Icon } from '@/components/design-system/Icon';
 import { Input } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
-import { headingFont } from '@/components/catalog/layout';
+import { headingFont, toolbarPill } from '@/components/catalog/layout';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useSaveSearchMutation } from '@/lib/queries/search';
 import { ApiClientError } from '@/lib/api/auth';
 import type { SearchQueryParams } from '@/lib/api/types';
 
+/** `SaveSearchRequest.name` in the contract. */
+const NAME_MAX_LENGTH = 60;
+
 const schema = z.object({
-  name: z.string().trim().min(1, 'search.save_search.name_required').max(60, 'search.save_search.name_max'),
+  name: z.string().trim().min(1, 'search.save_search.name_required').max(NAME_MAX_LENGTH, 'search.save_search.name_max'),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -52,10 +55,10 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
   const mutation = useSaveSearchMutation();
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { name: '' } });
 
-  const label = t('search.save_search.button', 'احفظ البحث');
+  const label = t('catalog.save_search', 'احفظ البحث');
   const triggerClass = cn(
-    'inline-flex shrink-0 cursor-pointer items-center rounded-qb-md border border-qb-line bg-qb-surface font-qb text-qb-ink shadow-qb-card transition-colors hover:bg-qb-hover',
-    'disabled:pointer-events-none disabled:opacity-50',
+    toolbarPill,
+    'shrink-0 cursor-pointer font-qb transition-colors hover:bg-qb-hover disabled:pointer-events-none disabled:opacity-50',
     TRIGGER[variant],
     focusRing,
     className,
@@ -106,12 +109,16 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
       }
     >
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
-        <Field label={t('search.save_search.name_label', 'اسم البحث')} error={nameError ? translateMaybeKey(nameError) : undefined} required>
+        <Field
+          label={t('search.save_search.name_label', 'اسم البحث')}
+          error={nameError ? <span role="alert">{translateMaybeKey(nameError)}</span> : undefined}
+          required
+        >
           {(control) => (
             <Input
               {...control}
               autoComplete="off"
-              maxLength={80}
+              maxLength={NAME_MAX_LENGTH}
               placeholder={t('search.save_search.name_placeholder')}
               {...form.register('name')}
             />

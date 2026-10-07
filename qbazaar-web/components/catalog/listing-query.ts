@@ -10,6 +10,9 @@ export const VIEW_MODES: readonly ViewMode[] = ['list', 'grid'];
 const DEFAULT_SORT: SortMode = 'latest';
 const DEFAULT_VIEW: ViewMode = 'list';
 
+/** `GET /ads` serves at most this many pages (`qbazaar.ads.feed_max_page`); deeper ones are a 422. */
+export const FEED_MAX_PAGE = 250;
+
 /** URL state of the plain listings (`/ads`, `/c/[slug]`): the filters `GET /ads` supports. */
 export interface ListingQuery {
   filters: FilterValues;
@@ -44,7 +47,7 @@ export function parseListingQuery(params: ParamReader): ListingQuery {
     },
     sort: parseSort(params.get('sort')),
     view: parseView(params.get('view')),
-    page: parsePage(params.get('page')),
+    page: Math.min(parsePage(params.get('page')), FEED_MAX_PAGE),
   };
 }
 

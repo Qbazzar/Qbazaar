@@ -22,8 +22,9 @@ import {
   AD_TYPES,
   CONDITIONS,
   SHIPPING_OPTIONS,
+  countActiveFilters,
   filtersEqual,
-  isPriceRangeInvalid,
+  hasInvalidRange,
   normalizeFilters,
   type FilterValues,
 } from './filter-values';
@@ -47,27 +48,36 @@ export interface FilterPanelProps {
 
 interface PanelProps extends FilterPanelProps {
   variant: 'sidebar' | 'sheet';
+  /** Applies the filters without a removed chip; defaults to `onApply`. */
+  onRemoveFilter?: (next: FilterValues) => void;
 }
 
 /**
  * The filter form of the listing pages: the sidebar card on desktop (250:4405)
- * and the body of the bottom sheet on tablets and phones (618:26974).
- * Remount it with a `key` of the applied values to reset the draft.
+ * and the body of the bottom sheet on tablets and phones (618:26974). It stays
+ * mounted when new filters apply, so the focus survives, and restarts its
+ * draft from them.
  */
-export function FilterPanel({ variant, groups, values, onApply, onReset, categories, locations, facets }: PanelProps) {
+export function FilterPanel({ variant, groups, values, onApply, onReset, onRemoveFilter = onApply, categories, locations, facets }: PanelProps) {
   const id = useId();
   const locale = getLocale();
   const compact = variant === 'sheet';
   const [draft, setDraft] = useState(values);
+  const appliedKey = JSON.stringify(values);
+  const [draftBase, setDraftBase] = useState(appliedKey);
+  if (draftBase !== appliedKey) {
+    setDraftBase(appliedKey);
+    setDraft(values);
+  }
   const patch = (next: Partial<FilterValues>) => setDraft((current) => ({ ...current, ...next }));
 
-  const invalid = isPriceRangeInvalid(draft.priceMin, draft.priceMax);
+  const invalid = hasInvalidRange(draft);
   const dirty = !filtersEqual(normalizeFilters(draft), values);
   const customFields = filterableFields(draft.category ? findCategoryBySlug(categories, draft.category)?.custom_fields : null);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!invalid) onApply(normalizeFilters(draft));
+    if (dirty && !invalid) onApply(normalizeFilters(draft));
   };
 
   const group = (key: FilterGroupKey) => {
@@ -191,11 +201,15 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, categor
 
   const reset = () => {
     setDraft(values);
-    onReset();
+    if (countActiveFilters(values) > 0) onReset();
   };
 
   const chips = (
-    <ActiveFilterChips chips={activeFilters(values, { categories, locations, locale })} onRemove={onApply} />
+    <ActiveFilterChips
+      chips={activeFilters(values, { categories, locations, locale })}
+      onRemove={onRemoveFilter}
+      focusNextAfterRemove={variant === 'sidebar'}
+    />
   );
 
   const apply = (

@@ -23,12 +23,15 @@ import { SORT_MODES, VIEW_MODES } from '@/components/catalog/listing-query';
 import { ListingResults } from '@/components/catalog/ListingResults';
 import { ListingToolbar } from '@/components/catalog/ListingToolbar';
 import { LoadError } from '@/components/catalog/LoadError';
+import { useRequestResultsFocus } from '@/components/catalog/results-focus';
+import { ResultsHeading } from '@/components/catalog/ResultsHeading';
 import { SaveSearchButton } from '@/components/search/SaveSearchButton';
 import { SearchNotFound } from '@/components/search/SearchNotFound';
 import { decodeCustomFields } from '@/components/search/search-params';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { ApiClientError } from '@/lib/api/auth';
 import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
@@ -63,6 +66,7 @@ export function SearchClient() {
     { history: 'push', shallow: false },
   );
 
+  const requestResultsFocus = useRequestResultsFocus();
   const { data: categoryTree } = useCategoryTreeQuery();
   const { data: locationTree } = useQatarLocationsQuery();
   const selectedCategory = urlState.category_slug ? findCategoryBySlug(categoryTree, urlState.category_slug) : null;
@@ -129,11 +133,22 @@ export function SearchClient() {
   if (!isLoading && !isError && total === 0) {
     return (
       <SearchNotFound
-        key={urlState.q}
         query={urlState.q}
         breadcrumb={breadcrumb}
-        onSearch={(q) => setUrlState({ q: q || null, page: 1 })}
-        onReset={hasFilters ? resetFilters : undefined}
+        searching={isFetching}
+        onSearch={(q) => {
+          if (q === urlState.q) return;
+          requestResultsFocus();
+          setUrlState({ q: q || null, page: 1 });
+        }}
+        onReset={
+          hasFilters
+            ? () => {
+                requestResultsFocus();
+                resetFilters();
+              }
+            : undefined
+        }
       />
     );
   }
@@ -152,7 +167,7 @@ export function SearchClient() {
         <CatalogHeader
           title={title}
           breadcrumb={breadcrumb}
-          stats={<CatalogStats items={data ? [{ value: formatNumber(total, locale), label: t('catalog.stats.results', 'نتيجة') }] : []} />}
+          stats={<CatalogStats items={data ? [{ value: formatNumber(total, locale), label: tPlural('catalog.stats.results', total) }] : []} />}
           actions={<SaveSearchButton params={searchFilters} />}
         />
       }
@@ -166,7 +181,7 @@ export function SearchClient() {
         />
       }
     >
-      <h2 className="sr-only">{t('catalog.results_heading', 'النتائج')}</h2>
+      <ResultsHeading loading={isFetching} total={data?.meta.total} />
       {isError ? (
         <LoadError headingLevel="h3" title={searchErrorMessage(error)} onRetry={() => refetch()} />
       ) : (

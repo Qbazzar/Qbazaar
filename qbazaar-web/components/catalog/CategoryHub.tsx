@@ -3,19 +3,18 @@
 import { useId, useState } from 'react';
 import { ChevronDown, LayoutGrid } from 'lucide-react';
 
-import { AdSummaryCard } from '@/components/ads/AdSummaryCard';
 import { Button } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
-import { formatNumber } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { cn } from '@/lib/utils';
-import type { AdSummary, Category, CategorySection } from '@/lib/api/types';
+import type { Category, CategorySection } from '@/lib/api/types';
 
+import { AdRow } from './AdRow';
 import { SubcategoryTile } from './CategoryTile';
-import { catalogBleed } from './layout';
 
 /** Sections shown before the sub-category tiles, as in 18:912. */
 const SECTIONS_BEFORE_TILES = 2;
@@ -23,6 +22,10 @@ const SECTIONS_BEFORE_TILES = 2;
 const DESKTOP_CARDS = 3;
 /** Tiles shown before "View More". */
 const INITIAL_TILES = 6;
+
+/** Section titles and "View All" at the size of the tiles' heading: 20 and 14 px on phones, 28 and 16 px above (623:28688, 539:35503). */
+const sectionTitleSize =
+  '[&_h2]:text-qb-h5 qb-tablet:[&_h2]:text-qb-h2 [&_a]:text-qb-caption qb-tablet:[&_a]:text-qb-body';
 
 interface CategoryHubProps {
   /** One per active sub-category, in display order (`GET /categories/{slug}`). */
@@ -44,7 +47,7 @@ export function CategoryHub({ sections = [], isLoading }: CategoryHubProps) {
   const after = filled.slice(SECTIONS_BEFORE_TILES);
 
   return (
-    <div className="flex flex-col gap-12 qb-tablet:gap-[38px] qb-desktop:gap-8">
+    <div className="flex flex-col gap-12 pt-5 qb-tablet:gap-[38px] qb-tablet:pt-0 qb-desktop:gap-8">
       {before.map((section) => (
         <AdSection key={section.category.id} section={section} />
       ))}
@@ -72,30 +75,10 @@ function AdSection({ section }: { section: CategorySection }) {
         id={id}
         title={name}
         action={{ href: `/c/${section.category.slug}`, label: t('catalog.view_all', 'عرض الكل') }}
-        className="mb-[26px] qb-tablet:mb-[38px]"
+        className={cn('mb-[26px] qb-tablet:mb-[38px]', sectionTitleSize)}
       />
-      <AdRow ads={section.ads} label={name} />
+      <AdRow ads={section.ads} label={name} desktop="grid" desktopLimit={DESKTOP_CARDS} />
     </section>
-  );
-}
-
-/** Newest ads of one sub-category: three cards on desktop, a swipeable row below. */
-function AdRow({ ads, label }: { ads: AdSummary[]; label: string }) {
-  return (
-    <ul
-      aria-label={label}
-      className={cn(
-        catalogBleed,
-        'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] qb-tablet:gap-3.5 [&::-webkit-scrollbar]:hidden',
-        'qb-desktop:mx-0 qb-desktop:[display:grid] qb-desktop:grid-cols-3 qb-desktop:gap-[17px] qb-desktop:overflow-visible qb-desktop:px-0 qb-desktop:pb-0',
-      )}
-    >
-      {ads.map((ad, index) => (
-        <li key={ad.id} className={cn('w-[250px] shrink-0 snap-start qb-tablet:w-[310px] qb-desktop:w-auto', index >= DESKTOP_CARDS && 'qb-desktop:hidden')}>
-          <AdSummaryCard ad={ad} className="h-full" />
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -118,7 +101,7 @@ function SubcategoryTiles({ subcategories }: { subcategories: Category[] }) {
               href={`/c/${child.slug}`}
               name={localized(child.name, locale)}
               icon={child.icon}
-              count={t('categories.ads_count', { count: formatNumber(child.ads_count, locale) }, `${formatNumber(child.ads_count, locale)} إعلان`)}
+              count={tPlural('catalog.ads_count', child.ads_count)}
               className="h-full"
             />
           </li>
@@ -139,7 +122,7 @@ function SubcategoryTiles({ subcategories }: { subcategories: Category[] }) {
 function HubSkeleton() {
   const card = 'animate-pulse rounded-qb-xl border border-qb-line bg-qb-surface motion-reduce:animate-none';
   return (
-    <div aria-busy="true" className="flex flex-col gap-12 qb-desktop:gap-8">
+    <div aria-busy="true" className="flex flex-col gap-12 pt-5 qb-tablet:gap-[38px] qb-tablet:pt-0 qb-desktop:gap-8">
       <span className="sr-only">{t('common.loading', 'جاري التحميل…')}</span>
       {Array.from({ length: 2 }, (_, row) => (
         <div key={row} aria-hidden="true">

@@ -111,4 +111,37 @@ describe('FilterPanel', () => {
 
     expect(onReset).toHaveBeenCalledOnce();
   });
+
+  it('does not reapply the same filters from the keyboard', async () => {
+    const { onApply, user } = renderPanel({ values: { ...EMPTY_FILTERS, priceMin: 100 } });
+
+    await user.type(screen.getByLabelText('Minimum price (QAR)'), '{Enter}');
+
+    expect(onApply).not.toHaveBeenCalled();
+  });
+
+  it('only clears the draft from "Reset All" when nothing is applied', async () => {
+    const { onReset, user } = renderPanel();
+    const min = screen.getByLabelText('Minimum price (QAR)');
+
+    await user.type(min, '100');
+    await user.click(screen.getByRole('button', { name: 'Reset All' }));
+
+    expect(min).toHaveValue(null);
+    expect(onReset).not.toHaveBeenCalled();
+  });
+
+  it('restarts its draft from newly applied filters without remounting', async () => {
+    const user = userEvent.setup();
+    const props = { variant: 'sidebar' as const, groups: ['price' as const], onApply: vi.fn(), onReset: vi.fn() };
+    const { rerender } = render(<FilterPanel {...props} values={EMPTY_FILTERS} />);
+    const min = screen.getByLabelText('Minimum price (QAR)');
+
+    await user.type(min, '5');
+    rerender(<FilterPanel {...props} values={{ ...EMPTY_FILTERS, priceMin: 100 }} />);
+
+    expect(screen.getByLabelText('Minimum price (QAR)')).toBe(min);
+    expect(min).toHaveValue(100);
+    expect(min).toHaveFocus();
+  });
 });

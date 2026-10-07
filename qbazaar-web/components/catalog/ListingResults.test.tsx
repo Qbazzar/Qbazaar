@@ -45,15 +45,16 @@ describe('ListingResults', () => {
     });
   });
 
-  it('renders each ad as the phone card and the list card, for CSS to pick one', () => {
+  it('renders each ad as the grid card under 1001 px and the list card from there, for CSS to pick one', () => {
     render(<ListingResults ads={ads} view="list" isLoading={false} empty={null} label="Cars" />);
     const list = screen.getByRole('list', { name: 'Cars' });
     const links = screen.getAllByRole('link', { name: 'Ad 1' });
 
     expect(list.children).toHaveLength(2);
     expect(links).toHaveLength(2);
-    expect(links[0].closest('article')).toHaveClass('qb-tablet:hidden');
-    expect(links[1].closest('article')).toHaveClass('hidden', 'qb-tablet:flex');
+    expect(links[0].closest('article')).toHaveClass('qb-desktop:hidden');
+    expect(links[1].closest('article')).toHaveClass('hidden', 'qb-desktop:flex');
+    expect(list).toHaveClass('qb-tablet:grid-cols-2', 'qb-desktop:flex-col');
   });
 
   it('renders one grid card per ad in the grid view', () => {

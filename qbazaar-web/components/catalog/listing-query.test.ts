@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { EMPTY_FILTERS } from './filters/filter-values';
-import { hasListingParams, listingSearch, parseListingQuery } from './listing-query';
+import { FEED_MAX_PAGE, hasListingParams, listingSearch, parseListingQuery } from './listing-query';
 
 const params = (query: string) => new URLSearchParams(query);
 
@@ -25,6 +25,10 @@ describe('parseListingQuery', () => {
     expect(query.sort).toBe('latest');
     expect(query.view).toBe('list');
     expect(query.page).toBe(1);
+  });
+
+  it('stops at the last page the ads feed serves', () => {
+    expect(parseListingQuery(params('page=999')).page).toBe(FEED_MAX_PAGE);
   });
 });
 
