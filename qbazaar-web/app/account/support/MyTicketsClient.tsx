@@ -1,181 +1,113 @@
 'use client';
 
 /**
- * My tickets index — auth-gated by the parent /account/layout.
- *
- * Layout: header + nuqs-driven tab filters (`All`, `Open`, `In Progress`,
- * `Resolved`) + a list of `.ticket-row` cards. Pagination follows the same
- * pattern as the notifications page.
+ * My support tickets — no frame of its own, so it follows the closest
+ * reference (DESIGN-MAP): the My Ads page of 518:20536, with the pill tabs
+ * filtering by status and one row per ticket. `?tab=` keeps the filter in
+ * the URL. Auth-gated by the parent /account/layout.
  */
 import { useState } from 'react';
 import Link from 'next/link';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
-import { Loader2Icon, PlusIcon } from 'lucide-react';
+import { LifeBuoy, Plus } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { TicketStatusPill } from '@/components/support/TicketStatusPill';
-import { TicketPriorityPill } from '@/components/support/TicketPriorityPill';
+import { buttonVariants } from '@/components/design-system/Button';
+import { EmptyState } from '@/components/design-system/EmptyState';
+import { Icon } from '@/components/design-system/Icon';
+import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
+import { AccountPage, pillTabClass, scrollingTabListClass } from '@/components/account/AccountPage';
+import { PanelState } from '@/components/account/PanelState';
+import { Pager } from '@/components/account/Pager';
+import { TicketRow } from '@/components/support/TicketRow';
 import { useMyTicketsQuery } from '@/lib/queries/support';
 import { t } from '@/lib/i18n/messages';
-import { cn } from '@/lib/utils';
-import type {
-  SupportTicketListItem,
-  SupportTicketStatus,
-} from '@/lib/api/types';
+import type { SupportTicketStatus } from '@/lib/api/types';
 
 const PER_PAGE = 20;
-type Tab = 'all' | 'open' | 'in_progress' | 'resolved';
 
-function tabToStatus(tab: Tab): SupportTicketStatus | undefined {
-  if (tab === 'all') return undefined;
-  return tab;
-}
+const TABS = ['all', 'open', 'in_progress', 'resolved'] as const satisfies readonly ('all' | SupportTicketStatus)[];
+
+type TicketTab = (typeof TABS)[number];
 
 export function MyTicketsClient() {
-  const [tab, setTab] = useQueryState(
-    'tab',
-    parseAsStringEnum<Tab>(['all', 'open', 'in_progress', 'resolved']).withDefault(
-      'all',
-    ),
-  );
+  const [tab, setTab] = useQueryState('tab', parseAsStringEnum<TicketTab>([...TABS]).withDefault('all'));
   const [page, setPage] = useState(1);
 
-  const status = tabToStatus(tab);
-  const params = status
-    ? { page, per_page: PER_PAGE, status }
-    : { page, per_page: PER_PAGE };
-  const { data, isLoading, isError } = useMyTicketsQuery(params);
-
-  const items = data?.data ?? [];
-  const lastPage = data?.meta.last_page ?? 1;
-
-  const handleTabChange = (next: Tab) => {
+  const handleTabChange = (next: TicketTab) => {
     void setTab(next);
     setPage(1);
   };
 
   return (
-    <div className="notif-page" style={{ paddingTop: 8, paddingBottom: 16 }}>
-      <div className="notif-head">
-        <div>
-          <h1 className="notif-head__h">
-            {t('support.my_tickets', 'تذاكر الدعم')}
-          </h1>
-          <p className="notif-head__sub">
-            {t(
-              'support.my_tickets_subtitle',
-              'كل تذاكر الدعم الخاصة بك في مكان واحد.',
-            )}
-          </p>
-        </div>
-        <Button asChild className="bg-coral hover:bg-coral/90 rounded-full text-white">
-          <Link href="/support/new">
-            <PlusIcon className="size-4" aria-hidden />
-            {t('support.new_ticket', 'تذكرة جديدة')}
-          </Link>
-        </Button>
-      </div>
-
-      <div className="notif-filters" role="tablist">
-        {(['all', 'open', 'in_progress', 'resolved'] as Tab[]).map((value) => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={tab === value}
-            onClick={() => handleTabChange(value)}
-            className={cn('chip', tab === value && 'is-active')}
-          >
-            {t(`support.tabs.${value}`, value)}
-          </button>
+    <AccountPage
+      title={t('support.my_tickets', 'تذاكر الدعم')}
+      actions={
+        <Link href="/support/new" className={buttonVariants({ size: 'sm' })}>
+          <Plus aria-hidden="true" />
+          {t('support.new_ticket', 'تذكرة جديدة')}
+        </Link>
+      }
+    >
+      <Tabs value={tab} onValueChange={(value) => handleTabChange(value as TicketTab)}>
+        <TabList aria-label={t('support.my_tickets', 'تذاكر الدعم')} className={scrollingTabListClass}>
+          {TABS.map((key) => (
+            <Tab key={key} value={key} className={pillTabClass}>
+              {t(`support.tabs.${key}`, key)}
+            </Tab>
+          ))}
+        </TabList>
+        {TABS.map((key) => (
+          <TabPanel key={key} value={key} className="mt-6 qb-tablet:mt-10">
+            <TicketsList status={key === 'all' ? undefined : key} page={page} onPageChange={setPage} />
+          </TabPanel>
         ))}
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12" role="status">
-          <Loader2Icon
-            className="text-muted-foreground size-6 animate-spin"
-            aria-hidden
-          />
-        </div>
-      ) : isError ? (
-        <p className="text-destructive py-12 text-center text-sm">
-          {t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-        </p>
-      ) : items.length === 0 ? (
-        <div className="card card--lg text-center">
-          <p className="text-ink-700 text-sm">
-            {t('support.no_tickets', 'لا توجد تذاكر في هذا التبويب')}
-          </p>
-        </div>
-      ) : (
-        <>
-          <ul className="tickets-table">
-            {items.map((ticket) => (
-              <li key={ticket.id} className="list-none">
-                <TicketRow ticket={ticket} />
-              </li>
-            ))}
-          </ul>
-
-          {lastPage > 1 ? (
-            <div className="pagination">
-              <button
-                type="button"
-                className="pagination__num"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-              >
-                ‹
-              </button>
-              <span className="pagination__gap">
-                {t(
-                  'ads.list.page_of',
-                  { current: String(page), total: String(lastPage) },
-                  `${page} / ${lastPage}`,
-                )}
-              </span>
-              <button
-                type="button"
-                className="pagination__num"
-                onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-                disabled={page >= lastPage}
-              >
-                ›
-              </button>
-            </div>
-          ) : null}
-        </>
-      )}
-    </div>
+      </Tabs>
+    </AccountPage>
   );
 }
 
-function TicketRow({ ticket }: { ticket: SupportTicketListItem }) {
+function TicketsList({
+  status,
+  page,
+  onPageChange,
+}: {
+  status?: SupportTicketStatus;
+  page: number;
+  onPageChange: (page: number) => void;
+}) {
+  const { data, isLoading, isError } = useMyTicketsQuery(
+    status ? { page, per_page: PER_PAGE, status } : { page, per_page: PER_PAGE },
+  );
+
+  if (isLoading) return <PanelState loading />;
+  if (isError || !data) return <PanelState loading={false} message={t('common.error', 'حدث خطأ، حاول مرة أخرى')} />;
+
+  if (data.data.length === 0) {
+    return (
+      <EmptyState
+        icon={<Icon icon={LifeBuoy} size="lg" />}
+        title={t('support.no_tickets', 'لا توجد تذاكر في هذا التبويب')}
+        description={t('support.new_ticket_sub')}
+        action={
+          <Link href="/support/new" className={buttonVariants({ size: 'sm' })}>
+            {t('support.new_ticket', 'تذكرة جديدة')}
+          </Link>
+        }
+        className="rounded-qb-2xl border border-qb-line bg-qb-surface py-20 shadow-qb-card"
+      />
+    );
+  }
+
   return (
-    <Link href={`/account/support/${ticket.id}`} className="ticket-row">
-      <div className="min-w-0">
-        <div className="ticket-row__subject truncate">{ticket.subject}</div>
-        <div className="ticket-row__meta">
-          <span>{t(`support.categories.${ticket.category}`, ticket.category)}</span>
-          <span>·</span>
-          <span>
-            {t(
-              'support.replies_count',
-              { count: String(ticket.replies_count) },
-              `${ticket.replies_count} replies`,
-            )}
-          </span>
-          <span>·</span>
-          <time dateTime={ticket.created_at}>
-            {new Date(ticket.created_at).toLocaleDateString()}
-          </time>
-        </div>
-      </div>
-      <div className="ticket-row__side">
-        <TicketStatusPill status={ticket.status} />
-        <TicketPriorityPill priority={ticket.priority} />
-      </div>
-    </Link>
+    <>
+      <ul className="flex flex-col gap-4 qb-tablet:gap-6">
+        {data.data.map((ticket) => (
+          <li key={ticket.id}>
+            <TicketRow ticket={ticket} />
+          </li>
+        ))}
+      </ul>
+      <Pager page={page} lastPage={data.meta.last_page} onChange={onPageChange} />
+    </>
   );
 }

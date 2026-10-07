@@ -25,10 +25,18 @@ import { AuthErrorCode } from '@/lib/api/types';
 import type {
   MakeSupportTicketRequest,
   PaginatedResponse,
+  SupportErrorCode,
   SupportReply,
   SupportTicket,
   SupportTicketListItem,
 } from '@/lib/api/types';
+
+/** Support ticket error codes the API sends (qbazaar-contracts/error-codes.md). */
+export const SUPPORT_ERROR = {
+  notFound: 'TICKET_001',
+  forbidden: 'TICKET_002',
+  invalidTransition: 'TICKET_003',
+} as const satisfies Record<string, SupportErrorCode>;
 
 const SECOND = 1000;
 
@@ -119,7 +127,7 @@ export function useReplyToTicketMutation(): UseMutationResult<
       qc.invalidateQueries({ queryKey: supportKeys.lists() });
     },
     onError: (err) => {
-      if (err.code === 'TICKET_INVALID_TRANSITION') {
+      if (err.code === SUPPORT_ERROR.invalidTransition) {
         toast.warning(
           t(
             'support.ticket_closed_notice',
