@@ -6,11 +6,14 @@ namespace App\Services\Catalog;
 
 use App\Actions\Catalog\GetHomeFeedAction;
 use App\Http\Resources\Api\V1\Home\HomeFeedResource;
+use App\Support\Locales;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
- * The serialised home feed, identical for every visitor. The catalog warmer
- * rebuilds it on a schedule; requests only read it.
+ * The serialised home feed, identical for every visitor of the same language.
+ * The catalog warmer rebuilds it on a schedule; requests only read it. Every
+ * rebuild renders all languages from one query pass.
  */
 class HomeFeedCache
 {
@@ -24,23 +27,42 @@ class HomeFeedCache
      */
     public function get(): array
     {
-        return $this->cache->get(CatalogCache::HOME_FEED_KEY, $this->ttlSeconds(), $this->render(...));
-    }
-
-    public function refresh(): void
-    {
-        $this->cache->put(CatalogCache::HOME_FEED_KEY, $this->ttlSeconds(), $this->render(...));
+        return $this->cache->get(
+            $this->key(app()->getLocale()),
+            $this->ttlSeconds(),
+            fn (): array => Locales::pick($this->refresh()),
+        );
     }
 
     /**
-     * Rendered against a blank request so nothing about the visitor who
-     * happened to trigger a rebuild can end up in the shared payload.
-     *
-     * @return array<string, mixed>
+     * @return array<string, array<string, mixed>> the stored feed of each language
      */
-    private function render(): array
+    public function refresh(): array
     {
-        return (new HomeFeedResource($this->getHomeFeed->execute()))->toArray(Request::create('/'));
+        $feed = $this->getHomeFeed->execute();
+
+        // Rendered against a blank request so nothing about the visitor who
+        // happened to trigger a rebuild can end up in the shared payload.
+        $request = Request::create('/');
+        $payloads = Locales::each(fn (): array => (new HomeFeedResource($feed))->toArray($request));
+
+        foreach ($payloads as $locale => $payload) {
+            $this->cache->put($this->key($locale), $this->ttlSeconds(), fn (): array => $payload);
+        }
+
+        return $payloads;
+    }
+
+    public function flush(): void
+    {
+        foreach (Locales::supported() as $locale) {
+            Cache::forget($this->key($locale));
+        }
+    }
+
+    public function key(string $locale): string
+    {
+        return CatalogCache::HOME_FEED_KEY . '.' . $locale;
     }
 
     private function ttlSeconds(): int

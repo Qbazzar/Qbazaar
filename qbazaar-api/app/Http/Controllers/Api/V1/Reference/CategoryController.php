@@ -83,8 +83,9 @@ class CategoryController extends Controller
     /**
      * GET /api/v1/categories/{slug} — category page with a section of newest ads per child.
      *
-     * The page is the same for every visitor and comes from {@see CategoryPageCache};
-     * the viewer's favourite flags are laid over the cached cards.
+     * The page is the same for every visitor of a language and comes from
+     * {@see CategoryPageCache}; the viewer's favourite flags are laid over
+     * the cached cards.
      *
      * @unauthenticated
      *
