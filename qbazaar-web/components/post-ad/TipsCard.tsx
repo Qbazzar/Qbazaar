@@ -1,5 +1,6 @@
 import { CircleCheck } from 'lucide-react';
 
+import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
 import { t } from '@/lib/i18n/messages';
 
@@ -9,7 +10,7 @@ const TIP_KEYS = ['photos', 'price', 'honest', 'details', 'light'] as const;
 
 export function TipsCard() {
   return (
-    <section aria-labelledby="post-ad-tips" className="rounded-qb-xl border border-qb-line bg-qb-surface p-6 font-qb">
+    <section aria-labelledby="post-ad-tips" className={cardVariants()}>
       <AsideTitle id="post-ad-tips">{t('post_ad.tips.title')}</AsideTitle>
       <ul className="flex flex-col gap-4">
         {TIP_KEYS.map((key) => (

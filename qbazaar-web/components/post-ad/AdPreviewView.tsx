@@ -6,21 +6,26 @@ import { CalendarDays, Eye, Flag, Heart, LoaderCircle, MapPin, MessageSquare, Sh
 
 import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { Button } from '@/components/design-system/Button';
+import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
-import type { Ad, CategoryField, CategoryNode, Location } from '@/lib/api/types';
+import type { CategoryField, CategoryNode, Location } from '@/lib/api/types';
+import { intlLocale } from '@/lib/i18n/format';
 import { getLocale, localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { formatAmount, formatDate } from '@/lib/post-ad/format';
-import { hasPrice, optionLabel, type AdFormValues } from '@/lib/post-ad/form';
+import { hasPrice, selectedOptionLabel, type AdFormValues } from '@/lib/post-ad/form';
 import { photoDisplayUrl } from '@/lib/post-ad/photos';
 import { findPath } from '@/lib/post-ad/tree';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { usePostAdStore } from '@/store/post-ad';
 
+import { visibleFocus } from './FormParts';
 import { SellerIdentity, type SellerSummary } from './ProfileCard';
 import { PreviewGallery } from './PreviewGallery';
 import type { PostAdAction } from './usePostAdActions';
 import { VIEW_HEADING_ID } from './view-heading';
+import { YourAdPanel } from './YourAdPanel';
 
 export interface AdPreviewViewProps {
   variant: 'preview' | 'publish';
@@ -33,12 +38,13 @@ export interface AdPreviewViewProps {
   onEdit: () => void;
   onPublish: () => void;
   onConfirm: () => void;
+  onDelete: () => void;
 }
 
-const card = 'rounded-qb-xl border border-qb-line bg-qb-surface font-qb';
+const card = cardVariants({ padding: 'none' });
 
 /** How a buyer will see the ad (preview.html), and the publish step (publish.html). */
-export function AdPreviewView({ variant, seller, tree, cities, fields, canPublish, running, onEdit, onPublish, onConfirm }: AdPreviewViewProps) {
+export function AdPreviewView({ variant, seller, tree, cities, fields, canPublish, running, onEdit, onPublish, onConfirm, onDelete }: AdPreviewViewProps) {
   const locale = getLocale();
   const values = usePostAdStore((state) => state.values);
   const photos = usePostAdStore((state) => state.photos);
@@ -50,17 +56,17 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
   return (
     <div className="flex flex-col gap-[22px]">
       {variant === 'preview' ? (
-        <div className="flex flex-col gap-4 rounded-qb-lg border border-qb-brand/40 bg-qb-brand-soft px-5 py-3.5 qb-tablet:flex-row qb-tablet:items-center qb-tablet:justify-between">
-          <p className="flex items-center gap-2.5 text-qb-body-sm font-medium text-qb-brand">
+        <div className="flex flex-col gap-4 rounded-qb-lg border border-qb-brand-tint bg-qb-brand-soft px-5 py-3.5 qb-tablet:flex-row qb-tablet:items-center qb-tablet:justify-between">
+          <p className="flex items-center gap-2.5 text-qb-body-sm font-medium text-qb-brand-on-soft">
             <Icon icon={Eye} size="md" />
             {t('post_ad.preview.banner')}
           </p>
           <div className="flex shrink-0 gap-2.5">
-            <Button variant="secondary" size="sm" onClick={onEdit} className="h-11 px-[22px]">
+            <Button variant="secondary" size="sm" onClick={onEdit} className={cn('h-11 px-[22px]', visibleFocus)}>
               {t('post_ad.actions.edit')}
             </Button>
             {canPublish ? (
-              <Button size="sm" onClick={onPublish} className="h-11 px-[22px]">
+              <Button size="sm" onClick={onPublish} className={cn('h-11 px-[22px]', visibleFocus)}>
                 {t('post_ad.actions.publish')}
               </Button>
             ) : null}
@@ -68,8 +74,9 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
         </div>
       ) : null}
 
+      {variant === 'publish' && ad ? <YourAdPanel ad={ad} running={running} onEdit={onEdit} onDelete={onDelete} /> : null}
+
       <Breadcrumb
-        className="max-qb-tablet:text-qb-body"
         items={[
           { label: t('post_ad.breadcrumb.home'), href: '/' },
           ...categories.map((node) => ({ label: localized(node.name) })),
@@ -86,11 +93,11 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
               <h1
                 id={VIEW_HEADING_ID}
                 tabIndex={-1}
-                className="text-qb-h4 leading-[1.3] font-semibold tracking-normal text-qb-ink outline-none qb-tablet:text-qb-h2"
+                className="text-qb-h4 leading-[1.3] font-semibold tracking-normal text-qb-ink outline-none qb-desktop:text-qb-h2"
               >
                 {title}
               </h1>
-              <p className="shrink-0 text-qb-h4 font-semibold text-qb-brand qb-tablet:text-qb-h3">{priceText(values, locale)}</p>
+              <p className="shrink-0 text-[26px] font-semibold text-qb-brand">{priceText(values, locale)}</p>
             </div>
             <ul className="mt-5 flex flex-col gap-3.5 text-qb-body-sm text-qb-ink-secondary">
               <MetaRow icon={<Icon icon={MapPin} size="sm" className="size-[18px] text-qb-brand" />}>
@@ -100,11 +107,11 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
               </MetaRow>
               {ad ? (
                 <MetaRow icon={<Icon icon={CalendarDays} size="sm" className="size-[18px] text-qb-brand" />}>
-                  {t('post_ad.preview.created', { time: formatRelativeTime(ad.created_at, locale) })}
+                  {t('post_ad.preview.created', { time: formatRelativeTime(ad.created_at, intlLocale(locale)) })}
                 </MetaRow>
               ) : null}
               <MetaRow icon={<Icon icon={Eye} size="sm" className="size-[18px] text-qb-brand" />}>
-                {t('post_ad.preview.views', { count: ad?.views_count ?? 0 })}
+                {tPlural('post_ad.preview.views', ad?.views_count ?? 0, locale)}
               </MetaRow>
             </ul>
           </section>
@@ -113,13 +120,15 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
             <h2 id="post-ad-preview-description" className="mb-3.5 text-qb-h5 font-semibold tracking-normal">
               {t('post_ad.preview.description')}
             </h2>
-            <p className="text-qb-body-sm leading-[1.7] whitespace-pre-line text-qb-ink-faint">{values.description.trim()}</p>
+            <p dir="auto" className="text-qb-body-sm leading-[1.7] whitespace-pre-line text-qb-ink-faint">
+              {values.description.trim()}
+            </p>
           </section>
 
           <FeaturesCard values={values} fields={fields} />
         </div>
 
-        <aside className="flex min-w-[min(280px,100%)] flex-[1_1_300px] flex-col gap-5">
+        <aside aria-label={t('post_ad.preview.aside_label')} className="flex min-w-[min(280px,100%)] flex-[1_1_300px] flex-col gap-5">
           <BuyerView seller={seller} />
           <section className={cn(card, 'p-[22px]')}>
             <dl className="text-qb-body">
@@ -134,18 +143,19 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
                 <dd className="font-semibold">{ad ? formatDate(ad.created_at, locale) : ''}</dd>
               </div>
             </dl>
+            {/* Inert in the preview, but drawn as buyers will see them. */}
             <div className="flex gap-2.5 border-t border-qb-line pt-4">
-              <Button variant="outline" size="sm" disabled className="min-w-0 flex-1 font-normal text-qb-ink-body">
+              <Button variant="outline" size="sm" disabled className="min-w-0 flex-1 font-normal text-qb-ink-body disabled:opacity-100">
                 <Icon icon={Share2} size="sm" />
                 {t('post_ad.preview.share')}
               </Button>
-              <Button variant="outline" size="sm" disabled className="min-w-0 flex-1 font-normal text-qb-ink-body">
+              <Button variant="outline" size="sm" disabled className="min-w-0 flex-1 font-normal text-qb-ink-body disabled:opacity-100">
                 <Icon icon={Flag} size="sm" />
                 {t('post_ad.preview.report')}
               </Button>
             </div>
           </section>
-          {variant === 'publish' ? <PublishCard running={running} onConfirm={onConfirm} onEdit={onEdit} /> : null}
+          {variant === 'publish' ? <PublishCard running={running} onConfirm={onConfirm} /> : null}
         </aside>
       </div>
     </div>
@@ -175,24 +185,31 @@ function priceText(values: AdFormValues, locale: Locale): string {
   return t('post_ad.price.amount', { amount: formatAmount(values.price.trim(), locale) });
 }
 
+const BUYER_NOTE_ID = 'post-ad-buyer-note';
+
 /** Seller card as buyers see it; its buttons work once the ad is live. */
 function BuyerView({ seller }: { seller: SellerSummary }) {
   return (
-    <section aria-describedby="post-ad-buyer-note" className={cn(card, 'p-[22px]')}>
-      <SellerIdentity seller={seller} />
-      <p id="post-ad-buyer-note" className="sr-only">
+    <section className={cn(card, 'p-[22px]')}>
+      <SellerIdentity seller={seller} variant="preview" />
+      <p id={BUYER_NOTE_ID} className="sr-only">
         {t('post_ad.preview.buyer_note')}
       </p>
       <div className="mt-5 flex flex-col gap-3">
-        <Button fullWidth disabled className="h-[46px] text-qb-caption font-medium">
+        <Button
+          fullWidth
+          disabled
+          aria-describedby={BUYER_NOTE_ID}
+          className="h-[46px] bg-qb-fill-strong text-qb-caption font-medium text-qb-surface disabled:opacity-100"
+        >
           <Icon icon={MessageSquare} size="sm" />
           {t('post_ad.preview.send_message')}
         </Button>
-        <Button variant="secondary" fullWidth disabled className="h-12">
+        <Button variant="secondary" fullWidth disabled aria-describedby={BUYER_NOTE_ID} className="h-12">
           <Icon icon={Star} size="sm" />
           {t('post_ad.preview.follow')}
         </Button>
-        <Button variant="ghost" fullWidth disabled className="h-[30px] font-semibold text-qb-brand">
+        <Button variant="ghost" fullWidth disabled aria-describedby={BUYER_NOTE_ID} className="h-[30px] font-semibold text-qb-brand">
           <Icon icon={Heart} size="sm" />
           {t('post_ad.preview.favorite')}
         </Button>
@@ -214,7 +231,7 @@ function FeaturesCard({ values, fields }: { values: AdFormValues; fields: readon
       typeof value === 'boolean'
         ? t(value ? 'post_ad.preview.yes' : 'post_ad.preview.no')
         : field.type === 'select'
-          ? optionLabel(value)
+          ? selectedOptionLabel(field, value)
           : value;
     items.push({ label: localized(field.label), value: text });
   }
@@ -224,7 +241,7 @@ function FeaturesCard({ values, fields }: { values: AdFormValues; fields: readon
       <h2 id="post-ad-preview-features" className="mb-5 text-qb-h5 font-semibold tracking-normal">
         {t('post_ad.preview.features')}
       </h2>
-      <dl className="grid grid-cols-1 gap-5 qb-tablet:grid-cols-3 qb-desktop:grid-cols-4">
+      <dl className="[display:grid] grid-cols-1 gap-5 qb-tablet:grid-cols-3 qb-desktop:grid-cols-4">
         {items.map((item) => (
           <div key={item.label}>
             <dt className="text-qb-caption text-qb-ink-subtle">{item.label}</dt>
@@ -245,7 +262,7 @@ function shippingText(values: AdFormValues): string {
 }
 
 /** The publish step's call to action, with the listing terms the API requires. */
-function PublishCard({ running, onConfirm, onEdit }: { running: PostAdAction | null; onConfirm: () => void; onEdit: () => void }) {
+function PublishCard({ running, onConfirm }: { running: PostAdAction | null; onConfirm: () => void }) {
   const [accepted, setAccepted] = useState(false);
   const [showError, setShowError] = useState(false);
   const busy = running === 'publish';
@@ -291,15 +308,10 @@ function PublishCard({ running, onConfirm, onEdit }: { running: PostAdAction | n
           {t('post_ad.publish.terms_required')}
         </p>
       ) : null}
-      <div className="mt-5 flex flex-col gap-3">
-        <Button fullWidth disabled={running !== null} aria-busy={busy || undefined} onClick={confirm} className="h-12">
-          {busy ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
-          {t('post_ad.actions.confirm_publish')}
-        </Button>
-        <Button variant="secondary" fullWidth disabled={running !== null} onClick={onEdit} className="h-[46px] text-qb-caption font-medium">
-          {t('post_ad.actions.edit')}
-        </Button>
-      </div>
+      <Button fullWidth disabled={running !== null} aria-busy={busy || undefined} onClick={confirm} className={cn('mt-5 h-12', visibleFocus)}>
+        {busy ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
+        {t('post_ad.actions.confirm_publish')}
+      </Button>
     </section>
   );
 }

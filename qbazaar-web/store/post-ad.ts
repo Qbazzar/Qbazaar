@@ -20,8 +20,8 @@ import type { PhotoItem } from '@/lib/post-ad/photos';
 
 export type PostAdView = 'form' | 'preview' | 'publish' | 'done';
 
-/** `create` for /post-ad, `edit:<ad id>` for the edit page. */
-export type PostAdSession = 'create' | `edit:${string}`;
+/** `create:<user id>` for /post-ad, `edit:<ad id>` for the edit page. */
+export type PostAdSession = `create:${string}` | `edit:${string}`;
 
 export interface PostAdState {
   session: PostAdSession | null;

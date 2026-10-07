@@ -13,8 +13,8 @@ function photo(changes: Partial<PhotoItem>): PhotoItem {
   return { key: 'p1', status: 'uploaded', previewUrl: 'blob:p1', ownsPreviewUrl: true, progress: 100, ...changes };
 }
 
-function renderTile(item: PhotoItem, position = 2) {
-  const handlers = { onRemove: vi.fn(), onRetry: vi.fn(), onMakeCover: vi.fn() };
+function renderTile(item: PhotoItem, position = 2, total = 3) {
+  const handlers = { onRemove: vi.fn(), onRetry: vi.fn(), onMakeCover: vi.fn(), onMove: vi.fn() };
   const wrap = (children: ReactNode) => (
     <DndContext>
       <SortableContext items={[item.key]}>
@@ -22,7 +22,7 @@ function renderTile(item: PhotoItem, position = 2) {
       </SortableContext>
     </DndContext>
   );
-  render(wrap(<PhotoTile photo={item} position={position} total={3} {...handlers} />));
+  render(wrap(<PhotoTile photo={item} position={position} total={total} {...handlers} />));
   return handlers;
 }
 
@@ -34,8 +34,27 @@ describe('PhotoTile', () => {
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.photos.remove', { n: 2 }) }));
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.photos.make_cover', { n: 2 }) }));
 
-    expect(handlers.onRemove).toHaveBeenCalledOnce();
-    expect(handlers.onMakeCover).toHaveBeenCalledOnce();
+    expect(handlers.onRemove).toHaveBeenCalledWith('p1');
+    expect(handlers.onMakeCover).toHaveBeenCalledWith('p1');
+  });
+
+  it('moves the photo one place either way without dragging', () => {
+    const handlers = renderTile(photo({}));
+
+    fireEvent.click(screen.getByRole('button', { name: t('post_ad.photos.move_earlier', { n: 2 }) }));
+    fireEvent.click(screen.getByRole('button', { name: t('post_ad.photos.move_later', { n: 2 }) }));
+
+    expect(handlers.onMove.mock.calls).toEqual([
+      ['p1', -1],
+      ['p1', 1],
+    ]);
+  });
+
+  it('offers no move past either end', () => {
+    renderTile(photo({}), 1, 1);
+
+    expect(screen.queryByRole('button', { name: t('post_ad.photos.move_earlier', { n: 1 }) })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: t('post_ad.photos.move_later', { n: 1 }) })).not.toBeInTheDocument();
   });
 
   it('labels the first photo as the cover', () => {
@@ -58,7 +77,7 @@ describe('PhotoTile', () => {
     expect(screen.getByText(t('post_ad.photos.failed_network'))).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.photos.retry', { n: 2 }) }));
 
-    expect(handlers.onRetry).toHaveBeenCalledOnce();
+    expect(handlers.onRetry).toHaveBeenCalledWith('p1');
   });
 
   it('has no retry for a photo the browser could not read', () => {

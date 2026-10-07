@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { PostAdFrame } from '@/components/post-ad/PostAdPage';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 
@@ -14,9 +15,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function PostAdPage() {
   return (
     <main className="min-h-svh bg-qb-page">
-      <div className="mx-auto w-full max-w-[1440px] px-qb-gutter py-[clamp(20px,4vw,40px)] font-qb text-qb-ink">
+      <PostAdFrame>
         <PostAdClient />
-      </div>
+      </PostAdFrame>
     </main>
   );
 }

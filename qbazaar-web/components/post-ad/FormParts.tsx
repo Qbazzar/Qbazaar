@@ -1,10 +1,25 @@
 import type { ChangeEvent, InputHTMLAttributes, ReactNode } from 'react';
 import { CircleAlert } from 'lucide-react';
 
+import { cardVariants } from '@/components/design-system/Card';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { translateMaybeKey } from '@/lib/i18n/messages';
 import type { AdFormField } from '@/lib/post-ad/form';
 import { cn } from '@/lib/utils';
+
+/**
+ * In Tailwind 4, focusRing's `outline-none` also sets the outline-style
+ * variable that its `focus-visible:outline-2` reads, so the ring never shows.
+ * This puts the style back, on design-system controls and our own.
+ */
+export const visibleFocus = 'focus-visible:outline-solid';
+export const visibleFocusRing = cn(focusRing, visibleFocus);
+
+/** Text boxes of add-ads.html: 15 px text and 14 px side padding on the design-system controls. */
+export const controlSize = 'h-[53px] px-3.5 text-qb-body-sm';
+/** The same for a select, whose end padding stays clear of its chevron. */
+export const selectSize = 'h-[53px] ps-3.5 text-qb-body-sm';
 
 /** DOM id of a form field, also used to focus the first invalid one. */
 export function fieldId(name: AdFormField): string {
@@ -27,10 +42,7 @@ export function describedBy(name: AdFormField, error: string | undefined, ...ext
 /** White form card with its 24 px heading (20 px on phones), as on add-ads.html. */
 export function FormSection({ title, id, children }: { title: string; id: string; children: ReactNode }) {
   return (
-    <section
-      aria-labelledby={id}
-      className="rounded-qb-xl border border-qb-line bg-qb-surface p-5 font-qb text-qb-ink qb-tablet:p-7"
-    >
+    <section aria-labelledby={id} className={cn(cardVariants({ padding: 'none' }), 'p-5 text-qb-ink qb-tablet:p-7')}>
       <h2 id={id} className="mb-[22px] text-qb-h5 font-semibold tracking-normal qb-tablet:text-qb-h3">
         {title}
       </h2>
@@ -39,6 +51,7 @@ export function FormSection({ title, id, children }: { title: string; id: string
   );
 }
 
+/** The 15 px label of add-ads.html; the design-system Field uses the 16 px one of the account forms. */
 export function FieldLabel({
   htmlFor,
   id,
@@ -68,15 +81,6 @@ export function FieldError({ name, message }: { name: AdFormField; message: stri
   );
 }
 
-/** Boxes of the text inputs on add-ads.html: 15 px text, line border, 10 px radius. */
-export const controlClass = cn(
-  'w-full rounded-qb-md border border-qb-line bg-qb-surface px-3.5 font-qb text-qb-body-sm text-qb-ink',
-  'placeholder:text-qb-placeholder outline-none transition-colors',
-  'focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
-  'aria-invalid:border-qb-danger aria-invalid:focus-visible:ring-qb-danger/20',
-  'disabled:cursor-not-allowed disabled:bg-qb-fill disabled:text-qb-ink-subtle',
-);
-
 export interface ChoiceOption<T extends string> {
   value: T;
   label: string;
@@ -101,7 +105,7 @@ export function ChoiceGroup<T extends string>({
   return (
     <fieldset className="min-w-0">
       <legend className="mb-2.5 text-qb-body-sm text-qb-ink-body">{legend}</legend>
-      <div className="grid grid-cols-1 gap-3.5 qb-tablet:grid-cols-2">
+      <div className="[display:grid] grid-cols-1 gap-3.5 qb-tablet:grid-cols-2">
         {options.map((option) => {
           const checked = option.value === value;
           return (
@@ -124,11 +128,12 @@ export function ChoiceGroup<T extends string>({
                 onChange={() => onChange(option.value)}
                 className="sr-only"
               />
+              {/* Darker than the design's ring: it marks the unpicked state, which needs 3:1 on white. */}
               <span
                 aria-hidden="true"
                 className={cn(
                   'flex size-[22px] shrink-0 items-center justify-center rounded-full border-2',
-                  checked ? 'border-qb-brand' : 'border-qb-ink-subtle/50',
+                  checked ? 'border-qb-brand' : 'border-qb-ink-subtle',
                 )}
               >
                 {checked ? <span className="size-[11px] rounded-full bg-qb-brand" /> : null}
@@ -142,18 +147,22 @@ export function ChoiceGroup<T extends string>({
   );
 }
 
-/** Amount box with the currency after the number ("0 ... QAR"). */
+/** Amount box with the currency after the number ("0 ... QAR"); the currency is read with the field. */
 export function AmountInput({
+  id,
   currency,
   invalid,
   className,
   onValueChange,
+  'aria-describedby': describedByIds,
   ...props
 }: Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> & {
+  id: string;
   currency: string;
   invalid?: boolean;
   onValueChange: (value: string, event: ChangeEvent<HTMLInputElement>) => void;
 }) {
+  const currencyId = `${id}-currency`;
   return (
     <div
       className={cn(
@@ -165,14 +174,18 @@ export function AmountInput({
       )}
     >
       <input
+        id={id}
         type="text"
         inputMode="decimal"
         autoComplete="off"
         className="h-full min-w-0 flex-1 bg-transparent font-qb text-qb-body-sm text-qb-ink outline-none placeholder:text-qb-placeholder disabled:cursor-not-allowed"
         onChange={(event) => onValueChange(event.target.value, event)}
+        aria-describedby={[currencyId, describedByIds].filter(Boolean).join(' ')}
         {...props}
       />
-      <span className="shrink-0 text-qb-body-sm text-qb-ink-subtle">{currency}</span>
+      <span id={currencyId} className="shrink-0 text-qb-body-sm text-qb-ink-subtle">
+        {currency}
+      </span>
     </div>
   );
 }

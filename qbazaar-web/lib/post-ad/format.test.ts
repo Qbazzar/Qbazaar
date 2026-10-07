@@ -10,16 +10,16 @@ describe('formatAmount', () => {
     expect(formatAmount('9999999.99', 'en')).toBe('9,999,999.99');
   });
 
-  it('uses Arabic digits and separators in Arabic', () => {
-    expect(formatAmount('2350', 'ar')).toBe('٢٬٣٥٠');
-    expect(formatAmount('12.5', 'ar')).toBe('١٢٫٥٠');
+  it('writes Latin digits in Arabic too, as the rest of the site does', () => {
+    expect(formatAmount('2350', 'ar')).toBe('2,350');
+    expect(formatAmount('12.5', 'ar')).toBe('12.50');
   });
 });
 
 describe('formatDate', () => {
-  it('writes the design date in English and the local short date in Arabic', () => {
+  it('writes the design date in both languages', () => {
     expect(formatDate('2016-01-08T10:00:00Z', 'en')).toBe('08.01.2016');
-    expect(formatDate('2016-01-08T10:00:00Z', 'ar')).toMatch(/٢٠١٦/);
+    expect(formatDate('2016-01-08T10:00:00Z', 'ar')).toBe('08.01.2016');
     expect(formatDate('not a date', 'en')).toBe('');
   });
 });

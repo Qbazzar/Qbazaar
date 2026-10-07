@@ -19,7 +19,11 @@ vi.mock('@/lib/api/ads', async (importOriginal) => ({
   createAd: vi.fn(),
   updateAd: vi.fn(),
   publishAd: vi.fn(),
-  getMyAds: vi.fn(),
+  deleteAd: vi.fn(),
+}));
+vi.mock('@/lib/api/account', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/api/account')>()),
+  getAccountSummary: vi.fn(),
 }));
 vi.mock('@/lib/api/categories', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/api/categories')>()),
@@ -41,11 +45,12 @@ vi.mock('@/lib/images/prepare-photo', async (importOriginal) => ({
 }));
 
 import { toast } from 'sonner';
+import { getAccountSummary } from '@/lib/api/account';
 import { uploadAdImages } from '@/lib/api/ad-images';
-import { createAd, getMyAds, publishAd, updateAd } from '@/lib/api/ads';
+import { createAd, deleteAd, publishAd, updateAd } from '@/lib/api/ads';
 import { getCategoryTree } from '@/lib/api/categories';
 import { getQatarLocations } from '@/lib/api/locations';
-import type { Ad, CategoryNode, Location, Media, User } from '@/lib/api/types';
+import type { AccountSummary, Ad, CategoryNode, Location, Media, User } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
 import { usePostAdStore } from '@/store/post-ad';
 
@@ -139,7 +144,7 @@ beforeEach(() => {
   usePostAdStore.setState({ session: null, view: 'form', ad: null, errors: {}, photos: [] });
   vi.mocked(getCategoryTree).mockResolvedValue(TREE);
   vi.mocked(getQatarLocations).mockResolvedValue(CITIES);
-  vi.mocked(getMyAds).mockResolvedValue({ data: [], meta: { current_page: 1, last_page: 1, per_page: 20, total: 3 }, links: { first: null, last: null, prev: null, next: null } });
+  vi.mocked(getAccountSummary).mockResolvedValue({ ads_by_status: { active: 3 } } as AccountSummary);
   vi.mocked(uploadAdImages).mockResolvedValue([MEDIA]);
 });
 
@@ -179,7 +184,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     await fillRequiredFields();
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.save_draft') }));
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith(t('post_ad.toast.draft_saved')));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith(t('post_ad.toast.draft_saved'), expect.anything()));
     expect(createAd).toHaveBeenCalledWith(
       expect.objectContaining({ category_id: 'cars', location_id: 'west-bay', price: 185000, title: 'Toyota Land Cruiser 2021' }),
     );
@@ -190,7 +195,8 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
 
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.add_ads') }));
     const confirm = await screen.findByRole('button', { name: t('post_ad.actions.confirm_publish') });
-    expect(updateAd).toHaveBeenCalledWith('ad-1', expect.objectContaining({ title: 'Toyota Land Cruiser 2021' }));
+    // Nothing changed since the draft was saved, so there was nothing to send.
+    expect(updateAd).not.toHaveBeenCalled();
 
     fireEvent.click(confirm);
     expect(await screen.findByText(t('post_ad.publish.terms_required'))).toBeInTheDocument();
@@ -230,9 +236,10 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     expect(updateAd).not.toHaveBeenCalled();
   });
 
-  it('saves a live ad in place and returns to My Ads', async () => {
-    const live = ad({ status: 'active', images: [MEDIA] });
-    vi.mocked(updateAd).mockResolvedValue(live);
+  it('saves only the price of a live ad, which keeps it live, and returns to My Ads', async () => {
+    // Stored by the mobile app without custom fields: the form must not send its own rebuilt bag.
+    const live = ad({ status: 'active', images: [MEDIA], custom_fields: null as unknown as Ad['custom_fields'] });
+    vi.mocked(updateAd).mockResolvedValue({ ...live, price: 179000 });
     renderFlow(live);
     await screen.findByRole('option', { name: 'الخليج الغربي' });
 
@@ -241,7 +248,65 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.save_changes') }));
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/account/ads'));
-    expect(updateAd).toHaveBeenCalledWith('ad-1', expect.objectContaining({ price: 179000 }));
-    expect(toast.success).toHaveBeenCalledWith(t('post_ad.toast.changes_in_review'));
+    expect(updateAd).toHaveBeenCalledWith('ad-1', { price: 179000 });
+    expect(toast.success).toHaveBeenCalledWith(t('post_ad.toast.changes_saved'), expect.anything());
+  });
+
+  it('tells the seller a live ad is back in review when its title changed', async () => {
+    const live = ad({ status: 'active', images: [MEDIA] });
+    vi.mocked(updateAd).mockResolvedValue({ ...live, title: 'Toyota Land Cruiser 2021 GXR', status: 'pending' });
+    renderFlow(live);
+    await screen.findByRole('option', { name: 'الخليج الغربي' });
+
+    fireEvent.change(screen.getByLabelText(t('post_ad.basic.ad_title')), { target: { value: 'Toyota Land Cruiser 2021 GXR' } });
+    fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.save_changes') }));
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/account/ads'));
+    expect(updateAd).toHaveBeenCalledWith('ad-1', { title: 'Toyota Land Cruiser 2021 GXR' });
+    expect(toast.success).toHaveBeenCalledWith(t('post_ad.toast.changes_in_review'), expect.anything());
+  });
+
+  it('holds the new photos of a live ad until Save Changes', async () => {
+    const live = ad({ status: 'active', images: [MEDIA] });
+    renderFlow(live);
+    await screen.findByRole('option', { name: 'الخليج الغربي' });
+
+    const file = new File([new Uint8Array(2000)], 'car.jpg', { type: 'image/jpeg' });
+    fireEvent.change(screen.getByLabelText(t('post_ad.basic.images')), { target: { files: [file] } });
+    await waitFor(() => expect(usePostAdStore.getState().photos[1]?.status).toBe('ready'));
+    expect(uploadAdImages).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.save_changes') }));
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/account/ads'));
+    expect(uploadAdImages).toHaveBeenCalledWith('ad-1', [expect.any(Blob)], expect.anything());
+    expect(updateAd).not.toHaveBeenCalled();
+    // The API sends a live ad back to review when a photo is added.
+    expect(toast.success).toHaveBeenCalledWith(t('post_ad.toast.changes_in_review'), expect.anything());
+  });
+
+  it('deletes the draft from the publish step', async () => {
+    vi.mocked(deleteAd).mockResolvedValue(undefined);
+    renderFlow(ad({ images: [MEDIA] }));
+    await screen.findByRole('option', { name: 'الخليج الغربي' });
+
+    fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.add_ads') }));
+    await screen.findByRole('heading', { name: t('post_ad.your_ad.title') });
+    fireEvent.click(screen.getByRole('button', { name: t('common.delete') }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: t('common.delete') }));
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/account/ads'));
+    expect(deleteAd).toHaveBeenCalledWith('ad-1');
+  });
+
+  it('waits for the categories, and offers a retry when they fail to load', async () => {
+    vi.mocked(getCategoryTree).mockRejectedValueOnce(new Error('offline'));
+    renderFlow();
+
+    fireEvent.click(await screen.findByRole('button', { name: t('common.retry') }));
+
+    expect(await screen.findByRole('heading', { name: t('post_ad.basic.title') })).toBeInTheDocument();
+    expect(getCategoryTree).toHaveBeenCalledTimes(2);
   });
 });

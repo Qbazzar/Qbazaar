@@ -1,30 +1,41 @@
 'use client';
 
+import { memo } from 'react';
 import Image from 'next/image';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CircleAlert, GripVertical, LoaderCircle, RotateCw, Star, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CircleAlert, LoaderCircle, RotateCw, Star, X } from 'lucide-react';
 
-import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { t } from '@/lib/i18n/messages';
 import { AD_LIMITS } from '@/lib/post-ad/form';
 import type { PhotoItem } from '@/lib/post-ad/photos';
 import { cn } from '@/lib/utils';
 
+import { visibleFocusRing } from './FormParts';
+
+/** -1 moves a photo towards the cover, 1 away from it. */
+export type PhotoStep = -1 | 1;
+
 export interface PhotoTileProps {
   photo: PhotoItem;
   position: number;
   total: number;
-  onRemove: () => void;
-  onRetry: () => void;
-  onMakeCover: () => void;
+  onRemove: (key: string) => void;
+  onRetry: (key: string) => void;
+  onMakeCover: (key: string) => void;
+  onMove: (key: string, step: PhotoStep) => void;
 }
 
 const cornerButton = cn(
-  'absolute flex size-[22px] items-center justify-center rounded-full bg-qb-ink/60 text-white transition-colors hover:bg-qb-ink/80',
-  focusRing,
+  'absolute flex size-[22px] items-center justify-center rounded-full bg-qb-ink/60 text-qb-surface transition-colors hover:bg-qb-ink/80',
+  visibleFocusRing,
 );
+
+/** DOM id of a tile's move button, so focus can follow the photo it moved. */
+export function moveButtonId(key: string, step: PhotoStep): string {
+  return `post-ad-photo-${key}-${step < 0 ? 'earlier' : 'later'}`;
+}
 
 /** Failure text for a tile, by what went wrong. */
 export function photoFailureText(photo: PhotoItem): string {
@@ -58,12 +69,13 @@ function statusText(photo: PhotoItem): string {
   }
 }
 
-/** One photo in the grid: drag handle, cover, remove, and its upload state. */
-export function PhotoTile({ photo, position, total, onRemove, onRetry, onMakeCover }: PhotoTileProps) {
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
-    id: photo.key,
-    attributes: { roleDescription: t('post_ad.photos.sortable') },
-  });
+/**
+ * One photo in the grid: cover, remove, the arrows that move it (dragging
+ * with a pointer works too) and its upload state. Memoised, so an upload's
+ * progress redraws its own tile only.
+ */
+export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRemove, onRetry, onMakeCover, onMove }: PhotoTileProps) {
+  const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: photo.key });
   const isCover = position === 1;
   const settled = photo.status === 'uploaded';
   const label = t('post_ad.photos.photo_label', { n: position, total });
@@ -72,7 +84,6 @@ export function PhotoTile({ photo, position, total, onRemove, onRetry, onMakeCov
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      // Pointer drags start anywhere on the photo; the keyboard uses the handle.
       onPointerDown={(event) => listeners?.onPointerDown?.(event)}
       className={cn(
         'relative aspect-square touch-manipulation overflow-hidden rounded-qb-md border border-qb-line bg-qb-fill',
@@ -93,40 +104,8 @@ export function PhotoTile({ photo, position, total, onRemove, onRetry, onMakeCov
       )}
       <span className="sr-only">{statusText(photo)}</span>
 
-      {isCover ? (
-        <span className="absolute start-1 top-1 rounded-qb-xs bg-qb-brand px-1.5 py-0.5 text-qb-tiny font-medium text-white">
-          {t('post_ad.photos.cover')}
-        </span>
-      ) : null}
-
-      <button type="button" onClick={onRemove} aria-label={t('post_ad.photos.remove', { n: position })} className={cn(cornerButton, 'end-1 top-1')}>
-        <Icon icon={X} size="sm" className="size-3.5" />
-      </button>
-
-      {!isCover && photo.status !== 'failed' ? (
-        <button
-          type="button"
-          onClick={onMakeCover}
-          aria-label={t('post_ad.photos.make_cover', { n: position })}
-          className={cn(cornerButton, 'start-1 bottom-1')}
-        >
-          <Icon icon={Star} size="sm" className="size-3" />
-        </button>
-      ) : null}
-
-      <button
-        type="button"
-        ref={setActivatorNodeRef}
-        {...attributes}
-        onKeyDown={(event) => listeners?.onKeyDown?.(event)}
-        aria-label={t('post_ad.photos.move', { n: position })}
-        className={cn(cornerButton, 'end-1 bottom-1 cursor-grab active:cursor-grabbing')}
-      >
-        <Icon icon={GripVertical} size="sm" className="size-3.5" />
-      </button>
-
       {photo.status === 'processing' ? (
-        <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <Icon icon={LoaderCircle} size="lg" className="animate-spin text-qb-ink-secondary motion-reduce:animate-none" />
         </span>
       ) : null}
@@ -145,14 +124,14 @@ export function PhotoTile({ photo, position, total, onRemove, onRetry, onMakeCov
       ) : null}
 
       {photo.status === 'failed' ? (
-        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-qb-danger-soft/90 px-1 text-center text-qb-danger">
+        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-qb-danger-soft px-1 text-center text-qb-danger">
           <Icon icon={CircleAlert} size="md" />
           {photo.failure === 'upload' ? (
             <button
               type="button"
-              onClick={onRetry}
+              onClick={() => onRetry(photo.key)}
               aria-label={t('post_ad.photos.retry', { n: position })}
-              className={cn('inline-flex items-center gap-1 rounded-qb-xs px-1.5 py-0.5 text-qb-tiny font-medium underline-offset-2 hover:underline', focusRing)}
+              className={cn('inline-flex items-center gap-1 rounded-qb-xs px-1.5 py-0.5 text-qb-tiny font-medium underline-offset-2 hover:underline', visibleFocusRing)}
             >
               <Icon icon={RotateCw} size="sm" className="size-3" />
               {t('post_ad.photos.retry_short')}
@@ -160,6 +139,53 @@ export function PhotoTile({ photo, position, total, onRemove, onRetry, onMakeCov
           ) : null}
         </span>
       ) : null}
+
+      {isCover ? (
+        <span className="absolute start-1 top-1 rounded-qb-xs bg-qb-brand px-1.5 py-0.5 text-qb-tiny font-medium text-qb-on-brand">
+          {t('post_ad.photos.cover')}
+        </span>
+      ) : photo.status !== 'failed' ? (
+        <button
+          type="button"
+          onClick={() => onMakeCover(photo.key)}
+          aria-label={t('post_ad.photos.make_cover', { n: position })}
+          className={cn(cornerButton, 'start-1 top-1')}
+        >
+          <Icon icon={Star} size="sm" className="size-3" />
+        </button>
+      ) : null}
+
+      <button
+        type="button"
+        onClick={() => onRemove(photo.key)}
+        aria-label={t('post_ad.photos.remove', { n: position })}
+        className={cn(cornerButton, 'end-1 top-1')}
+      >
+        <Icon icon={X} size="sm" className="size-3.5" />
+      </button>
+
+      {position > 1 ? (
+        <button
+          type="button"
+          id={moveButtonId(photo.key, -1)}
+          onClick={() => onMove(photo.key, -1)}
+          aria-label={t('post_ad.photos.move_earlier', { n: position })}
+          className={cn(cornerButton, 'start-1 bottom-1')}
+        >
+          <Icon icon={ChevronLeft} size="sm" flipInRtl className="size-3.5" />
+        </button>
+      ) : null}
+      {position < total ? (
+        <button
+          type="button"
+          id={moveButtonId(photo.key, 1)}
+          onClick={() => onMove(photo.key, 1)}
+          aria-label={t('post_ad.photos.move_later', { n: position })}
+          className={cn(cornerButton, 'end-1 bottom-1')}
+        >
+          <Icon icon={ChevronRight} size="sm" flipInRtl className="size-3.5" />
+        </button>
+      ) : null}
     </li>
   );
-}
+});

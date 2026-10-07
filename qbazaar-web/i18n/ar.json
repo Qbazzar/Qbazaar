@@ -755,7 +755,8 @@
     "optional": "(اختياري)",
     "breadcrumb": {
       "home": "الرئيسية",
-      "add_ads": "أضف إعلاناً"
+      "add_ads": "أضف إعلاناً",
+      "my_ads": "إعلاناتي"
     },
     "basic": {
       "title": "المعلومات الأساسية",
@@ -790,7 +791,7 @@
       "price": "السعر",
       "price_type": "نوع السعر",
       "currency": "ر.ق",
-      "amount": "{amount} ر.ق"
+      "amount": "ر.ق {amount}"
     },
     "location": {
       "title": "الموقع",
@@ -811,12 +812,10 @@
       "cover": "الغلاف",
       "make_cover": "اجعل الصورة {n} غلافاً",
       "remove": "حذف الصورة {n}",
-      "move": "نقل الصورة {n}",
-      "sortable": "صورة قابلة للترتيب",
       "retry": "إعادة رفع الصورة {n}",
       "retry_short": "إعادة",
       "uploading_label": "جارٍ رفع الصورة {n}",
-      "reorder_hint": "اسحب الصور لإعادة ترتيبها. الصورة الأولى هي الغلاف.",
+      "reorder_hint": "اسحب الصورة أو استخدم أسهمها لإعادة الترتيب. الصورة الأولى هي الغلاف.",
       "status_processing": "جارٍ تجهيز الصورة",
       "status_ready": "بانتظار الرفع",
       "status_uploading": "جارٍ الرفع، {percent}%",
@@ -834,11 +833,13 @@
       "summary_uploading": "تم رفع {done} من {total} صور",
       "summary_waiting": "تُرفع صورك عند حفظ الإعلان.",
       "summary_done": "تم رفع كل الصور.",
-      "dnd_instructions": "لنقل صورة اضغط مسافة أو Enter، واستخدم الأسهم، ثم اضغط مسافة أو Enter مرة أخرى لإفلاتها. اضغط Escape للإلغاء.",
       "dnd_picked": "تم التقاط الصورة {n}.",
       "dnd_over": "فوق الموضع {n}.",
       "dnd_dropped": "أُفلتت الصورة في الموضع {n}.",
-      "dnd_cancelled": "أُلغي النقل."
+      "dnd_cancelled": "أُلغي النقل.",
+      "move_earlier": "نقل الصورة {n} إلى موضع سابق",
+      "move_later": "نقل الصورة {n} إلى موضع لاحق",
+      "moved": "نُقلت الصورة إلى الموضع {n} من {total}."
     },
     "picker": {
       "title": "اختر القسم",
@@ -855,7 +856,14 @@
       "private": "بائع فرد",
       "business": "بائع تجاري",
       "verified": "موثّق",
-      "ads": "{count} إعلان",
+      "ads": {
+        "zero": "{count} إعلان",
+        "one": "{count} إعلان",
+        "two": "{count} إعلان",
+        "few": "{count} إعلانات",
+        "many": "{count} إعلانًا",
+        "other": "{count} إعلان"
+      },
       "member_since": "نشط منذ {date}"
     },
     "tips": {
@@ -887,7 +895,14 @@
       "next_photo": "الصورة التالية",
       "no_photos": "لا توجد صور بعد",
       "created": "أُنشئ {time}",
-      "views": "{count} مشاهدة",
+      "views": {
+        "zero": "{count} مشاهدة",
+        "one": "{count} مشاهدة",
+        "two": "{count} مشاهدة",
+        "few": "{count} مشاهدات",
+        "many": "{count} مشاهدةً",
+        "other": "{count} مشاهدة"
+      },
       "description": "الوصف",
       "features": "المواصفات",
       "ad_id": "رقم الإعلان",
@@ -901,7 +916,8 @@
       "delivery_fee": "توصيل، {amount}",
       "free_delivery": "توصيل مجاني",
       "yes": "نعم",
-      "no": "لا"
+      "no": "لا",
+      "aside_label": "البائع وتفاصيل الإعلان"
     },
     "publish": {
       "title": "جاهز للنشر؟",
@@ -947,6 +963,13 @@
       "field_required": "هذا الحقل مطلوب.",
       "field_number": "أدخل رقماً.",
       "field_too_long": "يجب ألا يتجاوز 255 حرفاً."
+    },
+    "load_failed": "تعذّر تحميل الأقسام والمناطق.",
+    "your_ad": {
+      "title": "إعلانك",
+      "visits": "الزيارات",
+      "wishlist": "المفضلة",
+      "published": "تاريخ النشر"
     }
   },
   "home": {

@@ -5,10 +5,14 @@ import type { Ad, CategoryField } from '@/lib/api/types';
 import {
   EMPTY_AD_FORM,
   adFormFromAd,
+  changedFields,
   firstErrorField,
   isAmount,
+  isPublishable,
   normalizeDigits,
   optionLabel,
+  selectOptions,
+  selectedOptionLabel,
   serverErrorsToForm,
   toAdPayload,
   validateAdForm,
@@ -208,6 +212,64 @@ describe('optionLabel', () => {
     expect(optionLabel('like_new')).toBe('Like new');
     expect(optionLabel('petrol')).toBe('Petrol');
     expect(optionLabel('BMW')).toBe('BMW');
+  });
+});
+
+describe('selectOptions', () => {
+  const fuel: CategoryField = {
+    key: 'fuel',
+    label: { ar: 'الوقود', en: 'Fuel' },
+    type: 'select',
+    required: false,
+    options: ['petrol', 'plug_in_hybrid'],
+    options_labeled: [
+      { value: 'petrol', label: 'بنزين' },
+      { value: 'plug_in_hybrid', label: 'هجين قابل للشحن' },
+    ],
+  };
+
+  it('shows the labels the API sends in the page language', () => {
+    expect(selectOptions(fuel)).toEqual(fuel.options_labeled);
+    expect(selectedOptionLabel(fuel, 'petrol')).toBe('بنزين');
+  });
+
+  it('falls back to the raw values as words while the API sends no labels', () => {
+    const unlabeled = { ...fuel, options_labeled: undefined };
+    expect(selectOptions(unlabeled)).toEqual([
+      { value: 'petrol', label: 'Petrol' },
+      { value: 'plug_in_hybrid', label: 'Plug in hybrid' },
+    ]);
+    expect(selectedOptionLabel(unlabeled, 'petrol')).toBe('Petrol');
+  });
+});
+
+describe('isPublishable', () => {
+  it('takes new, draft and rejected ads to the publish step, and saves live ones in place', () => {
+    expect(isPublishable(null)).toBe(true);
+    expect(isPublishable({ status: 'draft' })).toBe(true);
+    expect(isPublishable({ status: 'rejected' })).toBe(true);
+    expect(isPublishable({ status: 'active' })).toBe(false);
+    expect(isPublishable({ status: 'pending' })).toBe(false);
+  });
+});
+
+describe('changedFields', () => {
+  const saved = toAdPayload(VALID, CAR_FIELDS);
+
+  it('keeps only what differs', () => {
+    expect(changedFields(saved, { ...saved })).toEqual({});
+    expect(changedFields(saved, { ...saved, price: 179000, title: 'Toyota Land Cruiser 2021 GXR' })).toEqual({
+      price: 179000,
+      title: 'Toyota Land Cruiser 2021 GXR',
+    });
+  });
+
+  it('compares custom fields by value, whatever their key order', () => {
+    const reordered = { ...saved, custom_fields: Object.fromEntries(Object.entries(saved.custom_fields).reverse()) };
+    expect(changedFields(saved, reordered)).toEqual({});
+
+    const newerYear = toAdPayload({ ...VALID, customFields: { ...VALID.customFields, year: '2022' } }, CAR_FIELDS);
+    expect(changedFields(saved, newerYear)).toEqual({ custom_fields: { make: 'Toyota', year: 2022, imported: false } });
   });
 });
 

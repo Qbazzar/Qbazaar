@@ -4,14 +4,15 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, ImageIcon, ImageOff } from 'lucide-react';
 
-import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
+import { visibleFocusRing } from './FormParts';
+
 const arrowButton = cn(
   'absolute top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-qb-surface text-qb-ink shadow-qb-raised transition-colors hover:bg-qb-hover',
-  focusRing,
+  visibleFocusRing,
 );
 
 /** Product-page gallery of preview.html: one photo, arrows and the "1/4" counter. */
@@ -58,7 +59,7 @@ export function PreviewGallery({ title, urls }: { title: string; urls: readonly 
       ) : null}
       <span
         aria-live="polite"
-        className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-[7px] rounded-qb-sm bg-qb-icon/75 px-3.5 py-1.5 text-qb-label text-white"
+        className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-[7px] rounded-qb-sm bg-qb-icon/75 px-3.5 py-1.5 text-qb-label text-qb-surface"
       >
         <Icon icon={ImageIcon} size="sm" className="size-[15px]" />
         <span aria-hidden="true" dir="ltr">

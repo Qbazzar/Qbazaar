@@ -5,7 +5,7 @@ import { Info } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
-import { Select } from '@/components/design-system/Input';
+import { Input, Select, Textarea } from '@/components/design-system/Input';
 import type { CategoryField, CategoryNode, Location } from '@/lib/api/types';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -18,7 +18,7 @@ import {
   customFieldName,
   hasPrice,
   normalizeDigits,
-  optionLabel,
+  selectOptions,
   type AdFormField,
   type AdFormValues,
 } from '@/lib/post-ad/form';
@@ -33,10 +33,12 @@ import {
   FieldError,
   FieldLabel,
   FormSection,
-  controlClass,
+  controlSize,
   describedBy,
   errorId,
   fieldId,
+  selectSize,
+  visibleFocus,
 } from './FormParts';
 import { PhotoUploader } from './PhotoUploader';
 
@@ -80,14 +82,15 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
 
       <div className={fieldGap}>
         <FieldLabel htmlFor={fieldId('title')}>{t('post_ad.basic.ad_title')}</FieldLabel>
-        <input
+        <Input
           id={fieldId('title')}
           value={values.title}
           maxLength={AD_LIMITS.titleMax}
           placeholder={t('post_ad.basic.ad_title_placeholder')}
           autoComplete="off"
+          aria-required
           onChange={(event) => update({ title: event.target.value }, 'title')}
-          className={cn(controlClass, 'h-[57px] rounded-qb-lg px-4')}
+          className="h-[57px] rounded-qb-lg text-qb-body-sm"
           {...describedBy('title', errors.title, titleHintId)}
         />
         <p id={titleHintId} className="mt-2 flex items-center gap-1.5 text-qb-label text-qb-brand">
@@ -121,6 +124,7 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
             className={cn(
               'h-auto shrink-0 px-[26px] text-qb-body-sm font-medium shadow-qb-brand',
               'max-qb-tablet:rounded-qb-pill max-qb-tablet:border max-qb-tablet:border-qb-brand max-qb-tablet:px-4 max-qb-tablet:py-[9px] max-qb-tablet:text-qb-micro',
+              visibleFocus,
             )}
           >
             {t('post_ad.basic.category_select')}
@@ -145,14 +149,15 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
 
       <div>
         <FieldLabel htmlFor={fieldId('description')}>{t('post_ad.basic.description')}</FieldLabel>
-        <textarea
+        <Textarea
           id={fieldId('description')}
           rows={4}
           value={values.description}
           maxLength={AD_LIMITS.descriptionMax}
           placeholder={t('post_ad.basic.description_placeholder')}
+          aria-required
           onChange={(event) => update({ description: event.target.value }, 'description')}
-          className={cn(controlClass, 'min-h-[122px] resize-y py-3.5')}
+          className="min-h-[122px] resize-y px-3.5 text-qb-body-sm"
           {...describedBy('description', errors.description, descriptionHintId)}
         />
         <p id={descriptionHintId} className="mt-2 font-qb-label text-qb-label text-qb-brand">
@@ -170,7 +175,7 @@ export function DetailsSection({ fields }: { fields: readonly CategoryField[] })
 
   return (
     <FormSection id="post-ad-section-details" title={t('post_ad.details.title')}>
-      <div className="grid grid-cols-1 gap-x-4 gap-y-[22px] qb-tablet:grid-cols-2">
+      <div className="[display:grid] grid-cols-1 gap-x-4 gap-y-[22px] qb-tablet:grid-cols-2">
         <div>
           <FieldLabel htmlFor="post-ad-condition" optional={t('post_ad.optional')}>
             {t('post_ad.details.condition')}
@@ -182,7 +187,7 @@ export function DetailsSection({ fields }: { fields: readonly CategoryField[] })
               const condition = CONDITIONS.find((item) => item === event.target.value) ?? null;
               update({ condition });
             }}
-            className={cn('h-[53px] ps-3.5 text-qb-body-sm', values.condition ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
+            className={cn(selectSize, values.condition ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
           >
             <option value="">{t('post_ad.details.choose')}</option>
             {CONDITIONS.map((condition) => (
@@ -252,28 +257,28 @@ function CustomField({
         <Select
           id={id}
           value={text}
-          required={field.required}
+          aria-required={field.required || undefined}
           onChange={(event) => onChange(event.target.value)}
-          className={cn('h-[53px] ps-3.5 text-qb-body-sm', text ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
+          className={cn(selectSize, text ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
           {...describedBy(name, error)}
         >
           <option value="">{t('post_ad.details.choose')}</option>
-          {field.options.map((option) => (
-            <option key={option} value={option}>
-              {optionLabel(option)}
+          {selectOptions(field).map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </Select>
       ) : (
-        <input
+        <Input
           id={id}
           type={field.type === 'date' ? 'date' : 'text'}
           inputMode={field.type === 'number' ? 'decimal' : undefined}
           value={text}
-          required={field.required}
+          aria-required={field.required || undefined}
           maxLength={field.type === 'text' ? AD_LIMITS.customTextMax : undefined}
           onChange={(event) => onChange(field.type === 'number' ? normalizeDigits(event.target.value) : event.target.value)}
-          className={cn(controlClass, 'h-[53px]')}
+          className={controlSize}
           {...describedBy(name, error)}
         />
       )}
@@ -321,7 +326,7 @@ export function PriceSection() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 qb-tablet:grid-cols-2">
+      <div className="[display:grid] grid-cols-1 gap-4 qb-tablet:grid-cols-2">
         <div>
           <FieldLabel htmlFor={fieldId('price')}>{t('post_ad.price.price')}</FieldLabel>
           <AmountInput
@@ -330,6 +335,7 @@ export function PriceSection() {
             value={priced ? values.price : ''}
             placeholder="0"
             disabled={!priced}
+            aria-required={priced || undefined}
             invalid={Boolean(errors.price)}
             onValueChange={(value) => update({ price: normalizeDigits(value) }, 'price')}
             {...describedBy('price', errors.price)}
@@ -345,7 +351,7 @@ export function PriceSection() {
               const priceType = PRICE_TYPES.find((type) => type === event.target.value);
               if (priceType) update({ priceType }, 'price');
             }}
-            className="h-[53px] ps-3.5 text-qb-body-sm text-qb-ink-body"
+            className={cn(selectSize, 'text-qb-ink-body')}
           >
             {PRICE_TYPES.map((type) => (
               <option key={type} value={type}>
@@ -365,19 +371,19 @@ export function LocationSection({ cities }: { cities: readonly Location[] }) {
 
   return (
     <FormSection id="post-ad-section-location" title={t('post_ad.location.title')}>
-      <div className="mb-[18px] grid grid-cols-1 gap-4 qb-tablet:grid-cols-2">
+      <div className="mb-[18px] [display:grid] grid-cols-1 gap-4 qb-tablet:grid-cols-2">
         <div>
           <FieldLabel htmlFor={fieldId('postalCode')} optional={t('post_ad.optional')}>
             {t('post_ad.location.postal_code')}
           </FieldLabel>
-          <input
+          <Input
             id={fieldId('postalCode')}
             value={values.postalCode}
             maxLength={AD_LIMITS.postalCodeMax}
             placeholder="XXXXX"
             autoComplete="postal-code"
             onChange={(event) => update({ postalCode: normalizeDigits(event.target.value) }, 'postalCode')}
-            className={cn(controlClass, 'h-[53px]')}
+            className={controlSize}
             {...describedBy('postalCode', errors.postalCode)}
           />
           <FieldError name="postalCode" message={errors.postalCode} />
@@ -387,8 +393,9 @@ export function LocationSection({ cities }: { cities: readonly Location[] }) {
           <Select
             id={fieldId('locationId')}
             value={values.locationId ?? ''}
+            aria-required
             onChange={(event) => update({ locationId: event.target.value || null }, 'locationId')}
-            className={cn('h-[53px] ps-3.5 text-qb-body-sm', values.locationId ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
+            className={cn(selectSize, values.locationId ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
             {...describedBy('locationId', errors.locationId)}
           >
             <option value="">{t('post_ad.location.area_placeholder')}</option>
@@ -411,14 +418,14 @@ export function LocationSection({ cities }: { cities: readonly Location[] }) {
         <FieldLabel htmlFor={fieldId('street')} optional={t('post_ad.optional')}>
           {t('post_ad.location.street')}
         </FieldLabel>
-        <input
+        <Input
           id={fieldId('street')}
           value={values.street}
           maxLength={AD_LIMITS.streetMax}
           placeholder={t('post_ad.location.street_placeholder')}
           autoComplete="street-address"
           onChange={(event) => update({ street: event.target.value }, 'street')}
-          className={cn(controlClass, 'h-[53px]')}
+          className={controlSize}
           {...describedBy('street', errors.street)}
         />
         <FieldError name="street" message={errors.street} />

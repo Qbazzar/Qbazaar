@@ -6,6 +6,9 @@
  * Requests never overlap: the API refuses a second upload to the same ad
  * while one is running (409) and allows 20 upload requests a minute (429),
  * so both are waited out and retried a few times.
+ *
+ * A new photo sends a live ad back to review, so for a live ad the queue
+ * holds every change (uploads, removals and the order) until it is saved.
  */
 import { ApiClientError } from '@/lib/api/auth';
 import type { Media } from '@/lib/api/types';
@@ -45,6 +48,11 @@ export interface AddResult {
   rejected: RejectedFile[];
 }
 
+export interface ResetOptions {
+  /** Keep uploads, removals and reorders until `commit()`: the ad is live. */
+  holdUntilSave?: boolean;
+}
+
 /** How long to wait before retrying a failed upload, or null to give up. */
 export function uploadRetryDelay(error: unknown, attempt: number): number | null {
   if (attempt >= MAX_UPLOAD_ATTEMPTS || !(error instanceof ApiClientError)) return null;
@@ -78,7 +86,12 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
   const controllers = new Map<string, AbortController>();
   const listeners = new Set<(adId: string) => void>();
   const imagesChanged = (id: string) => listeners.forEach((listener) => listener(id));
+  /** The ad changes go to; null until the ad exists, and outside a save while holding. */
   let adId: string | null = null;
+  let holdUntilSave = false;
+  /** Server photos the seller removed from a live ad, deleted on the next save. */
+  let heldRemovals: PhotoItem[] = [];
+  let refusedRemovals = 0;
   let serverOrder: Media['id'][] = [];
   let processing: Promise<void> | null = null;
   let uploading: Promise<void> | null = null;
@@ -140,12 +153,33 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
         });
       } catch (error) {
         const delay = uploadRetryDelay(error, attempt);
-        if (delay === null || signal.aborted) throw error;
+        // A photo removed meanwhile is not worth another request from the rate limit.
+        if (delay === null || signal.aborted || !find(photo.key)) throw error;
         patch(photo.key, { progress: 0 });
         await wait(delay, signal);
         if (signal.aborted) throw error;
       }
     }
+  }
+
+  /** Deletes the held removals; a photo the server keeps comes back into the list. */
+  async function sendHeldRemovals(current: number): Promise<boolean> {
+    let removed = false;
+    for (const photo of heldRemovals.splice(0)) {
+      const mediaId = (photo.media as Media).id;
+      try {
+        await deps.removeMedia(mediaId);
+        if (current !== generation) return removed;
+        serverOrder = serverOrder.filter((item) => item !== mediaId);
+        releaseUrl(photo);
+        removed = true;
+      } catch {
+        if (current !== generation) return removed;
+        deps.setPhotos((photos) => [...photos, photo]);
+        refusedRemovals += 1;
+      }
+    }
+    return removed;
   }
 
   function upload() {
@@ -154,6 +188,7 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
     const current = generation;
     let changed = false;
     const run = (async () => {
+      if (await sendHeldRemovals(current)) changed = true;
       for (;;) {
         if (current !== generation) return;
         const next = deps.getPhotos().find((photo) => photo.status === 'ready');
@@ -180,7 +215,7 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
           controllers.delete(next.key);
         }
       }
-      if (await saveOrder(id)) changed = true;
+      if (await saveOrder(id, current)) changed = true;
     })();
     uploading = run;
     void run.finally(() => {
@@ -197,12 +232,13 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
   }
 
   /** Sends the on-screen order when it differs from the server's. */
-  async function saveOrder(id: string): Promise<boolean> {
+  async function saveOrder(id: string, current: number): Promise<boolean> {
+    if (current !== generation) return false;
     const wanted = uploadedMediaIds(deps.getPhotos());
     if (wanted.length === 0 || sameOrder(wanted, serverOrder)) return false;
     try {
       await deps.reorder(id, wanted);
-      serverOrder = wanted;
+      if (current === generation) serverOrder = wanted;
       return true;
     } catch {
       // The server keeps its order; the next change tries again.
@@ -214,9 +250,18 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
     const id = adId;
     // A running upload batch saves the order when it finishes.
     if (!id || uploading) return;
+    const current = generation;
     ordering = ordering.then(async () => {
-      if (await saveOrder(id)) imagesChanged(id);
+      if (await saveOrder(id, current)) imagesChanged(id);
     });
+  }
+
+  /** Resolves once nothing is being resized, uploaded or reordered. */
+  async function settle(): Promise<void> {
+    while (processing || uploading) {
+      await Promise.allSettled([processing, uploading]);
+    }
+    await ordering;
   }
 
   return {
@@ -227,22 +272,36 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
     },
 
     /** Starts over with the given server photos (a fresh form, or the ad being edited). */
-    reset(media: Media[] = [], id: string | null = null) {
+    reset(media: Media[] = [], id: string | null = null, { holdUntilSave: hold = false }: ResetOptions = {}) {
       generation += 1;
       controllers.forEach((controller) => controller.abort());
       controllers.clear();
       deps.getPhotos().forEach(releaseUrl);
+      heldRemovals.forEach(releaseUrl);
+      heldRemovals = [];
+      holdUntilSave = hold;
       deps.setPhotos(() => media.map(photoFromMedia));
-      adId = id;
+      adId = hold ? null : id;
       serverOrder = media.map((item) => item.id);
       processing = null;
       uploading = null;
     },
 
-    /** The ad exists on the server now: upload whatever is waiting. */
-    attach(id: string) {
+    /**
+     * The ad is saved: sends what waits for it (held removals, uploads, then
+     * the order) and resolves when that is done, with the number of removals
+     * the server refused (those photos are back in the list). A live ad holds
+     * the changes made after this until its next save.
+     */
+    async commit(id: string): Promise<number> {
+      const current = generation;
       adId = id;
+      refusedRemovals = 0;
       upload();
+      await settle();
+      if (current !== generation) return 0;
+      if (holdUntilSave) adId = null;
+      return refusedRemovals;
     },
 
     /** Queues picked files, keeping the ad at `max` photos at most. */
@@ -293,6 +352,10 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
         releaseUrl(photo);
         return true;
       }
+      if (holdUntilSave && !adId) {
+        heldRemovals.push(photo);
+        return true;
+      }
       const mediaId = photo.media.id;
       try {
         await deps.removeMedia(mediaId);
@@ -316,12 +379,6 @@ export function createPhotoQueue(deps: PhotoQueueDeps) {
       saveOrderWhenIdle();
     },
 
-    /** Resolves once nothing is being resized, uploaded or reordered. */
-    async settle(): Promise<void> {
-      while (processing || uploading) {
-        await Promise.allSettled([processing, uploading]);
-      }
-      await ordering;
-    },
+    settle,
   };
 }

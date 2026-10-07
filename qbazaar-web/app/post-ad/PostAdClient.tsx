@@ -1,34 +1,34 @@
 'use client';
 
-import { LoaderCircle } from 'lucide-react';
-
 import { PhoneVerificationNotice } from '@/components/auth/PhoneVerificationNotice';
-import { Icon } from '@/components/design-system/Icon';
+import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { PostAdFlow } from '@/components/post-ad/PostAdFlow';
+import { PostAdLoading, formBreadcrumbClass } from '@/components/post-ad/PostAdPage';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { t } from '@/lib/i18n/messages';
+import { useCategoryTreeQuery } from '@/lib/queries/categories';
+import { useQatarLocationsQuery } from '@/lib/queries/locations';
 
 /** Signed-in sellers with a verified phone post here; others are sent on first (FE-16.10). */
 export function PostAdClient() {
   const { user, isLoading } = useRequireAuth();
+  // Loaded while sign-in resolves; the form reads them from the cache.
+  useCategoryTreeQuery();
+  useQatarLocationsQuery();
 
-  if (isLoading || !user) {
+  if (isLoading || !user) return <PostAdLoading />;
+
+  const breadcrumb = [{ label: t('post_ad.breadcrumb.home'), href: '/' }, { label: t('post_ad.breadcrumb.add_ads') }];
+
+  if (!user.phone_verified) {
     return (
-      <div role="status" className="flex min-h-[60vh] items-center justify-center">
-        <Icon icon={LoaderCircle} size="lg" label={t('common.loading')} className="animate-spin text-qb-ink-subtle motion-reduce:animate-none" />
-      </div>
+      <>
+        <Breadcrumb items={breadcrumb} className={formBreadcrumbClass} />
+        <h1 className="sr-only">{t('post_ad.page_title')}</h1>
+        <PhoneVerificationNotice context="post_ad" />
+      </>
     );
   }
 
-  if (!user.phone_verified) return <PhoneVerificationNotice context="post_ad" />;
-
-  return (
-    <PostAdFlow
-      user={user}
-      breadcrumb={[
-        { label: t('post_ad.breadcrumb.home'), href: '/' },
-        { label: t('post_ad.breadcrumb.add_ads') },
-      ]}
-    />
-  );
+  return <PostAdFlow user={user} breadcrumb={breadcrumb} />;
 }

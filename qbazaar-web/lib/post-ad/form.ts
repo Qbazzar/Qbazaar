@@ -7,10 +7,13 @@ import type {
   Ad,
   AdCondition,
   AdShipping,
+  AdStatus,
   AdType,
   CategoryField,
+  CategoryFieldOption,
   CreateAdRequest,
   PriceType,
+  UpdateAdRequest,
 } from '@/lib/api/types';
 
 export const AD_LIMITS = {
@@ -25,6 +28,14 @@ export const AD_LIMITS = {
   customTextMax: 255,
   photosMax: 20,
 } as const;
+
+/** Ads that go through the publish step; any other ad is live (or was) and is saved in place. */
+const PUBLISHABLE_STATUSES: readonly AdStatus[] = ['draft', 'rejected'];
+
+/** A new ad (null), a draft or a rejected one: nothing a buyer sees yet. */
+export function isPublishable(ad: Pick<Ad, 'status'> | null): boolean {
+  return ad === null || PUBLISHABLE_STATUSES.includes(ad.status);
+}
 
 export const AD_TYPES: readonly AdType[] = ['offering', 'wanted'];
 export const SHIPPING_OPTIONS: readonly AdShipping[] = ['pickup_only', 'delivery'];
@@ -239,10 +250,20 @@ function customFieldError(field: CategoryField, value: CustomFieldValue | undefi
   return null;
 }
 
-/** Custom field options come as raw values ("like_new", "petrol"); show them as words. */
+/** A raw option value ("like_new", "petrol") as words, for categories the API sends no labels for. */
 export function optionLabel(option: string): string {
   const words = option.replace(/_/g, ' ');
   return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/** A select field's options with their label in the page language. */
+export function selectOptions(field: CategoryField): CategoryFieldOption[] {
+  return field.options_labeled ?? (field.options ?? []).map((value) => ({ value, label: optionLabel(value) }));
+}
+
+/** How a stored select value reads on the page. */
+export function selectedOptionLabel(field: CategoryField, value: string): string {
+  return selectOptions(field).find((option) => option.value === value)?.label ?? optionLabel(value);
 }
 
 /** First field with an error, in page order (custom fields after the details). */
@@ -293,6 +314,29 @@ function customFieldsForApi(
     payload[field.key] = field.type === 'number' ? Number(text) : text;
   }
   return payload;
+}
+
+/**
+ * The fields of `next` that differ from `saved`. An update sends only these:
+ * the API sends a live ad back to review when its text, category or custom
+ * fields change, and it compares the stored custom fields strictly (key order
+ * and types), so a rebuilt but equal bag would count as a change.
+ */
+export function changedFields(saved: CreateAdRequest, next: CreateAdRequest): UpdateAdRequest {
+  const changes = Object.entries(next).filter(([key, value]) => !sameValue(saved[key as keyof CreateAdRequest], value));
+  return Object.fromEntries(changes) as UpdateAdRequest;
+}
+
+/** Deep equality where the key order of objects does not matter. */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!isRecord(a) || !isRecord(b)) return false;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => key in b && sameValue(a[key], b[key]));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 const SERVER_FIELDS: Record<string, AdFormField> = {

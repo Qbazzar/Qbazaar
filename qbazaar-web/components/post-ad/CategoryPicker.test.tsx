@@ -53,6 +53,18 @@ describe('CategoryPicker', () => {
     expect(onSelect).toHaveBeenCalledWith('bags');
   });
 
+  it('on phones, moves focus into the level it opens and back to the parent', () => {
+    const matchMedia = vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+    const { dialog } = open();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Vehicles' }));
+    expect(within(dialog).getByRole('button', { name: 'Cars' })).toHaveFocus();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: t('post_ad.picker.back') }));
+    expect(within(dialog).getByRole('button', { name: 'Vehicles' })).toHaveFocus();
+    matchMedia.mockRestore();
+  });
+
   it('switching category clears the old subcategory', () => {
     const { dialog } = open('cars');
 

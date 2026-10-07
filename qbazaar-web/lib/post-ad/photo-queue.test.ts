@@ -103,8 +103,7 @@ describe('createPhotoQueue', () => {
     const { queue, uploads, photos } = setup();
     queue.add([jpeg('a.jpg', 3000), jpeg('b.jpg', 5000)], 20);
 
-    queue.attach('ad-1');
-    await queue.settle();
+    await queue.commit('ad-1');
 
     expect(uploads).toEqual([
       { adId: 'ad-1', size: 300 },
@@ -138,8 +137,7 @@ describe('createPhotoQueue', () => {
     });
 
     queue.add([jpeg('broken.jpg')], 20);
-    queue.attach('ad-1');
-    await queue.settle();
+    await queue.commit('ad-1');
 
     expect(photos()[0]).toMatchObject({ status: 'failed', failure: 'process' });
     expect(deps.upload).not.toHaveBeenCalled();
@@ -153,8 +151,7 @@ describe('createPhotoQueue', () => {
     const { queue, deps, photos } = setup({ upload });
 
     queue.add([jpeg('a.jpg')], 20);
-    queue.attach('ad-1');
-    await queue.settle();
+    await queue.commit('ad-1');
 
     expect(upload).toHaveBeenCalledTimes(2);
     expect(deps.wait).toHaveBeenCalledWith(RATE_LIMIT_WAIT_MS, expect.any(AbortSignal));
@@ -165,8 +162,7 @@ describe('createPhotoQueue', () => {
     const upload = vi.fn().mockRejectedValueOnce(apiError(422, 'UPLOAD_004')).mockResolvedValueOnce(media(9));
     const { queue, photos } = setup({ upload });
     queue.add([jpeg('a.jpg')], 20);
-    queue.attach('ad-1');
-    await queue.settle();
+    await queue.commit('ad-1');
 
     expect(photos()[0]).toMatchObject({ status: 'failed', failure: 'upload', errorCode: 'UPLOAD_004' });
 
@@ -182,8 +178,7 @@ describe('createPhotoQueue', () => {
     await queue.settle();
     queue.makeCover(photos()[1].key);
 
-    queue.attach('ad-1');
-    await queue.settle();
+    await queue.commit('ad-1');
 
     expect(vi.mocked(deps.upload).mock.calls.map(([, file]) => file.size)).toEqual([200, 100]);
     expect(deps.reorder).not.toHaveBeenCalled();
@@ -197,13 +192,13 @@ describe('createPhotoQueue', () => {
       .mockResolvedValueOnce(media(102));
     const { queue, deps, photos } = setup({ upload });
     queue.add([jpeg('a.jpg'), jpeg('b.jpg')], 20);
-    queue.attach('ad-1');
+    const committed = queue.commit('ad-1');
     await vi.waitFor(() => expect(upload).toHaveBeenCalledTimes(1));
 
     queue.makeCover(photos()[1].key);
     expect(deps.reorder).not.toHaveBeenCalled();
     finishFirst(media(101));
-    await queue.settle();
+    await committed;
 
     // The server appended a (101) then b (102); the seller wants b first.
     expect(deps.reorder).toHaveBeenCalledTimes(1);
@@ -239,14 +234,14 @@ describe('createPhotoQueue', () => {
     const upload = vi.fn(() => new Promise<Media>((resolve) => (finish = resolve)));
     const { queue, deps, photos } = setup({ upload });
     queue.add([jpeg('a.jpg')], 20);
-    queue.attach('ad-1');
+    const committed = queue.commit('ad-1');
     await vi.waitFor(() => expect(upload).toHaveBeenCalled());
 
     const key = photos()[0].key;
     const removed = queue.remove(key);
     finish(media(55));
     await removed;
-    await queue.settle();
+    await committed;
 
     expect(photos()).toEqual([]);
     expect(deps.removeMedia).toHaveBeenCalledWith(55);
@@ -261,11 +256,11 @@ describe('createPhotoQueue', () => {
     });
     const { queue, deps, photos } = setup({ upload });
     queue.add([jpeg('a.jpg')], 20);
-    queue.attach('ad-1');
+    const committed = queue.commit('ad-1');
     await vi.waitFor(() => expect(upload).toHaveBeenCalled());
 
     await queue.remove(photos()[0].key);
-    await queue.settle();
+    await committed;
 
     expect(signal?.aborted).toBe(true);
     expect(photos()).toEqual([]);
@@ -282,13 +277,13 @@ describe('createPhotoQueue', () => {
     });
     const { queue, deps, photos } = setup({ upload });
     queue.add([jpeg('a.jpg')], 20);
-    queue.attach('ad-1');
+    const committed = queue.commit('ad-1');
     await vi.waitFor(() => expect(upload).toHaveBeenCalled());
 
     await queue.remove(photos()[0].key);
     expect(signal?.aborted).toBe(false);
     finish(media(56));
-    await queue.settle();
+    await committed;
 
     expect(photos()).toEqual([]);
     expect(deps.removeMedia).toHaveBeenCalledWith(56);
@@ -308,7 +303,7 @@ describe('createPhotoQueue', () => {
       .mockResolvedValue(undefined);
     const { queue, photos } = setup({ upload, reorder });
     queue.add([jpeg('a.jpg'), jpeg('b.jpg'), jpeg('c.jpg')], 20);
-    queue.attach('ad-1');
+    const committed = queue.commit('ad-1');
     await vi.waitFor(() => expect(upload).toHaveBeenCalledTimes(1));
 
     queue.makeCover(photos()[1].key);
@@ -316,7 +311,7 @@ describe('createPhotoQueue', () => {
     await vi.waitFor(() => expect(reorder).toHaveBeenCalledTimes(1));
     queue.makeCover(photos()[2].key);
     finishReorder();
-    await queue.settle();
+    await committed;
 
     // a (101), b (102), c (103) went up in turn; b became the cover, then c.
     expect(reorder.mock.calls).toEqual([
@@ -330,12 +325,12 @@ describe('createPhotoQueue', () => {
     const upload = vi.fn(() => new Promise<Media>((resolve) => (finish = resolve)));
     const { queue, deps, photos } = setup({ upload });
     queue.add([jpeg('a.jpg')], 20);
-    queue.attach('ad-1');
+    const committed = queue.commit('ad-1');
     await vi.waitFor(() => expect(upload).toHaveBeenCalled());
 
     queue.reset();
     finish(media(77));
-    await queue.settle();
+    await committed;
 
     expect(photos()).toEqual([]);
     expect(deps.removeMedia).not.toHaveBeenCalled();
@@ -347,13 +342,91 @@ describe('createPhotoQueue', () => {
     const unsubscribe = queue.onImagesChanged(listener);
 
     queue.add([jpeg('a.jpg')], 20);
-    queue.attach('ad-1');
-    await queue.settle();
+    await queue.commit('ad-1');
     await vi.waitFor(() => expect(listener).toHaveBeenCalledWith('ad-1'));
 
     unsubscribe();
     queue.add([jpeg('b.jpg')], 20);
     await queue.settle();
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("holds a live ad's uploads, removals and order until it is saved", async () => {
+    const { queue, deps, photos } = setup();
+    queue.reset([media(1), media(2), media(3)], 'ad-9', { holdUntilSave: true });
+
+    queue.add([jpeg('a.jpg')], 20);
+    expect(await queue.remove('media-2')).toBe(true);
+    queue.move(1, 0);
+    await queue.settle();
+
+    expect(photos().map((photo) => photo.key)).toEqual(['media-3', 'media-1', 'k1']);
+    expect(deps.upload).not.toHaveBeenCalled();
+    expect(deps.removeMedia).not.toHaveBeenCalled();
+    expect(deps.reorder).not.toHaveBeenCalled();
+
+    expect(await queue.commit('ad-9')).toBe(0);
+
+    // The removal goes first, so the photo limit counts the new photo against what stays.
+    expect(vi.mocked(deps.removeMedia).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(deps.upload).mock.invocationCallOrder[0]);
+    expect(deps.removeMedia).toHaveBeenCalledWith(2);
+    expect(deps.upload).toHaveBeenCalledWith('ad-9', expect.any(Blob), expect.anything());
+    expect(deps.reorder).toHaveBeenCalledWith('ad-9', [3, 1, 101]);
+
+    queue.add([jpeg('b.jpg')], 20);
+    await queue.settle();
+    expect(deps.upload).toHaveBeenCalledTimes(1);
+  });
+
+  it('puts back a held removal the server refuses, and says so', async () => {
+    const removeMedia = vi.fn().mockRejectedValue(apiError(500, 'SERVER_ERROR'));
+    const { queue, photos } = setup({ removeMedia });
+    queue.reset([media(1), media(2)], 'ad-9', { holdUntilSave: true });
+    await queue.remove('media-1');
+
+    expect(await queue.commit('ad-9')).toBe(1);
+    expect(photos().map((photo) => photo.key)).toEqual(['media-2', 'media-1']);
+  });
+
+  it('spends no retry on a photo removed while its upload was failing', async () => {
+    let fail: (error: unknown) => void = () => undefined;
+    const upload = vi.fn((_adId: string, _file: Blob, options: UploadOptions) => {
+      options.onProgress(100);
+      return new Promise<Media>((_resolve, reject) => (fail = reject));
+    });
+    const { queue, deps, photos } = setup({ upload });
+    queue.add([jpeg('a.jpg')], 20);
+    const committed = queue.commit('ad-1');
+    await vi.waitFor(() => expect(upload).toHaveBeenCalled());
+
+    await queue.remove(photos()[0].key);
+    fail(apiError(429, 'RATE_LIMIT_EXCEEDED'));
+    await committed;
+
+    expect(upload).toHaveBeenCalledTimes(1);
+    expect(deps.wait).not.toHaveBeenCalled();
+  });
+
+  it("leaves a reorder still queued for the previous form out of the new one's", async () => {
+    let finishFirst: () => void = () => undefined;
+    const reorder = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise<void>((resolve) => (finishFirst = resolve)))
+      .mockResolvedValue(undefined);
+    const { queue } = setup({ reorder });
+    queue.reset([media(1), media(2)], 'ad-1');
+    queue.move(1, 0);
+    await vi.waitFor(() => expect(reorder).toHaveBeenCalledTimes(1));
+    queue.move(1, 0);
+
+    queue.reset([media(5), media(6)], 'ad-2');
+    queue.move(1, 0);
+    finishFirst();
+    await queue.settle();
+
+    expect(reorder.mock.calls).toEqual([
+      ['ad-1', [2, 1]],
+      ['ad-2', [6, 5]],
+    ]);
   });
 });

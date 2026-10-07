@@ -3,22 +3,29 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { CloudOff } from 'lucide-react';
 
 import { Breadcrumb, type BreadcrumbItem } from '@/components/design-system/Breadcrumb';
+import { Button } from '@/components/design-system/Button';
+import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import type { Ad, CategoryNode, Location, User } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
+import { isPublishable } from '@/lib/post-ad/form';
 import { fieldsOf } from '@/lib/post-ad/tree';
-import { adKeys, useMyAdsQuery } from '@/lib/queries/ads';
+import { useAccountSummaryQuery } from '@/lib/queries/account';
+import { adKeys } from '@/lib/queries/ads';
 import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { usePostAdStore } from '@/store/post-ad';
 
 import { AdFormView } from './AdFormView';
 import { AdPreviewView } from './AdPreviewView';
+import { visibleFocus } from './FormParts';
+import { PostAdLoading, formBreadcrumbClass } from './PostAdPage';
 import type { SellerSummary } from './ProfileCard';
 import { ReviewState } from './ReviewState';
-import { beginPostAdSession, photoQueue } from './session';
-import { isPublishable, usePostAdActions } from './usePostAdActions';
+import { beginPostAdSession, createSession, photoQueue } from './session';
+import { usePostAdActions } from './usePostAdActions';
 import { VIEW_HEADING_ID } from './view-heading';
 
 export interface PostAdFlowProps {
@@ -43,18 +50,20 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
   const view = usePostAdStore((state) => state.view);
   const savedAd = usePostAdStore((state) => state.ad);
   const categoryId = usePostAdStore((state) => state.values.categoryId);
-  const { data: tree = NO_CATEGORIES } = useCategoryTreeQuery();
-  const { data: cities = NO_LOCATIONS } = useQatarLocationsQuery();
-  const { data: liveAds } = useMyAdsQuery({ status: 'active' });
+  const treeQuery = useCategoryTreeQuery();
+  const citiesQuery = useQatarLocationsQuery();
+  const { data: summary } = useAccountSummaryQuery();
+  const tree = treeQuery.data ?? NO_CATEGORIES;
+  const cities = citiesQuery.data ?? NO_LOCATIONS;
   const fields = useMemo(() => fieldsOf(tree, categoryId), [tree, categoryId]);
   const actions = usePostAdActions(fields);
   const adId = ad?.id;
 
   useEffect(() => {
     // The ad prop is read once per ad: refetches of it must not wipe the seller's edits.
-    beginPostAdSession(adId ? `edit:${adId}` : 'create', ad ?? null);
+    beginPostAdSession(adId ? `edit:${adId}` : createSession(user.id), ad ?? null);
     setReady(true);
-  }, [adId]);
+  }, [adId, user.id]);
 
   useEffect(
     () =>
@@ -74,14 +83,37 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
     document.getElementById(VIEW_HEADING_ID)?.focus({ preventScroll: true });
   }, [view]);
 
-  if (!ready) return <div aria-busy="true" className="min-h-[60vh]" />;
+  // The custom fields and the areas come from these, so the form waits for both.
+  if (!treeQuery.data || !citiesQuery.data) {
+    if (!treeQuery.isError && !citiesQuery.isError) return <PostAdLoading />;
+    return (
+      <StatePanel
+        icon={<StateIcon icon={CloudOff} tone="muted" />}
+        title={t('post_ad.load_failed')}
+        description={t('common.error')}
+        action={
+          <Button
+            disabled={treeQuery.isFetching || citiesQuery.isFetching}
+            className={visibleFocus}
+            onClick={() => {
+              if (treeQuery.isError) void treeQuery.refetch();
+              if (citiesQuery.isError) void citiesQuery.refetch();
+            }}
+          >
+            {t('common.retry')}
+          </Button>
+        }
+      />
+    );
+  }
+  if (!ready) return <PostAdLoading />;
 
   const seller: SellerSummary = {
     name: user.full_name,
     avatarUrl: user.avatar_thumb_url ?? user.avatar_url,
     accountType: user.account_type,
     verified: user.phone_verified,
-    adsCount: liveAds?.meta.total,
+    adsCount: summary?.ads_by_status.active,
     memberSince: user.created_at,
   };
   const canPublish = isPublishable(savedAd);
@@ -95,7 +127,7 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
             router.push('/post-ad');
             return;
           }
-          beginPostAdSession('create', null);
+          beginPostAdSession(createSession(user.id), null);
         }}
       />
     );
@@ -114,13 +146,14 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
         onEdit={actions.edit}
         onPublish={() => usePostAdStore.getState().setView('publish')}
         onConfirm={() => void actions.publish()}
+        onDelete={() => void actions.remove()}
       />
     );
   }
 
   return (
     <>
-      <Breadcrumb items={breadcrumb} className="mb-6 max-qb-tablet:text-qb-body qb-tablet:mb-8" />
+      <Breadcrumb items={breadcrumb} className={formBreadcrumbClass} />
       <AdFormView
         title={adId ? t('post_ad.edit_title') : t('post_ad.page_title')}
         seller={seller}

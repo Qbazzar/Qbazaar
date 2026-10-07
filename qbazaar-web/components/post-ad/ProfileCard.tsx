@@ -5,12 +5,16 @@ import { BadgeCheck, CalendarDays, LoaderCircle, Tag } from 'lucide-react';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { Button } from '@/components/design-system/Button';
+import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
 import type { AccountType } from '@/lib/api/types';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { formatDate } from '@/lib/post-ad/format';
 import { cn } from '@/lib/utils';
+
+import { visibleFocus } from './FormParts';
 
 export interface SellerSummary {
   name: string;
@@ -28,45 +32,61 @@ export interface ProfileAction {
   busy: boolean;
 }
 
-/** Card heading of the right column ("Your Profile", "Tips"). */
+/** Card heading of the right column ("Your Profile", "Tips"): 24 px at every width. */
 export function AsideTitle({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <h2 id={id} className="mb-[18px] text-qb-h5 font-medium tracking-normal text-qb-ink-body qb-tablet:text-qb-h3">
+    <h2 id={id} className="mb-[18px] text-qb-h3 font-medium tracking-normal text-qb-ink-body">
       {children}
     </h2>
   );
 }
 
+const IDENTITY_STYLES = {
+  /** "Your Profile" on add-ads.html. */
+  form: {
+    name: 'text-qb-h5 text-qb-ink-title',
+    badge: 'bg-qb-brand-soft text-qb-brand-on-soft',
+    rows: 'gap-2.5',
+  },
+  /** The seller card of preview.html. */
+  preview: {
+    name: 'text-[17px] text-qb-ink',
+    badge: 'border border-qb-brand bg-qb-surface text-qb-brand',
+    rows: 'gap-3',
+  },
+} as const;
+
 /** Avatar, name, seller badge, ads count and member date, as on the add-ads and preview cards. */
-export function SellerIdentity({ seller }: { seller: SellerSummary }) {
+export function SellerIdentity({ seller, variant = 'form' }: { seller: SellerSummary; variant?: keyof typeof IDENTITY_STYLES }) {
   const locale = getLocale();
+  const styles = IDENTITY_STYLES[variant];
   return (
     <>
       {/* The badge moves under the name when a narrow card can't hold both. */}
       <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-2">
         <div className="flex min-w-0 flex-[1_1_180px] items-center gap-3">
           <Avatar name={seller.name} src={seller.avatarUrl} tone="brand" className="size-11 text-qb-body" />
-          <span className="min-w-0 text-qb-h5 font-semibold break-words text-qb-ink-title">
+          <span className={cn('min-w-0 font-semibold break-words', styles.name)}>
             {seller.name}
             {seller.verified ? (
               <Icon icon={BadgeCheck} size="sm" label={t('post_ad.profile.verified')} className="ms-1.5 inline-block align-[-2px] text-qb-info" />
             ) : null}
           </span>
         </div>
-        <span className="shrink-0 rounded-qb-sm bg-qb-brand-soft px-3 py-[5px] font-qb-label text-qb-tiny font-medium text-qb-brand">
+        <span className={cn('shrink-0 rounded-qb-sm px-3 py-[5px] font-qb-label text-qb-tiny font-medium', styles.badge)}>
           {t(`post_ad.profile.${seller.accountType}`)}
         </span>
       </div>
       <ul className="mt-[18px] flex flex-col gap-3.5 border-t border-qb-line pt-[18px] text-qb-body-sm text-qb-ink-secondary">
-        <li className="flex items-center gap-2.5">
+        <li className={cn('flex items-center', styles.rows)}>
           <Icon icon={Tag} size="sm" className="size-[18px] text-qb-ink-subtle" />
           {seller.adsCount === undefined ? (
             <span className="h-4 w-14 animate-pulse rounded-qb-xs bg-qb-fill motion-reduce:animate-none" />
           ) : (
-            t('post_ad.profile.ads', { count: seller.adsCount })
+            tPlural('post_ad.profile.ads', seller.adsCount, locale)
           )}
         </li>
-        <li className="flex items-center gap-2.5">
+        <li className={cn('flex items-center', styles.rows)}>
           <Icon icon={CalendarDays} size="sm" className="size-[18px] text-qb-ink-subtle" />
           {t('post_ad.profile.member_since', { date: formatDate(seller.memberSince, locale) })}
         </li>
@@ -90,7 +110,7 @@ export function ProfileCard({
   disabled: boolean;
 }) {
   return (
-    <section aria-labelledby="post-ad-profile" className="rounded-qb-xl border border-qb-line bg-qb-surface p-6 font-qb">
+    <section aria-labelledby="post-ad-profile" className={cardVariants()}>
       <AsideTitle id="post-ad-profile">{t('post_ad.profile.title')}</AsideTitle>
       <SellerIdentity seller={seller} />
       <div className="mt-[22px] flex flex-col gap-3 max-qb-tablet:flex-row">
@@ -127,7 +147,11 @@ function ActionButton({
       disabled={disabled}
       aria-busy={action.busy || undefined}
       onClick={action.onClick}
-      className={cn('px-3.5 max-qb-tablet:h-[42px] max-qb-tablet:min-w-0 max-qb-tablet:flex-1 max-qb-tablet:px-1.5 max-qb-tablet:text-qb-caption', className)}
+      className={cn(
+        'px-3.5 max-qb-tablet:h-[42px] max-qb-tablet:min-w-0 max-qb-tablet:flex-1 max-qb-tablet:px-1.5 max-qb-tablet:text-qb-caption',
+        visibleFocus,
+        className,
+      )}
     >
       {action.busy ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
       {action.label}

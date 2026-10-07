@@ -707,7 +707,8 @@
     "optional": "(optional)",
     "breadcrumb": {
       "home": "Home",
-      "add_ads": "Add Ads"
+      "add_ads": "Add Ads",
+      "my_ads": "My Ads"
     },
     "basic": {
       "title": "Basic Information",
@@ -763,12 +764,10 @@
       "cover": "Cover",
       "make_cover": "Make photo {n} the cover",
       "remove": "Remove photo {n}",
-      "move": "Move photo {n}",
-      "sortable": "sortable photo",
       "retry": "Retry uploading photo {n}",
       "retry_short": "Retry",
       "uploading_label": "Uploading photo {n}",
-      "reorder_hint": "Drag to reorder. The first photo is the cover.",
+      "reorder_hint": "Drag a photo or use its arrows to reorder. The first photo is the cover.",
       "status_processing": "Preparing the photo",
       "status_ready": "Waiting to upload",
       "status_uploading": "Uploading, {percent}%",
@@ -786,11 +785,13 @@
       "summary_uploading": "{done} of {total} photos uploaded",
       "summary_waiting": "Your photos upload when the ad is saved.",
       "summary_done": "All photos are uploaded.",
-      "dnd_instructions": "To move a photo, press space or enter, use the arrow keys, then press space or enter again to drop it. Press escape to cancel.",
       "dnd_picked": "Picked up photo {n}.",
       "dnd_over": "Over position {n}.",
       "dnd_dropped": "Photo dropped at position {n}.",
-      "dnd_cancelled": "Move cancelled."
+      "dnd_cancelled": "Move cancelled.",
+      "move_earlier": "Move photo {n} earlier",
+      "move_later": "Move photo {n} later",
+      "moved": "Photo moved to position {n} of {total}."
     },
     "picker": {
       "title": "Select Category",
@@ -807,7 +808,10 @@
       "private": "Private Seller",
       "business": "Business Seller",
       "verified": "Verified",
-      "ads": "{count} Ads",
+      "ads": {
+        "one": "{count} Ad",
+        "other": "{count} Ads"
+      },
       "member_since": "Active since {date}"
     },
     "tips": {
@@ -839,7 +843,10 @@
       "next_photo": "Next photo",
       "no_photos": "No photos yet",
       "created": "Created {time}",
-      "views": "{count} Views",
+      "views": {
+        "one": "{count} View",
+        "other": "{count} Views"
+      },
       "description": "Description",
       "features": "Features",
       "ad_id": "Ad ID",
@@ -853,7 +860,8 @@
       "delivery_fee": "Delivery, {amount}",
       "free_delivery": "Free delivery",
       "yes": "Yes",
-      "no": "No"
+      "no": "No",
+      "aside_label": "Seller and ad details"
     },
     "publish": {
       "title": "Ready to publish?",
@@ -899,6 +907,13 @@
       "field_required": "This field is required.",
       "field_number": "Enter a number.",
       "field_too_long": "Keep it under 255 characters."
+    },
+    "load_failed": "We couldn't load the categories and areas.",
+    "your_ad": {
+      "title": "Your Ad",
+      "visits": "Visits",
+      "wishlist": "Wishlist",
+      "published": "Publish in"
     }
   },
   "home": {
