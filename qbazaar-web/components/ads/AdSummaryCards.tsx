@@ -1,11 +1,15 @@
+'use client';
+
 import Image from 'next/image';
 
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { AdCard } from '@/components/design-system/AdCard';
 import { AdRowCard } from '@/components/design-system/AdRowCard';
 import { formatAdAge, formatAdPriceLabel, labelFromSlug } from '@/lib/ads/display';
-import { getLocale } from '@/lib/i18n/locale';
+import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { useQatarLocationsQuery } from '@/lib/queries/locations';
+import { findLocationBySlug } from '@/store/locations';
 import type { AdSummary } from '@/lib/api/types';
 
 /** The design's white round heart on listing photos. */
@@ -32,17 +36,26 @@ function AdSummaryImage({ ad, imageSizes }: Pick<AdSummaryCardProps, 'ad' | 'ima
   return <Image src={image.sizes.medium || image.url} alt="" fill sizes={imageSizes} className="object-cover" />;
 }
 
-function cardText(ad: AdSummary) {
+/**
+ * List cards carry only the place slug, so its name in the page language
+ * comes from the (cached) locations tree; the slug as words stands in until
+ * the tree is loaded.
+ */
+function useCardText(ad: AdSummary) {
   const locale = getLocale();
+  const { data: places } = useQatarLocationsQuery();
+  const place = ad.location_slug ? findLocationBySlug(places, ad.location_slug) : null;
+
   return {
     price: formatAdPriceLabel(ad, locale),
-    location: labelFromSlug(ad.location_slug),
+    location: place ? localized(place.name, locale) : labelFromSlug(ad.location_slug),
     postedAt: formatAdAge(ad.published_at, locale),
   };
 }
 
 /** An `AdSummary` as the grid listing card (similar ads, company ads). */
 export function AdSummaryGridCard({ ad, imageSizes, headingLevel, className }: AdSummaryCardProps) {
+  const text = useCardText(ad);
   return (
     <AdCard
       href={`/ads/${ad.id}`}
@@ -51,22 +64,24 @@ export function AdSummaryGridCard({ ad, imageSizes, headingLevel, className }: A
       favorite={<FavoriteButton adId={ad.id} className={favoriteClassName} />}
       headingLevel={headingLevel}
       className={className}
-      {...cardText(ad)}
+      {...text}
     />
   );
 }
 
-/** An `AdSummary` as the seller page's listing row. */
+/** An `AdSummary` as the seller page's listing row, with the description line under the title. */
 export function AdSummaryRowCard({ ad, imageSizes, headingLevel, className }: AdSummaryCardProps) {
+  const text = useCardText(ad);
   return (
     <AdRowCard
       href={`/ads/${ad.id}`}
       title={ad.title}
+      description={ad.summary || undefined}
       media={<AdSummaryImage ad={ad} imageSizes={imageSizes} />}
       favorite={<FavoriteButton adId={ad.id} className={favoriteClassName} />}
       headingLevel={headingLevel}
       className={className}
-      {...cardText(ad)}
+      {...text}
     />
   );
 }

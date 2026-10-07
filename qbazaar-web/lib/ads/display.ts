@@ -64,10 +64,15 @@ export function labelFromSlug(slug: string | null | undefined): string {
     .join(' ');
 }
 
-/** "semi_furnished" -> "Semi furnished": select options are stored as raw values. */
+/** "semi_furnished" -> "Semi furnished", for keys and for options without a label. */
 function humanizeOption(value: string): string {
   const text = value.replace(/[_-]+/g, ' ').trim();
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** Ads store the raw option value; the category gives its label in the request language. */
+function optionLabel(field: CategoryField, value: string): string {
+  return field.options_labeled?.find((option) => option.value === value)?.label || humanizeOption(value);
 }
 
 export interface AdSpec {
@@ -92,7 +97,7 @@ function specValue(field: CategoryField | undefined, value: unknown, locale: Loc
   if (typeof value === 'number') return formatSpecNumber(value, locale);
   const text = String(value);
   if (field?.type === 'date') return formatAdDate(text, locale) || text;
-  if (field?.type === 'select') return humanizeOption(text);
+  if (field?.type === 'select') return optionLabel(field, text);
   return text;
 }
 

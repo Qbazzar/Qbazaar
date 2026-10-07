@@ -423,7 +423,17 @@ export interface CategoryField {
   label: LocalizedString;
   type: CategoryFieldType;
   required: boolean;
+  /** Raw option values, as stored on ads and matched by search filters. */
   options: string[] | null;
+  /** The same options with their label in the request language; send the `value`, show the `label`. */
+  options_labeled?: CategoryFieldOption[] | null;
+  /** Whether the field's value is one of the listing-card chips (`AdSummary.spec_chips`). */
+  show_in_card?: boolean;
+}
+
+export interface CategoryFieldOption {
+  value: string;
+  label: string;
 }
 
 export interface CategoryStats {
@@ -562,6 +572,8 @@ export interface Ad {
 export interface AdSummary {
   id: string;
   title: string;
+  /** The description as one plain-text line of at most about 120 characters. */
+  summary?: string;
   price: number | null;
   price_type: PriceType;
   currency: 'QAR';
@@ -573,6 +585,15 @@ export interface AdSummary {
   category_slug: string;
   published_at: string | null;
   created_at: string;
+  /** Up to four key specs in the request language: the condition, then the category's card fields. */
+  spec_chips?: AdSpecChip[];
+}
+
+/** One spec of a listing card; `key` is the custom-field key (or `condition`), stable across languages. */
+export interface AdSpecChip {
+  key: string;
+  label: string;
+  value: string;
 }
 
 export interface CreateAdRequest {

@@ -11,6 +11,14 @@ const category = {
     { key: 'year', label: { ar: 'سنة الصنع', en: 'Year' }, type: 'number', required: true, options: null },
     { key: 'mileage_km', label: { ar: 'الكيلومترات', en: 'Mileage (km)' }, type: 'number', required: false, options: null },
     { key: 'furnished', label: { ar: 'الأثاث', en: 'Furnishing' }, type: 'select', required: false, options: ['semi_furnished'] },
+    {
+      key: 'fuel',
+      label: { ar: 'الوقود', en: 'Fuel' },
+      type: 'select',
+      required: false,
+      options: ['petrol', 'hybrid'],
+      options_labeled: [{ value: 'petrol', label: 'Gasoline' }],
+    },
     { key: 'sunroof', label: { ar: 'فتحة سقف', en: 'Sunroof' }, type: 'boolean', required: false, options: null },
     { key: 'towbar', label: { ar: 'خطاف قطر', en: 'Tow bar' }, type: 'boolean', required: false, options: null },
   ],
@@ -63,6 +71,12 @@ describe('buildAdSpecSheet', () => {
   it('turns stored option values into readable text', () => {
     setClientLocale('en');
     expect(sheetFor({ furnished: 'semi_furnished' }).specs[0]?.value).toBe('Semi furnished');
+  });
+
+  it('shows an option by the label the API sends, falling back to the readable value', () => {
+    setClientLocale('en');
+    expect(sheetFor({ fuel: 'petrol' }).specs[0]?.value).toBe('Gasoline');
+    expect(sheetFor({ fuel: ['petrol', 'hybrid'] }).specs[0]?.value).toBe('Gasoline, Hybrid');
   });
 
   it('moves the yes/no fields that are set to the features', () => {
