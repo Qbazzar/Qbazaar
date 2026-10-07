@@ -996,11 +996,11 @@ export interface MakeSupportTicketRequest {
   email?: string;
 }
 
-export type CmsErrorCode = 'PAGE_NOT_FOUND';
+/** Page not found (qbazaar-contracts/error-codes.md). */
+export type CmsErrorCode = 'CMS_001';
 
-export type HelpErrorCode =
-  | 'HELP_CATEGORY_NOT_FOUND'
-  | 'HELP_ARTICLE_NOT_FOUND';
+/** Article not found, help category not found. */
+export type HelpErrorCode = 'HELP_001' | 'HELP_002';
 
 export type SupportErrorCode =
   | 'TICKET_NOT_FOUND'

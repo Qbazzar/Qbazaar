@@ -83,7 +83,7 @@ Every route in `qbazaar-web/app` mapped to its pixel reference for the M3 reskin
 | `/support/new` | `app/support/new/page.tsx` | none | — | — | — | no reference | Closest: the add/edit form of `account.html` Billing Info (412:10263, 563:27380, 614:28114). |
 | `/impersonate` | `app/impersonate/page.tsx` | none | — | — | — | no reference | Admin hand-off that only shows a status line while it signs in and redirects. Closest: the auth card shell (736:65208). |
 | error boundary | `app/error.tsx`, `app/global-error.tsx` | none | — | — | — | no reference | Closest: "Search Not Found" (655:55973, 655:55238, 608:26579) built with `EmptyState`. |
-| 404 | Next.js default (no `not-found.tsx`) | none | — | — | — | no reference | Same as the error boundary. |
+| 404 | `app/not-found.tsx` | none | — | — | — | no reference | Same as the error boundary (`NotFoundView`, next to `ErrorView` in `components/status`). |
 
 Routes without UI, so nothing to design: `app/api/auth/refresh/route.ts`, `app/api/auth/session/route.ts`, `app/manifest.ts`, `app/robots.ts`, `app/sitemap.ts`.
 

@@ -13,6 +13,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./', import.meta.url)),
+      // Next resolves `server-only` from its own copy at build time; unit tests import server modules directly.
+      'server-only': 'next/dist/compiled/server-only/empty.js',
     },
   },
 });

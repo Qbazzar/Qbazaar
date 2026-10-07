@@ -1076,8 +1076,22 @@
     "contact": "تواصل معنا"
   },
   "cms": {
-    "page_not_found": "لم نعثر على هذه الصفحة",
     "last_updated": "آخر تحديث"
+  },
+  "errors": {
+    "generic_title": "حدث خطأ ما",
+    "generic_heading": "تعذّر تحميل هذه الصفحة",
+    "generic_body": "واجهنا مشكلة مؤقتة أثناء تحميل هذه الصفحة. حاول مرة أخرى.",
+    "retry": "إعادة المحاولة",
+    "not_found_title": "الصفحة غير موجودة",
+    "not_found_heading": "لم نعثر على هذه الصفحة",
+    "not_found_body": "ربما الرابط غير صحيح، أو نُقلت الصفحة أو حُذفت.",
+    "back_home": "العودة إلى الرئيسية"
+  },
+  "impersonate": {
+    "loading": "جارٍ تسجيل الدخول…",
+    "failed_title": "تعذّر بدء الجلسة",
+    "failed": "ربما انتهت صلاحية رابط الدخول. افتحه مجددًا من لوحة الإدارة."
   },
   "help": {
     "title": "مركز المساعدة",
@@ -1086,11 +1100,9 @@
     "search_submit": "بحث",
     "search_min_chars": "اكتب حرفين على الأقل لبدء البحث",
     "categories_title": "تصفّح حسب الموضوع",
-    "no_categories": "لا توجد فئات مساعدة بعد",
-    "articles_in_category": "المقالات في هذه الفئة",
-    "articles_count_arrow": "{count} مقالات ←",
-    "no_articles": "لا توجد مقالات في هذه الفئة بعد",
-    "search_results": "تم العثور على {count} نتائج",
+    "no_categories": "لا توجد مواضيع مساعدة بعد",
+    "articles_in_category": "المقالات في هذا الموضوع",
+    "no_articles": "لا توجد مقالات في هذا الموضوع بعد",
     "no_results": "لا توجد نتائج",
     "related_articles": "مقالات ذات صلة",
     "helpful_question": "هل كان هذا المقال مفيداً؟",
@@ -1098,10 +1110,52 @@
     "helpful_no": "لا",
     "feedback_thanks_yes": "شكراً لك! يسعدنا أن المقال كان مفيداً",
     "feedback_thanks_no": "شكراً لإخبارنا — سنحاول تحسين المقال",
-    "views_count": "{count} مشاهدة",
     "back_to_help": "العودة إلى مركز المساعدة",
-    "category_not_found": "لم نعثر على هذه الفئة",
-    "article_not_found": "لم نعثر على هذا المقال"
+    "article_not_found": "لم نعثر على هذا المقال",
+    "hero_lead": "كيف يمكننا",
+    "hero_accent": "مساعدتك؟",
+    "search_label": "ابحث في مركز المساعدة",
+    "search_title": "نتائج البحث",
+    "search_prompt_title": "عمّ تبحث؟",
+    "suggestions_label": "مقالات مقترحة",
+    "no_results_hint": "جرّب كلمات أخرى، أو تصفّح مواضيع المساعدة.",
+    "browse_topics": "تصفّح مواضيع المساعدة",
+    "not_found_body": "ربما نُقل أو حُذف. تصفّح مواضيع المساعدة لتجد ما تحتاجه.",
+    "contact_title": "ما زلت بحاجة إلى مساعدة؟",
+    "contact_body": "يرد فريق الدعم خلال ساعات قليلة.",
+    "contact_action": "تواصل مع الدعم",
+    "topic_count": {
+      "zero": "لا توجد مواضيع",
+      "one": "موضوع واحد",
+      "two": "موضوعان",
+      "few": "{count} مواضيع",
+      "many": "{count} موضوعًا",
+      "other": "{count} موضوع"
+    },
+    "article_count": {
+      "zero": "لا توجد مقالات",
+      "one": "مقال واحد",
+      "two": "مقالان",
+      "few": "{count} مقالات",
+      "many": "{count} مقالًا",
+      "other": "{count} مقال"
+    },
+    "result_count": {
+      "zero": "لا توجد نتائج",
+      "one": "نتيجة واحدة",
+      "two": "نتيجتان",
+      "few": "{count} نتائج",
+      "many": "{count} نتيجة",
+      "other": "{count} نتيجة"
+    },
+    "view_count": {
+      "zero": "لا توجد مشاهدات",
+      "one": "مشاهدة واحدة",
+      "two": "مشاهدتان",
+      "few": "{count} مشاهدات",
+      "many": "{count} مشاهدة",
+      "other": "{count} مشاهدة"
+    }
   },
   "support": {
     "title": "الدعم الفني",
@@ -1123,6 +1177,7 @@
     "submit_success_toast": "تم استلام طلبك، سنرد قريباً",
     "submit_success_title": "تم استلام رسالتك",
     "submit_success_body": "سنرد على البريد الذي زوّدتنا به خلال ساعات قليلة. احتفظ برقم التذكرة التالي للمراجعة:",
+    "ticket_reference": "رقم التذكرة",
     "categories": {
       "general": "استفسار عام",
       "billing": "الفوترة والمدفوعات",
@@ -1168,6 +1223,7 @@
       "body_required": "اكتب نص الرد",
       "body_min": "التفاصيل قصيرة جداً (10 أحرف على الأقل)",
       "body_max": "التفاصيل طويلة جداً (4000 حرف كحد أقصى)",
+      "email_required": "أدخل بريدك الإلكتروني لنتمكّن من الرد عليك",
       "ticket_not_found": "لم نعثر على هذه التذكرة",
       "ticket_forbidden": "ليس لديك صلاحية الوصول إلى هذه التذكرة",
       "invalid_transition": "لا يمكن الرد على تذكرة مغلقة. افتح تذكرة جديدة."

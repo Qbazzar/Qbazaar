@@ -1040,8 +1040,22 @@
     "contact": "Contact us"
   },
   "cms": {
-    "page_not_found": "We couldn't find this page",
     "last_updated": "Last updated"
+  },
+  "errors": {
+    "generic_title": "Something went wrong",
+    "generic_heading": "We couldn't load this page",
+    "generic_body": "A temporary problem stopped this page from loading. Please try again.",
+    "retry": "Try again",
+    "not_found_title": "Page not found",
+    "not_found_heading": "We couldn't find this page",
+    "not_found_body": "The link may be broken, or the page may have been moved or removed.",
+    "back_home": "Back to home"
+  },
+  "impersonate": {
+    "loading": "Signing you in…",
+    "failed_title": "Couldn't start the session",
+    "failed": "The sign-in link may have expired. Open it again from the admin panel."
   },
   "help": {
     "title": "Help center",
@@ -1050,11 +1064,9 @@
     "search_submit": "Search",
     "search_min_chars": "Type at least two characters to search",
     "categories_title": "Browse by topic",
-    "no_categories": "No help categories yet",
+    "no_categories": "No help topics yet",
     "articles_in_category": "Articles in this topic",
-    "articles_count_arrow": "{count} articles →",
-    "no_articles": "No articles in this category yet",
-    "search_results": "Found {count} results",
+    "no_articles": "No articles in this topic yet",
     "no_results": "No results",
     "related_articles": "Related articles",
     "helpful_question": "Was this article helpful?",
@@ -1062,10 +1074,36 @@
     "helpful_no": "No",
     "feedback_thanks_yes": "Thanks! Glad it helped.",
     "feedback_thanks_no": "Thanks — we'll improve this article.",
-    "views_count": "{count} views",
     "back_to_help": "Back to help center",
-    "category_not_found": "We couldn't find this category",
-    "article_not_found": "We couldn't find this article"
+    "article_not_found": "We couldn't find this article",
+    "hero_lead": "How can we",
+    "hero_accent": "help you?",
+    "search_label": "Search the help center",
+    "search_title": "Search results",
+    "search_prompt_title": "What are you looking for?",
+    "suggestions_label": "Suggested articles",
+    "no_results_hint": "Try different words, or browse the help topics.",
+    "browse_topics": "Browse help topics",
+    "not_found_body": "It may have been moved or removed. Browse the help topics to find what you need.",
+    "contact_title": "Still need help?",
+    "contact_body": "Our support team replies within a few hours.",
+    "contact_action": "Contact support",
+    "topic_count": {
+      "one": "{count} topic",
+      "other": "{count} topics"
+    },
+    "article_count": {
+      "one": "{count} article",
+      "other": "{count} articles"
+    },
+    "result_count": {
+      "one": "{count} result",
+      "other": "{count} results"
+    },
+    "view_count": {
+      "one": "{count} view",
+      "other": "{count} views"
+    }
   },
   "support": {
     "title": "Support",
@@ -1087,6 +1125,7 @@
     "submit_success_toast": "We received your request — we'll reply soon",
     "submit_success_title": "Your message has been received",
     "submit_success_body": "We'll reply to the email you provided within a few hours. Keep this ticket reference for follow-up:",
+    "ticket_reference": "Ticket reference",
     "categories": {
       "general": "General inquiry",
       "billing": "Billing & payments",
@@ -1132,6 +1171,7 @@
       "body_required": "Type a reply",
       "body_min": "Details are too short (min 10 characters)",
       "body_max": "Details are too long (max 4000 characters)",
+      "email_required": "Enter your email so we can reply",
       "ticket_not_found": "We couldn't find this ticket",
       "ticket_forbidden": "You don't have access to this ticket",
       "invalid_transition": "You can't reply to a closed ticket. Please open a new one."
