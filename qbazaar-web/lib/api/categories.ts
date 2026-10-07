@@ -12,8 +12,8 @@ import { api } from './client';
 import type {
   Category,
   CategoryField,
-  CategoryFilter,
   CategoryNode,
+  CategoryPage,
   CategoryStats,
   SuccessEnvelope,
 } from './types';
@@ -32,18 +32,17 @@ export async function getMainCategories(): Promise<Category[]> {
   return data.data;
 }
 
-export async function getCategoryStats(slug: string): Promise<CategoryStats> {
-  const { data } = await api.get<SuccessEnvelope<CategoryStats>>(
-    `${BASE}/${encodeURIComponent(slug)}/stats`,
+/** Category page: the category plus one section of newest ads per active child. */
+export async function getCategoryPage(slug: string): Promise<CategoryPage> {
+  const { data } = await api.get<SuccessEnvelope<CategoryPage>>(
+    `${BASE}/${encodeURIComponent(slug)}`,
   );
   return data.data;
 }
 
-export async function getCategoryFilters(
-  slug: string,
-): Promise<CategoryFilter[]> {
-  const { data } = await api.get<SuccessEnvelope<CategoryFilter[]>>(
-    `${BASE}/${encodeURIComponent(slug)}/filters`,
+export async function getCategoryStats(slug: string): Promise<CategoryStats> {
+  const { data } = await api.get<SuccessEnvelope<CategoryStats>>(
+    `${BASE}/${encodeURIComponent(slug)}/stats`,
   );
   return data.data;
 }

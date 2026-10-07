@@ -20,7 +20,8 @@
     "min": "الأدنى",
     "max": "الأعلى",
     "filters": "الفلاتر",
-    "view_all": "عرض الكل"
+    "view_all": "عرض الكل",
+    "currency": "ر.ق"
   },
   "auth": {
     "hero": {
@@ -475,6 +476,168 @@
       "not_found": "لم نعثر على هذا القسم"
     }
   },
+  "catalog": {
+    "card": {
+      "top_ad": "إعلان مميز"
+    },
+    "results_heading": "النتائج",
+    "view_all": "عرض الكل",
+    "view_more": "عرض المزيد",
+    "view_less": "عرض أقل",
+    "hub": {
+      "categories": "الأقسام"
+    },
+    "stats": {
+      "ads": {
+        "zero": "إعلان",
+        "one": "إعلان",
+        "two": "إعلان",
+        "few": "إعلانات",
+        "many": "إعلانًا",
+        "other": "إعلان"
+      },
+      "today": "اليوم",
+      "ads_today": {
+        "zero": "إعلان اليوم",
+        "one": "إعلان اليوم",
+        "two": "إعلان اليوم",
+        "few": "إعلانات اليوم",
+        "many": "إعلانًا اليوم",
+        "other": "إعلان اليوم"
+      },
+      "categories": {
+        "zero": "قسم",
+        "one": "قسم",
+        "two": "قسم",
+        "few": "أقسام",
+        "many": "قسمًا",
+        "other": "قسم"
+      },
+      "subcategories": {
+        "zero": "قسم فرعي",
+        "one": "قسم فرعي",
+        "two": "قسم فرعي",
+        "few": "أقسام فرعية",
+        "many": "قسمًا فرعيًا",
+        "other": "قسم فرعي"
+      },
+      "results": {
+        "zero": "نتيجة",
+        "one": "نتيجة",
+        "two": "نتيجة",
+        "few": "نتائج",
+        "many": "نتيجة",
+        "other": "نتيجة"
+      }
+    },
+    "index": {
+      "discover_start": "اكتشف",
+      "discover_accent": "الأقسام",
+      "discover_text": "تصفّح الأقسام المختلفة واعثر بسرعة على ما تحتاجه في مكان واحد.",
+      "search_label": "ابحث في الأقسام",
+      "search_placeholder": "ابحث في الأقسام…",
+      "search_submit": "بحث",
+      "matches": {
+        "zero": "لا توجد أقسام",
+        "one": "قسم واحد",
+        "two": "قسمان",
+        "few": "{count} أقسام",
+        "many": "{count} قسمًا",
+        "other": "{count} قسم"
+      },
+      "no_matches_title": "لا توجد أقسام مطابقة",
+      "no_matches": "لم نجد قسماً باسم «{query}»."
+    },
+    "view": {
+      "label": "طريقة العرض",
+      "grid": "عرض شبكي",
+      "list": "عرض قائمة"
+    },
+    "empty": {
+      "try_filters": "جرّب تعديل الفلاتر أو تصفّح كل الأقسام.",
+      "no_ads_in_category": "لا توجد إعلانات في هذا القسم حتى الآن.",
+      "load_failed": "تعذّر تحميل الإعلانات. حاول مرة أخرى."
+    },
+    "not_found": {
+      "heading": "لم نعثر على نتائج",
+      "title": "لا توجد نتائج",
+      "text": "لم نعثر على أي شيء يطابق بحثك.",
+      "recommended": "مقترحة لك",
+      "load_more": "تحميل المزيد من الإعلانات"
+    },
+    "filters": {
+      "title": "الفلتر",
+      "sheet_title": "فلاتر متقدمة",
+      "open": "فلتر",
+      "active_suffix": {
+        "zero": "فلتر مفعّل",
+        "one": "فلتر مفعّل",
+        "two": "فلتر مفعّل",
+        "few": "فلاتر مفعّلة",
+        "many": "فلترًا مفعّلًا",
+        "other": "فلتر مفعّل"
+      },
+      "apply": "تطبيق الفلتر",
+      "reset_all": "إعادة ضبط الكل",
+      "any": "الكل",
+      "category": "القسم",
+      "all_categories": "كل الأقسام",
+      "price": "السعر",
+      "price_min_label": "أقل سعر (ر.ق)",
+      "price_max_label": "أعلى سعر (ر.ق)",
+      "price_range_error": "لا يمكن أن يكون أعلى سعر أقل من أقل سعر.",
+      "location": "الموقع",
+      "city": "المدينة / المنطقة",
+      "district": "الحي",
+      "all_regions": "كل المناطق",
+      "all_districts": "كل الأحياء",
+      "condition": "الحالة",
+      "offer": "نوع الإعلان",
+      "ad_type": {
+        "offering": "معروض",
+        "wanted": "مطلوب"
+      },
+      "shipping": "الشحن والتوصيل",
+      "shipping_options": {
+        "delivery": "الشحن متاح",
+        "pickup_only": "استلام محلي فقط"
+      },
+      "details": "التفاصيل",
+      "range_min": "{label} من",
+      "range_max": "{label} إلى",
+      "keyword": "البحث",
+      "keyword_placeholder": "ابحث…",
+      "applied": "الفلاتر المطبّقة",
+      "remove": "إزالة {label}",
+      "range_between": "{min} – {max}",
+      "range_from": "من {min}",
+      "range_to": "حتى {max}",
+      "range_error": "لا يمكن أن يكون الحد الأعلى أقل من الحد الأدنى."
+    },
+    "ads_count": {
+      "zero": "{count} إعلان",
+      "one": "{count} إعلان",
+      "two": "{count} إعلان",
+      "few": "{count} إعلانات",
+      "many": "{count} إعلانًا",
+      "other": "{count} إعلان"
+    },
+    "results_count": {
+      "zero": "لا توجد نتائج",
+      "one": "نتيجة واحدة",
+      "two": "نتيجتان",
+      "few": "{count} نتائج",
+      "many": "{count} نتيجة",
+      "other": "{count} نتيجة"
+    },
+    "sort": {
+      "latest": "الأحدث",
+      "oldest": "الأقدم",
+      "price_asc": "السعر: من الأقل للأعلى",
+      "price_desc": "السعر: من الأعلى للأقل"
+    },
+    "save_search": "احفظ البحث"
+  },
   "locations": {
     "all": "كل قطر",
     "pick": "الموقع",
@@ -713,13 +876,13 @@
       "saving": "جاري الحفظ…",
       "cancel": "إلغاء",
       "success_toast": "تم حفظ البحث",
-      "limit_error": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
       "sign_in_required": "سجّل دخولك لحفظ البحث"
     },
     "errors": {
-      "search_invalid_params": "أحد الفلاتر غير صالح، حاول مرة أخرى",
-      "saved_search_limit": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
-      "saved_search_not_found": "لم نعثر على البحث المحفوظ",
+      "search_001": "البحث غير متاح الآن، حاول بعد قليل",
+      "search_002": "لم نعثر على البحث المحفوظ",
+      "search_003": "أحد الفلاتر غير صالح، حاول مرة أخرى",
+      "search_004": "وصلت إلى الحد الأقصى من عمليات البحث المحفوظة",
       "load_failed": "تعذّر تحميل نتائج البحث",
       "save_failed": "تعذّر حفظ البحث",
       "delete_failed": "تعذّر حذف البحث"

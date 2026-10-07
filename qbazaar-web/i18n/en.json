@@ -20,7 +20,8 @@
     "theme": {
       "switch_to_dark": "Dark mode",
       "switch_to_light": "Light mode"
-    }
+    },
+    "currency": "QAR"
   },
   "auth": {
     "hero": {
@@ -475,6 +476,132 @@
       "not_found": "We couldn't find this category"
     }
   },
+  "catalog": {
+    "card": {
+      "top_ad": "Top Ad"
+    },
+    "results_heading": "Results",
+    "view_all": "View All",
+    "view_more": "View More",
+    "view_less": "View Less",
+    "hub": {
+      "categories": "Categories"
+    },
+    "stats": {
+      "ads": {
+        "one": "Ad",
+        "other": "Ads"
+      },
+      "today": "Today",
+      "ads_today": {
+        "one": "Ad Today",
+        "other": "Ads Today"
+      },
+      "categories": {
+        "one": "Category",
+        "other": "Categories"
+      },
+      "subcategories": {
+        "one": "Sub Category",
+        "other": "Sub Categories"
+      },
+      "results": {
+        "one": "Result",
+        "other": "Results"
+      }
+    },
+    "index": {
+      "discover_start": "Discover",
+      "discover_accent": "Categories",
+      "discover_text": "Browse through different categories and quickly find what you need in one place.",
+      "search_label": "Search categories",
+      "search_placeholder": "Search categories…",
+      "search_submit": "Search",
+      "matches": {
+        "one": "{count} category",
+        "other": "{count} categories"
+      },
+      "no_matches_title": "No matching categories",
+      "no_matches": "We couldn’t find a category called “{query}”."
+    },
+    "view": {
+      "label": "View",
+      "grid": "Grid view",
+      "list": "List view"
+    },
+    "empty": {
+      "try_filters": "Try changing the filters or browse all categories.",
+      "no_ads_in_category": "No ads in this category yet.",
+      "load_failed": "We couldn’t load the ads. Please try again."
+    },
+    "not_found": {
+      "heading": "No results found",
+      "title": "Search Not Found",
+      "text": "We couldn’t find anything matching your search.",
+      "recommended": "Recommended for you",
+      "load_more": "Load More Ads"
+    },
+    "filters": {
+      "title": "Filter",
+      "sheet_title": "Advanced Filters",
+      "open": "Filter",
+      "active_suffix": {
+        "one": "filter applied",
+        "other": "filters applied"
+      },
+      "apply": "Apply Filter",
+      "reset_all": "Reset All",
+      "any": "Any",
+      "category": "Category",
+      "all_categories": "All categories",
+      "price": "Price",
+      "price_min_label": "Minimum price (QAR)",
+      "price_max_label": "Maximum price (QAR)",
+      "price_range_error": "The maximum price can’t be lower than the minimum.",
+      "location": "Location",
+      "city": "City / Region",
+      "district": "District",
+      "all_regions": "All Regions",
+      "all_districts": "All districts",
+      "condition": "Condition",
+      "offer": "Offer",
+      "ad_type": {
+        "offering": "Available",
+        "wanted": "Wanted"
+      },
+      "shipping": "Shipping & Delivery",
+      "shipping_options": {
+        "delivery": "Shipping Available",
+        "pickup_only": "Local Pickup Only"
+      },
+      "details": "Details",
+      "range_min": "{label} from",
+      "range_max": "{label} to",
+      "keyword": "Search",
+      "keyword_placeholder": "Search…",
+      "applied": "Applied filters",
+      "remove": "Remove {label}",
+      "range_between": "{min} – {max}",
+      "range_from": "From {min}",
+      "range_to": "Up to {max}",
+      "range_error": "The maximum can’t be lower than the minimum."
+    },
+    "ads_count": {
+      "one": "{count} Ad",
+      "other": "{count} Ads"
+    },
+    "results_count": {
+      "one": "{count} result",
+      "other": "{count} results"
+    },
+    "sort": {
+      "latest": "Newest",
+      "oldest": "Oldest",
+      "price_asc": "Price: Low to High",
+      "price_desc": "Price: High to Low"
+    },
+    "save_search": "Save Search"
+  },
   "locations": {
     "all": "All Qatar",
     "pick": "Location",
@@ -713,13 +840,13 @@
       "saving": "Saving…",
       "cancel": "Cancel",
       "success_toast": "Search saved",
-      "limit_error": "You've reached the saved-search limit",
       "sign_in_required": "Sign in to save searches"
     },
     "errors": {
-      "search_invalid_params": "One of the filters is invalid, try again",
-      "saved_search_limit": "You've reached the saved-search limit",
-      "saved_search_not_found": "We couldn't find that saved search",
+      "search_001": "Search is unavailable right now, try again in a moment",
+      "search_002": "We couldn't find that saved search",
+      "search_003": "One of the filters is invalid, try again",
+      "search_004": "You've reached the saved-search limit",
       "load_failed": "Could not load search results",
       "save_failed": "Could not save the search",
       "delete_failed": "Could not delete the saved search"
