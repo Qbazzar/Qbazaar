@@ -53,9 +53,20 @@ describe('ErrorView', () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it('blocks a second retry while one is running', () => {
-    render(<ErrorView onRetry={vi.fn()} retrying />);
+  it('ignores a second retry while one is running but keeps the button focusable', () => {
+    const onRetry = vi.fn();
+    render(<ErrorView onRetry={onRetry} retrying />);
+    const button = screen.getByRole('button', { name: 'Try again' });
+    fireEvent.click(button);
 
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeDisabled();
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    expect(button).not.toBeDisabled();
+    expect(onRetry).not.toHaveBeenCalled();
+  });
+
+  it('names the tab after the failure, not the page that failed', () => {
+    render(<ErrorView onRetry={vi.fn()} />);
+
+    expect(document.title).toBe('Something went wrong · QBazaar');
   });
 });

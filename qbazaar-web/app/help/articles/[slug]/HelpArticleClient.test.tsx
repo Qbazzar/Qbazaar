@@ -62,6 +62,7 @@ describe('HelpArticleClient', () => {
     const related = screen.getByRole('region', { name: 'Related articles' });
     expect(related.querySelectorAll('a')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'Contacting sellers' })).toBeInTheDocument();
+    expect(document.title).toBe('Making an offer · Help center · QBazaar');
   });
 
   it('holds the layout while the article loads', () => {
@@ -69,6 +70,7 @@ describe('HelpArticleClient', () => {
     render(<HelpArticleClient slug="making-an-offer" />);
 
     expect(screen.getByRole('status')).toHaveTextContent('Loading…');
+    expect(screen.getByRole('heading', { level: 1, name: 'Loading…' })).toBeInTheDocument();
   });
 
   it('says the article is missing when the API answers HELP_001', () => {
@@ -77,6 +79,8 @@ describe('HelpArticleClient', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: "We couldn't find this article" })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Browse help topics' })).toHaveAttribute('href', '/help');
+    expect(document.title).toBe('Page not found · QBazaar');
+    expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
   });
 
   it('offers a retry for any other failure', () => {

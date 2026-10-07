@@ -1,6 +1,10 @@
+import 'server-only';
+
+import { apiOrigin } from '@/lib/seo';
+
 import type { SuccessEnvelope } from './types';
 
-const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4010').replace(/\/+$/, '');
+// Longer than the SEO reads' budget: those degrade to nothing, this one fails the page.
 const API_TIMEOUT_MS = 10_000;
 
 /**
@@ -12,7 +16,7 @@ const API_TIMEOUT_MS = 10_000;
  * Next's per-request dedupe, so callers wrap it in React `cache()`.
  */
 export async function fetchPublicResource<T>(path: string, revalidateSeconds = 3600): Promise<T | null> {
-  const res = await fetch(`${API_ORIGIN}${path}`, {
+  const res = await fetch(`${apiOrigin()}${path}`, {
     headers: { Accept: 'application/json' },
     next: { revalidate: revalidateSeconds },
     signal: AbortSignal.timeout(API_TIMEOUT_MS),

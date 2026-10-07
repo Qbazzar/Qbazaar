@@ -29,6 +29,7 @@ import { useCreateTicketMutation } from '@/lib/queries/support';
 import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth';
 import type { MakeSupportTicketRequest, SupportTicket, SupportTicketCategory } from '@/lib/api/types';
 
@@ -56,16 +57,21 @@ const baseSchema = z.object({
     .trim()
     .min(10, 'support.errors.body_min')
     .max(4000, 'support.errors.body_max'),
-  email: z
-    .string()
-    .trim()
-    .email('auth.errors.email_invalid')
-    .optional()
-    .or(z.literal('')),
+  // Members are answered through their account, so only guests must give an email.
+  email: z.string().trim().email('auth.errors.email_invalid').or(z.literal('')),
+});
+
+const guestSchema = baseSchema.extend({
+  email: z.string().trim().min(1, 'support.errors.email_required').email('auth.errors.email_invalid'),
 });
 
 type FormInput = z.input<typeof baseSchema>;
 type FormOutput = z.output<typeof baseSchema>;
+
+/** Billing Info form controls (412:10263, 614:28114): 44 px fields with a 12 px radius and 14 px placeholders. */
+const controlClass = 'rounded-qb-lg placeholder:text-qb-caption';
+const singleLineControlClass = cn(controlClass, 'h-11');
+const actionClass = 'h-[46px] rounded-qb-lg qb-tablet:h-11 qb-tablet:rounded-qb-sm';
 
 /** Error text announced as soon as it appears; Field links it to the control. */
 function fieldError(message?: string) {
@@ -79,7 +85,7 @@ export function NewTicketClient() {
   const turnstile = useRef<TurnstileHandle>(null);
 
   const form = useForm<FormInput, unknown, FormOutput>({
-    resolver: zodResolver(baseSchema),
+    resolver: zodResolver(isAuthenticated ? baseSchema : guestSchema),
     mode: 'onBlur',
     defaultValues: {
       subject: '',
@@ -90,6 +96,7 @@ export function NewTicketClient() {
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
+    if (mutation.isPending) return;
     const payload: MakeSupportTicketRequest = {
       subject: values.subject,
       category: values.category,
@@ -130,10 +137,11 @@ export function NewTicketClient() {
     <PageShell breadcrumb={breadcrumb} title={t('support.new_ticket')} meta={t('support.new_ticket_subtitle')}>
       <Card large elevated className="max-w-[760px] qb-desktop:p-8">
         <form onSubmit={onSubmit} noValidate aria-busy={submitting} className="flex flex-col gap-5">
-          <Field label={t('support.subject_label')} required error={fieldError(errors.subject?.message)}>
+          <Field label={t('support.subject_label')} required error={fieldError(errors.subject?.message)} className="gap-3">
             {(control) => (
               <Input
                 {...control}
+                className={singleLineControlClass}
                 maxLength={160}
                 placeholder={t('support.subject_placeholder')}
                 {...form.register('subject')}
@@ -141,9 +149,9 @@ export function NewTicketClient() {
             )}
           </Field>
 
-          <Field label={t('support.category_label')} required error={fieldError(errors.category?.message)}>
+          <Field label={t('support.category_label')} required error={fieldError(errors.category?.message)} className="gap-3">
             {(control) => (
-              <Select {...control} {...form.register('category')}>
+              <Select {...control} className={singleLineControlClass} {...form.register('category')}>
                 {CATEGORIES.map((category) => (
                   <option key={category} value={category}>
                     {t(`support.categories.${category}`)}
@@ -153,10 +161,11 @@ export function NewTicketClient() {
             )}
           </Field>
 
-          <Field label={t('support.body_label')} required error={fieldError(errors.body?.message)}>
+          <Field label={t('support.body_label')} required error={fieldError(errors.body?.message)} className="gap-3">
             {(control) => (
               <Textarea
                 {...control}
+                className={controlClass}
                 rows={6}
                 maxLength={4000}
                 placeholder={t('support.body_placeholder')}
@@ -166,10 +175,17 @@ export function NewTicketClient() {
           </Field>
 
           {!isAuthenticated ? (
-            <Field label={t('support.email_label')} hint={t('support.email_hint')} error={fieldError(errors.email?.message)}>
+            <Field
+              label={t('support.email_label')}
+              required
+              hint={t('support.email_hint')}
+              error={fieldError(errors.email?.message)}
+              className="gap-3"
+            >
               {(control) => (
                 <Input
                   {...control}
+                  className={singleLineControlClass}
                   type="email"
                   inputMode="email"
                   autoComplete="email"
@@ -183,12 +199,14 @@ export function NewTicketClient() {
 
           <Turnstile ref={turnstile} />
 
-          <div className="mt-1 grid grid-cols-2 gap-3 qb-tablet:gap-[22px]">
-            <Button type="submit" disabled={submitting}>
+          {/* `[display:grid]`, not `grid`: the old stylesheet's unlayered `.grid` rule would override the gap. */}
+          <div className="mt-1 [display:grid] grid-cols-2 gap-3 qb-tablet:gap-[22px]">
+            {/* aria-disabled rather than disabled keeps keyboard focus on the button while the ticket is sent. */}
+            <Button type="submit" aria-disabled={submitting || undefined} className={actionClass}>
               {submitting ? <Icon icon={LoaderCircle} className="motion-safe:animate-spin" /> : null}
               {t('support.submit')}
             </Button>
-            <Link href="/support" className={buttonVariants({ variant: 'muted' })}>
+            <Link href="/support" className={cn(buttonVariants({ variant: 'muted' }), actionClass)}>
               {t('common.cancel')}
             </Link>
           </div>
@@ -204,7 +222,7 @@ function TicketReceived({ ticket }: { ticket: SupportTicket }) {
   useEffect(() => ref.current?.focus(), []);
 
   return (
-    <div ref={ref} tabIndex={-1} className="outline-none">
+    <div ref={ref} tabIndex={-1} role="region" aria-label={t('support.submit_success_title')} className="outline-none">
       <StatePanel
         icon={<StateIcon icon={CircleCheck} tone="success" />}
         title={t('support.submit_success_title')}
@@ -245,12 +263,15 @@ function handleError(
   }
   if (err.code === 'VALIDATION_FAILED' && err.details) {
     const known: (keyof FormInput)[] = ['subject', 'category', 'body', 'email'];
+    let focused = false;
     for (const [field, messages] of Object.entries(err.details)) {
       if ((known as string[]).includes(field) && messages?.length) {
-        form.setError(field as keyof FormInput, {
-          type: 'server',
-          message: translateMaybeKey(messages[0]) || messages[0],
-        });
+        form.setError(
+          field as keyof FormInput,
+          { type: 'server', message: translateMaybeKey(messages[0]) || messages[0] },
+          { shouldFocus: !focused },
+        );
+        focused = true;
       }
     }
   }

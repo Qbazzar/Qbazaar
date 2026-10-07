@@ -24,9 +24,11 @@ export function LinkTile({ href, icon, title, description, className }: LinkTile
     <Link
       href={href}
       className={cn(
-        'flex h-full min-h-[120px] flex-col rounded-qb-xl bg-qb-surface px-[17px] pt-[18px] pb-4 font-qb shadow-qb-card transition-shadow duration-200 hover:shadow-qb-hover motion-reduce:transition-none',
+        'flex h-full min-h-[120px] flex-col rounded-qb-xl border border-qb-line bg-qb-surface px-[17px] pt-[18px] pb-4 font-qb shadow-qb-card transition-shadow duration-200 hover:shadow-qb-hover motion-reduce:transition-none',
         'qb-tablet:min-h-[148px] qb-tablet:rounded-qb-2xl qb-tablet:pt-5 qb-desktop:pt-[17px]',
         focusRing,
+        // Until the shared ring sets it: Tailwind 4's outline-none leaves the outline style at none.
+        'focus-visible:outline-solid',
         className,
       )}
     >

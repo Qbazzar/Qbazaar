@@ -35,10 +35,12 @@ describe('NewTicketClient', () => {
     expect(alerts.map((alert) => alert.textContent)).toEqual([
       'Subject is too short (min 3 characters)',
       'Details are too short (min 10 characters)',
+      'Enter your email so we can reply',
     ]);
     const subject = screen.getByLabelText('Subject', { exact: false });
     expect(subject).toHaveAttribute('aria-invalid', 'true');
     expect(subject.getAttribute('aria-describedby')).toContain(alerts[0].parentElement!.id);
+    expect(screen.getByLabelText('Your email', { exact: false })).toBeRequired();
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 
@@ -86,5 +88,6 @@ describe('NewTicketClient', () => {
     submit();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('The email domain is not accepted.');
+    expect(screen.getByLabelText('Your email', { exact: false })).toHaveFocus();
   });
 });

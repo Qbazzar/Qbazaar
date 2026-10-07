@@ -34,13 +34,18 @@ export function HelpArticleClient({ slug }: { slug: string }) {
   if (!article && isError) {
     const trail = [{ label: t('help.title'), href: '/help' }];
     if (error.code === ARTICLE_NOT_FOUND) {
+      // The page answered 200 before the browser learnt the article is gone, so keep it out of the index.
       return (
-        <NotFoundView
-          trail={trail}
-          heading={t('help.article_not_found')}
-          description={t('help.not_found_body')}
-          actions={<BrowseTopicsLink />}
-        />
+        <>
+          <title>{`${t('errors.not_found_title')} · QBazaar`}</title>
+          <meta name="robots" content="noindex" />
+          <NotFoundView
+            trail={trail}
+            heading={t('help.article_not_found')}
+            description={t('help.not_found_body')}
+            actions={<BrowseTopicsLink />}
+          />
+        </>
       );
     }
     return <ErrorView trail={trail} onRetry={() => refetch()} retrying={isFetching} />;
@@ -50,7 +55,12 @@ export function HelpArticleClient({ slug }: { slug: string }) {
     return (
       <PageShell
         breadcrumb={[...helpCrumbs, { label: t('common.loading') }]}
-        title={<SkeletonText className="w-80" />}
+        title={
+          <>
+            <SkeletonText className="w-80" />
+            <span className="sr-only">{t('common.loading')}</span>
+          </>
+        }
         meta={<SkeletonText className="w-24" />}
       >
         <ContentPanel>
@@ -80,6 +90,8 @@ export function HelpArticleClient({ slug }: { slug: string }) {
       title={title}
       meta={tPlural('help.view_count', article.views_count)}
     >
+      {/* The server titles the page by its slug: reading the article there would count a view. */}
+      <title>{`${title} · ${t('help.title')} · QBazaar`}</title>
       <ContentPanel>
         <MarkdownContent html={localized(article.body)} />
       </ContentPanel>

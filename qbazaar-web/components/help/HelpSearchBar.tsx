@@ -13,13 +13,12 @@ import { Search } from 'lucide-react';
 import { buttonVariants } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
 import { focusRing } from '@/components/design-system/focus-ring';
-import { useHelpSearchQuery } from '@/lib/queries/help';
+import { MIN_HELP_QUERY_LENGTH, useHelpSearchQuery } from '@/lib/queries/help';
 import { tPlural } from '@/lib/i18n/intl';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-export const MIN_HELP_QUERY_LENGTH = 2;
 const SUGGESTION_LIMIT = 8;
 const DEBOUNCE_MS = 250;
 
@@ -35,6 +34,7 @@ export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, clas
   const inputId = useId();
   const suggestionsId = useId();
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState(initialQuery);
   const [debounced, setDebounced] = useState(initialQuery);
   const [open, setOpen] = useState(false);
@@ -76,11 +76,14 @@ export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, clas
     router.push(`/help/search?q=${encodeURIComponent(term)}`);
   };
 
+  // The first Escape only closes the list (the browser would also clear a search field), and focus
+  // returns to the field rather than falling to the page when it sat on a suggestion.
   const closeOnEscape = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && open) {
-      event.stopPropagation();
-      setOpen(false);
-    }
+    if (event.key !== 'Escape' || !open) return;
+    event.preventDefault();
+    event.stopPropagation();
+    inputRef.current?.focus();
+    setOpen(false);
   };
 
   return (
@@ -108,6 +111,7 @@ export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, clas
           {t('help.search_label')}
         </label>
         <input
+          ref={inputRef}
           id={inputId}
           type="search"
           value={value}
@@ -120,7 +124,7 @@ export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, clas
           autoComplete="off"
           enterKeyHint="search"
           aria-controls={showSuggestions ? suggestionsId : undefined}
-          className="h-full min-w-0 flex-1 bg-transparent text-qb-body text-qb-ink outline-none placeholder:text-qb-placeholder qb-desktop:text-qb-h5"
+          className="h-full min-w-0 flex-1 bg-transparent text-qb-body text-qb-ink outline-none placeholder:text-qb-caption placeholder:text-qb-placeholder qb-tablet:placeholder:text-qb-body qb-desktop:text-qb-h5 qb-desktop:placeholder:text-qb-h5"
         />
         <button
           type="submit"
@@ -152,7 +156,7 @@ export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, clas
                     <Link
                       href={`/help/articles/${article.slug}`}
                       onClick={() => setOpen(false)}
-                      className={cn('block px-5 py-3 hover:bg-qb-hover', focusRing, 'focus-visible:-outline-offset-2')}
+                      className={cn('block px-5 py-3 hover:bg-qb-hover', focusRing, 'focus-visible:outline-solid focus-visible:-outline-offset-2')}
                     >
                       <span className="block text-qb-body font-medium text-qb-ink-body">{localized(article.title)}</span>
                       {excerpt ? (

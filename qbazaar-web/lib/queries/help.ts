@@ -4,7 +4,7 @@
  * Caching strategy:
  * - Categories list: 1h — the catalogue rarely changes.
  * - Category / article detail: 1h — instant back-navigation on the same hop.
- * - Search: 5m, and only fires when `q.trim().length >= 2` so the user
+ * - Search: 5m, and only fires from MIN_HELP_QUERY_LENGTH characters so the user
  *   doesn't trigger a query on every keystroke. Debouncing happens upstream
  *   in `HelpSearchBar`; we also guard here to avoid surprise refetches.
  */
@@ -26,6 +26,9 @@ import type {
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
 
+/** Shortest help search the API is asked for. */
+export const MIN_HELP_QUERY_LENGTH = 2;
+
 export const helpKeys = {
   all: ['help'] as const,
   categories: () => [...helpKeys.all, 'categories'] as const,
@@ -45,17 +48,14 @@ export function useHelpCategoriesQuery(): UseQueryResult<
   });
 }
 
-/** `initialData` is the topic the page already read on the server, so the first render is complete. */
 export function useHelpCategoryQuery(
   slug: string,
-  initialData?: HelpCategoryWithArticles,
 ): UseQueryResult<HelpCategoryWithArticles, ApiClientError> {
   return useQuery<HelpCategoryWithArticles, ApiClientError>({
     queryKey: helpKeys.category(slug),
     queryFn: () => getHelpCategory(slug),
     staleTime: HOUR,
     enabled: Boolean(slug),
-    initialData,
   });
 }
 
@@ -78,7 +78,7 @@ export function useHelpSearchQuery(
     queryKey: helpKeys.search(trimmed),
     queryFn: () => searchHelp(trimmed),
     staleTime: 5 * MINUTE,
-    enabled: trimmed.length >= 2,
+    enabled: trimmed.length >= MIN_HELP_QUERY_LENGTH,
     placeholderData: (prev) => prev,
   });
 }

@@ -15,7 +15,7 @@ export function HelpHero({ id, titleLead, titleAccent, subtitle, children }: Hel
   return (
     <section
       aria-labelledby={id}
-      className="mx-auto mt-5 mb-12 flex max-w-[1125px] flex-col items-center text-center qb-tablet:mt-2 qb-tablet:mb-8 qb-desktop:mt-6 qb-desktop:mb-12"
+      className="mx-auto mb-12 flex max-w-[1125px] flex-col items-center pt-5 text-center qb-tablet:mb-8 qb-tablet:pt-2 qb-desktop:mb-12 qb-desktop:pt-6"
     >
       <h2
         id={id}

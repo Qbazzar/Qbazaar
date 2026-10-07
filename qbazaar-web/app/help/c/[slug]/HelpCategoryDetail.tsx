@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * Help topic page. No Figma frame: parent-category (69:467) with article rows
  * in place of the sub-category tiles.
@@ -12,14 +10,11 @@ import { BrowseTopicsLink } from '@/components/help/BrowseTopicsLink';
 import { HelpArticleCard } from '@/components/help/HelpArticleCard';
 import { HelpContactCard } from '@/components/help/HelpContactCard';
 import type { HelpCategoryWithArticles } from '@/lib/api/help';
-import { useHelpCategoryQuery } from '@/lib/queries/help';
 import { tPlural } from '@/lib/i18n/intl';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 
-export function HelpCategoryDetailClient({ initialCategory }: { initialCategory: HelpCategoryWithArticles }) {
-  const { data } = useHelpCategoryQuery(initialCategory.slug, initialCategory);
-  const category = data ?? initialCategory;
+export function HelpCategoryDetail({ category }: { category: HelpCategoryWithArticles }) {
   const name = localized(category.name);
   const description = localized(category.description);
   const articles = category.articles ?? [];

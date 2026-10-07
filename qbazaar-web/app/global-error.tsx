@@ -24,7 +24,10 @@ export default function GlobalError({ unstable_retry }: { error: Error & { diges
             <p className="mt-2 text-qb-body text-qb-ink-secondary">We hit an unexpected problem. Please try again.</p>
           </div>
           <button type="button" onClick={() => unstable_retry()} className={cn(buttonVariants(), 'mt-8')}>
-            إعادة المحاولة · Try again
+            إعادة المحاولة ·{' '}
+            <span lang="en" dir="ltr">
+              Try again
+            </span>
           </button>
         </main>
       </body>

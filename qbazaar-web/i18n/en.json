@@ -1044,6 +1044,7 @@
       "body_required": "Type a reply",
       "body_min": "Details are too short (min 10 characters)",
       "body_max": "Details are too long (max 4000 characters)",
+      "email_required": "Enter your email so we can reply",
       "ticket_not_found": "We couldn't find this ticket",
       "ticket_forbidden": "You don't have access to this ticket",
       "invalid_transition": "You can't reply to a closed ticket. Please open a new one."

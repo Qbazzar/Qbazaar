@@ -4,6 +4,13 @@ import { cache } from 'react';
 
 import type { HelpCategoryWithArticles } from './help';
 import { fetchPublicResource } from './public-resource';
+import type { HelpCategory } from './types';
+
+/** Every help topic with its article count, read on the server and memoized per request. */
+export const fetchHelpCategories = cache(
+  async (): Promise<HelpCategory[]> =>
+    (await fetchPublicResource<HelpCategory[]>('/api/v1/help/categories')) ?? [],
+);
 
 /**
  * A help topic with its articles, read on the server; `null` when it does not

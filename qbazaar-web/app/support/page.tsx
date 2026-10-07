@@ -38,7 +38,11 @@ export default async function SupportLandingPage() {
         titleAccent={t('help.hero_accent')}
         subtitle={t('support.subtitle')}
       />
-      <ul aria-labelledby="support-options-title" className="mx-auto grid max-w-[976px] gap-3 qb-tablet:grid-cols-2 qb-desktop:gap-4">
+      {/* `[display:grid]`, not `grid`: the old stylesheet's unlayered `.grid` rule would override the gaps. */}
+      <ul
+        aria-labelledby="support-options-title"
+        className="mx-auto [display:grid] max-w-[976px] gap-3 qb-tablet:grid-cols-2 qb-desktop:gap-4"
+      >
         <li>
           <LinkTile
             href="/help"

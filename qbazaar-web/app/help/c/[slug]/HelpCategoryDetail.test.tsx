@@ -1,14 +1,10 @@
 import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-vi.mock('@/lib/queries/help', () => ({
-  useHelpCategoryQuery: (_slug: string, initialData: unknown) => ({ data: initialData }),
-}));
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { HelpCategoryWithArticles } from '@/lib/api/help';
 import { setClientLocale } from '@/lib/i18n/locale';
 
-import { HelpCategoryDetailClient } from './HelpCategoryDetailClient';
+import { HelpCategoryDetail } from './HelpCategoryDetail';
 
 const topic = (articles: HelpCategoryWithArticles['articles']): HelpCategoryWithArticles => ({
   id: 'buying',
@@ -20,13 +16,13 @@ const topic = (articles: HelpCategoryWithArticles['articles']): HelpCategoryWith
   articles,
 });
 
-describe('HelpCategoryDetailClient', () => {
+describe('HelpCategoryDetail', () => {
   beforeEach(() => setClientLocale('en'));
 
   it('lists the topic articles under its title and article count', () => {
     render(
-      <HelpCategoryDetailClient
-        initialCategory={topic([
+      <HelpCategoryDetail
+        category={topic([
           { id: 'a', slug: 'searching-for-items', title: { ar: 'البحث', en: 'Searching for items' }, excerpt: null, display_order: 1 },
           { id: 'b', slug: 'making-an-offer', title: { ar: 'عرض', en: 'Making an offer' }, excerpt: null, display_order: 2 },
         ])}
@@ -41,7 +37,7 @@ describe('HelpCategoryDetailClient', () => {
   });
 
   it('says so when the topic has no articles yet', () => {
-    render(<HelpCategoryDetailClient initialCategory={topic([])} />);
+    render(<HelpCategoryDetail category={topic([])} />);
 
     expect(screen.getByRole('heading', { level: 2, name: 'No articles in this topic yet' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Browse help topics' })).toHaveAttribute('href', '/help');

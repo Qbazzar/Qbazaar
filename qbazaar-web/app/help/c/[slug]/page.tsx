@@ -7,7 +7,7 @@ import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { absoluteUrl } from '@/lib/seo';
 
-import { HelpCategoryDetailClient } from './HelpCategoryDetailClient';
+import { HelpCategoryDetail } from './HelpCategoryDetail';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -27,11 +27,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-/** A missing topic answers 404; otherwise the topic renders on the server and the client island keeps it fresh. */
+/** A missing topic answers 404; otherwise the topic renders on the server. */
 export default async function HelpCategoryPage({ params }: PageProps) {
   const { slug } = await params;
+  await resolveServerLocale();
+
   const category = await fetchHelpCategory(slug);
   if (!category) notFound();
 
-  return <HelpCategoryDetailClient initialCategory={category} />;
+  return <HelpCategoryDetail category={category} />;
 }

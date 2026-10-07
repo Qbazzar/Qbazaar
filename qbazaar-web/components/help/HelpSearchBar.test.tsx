@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
-vi.mock('@/lib/queries/help', () => ({ useHelpSearchQuery: vi.fn() }));
+vi.mock('@/lib/queries/help', () => ({ MIN_HELP_QUERY_LENGTH: 2, useHelpSearchQuery: vi.fn() }));
 
 import { setClientLocale } from '@/lib/i18n/locale';
 import { useHelpSearchQuery } from '@/lib/queries/help';
@@ -73,12 +73,28 @@ describe('HelpSearchBar', () => {
     expect(screen.getByRole('status')).toHaveTextContent('2 results');
   });
 
-  it('closes the suggestions with Escape', () => {
+  it('closes the suggestions with Escape and keeps the query', () => {
     render(<HelpSearchBar />);
     const input = type('offer');
-    fireEvent.keyDown(input, { key: 'Escape' });
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    act(() => {
+      input.dispatchEvent(escape);
+    });
 
     expect(screen.queryByRole('list')).toBeNull();
+    expect(escape.defaultPrevented).toBe(true);
+    expect(input).toHaveValue('offer');
+  });
+
+  it('returns focus to the field when Escape closes the list from a suggestion', () => {
+    render(<HelpSearchBar />);
+    const input = type('offer');
+    const suggestion = screen.getByRole('link', { name: 'Making an offer' });
+    suggestion.focus();
+    fireEvent.keyDown(suggestion, { key: 'Escape' });
+
+    expect(screen.queryByRole('list')).toBeNull();
+    expect(input).toHaveFocus();
   });
 
   it('says so when nothing matches', () => {

@@ -6,18 +6,18 @@
  * category.html (492:20208, 655:55973) with article rows.
  */
 import { parseAsString, useQueryState } from 'nuqs';
-import { CircleAlert, Search, SearchX } from 'lucide-react';
+import { Search } from 'lucide-react';
 
-import { Button } from '@/components/design-system/Button';
 import { PageShell } from '@/components/design-system/PageShell';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import { BrowseTopicsLink } from '@/components/help/BrowseTopicsLink';
 import { HelpArticleCard } from '@/components/help/HelpArticleCard';
 import { HelpContactCard } from '@/components/help/HelpContactCard';
-import { MIN_HELP_QUERY_LENGTH, HelpSearchBar } from '@/components/help/HelpSearchBar';
+import { HelpSearchBar } from '@/components/help/HelpSearchBar';
 import { HelpRowsSkeleton } from '@/components/help/HelpSkeletons';
+import { RetryPanel } from '@/components/status/RetryPanel';
 import type { HelpArticleListItem } from '@/lib/api/types';
-import { useHelpSearchQuery } from '@/lib/queries/help';
+import { MIN_HELP_QUERY_LENGTH, useHelpSearchQuery } from '@/lib/queries/help';
 import { tPlural } from '@/lib/i18n/intl';
 import { t } from '@/lib/i18n/messages';
 
@@ -25,7 +25,10 @@ export function HelpSearchClient() {
   const [q] = useQueryState('q', parseAsString.withDefault(''));
   const query = q.trim();
   const enabled = query.length >= MIN_HELP_QUERY_LENGTH;
-  const { data: results, isPending, isError, refetch, isFetching } = useHelpSearchQuery(query);
+  const { data: results, isPending, isPlaceholderData, isError, refetch, isFetching } = useHelpSearchQuery(query);
+  const resultCount = enabled && results ? tPlural('help.result_count', results.length) : '';
+  // The previous query's results stay on screen while the next loads; only the settled count is announced.
+  const announcement = enabled && isError ? t('errors.generic_heading') : isPlaceholderData ? '' : resultCount;
 
   return (
     <PageShell
@@ -35,8 +38,11 @@ export function HelpSearchClient() {
         { label: t('help.search_title') },
       ]}
       title={t('help.search_title')}
-      meta={enabled ? (results ? tPlural('help.result_count', results.length) : '\u00a0') : undefined}
+      meta={enabled ? resultCount || '\u00a0' : undefined}
     >
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
       <HelpSearchBar initialQuery={q} hideSuggestions className="mb-6 qb-desktop:mb-10 qb-desktop:max-w-[1125px]" />
       <SearchResults
         enabled={enabled}
@@ -72,26 +78,14 @@ function SearchResults({ enabled, loading, failed, results, onRetry, retrying }:
     );
   }
 
-  if (failed) {
-    return (
-      <StatePanel
-        icon={<StateIcon icon={CircleAlert} tone="muted" />}
-        title={t('common.error')}
-        action={
-          <Button size="sm" onClick={onRetry} disabled={retrying}>
-            {t('common.retry')}
-          </Button>
-        }
-      />
-    );
-  }
+  if (failed) return <RetryPanel onRetry={onRetry} retrying={retrying} />;
 
   if (loading || !results) return <HelpRowsSkeleton />;
 
   if (results.length === 0) {
     return (
       <StatePanel
-        icon={<StateIcon icon={SearchX} tone="muted" />}
+        icon={<StateIcon icon={Search} tone="muted" />}
         title={t('help.no_results')}
         description={t('help.no_results_hint')}
         action={<BrowseTopicsLink />}

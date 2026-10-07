@@ -4,7 +4,8 @@ import { PageShell } from '@/components/design-system/PageShell';
 import { HelpContactCard } from '@/components/help/HelpContactCard';
 import { HelpHero } from '@/components/help/HelpHero';
 import { HelpSearchBar } from '@/components/help/HelpSearchBar';
-import { HelpTopics, HelpTopicsSummary } from '@/components/help/HelpTopics';
+import { HelpTopics, helpTopicsSummary } from '@/components/help/HelpTopics';
+import { fetchHelpCategories } from '@/lib/api/help-server';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { absoluteUrl } from '@/lib/seo';
@@ -26,12 +27,13 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HelpIndexPage() {
   // Pages render in parallel with the root layout, so prime the locale here too.
   await resolveServerLocale();
+  const categories = await fetchHelpCategories();
 
   return (
     <PageShell
       breadcrumb={[{ label: t('home.breadcrumb'), href: '/' }, { label: t('help.title') }]}
       title={t('help.title')}
-      meta={<HelpTopicsSummary />}
+      meta={helpTopicsSummary(categories)}
     >
       <HelpHero
         id="help-search-title"
@@ -42,7 +44,7 @@ export default async function HelpIndexPage() {
         <HelpSearchBar />
       </HelpHero>
       <div className="qb-desktop:px-10">
-        <HelpTopics />
+        <HelpTopics categories={categories} />
         <HelpContactCard className="mt-10 qb-desktop:mt-12" />
       </div>
     </PageShell>

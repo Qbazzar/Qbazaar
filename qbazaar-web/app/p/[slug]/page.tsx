@@ -16,8 +16,8 @@ import { MarkdownContent } from '@/components/cms/MarkdownContent';
 import { PageShell } from '@/components/design-system/PageShell';
 import { fetchPublicResource } from '@/lib/api/public-resource';
 import type { Page } from '@/lib/api/types';
-import { intlLocale } from '@/lib/i18n/intl';
-import { localized } from '@/lib/i18n/locale';
+import { intlLocale } from '@/lib/i18n/format';
+import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { absoluteUrl } from '@/lib/seo';
@@ -68,7 +68,7 @@ export default async function CmsPage({ params }: PageProps) {
 }
 
 function LastUpdated({ iso }: { iso: string }) {
-  const date = new Intl.DateTimeFormat(intlLocale(), { dateStyle: 'long', timeZone: 'Asia/Qatar' }).format(new Date(iso));
+  const date = new Intl.DateTimeFormat(intlLocale(getLocale()), { dateStyle: 'long', timeZone: 'Asia/Qatar' }).format(new Date(iso));
 
   return (
     <>
