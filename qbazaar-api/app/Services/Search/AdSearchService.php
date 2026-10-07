@@ -196,8 +196,8 @@ class AdSearchService
 
     /**
      * Loads the hit ids in one query with what AdSummaryResource renders,
-     * keeping Meilisearch's ranking. Ads removed from the database since
-     * they were indexed are dropped.
+     * keeping Meilisearch's ranking. Ads deleted or no longer listed since
+     * they were indexed are dropped: the index catches up through the queue.
      *
      * @param array<string, mixed> $raw
      * @return list<Ad>
@@ -211,7 +211,7 @@ class AdSearchService
             return [];
         }
 
-        $ads = Ad::query()->whereKey($ids)->with(['category', 'location', 'primaryImage'])->get()->keyBy('id');
+        $ads = Ad::query()->whereKey($ids)->publiclyListed()->with(['category', 'location', 'primaryImage'])->get()->keyBy('id');
 
         return array_values(array_filter(array_map(fn (string $id): ?Ad => $ads->get($id), $ids)));
     }

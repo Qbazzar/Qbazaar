@@ -2073,7 +2073,7 @@ paths:
         child or any of its descendants. Inactive categories, and categories
         under an inactive ancestor, return 404.
 
-        The page is shared by every visitor and cached for
+        The page is shared by every visitor of a language and cached for
         `qbazaar.catalog.category_page_cache_seconds` (2 minutes, served stale
         up to 10 while it refreshes), so new listings can take that long to
         appear; a taxonomy change drops it at once. With a Bearer token,
@@ -2105,8 +2105,9 @@ paths:
       tags: [Reference]
       summary: Every home-screen section in one request
       description: |
-        The payload is the same for every visitor. A scheduled job rebuilds it
-        every `qbazaar.catalog.warm_every_minutes` (2 minutes), so new or
+        The payload is the same for every visitor of a language (card chips
+        and field labels follow the request language). A scheduled job
+        rebuilds it every `qbazaar.catalog.warm_every_minutes` (2 minutes), so new or
         changed listings and the place counts can be up to that old; a
         taxonomy change drops it at once. With a Bearer token, `is_favorited`
         on the ad cards reflects the caller's favourites.
@@ -2296,10 +2297,12 @@ paths:
       summary: Get ad detail
       description: |
         An optional Bearer token lets the owner see their own non-public ad and sets `is_favorited`.
-        Visitors other than the owner share a rendering cached for up to
-        `qbazaar.ads.detail_cache_seconds` (60 seconds); any edit of the ad or
-        its images drops it at once, so only `views_count`, `favorites_count`
-        and the seller block can trail by that long.
+        Visitors other than the owner share a rendering (one per language)
+        cached for up to `qbazaar.ads.detail_cache_seconds` (60 seconds); any
+        edit of the ad or its images drops it at once, so only `views_count`,
+        `favorites_count`, the seller block (its `location` included) and the
+        `category` block (field labels and card flags an admin just changed)
+        can trail by that long.
       operationId: adsShow
       security: [{}, {bearerAuth: []}]
       parameters:
@@ -2771,6 +2774,11 @@ paths:
 
         An optional Bearer token sets `is_favorited` on each ad; guests get false.
 
+        Results are read back from the database, so an ad deleted or no longer
+        publicly listed since the index last saw it is left out, and a page
+        can then hold fewer ads than `per_page` while `meta.total` still
+        counts it.
+
         Limited to 60 requests per minute per user (per IP for guests) by the
         `search` rate limiter, on top of the general API limit.
       operationId: searchIndex
@@ -2790,7 +2798,7 @@ paths:
         - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed, distance], default: latest }, description: '`distance` requires `lat` and `lng`.' }
         - { name: lat, in: query, schema: { type: number, minimum: -90, maximum: 90 }, description: 'Required with `lng`, `radius_km` or `sort=distance`.' }
         - { name: lng, in: query, schema: { type: number, minimum: -180, maximum: 180 }, description: 'Required with `lat`, `radius_km` or `sort=distance`.' }
-        - { name: radius_km, in: query, schema: { type: number, minimum: 0.1, maximum: 100 }, description: 'Radius around `lat`/`lng`, capped by `qbazaar.search.geo_max_radius_km`.' }
+        - { name: radius_km, in: query, schema: { type: number, minimum: 0.1, maximum: 200 }, description: 'Radius around `lat`/`lng` in kilometres, capped by `qbazaar.search.geo_max_radius_km` (200).' }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
       responses:
@@ -6011,6 +6019,15 @@ components:
               type: boolean
             business_verified:
               type: boolean
+        location:
+          description: |
+            The city or area the seller sells from: the place of their newest
+            publicly listed ad, null when they have none (users store no
+            location of their own). Only on the `user` of `GET /api/v1/ads/{id}`;
+            absent from the public-profile endpoints and conversations.
+          oneOf:
+            - $ref: '#/components/schemas/LocationSummary'
+            - type: 'null'
         ads_count:
           type: integer
           example: 0
@@ -6262,7 +6279,7 @@ components:
 
     CategoryField:
       type: object
-      required: [key, label, type, required]
+      required: [key, label, type, required, options_labeled, show_in_card]
       properties:
         key:
           type: string
@@ -6279,6 +6296,28 @@ components:
             - type: array
               items: { type: string }
             - type: 'null'
+          description: Raw option values, as stored on ads and matched by search filters.
+        options_labeled:
+          description: |
+            The same options in the same order, each raw `value` with its
+            `label` in the request language (`?lang=`, the signed-in user's
+            language, then `Accept-Language`). Send the `value`, show the
+            `label`. Null for fields without options. Present wherever a
+            category's fields are returned: the tree, `/categories/main`, the
+            category page, `/categories/{slug}/fields`, the home feed and the
+            `category` of `GET /api/v1/ads/{id}`.
+          oneOf:
+            - type: array
+              items:
+                type: object
+                required: [value, label]
+                properties:
+                  value: { type: string, example: petrol }
+                  label: { type: string, example: بنزين }
+            - type: 'null'
+        show_in_card:
+          type: boolean
+          description: Whether the field's value is one of the listing-card chips (`AdSummary.spec_chips`). Set per category by the admin.
 
     Location:
       type: object
@@ -6308,6 +6347,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Location'
+
+    LocationSummary:
+      type: object
+      description: A place by name only, with no coordinates and no children (city or area level).
+      required: [id, parent_id, slug, name, type]
+      properties:
+        id:
+          $ref: '#/components/schemas/ULID'
+        parent_id:
+          oneOf:
+            - $ref: '#/components/schemas/ULID'
+            - type: 'null'
+          description: The parent place (the city of a district); null for a city.
+        slug:
+          type: string
+          example: west-bay
+        name:
+          $ref: '#/components/schemas/LocalizedString'
+        type:
+          type: string
+          enum: [city, district, area]
 
     CategoryStats:
       type: object
@@ -6363,7 +6423,7 @@ components:
 
     SellerCard:
       type: object
-      required: [id, full_name, avatar_url, account_type, ads_count, rating_avg, rating_count]
+      required: [id, full_name, avatar_url, account_type, ads_count, rating_avg, rating_count, followers_count, joined_at, location]
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         full_name: { type: string }
@@ -6372,6 +6432,13 @@ components:
         ads_count: { type: integer, description: Active ads of the seller. }
         rating_avg: { type: number, format: float, example: 4.6 }
         rating_count: { type: integer }
+        followers_count: { type: integer, example: 12 }
+        joined_at: { type: string, format: date-time, description: When the account was created. }
+        location:
+          description: The city or area the seller sells from (the place of their newest publicly listed ad); null when they have none.
+          oneOf:
+            - $ref: '#/components/schemas/LocationSummary'
+            - type: 'null'
 
     HomePlace:
       type: object
@@ -6544,10 +6611,40 @@ components:
 
     AdSummary:
       type: object
-      required: [id, title, status, currency]
+      required: [id, title, summary, status, currency]
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         title: { type: string }
+        summary:
+          type: string
+          description: |
+            The description as one plain-text line, cut at a word to at most
+            120 characters plus "…" (`qbazaar.cards.summary_length`). Empty
+            when the caller may not open the ad (a saved, viewed or chatted
+            ad that went back to review or was hidden since).
+          example: Single owner, full service history, new tyres…
+        spec_chips:
+          type: array
+          maxItems: 4
+          description: |
+            The card's key specs in the request language: the ad's condition
+            first, then the values of the category fields flagged
+            `show_in_card`, in the category's order; select values carry their
+            option label, booleans read Yes/No. At most 4
+            (`qbazaar.cards.max_spec_chips`), each `value` at most 40
+            characters (`qbazaar.cards.spec_chip_max_length`); empty when the
+            ad has none of them or the caller may not open the ad. `key` is
+            the custom-field key (or `condition`), so it is stable across
+            languages. Present on every ad list (home, search, category page,
+            `GET /ads` and `?ids=`, favorites, recently viewed, seller and own
+            ads, featured, similar) and on the ad of a conversation.
+          items:
+            type: object
+            required: [key, label, value]
+            properties:
+              key: { type: string, example: transmission }
+              label: { type: string, example: ناقل الحركة }
+              value: { type: string, example: أوتوماتيك }
         price: { type: number, nullable: true }
         price_formatted: { type: string, nullable: true, example: '750.00 QAR' }
         price_type: { $ref: '#/components/schemas/PriceType' }
@@ -6623,6 +6720,18 @@ components:
           description: Whether the caller (identified by an optional Bearer token) saved this ad. Always false for guests.
         category_slug: { type: string, nullable: true }
         location_slug: { type: string, nullable: true }
+        user:
+          description: The seller. On `GET /api/v1/ads/{id}` it also carries `location`, the city or area the seller sells from.
+          allOf:
+            - $ref: '#/components/schemas/PublicProfile'
+        category:
+          description: The ad's category; its `custom_fields[].options_labeled` give the select labels for this ad's `custom_fields` values.
+          allOf:
+            - $ref: '#/components/schemas/Category'
+        location:
+          description: The ad's own place.
+          allOf:
+            - $ref: '#/components/schemas/Location'
         images:
           type: array
           items: { $ref: '#/components/schemas/Media' }
@@ -6655,6 +6764,12 @@ components:
           type: object
           additionalProperties: true
           nullable: true
+          description: |
+            `{key: value}` checked against the category's `custom_fields`:
+            `number` values between -999999999 and 999999999
+            (`qbazaar.ads.custom_field_number_max`); `text` values, and
+            `select` values of a field without options, at most 255
+            characters and without `<` or `>`.
 
     UpdateAdRequest:
       type: object
@@ -6679,6 +6794,12 @@ components:
           type: object
           additionalProperties: true
           nullable: true
+          description: |
+            `{key: value}` checked against the category's `custom_fields`:
+            `number` values between -999999999 and 999999999
+            (`qbazaar.ads.custom_field_number_max`); `text` values, and
+            `select` values of a field without options, at most 255
+            characters and without `<` or `>`.
 
     ReorderImagesRequest:
       type: object
