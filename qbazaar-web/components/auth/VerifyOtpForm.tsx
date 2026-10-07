@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { CheckCircle2Icon, Loader2Icon } from 'lucide-react';
+import { CircleCheck, Loader2, ShieldCheck } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { qatarPhoneRegex } from '@/lib/validation/auth';
@@ -21,6 +22,8 @@ import { AuthErrorCode } from '@/lib/api/types';
 import { safeReturnTo } from '@/lib/navigation/safe-return-to';
 import { PHONE_VERIFICATION_PATH, isPhoneVerificationPath } from '@/lib/auth/phone-gate';
 import { useAuthStore } from '@/store/auth';
+import { authSubmitClass } from './AuthFooter';
+import { AuthHeading } from './AuthHeading';
 import { FieldError } from './FieldError';
 import { OtpInput } from './OtpInput';
 import { Turnstile, type TurnstileHandle } from './Turnstile';
@@ -166,54 +169,34 @@ export function VerifyOtpForm() {
 
   if (!phoneIsValid) {
     return (
-      <div className="space-y-4">
-        <header className="space-y-2">
-          <h1 className="font-display text-3xl tracking-tight">
-            {t('auth.verify_otp.missing_phone_title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t('auth.verify_otp.missing_phone_body')}
-          </p>
-        </header>
-        <div className="flex gap-2">
-          {signedInUser ? (
-            <Link
-              href={PHONE_VERIFICATION_PATH}
-              className={cn(buttonVariants(), 'h-11 rounded-full px-6 text-sm font-semibold')}
-            >
-              {t('account.verification.title')}
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className={cn(buttonVariants(), 'h-11 rounded-full px-6 text-sm font-semibold')}
-            >
-              {t('auth.verify_otp.back_to_login')}
-            </Link>
-          )}
-        </div>
+      <div className="flex flex-col items-center gap-8">
+        <AuthHeading
+          icon={<ShieldCheck />}
+          title={t('auth.verify_otp.missing_phone_title')}
+          subtitle={t('auth.verify_otp.missing_phone_body')}
+        />
+        <Link
+          href={signedInUser ? PHONE_VERIFICATION_PATH : '/login'}
+          className={cn(buttonVariants({ fullWidth: true }), authSubmitClass, 'max-w-[420px]')}
+        >
+          {signedInUser ? t('account.verification.title') : t('auth.verify_otp.back_to_login')}
+        </Link>
       </div>
     );
   }
 
   if (status === 'success') {
     return (
-      <div className="space-y-5">
-        <div className="bg-cream-50 border-border flex flex-col items-center gap-3 rounded-2xl border p-6 text-center">
-          <span className="bg-coral/15 text-coral inline-flex size-12 items-center justify-center rounded-full">
-            <CheckCircle2Icon className="size-6" aria-hidden="true" />
-          </span>
-          <h1 className="font-display text-2xl tracking-tight">
-            {t('auth.verify_otp.success_title')}
-          </h1>
-          <p className="text-muted-foreground max-w-xs text-sm leading-relaxed">
-            {t('auth.verify_otp.success_body')}
-          </p>
-        </div>
+      <div className="flex flex-col items-center gap-8">
+        <AuthHeading
+          icon={<CircleCheck />}
+          title={t('auth.verify_otp.success_title')}
+          subtitle={t('auth.verify_otp.success_body')}
+        />
         <Button
           onClick={() => router.replace(continueTarget)}
-          size="lg"
-          className="h-11 w-full rounded-full text-sm font-semibold"
+          fullWidth
+          className={cn(authSubmitClass, 'max-w-[420px]')}
         >
           {resumesAction
             ? t('auth.phone_gate.resume')
@@ -224,89 +207,95 @@ export function VerifyOtpForm() {
   }
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        void submit(code);
-      }}
-      noValidate
-      className="space-y-5"
-    >
-      <p className="text-muted-foreground text-sm">
-        {t('auth.verify_otp.subtitle')}{' '}
-        <span className="text-foreground font-medium" dir="ltr">
-          {phone}
-        </span>
-      </p>
-
-      <div className="space-y-2">
-        <OtpInput
-          value={code}
-          onChange={(next) => {
-            setSubmitError(null);
-            setCode(next);
-          }}
-          onComplete={onComplete}
-          length={CODE_LENGTH}
-          disabled={submitting}
-          ariaInvalid={Boolean(submitError)}
-          ariaDescribedBy={submitError ? 'otp-error' : undefined}
-          autoFocus
-        />
-        <div className="flex min-h-[1.25rem] items-center justify-center">
-          <FieldError id="otp-error" message={submitError ?? undefined} />
-        </div>
-        {expiresSeconds > 0 && !submitError ? (
-          <p className="text-muted-foreground text-center text-xs">
-            {t('auth.verify_otp.expires_in').replace(
-              '{seconds}',
-              String(expiresSeconds),
-            )}
-          </p>
-        ) : null}
-      </div>
-
-      <Turnstile ref={turnstile} />
-
-      <Button
-        type="submit"
-        size="lg"
-        disabled={submitting || code.length !== CODE_LENGTH}
-        className={cn(
-          'h-11 w-full rounded-full text-sm font-semibold',
-          submitting && 'cursor-progress',
-        )}
-      >
-        {submitting ? (
+    <>
+      <AuthHeading
+        icon={<ShieldCheck />}
+        title={t('auth.verify_otp.heading')}
+        subtitle={
           <>
-            <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
-            {t('auth.verify_otp.submitting')}
+            {t('auth.verify_otp.subtitle')}{' '}
+            <span className="font-semibold text-qb-ink-body" dir="ltr">
+              {phone}
+            </span>
+            <br />
+            {t('auth.verify_otp.enter_below')}
           </>
-        ) : (
-          t('auth.verify_otp.submit')
-        )}
-      </Button>
+        }
+      />
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submit(code);
+        }}
+        noValidate
+        className="mt-8 flex flex-col gap-5 qb-desktop:mt-12"
+      >
+        <div className="flex flex-col gap-3">
+          <OtpInput
+            value={code}
+            onChange={(next) => {
+              setSubmitError(null);
+              setCode(next);
+            }}
+            onComplete={onComplete}
+            length={CODE_LENGTH}
+            disabled={submitting}
+            ariaInvalid={Boolean(submitError)}
+            ariaDescribedBy={submitError ? 'otp-error' : undefined}
+            autoFocus
+          />
+          <div className="flex min-h-5 items-center justify-center">
+            <FieldError id="otp-error" message={submitError ?? undefined} />
+          </div>
+          {expiresSeconds > 0 && !submitError ? (
+            <p className="text-center text-qb-label text-qb-ink-subtle">
+              {t('auth.verify_otp.expires_in').replace(
+                '{seconds}',
+                String(expiresSeconds),
+              )}
+            </p>
+          ) : null}
+        </div>
 
-      <p className="text-muted-foreground text-center text-sm">
-        {t('auth.verify_otp.resend_question')}{' '}
-        {canResend ? (
-          <button
-            type="button"
-            onClick={onResend}
-            className="text-coral font-medium hover:underline"
-          >
-            {t('auth.verify_otp.resend_now')}
-          </button>
-        ) : (
-          <span className="font-medium">
-            {t('auth.verify_otp.resend_in').replace(
-              '{seconds}',
-              String(resendSeconds),
-            )}
-          </span>
-        )}
-      </p>
-    </form>
+        <p className="text-center text-qb-caption text-qb-ink-subtle qb-tablet:text-qb-body">
+          {t('auth.verify_otp.no_code')}{' '}
+          {canResend ? (
+            <button
+              type="button"
+              onClick={onResend}
+              className={cn('rounded-qb-xs font-medium text-qb-brand underline underline-offset-2 hover:text-qb-brand-hover', focusRing)}
+            >
+              {t('auth.verify_otp.resend_now')}
+            </button>
+          ) : (
+            <span className="font-medium text-qb-ink">
+              {t('auth.verify_otp.resend_in').replace(
+                '{seconds}',
+                String(resendSeconds),
+              )}
+            </span>
+          )}
+        </p>
+
+        <Turnstile ref={turnstile} />
+
+        <Button
+          type="submit"
+          fullWidth
+          disabled={submitting || code.length !== CODE_LENGTH}
+          className={cn(authSubmitClass, 'mt-3', submitting && 'cursor-progress')}
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="animate-spin" aria-hidden="true" />
+              {t('auth.verify_otp.submitting')}
+            </>
+          ) : (
+            t('auth.verify_otp.submit')
+          )}
+        </Button>
+      </form>
+    </>
   );
 }
 

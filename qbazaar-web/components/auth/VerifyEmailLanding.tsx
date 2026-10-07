@@ -1,16 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  AlertTriangleIcon,
-  CheckCircle2Icon,
-  Loader2Icon,
-} from 'lucide-react';
+import { CircleCheck, Loader2, TriangleAlert } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/design-system/Button';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import {
@@ -18,6 +14,9 @@ import {
   sendEmailVerification,
   verifyEmail,
 } from '@/lib/api/auth';
+import { AuthCard } from './AuthCard';
+import { authSubmitClass } from './AuthFooter';
+import { AuthHeading } from './AuthHeading';
 
 type Status = 'checking' | 'success' | 'expired' | 'missing';
 
@@ -87,9 +86,8 @@ export function VerifyEmailLanding() {
 
   if (status === 'checking') {
     return (
-      <Card
-        icon={<Loader2Icon className="size-6 animate-spin" aria-hidden="true" />}
-        tone="neutral"
+      <ResultCard
+        icon={<Loader2 className="animate-spin motion-reduce:animate-none" />}
         title={t('auth.verify_email.checking_title')}
         body={t('auth.verify_email.checking_body')}
       />
@@ -98,120 +96,74 @@ export function VerifyEmailLanding() {
 
   if (status === 'success') {
     return (
-      <Card
-        icon={<CheckCircle2Icon className="size-6" aria-hidden="true" />}
-        tone="success"
+      <ResultCard
+        icon={<CircleCheck />}
         title={t('auth.verify_email.success_title')}
         body={t('auth.verify_email.success_body')}
-        actions={
-          <Button
-            size="lg"
-            onClick={() => router.replace(continueParam)}
-            className="h-11 w-full rounded-full text-sm font-semibold"
-          >
-            {t('auth.verify_email.continue')}
-          </Button>
-        }
-      />
+      >
+        <Button fullWidth onClick={() => router.replace(continueParam)} className={authSubmitClass}>
+          {t('auth.verify_email.continue')}
+        </Button>
+      </ResultCard>
     );
   }
 
   if (status === 'expired') {
     return (
-      <Card
-        icon={<AlertTriangleIcon className="size-6" aria-hidden="true" />}
-        tone="warning"
+      <ResultCard
+        icon={<TriangleAlert />}
         title={t('auth.verify_email.expired_title')}
         body={t('auth.verify_email.expired_body')}
-        actions={
-          <div className="flex w-full flex-col gap-2">
-            <Button
-              size="lg"
-              onClick={resend}
-              disabled={resending}
-              className="h-11 w-full rounded-full text-sm font-semibold"
-            >
-              {resending ? (
-                <>
-                  <Loader2Icon
-                    className="size-4 animate-spin"
-                    aria-hidden="true"
-                  />
-                  {t('common.loading')}
-                </>
-              ) : (
-                t('auth.verify_email.resend')
-              )}
-            </Button>
-            <Link
-              href="/login"
-              className={cn(
-                buttonVariants({ variant: 'outline' }),
-                'h-11 w-full rounded-full text-sm font-semibold',
-              )}
-            >
-              {t('auth.verify_otp.back_to_login')}
-            </Link>
-          </div>
-        }
-      />
+      >
+        <Button fullWidth onClick={resend} disabled={resending} className={authSubmitClass}>
+          {resending ? (
+            <>
+              <Loader2 className="animate-spin" aria-hidden="true" />
+              {t('common.loading')}
+            </>
+          ) : (
+            t('auth.verify_email.resend')
+          )}
+        </Button>
+        <Link href="/login" className={cn(buttonVariants({ variant: 'outline', fullWidth: true }), authSubmitClass)}>
+          {t('auth.verify_otp.back_to_login')}
+        </Link>
+      </ResultCard>
     );
   }
 
   // status === 'missing'
   return (
-    <Card
-      icon={<AlertTriangleIcon className="size-6" aria-hidden="true" />}
-      tone="warning"
+    <ResultCard
+      icon={<TriangleAlert />}
       title={t('auth.verify_email.missing_params_title')}
       body={t('auth.verify_email.missing_params_body')}
-      actions={
-        <Link
-          href="/login"
-          className={cn(
-            buttonVariants(),
-            'h-11 w-full rounded-full text-sm font-semibold',
-          )}
-        >
-          {t('auth.verify_otp.back_to_login')}
-        </Link>
-      }
-    />
+    >
+      <Link href="/login" className={cn(buttonVariants({ fullWidth: true }), authSubmitClass)}>
+        {t('auth.verify_otp.back_to_login')}
+      </Link>
+    </ResultCard>
   );
 }
 
-function Card({
+/** "Check your email" card of 739:36548 with the result's icon, title and next step. */
+function ResultCard({
   icon,
-  tone,
   title,
   body,
-  actions,
+  children,
 }: {
-  icon: React.ReactNode;
-  tone: 'neutral' | 'success' | 'warning';
+  icon: ReactNode;
   title: string;
   body: string;
-  actions?: React.ReactNode;
+  children?: ReactNode;
 }) {
-  const toneClasses =
-    tone === 'success'
-      ? 'bg-coral/15 text-coral'
-      : tone === 'warning'
-        ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
-        : 'bg-muted text-muted-foreground';
-
   return (
-    <div className="bg-card border-border w-full max-w-md space-y-5 rounded-2xl border p-8 shadow-sm">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <span
-          className={`inline-flex size-12 items-center justify-center rounded-full ${toneClasses}`}
-        >
-          {icon}
-        </span>
-        <h1 className="font-display text-2xl tracking-tight">{title}</h1>
-        <p className="text-muted-foreground text-sm leading-relaxed">{body}</p>
+    <AuthCard>
+      <div role="status" className="flex flex-col items-center gap-8">
+        <AuthHeading icon={icon} title={title} subtitle={body} />
+        {children ? <div className="flex w-full max-w-[420px] flex-col gap-3">{children}</div> : null}
       </div>
-      {actions ? <div className="pt-2">{actions}</div> : null}
-    </div>
+    </AuthCard>
   );
 }

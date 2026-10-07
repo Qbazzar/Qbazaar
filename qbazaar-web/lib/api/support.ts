@@ -6,8 +6,8 @@
  *   Anonymous payloads must include `email`; the backend enforces it.
  * - The remaining endpoints sit behind auth and are scoped to the caller.
  *
- * `TICKET_INVALID_TRANSITION` is the soft-error raised when replying to a
- * `resolved` or `closed` ticket. The UI catches it and surfaces a toast.
+ * `TICKET_003` (invalid status change) is the soft-error raised when replying
+ * to a `resolved` or `closed` ticket. The UI catches it and surfaces a toast.
  */
 import { isAxiosError } from 'axios';
 import { api } from './client';

@@ -16,9 +16,9 @@
  */
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { BellOffIcon, BellRingIcon, Loader2Icon } from 'lucide-react';
+import { BellOff, BellRing, Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/design-system/Button';
 import {
   enablePush,
   getLastPushError,
@@ -80,11 +80,8 @@ export function EnablePushButton() {
 
   if (state === 'enabled') {
     return (
-      <p
-        role="status"
-        className="text-muted-foreground inline-flex items-center gap-1.5 text-sm"
-      >
-        <BellRingIcon className="size-3.5" aria-hidden />
+      <p role="status" className="inline-flex items-center gap-1.5 font-qb text-qb-caption text-qb-ink-subtle">
+        <BellRing className="size-4" aria-hidden="true" />
         {t('notifications.push.enabled', 'إشعارات المتصفح مفعّلة')}
       </p>
     );
@@ -92,11 +89,8 @@ export function EnablePushButton() {
 
   if (state === 'denied') {
     return (
-      <p
-        role="status"
-        className="text-muted-foreground inline-flex items-center gap-1.5 text-sm"
-      >
-        <BellOffIcon className="size-3.5" aria-hidden />
+      <p role="status" className="inline-flex items-center gap-1.5 font-qb text-qb-caption text-qb-ink-subtle">
+        <BellOff className="size-4" aria-hidden="true" />
         {t('notifications.push.denied', 'الإشعارات محظورة من إعدادات المتصفح')}
       </p>
     );
@@ -113,29 +107,22 @@ export function EnablePushButton() {
 
   return (
     <div className="inline-flex flex-col items-start gap-1">
-      <Button
-        type="button"
-        variant="outline"
-        size="default"
-        className="rounded-full"
-        disabled={state === 'pending'}
-        onClick={() => void handleEnable()}
-      >
+      <Button variant="outline" size="sm" disabled={state === 'pending'} onClick={() => void handleEnable()}>
         {state === 'pending' ? (
-          <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
+          <Loader2 className="animate-spin" aria-hidden="true" />
         ) : (
-          <BellRingIcon className="size-3.5" aria-hidden />
+          <BellRing aria-hidden="true" />
         )}
         {t('notifications.push.enable', 'فعّل إشعارات المتصفح')}
       </Button>
       {state === 'error' ? (
-        <p role="alert" className="text-destructive max-w-xs text-xs">
+        <p role="alert" className="max-w-xs font-qb text-qb-micro text-qb-danger">
           {t(
             'notifications.push.error',
             'تعذّر تفعيل إشعارات المتصفح، حاول مرة أخرى',
           )}
           {getLastPushError() ? (
-            <span className="text-ink-400 mt-0.5 block break-words font-mono text-[10px]">
+            <span className="mt-0.5 block font-mono text-qb-tiny break-words text-qb-ink-subtle">
               {getLastPushError()}
             </span>
           ) : null}

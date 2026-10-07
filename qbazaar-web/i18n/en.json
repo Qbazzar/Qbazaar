@@ -20,9 +20,13 @@
     "theme": {
       "switch_to_dark": "Dark mode",
       "switch_to_light": "Light mode"
-    }
+    },
+    "currency": "QAR"
   },
   "auth": {
+    "password": {
+      "toggle": "Show or hide password"
+    },
     "hero": {
       "eyebrow": "Qatar marketplace",
       "title_line1": "Your neighbourhood",
@@ -37,6 +41,9 @@
       "register": "Create account"
     },
     "login": {
+      "welcome_prefix": "Welcome to",
+      "welcome_brand": "QBAZAAR",
+      "tagline": "Discover, buy, and sell with ease. Connect with a diverse community and explore thousands of products all in one place.",
       "title": "Welcome back",
       "subtitle": "Sign in to your QBazaar account.",
       "identifier_label": "Email or phone",
@@ -54,6 +61,11 @@
       "deleted_notice": "Your account is scheduled for deletion. Sign in within 30 days to cancel."
     },
     "register": {
+      "heading": "Create an account",
+      "tagline": "Join Bazaar to buy and sell locally.",
+      "usage_question": "How would you like to use classifieds?",
+      "login_details": "Your login details",
+      "submit_free": "Register For Free",
       "title": "Create your account",
       "subtitle": "It takes less than a minute.",
       "full_name_label": "Full name",
@@ -97,6 +109,9 @@
       "country_prefix": "🇶🇦 +974"
     },
     "verify_otp": {
+      "heading": "Verify Your Identity",
+      "enter_below": "Enter the code below to continue.",
+      "no_code": "You haven't received any code?",
       "title": "Verify your phone",
       "subtitle": "We sent a 6-digit code to",
       "code_label": "Verification code",
@@ -210,7 +225,39 @@
     }
   },
   "account": {
+    "price": {
+      "negotiable": "{price} · Negotiable"
+    },
+    "my_ads": {
+      "tabs_label": "Ad status",
+      "total": {
+        "one": "You have {count} ad",
+        "other": "You have {count} ads"
+      },
+      "untitled": "(Untitled)",
+      "without_photo": "Without Photo",
+      "complete": "Complete",
+      "visitors": {
+        "one": "{count} visitor",
+        "other": "{count} visitors"
+      },
+      "likes": {
+        "one": "{count} like",
+        "other": "{count} likes"
+      },
+      "published_on": "Published on: {date}",
+      "empty_body": "Post an ad and it will show up here with its status and stats.",
+      "delete_label": "Delete {title}"
+    },
     "nav": {
+      "overview": "My account",
+      "settings": "Settings",
+      "back_to_settings": "Back to settings",
+      "activity": "My activity",
+      "profile_settings": "Profile Settings",
+      "account_settings": "Account Settings",
+      "data_protection": "Data Protection",
+      "my_ads": "My Ads",
       "title": "Account",
       "dashboard": "Dashboard",
       "profile": "Profile",
@@ -233,6 +280,9 @@
       "greeting": "Welcome back, {name}",
       "subtitle": "A quick snapshot of your QBazaar activity.",
       "stats": {
+        "unread_messages": "Unread messages",
+        "favorites": "Saved ads",
+        "saved_searches": "Saved searches",
         "my_ads": "My ads",
         "drafts": "Drafts",
         "conversations": "Conversations",
@@ -251,6 +301,14 @@
       }
     },
     "profile": {
+      "settings_title": "Profile Settings",
+      "settings_subtitle": "Add information about yourself",
+      "personal_info": "Personal Information",
+      "bio_empty": "No bio added yet.",
+      "edit_title": "Edit profile",
+      "active_since": "Active since {date}",
+      "private_seller": "Private Seller",
+      "business_seller": "Business Seller",
       "title": "Profile",
       "subtitle": "Update the information visitors see on your public profile.",
       "full_name_label": "Full name",
@@ -266,6 +324,13 @@
       "success": "Profile updated"
     },
     "security": {
+      "settings_subtitle": "Edit your account settings and change your password here.",
+      "verified_phone": "Verified Phone Number",
+      "phone": "Phone Number",
+      "email": "Email",
+      "password": "Password",
+      "verify": "Verify",
+      "edit_password": "Edit Password",
       "title": "Security",
       "subtitle": "Change your password regularly to keep your account safe.",
       "current_password_label": "Current password",
@@ -277,6 +342,8 @@
       "sign_out_notice": "This will sign you out from other devices."
     },
     "sessions": {
+      "confirm_title": "Sign out this device?",
+      "confirm_body": "{device} will need to sign in again to use your account.",
       "title": "Active sessions",
       "subtitle": "Devices currently signed in to your account.",
       "current_badge": "This device",
@@ -365,6 +432,15 @@
         "cancel": "Cancel"
       },
       "delete": {
+        "reason_question": "Why are you leaving?",
+        "reasons": {
+          "not_using": "I don't use this website",
+          "other_account": "I have another account",
+          "problems": "The website has some problems",
+          "privacy": "Privacy concerns",
+          "prefer_not": "Prefer not to tell",
+          "something_else": "Something else"
+        },
         "title": "Delete my account",
         "body": "Schedules your account for permanent deletion in 30 days. After that we erase your profile, ads, and messages. Sign in again within the window to cancel.",
         "submit": "Delete account",
@@ -380,6 +456,7 @@
       }
     },
     "avatar": {
+      "change_photo": "Change Profile photo",
       "title": "Profile photo",
       "subtitle": "A clear photo helps buyers trust you. Square images work best.",
       "drop_label": "Drop a photo here or",
@@ -417,6 +494,20 @@
       "USER_010": "The image is too large (max 5 MB)"
     },
     "saved_searches": {
+      "saved_ago": "• Saved {when}",
+      "view_results": "View Result",
+      "delete_label": "Delete saved search {name}",
+      "price_range": "QAR {min} – {max}",
+      "price_max": "Up to QAR {max}",
+      "price_min": "From QAR {min}",
+      "params": {
+        "keyword": "Keyword",
+        "category": "Category",
+        "location": "Location",
+        "condition": "Condition",
+        "price": "Price",
+        "sort": "Sort"
+      },
       "title": "Saved searches",
       "subtitle": "Save your favourite filters and rerun them in one click.",
       "empty_title": "No saved searches yet",
@@ -474,6 +565,132 @@
     "errors": {
       "not_found": "We couldn't find this category"
     }
+  },
+  "catalog": {
+    "card": {
+      "top_ad": "Top Ad"
+    },
+    "results_heading": "Results",
+    "view_all": "View All",
+    "view_more": "View More",
+    "view_less": "View Less",
+    "hub": {
+      "categories": "Categories"
+    },
+    "stats": {
+      "ads": {
+        "one": "Ad",
+        "other": "Ads"
+      },
+      "today": "Today",
+      "ads_today": {
+        "one": "Ad Today",
+        "other": "Ads Today"
+      },
+      "categories": {
+        "one": "Category",
+        "other": "Categories"
+      },
+      "subcategories": {
+        "one": "Sub Category",
+        "other": "Sub Categories"
+      },
+      "results": {
+        "one": "Result",
+        "other": "Results"
+      }
+    },
+    "index": {
+      "discover_start": "Discover",
+      "discover_accent": "Categories",
+      "discover_text": "Browse through different categories and quickly find what you need in one place.",
+      "search_label": "Search categories",
+      "search_placeholder": "Search categories…",
+      "search_submit": "Search",
+      "matches": {
+        "one": "{count} category",
+        "other": "{count} categories"
+      },
+      "no_matches_title": "No matching categories",
+      "no_matches": "We couldn’t find a category called “{query}”."
+    },
+    "view": {
+      "label": "View",
+      "grid": "Grid view",
+      "list": "List view"
+    },
+    "empty": {
+      "try_filters": "Try changing the filters or browse all categories.",
+      "no_ads_in_category": "No ads in this category yet.",
+      "load_failed": "We couldn’t load the ads. Please try again."
+    },
+    "not_found": {
+      "heading": "No results found",
+      "title": "Search Not Found",
+      "text": "We couldn’t find anything matching your search.",
+      "recommended": "Recommended for you",
+      "load_more": "Load More Ads"
+    },
+    "filters": {
+      "title": "Filter",
+      "sheet_title": "Advanced Filters",
+      "open": "Filter",
+      "active_suffix": {
+        "one": "filter applied",
+        "other": "filters applied"
+      },
+      "apply": "Apply Filter",
+      "reset_all": "Reset All",
+      "any": "Any",
+      "category": "Category",
+      "all_categories": "All categories",
+      "price": "Price",
+      "price_min_label": "Minimum price (QAR)",
+      "price_max_label": "Maximum price (QAR)",
+      "price_range_error": "The maximum price can’t be lower than the minimum.",
+      "location": "Location",
+      "city": "City / Region",
+      "district": "District",
+      "all_regions": "All Regions",
+      "all_districts": "All districts",
+      "condition": "Condition",
+      "offer": "Offer",
+      "ad_type": {
+        "offering": "Available",
+        "wanted": "Wanted"
+      },
+      "shipping": "Shipping & Delivery",
+      "shipping_options": {
+        "delivery": "Shipping Available",
+        "pickup_only": "Local Pickup Only"
+      },
+      "details": "Details",
+      "range_min": "{label} from",
+      "range_max": "{label} to",
+      "keyword": "Search",
+      "keyword_placeholder": "Search…",
+      "applied": "Applied filters",
+      "remove": "Remove {label}",
+      "range_between": "{min} – {max}",
+      "range_from": "From {min}",
+      "range_to": "Up to {max}",
+      "range_error": "The maximum can’t be lower than the minimum."
+    },
+    "ads_count": {
+      "one": "{count} Ad",
+      "other": "{count} Ads"
+    },
+    "results_count": {
+      "one": "{count} result",
+      "other": "{count} results"
+    },
+    "sort": {
+      "latest": "Newest",
+      "oldest": "Oldest",
+      "price_asc": "Price: Low to High",
+      "price_desc": "Price: High to Low"
+    },
+    "save_search": "Save Search"
   },
   "locations": {
     "all": "All Qatar",
@@ -713,19 +930,21 @@
       "saving": "Saving…",
       "cancel": "Cancel",
       "success_toast": "Search saved",
-      "limit_error": "You've reached the saved-search limit",
       "sign_in_required": "Sign in to save searches"
     },
     "errors": {
-      "search_invalid_params": "One of the filters is invalid, try again",
-      "saved_search_limit": "You've reached the saved-search limit",
-      "saved_search_not_found": "We couldn't find that saved search",
+      "search_001": "Search is unavailable right now, try again in a moment",
+      "search_002": "We couldn't find that saved search",
+      "search_003": "One of the filters is invalid, try again",
+      "search_004": "You've reached the saved-search limit",
       "load_failed": "Could not load search results",
       "save_failed": "Could not save the search",
       "delete_failed": "Could not delete the saved search"
     }
   },
   "favorites": {
+    "wishlist_title": "My Wishlist",
+    "remove_label": "Remove {title} from your wishlist",
     "title": "Saved ads",
     "count": "{count} ads",
     "empty": {
@@ -1341,6 +1560,11 @@
     }
   },
   "messaging": {
+    "thread_label": "Messages in this conversation",
+    "incoming_message": "New message from {name}: {message}",
+    "chat_label": "Conversation",
+    "unread_label": "unread messages",
+    "safety_notice": "With “Safe Pay”, you don’t need to share your email, phone number, or bank details with anyone.",
     "title": "My inbox",
     "empty": {
       "list": "Start a conversation by reaching out to a seller",
@@ -1407,6 +1631,10 @@
     }
   },
   "notifications": {
+    "open_unread": "Unread: {title}",
+    "delete_label": "Delete notification: {title}",
+    "delete_success": "Notification deleted",
+    "empty_body": "Updates about your ads, messages and saved searches will show up here.",
     "title": "Notifications",
     "header_label": "Notifications",
     "tabs": {
@@ -1497,8 +1725,22 @@
     "contact": "Contact us"
   },
   "cms": {
-    "page_not_found": "We couldn't find this page",
     "last_updated": "Last updated"
+  },
+  "errors": {
+    "generic_title": "Something went wrong",
+    "generic_heading": "We couldn't load this page",
+    "generic_body": "A temporary problem stopped this page from loading. Please try again.",
+    "retry": "Try again",
+    "not_found_title": "Page not found",
+    "not_found_heading": "We couldn't find this page",
+    "not_found_body": "The link may be broken, or the page may have been moved or removed.",
+    "back_home": "Back to home"
+  },
+  "impersonate": {
+    "loading": "Signing you in…",
+    "failed_title": "Couldn't start the session",
+    "failed": "The sign-in link may have expired. Open it again from the admin panel."
   },
   "help": {
     "title": "Help center",
@@ -1507,11 +1749,9 @@
     "search_submit": "Search",
     "search_min_chars": "Type at least two characters to search",
     "categories_title": "Browse by topic",
-    "no_categories": "No help categories yet",
+    "no_categories": "No help topics yet",
     "articles_in_category": "Articles in this topic",
-    "articles_count_arrow": "{count} articles →",
-    "no_articles": "No articles in this category yet",
-    "search_results": "Found {count} results",
+    "no_articles": "No articles in this topic yet",
     "no_results": "No results",
     "related_articles": "Related articles",
     "helpful_question": "Was this article helpful?",
@@ -1519,10 +1759,36 @@
     "helpful_no": "No",
     "feedback_thanks_yes": "Thanks! Glad it helped.",
     "feedback_thanks_no": "Thanks — we'll improve this article.",
-    "views_count": "{count} views",
     "back_to_help": "Back to help center",
-    "category_not_found": "We couldn't find this category",
-    "article_not_found": "We couldn't find this article"
+    "article_not_found": "We couldn't find this article",
+    "hero_lead": "How can we",
+    "hero_accent": "help you?",
+    "search_label": "Search the help center",
+    "search_title": "Search results",
+    "search_prompt_title": "What are you looking for?",
+    "suggestions_label": "Suggested articles",
+    "no_results_hint": "Try different words, or browse the help topics.",
+    "browse_topics": "Browse help topics",
+    "not_found_body": "It may have been moved or removed. Browse the help topics to find what you need.",
+    "contact_title": "Still need help?",
+    "contact_body": "Our support team replies within a few hours.",
+    "contact_action": "Contact support",
+    "topic_count": {
+      "one": "{count} topic",
+      "other": "{count} topics"
+    },
+    "article_count": {
+      "one": "{count} article",
+      "other": "{count} articles"
+    },
+    "result_count": {
+      "one": "{count} result",
+      "other": "{count} results"
+    },
+    "view_count": {
+      "one": "{count} view",
+      "other": "{count} views"
+    }
   },
   "support": {
     "title": "Support",
@@ -1544,6 +1810,7 @@
     "submit_success_toast": "We received your request — we'll reply soon",
     "submit_success_title": "Your message has been received",
     "submit_success_body": "We'll reply to the email you provided within a few hours. Keep this ticket reference for follow-up:",
+    "ticket_reference": "Ticket reference",
     "categories": {
       "general": "General inquiry",
       "billing": "Billing & payments",
@@ -1574,7 +1841,10 @@
       "resolved": "Resolved"
     },
     "no_tickets": "No tickets in this tab",
-    "replies_count": "{count} replies",
+    "replies_count": {
+      "one": "{count} reply",
+      "other": "{count} replies"
+    },
     "back_to_list": "Back to my tickets",
     "you": "You",
     "staff_badge": "Support team",
@@ -1589,6 +1859,7 @@
       "body_required": "Type a reply",
       "body_min": "Details are too short (min 10 characters)",
       "body_max": "Details are too long (max 4000 characters)",
+      "email_required": "Enter your email so we can reply",
       "ticket_not_found": "We couldn't find this ticket",
       "ticket_forbidden": "You don't have access to this ticket",
       "invalid_transition": "You can't reply to a closed ticket. Please open a new one."

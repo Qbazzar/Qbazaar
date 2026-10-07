@@ -1,70 +1,65 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { LifeBuoyIcon, MessageSquareIcon } from 'lucide-react';
+import { LifeBuoy, MessageSquare } from 'lucide-react';
 
+import { Icon } from '@/components/design-system/Icon';
+import { LinkTile } from '@/components/design-system/LinkTile';
+import { PageShell } from '@/components/design-system/PageShell';
+import { HelpHero } from '@/components/help/HelpHero';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
+import { absoluteUrl } from '@/lib/seo';
 
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
 
   return {
-    title: t('support.title', 'الدعم الفني'),
+    title: t('support.title'),
     description: t('support.subtitle'),
+    alternates: { canonical: absoluteUrl('/support') },
   };
 }
 
 /**
- * Support landing — pure server component. Two big cards:
- *   • "Browse help center" → /help (read-first culture)
- *   • "Contact us"          → /support/new
+ * Support landing: the help center first, a ticket second. No Figma frame:
+ * the all-categories hero (185:6576) over two of its tiles.
  */
-export default function SupportLandingPage() {
+export default async function SupportLandingPage() {
+  // Pages render in parallel with the root layout, so prime the locale here too.
+  await resolveServerLocale();
+
   return (
-    <main>
-      <div className="container" style={{ paddingTop: 32, paddingBottom: 64 }}>
-        <div className="help-hero">
-          <h1 className="help-hero__h">{t('support.title', 'كيف يمكننا مساعدتك؟')}</h1>
-          <p className="help-hero__sub">
-            {t(
-              'support.subtitle',
-              'ابدأ بمركز المساعدة، أو راسل فريق الدعم وسنرد خلال ساعات.',
-            )}
-          </p>
-        </div>
-
-        <div className="support-landing-grid">
-          <Link href="/help" className="support-landing-card">
-            <span className="support-landing-card__icon" aria-hidden>
-              <LifeBuoyIcon className="size-6" />
-            </span>
-            <div className="support-landing-card__title">
-              {t('support.browse_help', 'تصفّح مركز المساعدة')}
-            </div>
-            <p className="support-landing-card__sub">
-              {t(
-                'support.browse_help_sub',
-                'مقالات شاملة عن النشر والشراء والأمان والمدفوعات.',
-              )}
-            </p>
-          </Link>
-
-          <Link href="/support/new" className="support-landing-card">
-            <span className="support-landing-card__icon" aria-hidden>
-              <MessageSquareIcon className="size-6" />
-            </span>
-            <div className="support-landing-card__title">
-              {t('support.new_ticket', 'تواصل معنا')}
-            </div>
-            <p className="support-landing-card__sub">
-              {t(
-                'support.new_ticket_sub',
-                'افتح تذكرة جديدة وسيتولّى فريق الدعم متابعتها معك.',
-              )}
-            </p>
-          </Link>
-        </div>
-      </div>
-    </main>
+    <PageShell
+      breadcrumb={[{ label: t('home.breadcrumb'), href: '/' }, { label: t('support.title') }]}
+      title={t('support.title')}
+    >
+      <HelpHero
+        id="support-options-title"
+        titleLead={t('help.hero_lead')}
+        titleAccent={t('help.hero_accent')}
+        subtitle={t('support.subtitle')}
+      />
+      {/* `[display:grid]`, not `grid`: the old stylesheet's unlayered `.grid` rule would override the gaps. */}
+      <ul
+        aria-labelledby="support-options-title"
+        className="mx-auto [display:grid] max-w-[976px] gap-3 qb-tablet:grid-cols-2 qb-desktop:gap-4"
+      >
+        <li>
+          <LinkTile
+            href="/help"
+            icon={<Icon icon={LifeBuoy} size="lg" />}
+            title={t('support.browse_help')}
+            description={t('support.browse_help_sub')}
+          />
+        </li>
+        <li>
+          <LinkTile
+            href="/support/new"
+            icon={<Icon icon={MessageSquare} size="lg" />}
+            title={t('support.new_ticket')}
+            description={t('support.new_ticket_sub')}
+          />
+        </li>
+      </ul>
+    </PageShell>
   );
 }

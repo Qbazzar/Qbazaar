@@ -1,22 +1,21 @@
 'use client';
 
 /**
- * Reply form attached to the bottom of a ticket timeline.
+ * Reply box under a ticket thread, in the chat input's place (365:14788).
  *
  * - RHF + Zod validation (`body` required, max 4000 chars).
- * - Disabled when the ticket is `resolved`/`closed`; we still render an
- *   info notice so the user knows why.
+ * - Resolved and closed tickets take no replies; a notice says why instead.
  * - Mutation invalidation is handled by `useReplyToTicketMutation`.
  */
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2Icon, SendIcon } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 import { z } from 'zod';
 
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { FieldError } from '@/components/auth/FieldError';
+import { Button } from '@/components/design-system/Button';
+import { Field } from '@/components/design-system/Field';
+import { Textarea } from '@/components/design-system/Input';
+import { announcedError } from '@/components/auth/FieldError';
 import { useReplyToTicketMutation } from '@/lib/queries/support';
 import { t } from '@/lib/i18n/messages';
 import type { SupportTicketStatus } from '@/lib/api/types';
@@ -44,7 +43,6 @@ interface Props {
 
 export function TicketReplyForm({ ticketId, status }: Props) {
   const mutation = useReplyToTicketMutation();
-  const locked = TERMINAL_STATUSES.has(status);
 
   const form = useForm<ReplyFormInput, unknown, ReplyFormOutput>({
     resolver: zodResolver(replySchema),
@@ -52,58 +50,44 @@ export function TicketReplyForm({ ticketId, status }: Props) {
     mode: 'onSubmit',
   });
 
-  const onSubmit = form.handleSubmit((values) => {
-    mutation.mutate(
-      { ticketId, body: values.body },
-      {
-        onSuccess: () => {
-          form.reset({ body: '' });
-        },
-      },
-    );
-  });
-
-  if (locked) {
+  if (TERMINAL_STATUSES.has(status)) {
     return (
-      <div className="ring-ink-200 bg-cream-100 text-ink-700 mt-6 rounded-2xl p-5 text-sm leading-relaxed ring-1">
-        {t(
-          'support.ticket_closed_notice',
-          'لا يمكن الرد على تذكرة مغلقة. افتح تذكرة جديدة.',
-        )}
-      </div>
+      <p className="border-t border-qb-line px-[21px] py-5 text-qb-caption text-qb-ink-body qb-tablet:px-6 qb-desktop:px-10">
+        {t('support.ticket_closed_notice', 'لا يمكن الرد على تذكرة مغلقة. افتح تذكرة جديدة.')}
+      </p>
     );
   }
 
-  const bodyError = form.formState.errors.body?.message;
+  const onSubmit = form.handleSubmit((values) => {
+    mutation.mutate(
+      { ticketId, body: values.body },
+      { onSuccess: () => form.reset({ body: '' }) },
+    );
+  });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-6 space-y-3">
-      <div className="space-y-1.5">
-        <Label htmlFor="ticket-reply">
-          {t('support.reply_label', 'إضافة رد')}
-        </Label>
-        <Textarea
-          id="ticket-reply"
-          rows={4}
-          maxLength={4000}
-          placeholder={t('support.reply_placeholder', 'اكتب ردك هنا…')}
-          aria-invalid={Boolean(bodyError)}
-          aria-describedby={bodyError ? 'ticket-reply-error' : undefined}
-          {...form.register('body')}
-        />
-        <FieldError id="ticket-reply-error" message={bodyError} />
-      </div>
+    <form
+      onSubmit={onSubmit}
+      noValidate
+      className="flex flex-col gap-3 border-t border-qb-line px-[21px] py-5 qb-tablet:px-6 qb-desktop:px-10 qb-desktop:pb-8"
+    >
+      <Field label={t('support.reply_label', 'إضافة رد')} error={announcedError(form.formState.errors.body?.message)}>
+        {(control) => (
+          <Textarea
+            {...control}
+            rows={4}
+            maxLength={4000}
+            placeholder={t('support.reply_placeholder', 'اكتب ردك هنا…')}
+            {...form.register('body')}
+          />
+        )}
+      </Field>
       <div className="flex justify-end">
-        <Button
-          type="submit"
-          size="lg"
-          disabled={mutation.isPending}
-          className="bg-coral hover:bg-coral/90 h-11 rounded-full px-6 text-sm font-semibold text-white"
-        >
+        <Button type="submit" size="sm" disabled={mutation.isPending}>
           {mutation.isPending ? (
-            <Loader2Icon className="size-4 animate-spin" aria-hidden />
+            <Loader2 className="animate-spin" aria-hidden="true" />
           ) : (
-            <SendIcon className="size-4" aria-hidden />
+            <Send className="rtl:-scale-x-100" aria-hidden="true" />
           )}
           {t('support.send_reply', 'إرسال الرد')}
         </Button>
