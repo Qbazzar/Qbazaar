@@ -774,7 +774,7 @@ export interface Message {
   };
   /**
    * Populated when `type === 'offer'`. The backend bundles the offer envelope
-   * onto the message so the chat timeline can render an OfferBubble inline
+   * onto the message so the chat timeline can render the offer card inline
    * without an extra round-trip.
    */
   offer?: Offer | null;
