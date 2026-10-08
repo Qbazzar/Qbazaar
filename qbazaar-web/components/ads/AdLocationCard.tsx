@@ -41,7 +41,8 @@ export function AdLocationCard({ locationName, latitude, longitude }: AdLocation
           lat={latitude}
           lng={longitude}
           label={t('ads.detail.map_label', { place: locationName })}
-          className="mt-4 h-[180px] w-full overflow-hidden rounded-qb-lg"
+          // `isolate` keeps Leaflet's z-indexed panes (400-1000) under the page's dialogs and sheets.
+          className="isolate mt-4 h-[180px] w-full overflow-hidden rounded-qb-lg"
         />
       ) : null}
     </section>
