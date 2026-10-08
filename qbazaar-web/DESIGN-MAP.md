@@ -87,7 +87,7 @@ The purchase-request and offer cards of the chat follow 667:30685, 667:31850, 72
 | `/verify-otp` | `app/(auth)/verify-otp/page.tsx` | `signup-verify.html` / `enter-code.html` | 741:36808 · 741:37607 | 779:40048 | 779:40384 | matches | |
 | `/forgot-password` | `app/(auth)/forgot-password/page.tsx` | `forgot-password.html` | 739:36152 | 779:40111 | 779:40422 | matches | |
 | `/reset-password` | `app/(auth)/reset-password/page.tsx` | `new-password.html` | 745:38739 | 779:39915 | 779:40473 | matches | |
-| `/verify-email` | `app/verify-email/page.tsx` | `send-code.html` ("Check your email") | 739:36548 | 779:40163 | 779:40344 | partial | The verified / expired-link results have no frame: same card with the EmptyState icon tile. |
+| `/verify-email` | `app/(auth)/verify-email/page.tsx` | `send-code.html` ("Check your email") | 739:36548 | 779:40163 | 779:40344 | partial | The verified / expired-link results have no frame: same card with the EmptyState icon tile. |
 
 ## Help, support and system pages
 
