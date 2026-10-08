@@ -14,7 +14,6 @@ import { siteUrl } from '@/lib/seo';
 import { fontVariables } from './fonts';
 import { Providers } from './providers';
 import './globals.css';
-import '../styles/qbfront.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
@@ -50,7 +49,7 @@ export default async function RootLayout({
       // The sticky header is 88 px tall: keep focused and linked-to elements below it.
       className={`${fontVariables} scroll-pt-24`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col bg-qb-page">
         <LocaleProvider locale={locale}>
           {/* Light-only product — force light and ignore the OS/system theme. */}
           <ThemeProvider attribute="class" forcedTheme="light">

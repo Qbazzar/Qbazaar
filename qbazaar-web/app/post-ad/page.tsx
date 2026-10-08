@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 /** `/post-ad`: add-ads.html → preview.html → publish.html (FE-16.5). */
 export default function PostAdPage() {
   return (
-    <main className="min-h-svh bg-qb-page">
+    <main className="bg-qb-page">
       <PostAdFrame>
         <PostAdClient />
       </PostAdFrame>

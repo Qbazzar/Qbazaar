@@ -203,6 +203,13 @@
     text-rendering: optimizeLegibility;
     line-height: 1.5;
   }
+  /* No page scrolls sideways on a phone. `clip`, not `hidden`, so <body> does
+     not become a scroll container and the sticky header keeps working. */
+  html,
+  body {
+    overflow-x: clip;
+    max-width: 100%;
+  }
   /* For RTL: stack Noto Naskh first so Arabic glyphs render properly,
      then Inter as the Latin fallback for mixed-script lines. */
   [dir="rtl"] body {
