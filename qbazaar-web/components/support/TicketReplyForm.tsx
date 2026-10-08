@@ -15,7 +15,7 @@ import { z } from 'zod';
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Textarea } from '@/components/design-system/Input';
-import { announcedError } from '@/components/auth/FieldError';
+import { fieldErrorText } from '@/components/auth/FieldError';
 import { useReplyToTicketMutation } from '@/lib/queries/support';
 import { t } from '@/lib/i18n/messages';
 import type { SupportTicketStatus } from '@/lib/api/types';
@@ -71,7 +71,7 @@ export function TicketReplyForm({ ticketId, status }: Props) {
       noValidate
       className="flex flex-col gap-3 border-t border-qb-line px-[21px] py-5 qb-tablet:px-6 qb-desktop:px-10 qb-desktop:pb-8"
     >
-      <Field label={t('support.reply_label', 'إضافة رد')} error={announcedError(form.formState.errors.body?.message)}>
+      <Field label={t('support.reply_label', 'إضافة رد')} error={fieldErrorText(form.formState.errors.body?.message)}>
         {(control) => (
           <Textarea
             {...control}

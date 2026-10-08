@@ -263,7 +263,7 @@ function VerificationRow({
           {verified ? (
             <VerifiedBadge />
           ) : (
-            <Badge tone="neutral" size="sm" className="font-qb-label">
+            <Badge tone="neutral" size="sm" font="label">
               {t('account.verification.status.not_verified')}
             </Badge>
           )}

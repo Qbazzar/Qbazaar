@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { Loader2Icon } from 'lucide-react';
 import { z } from 'zod';
 
-import { FieldError, announcedError } from '@/components/auth/FieldError';
+import { FieldError, fieldErrorText } from '@/components/auth/FieldError';
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Textarea } from '@/components/design-system/Input';
@@ -149,7 +149,7 @@ export function ReportDialog({ open, onOpenChange, asSheet, target_type, target_
           <FieldError id={errorId} message={categoryError} />
         </fieldset>
 
-        <Field label={t('reports.description_label')} error={announcedError(descriptionError)} className="mt-4">
+        <Field label={t('reports.description_label')} error={fieldErrorText(descriptionError)} className="mt-4">
           {(control) => (
             <Textarea
               {...control}
@@ -166,7 +166,7 @@ export function ReportDialog({ open, onOpenChange, asSheet, target_type, target_
           type="submit"
           fullWidth
           aria-disabled={mutation.isPending || undefined}
-          className="mt-6 h-[46px] rounded-qb-xl text-qb-body focus-visible:outline-solid qb-tablet:h-12"
+          className="mt-6 h-[46px] rounded-qb-xl text-qb-body qb-tablet:h-12"
         >
           {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
           {t('reports.submit')}

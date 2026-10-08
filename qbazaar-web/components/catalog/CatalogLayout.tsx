@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import { catalogContainer, catalogPageTop, headingFont } from './layout';
+import { siteFrame } from '@/components/design-system/site-frame';
+import { catalogPageTop, headingFont } from './layout';
 
 interface CatalogLayoutProps {
   header: ReactNode;
@@ -18,7 +19,7 @@ interface CatalogLayoutProps {
 export function CatalogLayout({ header, sidebar, toolbar, toolbarBelowDesktopOnly = false, children }: CatalogLayoutProps) {
   return (
     <main className={cn('bg-qb-page font-qb text-qb-ink', headingFont)}>
-      <div className={cn(catalogContainer, catalogPageTop)}>
+      <div className={cn(siteFrame, catalogPageTop)}>
         {header}
         <div className="mt-11 flex items-start gap-9 qb-tablet:mt-[49px]">
           {sidebar}

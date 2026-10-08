@@ -48,7 +48,3 @@ export function AccountPage({ title, actions, children, titleClassName, classNam
 
 /** Type of the notifications pill tabs (16 px on phones, 20 px from tablets), which My Ads and the tickets reuse. */
 export const pillTabClass = 'text-qb-body qb-tablet:text-qb-h5';
-
-/** Pill tabs scroll sideways on phones instead of wrapping, as in 597:27743. */
-export const scrollingTabListClass =
-  'max-qb-tablet:-mx-4 max-qb-tablet:flex-nowrap max-qb-tablet:overflow-x-auto max-qb-tablet:px-4 max-qb-tablet:py-2 max-qb-tablet:[scrollbar-width:none]';

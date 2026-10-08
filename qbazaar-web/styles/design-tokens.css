@@ -1,7 +1,7 @@
 /* QBazaar design system tokens (Figma file Cvn7hexeu07FIOyJhDDCLd).
    Values are measured from Qbazaar-front (assets/*.css and computed styles)
    and the per-frame Figma renders. Everything is namespaced `qb-` so it can
-   live next to the old QBFront tokens until qbfront.css is gone.
+   live next to the old QBFront tokens in app/globals.css.
 
    Text and button colours are the Figma hues darkened just enough to meet
    WCAG AA, 4.5:1 against every background each one sits on (white, the page,
@@ -112,8 +112,6 @@
   /* Layout: page gutter (40 px at 1440, 30 at 744, 16 at 390, fluid between)
      and the 1440 frame's content width */
   --spacing-qb-gutter: clamp(16px, 4vw, 40px);
-  --spacing-qb-gutter-tablet: 30px;
-  --spacing-qb-gutter-phone: 16px;
   --container-qb-content: 1360px;
 
   /* The reference switches layouts at 600 px and 1000 px */

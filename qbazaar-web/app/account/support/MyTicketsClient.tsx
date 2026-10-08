@@ -15,7 +15,7 @@ import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
-import { AccountPage, pillTabClass, scrollingTabListClass } from '@/components/account/AccountPage';
+import { AccountPage, pillTabClass } from '@/components/account/AccountPage';
 import { PanelState } from '@/components/account/PanelState';
 import { Pager } from '@/components/account/Pager';
 import { TicketRow } from '@/components/support/TicketRow';
@@ -49,7 +49,7 @@ export function MyTicketsClient() {
       }
     >
       <Tabs value={tab} onValueChange={(value) => handleTabChange(value as TicketTab)}>
-        <TabList aria-label={t('support.my_tickets', 'تذاكر الدعم')} className={scrollingTabListClass}>
+        <TabList aria-label={t('support.my_tickets', 'تذاكر الدعم')} scrollOnPhones>
           {TABS.map((key) => (
             <Tab key={key} value={key} className={pillTabClass}>
               {t(`support.tabs.${key}`, key)}

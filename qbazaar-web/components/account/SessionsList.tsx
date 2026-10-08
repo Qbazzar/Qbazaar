@@ -78,7 +78,7 @@ export function SessionsList({ sessions }: SessionsListProps) {
               <span className="flex flex-wrap items-center gap-2">
                 {deviceLabel(session)}
                 {session.is_current ? (
-                  <Badge tone="brand" size="sm" className="font-qb-label">
+                  <Badge tone="brand" size="sm" font="label">
                     {t('account.sessions.current_badge')}
                   </Badge>
                 ) : null}

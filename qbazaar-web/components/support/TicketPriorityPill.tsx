@@ -17,7 +17,7 @@ interface Props {
 export function TicketPriorityPill({ priority, showAll, className }: Props) {
   if (!showAll && (priority === 'low' || priority === 'normal')) return null;
   return (
-    <Badge tone={priority === 'urgent' ? 'danger' : 'neutral'} className={cn(statusChipClass, className)}>
+    <Badge tone={priority === 'urgent' ? 'danger' : 'neutral'} font="label" className={cn(statusChipClass, className)}>
       {t(`support.priority.${priority}`, priority)}
     </Badge>
   );

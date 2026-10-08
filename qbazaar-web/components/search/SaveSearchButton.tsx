@@ -13,13 +13,14 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { Search } from 'lucide-react';
 
+import { fieldErrorText } from '@/components/auth/FieldError';
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { Input } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { t } from '@/lib/i18n/messages';
 import { headingFont, toolbarPill } from '@/components/catalog/layout';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -111,7 +112,7 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
         <Field
           label={t('search.save_search.name_label', 'اسم البحث')}
-          error={nameError ? translateMaybeKey(nameError) : undefined}
+          error={fieldErrorText(nameError)}
           required
         >
           {(control) => (

@@ -18,7 +18,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Input, Select, Textarea } from '@/components/design-system/Input';
-import { announcedError } from '@/components/auth/FieldError';
+import { fieldErrorText } from '@/components/auth/FieldError';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import {
@@ -104,7 +104,7 @@ export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileF
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6 text-start">
-      <Field label={t('account.profile.full_name_label')} required error={announcedError(errors.full_name?.message)}>
+      <Field label={t('account.profile.full_name_label')} required error={fieldErrorText(errors.full_name?.message)}>
         {(control) => (
           <Input
             {...control}
@@ -116,7 +116,7 @@ export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileF
         )}
       </Field>
 
-      <Field label={t('account.profile.language_label')} error={announcedError(errors.language?.message)}>
+      <Field label={t('account.profile.language_label')} error={fieldErrorText(errors.language?.message)}>
         {(control) => (
           <Select {...control} {...form.register('language')}>
             <option value="ar">{t('account.profile.language_ar')}</option>
@@ -128,7 +128,7 @@ export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileF
       <Field
         label={t('account.profile.bio_label')}
         hint={t('account.profile.bio_hint')}
-        error={announcedError(errors.bio?.message)}
+        error={fieldErrorText(errors.bio?.message)}
       >
         {(control) => (
           <Textarea

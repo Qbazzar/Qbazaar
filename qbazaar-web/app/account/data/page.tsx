@@ -28,7 +28,7 @@ import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Textarea } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
-import { announcedError } from '@/components/auth/FieldError';
+import { fieldErrorText } from '@/components/auth/FieldError';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { ModalActions } from '@/components/account/ModalActions';
 import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
@@ -303,7 +303,7 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
           id={`${prefix}-password`}
           label={t(`account.data.${flow}.password_label`)}
           required
-          error={announcedError(errors.password?.message)}
+          error={fieldErrorText(errors.password?.message)}
         >
           {(control) => (
             <PasswordInput {...control} autoComplete="current-password" placeholder="••••••••" {...form.register('password')} />
@@ -314,7 +314,7 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
           <Field
             id={`${prefix}-reason`}
             label={t(`account.data.${flow}.reason_label`)}
-            error={announcedError(errors.reason?.message)}
+            error={fieldErrorText(errors.reason?.message)}
           >
             {(control) => (
               <Textarea

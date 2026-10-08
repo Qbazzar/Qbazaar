@@ -24,6 +24,7 @@ import { Icon } from '@/components/design-system/Icon';
 import { Input, Select, Textarea } from '@/components/design-system/Input';
 import { PageShell } from '@/components/design-system/PageShell';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
+import { fieldErrorText } from '@/components/auth/FieldError';
 import { Turnstile, type TurnstileHandle } from '@/components/auth/Turnstile';
 import { useCreateTicketMutation } from '@/lib/queries/support';
 import { ApiClientError } from '@/lib/api/auth';
@@ -72,11 +73,6 @@ type FormOutput = z.output<typeof baseSchema>;
 const controlClass = 'rounded-qb-lg placeholder:text-qb-caption';
 const singleLineControlClass = cn(controlClass, 'h-11');
 const actionClass = 'h-[46px] rounded-qb-lg qb-tablet:h-11 qb-tablet:rounded-qb-sm';
-
-/** Translated error text; Field announces it and links it to the control. */
-function fieldError(message?: string) {
-  return message ? translateMaybeKey(message) : undefined;
-}
 
 export function NewTicketClient() {
   const isAuthenticated = useAuthStore((s) => Boolean(s.user && s.accessToken));
@@ -137,7 +133,7 @@ export function NewTicketClient() {
     <PageShell breadcrumb={breadcrumb} title={t('support.new_ticket')} meta={t('support.new_ticket_subtitle')}>
       <Card large elevated className="max-w-[760px] qb-desktop:p-8">
         <form onSubmit={onSubmit} noValidate aria-busy={submitting} className="flex flex-col gap-5">
-          <Field label={t('support.subject_label')} required error={fieldError(errors.subject?.message)} className="gap-3">
+          <Field label={t('support.subject_label')} required error={fieldErrorText(errors.subject?.message)} className="gap-3">
             {(control) => (
               <Input
                 {...control}
@@ -149,7 +145,7 @@ export function NewTicketClient() {
             )}
           </Field>
 
-          <Field label={t('support.category_label')} required error={fieldError(errors.category?.message)} className="gap-3">
+          <Field label={t('support.category_label')} required error={fieldErrorText(errors.category?.message)} className="gap-3">
             {(control) => (
               <Select {...control} className={singleLineControlClass} {...form.register('category')}>
                 {CATEGORIES.map((category) => (
@@ -161,7 +157,7 @@ export function NewTicketClient() {
             )}
           </Field>
 
-          <Field label={t('support.body_label')} required error={fieldError(errors.body?.message)} className="gap-3">
+          <Field label={t('support.body_label')} required error={fieldErrorText(errors.body?.message)} className="gap-3">
             {(control) => (
               <Textarea
                 {...control}
@@ -179,7 +175,7 @@ export function NewTicketClient() {
               label={t('support.email_label')}
               required
               hint={t('support.email_hint')}
-              error={fieldError(errors.email?.message)}
+              error={fieldErrorText(errors.email?.message)}
               className="gap-3"
             >
               {(control) => (

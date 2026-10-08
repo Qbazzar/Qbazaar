@@ -78,7 +78,7 @@ function BankAccountRow({ account }: { account: BankAccount }) {
             {account.holder_name}
           </span>
           {account.is_default ? (
-            <Badge tone="success" size="sm" className="font-qb-label">
+            <Badge tone="success" size="sm" font="label">
               {t('orders.bank.default')}
             </Badge>
           ) : null}
