@@ -1,11 +1,11 @@
+import type { PaginatedEnvelope } from '@/lib/api/types';
+
 /**
  * SEO helpers shared by robots / sitemap / manifest / per-page metadata.
  *
  * `NEXT_PUBLIC_APP_URL` is the public site origin (canonical + OG/sitemap URLs);
  * `NEXT_PUBLIC_API_URL` is the API origin the server-side SEO fetches hit.
  */
-
-import type { PaginatedEnvelope } from '@/lib/api/types';
 
 const DEFAULT_SITE_URL = 'https://qbazaar.fleeteye.de';
 const DEFAULT_API_URL = 'http://localhost:8000';
