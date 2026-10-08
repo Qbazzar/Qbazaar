@@ -14,6 +14,7 @@ vi.mock('@/lib/queries/messaging', () => ({
   useStartConversationMutation: () => ({ mutateAsync, isPending: false }),
 }));
 
+import type { DealAd } from '@/lib/api/commerce-types';
 import type { PublicUser, User } from '@/lib/api/types';
 import { setClientLocale } from '@/lib/i18n/locale';
 import { useAuthStore } from '@/store/auth';
@@ -35,7 +36,7 @@ const seller: PublicUser = {
   following_count: 2,
 };
 
-const ad = { id: 'ad-1', user_id: 'seller', status: 'active' as const };
+const ad = { id: 'ad-1', user_id: 'seller', status: 'active', price: 1500, price_type: 'fixed', ad_type: 'offering' } as DealAd;
 
 function renderCard(props: Partial<Parameters<typeof AdSellerCard>[0]> = {}) {
   const client = new QueryClient();
@@ -61,19 +62,39 @@ describe('AdSellerCard', () => {
     expect(screen.getByText('Member since Jan 08, 2016')).toBeInTheDocument();
   });
 
-  it('offers "Make an Offer" and "Send Message" to buyers', () => {
+  it('offers "Buy Now", "Make an Offer" and "Send Message" to buyers', () => {
     renderCard();
 
-    expect(screen.getByRole('button', { name: 'Make an Offer' })).toBeEnabled();
+    expect(screen.getByRole('link', { name: 'Buy Now' })).toHaveAttribute('href', '/ads/ad-1/buy');
+    expect(screen.getByRole('link', { name: 'Make an Offer' })).toHaveAttribute('href', '/ads/ad-1/offer');
     expect(screen.getByRole('button', { name: 'Send Message' })).toBeEnabled();
   });
 
-  it('opens the conversation for a verified buyer, where the offer is made', async () => {
+  it.each([
+    ['without a price', { price: null, price_type: 'contact' }],
+    ['given away', { price: null, price_type: 'free' }],
+    ['looking to buy', { ad_type: 'wanted' }],
+  ] as const)('has no "Buy Now" on an ad %s', (_, change) => {
+    renderCard({ ad: { ...ad, ...change } as DealAd });
+
+    expect(screen.queryByRole('link', { name: 'Buy Now' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Make an Offer' })).toBeInTheDocument();
+  });
+
+  it('takes no deal on a reserved ad, only messages', () => {
+    renderCard({ ad: { ...ad, is_reserved: true } });
+
+    expect(screen.queryByRole('link', { name: 'Buy Now' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Make an Offer' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Send Message' })).toBeInTheDocument();
+  });
+
+  it('opens the conversation for a verified buyer', async () => {
     useAuthStore.setState({ user: { id: 'buyer', phone_verified: true } as User, accessToken: 'AT', isHydrated: true });
     mutateAsync.mockResolvedValue({ id: 'conv-9' });
     renderCard();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Make an Offer' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Send Message' }));
 
     expect(mutateAsync).toHaveBeenCalledWith('ad-1');
     await waitFor(() => expect(push).toHaveBeenCalledWith('/account/messages?c=conv-9'));
@@ -92,7 +113,8 @@ describe('AdSellerCard', () => {
     renderCard({ isOwner: true });
 
     expect(screen.getByText('This is your ad')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Make an Offer' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Make an Offer' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Buy Now' })).toBeNull();
   });
 
   it('marks a sold ad and takes no contact, but the buyer can still rate the seller', () => {
@@ -114,7 +136,7 @@ describe('AdSellerCard', () => {
   it('still offers the actions when the ad came without its seller', () => {
     renderCard({ seller: undefined });
 
-    expect(screen.queryByRole('link')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Make an Offer' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Mark Toro/ })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Make an Offer' })).toBeInTheDocument();
   });
 });

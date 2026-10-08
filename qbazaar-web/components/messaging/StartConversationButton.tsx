@@ -5,8 +5,7 @@
  * the inbox with `?c={id}` set. Guests go to login first and signed-in users
  * without a verified phone to phone verification; both come back here.
  *
- * The ad detail uses it for "Send Message" and for "Make an Offer", since an
- * offer is made inside that conversation. Whether the button shows at all
+ * The ad detail uses it for "Send Message". Whether the button shows at all
  * (own ad, sold ad) is the caller's call.
  */
 import { useState, type ReactNode } from 'react';

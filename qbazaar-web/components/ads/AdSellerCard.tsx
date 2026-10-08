@@ -2,19 +2,20 @@
 
 /**
  * Seller panel of the ad detail: who sells, a few facts about them and the
- * contact actions. The actions follow the ad's state: a sold ad says so (to
- * everyone, the owner included) and the owner sees a "this is your ad" note;
- * everyone else gets "Make an Offer" and "Send Message", which both open the
- * conversation (offers are made there). "Rate the seller" stays on a sold ad,
- * since a review needs a completed deal. "Buy Now" joins them with the
- * purchase flow (FE-16.8).
+ * contact actions (88:776). The actions follow the ad's state: a sold ad says
+ * so (to everyone, the owner included) and the owner sees a "this is your ad"
+ * note. Everyone else gets "Buy Now" and "Make an Offer" when the ad takes
+ * them (the API's rules in lib/orders), and "Send Message", which opens the
+ * conversation. "Rate the seller" stays on a sold ad, since a review needs a
+ * completed deal.
  */
 import Link from 'next/link';
-import { CalendarDays, LayoutGrid, MessageSquareText, Star, Tag, type LucideIcon } from 'lucide-react';
+import { CalendarDays, LayoutGrid, MessageSquareText, ShoppingBag, Star, Tag, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { Badge } from '@/components/design-system/Badge';
+import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { StartConversationButton } from '@/components/messaging/StartConversationButton';
@@ -24,20 +25,22 @@ import { formatAdDate, formatRating } from '@/lib/ads/display';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
+import { buyNowBlocker, offerBlocker } from '@/lib/orders/offers';
 import { cn } from '@/lib/utils';
-import type { Ad, PublicUser } from '@/lib/api/types';
+import type { DealAd } from '@/lib/api/commerce-types';
+import type { PublicUser } from '@/lib/api/types';
 
 import { detailCard, detailCardSide } from './detail-card';
 
 interface AdSellerCardProps {
-  ad: Pick<Ad, 'id' | 'user_id' | 'status'>;
+  ad: DealAd;
   /** The embedded seller card; the panel still offers the actions without it. */
   seller?: PublicUser;
   isOwner: boolean;
   locale: Locale;
 }
 
-const actionButton = 'h-12 rounded-qb-lg font-medium qb-tablet:h-10 qb-tablet:rounded-qb-md';
+const actionButton = 'h-12 rounded-qb-lg font-medium focus-visible:outline-solid qb-tablet:h-10 qb-tablet:rounded-qb-md';
 
 export function AdSellerCard({ ad, seller, isOwner, locale }: AdSellerCardProps) {
   return (
@@ -119,11 +122,24 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
       </Badge>
     );
   }
+  // The owner never gets here, so only the ad itself decides.
+  const canBuy = buyNowBlocker(ad, undefined) === null;
+  const canOffer = offerBlocker(ad, undefined) === null;
+
   return (
     <>
-      <StartConversationButton ad={ad} variant="secondary" size="sm" icon={Tag} className={actionButton}>
-        {t('ads.actions.make_offer')}
-      </StartConversationButton>
+      {canBuy ? (
+        <Link href={`/ads/${ad.id}/buy`} className={cn(buttonVariants({ size: 'sm' }), actionButton)}>
+          <ShoppingBag aria-hidden />
+          {t('ads.actions.buy_now')}
+        </Link>
+      ) : null}
+      {canOffer ? (
+        <Link href={`/ads/${ad.id}/offer`} className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), actionButton)}>
+          <Tag aria-hidden />
+          {t('ads.actions.make_offer')}
+        </Link>
+      ) : null}
       <StartConversationButton
         ad={ad}
         variant="ghost"
