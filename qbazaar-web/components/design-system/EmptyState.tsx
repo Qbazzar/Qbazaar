@@ -34,7 +34,7 @@ export function EmptyState({ icon, title, description, action, headingLevel: Hea
         {title}
       </Heading>
       {description ? (
-        <p className="mt-2 max-w-[806px] text-qb-body text-qb-ink-muted qb-tablet:text-qb-h5">{description}</p>
+        <p className="mt-2 max-w-[806px] text-qb-body text-qb-ink-disabled qb-tablet:text-qb-h5">{description}</p>
       ) : null}
       {action ? <div className="mt-6">{action}</div> : null}
     </div>

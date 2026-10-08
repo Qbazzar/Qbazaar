@@ -19,8 +19,7 @@ export interface NoticeProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title
 
 /**
  * Bordered message box, as the "Safe Pay" note of the chat (667:30685).
- * The tone shows in the border, fill and icon; the text stays ink so it
- * reads at AA contrast on every tint. Pass `role="alert"` or
+ * The tone shows in the border, fill and icon; the text stays ink. Pass `role="alert"` or
  * `role="status"` when it reports the result of an action.
  */
 export function Notice({ tone = 'brand', icon, title, children, className, ...props }: NoticeProps) {

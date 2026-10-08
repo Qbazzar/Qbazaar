@@ -72,7 +72,7 @@ export function AdGallery({ images, alt, favorite, className }: AdGalleryProps) 
 
   if (count === 0) {
     return (
-      <div className={cn(frame, 'flex items-center justify-center text-qb-caption text-qb-ink-secondary', className)}>
+      <div className={cn(frame, 'flex items-center justify-center text-qb-caption text-qb-ink-subtle', className)}>
         {t('media.no_image')}
       </div>
     );

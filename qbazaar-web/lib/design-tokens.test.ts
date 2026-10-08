@@ -17,62 +17,36 @@ describe('design tokens', () => {
     }
   });
 
-  it('keeps the Figma card shadow and the AA-darkened brand orange', () => {
-    expect(tokensCss).toContain('--color-qb-brand: #cf410f;');
+  it('keeps the Figma card shadow and the Figma brand orange', () => {
+    expect(tokensCss).toContain('--color-qb-brand: #f38057;');
     expect(tokensCss).toContain('--shadow-qb-card: 0 4px 40px 0 rgb(161 161 161 / 0.15);');
   });
 });
 
-function colorToken(name: string): string {
-  const match = tokensCss.match(new RegExp(`--color-qb-${name}: (#[0-9a-f]{6});`));
-  if (!match) throw new Error(`--color-qb-${name} is not a hex colour`);
-  return match[1];
-}
+/** The design's exact colours (owner decision: never darken them for contrast). */
+const DESIGN_COLOURS = {
+  brand: '#f38057',
+  'brand-hover': '#e96c3f',
+  'brand-active': '#d3664c',
+  'brand-on-soft': '#f38057',
+  'ink-muted': '#757575',
+  'ink-subtle': '#9e9e9e',
+  'ink-faint': '#9e9696',
+  'ink-disabled': '#bdbdbd',
+  placeholder: '#bfbfbf',
+  'icon-muted': '#a19f9f',
+  'icon-faint': '#bdbdbd',
+  'icon-accordion': '#aaaaaa',
+  breadcrumb: '#a4adba',
+  'field-border': '#ededed',
+  success: '#1bad07',
+  danger: '#e64646',
+  info: '#2b6fdb',
+} as const;
 
-function relativeLuminance(hex: string): number {
-  const [r, g, b] = [1, 3, 5].map((i) => {
-    const channel = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function contrastRatio(a: string, b: string): number {
-  const [light, dark] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
-  return (light + 0.05) / (dark + 0.05);
-}
-
-describe('colour contrast (WCAG AA, 4.5:1)', () => {
-  it.each([
-    ['on-brand', 'brand'],
-    ['on-brand', 'brand-hover'],
-    ['on-brand', 'brand-active'],
-    ['brand', 'page'],
-    ['brand-on-soft', 'brand-soft'],
-    ['ink-muted', 'fill-strong'],
-    ['ink-subtle', 'fill-strong'],
-    ['ink-faint', 'fill-strong'],
-    ['placeholder', 'surface'],
-    ['breadcrumb', 'page'],
-    ['success', 'success-soft'],
-    ['danger', 'danger-soft'],
-    ['info', 'info-soft'],
-  ])('%s text on %s', (text, background) => {
-    expect(contrastRatio(colorToken(text), colorToken(background))).toBeGreaterThanOrEqual(4.5);
-  });
-});
-
-describe('control contrast (WCAG 1.4.11, 3:1)', () => {
-  const surfaces = ['surface', 'page', 'hover', 'fill', 'fill-strong'];
-
-  it.each(['ink-disabled', 'icon-muted', 'field-border'])('%s on every light surface', (control) => {
-    for (const surface of surfaces) {
-      expect(contrastRatio(colorToken(control), colorToken(surface)), surface).toBeGreaterThanOrEqual(3);
-    }
-  });
-
-  it('keeps the hover of an inactive toggle visible', () => {
-    expect(contrastRatio(colorToken('ink-muted'), colorToken('ink-disabled'))).toBeGreaterThan(1.3);
+describe('design colours', () => {
+  it.each(Object.entries(DESIGN_COLOURS))('%s is the design value %s', (name, hex) => {
+    expect(tokensCss).toContain(`--color-qb-${name}: ${hex};`);
   });
 });
 

@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#F37335',
+    theme_color: '#f38057',
     // TODO: ship dedicated maskable 192/512 icons; the brand mark is a
     // reasonable stand-in until then.
     icons: [

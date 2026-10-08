@@ -35,7 +35,7 @@ const input =
 /** "Choose Category" and "Distance" stay on one line and read larger on desktop (the reference's .qb-hlabel). */
 const choiceLabel = 'whitespace-nowrap text-qb-caption text-qb-placeholder qb-desktop:text-qb-h5';
 /** Tablet fields are narrow, so their icons shrink there instead of clipping the text. */
-const fieldIcon = 'size-4 text-qb-icon-muted qb-desktop:size-5';
+const fieldIcon = 'size-4 text-qb-icon-faint qb-desktop:size-5';
 
 const PLACES_LIST_ID = 'home-search-places';
 
