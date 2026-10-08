@@ -75,42 +75,50 @@ export function AdRail({ label, children }: AdRailProps) {
     const list = listRef.current;
     if (!list) return;
     const direction = getComputedStyle(list).direction === 'rtl' ? -1 : 1;
-    list.scrollTo({ left: direction * page * list.clientWidth, behavior: 'smooth' });
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    list.scrollTo({ left: direction * page * list.clientWidth, behavior });
   };
 
   return (
     <div>
       <div className="relative">
+        {/* The 4 px padding, taken back by the negative margin, leaves room for the cards' focus outline and hover lift. */}
         <ul
           ref={listRef}
           aria-label={label}
           onScroll={measure}
-          className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="-mx-1 -mt-1 flex snap-x snap-mandatory scroll-px-1 gap-5 overflow-x-auto px-1 pt-1 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {Children.map(children, (card) => (
             <li className="w-[clamp(258px,23vw,300px)] shrink-0 snap-start">{card}</li>
           ))}
         </ul>
-        {!position.atStart ? (
-          <RailArrow side="start" label={t('ui.rail.previous')} onClick={() => scrollToPage(position.page - 1)} />
-        ) : null}
-        {!position.atEnd ? (
-          <RailArrow side="end" label={t('ui.rail.next')} onClick={() => scrollToPage(position.page + 1)} />
-        ) : null}
+        <RailArrow side="start" label={t('ui.rail.previous')} inactive={position.atStart} onClick={() => scrollToPage(position.page - 1)} />
+        <RailArrow side="end" label={t('ui.rail.next')} inactive={position.atEnd} onClick={() => scrollToPage(position.page + 1)} />
       </div>
       {position.pages > 1 ? <RailDots page={position.page} pages={position.pages} /> : null}
     </div>
   );
 }
 
-function RailArrow({ side, label, onClick }: { side: 'start' | 'end'; label: string; onClick: () => void }) {
+interface RailArrowProps {
+  side: 'start' | 'end';
+  label: string;
+  /** At that end of the rail: hidden, unless it holds the focus, so keyboard users do not lose their place. */
+  inactive: boolean;
+  onClick: () => void;
+}
+
+function RailArrow({ side, label, inactive, onClick }: RailArrowProps) {
   return (
     <button
       type="button"
       aria-label={label}
-      onClick={onClick}
+      aria-disabled={inactive || undefined}
+      onClick={inactive ? undefined : onClick}
       className={cn(
         'absolute top-[57px] flex size-[42px] cursor-pointer items-center justify-center rounded-full border border-qb-brand bg-qb-surface text-qb-brand shadow-qb-lift transition-colors hover:bg-qb-brand hover:text-qb-on-brand',
+        'aria-disabled:cursor-default aria-disabled:opacity-40 aria-disabled:hover:bg-qb-surface aria-disabled:hover:text-qb-brand aria-disabled:not-focus:invisible',
         side === 'start' ? '-start-2' : '-end-2',
         focusRing,
       )}

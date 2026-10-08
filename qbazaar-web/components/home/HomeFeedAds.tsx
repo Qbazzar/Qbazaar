@@ -15,7 +15,10 @@ interface HomeFeedAdsProps {
   className?: string;
 }
 
-/** "Recommended for you" or "Best Selling" from the home feed; hidden when the list is empty. */
+/**
+ * "Recommended for you" or "Best Selling" from the home feed; hidden when the
+ * list is empty or the feed failed before it had any data.
+ */
 export function HomeFeedAds({ list, id, title, subtitle, eager, className }: HomeFeedAdsProps) {
   const { data, isLoading, isError } = useHomeFeedQuery();
 
@@ -24,7 +27,7 @@ export function HomeFeedAds({ list, id, title, subtitle, eager, className }: Hom
       id={id}
       title={title}
       subtitle={subtitle}
-      ads={isError ? [] : data?.[list]}
+      ads={data?.[list] ?? (isError ? [] : undefined)}
       isLoading={isLoading}
       eager={eager}
       className={className}

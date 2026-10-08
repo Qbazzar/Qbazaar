@@ -1,6 +1,7 @@
 'use client';
 
 import { AdSummaryCard } from '@/components/ads/AdSummaryCard';
+import { siteFrame } from '@/components/design-system/site-frame';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
 import type { AdSummary } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
@@ -26,7 +27,7 @@ export function HomeAdSection({ id, title, subtitle, action, ads, isLoading, eag
   if (!isLoading && !ads?.length) return null;
 
   return (
-    <section aria-labelledby={id} className={cn('mx-auto max-w-[1440px] px-qb-gutter py-6', className)}>
+    <section aria-labelledby={id} className={cn(siteFrame, 'py-6', className)}>
       <SectionHeader id={id} title={title} subtitle={subtitle} action={action} className="mb-[22px]" />
       {isLoading ? (
         <div className="flex gap-5 overflow-hidden" aria-busy="true">
@@ -34,7 +35,7 @@ export function HomeAdSection({ id, title, subtitle, action, ads, isLoading, eag
             <div
               key={i}
               aria-hidden="true"
-              className="h-[288px] w-[clamp(258px,23vw,300px)] shrink-0 animate-pulse rounded-qb-xl border border-qb-line bg-qb-surface"
+              className="h-[288px] w-[clamp(258px,23vw,300px)] shrink-0 animate-pulse rounded-qb-xl border border-qb-line bg-qb-surface motion-reduce:animate-none"
             />
           ))}
         </div>

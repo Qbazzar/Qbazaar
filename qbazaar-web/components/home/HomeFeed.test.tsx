@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render as renderDom, screen, within } from '@testing-library/react';
+import { act, render as renderDom, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -68,7 +68,7 @@ describe('home feed sections', () => {
   beforeEach(() => {
     setClientLocale('en');
     Object.assign(feed, { data: homeFeed, isLoading: false, isError: false });
-    feed.refetch.mockClear();
+    feed.refetch.mockReset().mockResolvedValue(undefined);
   });
 
   it('shows the first eight categories as tiles with their ad counts', () => {
@@ -78,7 +78,7 @@ describe('home feed sections', () => {
     expect(tiles).toHaveLength(8);
     expect(tiles[0]).toHaveAttribute('href', '/c/category-0');
     expect(within(tiles[0]).getByText('Category 0')).toBeInTheDocument();
-    expect(within(tiles[0]).getByText('1,250 ads')).toBeInTheDocument();
+    expect(within(tiles[0]).getByText('1,250 Ads')).toBeInTheDocument();
   });
 
   it('announces a failed feed and retries it', async () => {
@@ -88,6 +88,55 @@ describe('home feed sections', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong, please retry');
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(feed.refetch).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the focus on Retry while it runs and after it fails again', async () => {
+    let settle = () => {};
+    feed.refetch.mockImplementation(() => new Promise<void>((resolve) => (settle = resolve)));
+    Object.assign(feed, { data: undefined, isError: true });
+    const { rerender } = render(<HomeCategoryStrip />);
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+    // A query without data reports pending, not failed, while it refetches.
+    Object.assign(feed, { isError: false });
+    rerender(<HomeCategoryStrip />);
+    expect(screen.getByRole('button', { name: 'Retry' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Retry' })).toHaveAttribute('aria-disabled', 'true');
+
+    Object.assign(feed, { isError: true });
+    await act(async () => settle());
+    rerender(<HomeCategoryStrip />);
+    expect(screen.getByRole('button', { name: 'Retry' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Retry' })).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('moves the focus to the first tile once a retry loads the feed', async () => {
+    let settle = () => {};
+    feed.refetch.mockImplementation(() => new Promise<void>((resolve) => (settle = resolve)));
+    Object.assign(feed, { data: undefined, isError: true });
+    const { rerender } = render(<HomeCategoryStrip />);
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+    Object.assign(feed, { data: homeFeed, isError: false });
+    await act(async () => settle());
+    rerender(<HomeCategoryStrip />);
+    expect(screen.getAllByRole('link')[0]).toHaveFocus();
+  });
+
+  it('keeps showing the feed it has when a later refresh fails', () => {
+    Object.assign(feed, { data: homeFeed, isError: true });
+    render(
+      <>
+        <HomeCategoryStrip />
+        <HomeFeedAds list="recommended" id="home-recommended" title="Recommended for you" subtitle="Hand-picked deals" />
+        <HomeFeaturedCompanies />
+      </>,
+    );
+
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('link', { name: /^Category 0/ })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Recommended for you' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Seller 0' })).toBeInTheDocument();
   });
 
   it('shows the chosen ad list with its spec chips', () => {
@@ -117,7 +166,7 @@ describe('home feed sections', () => {
     expect(cards).toHaveLength(5);
     expect(screen.getByRole('link', { name: 'Seller 0' })).toHaveAttribute('href', '/u/s0');
     expect(screen.getByText('Al Wakra')).toBeInTheDocument();
-    expect(screen.getAllByText('9 ads')).toHaveLength(5);
+    expect(screen.getAllByText('9 Ads')).toHaveLength(5);
     expect(screen.getByRole('link', { name: /View All/ })).toHaveAttribute('href', '/companies');
   });
 

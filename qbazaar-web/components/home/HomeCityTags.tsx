@@ -16,8 +16,8 @@ import { cn } from '@/lib/utils';
 import type { Location } from '@/lib/api/types';
 
 /**
- * Where the reference scatters its pills on desktop: the horizontal centre
- * (from the start edge), the top offset and the tilt of each one.
+ * Where the reference scatters its pills on wide screens: the horizontal
+ * centre (from the start edge), the top offset and the tilt of each one.
  */
 const DESKTOP_SLOTS = [
   ['5%', '66px', '-16deg'],
@@ -38,8 +38,8 @@ const DESKTOP_SLOTS = [
   ['94%', '104px', '-2deg'],
 ] as const;
 
-/** Under 1000 px the pills wrap in rows and tilt in groups of three. */
-const ROW_TILTS = ['-rotate-7', 'mt-2 rotate-5', 'mt-[3px] -rotate-3'] as const;
+/** Narrower screens wrap the pills in rows that tilt in groups of three. */
+const ROW_TILTS = ['[--tilt:-7deg]', 'mt-2 [--tilt:5deg]', 'mt-[3px] [--tilt:-3deg]'] as const;
 
 const pill =
   'inline-block rounded-qb-pill border border-qb-line bg-qb-surface px-5 py-2.5 text-qb-h5 leading-[23px] font-medium whitespace-nowrap text-qb-black shadow-qb-float';
@@ -62,10 +62,12 @@ function slotStyle(index: number): CSSProperties {
   return { '--slot-x': x, '--slot-y': y, '--slot-tilt': tilt } as CSSProperties;
 }
 
+// The collage needs about 1280 px: with the live place names the pills overlap on narrower desktops.
+// Arabic mirrors the tilts along with the positions (--flip).
 const collage =
-  'relative mx-auto flex max-w-[1400px] flex-wrap justify-center gap-3 py-1.5 qb-desktop:block qb-desktop:h-[200px] qb-desktop:py-0';
+  'relative mx-auto flex max-w-[1400px] flex-wrap justify-center gap-3 py-1.5 [--flip:1] rtl:[--flip:-1] min-[1280px]:block min-[1280px]:h-[200px] min-[1280px]:py-0';
 const slot =
-  'qb-desktop:absolute qb-desktop:start-(--slot-x) qb-desktop:top-(--slot-y) qb-desktop:mt-0 qb-desktop:-translate-x-1/2 qb-desktop:rotate-(--slot-tilt) rtl:qb-desktop:translate-x-1/2';
+  'rotate-[calc(var(--tilt)*var(--flip))] min-[1280px]:absolute min-[1280px]:start-(--slot-x) min-[1280px]:top-(--slot-y) min-[1280px]:mt-0 min-[1280px]:-translate-x-1/2 min-[1280px]:[--tilt:var(--slot-tilt)] rtl:min-[1280px]:translate-x-1/2';
 
 export function HomeCityTags() {
   const locale = getLocale();
@@ -76,7 +78,12 @@ export function HomeCityTags() {
     return (
       <div className={collage} aria-busy="true">
         {DESKTOP_SLOTS.map((_, i) => (
-          <span key={i} aria-hidden="true" style={slotStyle(i)} className={cn(pill, ROW_TILTS[i % 3], slot, 'h-[45px] w-28 animate-pulse')} />
+          <span
+            key={i}
+            aria-hidden="true"
+            style={slotStyle(i)}
+            className={cn(pill, ROW_TILTS[i % 3], slot, 'h-[45px] w-28 animate-pulse motion-reduce:animate-none')}
+          />
         ))}
       </div>
     );

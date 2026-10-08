@@ -69,6 +69,24 @@ describe('HomeSearchBar', () => {
     expect(push).toHaveBeenCalledWith('/search?location_slug=west-bay');
   });
 
+  it('asks for a listed place instead of dropping an unknown location', async () => {
+    const user = userEvent.setup();
+    render(<HomeSearchBar />);
+    const location = screen.getByRole('combobox', { name: 'Location' });
+
+    await user.type(location, 'Dohaa');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Choose a place from the suggestions');
+    expect(location).toHaveAttribute('aria-invalid', 'true');
+    expect(location).toHaveAccessibleDescription('Choose a place from the suggestions');
+    expect(location).toHaveFocus();
+
+    await user.type(location, '{Backspace}');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('links "Choose Category" to the categories page and hides the inert distance field', () => {
     render(<HomeSearchBar />);
 

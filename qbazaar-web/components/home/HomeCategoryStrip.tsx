@@ -1,6 +1,7 @@
 'use client';
 
 /** The first eight main categories of the home feed as the "Browse Categories" tiles. */
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { CircleAlert } from 'lucide-react';
 
@@ -9,9 +10,10 @@ import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
-import { formatNumber } from '@/lib/i18n/format';
+import { useRetry } from '@/hooks/useRetry';
 import { localized, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { useHomeFeedQuery } from '@/lib/queries/home';
 import { cn } from '@/lib/utils';
 
@@ -23,40 +25,68 @@ const tile = 'flex flex-col gap-[22px] rounded-qb-xl border border-qb-line bg-qb
 
 export function HomeCategoryStrip() {
   const locale = getLocale();
-  const { data, isLoading, isError, refetch } = useHomeFeedQuery();
+  const { data, isError, refetch } = useHomeFeedQuery();
+  const { retrying, retry } = useRetry(refetch);
+  const firstTileRef = useRef<HTMLAnchorElement>(null);
+  const focusTilesOnLoad = useRef(false);
 
-  if (isLoading) {
+  // A successful retry replaces the panel, and the Retry button with it, so the focus moves to the first tile.
+  useEffect(() => {
+    if (!focusTilesOnLoad.current) return;
+    if (data) {
+      focusTilesOnLoad.current = false;
+      if (document.activeElement === document.body) firstTileRef.current?.focus();
+    } else if (isError && !retrying) {
+      focusTilesOnLoad.current = false;
+    }
+  }, [data, isError, retrying]);
+
+  if (!data) {
+    // The other home sections hide when the feed fails, so this one says so and retries the whole feed.
+    if (isError || retrying) {
+      return (
+        <div role="alert" className="rounded-qb-2xl border border-qb-line bg-qb-surface">
+          <EmptyState
+            icon={<Icon icon={CircleAlert} size="lg" />}
+            title={t('common.error', 'حدث خطأ، حاول مرة أخرى')}
+            headingLevel="h3"
+            action={
+              // aria-disabled rather than disabled: a disabled button drops the keyboard focus it holds.
+              <Button
+                variant="secondary"
+                size="sm"
+                aria-disabled={retrying || undefined}
+                onClick={
+                  retrying
+                    ? undefined
+                    : () => {
+                        focusTilesOnLoad.current = true;
+                        void retry();
+                      }
+                }
+              >
+                {t('common.retry', 'إعادة المحاولة')}
+              </Button>
+            }
+          />
+        </div>
+      );
+    }
     return (
       <div className={grid} aria-busy="true">
         {Array.from({ length: TILE_COUNT }, (_, i) => (
-          <div key={i} className={cn(tile, 'h-[170px] animate-pulse')} aria-hidden="true" />
+          <div key={i} className={cn(tile, 'h-[170px] animate-pulse motion-reduce:animate-none')} aria-hidden="true" />
         ))}
-      </div>
-    );
-  }
-  // The other home sections hide when the feed fails, so this one says so and retries the whole feed.
-  if (isError || !data) {
-    return (
-      <div role="alert" className="rounded-qb-2xl border border-qb-line bg-qb-surface">
-        <EmptyState
-          icon={<Icon icon={CircleAlert} size="lg" />}
-          title={t('common.error', 'حدث خطأ، حاول مرة أخرى')}
-          headingLevel="h3"
-          action={
-            <Button variant="secondary" size="sm" onClick={() => refetch()}>
-              {t('common.retry', 'إعادة المحاولة')}
-            </Button>
-          }
-        />
       </div>
     );
   }
 
   return (
     <ul className={grid}>
-      {data.categories.slice(0, TILE_COUNT).map((cat) => (
+      {data.categories.slice(0, TILE_COUNT).map((cat, index) => (
         <li key={cat.id}>
           <Link
+            ref={index === 0 ? firstTileRef : undefined}
             href={`/c/${cat.slug}`}
             className={cn(
               tile,
@@ -65,17 +95,11 @@ export function HomeCategoryStrip() {
             )}
           >
             <span aria-hidden="true" className="flex size-12 items-center justify-center rounded-qb-lg bg-qb-brand-soft text-qb-brand">
-              <DynamicIcon name={cat.icon} className="size-6" />
+              <DynamicIcon name={cat.icon} className="size-6" strokeWidth={1.6} />
             </span>
             <span>
               <span className="mb-1.5 block text-qb-body-lg font-medium text-qb-ink">{localized(cat.name, locale)}</span>
-              <span className="block text-qb-caption text-qb-ink-subtle">
-                {t(
-                  'categories.ads_count',
-                  { count: formatNumber(cat.ads_count, locale) },
-                  `${formatNumber(cat.ads_count, locale)} إعلان`,
-                )}
-              </span>
+              <span className="block text-qb-caption text-qb-ink-subtle">{tPlural('catalog.ads_count', cat.ads_count, locale)}</span>
             </span>
           </Link>
         </li>

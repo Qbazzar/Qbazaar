@@ -37,21 +37,53 @@ describe('AdRail', () => {
     expect(screen.getByRole('list', { name: 'Latest ads' }).children).toHaveLength(3);
   });
 
-  it('shows only the arrows that lead somewhere and scrolls a page at a time', () => {
+  it('turns off the arrow of the end it reached and scrolls a page at a time', () => {
     render(<AdRail label="Latest ads">{cards}</AdRail>);
     const list = screen.getByRole('list');
     list.scrollTo = vi.fn();
     sizeList(list, { scrollWidth: 1000, clientWidth: 400 });
     fireEvent.scroll(list);
 
-    expect(screen.queryByRole('button', { name: 'Previous' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    const previous = screen.getByRole('button', { name: 'Previous' });
+    const next = screen.getByRole('button', { name: 'Next' });
+    expect(previous).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(previous);
+    expect(list.scrollTo).not.toHaveBeenCalled();
+    fireEvent.click(next);
     expect(list.scrollTo).toHaveBeenCalledWith({ left: 400, behavior: 'smooth' });
 
     sizeList(list, { scrollWidth: 1000, clientWidth: 400, scrollLeft: 600 });
     fireEvent.scroll(list);
-    expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Previous' })).toBeInTheDocument();
+    expect(next).toHaveAttribute('aria-disabled', 'true');
+    expect(previous).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('keeps the focused arrow in place when the rail reaches that end', () => {
+    render(<AdRail label="Latest ads">{cards}</AdRail>);
+    const list = screen.getByRole('list');
+    list.scrollTo = vi.fn();
+    sizeList(list, { scrollWidth: 1000, clientWidth: 400, scrollLeft: 400 });
+    fireEvent.scroll(list);
+    const next = screen.getByRole('button', { name: 'Next' });
+    next.focus();
+
+    sizeList(list, { scrollWidth: 1000, clientWidth: 400, scrollLeft: 600 });
+    fireEvent.scroll(list);
+    expect(next).toHaveFocus();
+    expect(next).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('jumps instead of gliding when the user asks for less motion', () => {
+    const matchMedia = vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+    render(<AdRail label="Latest ads">{cards}</AdRail>);
+    const list = screen.getByRole('list');
+    list.scrollTo = vi.fn();
+    sizeList(list, { scrollWidth: 1000, clientWidth: 400 });
+    fireEvent.scroll(list);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(list.scrollTo).toHaveBeenCalledWith({ left: 400, behavior: 'auto' });
+    matchMedia.mockRestore();
   });
 
   it('does not break while the list has no width', () => {
@@ -61,6 +93,6 @@ describe('AdRail', () => {
     fireEvent.scroll(list);
 
     expect(screen.getByRole('list', { name: 'Latest ads' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Next' })).toHaveAttribute('aria-disabled', 'true');
   });
 });

@@ -1,11 +1,13 @@
 'use client';
 
 import { CompanyCard } from '@/components/design-system/CompanyCard';
+import { siteFrame } from '@/components/design-system/site-frame';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
-import { formatNumber } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { useHomeFeedQuery } from '@/lib/queries/home';
+import { cn } from '@/lib/utils';
 
 /** One row of five on desktop, three a row on tablets and the first two on phones, as in the design. */
 const COMPANY_COUNT = 5;
@@ -17,10 +19,10 @@ export function HomeFeaturedCompanies() {
   const locale = getLocale();
   const { data, isLoading, isError } = useHomeFeedQuery();
   const sellers = data?.featured_sellers.slice(0, COMPANY_COUNT) ?? [];
-  if (isError || (!isLoading && sellers.length === 0)) return null;
+  if ((!data && isError) || (!isLoading && sellers.length === 0)) return null;
 
   return (
-    <section aria-labelledby="home-companies" className="mx-auto max-w-[1440px] px-qb-gutter py-6">
+    <section aria-labelledby="home-companies" className={cn(siteFrame, 'py-6')}>
       <SectionHeader
         id="home-companies"
         title={t('home.sections.companies_title', 'شركات مميزة')}
@@ -31,7 +33,7 @@ export function HomeFeaturedCompanies() {
       {isLoading ? (
         <div className={grid} aria-busy="true">
           {Array.from({ length: COMPANY_COUNT }, (_, i) => (
-            <div key={i} aria-hidden="true" className="h-[180px] animate-pulse rounded-qb-2xl border border-qb-line bg-qb-surface" />
+            <div key={i} aria-hidden="true" className="h-[180px] animate-pulse rounded-qb-2xl border border-qb-line bg-qb-surface motion-reduce:animate-none" />
           ))}
         </div>
       ) : (
@@ -44,7 +46,7 @@ export function HomeFeaturedCompanies() {
                 logoUrl={seller.avatar_url}
                 toneKey={seller.id}
                 meta={seller.location ? localized(seller.location.name, locale) : undefined}
-                count={t('categories.ads_count', { count: formatNumber(seller.ads_count, locale) }, `${formatNumber(seller.ads_count, locale)} إعلان`)}
+                count={tPlural('catalog.ads_count', seller.ads_count, locale)}
                 className="h-full"
               />
             </li>
