@@ -28,7 +28,6 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
             pageGutter,
           )}
         >
-          {/* The box sets the size: the old stylesheet's unlayered `img { height: auto }` beats utilities on the img. */}
           <Link
             href="/"
             aria-label={t('brand.name')}

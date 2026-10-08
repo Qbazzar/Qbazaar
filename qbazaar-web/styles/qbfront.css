@@ -354,19 +354,6 @@ button.btn--primary:hover { color: #ffffff; }
   border: 1px solid var(--ink-200);
 }
 
-/* ---------- Post / wizard ---------- */
-
-/* ---------- Messages ---------- */
-.conv {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--ink-200);
-  border-radius: 16px;
-  overflow: hidden;
-  height: 78vh;
-}
-
 /* ---------- Profile / shop heads ---------- */
 .profile-head {
   display: flex;
@@ -413,29 +400,6 @@ button.btn--primary:hover { color: #ffffff; }
 .empty-state__title { margin: 20px 0 6px; font-size: 24px; font-weight: 800; color: var(--ink-900); }
 .empty-state__sub { font-size: 14.5px; color: var(--ink-700); max-width: 380px; margin: 0 auto; }
 
-/* ---------- Auth ---------- */
-
-/* ---------- Help ---------- */
-.help-search {
-  margin: 32px auto 0;
-  max-width: 580px;
-  display: flex;
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--ink-200);
-  border-radius: 14px;
-  padding: 6px;
-  box-shadow: var(--shadow-md);
-}
-.help-search input {
-  flex: 1; border: none; outline: none;
-  padding: 14px; font-size: 15px;
-  background: transparent; color: var(--ink-900);
-  font-family: inherit;
-}
-
-/* ---------- Notifications ---------- */
-
 /* ---------- Mobile responsive ---------- */
 
 @media (max-width: 900px) {
@@ -462,12 +426,6 @@ button.btn--primary:hover { color: #ffffff; }
 /* Kill horizontal overflow site-wide. `clip` (not `hidden`) so the sticky
    header keeps working — `hidden` would turn <body> into a scroll container. */
 html, body { overflow-x: clip; max-width: 100%; }
-img, video, canvas { max-width: 100%; height: auto; }
-
-@media (max-width: 760px) {
-  /* Single pane fills the viewport height on phones. */
-  .conv { height: calc(100svh - 150px); }
-}
 
 /* ============================================================
    RTL adjustments — Arabic pages flip iconography & corners.
