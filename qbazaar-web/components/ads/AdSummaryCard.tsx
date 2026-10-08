@@ -20,7 +20,7 @@ interface AdSummaryCardProps {
 
 const IMAGE_SIZES = {
   grid: '(min-width: 601px) 310px, 100vw',
-  list: '(min-width: 601px) 341px, 100vw',
+  list: '(min-width: 1001px) 341px, (min-width: 601px) 220px, 100vw',
 } as const;
 
 /** An `AdSummary` from the API shown as the design-system listing card. */
@@ -54,6 +54,7 @@ export function AdSummaryCard({ ad, layout = 'grid', eager = false, className }:
       favorite={
         <FavoriteButton
           adId={ad.id}
+          adTitle={ad.title}
           className="size-8 bg-qb-surface text-qb-ink-muted shadow-qb-soft ring-0 backdrop-blur-none hover:text-qb-brand focus-visible:ring-qb-brand-active [&_svg]:size-[17px]"
         />
       }

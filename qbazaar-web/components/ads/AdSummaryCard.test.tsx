@@ -71,8 +71,11 @@ describe('AdSummaryCard', () => {
   it('marks promoted ads as "Top Ad" in the list layout', () => {
     render(<AdSummaryCard ad={{ ...ad, promotion: 'premium' }} layout="list" />);
 
-    expect(screen.getByText('Top Ad')).toHaveClass('bg-qb-brand');
-    expect(screen.getByText('QAR 285,000')).not.toHaveClass('bg-qb-brand');
+    expect(screen.getByText('Top Ad')).toHaveClass('bg-qb-brand', 'qb-tablet:inline-flex');
+    // The price stays on the photo on phones only, and sits next to the title from tablets up.
+    const [onPhoto, besideTitle] = screen.getAllByText('QAR 285,000');
+    expect(onPhoto).toHaveClass('bg-qb-brand', 'qb-tablet:hidden');
+    expect(besideTitle).not.toHaveClass('bg-qb-brand');
   });
 
   it('shows the summary and the spec chips in the list layout', () => {

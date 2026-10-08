@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 import { Breadcrumb, type BreadcrumbItem } from './Breadcrumb';
+import { siteFrame } from './site-frame';
 
 export interface PageShellProps {
   /** The page's only h1. */
@@ -25,7 +26,7 @@ export interface PageShellProps {
 export function PageShell({ title, breadcrumb, meta, actions, children, className }: PageShellProps) {
   return (
     <main className={cn('bg-qb-page font-qb text-qb-ink', className)}>
-      <div className="mx-auto box-content max-w-qb-content px-qb-gutter pt-9 pb-16 qb-tablet:pt-16 qb-desktop:pb-20">
+      <div className={cn(siteFrame, 'pt-9 pb-16 qb-tablet:pt-16 qb-desktop:pb-20')}>
         <header className="mb-6 qb-tablet:mb-8 qb-desktop:mb-10">
           {breadcrumb?.length ? (
             <Breadcrumb items={breadcrumb} className="mb-16 hidden qb-tablet:block qb-desktop:mb-12" />

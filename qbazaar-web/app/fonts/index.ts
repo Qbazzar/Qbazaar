@@ -55,7 +55,7 @@ const ibmPlexArabicWeights = localFont({
 
 const montserrat = localFont({
   src: './montserrat-latin-variable.woff2',
-  weight: '400 500',
+  weight: '400 600',
   variable: '--font-montserrat',
   preload: false,
 });

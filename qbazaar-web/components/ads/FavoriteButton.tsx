@@ -32,6 +32,11 @@ interface Props {
   className?: string;
   /** Render a label next to the heart (used in the ad-detail sidebar). */
   withLabel?: boolean;
+  /**
+   * Title of the ad, for a heart on a card: the button is then named after
+   * the ad ("Save Toyota Corolla"), and `aria-pressed` alone tells the state.
+   */
+  adTitle?: string;
 }
 
 const SIZE_CLS: Record<NonNullable<Props['size']>, string> = {
@@ -45,6 +50,7 @@ export function FavoriteButton({
   size = 'sm',
   className,
   withLabel = false,
+  adTitle,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -62,6 +68,7 @@ export function FavoriteButton({
     ? 'favorites.tooltip.remove'
     : 'favorites.tooltip.add';
   const label = t(labelKey);
+  const name = adTitle ? t('favorites.save_named', { title: adTitle }) : label;
 
   const handleClick = useMemo(() => {
     return (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -99,7 +106,7 @@ export function FavoriteButton({
     <button
       type="button"
       onClick={handleClick}
-      aria-label={label}
+      aria-label={name}
       aria-pressed={favorited}
       title={label}
       disabled={toggleMutation.isPending}

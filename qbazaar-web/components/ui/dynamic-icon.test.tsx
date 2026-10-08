@@ -10,7 +10,21 @@ const loadFullSet = () => act(async () => {
   await import('lucide-react');
 });
 
+/** Every icon name the API sends: category and help seeds, notification classes and OrderNotice. */
+const API_ICON_NAMES = [
+  'Bike', 'Briefcase', 'Car', 'Factory', 'Home', 'PawPrint', 'Shirt', 'Smartphone', 'Sofa', 'Wrench',
+  'BookOpen', 'Lock', 'Shield', 'ShoppingBag', 'Sparkles', 'Tag',
+  'alert', 'badge-check', 'bell-ring', 'circle-x', 'clock', 'clock-alert', 'download', 'flag', 'inbox',
+  'life-buoy', 'megaphone', 'package-check', 'shield-alert', 'shopping-bag', 'sparkles', 'wallet',
+];
+
 describe('DynamicIcon', () => {
+  it.each(API_ICON_NAMES)('draws "%s" without loading the whole icon set', (name) => {
+    const { container } = render(<DynamicIcon name={name} />);
+
+    expect(svgOf(container)).not.toHaveClass('lucide-layers');
+  });
+
   it('draws the icons the API sends at once, aliases and kebab-case names included', () => {
     const { container, rerender } = render(<DynamicIcon name="Car" className="size-6" />);
     expect(svgOf(container)).toHaveClass('lucide-car', 'size-6');
@@ -20,6 +34,9 @@ describe('DynamicIcon', () => {
 
     rerender(<DynamicIcon name="shield-alert" />);
     expect(svgOf(container)).toHaveClass('lucide-shield-alert');
+
+    rerender(<DynamicIcon name="alert" />);
+    expect(svgOf(container)).toHaveClass('lucide-circle-alert');
   });
 
   it('loads any other lucide icon on demand, showing the stand-in meanwhile', async () => {
