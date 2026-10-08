@@ -47,7 +47,7 @@ export function AdSummaryRowCard({ ad, headingLevel, className }: AdSummaryRowCa
         image ? (
           <Image src={image.sizes.medium || image.url} alt="" fill sizes={IMAGE_SIZES} className="object-cover" />
         ) : (
-          <span className="flex size-full items-center justify-center text-qb-micro text-qb-ink-secondary">
+          <span className="flex size-full items-center justify-center text-qb-micro text-qb-ink-subtle">
             {t('media.no_image')}
           </span>
         )

@@ -7,8 +7,8 @@ import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon
 import { t } from "@/lib/i18n/messages"
 
 /**
- * Toast colours from the design tokens: each tone's text passes AA on its soft
- * tint. Warnings take the brand orange, the design's only warm tone.
+ * Toast colours from the design tokens: each tone's text sits on its soft tint.
+ * Warnings take the brand orange, the design's only warm tone.
  */
 const TOAST_COLOURS = {
   "--normal-bg": "var(--color-qb-surface)",

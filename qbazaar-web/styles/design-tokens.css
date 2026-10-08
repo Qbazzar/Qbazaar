@@ -3,40 +3,37 @@
    and the per-frame Figma renders. Everything is namespaced `qb-` so it can
    live next to the old QBFront tokens in app/globals.css.
 
-   Text and button colours are the Figma hues darkened just enough to meet
-   WCAG AA, 4.5:1 against every background each one sits on (white, the page,
-   the chip fill or its soft tint). Greys that only draw controls (radio
-   rings, inactive toggles, chevrons, field borders) need 3:1 against the
-   light surfaces. lib/design-tokens.test.ts checks each pair. The Figma value
-   is noted next to each one that changed; decorative tints keep the Figma
-   values. */
+   The colour values are the design's exact colours by owner decision; do not
+   darken them. */
 
 @theme {
   /* Brand */
-  --color-qb-brand: #cf410f; /* Figma #f38057 */
-  --color-qb-brand-hover: #b73a0d; /* Figma #e96c3f */
-  --color-qb-brand-active: #9f320c; /* Figma #d3664c */
-  --color-qb-brand-on-soft: #c83f0f; /* brand text on brand-soft */
+  --color-qb-brand: #f38057;
+  --color-qb-brand-hover: #e96c3f;
+  --color-qb-brand-active: #d3664c;
+  --color-qb-brand-on-soft: #f38057;
   --color-qb-brand-soft: #fff0ea;
-  --color-qb-on-brand: #ffffff; /* text and icons on brand fills */
-  --color-qb-brand-tint: #f9c7b2; /* decorative: inactive slider dots */
+  --color-qb-on-brand: #ffffff;
+  --color-qb-brand-tint: #f9c7b2;
 
   /* Text */
   --color-qb-ink: #212121;
   --color-qb-ink-title: #333333;
   --color-qb-ink-body: #4b4b4b;
   --color-qb-ink-secondary: #616161;
-  --color-qb-ink-muted: #707070; /* Figma #757575 */
-  --color-qb-ink-subtle: #707070; /* Figma #9e9e9e: meta lines, subtitles */
-  --color-qb-ink-faint: #776e6e; /* Figma #9e9696: chip text */
-  --color-qb-ink-disabled: #8d8d8d; /* Figma #bdbdbd: unchecked rings, inactive toggles (3:1, never text) */
-  --color-qb-placeholder: #767676; /* Figma #bfbfbf */
+  --color-qb-ink-muted: #757575;
+  --color-qb-ink-subtle: #9e9e9e;
+  --color-qb-ink-faint: #9e9696;
+  --color-qb-ink-disabled: #bdbdbd;
+  --color-qb-placeholder: #bfbfbf;
   --color-qb-icon: #231f20;
-  --color-qb-icon-muted: #8d8d8d; /* Figma #a19f9f to #bdbdbd: chevrons and field icons (3:1) */
+  --color-qb-icon-muted: #a19f9f; /* chevrons in the menu drawer */
+  --color-qb-icon-faint: #bdbdbd; /* hero search field icons */
+  --color-qb-icon-accordion: #aaaaaa; /* footer accordion chevrons */
   --color-qb-navy: #000640;
   --color-qb-black: #000000;
-  --color-qb-breadcrumb: #677488; /* Figma #a4adba */
-  --color-qb-breadcrumb-separator: #cfd1d5; /* decorative, hidden from assistive tech */
+  --color-qb-breadcrumb: #a4adba;
+  --color-qb-breadcrumb-separator: #cfd1d5;
 
   /* Surfaces and lines */
   --color-qb-page: #f9f9f9;
@@ -46,17 +43,17 @@
   --color-qb-hover: #fafafa;
   --color-qb-line: #ededed;
   --color-qb-line-strong: #d4d4d4;
-  --color-qb-field-border: #8d8d8d; /* Figma #ededed: text fields and selects (3:1) */
+  --color-qb-field-border: #ededed;
   --color-qb-divider: rgb(0 0 0 / 0.09);
   --color-qb-overlay: rgb(0 0 0 / 0.3);
-  --color-qb-overlay-strong: rgb(20 20 20 / 0.45); /* behind the menu drawer */
+  --color-qb-overlay-strong: rgb(20 20 20 / 0.45);
 
   /* Status */
-  --color-qb-success: #158505; /* Figma #1bad07 */
+  --color-qb-success: #1bad07;
   --color-qb-success-soft: #e8ffec;
-  --color-qb-danger: #d61d1d; /* Figma #e64646 */
+  --color-qb-danger: #e64646;
   --color-qb-danger-soft: #ffebeb;
-  --color-qb-info: #256ad9; /* Figma #2b6fdb */
+  --color-qb-info: #2b6fdb;
   --color-qb-info-soft: #ebf2ff;
 
   /* Type scale */
@@ -101,7 +98,7 @@
   --shadow-qb-raised: 0 4px 30px 0 rgb(161 161 161 / 0.2);
   --shadow-qb-soft: 0 4px 25px 0 rgb(188 188 188 / 0.1);
   --shadow-qb-hover: 0 4px 40px 0 rgb(161 161 161 / 0.25);
-  --shadow-qb-brand: 0 4px 40px 0 rgb(243 128 87 / 0.2); /* decorative glow keeps the Figma orange */
+  --shadow-qb-brand: 0 4px 40px 0 rgb(243 128 87 / 0.2);
   --shadow-qb-header: 0 2px 12px 0 rgb(161 161 161 / 0.18);
   --shadow-qb-popover: 0 16px 40px 0 rgb(0 0 0 / 0.14);
   --shadow-qb-float: 0 4px 20px 0 rgb(161 161 161 / 0.1);

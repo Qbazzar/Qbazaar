@@ -138,7 +138,7 @@ function FooterColumnBlock({ column }: { column: FooterColumn }) {
       <details className="group border-b border-qb-divider first-of-type:border-t qb-desktop:hidden">
         <summary className={cn('flex cursor-pointer list-none items-center justify-between px-0.5 py-4 text-qb-body font-semibold [&::-webkit-details-marker]:hidden', focusRing)}>
           {column.title}
-          <Icon icon={ChevronDown} className="text-qb-icon-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+          <Icon icon={ChevronDown} className="text-qb-icon-accordion transition-transform group-open:rotate-180 motion-reduce:transition-none" />
         </summary>
         <div className="pb-3.5">{links}</div>
       </details>

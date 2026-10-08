@@ -119,12 +119,11 @@ export function ChoiceGroup<T extends string>({
                 onChange={() => onChange(option.value)}
                 className="sr-only"
               />
-              {/* Darker than the design's ring: it marks the unpicked state, which needs 3:1 on white. */}
               <span
                 aria-hidden="true"
                 className={cn(
                   'flex size-[22px] shrink-0 items-center justify-center rounded-full border-2',
-                  checked ? 'border-qb-brand' : 'border-qb-ink-subtle',
+                  checked ? 'border-qb-brand' : 'border-qb-ink-disabled',
                 )}
               >
                 {checked ? <span className="size-[11px] rounded-full bg-qb-brand" /> : null}
