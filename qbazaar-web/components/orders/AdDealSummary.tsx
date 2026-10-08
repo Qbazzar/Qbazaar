@@ -21,7 +21,7 @@ import { panelClass } from './CheckoutPanel';
 export function AdDealSummary({ ad }: { ad: DealAd }) {
   const photo = ad.images?.[0];
   const sellerName = ad.user?.business_name || ad.user?.full_name;
-  const verified = Boolean(ad.user?.verification_badges?.phone_verified ?? ad.user?.phone_verified);
+  const verified = Boolean(ad.user?.verification_badges?.phone_verified);
   const place = localized(ad.location?.name);
 
   return (
@@ -67,7 +67,7 @@ export function AdDealSummary({ ad }: { ad: DealAd }) {
           <span aria-hidden="true" className="flex shrink-0">
             <Avatar
               name={sellerName}
-              src={ad.user?.avatar_thumb_url ?? ad.user?.avatar_url}
+              src={ad.user?.avatar_url}
               className="size-10 border border-qb-line bg-qb-hover text-qb-caption text-qb-ink qb-desktop:size-[50px] qb-desktop:text-qb-body"
             />
           </span>

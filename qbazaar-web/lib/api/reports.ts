@@ -3,7 +3,7 @@
  *
  * The reports endpoint accepts a polymorphic target (ad/user/conversation/
  * message) plus a category enum. The backend rate-limits duplicate reports
- * per target/category which surfaces as the `REPORT_RECENT_DUPLICATE` code
+ * per target/category which surfaces as the `REPORT_002` code
  * the UI maps to a friendly toast.
  */
 import { isAxiosError } from 'axios';

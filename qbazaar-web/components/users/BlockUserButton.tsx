@@ -1,58 +1,47 @@
 'use client';
 
 /**
- * BlockUserButton — reusable "Block this user" control.
- *
- * Wraps a confirm dialog around `POST /users/{id}/block`. Designed to be
- * dropped on the public profile page + chat threads.
- *
- * On success: closes the dialog, fires a sonner toast, and calls the
- * optional `onBlocked` callback so the parent can hide the now-blocked
- * user's content optimistically.
+ * "Block" control: a confirmation dialog (369:17179 / 532:26075 / 604:33981)
+ * around `POST /users/{id}/block`. Guests are sent to login and come back.
+ * On success it closes, says so and calls `onBlocked` so the parent can update.
  */
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2Icon, ShieldOffIcon } from 'lucide-react';
+import { Ban, Loader2Icon } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { Button } from '@/components/design-system/Button';
+import { Modal } from '@/components/design-system/Modal';
+import { useAuth } from '@/hooks/useAuth';
+import { t } from '@/lib/i18n/messages';
 import { blockUser } from '@/lib/api/users';
 import { ApiClientError } from '@/lib/api/auth';
-import { UserErrorCode } from '@/lib/api/types';
+import { currentLocationPath } from '@/lib/navigation/safe-return-to';
 import { cn } from '@/lib/utils';
+
+/** Blocking is idempotent, so "already blocked" is never an error. */
+const BLOCK_ERROR_KEYS: Record<string, string> = {
+  USER_002: 'users.block.errors.admin',
+  USER_003: 'users.block.errors.self',
+  RATE_LIMIT_EXCEEDED: 'auth.errors.RATE_LIMIT_EXCEEDED',
+};
+
+/** The two equal buttons of the reference: 34 px from 601 px, 46 px on phones. */
+const dialogButton = 'h-[46px] flex-1 rounded-qb-lg px-4 focus-visible:outline-solid qb-tablet:h-[34px] qb-tablet:rounded-qb-sm';
 
 export interface BlockUserButtonProps {
   userId: string;
   userName: string;
-  /** Visual variant of the trigger — `outline` (default) or `destructive`. */
-  variant?: 'outline' | 'destructive';
-  /** `sm` (default) or `default` height — same scale as shadcn Button sizes. */
-  size?: 'sm' | 'default';
   /** Fired after the block succeeds; the parent can hide the user's content. */
   onBlocked?: () => void;
   className?: string;
 }
 
-export function BlockUserButton({
-  userId,
-  userName,
-  variant = 'outline',
-  size = 'sm',
-  onBlocked,
-  className,
-}: BlockUserButtonProps) {
+export function BlockUserButton({ userId, userName, onBlocked, className }: BlockUserButtonProps) {
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const { isAuthenticated, isHydrated } = useAuth();
   const [open, setOpen] = useState(false);
 
   const mutation = useMutation({
@@ -64,74 +53,51 @@ export function BlockUserButton({
       onBlocked?.();
     },
     onError: (err) => {
-      if (err instanceof ApiClientError) {
-        if (err.code === UserErrorCode.AlreadyBlocked) {
-          toast.info(t('users.block.already_blocked'));
-          setOpen(false);
-          return;
-        }
-        toast.error(
-          translateMaybeKey(`account.errors.${err.code}`) ||
-            translateMaybeKey(`auth.errors.${err.code}`) ||
-            err.message,
-        );
-      } else {
-        toast.error(t('auth.errors.unknown'));
-      }
+      const key = err instanceof ApiClientError ? BLOCK_ERROR_KEYS[err.code] : undefined;
+      toast.error(t(key ?? 'common.error'));
     },
   });
 
+  const openDialog = () => {
+    if (!isHydrated) return;
+    if (!isAuthenticated) {
+      router.push(`/login?from=${encodeURIComponent(currentLocationPath())}`);
+      return;
+    }
+    setOpen(true);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button
-            type="button"
-            variant={variant === 'destructive' ? 'destructive' : 'outline'}
-            size={size}
-            className={cn('rounded-full px-3 text-xs font-semibold', className)}
-          />
-        }
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={openDialog}
+        className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink focus-visible:outline-solid', className)}
       >
-        <ShieldOffIcon className="size-3.5" aria-hidden />
-        <span>{t('users.block.button')}</span>
-      </DialogTrigger>
-
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {t('users.block.confirm_title', { name: userName })}
-          </DialogTitle>
-          <DialogDescription>{t('users.block.confirm_body')}</DialogDescription>
-        </DialogHeader>
-
-        <DialogFooter>
-          <DialogClose
-            render={
-              <Button variant="outline" size="default" className="rounded-full">
-                {t('users.block.cancel')}
-              </Button>
-            }
-          />
+        <Ban aria-hidden />
+        {t('users.block.button')}
+      </Button>
+      <Modal
+        open={open}
+        onOpenChange={setOpen}
+        title={t('users.block.confirm_title', { name: userName })}
+        description={t('users.block.confirm_body')}
+      >
+        <div className="mt-2 flex gap-3 qb-tablet:gap-4">
           <Button
-            type="button"
-            variant="destructive"
-            size="default"
-            disabled={mutation.isPending}
-            onClick={() => mutation.mutate()}
-            className="rounded-full"
+            aria-disabled={mutation.isPending || undefined}
+            onClick={mutation.isPending ? undefined : () => mutation.mutate()}
+            className={cn(dialogButton, 'text-qb-body qb-tablet:text-qb-caption')}
           >
-            {mutation.isPending ? (
-              <>
-                <Loader2Icon className="size-3.5 animate-spin" aria-hidden />
-                {t('users.block.blocking')}
-              </>
-            ) : (
-              t('users.block.confirm')
-            )}
+            {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
+            {mutation.isPending ? t('users.block.blocking') : t('users.block.confirm')}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <Button variant="muted" onClick={() => setOpen(false)} className={cn(dialogButton, 'text-qb-body qb-tablet:text-qb-caption')}>
+            {t('users.block.cancel')}
+          </Button>
+        </div>
+      </Modal>
+    </>
   );
 }

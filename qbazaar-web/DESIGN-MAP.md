@@ -28,8 +28,9 @@ Every route in `qbazaar-web/app` mapped to its pixel reference for the M3 reskin
 | `/c/[slug]` | `app/c/[slug]/page.tsx` | `parent-category.html` (sub-category rows and tiles) + `category.html` (its listings) | overview 18:912 · listing 69:467 (list), 81:1629 (grid) | overview 539:35503 · listing 544:38513 | overview 623:28688 · listing 623:30012 | matches | A parent category opens on the overview; a leaf category, or a filtered, sorted or paged URL, shows the listing. |
 | `/ads` | `app/ads/page.tsx` | `category.html` (list/grid + filter sidebar) | 69:467 · 81:1629 · filter 250:4405 · filter open 264:4818 | 544:38513 · filters 244:3508 | 623:30012 · filter sheet 618:26974 | matches | Filters become a bottom sheet under 1000 px. |
 | `/search` | `app/search/page.tsx` | `category.html` (search state) | 492:20208 · not found 655:55973 | 655:54431 · not found 655:55238 | 654:50760 · not found 654:51147 · distance 654:50586 | matches | "Save Search" is the pill next to "Add to Favorite" on 18:912. The distance select of 654:50586 is deferred: `/search` takes `lat`, `lng` and `radius_km`, and the select first needs the visitor's position. |
-| `/ads/[id]` | `app/ads/[id]/page.tsx` | `product.html` | 88:776 · organisation 190:8469 | 547:39923 · organisation 534:32277 | 618:27221 · 623:29490 | partial | Seller reviews and the report action have no frame: reviews go under the seller card as rows in the notification-row style (455:14636), report is a ghost button in the seller card. Buy Now / Make an Offer wait for FE-16.8. |
-| `/u/[id]` | `app/u/[id]/page.tsx` | `seller-individual.html` | 136:1562 | 548:42879 | 625:31486 | partial | Reviews and the block/report actions have no frame: reuse the seller card actions row and the notification-row style for reviews. Organisation sellers use `seller-organization.html` (145:1063, 532:27700, 616:26793) once companies exist (FE-16.6). |
+| `/ads/[id]` | `app/ads/[id]/page.tsx` | `product.html` | 88:776 · organisation 190:8469 · share/report states 190:9777, 283:8005 · report 369:17437 | 547:39923 · organisation 534:32277 · report 532:26357 | 618:27221 · 623:29490 · report 604:34196 | partial | "Another Ads From Seller" lists the seller's other ads; the similar ads follow as a second row. "Rate the seller" has no frame: the centred Modal of the report and block dialogs. Buy Now and Make an Offer open `/ads/[id]/buy` and `/ads/[id]/offer` when the ad takes them (rules in `lib/orders/offers.ts`). |
+| `/u/[id]` | `app/u/[id]/page.tsx` | `seller-individual.html`; business accounts `seller-organization.html` | 136:1562 · company 145:1063, 167:1827, 167:2754 · block 369:17179 · report 369:17437 | 548:42879 · company 532:27700, 532:29227, 532:29971 · block 532:26075 | 625:31486 · company 616:26793, 616:26981, 616:27111 · block 604:33981 · report 604:34196 | partial | Reviews have no frame: rows in the notification-row style (455:14636) under the listings. The report and block links sit under the seller card's buttons. |
+| `/companies` | `app/companies/page.tsx` | `companies.html` | 179:4492 | 532:31445 | 620:28373 | partial | Companies have no city in the API yet, so the card's meta line shows the followers count. |
 | `/p/[slug]` | `app/p/[slug]/page.tsx` | none | — | — | — | no reference | CMS page. Closest: page shell of `notifications.html` (breadcrumb + 48 px title, 455:14636) with the body in the white r24 panel of `wishlist.html` (376:7817). |
 
 ## Posting an ad
@@ -109,9 +110,9 @@ Routes without UI, so nothing to design: `app/api/auth/refresh/route.ts`, `app/a
 
 | | Count |
 |---|---|
-| Rows (50 `page.tsx` routes, the error boundaries, the 404 page) | 52 |
+| Rows (51 `page.tsx` routes, the error boundaries, the 404 page) | 53 |
 | matches | 17 |
-| partial | 15 |
+| partial | 16 |
 | no reference (closest reference proposed for each) | 20 |
 
 Plus the 3 layouts, which all match.
@@ -122,8 +123,6 @@ Future work. These are **not** built in FE-16.1/16.2; the task that owns each is
 
 | Reference page | Figma frames (1440 / 744 / 390) | What it is |
 |---|---|---|
-| `companies.html` | 179:4492 / 532:31445 / 620:28373 | Companies list [FE-16.6] |
-| `seller-organization.html` | 145:1063, 167:1827, 167:2754 / 532:27700 / 616:26793 | Company seller page [FE-16.6] |
 | `users.html` | 376:9466, 376:9268 / 515:18203, 514:18424 / 600:25084, 600:25354 | Followers / following [FE-16.6] |
 | `premium.html` | 397:9995 / — / — | Premium subscription [not planned in M3] |
 | `financing.html` | no frame (prototype-only page) | Flexible financing [not planned in M3] |

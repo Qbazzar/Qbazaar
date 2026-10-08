@@ -66,19 +66,3 @@ export function formatRelativeTime(
     day: 'numeric',
   }).format(date);
 }
-
-/**
- * Render a date as a long-form month + year (e.g. "March 2022", "مارس 2022").
- * Used on the public profile "Member since" line.
- */
-export function formatMonthYear(
-  isoTimestamp: string,
-  locale: string = 'ar',
-): string {
-  const date = new Date(isoTimestamp);
-  if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'long',
-  }).format(date);
-}
