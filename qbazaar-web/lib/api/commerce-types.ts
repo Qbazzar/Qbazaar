@@ -26,21 +26,14 @@ export interface CursorPage<T> {
 
 // ── Ads as the deal pages read them ──────────────────────────────────────
 
-export type AdShipping = 'pickup_only' | 'delivery';
-export type AdType = 'offering' | 'wanted';
-
 export interface VerificationBadges {
   email_verified: boolean;
   phone_verified: boolean;
   business_verified?: boolean;
 }
 
-/** `GET /ads/{id}` with the M1 fields the shared `Ad` type does not carry yet. */
+/** `GET /ads/{id}` as the deal pages read it: the shared `Ad` plus the seller's badges. */
 export interface DealAd extends Omit<Ad, 'user'> {
-  ad_type?: AdType;
-  shipping?: AdShipping;
-  shipping_fee?: DecimalAmount | null;
-  quantity?: number;
   is_reserved?: boolean;
   user?: PublicUser & {
     business_name?: string | null;
