@@ -8,9 +8,9 @@ use GdImage;
 use RuntimeException;
 
 /**
- * Draws listing photos locally with GD: the category colour, the listing
- * title and the photo number. No network, no stock images, and every file
- * is a real JPEG the media pipeline can convert, hash and serve.
+ * Draws listing photos locally with GD: the category colour and the listing
+ * title. No network, no stock images, and every file is a real JPEG the
+ * media pipeline can convert, hash and serve.
  */
 final class PlaceholderImages
 {
@@ -42,7 +42,7 @@ final class PlaceholderImages
 
     /**
      * Photos of one listing share their background and caption, which are
-     * drawn once; each copy only gets its own number.
+     * drawn once and saved as separate files.
      *
      * @param array{int, int}|null $size width and height; a random photo size when null
      * @return list<string> paths of temporary JPEGs, removed by {@see cleanUp()}
@@ -54,12 +54,8 @@ final class PlaceholderImages
         $base = $this->background($width, $height, $red, $green, $blue, $caption);
         $paths = [];
 
-        for ($number = 1; $number <= $count; $number++) {
-            $photo = $this->canvas($width, $height);
-            imagecopy($photo, $base, 0, 0, 0, 0, $width, $height);
-            imagefilledellipse($photo, (int) ($width * 0.82), (int) ($height * 0.22), (int) ($height * 0.26), (int) ($height * 0.26), $this->color($photo, 255, 255, 255));
-            $this->text($photo, (string) $number, (int) ($width * 0.82), (int) ($height * 0.22), 4, $this->color($photo, $red, $green, $blue));
-            $paths[] = $this->save($photo);
+        for ($copy = 0; $copy < $count; $copy++) {
+            $paths[] = $this->save($base);
         }
 
         return $paths;
