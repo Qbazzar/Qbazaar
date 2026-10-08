@@ -775,6 +775,221 @@
       "not_found": "Could not load locations"
     }
   },
+  "post_ad": {
+    "page_title": "Post an ad",
+    "edit_title": "Edit ad",
+    "optional": "(optional)",
+    "breadcrumb": {
+      "home": "Home",
+      "add_ads": "Add Ads",
+      "my_ads": "My Ads"
+    },
+    "basic": {
+      "title": "Basic Information",
+      "ad_type": "Ad Type",
+      "ad_title": "Ad Title",
+      "ad_title_placeholder": "e.g. Clean Mercedes Benz 2020",
+      "ad_title_hint": "Clear titles increase sales chances by 70%",
+      "category": "Category",
+      "category_placeholder": "e.g. Fashion & Beauty > Skincare",
+      "category_select": "Select",
+      "images": "Images",
+      "description": "Description",
+      "description_placeholder": "Describe the condition, what's included and why you're selling",
+      "description_hint": "It is recommended to write at least 30 words to build trust."
+    },
+    "ad_type": {
+      "offering": "Offering",
+      "wanted": "Looking for"
+    },
+    "details": {
+      "title": "Details",
+      "condition": "Condition",
+      "choose": "Choose"
+    },
+    "price": {
+      "title": "Price",
+      "shipping": "Shipping Options",
+      "shipping_pickup_only": "Pickup Only",
+      "shipping_delivery": "Delivery Available",
+      "fee": "Delivery Fee",
+      "fee_hint": "Leave it empty if delivery is free.",
+      "price": "Price",
+      "price_type": "Price Type",
+      "currency": "QAR",
+      "amount": "QAR {amount}"
+    },
+    "location": {
+      "title": "Location",
+      "postal_code": "Postal Code",
+      "area": "Location",
+      "area_placeholder": "City",
+      "whole_city": "{city} (all areas)",
+      "street": "Street/No.",
+      "street_placeholder": "Street, Building no. .. etc",
+      "show_full_address": "Show my full address on the ad",
+      "note": "Note: By default, we only show the postal code and city. If you want to show the full address, please check the box."
+    },
+    "photos": {
+      "drop": "Drop images here or click to select files from your device",
+      "limits": "You can add up to {max} images (Max 12MB per image)",
+      "list_label": "Ad photos",
+      "photo_label": "Photo {n} of {total}",
+      "cover": "Cover",
+      "make_cover": "Make photo {n} the cover",
+      "remove": "Remove photo {n}",
+      "retry": "Retry uploading photo {n}",
+      "retry_short": "Retry",
+      "uploading_label": "Uploading photo {n}",
+      "reorder_hint": "Drag a photo or use its arrows to reorder. The first photo is the cover.",
+      "status_processing": "Preparing the photo",
+      "status_ready": "Waiting to upload",
+      "status_uploading": "Uploading, {percent}%",
+      "status_uploaded": "Uploaded",
+      "failed_process": "This photo could not be read.",
+      "failed_upload": "The upload failed.",
+      "failed_network": "The upload failed. Check your connection.",
+      "failed_limit": "This ad already has {max} photos.",
+      "failed_rejected": "This photo was not accepted.",
+      "rejected_type": "{name}: only JPG, PNG or WebP photos can be added.",
+      "rejected_size": "{name} is larger than 12 MB.",
+      "rejected_limit": "You can add up to {max} photos.",
+      "remove_failed": "The photo could not be removed. Please try again.",
+      "some_failed": "Some photos didn't upload. Retry or remove them.",
+      "summary_uploading": "{done} of {total} photos uploaded",
+      "summary_waiting": "Your photos upload when the ad is saved.",
+      "summary_done": "All photos are uploaded.",
+      "dnd_picked": "Picked up photo {n}.",
+      "dnd_over": "Over position {n}.",
+      "dnd_dropped": "Photo dropped at position {n}.",
+      "dnd_cancelled": "Move cancelled.",
+      "move_earlier": "Move photo {n} earlier",
+      "move_later": "Move photo {n} later",
+      "moved": "Photo moved to position {n} of {total}."
+    },
+    "picker": {
+      "title": "Select Category",
+      "category": "Category",
+      "subcategory": "Subcategory",
+      "items": "Items",
+      "choose_first": "Choose a category first.",
+      "add": "Add",
+      "back": "Back"
+    },
+    "profile": {
+      "title": "Your Profile",
+      "aside_label": "Your profile and tips",
+      "private": "Private Seller",
+      "business": "Business Seller",
+      "verified": "Verified",
+      "ads": {
+        "one": "{count} Ad",
+        "other": "{count} Ads"
+      },
+      "member_since": "Active since {date}"
+    },
+    "tips": {
+      "title": "Tips",
+      "photos": "Add more than 3 high-quality images.",
+      "price": "Set a realistic price compared to the market.",
+      "honest": "Write an honest and accurate description of the item's condition.",
+      "details": "Include important details such as brand, size, color, and specifications.",
+      "light": "Use natural lighting when taking photos."
+    },
+    "actions": {
+      "add_ads": "Add Ads",
+      "save_draft": "Save Draft",
+      "preview": "Preview",
+      "save_changes": "Save Changes",
+      "edit": "Edit",
+      "publish": "Publish Ad",
+      "confirm_publish": "Confirm & Publish",
+      "my_ads": "Go to My Ads",
+      "post_another": "Post another ad",
+      "view_ad": "View ad"
+    },
+    "preview": {
+      "banner": "This is a preview of your ad. Only you can see it until you publish.",
+      "gallery": "photo gallery",
+      "photo_alt": "{title}, photo {n} of {total}",
+      "photo_count": "Photo {n} of {total}",
+      "previous_photo": "Previous photo",
+      "next_photo": "Next photo",
+      "no_photos": "No photos yet",
+      "created": "Created {time}",
+      "views": {
+        "one": "{count} View",
+        "other": "{count} Views"
+      },
+      "description": "Description",
+      "features": "Features",
+      "ad_id": "Ad ID",
+      "created_on": "Created on",
+      "share": "Share Ad",
+      "report": "Report Ad",
+      "send_message": "Send Message",
+      "follow": "Follow Seller",
+      "favorite": "Add to Favorite",
+      "buyer_note": "Buyers can use these buttons once your ad is live.",
+      "delivery_fee": "Delivery, {amount}",
+      "free_delivery": "Free delivery",
+      "yes": "Yes",
+      "no": "No",
+      "aside_label": "Seller and ad details"
+    },
+    "publish": {
+      "title": "Ready to publish?",
+      "body": "We review every ad before it goes live.",
+      "terms_before": "I agree to the",
+      "terms_link": "listing terms",
+      "new_tab": "(opens in a new tab)",
+      "terms_required": "Please accept the listing terms to publish your ad."
+    },
+    "review": {
+      "title": "Your ad is under review",
+      "body": "We check every ad before it goes live and will notify you as soon as yours is approved.",
+      "live_title": "Your ad is live",
+      "live_body": "Buyers can find it now."
+    },
+    "toast": {
+      "draft_saved": "Your ad was saved as a draft",
+      "changes_saved": "Changes saved",
+      "changes_in_review": "Changes saved. Edits to the text or photos are reviewed before they go live.",
+      "save_failed": "The ad could not be saved. Please try again.",
+      "publish_failed": "The ad could not be published. Please try again.",
+      "daily_limit": "You have reached today's publishing limit. Please try again tomorrow.",
+      "fix_errors": "Please check the highlighted fields."
+    },
+    "errors": {
+      "title_required": "Enter a title for your ad.",
+      "title_min": "Use at least 5 characters.",
+      "title_max": "Keep the title under 120 characters.",
+      "category_required": "Choose a category.",
+      "photos_required": "Add at least one photo.",
+      "description_required": "Describe what you are offering.",
+      "description_min": "Use at least 20 characters.",
+      "description_max": "Keep the description under 5,000 characters.",
+      "price_required": "Enter a price.",
+      "price_invalid": "Enter a number with up to two decimals.",
+      "price_max": "The price can't be more than 9,999,999 QAR.",
+      "fee_invalid": "Enter a number with up to two decimals.",
+      "fee_max": "The delivery fee can't be more than 10,000 QAR.",
+      "postal_code_invalid": "Use Latin letters, numbers, spaces or dashes.",
+      "postal_code_max": "Use at most 10 characters.",
+      "location_required": "Choose a location.",
+      "street_max": "Keep it under 255 characters.",
+      "field_required": "This field is required.",
+      "field_number": "Enter a number.",
+      "field_too_long": "Keep it under 255 characters."
+    },
+    "load_failed": "We couldn't load the categories and areas.",
+    "your_ad": {
+      "title": "Your Ad",
+      "visits": "Visits",
+      "wishlist": "Wishlist",
+      "published": "Publish in"
+    }
+  },
   "home": {
     "breadcrumb": "Home",
     "hero": {

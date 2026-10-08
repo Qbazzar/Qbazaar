@@ -190,26 +190,21 @@ export function useDeleteAdMutation(): UseMutationResult<
 
 export interface PublishAdVariables {
   id: string;
-  /**
-   * Optional `X-Idempotency-Key` so retries dedupe server-side. Callers that
-   * still pass a bare id keep working — the helper below normalises both
-   * shapes.
-   */
+  /** The seller ticked the listing-terms checkbox; the API requires it. */
+  acceptedTerms: true;
+  /** Optional `X-Idempotency-Key` so retries dedupe server-side. */
   idempotencyKey?: string;
 }
 
 export function usePublishAdMutation(): UseMutationResult<
   Ad,
   ApiClientError,
-  string | PublishAdVariables
+  PublishAdVariables
 > {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: string | PublishAdVariables) => {
-      const vars: PublishAdVariables =
-        typeof input === 'string' ? { id: input } : input;
-      return publishAd(vars.id, { idempotencyKey: vars.idempotencyKey });
-    },
+    mutationFn: ({ id, acceptedTerms, idempotencyKey }: PublishAdVariables) =>
+      publishAd(id, { acceptedTerms, idempotencyKey }),
     onSuccess: (ad) => {
       qc.setQueryData(adKeys.detail(ad.id), ad);
       qc.invalidateQueries({ queryKey: adKeys.lists() });
