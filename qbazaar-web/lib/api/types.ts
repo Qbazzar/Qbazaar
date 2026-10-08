@@ -821,7 +821,7 @@ export interface Message {
   };
   /**
    * Populated when `type === 'offer'`. The backend bundles the offer envelope
-   * onto the message so the chat timeline can render an OfferBubble inline
+   * onto the message so the chat timeline can render the offer card inline
    * without an extra round-trip.
    */
   offer?: Offer | null;
@@ -882,7 +882,8 @@ export interface Offer {
 }
 
 export interface CreateOfferRequest {
-  amount: number;
+  /** A decimal string ("1500.50") keeps the amount exact; the API accepts both. */
+  amount: number | string;
   note?: string | null;
 }
 

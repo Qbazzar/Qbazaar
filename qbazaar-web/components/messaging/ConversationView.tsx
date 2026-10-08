@@ -61,7 +61,7 @@ export function ConversationView({ conversationId, onBack }: Props) {
   );
 
   // Real-time push: offer lifecycle event → invalidate offers + messages so
-  // the OfferBubble re-renders with the latest status and any new offer
+  // the offer card re-renders with the latest status and any new offer
   // message lands in the timeline.
   const onOfferEvent = useCallback(
     (_event: OfferEvent, offer: Offer) => {

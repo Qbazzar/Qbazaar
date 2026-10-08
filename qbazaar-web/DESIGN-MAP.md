@@ -61,6 +61,24 @@ Every route in `qbazaar-web/app` mapped to its pixel reference for the M3 reskin
 | `/account/support` | `app/account/support/page.tsx` | none | — | — | — | no reference | Closest: the rows of `my-ads.html` (518:20536) with a status Badge per ticket. |
 | `/account/support/[id]` | `app/account/support/[id]/page.tsx` | none | — | — | — | no reference | Closest: the chat thread of `messages.html` (365:14788); the ticket timeline is the message list. |
 
+## Orders, wallet and promotions
+
+The purchase-request and offer cards of the chat follow 667:30685, 667:31850, 721:41875 and 721:42157 (744: 721:39927, 390: 721:43079); `components/orders/DealCardForMessage` maps the message types to them.
+
+| Route | Next.js file | Reference | 1440 | 744 | 390 | Status | Notes |
+|---|---|---|---|---|---|---|---|
+| `/ads/[id]/buy` | `app/ads/[id]/buy/page.tsx` | `buy-now.html` | 659:58417 | 709:32483 | 709:33450 | matches | The request lands in the chat as a purchase-request card. Offered on live ads with a positive price, fixed or negotiable. |
+| `/ads/[id]/offer` | `app/ads/[id]/offer/page.tsx` | `offer.html` | 657:57378 | 709:32645 | 709:33285 | matches | The offer lands in the chat as an offer card. |
+| `/checkout/[orderId]` | `app/checkout/[orderId]/page.tsx` | `checkout.html` | 682:32513 · new address 689:33725 · done 684:33194 · error 689:33489 | 710:36152 | 710:34891 | partial | Cash only: the other payment methods stay hidden until a gateway exists. The summary has no product photo or "Sold by" line, because the order carries only the ad's id and title. |
+| `/account/orders` | `app/account/orders/page.tsx` | `sales-overview.html` | 502:21437 | 573:33241 | 600:30639 | partial | Purchases and Sales pill tabs (455:14636) where the reference shows sales only. No stat tiles: the API has no sales summary. |
+| `/account/orders/[id]` | `app/account/orders/[id]/page.tsx` | none | — | — | — | no reference | Closest: the checkout panels and summary card (682:32513) for the progress, the actions and the totals. |
+| `/account/wallet` | `app/account/wallet/page.tsx` | `wallet.html` | 502:22401 | 563:31406 | 613:31879 | partial | In the Settings shell, right after Profile. The tiles show the balance, the commission owed and the withdrawable amount in place of revenue, sales and pending payout; the history is the ledger statement. |
+| `/account/wallet/settlements` | `app/account/wallet/settlements/page.tsx` | none | — | — | — | no reference | Closest: the full-width page of `payment-method.html` (502:21900, 569:32222, 613:32185) with the checkout option cards (682:32513) and the "Transaction History" table of 502:22401. |
+| `/account/wallet/withdrawals` | `app/account/wallet/withdrawals/page.tsx` | none | — | — | — | no reference | Same as the settlements. |
+| `/account/wallet/bank-accounts` | `app/account/wallet/bank-accounts/page.tsx` | `payment-method.html` | 502:21900 · list 504:25438 | 569:32222 · list 573:34759 | 613:32185 · list 603:31189 | partial | The "Payment Method" button of the wallet header opens it. Payout IBANs, masked, in the rows of the saved-method list, with the add form under it. |
+| `/account/promotions` | `app/account/promotions/page.tsx` | none | — | — | — | no reference | Closest: the sales-overview frame (502:21437) with its table. |
+| `/account/ads/[id]/promote` | `app/account/ads/[id]/promote/page.tsx` | none | — | — | — | no reference | Closest: the checkout panels and option cards (682:32513). |
+
 ## Auth
 
 | Route | Next.js file | Reference | 1440 | 744 | 390 | Status | Notes |
@@ -92,10 +110,10 @@ Routes without UI, so nothing to design: `app/api/auth/refresh/route.ts`, `app/a
 
 | | Count |
 |---|---|
-| Rows (40 `page.tsx` routes, the error boundaries, the 404 page) | 42 |
-| matches | 15 |
-| partial | 12 |
-| no reference (closest reference proposed for each) | 15 |
+| Rows (51 `page.tsx` routes, the error boundaries, the 404 page) | 53 |
+| matches | 17 |
+| partial | 16 |
+| no reference (closest reference proposed for each) | 20 |
 
 Plus the 3 layouts, which all match.
 
@@ -105,12 +123,6 @@ Future work. These are **not** built in FE-16.1/16.2; the task that owns each is
 
 | Reference page | Figma frames (1440 / 744 / 390) | What it is |
 |---|---|---|
-| `buy-now.html` | 659:58417 / 709:32483 / 709:33450 | Buy Now request [FE-16.8] |
-| `offer.html` | 657:57378 / 709:32645 / 709:33285 | Make an Offer page (today offers exist only inside chat) [FE-16.8] |
-| `checkout.html` | 682:32513, 689:33725, 684:33194, 689:33489 / 710:36152 / 710:34891 | Checkout, cash and QNB [FE-16.8] |
-| `payment-method.html` | 504:25438 / 573:34759 / 603:31189 | Payment methods [FE-16.8] |
-| `wallet.html` | 502:22401 / 563:31406 / 613:31879 | Wallet [FE-16.8] |
-| `sales-overview.html` | 502:21437 / 573:33241 / 600:30639 | Seller sales dashboard [FE-16.8] |
 | `users.html` | 376:9466, 376:9268 / 515:18203, 514:18424 / 600:25084, 600:25354 | Followers / following [FE-16.6] |
 | `premium.html` | 397:9995 / — / — | Premium subscription [not planned in M3] |
 | `financing.html` | no frame (prototype-only page) | Flexible financing [not planned in M3] |
