@@ -73,9 +73,9 @@ const controlClass = 'rounded-qb-lg placeholder:text-qb-caption';
 const singleLineControlClass = cn(controlClass, 'h-11');
 const actionClass = 'h-[46px] rounded-qb-lg qb-tablet:h-11 qb-tablet:rounded-qb-sm';
 
-/** Error text announced as soon as it appears; Field links it to the control. */
+/** Translated error text; Field announces it and links it to the control. */
 function fieldError(message?: string) {
-  return message ? <span role="alert">{translateMaybeKey(message)}</span> : undefined;
+  return message ? translateMaybeKey(message) : undefined;
 }
 
 export function NewTicketClient() {

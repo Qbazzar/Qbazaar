@@ -9,6 +9,7 @@
  * Pure presentational + locale-aware via `Intl.NumberFormat`. Server-friendly
  * (no hooks, no client-only APIs).
  */
+import { intlLocale } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -32,8 +33,7 @@ const CURRENCY_LABEL_AR = 'ر.ق';
 const CURRENCY_LABEL_EN = 'QAR';
 
 function formatAmount(price: number, locale: 'ar' | 'en'): string {
-  const lang = locale === 'ar' ? 'ar-EG' : 'en-US';
-  return new Intl.NumberFormat(lang, { maximumFractionDigits: 0 }).format(price);
+  return new Intl.NumberFormat(intlLocale(locale), { maximumFractionDigits: 0 }).format(price);
 }
 
 export function PriceTag({

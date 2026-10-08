@@ -111,7 +111,7 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
         <Field
           label={t('search.save_search.name_label', 'اسم البحث')}
-          error={nameError ? <span role="alert">{translateMaybeKey(nameError)}</span> : undefined}
+          error={nameError ? translateMaybeKey(nameError) : undefined}
           required
         >
           {(control) => (
