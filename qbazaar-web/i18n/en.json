@@ -526,34 +526,105 @@
   "users": {
     "profile": {
       "joined": "Member since {date}",
-      "ads_count": "{count} active ads",
-      "account_type": {
-        "private": "Private account",
-        "business": "Business account"
-      },
       "tabs": {
-        "ads": "Ads",
-        "about": "About"
+        "company_ads": "Ads ({count})",
+        "about_us": "About us",
+        "legal": "Legal Info"
       },
-      "send_message": "Send message",
       "send_message_soon": "Messaging is coming soon",
-      "report": "Report",
-      "report_soon": "Reporting is coming soon",
-      "no_bio": "This member hasn't written a bio yet.",
       "ads_empty_title": "No active ads",
       "ads_empty_body": "{name} doesn't have any active ads right now.",
       "not_found_title": "User not found",
-      "not_found_body": "The account may have been removed or the link is invalid."
+      "not_found_body": "The account may have been removed or the link is invalid.",
+      "verified": "Verified seller",
+      "seller_type": {
+        "private": "Private Seller",
+        "business": "Business Seller"
+      },
+      "info": "Info",
+      "followers": "Followers",
+      "member_since": "Member Since",
+      "ads_number": "Ads no.",
+      "highlights": "Seller Highlights",
+      "verified_phone": "Verified phone",
+      "verified_email": "Verified email",
+      "active_listings": "Active Listings",
+      "ads_available": {
+        "one": "{count} Ad Available",
+        "other": "{count} Ads Available"
+      },
+      "load_more": "Load more ads",
+      "message": "Message",
+      "ads_label": {
+        "one": "Ad",
+        "other": "Ads"
+      },
+      "followers_label": {
+        "one": "Follower",
+        "other": "Followers"
+      },
+      "about_empty": "This company hasn't added a description yet.",
+      "legal_empty": "This company hasn't added its legal details yet.",
+      "contact": {
+        "phone": "Phone",
+        "email": "Email",
+        "website": "Website",
+        "address": "Address",
+        "hours": "Opening hours",
+        "closed": "Closed"
+      },
+      "legal": {
+        "imprint": "Imprint",
+        "registration": "Commercial registration",
+        "contact": "Contact"
+      }
     },
     "block": {
       "button": "Block",
       "blocking": "Blocking…",
       "confirm_title": "Block {name}?",
       "confirm_body": "They won't be able to message you or see your ads. You can unblock them later from your account settings.",
-      "confirm": "Block",
+      "confirm": "Block User",
       "cancel": "Cancel",
       "success": "User blocked",
-      "already_blocked": "This user is already blocked"
+      "errors": {
+        "admin": "This account can't be blocked",
+        "self": "You can't block yourself"
+      }
+    },
+    "follow": {
+      "follow": "Follow",
+      "follow_seller": "Follow Seller",
+      "following": "Following",
+      "followed": "You're following {name}",
+      "unfollowed": "You unfollowed {name}",
+      "errors": {
+        "self": "You can't follow yourself",
+        "blocked": "You can't follow this user"
+      }
+    }
+  },
+  "reviews": {
+    "title": "Reviews",
+    "count": {
+      "one": "{count} review",
+      "other": "{count} reviews"
+    },
+    "empty": "No reviews yet.",
+    "rate_seller": "Rate the seller",
+    "rating_label": "Your rating",
+    "stars": "{count} of {max} stars",
+    "stars_label": "{rating} out of {max}",
+    "comment_label": "Your comment",
+    "comment_placeholder": "Share your experience with this seller (optional)",
+    "submit": "Submit review",
+    "submit_success": "Thanks, your review was sent",
+    "deleted_user": "Former member",
+    "errors": {
+      "not_eligible": "You can rate the seller only after a completed deal (an accepted offer) on this ad",
+      "already": "You have already rated this ad",
+      "own": "You can't rate your own ad",
+      "rating_required": "Choose a rating first"
     }
   },
   "categories": {
@@ -963,7 +1034,9 @@
       "error_size": "File is larger than 10 MB",
       "error_reorder": "Could not save the new order",
       "error_delete": "Could not delete the image"
-    }
+    },
+    "carousel": "carousel",
+    "slide": "slide"
   },
   "ads": {
     "list": {
@@ -1007,11 +1080,27 @@
     },
     "detail": {
       "description": "Description",
-      "specs": "Details",
-      "safety_title": "Stay safe when meeting",
-      "safety_body": "Meet in public, inspect goods before paying, and never wire money to strangers.",
-      "ad_id": "Ad ID {id}",
-      "views": "{count} views"
+      "views": {
+        "one": "{count} view",
+        "other": "{count} views"
+      },
+      "gallery": "Photos of {title}",
+      "slide": "Photo {current} of {total}",
+      "technical_data": "Technical Data",
+      "features": "Features & Extras",
+      "condition": "Condition",
+      "seller": "Seller",
+      "seller_ads": {
+        "one": "{count} Ad",
+        "other": "{count} Ads"
+      },
+      "seller_ads_title": "More Ads From Seller",
+      "facts": "Ad details",
+      "ad_id_label": "Ad ID",
+      "posted_on": "Posted on",
+      "share_ad": "Share Ad",
+      "report_ad": "Report Ad",
+      "map_label": "Map of {place}"
     },
     "form": {
       "title": "Ad title",
@@ -1067,12 +1156,12 @@
       "save_for_later": "Save ad",
       "save_soon": "Saving lands soon",
       "contact_seller": "Contact seller",
-      "call": "Show phone",
-      "call_revealed": "Tap to call",
-      "share": "Share",
       "share_copied": "Link copied",
       "report": "Report",
-      "report_soon": "Reporting lands soon"
+      "report_soon": "Reporting lands soon",
+      "buy_now": "Buy Now",
+      "make_offer": "Make an Offer",
+      "send_message": "Send Message"
     },
     "description": {
       "show_more": "Show more",
@@ -1095,7 +1184,6 @@
       "saved": "Changes saved"
     },
     "similar_section": {
-      "kicker": "Suggested for you",
       "title": "Similar ads"
     },
     "featured_section": {
@@ -1900,45 +1988,36 @@
   "reports": {
     "title": "Report",
     "dialog": {
-      "title": "Report inappropriate content",
-      "description": "Help us keep QBazaar safe. Our team will review your report."
+      "heading": "Select a problem to report"
     },
-    "category_label": "Reason",
     "description_label": "Additional details (optional)",
     "description_placeholder": "Add any context that helps us review the report.",
     "submit": "Submit report",
-    "cancel": "Cancel",
     "categories": {
       "spam": {
-        "label": "Spam",
-        "hint": "Repeated listings or unwanted promotion."
+        "label": "Spam"
       },
       "fraud": {
-        "label": "Fraud",
-        "hint": "Attempted scam or misleading listing."
+        "label": "Fraud"
       },
       "inappropriate": {
-        "label": "Inappropriate content",
-        "hint": "Images or text that don't belong here."
+        "label": "Inappropriate content"
       },
       "offensive": {
-        "label": "Offensive content",
-        "hint": "Hateful language or harassment."
+        "label": "Offensive content"
       },
       "duplicate": {
-        "label": "Duplicate listing",
-        "hint": "The same ad posted more than once."
+        "label": "Duplicate listing"
       },
       "wrong_category": {
-        "label": "Wrong category",
-        "hint": "Listed under the wrong section."
+        "label": "Wrong category"
       },
       "other": {
-        "label": "Other",
-        "hint": "Tell us what's wrong in the details box."
+        "label": "Other"
       }
     },
     "success_toast": "Report submitted",
+    "reported": "Reported!",
     "errors": {
       "invalid_target": "This item can't be reported",
       "self": "You can't report yourself",
@@ -2103,5 +2182,32 @@
       "last": "Last page",
       "page": "Page {page}"
     }
+  },
+  "companies": {
+    "title": "Companies",
+    "count": {
+      "one": "Local Company in Qatar",
+      "other": "Local Companies in Qatar"
+    },
+    "hero": "Find the Right {highlight}",
+    "hero_highlight": "Companies",
+    "subtitle": "Explore companies, discover their details, and easily search for the services or opportunities that match your needs.",
+    "search_label": "Search companies",
+    "search_placeholder": "Search Companies..",
+    "search": "Search",
+    "followers": {
+      "one": "{count} follower",
+      "other": "{count} followers"
+    },
+    "ads": {
+      "one": "{count} Ad",
+      "other": "{count} Ads"
+    },
+    "no_results_title": "No companies match “{query}”",
+    "no_results_body": "Check the spelling or try another name.",
+    "empty_title": "No companies to show here",
+    "show_all": "Show all companies",
+    "error_title": "Companies couldn't be loaded",
+    "error_body": "Please try again in a moment."
   }
 }

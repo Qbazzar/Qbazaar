@@ -7,6 +7,7 @@
  * `{ success, data }` envelope so callers stay envelope-agnostic.
  */
 import { isAxiosError } from 'axios';
+import type { Locale } from '@/lib/i18n/locale';
 import { api } from './client';
 import { ApiClientError } from './auth';
 import type {
@@ -20,6 +21,11 @@ import type {
 } from './types';
 
 const BASE = '/api/v1/ads';
+
+/** `?lang=` outranks the user's saved language and Accept-Language on the API. */
+function langParams(locale: Locale | undefined): { lang: Locale } | undefined {
+  return locale ? { lang: locale } : undefined;
+}
 
 function toApiClientError(err: unknown): ApiClientError {
   if (isAxiosError<ErrorEnvelope>(err) && err.response?.data?.error) {
@@ -90,10 +96,15 @@ export async function listAds(
   }
 }
 
-export async function getAd(id: string): Promise<Ad> {
+/**
+ * One ad. `locale` asks for the category's option labels in the page language
+ * rather than the signed-in user's or the browser's.
+ */
+export async function getAd(id: string, locale?: Locale): Promise<Ad> {
   try {
     const { data } = await api.get<SuccessEnvelope<Ad>>(
       `${BASE}/${encodeURIComponent(id)}`,
+      { params: langParams(locale) },
     );
     return data.data;
   } catch (err) {
@@ -142,10 +153,11 @@ export async function deleteAd(id: string): Promise<void> {
  * `GET /api/v1/ads/{id}/similar`. Returns an unwrapped list — the endpoint
  * does not paginate.
  */
-export async function getSimilarAds(id: string): Promise<AdSummary[]> {
+export async function getSimilarAds(id: string, locale?: Locale): Promise<AdSummary[]> {
   try {
     const { data } = await api.get<SuccessEnvelope<AdSummary[]>>(
       `${BASE}/${encodeURIComponent(id)}/similar`,
+      { params: langParams(locale) },
     );
     return data.data;
   } catch (err) {

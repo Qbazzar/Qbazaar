@@ -1,99 +1,90 @@
 'use client';
 
 /**
- * Read-only reviews block for a seller's public profile: a rating summary
- * (average + count + stars) followed by the list of individual reviews.
+ * A seller's reviews: the average with its stars and count, then one row per
+ * review in the notification-row style of the design (455:14636).
  */
-import { useQuery } from '@tanstack/react-query';
-import Image from 'next/image';
-import { getUserReviews } from '@/lib/api/users';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { RatingStars } from './RatingStars';
-import { formatRelativeTime } from '@/components/messaging/relative-time';
-import { t } from '@/lib/i18n/messages';
+import { useId } from 'react';
+import { Clock } from 'lucide-react';
 
-export function SellerReviews({
-  userId,
-  ratingAvg,
-  ratingCount,
-}: {
+import { Avatar } from '@/components/design-system/Avatar';
+import { cardVariants } from '@/components/design-system/Card';
+import { Icon } from '@/components/design-system/Icon';
+import { formatRating, formatTimeAgo } from '@/lib/ads/display';
+import { getLocale } from '@/lib/i18n/locale';
+import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
+import { useUserReviewsQuery } from '@/lib/queries/users';
+import { cn } from '@/lib/utils';
+
+import { RatingStars } from './RatingStars';
+
+interface SellerReviewsProps {
   userId: string;
   ratingAvg: number;
   ratingCount: number;
-}) {
-  const { data, isLoading } = useQuery({
-    queryKey: ['users', userId, 'reviews'],
-    queryFn: () => getUserReviews(userId),
-    enabled: ratingCount > 0,
-  });
+  className?: string;
+}
+
+const row = cardVariants({ large: true, elevated: true, padding: 'none' });
+
+export function SellerReviews({ userId, ratingAvg, ratingCount, className }: SellerReviewsProps) {
+  const locale = getLocale();
+  const titleId = useId();
+  const { data, isPending } = useUserReviewsQuery(userId, ratingCount > 0);
+  const reviews = data?.data ?? [];
 
   return (
-    <section className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1 sm:p-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-xl tracking-tight">
-          {t('reviews.title', 'التقييمات')}
+    <section aria-labelledby={titleId} className={cn('font-qb', className)}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 id={titleId} className="text-qb-body-lg font-medium tracking-normal text-qb-ink-title qb-tablet:text-qb-h4">
+          {t('reviews.title')}
         </h2>
         {ratingCount > 0 ? (
-          <div className="flex items-center gap-2">
-            <span className="text-ink-900 text-lg font-bold">
-              {ratingAvg.toFixed(1)}
-            </span>
+          <p className="flex items-center gap-2 text-qb-caption text-qb-ink-subtle">
+            <span className="text-qb-body-lg font-semibold text-qb-ink">{formatRating(ratingAvg, locale)}</span>
             <RatingStars value={ratingAvg} />
-            <span className="text-ink-500 text-sm">
-              ({ratingCount})
-            </span>
-          </div>
+            <span>{tPlural('reviews.count', ratingCount, locale)}</span>
+          </p>
         ) : null}
-      </header>
+      </div>
 
       {ratingCount === 0 ? (
-        <p className="text-ink-500 mt-4 text-sm">
-          {t('reviews.empty', 'لا توجد تقييمات بعد.')}
-        </p>
-      ) : isLoading ? (
-        <p className="text-ink-500 mt-4 text-sm">
-          {t('common.loading', 'جاري التحميل…')}
-        </p>
+        <p className={cn(row, 'mt-4 p-6 text-qb-caption text-qb-ink-subtle')}>{t('reviews.empty')}</p>
+      ) : isPending ? (
+        <div aria-busy="true" className="mt-4 flex flex-col gap-4">
+          <span className="sr-only">{t('common.loading')}</span>
+          <div aria-hidden="true" className={cn(row, 'h-[104px] animate-pulse bg-qb-fill motion-reduce:animate-none')} />
+          <div aria-hidden="true" className={cn(row, 'h-[104px] animate-pulse bg-qb-fill motion-reduce:animate-none')} />
+        </div>
       ) : (
-        <ul className="mt-4 space-y-4">
-          {(data?.data ?? []).map((review) => (
-            <li
-              key={review.id}
-              className="border-ink-100 flex gap-3 border-b pb-4 last:border-0 last:pb-0"
-            >
-              <Avatar className="size-9 shrink-0">
-                {review.reviewer?.avatar_url ? (
-                  <Image
-                    src={review.reviewer.avatar_url}
-                    alt={review.reviewer.full_name}
-                    width={36}
-                    height={36}
-                    className="size-full rounded-full object-cover"
-                  />
-                ) : (
-                  <AvatarFallback>
-                    {review.reviewer?.full_name?.charAt(0) ?? '؟'}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-ink-900 truncate text-sm font-semibold">
-                    {review.reviewer?.full_name ?? '—'}
-                  </span>
-                  <span className="text-ink-400 shrink-0 text-xs">
-                    {formatRelativeTime(review.created_at)}
-                  </span>
-                </div>
-                <RatingStars value={review.rating} size={13} className="mt-0.5" />
-                {review.comment ? (
-                  <p className="text-ink-700 mt-1 text-sm leading-relaxed whitespace-pre-wrap break-words">
-                    {review.comment}
+        <ul className="mt-4 flex flex-col gap-4">
+          {reviews.map((review) => {
+            const reviewer = review.reviewer?.full_name ?? t('reviews.deleted_user');
+            return (
+              <li key={review.id} className={cn(row, 'flex gap-4 p-4 qb-tablet:p-5')}>
+                {/* The name follows in text. */}
+                <span aria-hidden="true" className="flex shrink-0">
+                  <Avatar name={reviewer} src={review.reviewer?.avatar_url} size="md" tone="brand" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p dir="auto" className="truncate text-qb-body font-medium text-qb-ink-body">
+                    {reviewer}
                   </p>
-                ) : null}
-              </div>
-            </li>
-          ))}
+                  <RatingStars value={review.rating} size={14} className="mt-1.5" />
+                  {review.comment ? (
+                    <p dir="auto" className="mt-2 text-qb-caption leading-[1.5] break-words whitespace-pre-line text-qb-ink-muted">
+                      {review.comment}
+                    </p>
+                  ) : null}
+                  <p className="mt-2 flex items-center gap-1.5 text-qb-label text-qb-ink-subtle">
+                    <Icon icon={Clock} size="sm" />
+                    {formatTimeAgo(review.created_at, locale)}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

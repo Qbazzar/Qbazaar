@@ -1,58 +1,78 @@
 'use client';
 
 /**
- * Collapsible long-form ad description.
- *
- * Renders the first ~6 lines clamped, with a "show more / show less" toggle
- * when the content actually overflows. The toggle is hidden if the
- * description is short enough to fit unclamped — measured client-side after
- * mount with a ResizeObserver-free trick (compare scrollHeight to clientHeight).
+ * "Description" panel of the ad detail. Long texts are clamped to six lines
+ * with a "show more / show less" toggle, which only appears when the text
+ * actually overflows (measured after mount). While clamped, the toggle sits
+ * over the end of the last line, so its arrival moves nothing on the page.
  */
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useId, useRef, useState } from 'react';
+
+import { focusRing } from '@/components/design-system/focus-ring';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-interface Props {
+import { detailCard, detailCardMain, detailCardTitle } from './detail-card';
+
+interface AdDescriptionProps {
   text: string;
   className?: string;
 }
 
-export function AdDescription({ text, className }: Props) {
+const lineHeight = 'leading-[22px] qb-tablet:leading-6';
+
+export function AdDescription({ text, className }: AdDescriptionProps) {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
-  const ref = useRef<HTMLParagraphElement>(null);
+  const textRef = useRef<HTMLParagraphElement>(null);
+  const titleId = useId();
+  const textId = useId();
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    setOverflows(el.scrollHeight > el.clientHeight + 1);
+    const element = textRef.current;
+    if (!element) return;
+    setOverflows(element.scrollHeight > element.clientHeight + 1);
   }, [text]);
 
   return (
-    <div className={cn('space-y-2', className)}>
-      <p
-        ref={ref}
-        className={cn(
-          'text-ink-700 whitespace-pre-line text-[15px] leading-relaxed',
-          !expanded && 'line-clamp-6',
-        )}
-      >
-        {text}
-      </p>
-      {overflows ? (
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          onClick={() => setExpanded((v) => !v)}
-          className="text-coral px-0"
+    <section aria-labelledby={titleId} className={cn(detailCard, detailCardMain, className)}>
+      <h2 id={titleId} className={detailCardTitle}>
+        {t('ads.detail.description')}
+      </h2>
+      <div className="relative mt-4">
+        <p
+          id={textId}
+          ref={textRef}
+          dir="auto"
+          className={cn(
+            'text-qb-micro break-words whitespace-pre-line text-qb-ink-subtle qb-desktop:text-qb-body',
+            lineHeight,
+            !expanded && 'line-clamp-6',
+          )}
         >
-          {expanded
-            ? t('ads.description.show_less', 'عرض أقل')
-            : t('ads.description.show_more', 'عرض المزيد')}
-        </Button>
-      ) : null}
-    </div>
+          {text}
+        </p>
+        {overflows ? (
+          // One button in both states, so it keeps the keyboard focus when it moves under the text.
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls={textId}
+            onClick={() => setExpanded((value) => !value)}
+            className={cn(
+              'rounded-qb-xs text-qb-caption font-medium text-qb-brand hover:text-qb-brand-active',
+              lineHeight,
+              focusRing,
+              'focus-visible:outline-solid',
+              expanded
+                ? 'mt-2'
+                : 'absolute end-0 bottom-0 from-qb-surface from-60% to-transparent ps-10 ltr:bg-linear-to-l rtl:bg-linear-to-r',
+            )}
+          >
+            {expanded ? t('ads.description.show_less') : t('ads.description.show_more')}
+          </button>
+        ) : null}
+      </div>
+    </section>
   );
 }

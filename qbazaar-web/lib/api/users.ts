@@ -1,18 +1,21 @@
 /**
- * Typed users API client — public profile + block / unblock interactions.
+ * Typed users API client — public profile, follows and block / unblock.
  *
- * Block + unblock require the Bearer token; public-profile and user-ads are
- * anonymous-friendly per the contract. All errors funnel through
+ * Follow and block require the Bearer token; public-profile and user-ads are
+ * anonymous-friendly per the contract (with a token, the profile also says
+ * whether the caller follows the user). All errors funnel through
  * `ApiClientError` so the UI can switch on the stable `USER_*` codes.
  */
+import type { Locale } from '@/lib/i18n/locale';
 import { api } from './client';
 import { ApiClientError } from './auth';
 import { isAxiosError } from 'axios';
 import type {
+  AdSummary,
   CreateReviewRequest,
   ErrorEnvelope,
+  FollowState,
   PaginatedEnvelope,
-  PublicUserAd,
   PublicUserProfile,
   Review,
   SuccessEnvelope,
@@ -62,14 +65,16 @@ export async function getPublicProfile(
 export interface GetUserAdsParams {
   page?: number;
   per_page?: number;
+  /** The page language, for the card chips (outranks the user's saved language). */
+  lang?: Locale;
 }
 
 export async function getUserAds(
   userId: string,
   params: GetUserAdsParams = {},
-): Promise<PaginatedEnvelope<PublicUserAd>> {
+): Promise<PaginatedEnvelope<AdSummary>> {
   try {
-    const { data } = await api.get<PaginatedEnvelope<PublicUserAd>>(
+    const { data } = await api.get<PaginatedEnvelope<AdSummary>>(
       `/api/v1/users/${encodeURIComponent(userId)}/ads`,
       { params },
     );
@@ -104,6 +109,28 @@ export async function createReview(
     const { data } = await api.post<SuccessEnvelope<Review>>(
       `/api/v1/ads/${encodeURIComponent(adId)}/reviews`,
       payload,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+export async function followUser(userId: string): Promise<FollowState> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<FollowState>>(
+      `/api/v1/users/${encodeURIComponent(userId)}/follow`,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+export async function unfollowUser(userId: string): Promise<FollowState> {
+  try {
+    const { data } = await api.delete<SuccessEnvelope<FollowState>>(
+      `/api/v1/users/${encodeURIComponent(userId)}/follow`,
     );
     return data.data;
   } catch (err) {

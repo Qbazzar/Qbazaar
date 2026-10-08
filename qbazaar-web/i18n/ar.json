@@ -538,34 +538,121 @@
   "users": {
     "profile": {
       "joined": "عضو منذ {date}",
-      "ads_count": "{count} إعلان نشط",
-      "account_type": {
-        "private": "حساب شخصي",
-        "business": "حساب تجاري"
-      },
       "tabs": {
-        "ads": "الإعلانات",
-        "about": "نبذة"
+        "company_ads": "الإعلانات ({count})",
+        "about_us": "من نحن",
+        "legal": "المعلومات القانونية"
       },
-      "send_message": "أرسل رسالة",
       "send_message_soon": "ميزة المراسلة قادمة قريباً",
-      "report": "الإبلاغ",
-      "report_soon": "ميزة الإبلاغ قادمة قريباً",
-      "no_bio": "لم يكتب هذا المستخدم نبذة بعد.",
       "ads_empty_title": "لا توجد إعلانات",
       "ads_empty_body": "ليس لدى {name} أي إعلانات نشطة حالياً.",
       "not_found_title": "لم نعثر على هذا المستخدم",
-      "not_found_body": "ربما تم حذف الحساب أو الرابط غير صحيح."
+      "not_found_body": "ربما تم حذف الحساب أو الرابط غير صحيح.",
+      "verified": "بائع موثّق",
+      "seller_type": {
+        "private": "بائع فردي",
+        "business": "بائع تجاري"
+      },
+      "info": "معلومات",
+      "followers": "المتابعون",
+      "member_since": "عضو منذ",
+      "ads_number": "عدد الإعلانات",
+      "highlights": "مميزات البائع",
+      "verified_phone": "رقم هاتف موثّق",
+      "verified_email": "بريد إلكتروني موثّق",
+      "active_listings": "الإعلانات النشطة",
+      "ads_available": {
+        "zero": "{count} إعلان متاح",
+        "one": "إعلان واحد متاح",
+        "two": "إعلانان متاحان",
+        "few": "{count} إعلانات متاحة",
+        "many": "{count} إعلانًا متاحًا",
+        "other": "{count} إعلان متاح"
+      },
+      "load_more": "تحميل المزيد من الإعلانات",
+      "message": "مراسلة",
+      "ads_label": {
+        "zero": "إعلان",
+        "one": "إعلان",
+        "two": "إعلان",
+        "few": "إعلانات",
+        "many": "إعلانًا",
+        "other": "إعلان"
+      },
+      "followers_label": {
+        "zero": "متابع",
+        "one": "متابع",
+        "two": "متابع",
+        "few": "متابعين",
+        "many": "متابعًا",
+        "other": "متابع"
+      },
+      "about_empty": "لم تُضف هذه الشركة وصفاً بعد.",
+      "legal_empty": "لم تُضف هذه الشركة بياناتها القانونية بعد.",
+      "contact": {
+        "phone": "الهاتف",
+        "email": "البريد الإلكتروني",
+        "website": "الموقع الإلكتروني",
+        "address": "العنوان",
+        "hours": "ساعات العمل",
+        "closed": "مغلق"
+      },
+      "legal": {
+        "imprint": "بيانات الشركة",
+        "registration": "السجل التجاري",
+        "contact": "التواصل"
+      }
     },
     "block": {
       "button": "حظر",
       "blocking": "جاري الحظر…",
       "confirm_title": "حظر {name}؟",
       "confirm_body": "لن يستطيع مراسلتك أو رؤية إعلاناتك. يمكنك إلغاء الحظر لاحقاً من إعدادات حسابك.",
-      "confirm": "تأكيد الحظر",
+      "confirm": "حظر المستخدم",
       "cancel": "إلغاء",
       "success": "تم حظر المستخدم",
-      "already_blocked": "هذا المستخدم محظور بالفعل"
+      "errors": {
+        "admin": "لا يمكن حظر هذا الحساب",
+        "self": "لا يمكنك حظر نفسك"
+      }
+    },
+    "follow": {
+      "follow": "متابعة",
+      "follow_seller": "متابعة البائع",
+      "following": "تتابع",
+      "followed": "أنت الآن تتابع {name}",
+      "unfollowed": "ألغيت متابعة {name}",
+      "errors": {
+        "self": "لا يمكنك متابعة نفسك",
+        "blocked": "لا يمكنك متابعة هذا المستخدم"
+      }
+    }
+  },
+  "reviews": {
+    "title": "التقييمات",
+    "count": {
+      "zero": "{count} تقييم",
+      "one": "تقييم واحد",
+      "two": "تقييمان",
+      "few": "{count} تقييمات",
+      "many": "{count} تقييمًا",
+      "other": "{count} تقييم"
+    },
+    "empty": "لا توجد تقييمات بعد.",
+    "rate_seller": "قيّم البائع",
+    "rating_label": "تقييمك",
+    "stars": "{count} من {max} نجوم",
+    "stars_label": "{rating} من {max}",
+    "comment_label": "تعليقك",
+    "comment_placeholder": "شارك تجربتك مع هذا البائع (اختياري)",
+    "submit": "إرسال التقييم",
+    "submit_success": "تم إرسال تقييمك، شكراً لك",
+    "deleted_user": "عضو سابق",
+    "errors": {
+      "not_eligible": "يمكنك تقييم البائع بعد إتمام صفقة (عرض مقبول) على هذا الإعلان فقط",
+      "already": "لقد قيّمت هذا الإعلان من قبل",
+      "own": "لا يمكنك تقييم إعلانك الخاص",
+      "rating_required": "اختر عدد النجوم أولاً"
     }
   },
   "categories": {
@@ -1019,7 +1106,9 @@
       "error_size": "الملف أكبر من 10 ميغابايت",
       "error_reorder": "تعذّر حفظ الترتيب",
       "error_delete": "تعذّر حذف الصورة"
-    }
+    },
+    "carousel": "عرض صور",
+    "slide": "صورة"
   },
   "ads": {
     "list": {
@@ -1063,11 +1152,35 @@
     },
     "detail": {
       "description": "الوصف",
-      "specs": "التفاصيل",
-      "safety_title": "ابقَ آمناً عند اللقاء",
-      "safety_body": "التق في مكان عام، افحص البضاعة قبل الدفع، ولا ترسل أموالاً لأشخاص لم تقابلهم.",
-      "ad_id": "رقم الإعلان {id}",
-      "views": "{count} مشاهدة"
+      "views": {
+        "zero": "{count} مشاهدة",
+        "one": "مشاهدة واحدة",
+        "two": "مشاهدتان",
+        "few": "{count} مشاهدات",
+        "many": "{count} مشاهدة",
+        "other": "{count} مشاهدة"
+      },
+      "gallery": "صور {title}",
+      "slide": "الصورة {current} من {total}",
+      "technical_data": "البيانات الفنية",
+      "features": "المزايا والإضافات",
+      "condition": "الحالة",
+      "seller": "البائع",
+      "seller_ads": {
+        "zero": "{count} إعلان",
+        "one": "إعلان واحد",
+        "two": "إعلانان",
+        "few": "{count} إعلانات",
+        "many": "{count} إعلانًا",
+        "other": "{count} إعلان"
+      },
+      "seller_ads_title": "إعلانات أخرى من البائع",
+      "facts": "تفاصيل الإعلان",
+      "ad_id_label": "رقم الإعلان",
+      "posted_on": "تاريخ النشر",
+      "share_ad": "مشاركة الإعلان",
+      "report_ad": "الإبلاغ عن الإعلان",
+      "map_label": "خريطة {place}"
     },
     "form": {
       "title": "عنوان الإعلان",
@@ -1123,12 +1236,12 @@
       "save_for_later": "حفظ الإعلان",
       "save_soon": "الحفظ متاح قريباً",
       "contact_seller": "تواصل مع البائع",
-      "call": "إظهار الرقم",
-      "call_revealed": "اضغط للاتصال",
-      "share": "مشاركة",
       "share_copied": "تم نسخ الرابط",
       "report": "إبلاغ",
-      "report_soon": "الإبلاغ متاح قريباً"
+      "report_soon": "الإبلاغ متاح قريباً",
+      "buy_now": "اشترِ الآن",
+      "make_offer": "قدّم عرضاً",
+      "send_message": "أرسل رسالة"
     },
     "description": {
       "show_more": "عرض المزيد",
@@ -1151,7 +1264,6 @@
       "saved": "تم حفظ التعديلات"
     },
     "similar_section": {
-      "kicker": "مختار لك",
       "title": "إعلانات مشابهة"
     },
     "featured_section": {
@@ -1968,45 +2080,36 @@
   "reports": {
     "title": "إبلاغ",
     "dialog": {
-      "title": "الإبلاغ عن محتوى مخالف",
-      "description": "ساعدنا في الحفاظ على QBazaar آمناً. سيتم مراجعة بلاغك من قبل فريقنا."
+      "heading": "اختر سبب الإبلاغ"
     },
-    "category_label": "سبب الإبلاغ",
     "description_label": "تفاصيل إضافية (اختياري)",
     "description_placeholder": "اكتب أي تفاصيل تساعدنا على مراجعة بلاغك.",
     "submit": "إرسال البلاغ",
-    "cancel": "إلغاء",
     "categories": {
       "spam": {
-        "label": "محتوى دعائي",
-        "hint": "إعلان متكرر أو ترويج غير مرغوب فيه."
+        "label": "محتوى دعائي"
       },
       "fraud": {
-        "label": "احتيال",
-        "hint": "محاولة نصب أو إعلان كاذب."
+        "label": "احتيال"
       },
       "inappropriate": {
-        "label": "محتوى غير لائق",
-        "hint": "صور أو نصوص لا تناسب المنصة."
+        "label": "محتوى غير لائق"
       },
       "offensive": {
-        "label": "محتوى مسيء",
-        "hint": "لغة عدائية أو خطاب كراهية."
+        "label": "محتوى مسيء"
       },
       "duplicate": {
-        "label": "إعلان مكرر",
-        "hint": "تم نشر نفس الإعلان أكثر من مرة."
+        "label": "إعلان مكرر"
       },
       "wrong_category": {
-        "label": "تصنيف خاطئ",
-        "hint": "الإعلان منشور في القسم الخطأ."
+        "label": "تصنيف خاطئ"
       },
       "other": {
-        "label": "سبب آخر",
-        "hint": "اشرح السبب في خانة التفاصيل."
+        "label": "سبب آخر"
       }
     },
     "success_toast": "تم إرسال البلاغ",
+    "reported": "تم الإبلاغ!",
     "errors": {
       "invalid_target": "لا يمكن الإبلاغ عن هذا العنصر",
       "self": "لا يمكنك الإبلاغ عن نفسك",
@@ -2191,5 +2294,44 @@
       "last": "الصفحة الأخيرة",
       "page": "الصفحة {page}"
     }
+  },
+  "companies": {
+    "title": "الشركات",
+    "count": {
+      "zero": "شركة محلية في قطر",
+      "one": "شركة محلية في قطر",
+      "two": "شركة محلية في قطر",
+      "few": "شركات محلية في قطر",
+      "many": "شركة محلية في قطر",
+      "other": "شركة محلية في قطر"
+    },
+    "hero": "ابحث عن {highlight} المناسبة",
+    "hero_highlight": "الشركات",
+    "subtitle": "استكشف الشركات وتعرّف على تفاصيلها، وابحث بسهولة عن الخدمات أو الفرص التي تناسب احتياجاتك.",
+    "search_label": "ابحث عن شركة",
+    "search_placeholder": "ابحث عن الشركات..",
+    "search": "بحث",
+    "followers": {
+      "zero": "{count} متابع",
+      "one": "متابع واحد",
+      "two": "متابعان",
+      "few": "{count} متابعين",
+      "many": "{count} متابعًا",
+      "other": "{count} متابع"
+    },
+    "ads": {
+      "zero": "{count} إعلان",
+      "one": "إعلان واحد",
+      "two": "إعلانان",
+      "few": "{count} إعلانات",
+      "many": "{count} إعلانًا",
+      "other": "{count} إعلان"
+    },
+    "no_results_title": "لا توجد شركات تطابق «{query}»",
+    "no_results_body": "تحقّق من الكتابة أو جرّب اسماً آخر.",
+    "empty_title": "لا توجد شركات لعرضها هنا",
+    "show_all": "عرض كل الشركات",
+    "error_title": "تعذّر تحميل الشركات",
+    "error_body": "حاول مرة أخرى بعد قليل."
   }
 }

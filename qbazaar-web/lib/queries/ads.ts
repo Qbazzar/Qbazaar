@@ -34,6 +34,8 @@ import {
   type MyAdsParams,
 } from '@/lib/api/ads';
 import type { ApiClientError } from '@/lib/api/auth';
+import { getLocale } from '@/lib/i18n/locale';
+import { useAuthStore } from '@/store/auth';
 import type {
   Ad,
   AdSummary,
@@ -74,14 +76,25 @@ export function useAdsListQuery(
   });
 }
 
+/**
+ * `initialData` is the anonymous copy the page fetched on the server: it is
+ * shown at once and treated as stale. The refetch waits until the session is
+ * restored, so it carries the viewer's token (an owner may be looking at an
+ * ad the public can't see), and asks for the page language.
+ */
 export function useAdQuery(
   id: string | null | undefined,
+  initialData?: Ad,
 ): UseQueryResult<Ad, ApiClientError> {
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+
   return useQuery({
     queryKey: adKeys.detail(id ?? ''),
-    queryFn: () => getAd(id as string),
-    enabled: Boolean(id),
+    queryFn: () => getAd(id as string, getLocale()),
+    enabled: Boolean(id) && isHydrated,
     staleTime: MINUTE,
+    initialData,
+    initialDataUpdatedAt: 0,
   });
 }
 
@@ -105,7 +118,7 @@ export function useSimilarAdsQuery(
 ): UseQueryResult<AdSummary[], ApiClientError> {
   return useQuery({
     queryKey: adKeys.similar(id ?? ''),
-    queryFn: () => getSimilarAds(id as string),
+    queryFn: () => getSimilarAds(id as string, getLocale()),
     enabled: Boolean(id),
     staleTime: 5 * MINUTE,
   });

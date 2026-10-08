@@ -1,3 +1,5 @@
+import type { PaginatedEnvelope } from '@/lib/api/types';
+
 /**
  * SEO helpers shared by robots / sitemap / manifest / per-page metadata.
  *
@@ -26,15 +28,12 @@ export function apiOrigin(): string {
 }
 
 /**
- * Server-only fetch against the public API for SEO endpoints. Unwraps the
- * `{ success, data }` envelope and returns `null` on any failure, including no
- * answer within API_TIMEOUT_MS, so a missing sitemap entry / OG tag degrades
- * gracefully instead of 500-ing or stalling the route.
+ * Server-only fetch against the public API. Returns `null` on any failure,
+ * including no answer within API_TIMEOUT_MS, so a missing sitemap entry / OG
+ * tag / first render degrades gracefully instead of 500-ing or stalling the
+ * route.
  */
-export async function fetchApiData<T>(
-  path: string,
-  revalidateSeconds = 3600,
-): Promise<T | null> {
+async function fetchApiJson<T>(path: string, revalidateSeconds: number): Promise<T | null> {
   try {
     const res = await fetch(`${apiOrigin()}${path}`, {
       headers: { Accept: 'application/json' },
@@ -44,12 +43,30 @@ export async function fetchApiData<T>(
 
     if (!res.ok) return null;
 
-    const json = (await res.json()) as { success?: boolean; data?: T };
-
-    return json?.data ?? null;
+    return (await res.json()) as T;
   } catch {
     return null;
   }
+}
+
+/** `fetchApiJson` unwrapped from the `{ success, data }` envelope. */
+export async function fetchApiData<T>(
+  path: string,
+  revalidateSeconds = 3600,
+): Promise<T | null> {
+  const json = await fetchApiJson<{ success?: boolean; data?: T }>(path, revalidateSeconds);
+
+  return json?.data ?? null;
+}
+
+/** A paginated list: its rows with the `meta` the pager needs. */
+export async function fetchApiPage<T>(
+  path: string,
+  revalidateSeconds = 3600,
+): Promise<PaginatedEnvelope<T> | null> {
+  const json = await fetchApiJson<PaginatedEnvelope<T>>(path, revalidateSeconds);
+
+  return json && Array.isArray(json.data) && json.meta ? json : null;
 }
 
 /**
