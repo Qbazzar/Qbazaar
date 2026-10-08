@@ -171,7 +171,10 @@ export async function getFeaturedAds(): Promise<AdSummary[]> {
 // ── State transitions ──────────────────────────────────────────────────────
 
 /**
- * Publish a draft ad.
+ * Submit a draft (or rejected) ad for review.
+ *
+ * The seller must have accepted the listing terms: the API rejects the call
+ * without `accepted_terms: true`, so callers pass the checkbox state through.
  *
  * Accepts an optional `idempotencyKey` so the caller can guarantee at-most-
  * once semantics across retries (network blip → user re-clicks → axios
@@ -181,7 +184,7 @@ export async function getFeaturedAds(): Promise<AdSummary[]> {
  */
 export async function publishAd(
   id: string,
-  options: { idempotencyKey?: string } = {},
+  options: { acceptedTerms: true; idempotencyKey?: string },
 ): Promise<Ad> {
   try {
     const headers: Record<string, string> = {};
@@ -190,7 +193,7 @@ export async function publishAd(
     }
     const { data } = await api.post<SuccessEnvelope<Ad>>(
       `${BASE}/${encodeURIComponent(id)}/publish`,
-      undefined,
+      { accepted_terms: options.acceptedTerms },
       Object.keys(headers).length ? { headers } : undefined,
     );
     return data.data;

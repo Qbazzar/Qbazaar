@@ -8,13 +8,14 @@
  * the UI can switch on stable `OfferErrorCode` values.
  *
  * Note on `amount`: the backend serialises decimals as strings (e.g.
- * `"1500.00"`) to avoid float drift. Every offer payload is funnelled
- * through `normaliseOffer` which coerces it to a `number` so consumers
- * never have to worry about the wire shape.
+ * `"1500.00"`) to avoid float drift. The Sprint 9 calls funnel every offer
+ * through `normaliseOffer`, which coerces it to a `number` for the old offer
+ * bubble; `counterOffer`, used by the order-cycle cards, keeps the string.
  */
 import { isAxiosError } from 'axios';
 import { api } from './client';
 import { ApiClientError } from './auth';
+import type { DealOffer } from './commerce-types';
 import type {
   CreateOfferRequest,
   ErrorEnvelope,
@@ -119,6 +120,25 @@ export async function withdrawOffer(offerId: string): Promise<Offer> {
       `${OFFERS_BASE}/${encodeURIComponent(offerId)}/withdraw`,
     );
     return normaliseOffer(data.data);
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/**
+ * The responder answers a pending offer with a new amount; the answered offer
+ * turns `countered`. Returned as sent, with the amount still an exact string.
+ */
+export async function counterOffer(
+  offerId: string,
+  payload: CreateOfferRequest,
+): Promise<DealOffer> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<DealOffer>>(
+      `${OFFERS_BASE}/${encodeURIComponent(offerId)}/counter`,
+      payload,
+    );
+    return data.data;
   } catch (err) {
     throw toApiClientError(err);
   }

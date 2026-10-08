@@ -1,94 +1,71 @@
 /**
- * Post-ad wizard state — Zustand.
+ * Post-ad form state — Zustand.
  *
- * Holds the multi-step form state for the `/post-ad` flow:
- *
- *   - which step the user is on (1..4)
- *   - the chosen category + location ids
- *   - the in-progress text fields
- *   - the draft ad id once it's been created server-side (step 4 needs it
- *     so image uploads have a parent)
- *
- * NOT persisted — the wizard is transient by design. If the user reloads we
- * want them to start clean rather than recover a stale half-filled form.
+ * Lives outside the page so the form survives switching between the form,
+ * the preview and the publish step, and so photo uploads keep updating it
+ * while the seller looks at the preview. Not persisted: a reload starts a
+ * clean form, and saved drafts are resumed from My Ads.
  */
 import { create } from 'zustand';
-import type { AdCondition, Media, PriceType } from '@/lib/api/types';
 
-export type PostAdStep = 1 | 2 | 3 | 4;
+import type { Ad } from '@/lib/api/types';
+import {
+  EMPTY_AD_FORM,
+  adFormFromAd,
+  type AdFormErrors,
+  type AdFormField,
+  type AdFormValues,
+} from '@/lib/post-ad/form';
+import type { PhotoItem } from '@/lib/post-ad/photos';
 
-export interface PostAdDetails {
-  title: string;
-  description: string;
-  price: string;          // input is a string so RHF can show empty state
-  price_type: PriceType;
-  condition: AdCondition | null;
-  custom_fields: Record<string, unknown>;
-}
+export type PostAdView = 'form' | 'preview' | 'publish' | 'done';
+
+/** `create:<user id>` for /post-ad, `edit:<ad id>` for the edit page. */
+export type PostAdSession = `create:${string}` | `edit:${string}`;
 
 export interface PostAdState {
-  step: PostAdStep;
-  draftAdId: string | null;
-  categoryId: string | null;
-  locationId: string | null;
-  coords: { lat: number; lng: number } | null;
-  details: PostAdDetails;
-  images: Media[];
+  session: PostAdSession | null;
+  view: PostAdView;
+  /** The ad on the server: the one being edited, or the draft once saved. */
+  ad: Ad | null;
+  values: AdFormValues;
+  errors: AdFormErrors;
+  /** Managed by the photo queue (lib/post-ad/photo-queue). */
+  photos: PhotoItem[];
 
-  setStep: (step: PostAdStep) => void;
-  next: () => void;
-  prev: () => void;
-  setCategoryId: (id: string | null) => void;
-  setLocationId: (id: string | null) => void;
-  setCoords: (coords: { lat: number; lng: number } | null) => void;
-  setDetails: (patch: Partial<PostAdDetails>) => void;
-  setDraftAdId: (id: string | null) => void;
-  setImages: (images: Media[]) => void;
-  reset: () => void;
+  begin: (session: PostAdSession, ad: Ad | null) => void;
+  setValues: (patch: Partial<AdFormValues>) => void;
+  setErrors: (errors: AdFormErrors) => void;
+  clearError: (field: AdFormField) => void;
+  setView: (view: PostAdView) => void;
+  setAd: (ad: Ad) => void;
 }
 
-const INITIAL_DETAILS: PostAdDetails = {
-  title: '',
-  description: '',
-  price: '',
-  price_type: 'fixed',
-  condition: null,
-  custom_fields: {},
-};
+export const usePostAdStore = create<PostAdState>((set) => ({
+  session: null,
+  view: 'form',
+  ad: null,
+  values: EMPTY_AD_FORM,
+  errors: {},
+  photos: [],
 
-export const usePostAdStore = create<PostAdState>((set, get) => ({
-  step: 1,
-  draftAdId: null,
-  categoryId: null,
-  locationId: null,
-  coords: null,
-  details: INITIAL_DETAILS,
-  images: [],
-
-  setStep: (step) => set({ step }),
-  next: () => {
-    const cur = get().step;
-    set({ step: (Math.min(4, cur + 1) as PostAdStep) });
-  },
-  prev: () => {
-    const cur = get().step;
-    set({ step: (Math.max(1, cur - 1) as PostAdStep) });
-  },
-  setCategoryId: (categoryId) => set({ categoryId }),
-  setLocationId: (locationId) => set({ locationId }),
-  setCoords: (coords) => set({ coords }),
-  setDetails: (patch) =>
-    set((state) => ({ details: { ...state.details, ...patch } })),
-  setDraftAdId: (draftAdId) => set({ draftAdId }),
-  setImages: (images) => set({ images }),
-  reset: () =>
+  begin: (session, ad) =>
     set({
-      step: 1,
-      draftAdId: null,
-      categoryId: null,
-      locationId: null,
-      coords: null,
-      details: INITIAL_DETAILS,
-      images: [],
+      session,
+      view: 'form',
+      ad,
+      values: ad ? adFormFromAd(ad) : EMPTY_AD_FORM,
+      errors: {},
     }),
+  setValues: (patch) => set((state) => ({ values: { ...state.values, ...patch } })),
+  setErrors: (errors) => set({ errors }),
+  clearError: (field) =>
+    set((state) => {
+      if (!state.errors[field]) return state;
+      const errors = { ...state.errors };
+      delete errors[field];
+      return { errors };
+    }),
+  setView: (view) => set({ view }),
+  setAd: (ad) => set({ ad }),
 }));

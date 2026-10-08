@@ -38,6 +38,10 @@ function toApiClientError(err: unknown): ApiClientError {
   });
 }
 
+// The shared client gives up after 15 s, which a photo on a slow mobile link
+// can exceed even after the browser shrank it.
+const UPLOAD_TIMEOUT_MS = 120_000;
+
 export interface UploadAdImagesOptions {
   /** 0-100 progress for the combined multipart upload. */
   onProgress?: (percent: number) => void;
@@ -76,6 +80,7 @@ export async function uploadAdImages(
       {
         headers: { 'Content-Type': 'multipart/form-data' },
         signal: options.signal,
+        timeout: UPLOAD_TIMEOUT_MS,
         onUploadProgress: (event) => {
           if (!options.onProgress || !event.total) return;
           const percent = Math.round((event.loaded * 100) / event.total);

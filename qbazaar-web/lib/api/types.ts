@@ -525,6 +525,15 @@ export interface Ad {
   price_type: PriceType;
   currency: 'QAR';
   condition: AdCondition | null;
+  ad_type: AdType;
+  shipping: AdShipping;
+  /** Delivery fee as an exact decimal ("15.00"); null is free delivery. */
+  shipping_fee: string | null;
+  quantity: number;
+  postal_code: string | null;
+  /** Null for other viewers unless `show_full_address`; the seller always sees it. */
+  street: string | null;
+  show_full_address: boolean;
   status: AdStatus;
   /** Free-form bag keyed by `CategoryField.key` — values arrive verbatim. */
   custom_fields: Record<string, unknown>;
@@ -590,6 +599,12 @@ export interface CreateAdRequest {
   price_type: PriceType;
   condition: AdCondition | null;
   custom_fields: Record<string, unknown>;
+  ad_type?: AdType;
+  shipping?: AdShipping;
+  shipping_fee?: number | null;
+  postal_code?: string | null;
+  street?: string | null;
+  show_full_address?: boolean;
 }
 
 export type UpdateAdRequest = Partial<CreateAdRequest>;
@@ -774,7 +789,7 @@ export interface Message {
   };
   /**
    * Populated when `type === 'offer'`. The backend bundles the offer envelope
-   * onto the message so the chat timeline can render an OfferBubble inline
+   * onto the message so the chat timeline can render the offer card inline
    * without an extra round-trip.
    */
   offer?: Offer | null;
@@ -835,7 +850,8 @@ export interface Offer {
 }
 
 export interface CreateOfferRequest {
-  amount: number;
+  /** A decimal string ("1500.50") keeps the amount exact; the API accepts both. */
+  amount: number | string;
   note?: string | null;
 }
 

@@ -1,0 +1,122 @@
+'use client';
+
+import { useState, type ReactNode } from 'react';
+import { Eye, Heart, LoaderCircle, PenLine, Trash2, type LucideIcon } from 'lucide-react';
+
+import { ModalActions } from '@/components/account/ModalActions';
+import { Button } from '@/components/design-system/Button';
+import { cardVariants } from '@/components/design-system/Card';
+import { Icon } from '@/components/design-system/Icon';
+import { Modal } from '@/components/design-system/Modal';
+import type { Ad } from '@/lib/api/types';
+import { formatNumber } from '@/lib/i18n/format';
+import { getLocale } from '@/lib/i18n/locale';
+import { t } from '@/lib/i18n/messages';
+import { formatDate } from '@/lib/post-ad/format';
+import { cn } from '@/lib/utils';
+
+import { visibleFocus, visibleFocusRing } from './FormParts';
+import type { PostAdAction } from './usePostAdActions';
+
+export interface YourAdPanelProps {
+  ad: Ad;
+  running: PostAdAction | null;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+/**
+ * "Your Ad" at the top of publish.html (355:7297, 532:23641, 638:36533): the
+ * ad's visits, wishlist count and publish date, with Edit and Delete. The
+ * design's Report and Reserved are left out: a seller doesn't report their
+ * own ad, and only a live ad can be reserved.
+ */
+export function YourAdPanel({ ad, running, onEdit, onDelete }: YourAdPanelProps) {
+  const locale = getLocale();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleting = running === 'delete';
+
+  return (
+    <section aria-labelledby="post-ad-your-ad" className={cn(cardVariants({ padding: 'none' }), 'p-[26px] text-qb-ink qb-desktop:w-[390px]')}>
+      <h2 id="post-ad-your-ad" className="flex items-center gap-2.5 text-qb-body-lg font-semibold tracking-normal">
+        <span aria-hidden="true" className="h-5 w-1 rounded-[2px] bg-qb-brand" />
+        {t('post_ad.your_ad.title')}
+      </h2>
+      <dl className="mt-[22px] flex flex-col gap-4 border-b border-qb-line pb-[18px] text-qb-body-sm">
+        <SummaryRow label={t('post_ad.your_ad.visits')}>
+          <Icon icon={Eye} size="sm" />
+          {formatNumber(ad.views_count, locale)}
+        </SummaryRow>
+        <SummaryRow label={t('post_ad.your_ad.wishlist')}>
+          <Icon icon={Heart} size="sm" />
+          {formatNumber(ad.favorites_count, locale)}
+        </SummaryRow>
+        <SummaryRow label={t('post_ad.your_ad.published')}>{formatDate(ad.published_at ?? new Date().toISOString(), locale)}</SummaryRow>
+      </dl>
+      <ul className="mt-[18px] flex flex-col gap-4 text-qb-body-sm text-qb-ink-secondary">
+        <li>
+          <PanelAction icon={PenLine} disabled={running !== null} onClick={onEdit}>
+            {t('post_ad.actions.edit')}
+          </PanelAction>
+        </li>
+        <li>
+          <PanelAction icon={Trash2} disabled={running !== null} onClick={() => setConfirmDelete(true)}>
+            {t('common.delete')}
+          </PanelAction>
+        </li>
+      </ul>
+
+      <Modal
+        open={confirmDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setConfirmDelete(false);
+        }}
+        title={t('ads.actions.delete_confirm_title')}
+        description={t('ads.actions.delete_confirm_body')}
+      >
+        <ModalActions className="mt-2">
+          <Button size="sm" disabled={running !== null} aria-busy={deleting || undefined} onClick={onDelete} className={visibleFocus}>
+            {deleting ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
+            {t('common.delete')}
+          </Button>
+          <Button variant="muted" size="sm" disabled={deleting} onClick={() => setConfirmDelete(false)} className={visibleFocus}>
+            {t('common.cancel')}
+          </Button>
+        </ModalActions>
+      </Modal>
+    </section>
+  );
+}
+
+function SummaryRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <dt className="text-qb-ink-faint">{label}</dt>
+      <dd className="flex items-center gap-1.5 font-semibold">{children}</dd>
+    </div>
+  );
+}
+
+function PanelAction({
+  icon,
+  disabled,
+  onClick,
+  children,
+}: {
+  icon: LucideIcon;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn('flex items-center gap-3 rounded-qb-xs hover:text-qb-ink disabled:cursor-not-allowed disabled:opacity-50', visibleFocusRing)}
+    >
+      <Icon icon={icon} className="size-[17px]" />
+      {children}
+    </button>
+  );
+}
