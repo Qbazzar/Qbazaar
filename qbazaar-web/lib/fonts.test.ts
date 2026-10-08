@@ -52,4 +52,10 @@ describe('app/fonts', () => {
       }
     }
   });
+
+  it('keeps the old Cairo, DM Sans and Instrument Serif faces out of the app', () => {
+    const globalsCss = readFileSync(join(__dirname, '..', 'app', 'globals.css'), 'utf8');
+    expect(`${fontsTs}
+${globalsCss}`).not.toMatch(/cairo|dm-?sans|instrument/i);
+  });
 });

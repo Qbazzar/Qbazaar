@@ -19,7 +19,7 @@ Not there yet (V2): passwordless login, online payments.
 ## Stack
 
 - Next.js 16 (App Router) · React 19 · TypeScript 5 (strict)
-- Tailwind CSS 4 + shadcn/ui; the design in `styles/design-tokens.css`, with the old QBFront tokens (coral `#F37335`, DM Sans / Instrument Serif / Cairo) still in `app/globals.css` for the shadcn primitives; light theme only
+- Tailwind CSS 4 + shadcn/ui; the design in `styles/design-tokens.css`, with the old QBFront tokens (coral `#F37335`) still in `app/globals.css` for the shadcn primitives; light theme only
 - TanStack Query 5 + axios · Zustand · React Hook Form + Zod · nuqs
 - i18n: a synchronous `t()` over `i18n/{ar,en}.json`, locale from a cookie (`next-intl` is installed but its routing isn't used)
 - Realtime: Laravel Echo + pusher-js against Reverb, authorised at `POST /api/v1/broadcasting/auth` with the Bearer token
