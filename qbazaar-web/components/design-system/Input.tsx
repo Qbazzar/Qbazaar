@@ -1,18 +1,18 @@
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
 /** Box shared by Input, Select and Textarea (`.qb-field input` in Qbazaar-front). */
 const controlBase = [
-  'w-full rounded-qb-md border border-qb-line bg-qb-surface font-qb text-qb-body text-qb-ink',
+  'w-full rounded-qb-md border border-qb-field-border bg-qb-surface font-qb text-qb-body text-qb-ink',
   'placeholder:text-qb-placeholder outline-none transition-colors',
   'focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
   'aria-invalid:border-qb-danger aria-invalid:focus-visible:ring-qb-danger/20',
-  'disabled:cursor-not-allowed disabled:bg-qb-fill disabled:text-qb-ink-subtle',
+  'disabled:cursor-not-allowed disabled:border-qb-line disabled:bg-qb-fill disabled:text-qb-ink-subtle',
 ].join(' ');
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends ComponentProps<'input'> {
   /** Decorative icon at the start of the field (e.g. a search glass). */
   startIcon?: ReactNode;
 }
@@ -40,13 +40,13 @@ export function Input({ className, startIcon, type = 'text', ...props }: InputPr
   );
 }
 
-export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>;
+export type TextareaProps = ComponentProps<'textarea'>;
 
 export function Textarea({ className, rows = 4, ...props }: TextareaProps) {
   return <textarea rows={rows} className={cn(controlBase, 'min-h-[120px] px-4 py-3.5', className)} {...props} />;
 }
 
-export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;
+export type SelectProps = ComponentProps<'select'>;
 
 /** Native select: keeps the platform picker on phones and needs no client JS. */
 export function Select({ className, children, ...props }: SelectProps) {

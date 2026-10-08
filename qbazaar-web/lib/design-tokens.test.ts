@@ -52,7 +52,6 @@ describe('colour contrast (WCAG AA, 4.5:1)', () => {
     ['ink-muted', 'fill-strong'],
     ['ink-subtle', 'fill-strong'],
     ['ink-faint', 'fill-strong'],
-    ['ink-disabled', 'page'],
     ['placeholder', 'surface'],
     ['breadcrumb', 'page'],
     ['success', 'success-soft'],
@@ -60,6 +59,20 @@ describe('colour contrast (WCAG AA, 4.5:1)', () => {
     ['info', 'info-soft'],
   ])('%s text on %s', (text, background) => {
     expect(contrastRatio(colorToken(text), colorToken(background))).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe('control contrast (WCAG 1.4.11, 3:1)', () => {
+  const surfaces = ['surface', 'page', 'hover', 'fill', 'fill-strong'];
+
+  it.each(['ink-disabled', 'icon-muted', 'field-border'])('%s on every light surface', (control) => {
+    for (const surface of surfaces) {
+      expect(contrastRatio(colorToken(control), colorToken(surface)), surface).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('keeps the hover of an inactive toggle visible', () => {
+    expect(contrastRatio(colorToken('ink-muted'), colorToken('ink-disabled'))).toBeGreaterThan(1.3);
   });
 });
 
