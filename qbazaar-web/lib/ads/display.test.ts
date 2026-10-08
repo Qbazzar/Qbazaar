@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { setClientLocale } from '@/lib/i18n/locale';
 import type { Ad, Category } from '@/lib/api/types';
 
-import { buildAdSpecSheet, formatAdDate, formatAdPriceLabel, labelFromSlug, tCount } from './display';
+import { buildAdSpecSheet, formatAdDate, formatRating, formatTimeAgo } from './display';
 
 const category = {
   custom_fields: [
@@ -29,24 +29,6 @@ function sheetFor(custom_fields: Record<string, unknown> | null, condition: Ad['
 }
 
 afterEach(() => setClientLocale('ar'));
-
-describe('formatAdPriceLabel', () => {
-  it('puts the currency before the amount in English', () => {
-    setClientLocale('en');
-    expect(formatAdPriceLabel({ price: 285000, price_type: 'fixed' }, 'en')).toBe('QAR 285,000');
-  });
-
-  it('writes Arabic digits and the Arabic currency after the amount', () => {
-    setClientLocale('ar');
-    expect(formatAdPriceLabel({ price: 1500, price_type: 'negotiable' }, 'ar')).toBe('١٬٥٠٠ ر.ق');
-  });
-
-  it('says free or contact instead of an amount', () => {
-    setClientLocale('en');
-    expect(formatAdPriceLabel({ price: 0, price_type: 'free' }, 'en')).toBe('Free');
-    expect(formatAdPriceLabel({ price: null, price_type: 'fixed' }, 'en')).toBe('Contact for price');
-  });
-});
 
 describe('buildAdSpecSheet', () => {
   it('lists the condition first, then the fields in the category order', () => {
@@ -106,24 +88,26 @@ describe('formatAdDate', () => {
     expect(formatAdDate('2026-04-11T22:30:00+00:00', 'en')).toBe('Apr 12, 2026');
     expect(formatAdDate(null, 'en')).toBe('');
   });
-});
 
-describe('labelFromSlug', () => {
-  it('reads a slug as words', () => {
-    expect(labelFromSlug('al-wakra-center')).toBe('Al Wakra Center');
-    expect(labelFromSlug('')).toBe('');
+  it('writes Latin digits on Arabic pages', () => {
+    expect(formatAdDate('2026-04-11T22:30:00+00:00', 'ar')).toMatch(/^12 .+ 2026$/);
   });
 });
 
-describe('tCount', () => {
-  it('uses the English singular for one', () => {
-    setClientLocale('en');
-    expect(tCount('reviews.count', 1, 'en')).toBe('1 review');
-    expect(tCount('reviews.count', 3, 'en')).toBe('3 reviews');
+describe('formatRating', () => {
+  it('keeps one decimal at most, in Latin digits in both languages', () => {
+    expect(formatRating(4.46, 'en')).toBe('4.5');
+    expect(formatRating(4, 'ar')).toBe('4');
+    expect(formatRating(4.25, 'ar')).toBe('4.3');
   });
+});
 
-  it('keeps one Arabic form', () => {
-    setClientLocale('ar');
-    expect(tCount('reviews.count', 1, 'ar')).toBe('١ تقييم');
+describe('formatTimeAgo', () => {
+  it('says how long ago with Latin digits, then falls back to the full date', () => {
+    const now = Date.now();
+    expect(formatTimeAgo(new Date(now - 3 * 60 * 60 * 1000).toISOString(), 'en')).toBe('3 hours ago');
+    expect(formatTimeAgo(new Date(now - 3 * 60 * 60 * 1000).toISOString(), 'ar')).toMatch(/3/);
+    expect(formatTimeAgo('2024-03-12T10:00:00+00:00', 'en')).toBe('Mar 12, 2024');
+    expect(formatTimeAgo(null, 'en')).toBe('');
   });
 });

@@ -1,9 +1,10 @@
 import { Clock, Globe, Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 
+import { cardVariants } from '@/components/design-system/Card';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
-import { numberLocale } from '@/lib/ads/display';
+import { intlLocale } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { groupOpeningHours } from '@/lib/users/opening-hours';
@@ -19,6 +20,9 @@ export function safeWebsiteHref(website: string): string | null {
     return null;
   }
 }
+
+// focusRing's outline-none also clears the style its focus outline reads; outline-solid restores it.
+const linkClass = cn('rounded-qb-xs hover:text-qb-brand', focusRing, 'focus-visible:outline-solid');
 
 /** "https://www.example.qa/" -> "www.example.qa" */
 function websiteLabel(website: string): string {
@@ -40,20 +44,20 @@ interface CompanyInfoListProps {
 /** Phone, email, website, address and opening hours, each with its icon tile. */
 export function CompanyInfoList({ business, locale }: CompanyInfoListProps) {
   const website = business.website ? safeWebsiteHref(business.website) : null;
-  const hours = groupOpeningHours(business.opening_hours ?? [], numberLocale(locale));
+  const hours = groupOpeningHours(business.opening_hours ?? [], intlLocale(locale));
 
   return (
     <ul className="flex flex-col gap-3.5 text-qb-caption text-qb-ink-body">
       {business.contact_phone ? (
         <InfoItem icon={Phone} label={t('users.profile.contact.phone')}>
-          <a href={`tel:${business.contact_phone}`} dir="ltr" className={cn('rounded-qb-xs hover:text-qb-brand', focusRing)}>
+          <a href={`tel:${business.contact_phone}`} dir="ltr" className={linkClass}>
             {business.contact_phone}
           </a>
         </InfoItem>
       ) : null}
       {business.contact_email ? (
         <InfoItem icon={Mail} label={t('users.profile.contact.email')}>
-          <a href={`mailto:${business.contact_email}`} className={cn('rounded-qb-xs break-all hover:text-qb-brand', focusRing)}>
+          <a href={`mailto:${business.contact_email}`} className={cn(linkClass, 'break-all')}>
             {business.contact_email}
           </a>
         </InfoItem>
@@ -65,7 +69,7 @@ export function CompanyInfoList({ business, locale }: CompanyInfoListProps) {
               href={website}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className={cn('rounded-qb-xs break-all hover:text-qb-brand', focusRing)}
+              className={cn(linkClass, 'break-all')}
             >
               {websiteLabel(business.website)}
             </a>
@@ -76,7 +80,7 @@ export function CompanyInfoList({ business, locale }: CompanyInfoListProps) {
       ) : null}
       {business.address ? (
         <InfoItem icon={MapPin} label={t('users.profile.contact.address')}>
-          {business.address}
+          <bdi>{business.address}</bdi>
         </InfoItem>
       ) : null}
       {hours.length ? (
@@ -111,7 +115,7 @@ export function CompanyInfoCard({ business, locale, className }: CompanyInfoList
   return (
     <section
       aria-labelledby={titleId}
-      className={cn('rounded-qb-2xl border border-qb-line bg-qb-surface px-[25px] pt-[30px] pb-6 font-qb shadow-qb-card', className)}
+      className={cn(cardVariants({ large: true, elevated: true, padding: 'none' }), 'px-[25px] pt-[30px] pb-6', className)}
     >
       <h2 id={titleId} className="mb-5 text-qb-body-lg font-semibold tracking-normal text-qb-ink">
         {t('users.profile.info')}

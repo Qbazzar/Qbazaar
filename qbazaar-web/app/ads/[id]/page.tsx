@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import type { Ad } from '@/lib/api/types';
-import { localized } from '@/lib/i18n/locale';
+import { localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { absoluteUrl, breadcrumbJsonLd, fetchApiData } from '@/lib/seo';
@@ -19,15 +19,23 @@ function metaDescription(body: string | null | undefined): string | undefined {
   return flat.length > 160 ? `${flat.slice(0, 157)}…` : flat;
 }
 
+/**
+ * The public copy of the ad, cached for five minutes per language: the option
+ * labels of its category come in the language the request asks for. The
+ * metadata and the page call it with the same URL, so they share the entry.
+ */
+function fetchAd(id: string, locale: Locale): Promise<Ad | null> {
+  return fetchApiData<Ad>(`/api/v1/ads/${encodeURIComponent(id)}?lang=${locale}`, 300);
+}
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  // Cached + deduped with the page's own fetch below (same URL + options).
-  const ad = await fetchApiData<Ad>(`/api/v1/ads/${id}`, 300);
+  const [{ id }, locale] = await Promise.all([params, resolveServerLocale()]);
+  const ad = await fetchAd(id, locale);
 
   if (!ad) {
-    return { title: 'الإعلان' };
+    return { title: t('ads.errors.ad_not_found') };
   }
 
   const url = absoluteUrl(`/ads/${id}`);
@@ -109,9 +117,9 @@ function adBreadcrumbJsonLd(ad: Ad): Record<string, unknown> {
  * looking at an ad the public can't see).
  */
 export default async function AdDetailPage({ params }: PageProps) {
-  const { id } = await params;
   // The page renders alongside the root layout, so the JSON-LD names need the request locale here too.
-  const [ad] = await Promise.all([fetchApiData<Ad>(`/api/v1/ads/${id}`, 300), resolveServerLocale()]);
+  const [{ id }, locale] = await Promise.all([params, resolveServerLocale()]);
+  const ad = await fetchAd(id, locale);
 
   return (
     <>

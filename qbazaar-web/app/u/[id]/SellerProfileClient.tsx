@@ -1,12 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { UserX } from 'lucide-react';
 
-import { buttonVariants } from '@/components/design-system/Button';
-import { EmptyState } from '@/components/design-system/EmptyState';
-import { Icon } from '@/components/design-system/Icon';
+import { ErrorView } from '@/components/status/ErrorView';
+import { NotFoundView } from '@/components/status/NotFoundView';
 import { isCompanyTab } from '@/components/users/CompanyTabs';
 import { SellerProfileView } from '@/components/users/SellerProfileView';
 import { getLocale } from '@/lib/i18n/locale';
@@ -27,7 +24,7 @@ interface SellerProfileClientProps {
 export function SellerProfileClient({ id, initialProfile }: SellerProfileClientProps) {
   const locale = getLocale();
   const tab = useSearchParams().get('tab');
-  const { data, isPending, isFetchedAfterMount } = usePublicProfileQuery(id, initialProfile);
+  const { data, isPending, isFetchedAfterMount, error, refetch, isFetching } = usePublicProfileQuery(id, initialProfile);
 
   if (data) {
     return (
@@ -43,23 +40,15 @@ export function SellerProfileClient({ id, initialProfile }: SellerProfileClientP
   if (isPending) {
     return (
       <main aria-busy="true" className="bg-qb-page px-4 pt-10 pb-16 qb-tablet:px-6 qb-tablet:pt-[165px] qb-desktop:px-10">
-        <div className="mx-auto h-[600px] max-w-[1360px] animate-pulse rounded-qb-2xl bg-qb-fill" />
+        <span className="sr-only">{t('common.loading')}</span>
+        <div aria-hidden="true" className="mx-auto h-[600px] max-w-[1360px] animate-pulse rounded-qb-2xl bg-qb-fill motion-reduce:animate-none" />
       </main>
     );
   }
 
-  return (
-    <main className="bg-qb-page px-4 py-16 font-qb">
-      <EmptyState
-        icon={<Icon icon={UserX} size="lg" />}
-        title={t('users.profile.not_found_title')}
-        description={t('users.profile.not_found_body')}
-        action={
-          <Link href="/" className={buttonVariants()}>
-            {t('users.profile.back_home')}
-          </Link>
-        }
-      />
-    </main>
-  );
+  if (error?.status === 404) {
+    return <NotFoundView heading={t('users.profile.not_found_title')} description={t('users.profile.not_found_body')} />;
+  }
+
+  return <ErrorView onRetry={() => void refetch()} retrying={isFetching} />;
 }

@@ -31,6 +31,7 @@ import type {
   PublicUserProfile,
   Review,
 } from '@/lib/api/types';
+import { getLocale } from '@/lib/i18n/locale';
 import { useAuthStore } from '@/store/auth';
 
 const MINUTE = 60 * 1000;
@@ -80,7 +81,7 @@ export function useUserAdsQuery(
 ): UseInfiniteQueryResult<InfiniteData<PaginatedEnvelope<AdSummary>, number>, ApiClientError> {
   return useInfiniteQuery({
     queryKey: userKeys.ads(id),
-    queryFn: ({ pageParam }) => getUserAds(id, { page: pageParam, per_page: ADS_PER_PAGE }),
+    queryFn: ({ pageParam }) => getUserAds(id, { page: pageParam, per_page: ADS_PER_PAGE, lang: getLocale() }),
     initialPageParam: 1,
     getNextPageParam: ({ meta }) => (meta.current_page < meta.last_page ? meta.current_page + 1 : undefined),
     staleTime: MINUTE,

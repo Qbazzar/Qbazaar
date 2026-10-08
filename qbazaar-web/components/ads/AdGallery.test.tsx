@@ -56,13 +56,23 @@ describe('AdGallery', () => {
     expect(screen.getByRole('img', { name: 'BMW M3 — 1' })).toBeInTheDocument();
   });
 
-  it('moves with the arrows, the first one disabled on the first photo', async () => {
+  it('moves with the arrows; at the first photo "Previous" does nothing but keeps its focus', async () => {
     render(<AdGallery images={[media(1), media(2)]} alt="BMW M3" />);
+    const previous = screen.getByRole('button', { name: 'Previous' });
 
-    expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    expect(previous).toHaveAttribute('aria-disabled', 'true');
+    expect(previous).toBeEnabled();
+    await userEvent.click(previous);
+    expect(emblaApi.scrollPrev).not.toHaveBeenCalled();
+
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
-
     expect(emblaApi.scrollNext).toHaveBeenCalledOnce();
+  });
+
+  it('announces the photo that is showing', () => {
+    render(<AdGallery images={[media(1), media(2), media(3)]} alt="BMW M3" />);
+
+    expect(screen.getByText('Photo 1 of 3', { selector: '[aria-live="polite"]' })).toBeInTheDocument();
   });
 
   it('has no arrows for a single photo', () => {

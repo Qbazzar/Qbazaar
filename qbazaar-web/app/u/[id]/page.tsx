@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { sellerDisplayName } from '@/components/users/SellerBadges';
 import type { PublicUserProfile } from '@/lib/api/types';
 import { absoluteUrl, fetchApiData } from '@/lib/seo';
 import { t } from '@/lib/i18n/messages';
@@ -10,13 +11,9 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-/** Cached and deduped with the page's own fetch below (same URL and options). */
+/** Cached for five minutes; the metadata and the page read the same entry. */
 function fetchProfile(id: string): Promise<PublicUserProfile | null> {
   return fetchApiData<PublicUserProfile>(`/api/v1/users/${encodeURIComponent(id)}/public-profile`, 300);
-}
-
-function displayName(profile: PublicUserProfile): string {
-  return profile.business_name?.trim() || profile.full_name;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -24,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const [profile] = await Promise.all([fetchProfile(id), resolveServerLocale()]);
   if (!profile) return { title: t('users.profile.not_found_title') };
 
-  const name = displayName(profile);
+  const name = sellerDisplayName(profile);
   const description = profile.business_profile?.about?.replace(/\s+/g, ' ').trim().slice(0, 160) || undefined;
   return {
     title: name,

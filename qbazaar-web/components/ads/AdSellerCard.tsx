@@ -20,9 +20,10 @@ import { Icon } from '@/components/design-system/Icon';
 import { StartConversationButton } from '@/components/messaging/StartConversationButton';
 import { ReviewSellerButton } from '@/components/reviews/ReviewSellerButton';
 import { SellerTypeChip, VerifiedMark, isVerifiedSeller, sellerDisplayName } from '@/components/users/SellerBadges';
-import { formatAdDate, formatCount, tCount } from '@/lib/ads/display';
+import { formatAdDate, formatRating } from '@/lib/ads/display';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { cn } from '@/lib/utils';
 import type { Ad, PublicUser } from '@/lib/api/types';
 
@@ -55,15 +56,23 @@ function SellerSummary({ seller, locale }: { seller: PublicUser; locale: Locale 
   return (
     <>
       <div className="flex items-center justify-between gap-3">
-        <Link href={`/u/${seller.id}`} className={cn('flex min-w-0 items-center gap-3 rounded-qb-md qb-desktop:gap-2.5', focusRing)}>
-          <Avatar
-            name={name}
-            src={seller.avatar_url}
-            className="size-14 border border-qb-line bg-qb-hover text-qb-body text-qb-ink qb-tablet:size-12 qb-desktop:size-[50px]"
-          />
+        <Link
+          href={`/u/${seller.id}`}
+          className={cn('flex min-w-0 items-center gap-3 rounded-qb-md qb-desktop:gap-2.5', focusRing, 'focus-visible:outline-solid')}
+        >
+          {/* The name follows in text, so the picture stays out of the link's name. */}
+          <span aria-hidden="true" className="flex shrink-0">
+            <Avatar
+              name={name}
+              src={seller.avatar_url}
+              className="size-14 border border-qb-line bg-qb-hover text-qb-body text-qb-ink qb-tablet:size-12 qb-desktop:size-[50px]"
+            />
+          </span>
           <span className="flex min-w-0 flex-col gap-1.5">
             <span className="flex min-w-0 items-center gap-1">
-              <span className="truncate text-qb-body font-semibold text-qb-ink">{name}</span>
+              <span dir="auto" className="truncate text-qb-body font-semibold text-qb-ink">
+                {name}
+              </span>
               {isVerifiedSeller(seller) ? <VerifiedMark /> : null}
             </span>
             <SellerTypeChip accountType={seller.account_type} className="qb-desktop:hidden" />
@@ -80,12 +89,10 @@ function SellerSummary({ seller, locale }: { seller: PublicUser; locale: Locale 
       >
         {seller.rating_count > 0 ? (
           <InfoRow icon={Star}>
-            {tCount('ads.detail.seller_rating', seller.rating_count, locale, {
-              rating: formatCount(Math.round(seller.rating_avg * 10) / 10, locale),
-            })}
+            {`${formatRating(seller.rating_avg, locale)} · ${tPlural('reviews.count', seller.rating_count, locale)}`}
           </InfoRow>
         ) : null}
-        <InfoRow icon={LayoutGrid}>{tCount('ads.detail.seller_ads', seller.ads_count, locale)}</InfoRow>
+        <InfoRow icon={LayoutGrid}>{tPlural('ads.detail.seller_ads', seller.ads_count, locale)}</InfoRow>
         <InfoRow icon={CalendarDays}>{t('users.profile.joined', { date: formatAdDate(seller.joined_at, locale) })}</InfoRow>
       </ul>
     </>
@@ -98,7 +105,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
   if (ad.status === 'sold') {
     return (
       <>
-        <Badge tone="neutral" className="h-10 justify-center rounded-qb-md text-qb-caption">
+        <Badge tone="neutral" className="h-10 justify-center rounded-qb-md font-qb-label text-qb-caption">
           {t('ads.status.sold')}
         </Badge>
         {rateSeller}
@@ -107,7 +114,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
   }
   if (isOwner) {
     return (
-      <Badge tone="brand" className="h-10 justify-center rounded-qb-md text-qb-caption">
+      <Badge tone="brand" className="h-10 justify-center rounded-qb-md font-qb-label text-qb-caption">
         {t('messaging.own_ad_badge')}
       </Badge>
     );

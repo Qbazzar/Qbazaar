@@ -25,7 +25,7 @@ describe('AdSpecs', () => {
     const panel = screen.getByRole('region', { name: 'Technical Data' });
 
     expect(within(panel).getByText('Condition').tagName).toBe('DT');
-    expect(within(panel).getByText('Like new').tagName).toBe('DD');
+    expect(within(panel).getByText('Like new').closest('dd')).not.toBeNull();
     expect(within(panel).getByText('BMW')).toBeInTheDocument();
   });
 

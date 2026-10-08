@@ -4,6 +4,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const push = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock('@/lib/echo/client', () => ({ disconnectEcho: vi.fn() }));
 vi.mock('@/lib/push/fcm', () => ({ disablePush: vi.fn() }));
@@ -26,7 +28,7 @@ function renderButton() {
 
 async function submitFourStars() {
   await userEvent.click(screen.getByRole('button', { name: 'Rate the seller' }));
-  await userEvent.click(await screen.findByRole('button', { name: '4 of 5 stars' }));
+  await userEvent.click(await screen.findByRole('radio', { name: '4 of 5 stars' }));
   await userEvent.click(screen.getByRole('button', { name: 'Submit review' }));
 }
 
@@ -37,15 +39,32 @@ beforeEach(() => {
 });
 
 describe('ReviewSellerButton', () => {
-  it('is hidden from guests and from the seller', () => {
+  it('sends guests to login and back', async () => {
     useAuthStore.setState({ user: null, accessToken: null, isHydrated: true });
-    const { unmount } = renderButton();
-    expect(screen.queryByRole('button', { name: 'Rate the seller' })).toBeNull();
-    unmount();
+    renderButton();
 
+    await userEvent.click(screen.getByRole('button', { name: 'Rate the seller' }));
+
+    const here = `${window.location.pathname}${window.location.search}`;
+    expect(push).toHaveBeenCalledWith(`/login?from=${encodeURIComponent(here)}`);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('is hidden from the seller', () => {
     useAuthStore.setState({ user: { id: 'seller' } as User, accessToken: 'AT', isHydrated: true });
     renderButton();
+
     expect(screen.queryByRole('button', { name: 'Rate the seller' })).toBeNull();
+  });
+
+  it('asks for a rating before sending', async () => {
+    renderButton();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Rate the seller' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Submit review' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Choose a rating first');
+    expect(createReview).not.toHaveBeenCalled();
   });
 
   it('sends the rating', async () => {

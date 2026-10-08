@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
-vi.mock('sonner', () => ({ toast: { error: vi.fn(), info: vi.fn() } }));
+vi.mock('sonner', () => ({ toast: { error: vi.fn(), info: vi.fn(), success: vi.fn() } }));
 vi.mock('@/lib/echo/client', () => ({ disconnectEcho: vi.fn() }));
 vi.mock('@/lib/push/fcm', () => ({ disablePush: vi.fn() }));
 vi.mock('@/lib/api/users', () => ({ followUser: vi.fn(), unfollowUser: vi.fn() }));
@@ -79,6 +79,22 @@ describe('FollowButton', () => {
       expect(queryClient.getQueryData<PublicUserProfile>(key)).toMatchObject({ is_following: true, followers_count: 5 }),
     );
     expect(followUser).toHaveBeenCalledWith('seller');
+    expect(toast.success).toHaveBeenCalledWith("You're following BonTon");
+  });
+
+  it('keeps the keyboard focus while the request runs', async () => {
+    signIn();
+    vi.mocked(followUser).mockReturnValue(new Promise(() => {}));
+
+    render(<FollowButton userId="seller" name="BonTon" isFollowing={false} stateKnown />, { wrapper });
+    const button = screen.getByRole('button', { name: 'Follow BonTon' });
+    button.focus();
+    await userEvent.keyboard('{Enter}');
+
+    await waitFor(() => expect(button).toHaveAttribute('aria-busy', 'true'));
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    expect(button).toBeEnabled();
+    expect(document.activeElement).toBe(button);
   });
 
   it('unfollows when already following', async () => {

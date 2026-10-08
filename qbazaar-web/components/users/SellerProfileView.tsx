@@ -13,12 +13,13 @@ import { toast } from 'sonner';
 import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { Badge } from '@/components/design-system/Badge';
 import { Button } from '@/components/design-system/Button';
+import { pageFrame } from '@/components/design-system/page-frame';
 import { ReportButton } from '@/components/reports/ReportButton';
 import { SellerReviews } from '@/components/reviews/SellerReviews';
-import { tCount } from '@/lib/ads/display';
 import { useAuth } from '@/hooks/useAuth';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import type { PublicUserProfile } from '@/lib/api/types';
 
 import { BlockUserButton } from './BlockUserButton';
@@ -37,8 +38,6 @@ interface SellerProfileViewProps {
   viewerStateKnown: boolean;
   defaultTab: CompanyTab;
 }
-
-const pageFrame = 'mx-auto max-w-[1440px] px-4 qb-tablet:px-6 qb-desktop:px-10';
 
 export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTab }: SellerProfileViewProps) {
   const { user } = useAuth();
@@ -68,7 +67,7 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
         variant="secondary"
         size="sm"
         onClick={() => toast.info(t('users.profile.send_message_soon'))}
-        className="h-10 w-full font-medium qb-tablet:w-auto qb-tablet:min-w-[106px]"
+        className="h-10 w-full font-medium focus-visible:outline-solid qb-tablet:w-auto qb-tablet:min-w-[106px]"
       >
         <MessageSquareText aria-hidden />
         {isBusiness ? t('users.profile.message') : t('ads.actions.send_message')}
@@ -138,7 +137,7 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
                 {t('users.profile.active_listings')}
               </h2>
               <p className="mt-2 text-qb-body text-qb-ink-subtle">
-                {tCount('users.profile.ads_available', profile.ads_count, locale)}
+                {tPlural('users.profile.ads_available', profile.ads_count, locale)}
               </p>
             </div>
             <SellerListings userId={profile.id} sellerName={name} layout="rows" />

@@ -6,6 +6,7 @@
  * whether the caller follows the user). All errors funnel through
  * `ApiClientError` so the UI can switch on the stable `USER_*` codes.
  */
+import type { Locale } from '@/lib/i18n/locale';
 import { api } from './client';
 import { ApiClientError } from './auth';
 import { isAxiosError } from 'axios';
@@ -64,6 +65,8 @@ export async function getPublicProfile(
 export interface GetUserAdsParams {
   page?: number;
   per_page?: number;
+  /** The page language, for the card chips (outranks the user's saved language). */
+  lang?: Locale;
 }
 
 export async function getUserAds(

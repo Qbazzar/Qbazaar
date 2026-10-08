@@ -1,47 +1,31 @@
-import { formatRelativeTime } from '@/lib/utils';
+import { formatNumber, intlLocale } from '@/lib/i18n/format';
 import { localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
-import type { Ad, AdSummary, CategoryField } from '@/lib/api/types';
+import { formatRelativeTime } from '@/lib/utils';
+import type { Ad, CategoryField } from '@/lib/api/types';
 
-/** Arabic pages show Arabic-Indic digits, as the rest of the app does. */
-export function numberLocale(locale: Locale): string {
-  return locale === 'ar' ? 'ar-EG' : 'en-US';
-}
-
-export function formatCount(value: number, locale: Locale): string {
-  return new Intl.NumberFormat(numberLocale(locale), { maximumFractionDigits: 2 }).format(value);
-}
-
-/** `t()` for a count: English needs the singular `{key}_one` for 1; other languages share one form. */
-export function tCount(key: string, count: number, locale: Locale, vars: Record<string, string | number> = {}): string {
-  const singular = count === 1 && locale === 'en';
-  return t(singular ? `${key}_one` : key, { ...vars, count: formatCount(count, locale) });
+/** A 0-5 average with one decimal at most: "4.5", "4". */
+export function formatRating(value: number, locale: Locale): string {
+  return formatNumber(Math.round(value * 10) / 10, locale);
 }
 
 /** Spec numbers: grouped from five digits, so a year stays "2020" while mileage reads "126,000". */
 function formatSpecNumber(value: number, locale: Locale): string {
-  return new Intl.NumberFormat(numberLocale(locale), {
+  return new Intl.NumberFormat(intlLocale(locale), {
     maximumFractionDigits: 2,
     useGrouping: Math.abs(value) >= 10_000,
   }).format(value);
 }
 
-/** "QAR 285,000", "Free" or "Contact for price". */
-export function formatAdPriceLabel(ad: Pick<AdSummary, 'price' | 'price_type'>, locale: Locale): string {
-  if (ad.price_type === 'free') return t('ads.price.free');
-  if (ad.price_type === 'contact' || ad.price == null) return t('ads.price.contact');
-  return t('ads.price.amount', { amount: formatCount(ad.price, locale) });
-}
-
 /**
- * "12 Apr 2026" in the page language; empty for a missing or broken date.
+ * "Apr 12, 2026" in the page language; empty for a missing or broken date.
  * Always on Qatar time, so the server and the browser print the same day.
  */
 export function formatAdDate(iso: string | null | undefined, locale: Locale): string {
   if (!iso) return '';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat(numberLocale(locale), {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -49,19 +33,9 @@ export function formatAdDate(iso: string | null | undefined, locale: Locale): st
   }).format(date);
 }
 
-/** "30 minutes ago"; older than a month falls back to the date. */
-export function formatAdAge(iso: string | null | undefined, locale: Locale): string {
-  return iso ? formatRelativeTime(iso, numberLocale(locale)) : '';
-}
-
-/** Readable name from a slug ("al-wakra-center" -> "Al Wakra Center"); list cards only carry the slug. */
-export function labelFromSlug(slug: string | null | undefined): string {
-  if (!slug) return '';
-  return slug
-    .split(/[-_]+/)
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+/** "30 minutes ago"; older than a month falls back to the date, year included. */
+export function formatTimeAgo(iso: string | null | undefined, locale: Locale): string {
+  return iso ? formatRelativeTime(iso, intlLocale(locale)) : '';
 }
 
 /** "semi_furnished" -> "Semi furnished", for keys and for options without a label. */

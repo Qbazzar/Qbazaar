@@ -10,7 +10,7 @@ import { Icon } from './Icon';
 
 /** The design gives every company without a logo one of these tinted tiles. */
 const LOGO_TONES = [
-  'border-qb-brand bg-qb-brand-soft text-qb-brand',
+  'border-qb-brand bg-qb-brand-soft text-qb-brand-on-soft',
   'border-qb-success bg-qb-success-soft text-qb-success',
   'border-qb-info bg-qb-info-soft text-qb-info',
   'border-qb-danger bg-qb-danger-soft text-qb-danger',

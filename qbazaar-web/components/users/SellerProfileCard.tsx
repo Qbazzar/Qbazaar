@@ -8,10 +8,13 @@ import { CalendarDays, LayoutGrid, MailCheck, ShieldCheck, Star, Users, type Luc
 import { useId, type ReactNode } from 'react';
 
 import { Avatar } from '@/components/design-system/Avatar';
+import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
-import { formatAdDate, formatCount, tCount } from '@/lib/ads/display';
+import { formatAdDate, formatRating } from '@/lib/ads/display';
+import { formatNumber } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { cn } from '@/lib/utils';
 import type { PublicUserProfile } from '@/lib/api/types';
 
@@ -38,9 +41,7 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
     profile.rating_count > 0
       ? {
           icon: Star,
-          label: tCount('ads.detail.seller_rating', profile.rating_count, locale, {
-            rating: formatCount(Math.round(profile.rating_avg * 10) / 10, locale),
-          }),
+          label: `${formatRating(profile.rating_avg, locale)} · ${tPlural('reviews.count', profile.rating_count, locale)}`,
         }
       : null,
   ].filter((item): item is { icon: LucideIcon; label: string } => item !== null);
@@ -49,15 +50,19 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
     <section
       aria-label={name}
       className={cn(
-        'rounded-qb-2xl border border-qb-line bg-qb-surface px-5 pt-5 pb-6 font-qb shadow-qb-card',
+        cardVariants({ large: true, elevated: true, padding: 'none' }),
+        'px-5 pt-5 pb-6',
         'qb-tablet:px-12 qb-tablet:pt-7 qb-tablet:pb-9 qb-desktop:px-[17px] qb-desktop:pt-[42px] qb-desktop:pb-9',
         className,
       )}
     >
       <div className="flex flex-col items-center text-center">
-        <Avatar name={name} src={profile.avatar_url} size="lg" className="size-20 border border-qb-line bg-qb-hover text-qb-h3 text-qb-ink qb-tablet:size-[79px]" />
+        {/* The name is the heading below. */}
+        <span aria-hidden="true" className="flex">
+          <Avatar name={name} src={profile.avatar_url} size="lg" className="size-20 border border-qb-line bg-qb-hover text-qb-h3 text-qb-ink qb-tablet:size-[79px]" />
+        </span>
         <h1 className="mt-3 flex items-center gap-1.5 text-qb-h5 font-medium tracking-normal text-qb-ink qb-tablet:mt-[14px] qb-tablet:text-qb-h4">
-          {name}
+          <span dir="auto">{name}</span>
           {isVerifiedSeller(profile) ? <VerifiedMark /> : null}
         </h1>
         <p className="mt-3 font-qb-label text-qb-caption font-medium text-qb-ink-subtle qb-tablet:text-qb-body">
@@ -66,7 +71,7 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
       </div>
 
       {actions ? (
-        <div className="mt-[22px] [display:grid] grid-cols-2 gap-3 qb-tablet:gap-5 qb-desktop:mt-9 qb-desktop:gap-[11px]">{actions}</div>
+        <div className="mt-[22px] [display:grid] grid-cols-2 gap-3 qb-tablet:gap-5 qb-desktop:mt-5 qb-desktop:gap-[11px]">{actions}</div>
       ) : null}
       {secondaryActions ? <div className="mt-3 flex flex-wrap items-center justify-center gap-1">{secondaryActions}</div> : null}
 
@@ -75,9 +80,9 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
           {t('users.profile.info')}
         </h2>
         <dl className="mt-[18px] flex flex-col gap-3.5 text-qb-body">
-          <InfoRow icon={Users} label={t('users.profile.followers')} value={formatCount(profile.followers_count, locale)} />
+          <InfoRow icon={Users} label={t('users.profile.followers')} value={formatNumber(profile.followers_count, locale)} />
           <InfoRow icon={CalendarDays} label={t('users.profile.member_since')} value={formatAdDate(profile.joined_at, locale)} />
-          <InfoRow icon={LayoutGrid} label={t('users.profile.ads_number')} value={formatCount(profile.ads_count, locale)} />
+          <InfoRow icon={LayoutGrid} label={t('users.profile.ads_number')} value={formatNumber(profile.ads_count, locale)} />
         </dl>
       </section>
 
@@ -90,7 +95,7 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
             {highlights.map((item) => (
               <li
                 key={item.label}
-                className="flex h-9 items-center gap-1.5 rounded-qb-sm bg-qb-brand-soft px-3.5 text-qb-label text-qb-brand qb-tablet:text-qb-body"
+                className="flex h-9 items-center gap-1.5 rounded-qb-sm bg-qb-brand-soft px-3.5 text-qb-label text-qb-brand-on-soft qb-tablet:text-qb-body"
               >
                 <Icon icon={item.icon} size="sm" />
                 {item.label}

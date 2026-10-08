@@ -7,17 +7,21 @@
  *    ad-facts panels beside them from the top.
  *  - 744: photos across the page, then the two columns.
  *  - 390: one column with full-bleed photos and no breadcrumb.
+ *
+ * Under the panels: the seller's other ads (the design's "Another Ads From
+ * Seller") and the similar ads.
  */
 import { AdDescription } from '@/components/ads/AdDescription';
 import { AdFactsCard } from '@/components/ads/AdFactsCard';
 import { AdGallery } from '@/components/ads/AdGallery';
 import { AdLocationCard } from '@/components/ads/AdLocationCard';
 import { AdOverviewCard } from '@/components/ads/AdOverviewCard';
+import { AdSellerAds, AdSimilarAds } from '@/components/ads/AdRelatedAds';
 import { AdSellerCard } from '@/components/ads/AdSellerCard';
-import { AdSimilar } from '@/components/ads/AdSimilar';
 import { AdSpecs } from '@/components/ads/AdSpecs';
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { Breadcrumb } from '@/components/design-system/Breadcrumb';
+import { pageFrame } from '@/components/design-system/page-frame';
 import { useAuth } from '@/hooks/useAuth';
 import { localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -53,7 +57,7 @@ export function AdDetailView({ ad, locale }: AdDetailViewProps) {
 
   return (
     <main className="bg-qb-page pb-16 font-qb text-qb-ink">
-      <div className="mx-auto max-w-[1440px] px-4 qb-tablet:px-6 qb-tablet:pt-[72px] qb-desktop:px-10 qb-desktop:pt-[65px]">
+      <div className={`${pageFrame} qb-tablet:pt-[72px] qb-desktop:pt-[65px]`}>
         <Breadcrumb items={crumbs} className="hidden qb-tablet:block" />
 
         <div className="[display:grid] grid-cols-1 gap-4 qb-tablet:mt-[49px] qb-tablet:grid-cols-[minmax(0,1fr)_263px] qb-tablet:gap-x-[17px] qb-tablet:gap-y-6 qb-desktop:grid-cols-[minmax(0,1fr)_421px] qb-desktop:gap-x-8">
@@ -79,7 +83,8 @@ export function AdDetailView({ ad, locale }: AdDetailViewProps) {
           </aside>
         </div>
 
-        <AdSimilar adId={ad.id} categorySlug={ad.category?.slug} />
+        <AdSellerAds adId={ad.id} sellerId={ad.user_id} />
+        <AdSimilarAds adId={ad.id} categorySlug={ad.category?.slug} />
       </div>
     </main>
   );

@@ -1,5 +1,8 @@
+import { cardVariants } from '@/components/design-system/Card';
+import { cn } from '@/lib/utils';
+
 /** White r24 panel the ad detail page is built from. */
-export const detailCard = 'rounded-qb-2xl border border-qb-line bg-qb-surface shadow-qb-card';
+export const detailCard = cn(cardVariants({ large: true, elevated: true, padding: 'none' }));
 
 /** Padding of the main-column panels (title, description, specs). */
 export const detailCardMain = 'p-[17px] qb-tablet:p-5 qb-desktop:p-8';

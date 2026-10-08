@@ -35,7 +35,10 @@ export function AdSpecs({ ad, locale }: AdSpecsProps) {
             {specs.map((spec) => (
               <div key={spec.key} className="flex items-start gap-2 qb-tablet:flex-col qb-tablet:gap-[7px] qb-desktop:gap-[9px]">
                 <dt className="w-1/2 shrink-0 text-qb-micro text-qb-ink-subtle qb-tablet:w-auto qb-desktop:text-qb-caption">{spec.label}</dt>
-                <dd className="min-w-0 text-qb-caption font-medium break-words text-qb-ink">{spec.value}</dd>
+                {/* Free text is in the seller's script; isolating it keeps numbers aligned with the page. */}
+                <dd className="min-w-0 text-qb-caption font-medium break-words text-qb-ink">
+                  <bdi>{spec.value}</bdi>
+                </dd>
               </div>
             ))}
           </dl>
@@ -50,7 +53,7 @@ export function AdSpecs({ ad, locale }: AdSpecsProps) {
           <ul className="mt-6 [display:grid] grid-cols-1 gap-y-4 qb-tablet:mt-4 qb-tablet:gap-y-8 qb-desktop:mt-6 qb-desktop:grid-cols-3 qb-desktop:gap-x-6">
             {features.map((feature) => (
               <li key={feature} className="flex items-center gap-2 text-qb-caption text-qb-ink-subtle">
-                <span aria-hidden="true" className="flex size-5 shrink-0 items-center justify-center rounded-full bg-qb-success text-white">
+                <span aria-hidden="true" className="flex size-5 shrink-0 items-center justify-center rounded-full bg-qb-success text-qb-surface">
                   <Check className="size-3.5" strokeWidth={3} />
                 </span>
                 {feature}

@@ -20,7 +20,7 @@ export function VerifiedMark({ className }: { className?: string }) {
     <BadgeCheck
       role="img"
       aria-label={t('users.profile.verified')}
-      className={cn('size-5 shrink-0 fill-qb-info text-white', className)}
+      className={cn('size-5 shrink-0 fill-qb-info text-qb-surface', className)}
     />
   );
 }
@@ -33,7 +33,7 @@ export function SellerTypeChip({ accountType, className }: { accountType: Accoun
   return (
     <span
       className={cn(
-        'inline-flex h-5 w-fit items-center rounded-[4px] border border-qb-brand bg-qb-brand-soft px-2 font-qb-label text-qb-tiny leading-none font-medium whitespace-nowrap text-qb-brand',
+        'inline-flex h-5 w-fit items-center rounded-[4px] border border-qb-brand bg-qb-brand-soft px-2 font-qb-label text-qb-tiny leading-none font-medium whitespace-nowrap text-qb-brand-on-soft',
         className,
       )}
     >

@@ -1,24 +1,17 @@
 import type { ReactNode } from 'react';
 import { CalendarDays, Eye, MapPin, type LucideIcon } from 'lucide-react';
 
-import { Badge, type BadgeProps } from '@/components/design-system/Badge';
+import { AdStatusBadge } from '@/components/account/AdStatusBadge';
 import { Icon } from '@/components/design-system/Icon';
-import { formatAdAge, formatAdPriceLabel, tCount } from '@/lib/ads/display';
+import { formatTimeAgo } from '@/lib/ads/display';
+import { formatAdPrice } from '@/lib/ads/format';
 import { localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { cn } from '@/lib/utils';
-import type { Ad, AdStatus } from '@/lib/api/types';
+import type { Ad } from '@/lib/api/types';
 
 import { detailCard, detailCardMain } from './detail-card';
-
-const STATUS_TONE: Record<Exclude<AdStatus, 'active'>, NonNullable<BadgeProps['tone']>> = {
-  draft: 'neutral',
-  pending: 'brand',
-  sold: 'neutral',
-  expired: 'neutral',
-  rejected: 'danger',
-  blocked: 'danger',
-};
 
 interface AdOverviewCardProps {
   ad: Ad;
@@ -34,12 +27,12 @@ export function AdOverviewCard({ ad, locale }: AdOverviewCardProps) {
     <section className={cn(detailCard, detailCardMain)}>
       <div className="flex items-start justify-between gap-4 qb-desktop:gap-10">
         <div className="min-w-0">
-          {ad.status !== 'active' ? (
-            <Badge tone={STATUS_TONE[ad.status]} size="sm" className="mb-3">
-              {t(`ads.status.${ad.status}`)}
-            </Badge>
-          ) : null}
-          <h1 className="text-qb-caption leading-[1.25] font-semibold tracking-normal text-balance text-qb-ink-title qb-desktop:text-qb-h3">
+          {/* A sold ad, or an owner's ad that isn't live, wears its status chip as on My Ads. */}
+          {ad.status !== 'active' ? <AdStatusBadge status={ad.status} className="mb-3" /> : null}
+          <h1
+            dir="auto"
+            className="text-qb-caption leading-[1.25] font-semibold tracking-normal text-balance text-qb-ink-title qb-desktop:text-qb-h3"
+          >
             {ad.title}
           </h1>
         </div>
@@ -50,7 +43,7 @@ export function AdOverviewCard({ ad, locale }: AdOverviewCardProps) {
               hasAmount || ad.price_type === 'free' ? 'text-qb-brand' : 'text-qb-ink-subtle',
             )}
           >
-            {formatAdPriceLabel(ad, locale)}
+            {formatAdPrice(ad, locale)}
           </span>
           {ad.price_type === 'negotiable' && hasAmount ? (
             <span className="text-qb-micro text-qb-ink-subtle qb-desktop:text-qb-caption">{t('ads.price.negotiable')}</span>
@@ -63,10 +56,10 @@ export function AdOverviewCard({ ad, locale }: AdOverviewCardProps) {
         {ad.published_at ? (
           <MetaRow icon={CalendarDays}>
             {/* Relative to "now", so the server and the browser may differ by a minute. */}
-            <span suppressHydrationWarning>{formatAdAge(ad.published_at, locale)}</span>
+            <span suppressHydrationWarning>{formatTimeAgo(ad.published_at, locale)}</span>
           </MetaRow>
         ) : null}
-        <MetaRow icon={Eye}>{tCount('ads.detail.views', ad.views_count, locale)}</MetaRow>
+        <MetaRow icon={Eye}>{tPlural('ads.detail.views', ad.views_count, locale)}</MetaRow>
       </ul>
     </section>
   );

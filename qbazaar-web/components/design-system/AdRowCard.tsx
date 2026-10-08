@@ -75,7 +75,7 @@ export function AdRowCard({
       <div className="flex min-w-0 flex-1 flex-col p-4 qb-tablet:px-4 qb-tablet:pt-7 qb-tablet:pb-5 qb-desktop:px-6 qb-desktop:pt-[30px]">
         <div className="flex items-start justify-between gap-4">
           <Heading className="line-clamp-2 min-w-0 text-qb-body leading-[1.25] font-medium tracking-normal text-qb-ink-body qb-desktop:text-qb-h5">
-            <Link href={href} className="outline-none after:absolute after:inset-0">
+            <Link href={href} dir="auto" className="outline-none after:absolute after:inset-0">
               {title}
             </Link>
           </Heading>
@@ -86,14 +86,15 @@ export function AdRowCard({
           ) : null}
         </div>
         {description ? (
-          <p className="mt-3 line-clamp-2 text-qb-caption leading-[1.3] text-qb-ink-muted qb-desktop:max-w-[432px] qb-desktop:text-qb-body">
+          <p dir="auto" className="mt-3 line-clamp-2 text-qb-caption leading-[1.3] text-qb-ink-muted qb-desktop:max-w-[432px] qb-desktop:text-qb-body">
             {description}
           </p>
         ) : null}
         {tags?.length ? (
           <ul className="mt-3 flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <li key={tag}>
+            {tags.map((tag, index) => (
+              // Two yes/no specs can read the same.
+              <li key={`${index}-${tag}`}>
                 <Chip size="sm" className="rounded-qb-pill">
                   {tag}
                 </Chip>

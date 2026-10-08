@@ -54,6 +54,15 @@ describe('SellerProfileCard', () => {
     ]);
   });
 
+  it('counts in Arabic with Latin digits and the Arabic plural forms', () => {
+    setClientLocale('ar');
+    render(<SellerProfileCard profile={{ ...profile, rating_count: 3, followers_count: 1250 }} locale="ar" actions={null} />);
+    const highlights = screen.getByRole('region', { name: 'مميزات البائع' });
+
+    expect(within(highlights).getByText('4.5 · 3 تقييمات')).toBeInTheDocument();
+    expect(screen.getByText('1,250')).toBeInTheDocument();
+  });
+
   it('has no highlights section when there is nothing to highlight', () => {
     render(
       <SellerProfileCard

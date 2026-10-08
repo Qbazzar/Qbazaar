@@ -4,6 +4,7 @@
  * Follow / unfollow a seller. Guests are sent to login and come back; the
  * button is not shown on your own profile. While the viewer's own copy of the
  * profile is still loading, the state isn't known yet, so the button waits.
+ * During the request it keeps its focus, and the result is announced.
  */
 import { Check, Loader2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -42,14 +43,18 @@ export function FollowButton({ userId, name, isFollowing, stateKnown, label, siz
 
   if (isHydrated && user?.id === userId) return null;
 
-  const busy = mutation.isPending || !isHydrated || (isAuthenticated && !stateKnown);
+  const waiting = !isHydrated || (isAuthenticated && !stateKnown);
 
   const onClick = () => {
+    if (mutation.isPending) return;
     if (!isAuthenticated) {
       router.push(`/login?from=${encodeURIComponent(currentLocationPath())}`);
       return;
     }
     mutation.mutate(!isFollowing, {
+      onSuccess: (state) => {
+        toast.success(t(state.following ? 'users.follow.followed' : 'users.follow.unfollowed', { name }));
+      },
       onError: (err) => {
         const key = err instanceof ApiClientError ? ERROR_KEYS[err.code] : undefined;
         toast.error(t(key ?? 'common.error'));
@@ -62,9 +67,10 @@ export function FollowButton({ userId, name, isFollowing, stateKnown, label, siz
       variant={isFollowing ? 'secondary' : 'primary'}
       size={size}
       onClick={onClick}
-      disabled={busy}
+      disabled={waiting}
+      aria-disabled={mutation.isPending || undefined}
       aria-busy={mutation.isPending || undefined}
-      className={cn('font-medium', className)}
+      className={cn('font-medium focus-visible:outline-solid', className)}
     >
       {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
       {!mutation.isPending && isFollowing ? <Check aria-hidden /> : null}

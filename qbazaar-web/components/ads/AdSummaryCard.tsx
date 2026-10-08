@@ -15,6 +15,8 @@ interface AdSummaryCardProps {
   layout?: 'grid' | 'list';
   /** First cards of the page load eagerly so they are not late for LCP. */
   eager?: boolean;
+  /** `h2` where no section heading sits above the cards. */
+  headingLevel?: 'h2' | 'h3';
   className?: string;
 }
 
@@ -24,7 +26,7 @@ const IMAGE_SIZES = {
 } as const;
 
 /** An `AdSummary` from the API shown as the design-system listing card. */
-export function AdSummaryCard({ ad, layout = 'grid', eager = false, className }: AdSummaryCardProps) {
+export function AdSummaryCard({ ad, layout = 'grid', eager = false, headingLevel, className }: AdSummaryCardProps) {
   const locale = getLocale();
   const place = useLocationsStore((state) => state.findBySlug(ad.location_slug));
   const image = ad.primary_image;
@@ -35,6 +37,7 @@ export function AdSummaryCard({ ad, layout = 'grid', eager = false, className }:
       href={`/ads/${ad.id}`}
       title={ad.title}
       layout={layout}
+      headingLevel={headingLevel}
       price={formatAdPrice(ad, locale)}
       badge={ad.promotion ? t('catalog.card.top_ad', 'إعلان مميز') : undefined}
       description={ad.summary || undefined}

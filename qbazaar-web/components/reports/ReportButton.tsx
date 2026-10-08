@@ -2,19 +2,25 @@
 
 /**
  * "Report" trigger for an ad or a user: a ghost button that opens
- * `ReportDialog`, which owns the form. Hidden for guests, since only
- * signed-in users can file reports.
+ * `ReportDialog`, which owns the form. It shows from the first render, so
+ * nothing shifts once the session is known; guests are sent to login and
+ * come back. After a report it reads "Reported!" (190:9777) for the visit.
  */
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { TriangleAlert } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { t } from '@/lib/i18n/messages';
+import { currentLocationPath } from '@/lib/navigation/safe-return-to';
 import { cn } from '@/lib/utils';
 import type { ReportTarget } from '@/lib/api/types';
 
 import { ReportDialog } from './ReportDialog';
+
+/** Below the reference's 601 px tablet breakpoint the form is a bottom sheet. */
+const PHONE_QUERY = '(max-width: 600px)';
 
 interface ReportButtonProps {
   target_type: ReportTarget;
@@ -25,24 +31,48 @@ interface ReportButtonProps {
 }
 
 export function ReportButton({ target_type, target_id, label, className }: ReportButtonProps) {
+  const router = useRouter();
   const { isAuthenticated, isHydrated } = useAuth();
   const [open, setOpen] = useState(false);
+  const [asSheet, setAsSheet] = useState(false);
+  const [reported, setReported] = useState(false);
 
-  if (!isHydrated || !isAuthenticated) return null;
+  const onClick = () => {
+    if (reported || !isHydrated) return;
+    if (!isAuthenticated) {
+      router.push(`/login?from=${encodeURIComponent(currentLocationPath())}`);
+      return;
+    }
+    setAsSheet(window.matchMedia(PHONE_QUERY).matches);
+    setOpen(true);
+  };
 
   return (
     <>
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setOpen(true)}
-        className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink', className)}
+        onClick={onClick}
+        aria-disabled={reported || undefined}
+        className={cn(
+          'font-normal text-qb-ink-subtle hover:text-qb-ink focus-visible:outline-solid',
+          // No warning token yet: the design's amber "Reported!" takes the brand colour.
+          reported && 'text-qb-brand aria-disabled:opacity-100',
+          className,
+        )}
       >
         <TriangleAlert aria-hidden />
-        {label ?? t('reports.title')}
+        {reported ? t('reports.reported') : (label ?? t('reports.title'))}
       </Button>
 
-      <ReportDialog open={open} onOpenChange={setOpen} target_type={target_type} target_id={target_id} />
+      <ReportDialog
+        open={open}
+        onOpenChange={setOpen}
+        asSheet={asSheet}
+        target_type={target_type}
+        target_id={target_id}
+        onReported={() => setReported(true)}
+      />
     </>
   );
 }

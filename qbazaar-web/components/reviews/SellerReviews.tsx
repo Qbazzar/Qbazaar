@@ -8,11 +8,12 @@ import { useId } from 'react';
 import { Clock } from 'lucide-react';
 
 import { Avatar } from '@/components/design-system/Avatar';
+import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
-import { formatRelativeTime } from '@/components/messaging/relative-time';
-import { formatCount, tCount } from '@/lib/ads/display';
+import { formatRating, formatTimeAgo } from '@/lib/ads/display';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { useUserReviewsQuery } from '@/lib/queries/users';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +26,7 @@ interface SellerReviewsProps {
   className?: string;
 }
 
-const row = 'rounded-qb-2xl border border-qb-line bg-qb-surface shadow-qb-card';
+const row = cardVariants({ large: true, elevated: true, padding: 'none' });
 
 export function SellerReviews({ userId, ratingAvg, ratingCount, className }: SellerReviewsProps) {
   const locale = getLocale();
@@ -41,9 +42,9 @@ export function SellerReviews({ userId, ratingAvg, ratingCount, className }: Sel
         </h2>
         {ratingCount > 0 ? (
           <p className="flex items-center gap-2 text-qb-caption text-qb-ink-subtle">
-            <span className="text-qb-body-lg font-semibold text-qb-ink">{formatCount(Math.round(ratingAvg * 10) / 10, locale)}</span>
+            <span className="text-qb-body-lg font-semibold text-qb-ink">{formatRating(ratingAvg, locale)}</span>
             <RatingStars value={ratingAvg} />
-            <span>{tCount('reviews.count', ratingCount, locale)}</span>
+            <span>{tPlural('reviews.count', ratingCount, locale)}</span>
           </p>
         ) : null}
       </div>
@@ -51,9 +52,10 @@ export function SellerReviews({ userId, ratingAvg, ratingCount, className }: Sel
       {ratingCount === 0 ? (
         <p className={cn(row, 'mt-4 p-6 text-qb-caption text-qb-ink-subtle')}>{t('reviews.empty')}</p>
       ) : isPending ? (
-        <div aria-hidden="true" className="mt-4 flex flex-col gap-4">
-          <div className={cn(row, 'h-[104px] animate-pulse bg-qb-fill')} />
-          <div className={cn(row, 'h-[104px] animate-pulse bg-qb-fill')} />
+        <div aria-busy="true" className="mt-4 flex flex-col gap-4">
+          <span className="sr-only">{t('common.loading')}</span>
+          <div aria-hidden="true" className={cn(row, 'h-[104px] animate-pulse bg-qb-fill motion-reduce:animate-none')} />
+          <div aria-hidden="true" className={cn(row, 'h-[104px] animate-pulse bg-qb-fill motion-reduce:animate-none')} />
         </div>
       ) : (
         <ul className="mt-4 flex flex-col gap-4">
@@ -61,18 +63,23 @@ export function SellerReviews({ userId, ratingAvg, ratingCount, className }: Sel
             const reviewer = review.reviewer?.full_name ?? t('reviews.deleted_user');
             return (
               <li key={review.id} className={cn(row, 'flex gap-4 p-4 qb-tablet:p-5')}>
-                <Avatar name={reviewer} src={review.reviewer?.avatar_url} size="md" tone="brand" />
+                {/* The name follows in text. */}
+                <span aria-hidden="true" className="flex shrink-0">
+                  <Avatar name={reviewer} src={review.reviewer?.avatar_url} size="md" tone="brand" />
+                </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-qb-body font-medium text-qb-ink-body">{reviewer}</p>
+                  <p dir="auto" className="truncate text-qb-body font-medium text-qb-ink-body">
+                    {reviewer}
+                  </p>
                   <RatingStars value={review.rating} size={14} className="mt-1.5" />
                   {review.comment ? (
-                    <p className="mt-2 text-qb-caption leading-[1.5] break-words whitespace-pre-line text-qb-ink-muted">
+                    <p dir="auto" className="mt-2 text-qb-caption leading-[1.5] break-words whitespace-pre-line text-qb-ink-muted">
                       {review.comment}
                     </p>
                   ) : null}
                   <p className="mt-2 flex items-center gap-1.5 text-qb-label text-qb-ink-subtle">
                     <Icon icon={Clock} size="sm" />
-                    {formatRelativeTime(review.created_at)}
+                    {formatTimeAgo(review.created_at, locale)}
                   </p>
                 </div>
               </li>

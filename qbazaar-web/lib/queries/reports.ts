@@ -31,11 +31,11 @@ export function useSubmitReportMutation(): UseMutationResult<
         toast.info(t('reports.errors.self', 'لا يمكنك الإبلاغ عن نفسك'));
         return;
       }
-      // Validation errors are surfaced inline by the dialog; everything else
-      // gets a generic toast so the user has feedback.
-      if (err.code !== 'VALIDATION_FAILED') {
-        toast.error(err.message || t('common.error', 'حدث خطأ، حاول مرة أخرى'));
+      if (err.code === 'REPORT_003') {
+        toast.error(t('reports.errors.invalid_target', 'لا يمكن الإبلاغ عن هذا العنصر'));
+        return;
       }
+      toast.error(err.message || t('common.error', 'حدث خطأ، حاول مرة أخرى'));
     },
   });
 }

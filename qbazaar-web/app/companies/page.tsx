@@ -9,11 +9,13 @@ import { CompanyCard } from '@/components/design-system/CompanyCard';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Pagination } from '@/components/design-system/Pagination';
-import { formatCount, tCount } from '@/lib/ads/display';
+import { pageFrame } from '@/components/design-system/page-frame';
 import type { Company } from '@/lib/api/types';
 import { companiesApiPath, companiesHref, readCompaniesParams, type CompaniesParams } from '@/lib/companies/directory';
+import { formatNumber } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { tPlural } from '@/lib/i18n/plural';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { absoluteUrl, fetchApiPage } from '@/lib/seo';
 
@@ -51,7 +53,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
 
   return (
     <main className="bg-qb-page pb-16 font-qb text-qb-ink">
-      <div className="mx-auto max-w-[1440px] px-4 pt-11 qb-tablet:px-6 qb-tablet:pt-[72px] qb-desktop:px-10 qb-desktop:pt-[65px]">
+      <div className={`${pageFrame} pt-11 qb-tablet:pt-[72px] qb-desktop:pt-[65px]`}>
         <Breadcrumb
           items={[{ label: t('home.breadcrumb'), href: '/' }, { label: t('companies.title') }]}
           className="hidden qb-tablet:block"
@@ -60,12 +62,15 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         <h1 className="text-qb-h2 leading-none font-semibold tracking-normal text-qb-ink qb-tablet:mt-[73px] qb-tablet:text-[32px] qb-desktop:mt-[49px] qb-desktop:text-qb-h1">
           {t('companies.title')}
         </h1>
-        {result ? (
-          <p className="mt-[19px] text-qb-caption text-qb-breadcrumb qb-tablet:mt-7 qb-tablet:text-qb-body qb-desktop:mt-[37px] qb-desktop:text-qb-h5">
-            <span className="font-semibold text-qb-ink-body qb-tablet:font-medium">{formatCount(total, locale)}</span>{' '}
-            {tCount('companies.count', total, locale)}
-          </p>
-        ) : null}
+        {/* Present in every state, so a new search's count is read out when the results change in place. */}
+        <div role="status">
+          {result ? (
+            <p className="mt-[19px] text-qb-caption text-qb-breadcrumb qb-tablet:mt-7 qb-tablet:text-qb-body qb-desktop:mt-[37px] qb-desktop:text-qb-h5">
+              <span className="font-semibold text-qb-ink-body qb-tablet:font-medium">{formatNumber(total, locale)}</span>{' '}
+              {tPlural('companies.count', total, locale)}
+            </p>
+          ) : null}
+        </div>
 
         <section aria-labelledby="companies-search-title" className="mt-[45px] qb-tablet:mt-[42px] qb-desktop:mt-[77px]">
           <div className="mx-auto max-w-[1109px] text-center">
@@ -134,9 +139,9 @@ function CompanyResults({ companies, params, lastPage, locale }: CompanyResultsP
               name={company.business_name}
               logoUrl={company.avatar_url}
               toneKey={company.id}
-              meta={tCount('companies.followers', company.followers_count, locale)}
+              meta={tPlural('companies.followers', company.followers_count, locale)}
               metaIcon={Users}
-              count={tCount('companies.ads', company.active_ads_count, locale)}
+              count={tPlural('companies.ads', company.active_ads_count, locale)}
               className="h-full"
             />
           </li>
