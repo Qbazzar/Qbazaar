@@ -33,9 +33,6 @@ const frame =
 
 const slideSizes = '(min-width: 1001px) 907px, (min-width: 601px) 696px, 100vw';
 
-// focusRing's outline-none also clears the style its focus outline reads; outline-solid restores it.
-const visibleFocus = cn(focusRing, 'focus-visible:outline-solid');
-
 function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
@@ -105,7 +102,7 @@ export function AdGallery({ images, alt, favorite, className }: AdGalleryProps) 
                 type="button"
                 onClick={() => setLightboxIndex(index)}
                 aria-label={t('media.open_fullscreen')}
-                className={cn('absolute inset-0 cursor-zoom-in', visibleFocus, 'focus-visible:-outline-offset-4')}
+                className={cn('absolute inset-0 cursor-zoom-in', focusRing, 'focus-visible:-outline-offset-4')}
               >
                 <Image
                   src={media.sizes.large || media.url}
@@ -180,7 +177,7 @@ function ArrowButton({ icon, label, atEnd, onClick, className }: ArrowButtonProp
       className={cn(
         'absolute top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-qb-surface text-qb-brand transition-opacity motion-reduce:transition-none',
         'qb-tablet:size-10 qb-desktop:size-12 aria-disabled:cursor-default aria-disabled:opacity-60',
-        visibleFocus,
+        focusRing,
         className,
       )}
     >
@@ -256,7 +253,7 @@ function Lightbox({ images, alt, index, onIndexChange, onClose, returnFocus }: L
           ) : null}
           <Dialog.Close
             aria-label={t('media.close_fullscreen')}
-            className={cn('absolute end-4 top-4 flex size-11 items-center justify-center rounded-full bg-qb-surface text-qb-ink', visibleFocus)}
+            className={cn('absolute end-4 top-4 flex size-11 items-center justify-center rounded-full bg-qb-surface text-qb-ink', focusRing)}
           >
             <Icon icon={X} size="lg" />
           </Dialog.Close>

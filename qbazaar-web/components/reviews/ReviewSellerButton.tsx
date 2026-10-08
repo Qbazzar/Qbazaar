@@ -98,7 +98,7 @@ export function ReviewSellerButton({ adId, sellerId, className }: ReviewSellerBu
         variant="ghost"
         size="sm"
         onClick={openDialog}
-        className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink focus-visible:outline-solid', className)}
+        className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink', className)}
       >
         <Star aria-hidden />
         {t('reviews.rate_seller')}
@@ -154,10 +154,10 @@ export function ReviewSellerButton({ adId, sellerId, className }: ReviewSellerBu
         />
 
         <div className="mt-6 flex flex-col-reverse gap-3 qb-tablet:flex-row qb-tablet:justify-end">
-          <Button variant="outline" onClick={() => setOpen(false)} className="focus-visible:outline-solid">
+          <Button variant="outline" onClick={() => setOpen(false)}>
             {t('common.cancel')}
           </Button>
-          <Button aria-disabled={mutation.isPending || undefined} onClick={submit} className="focus-visible:outline-solid">
+          <Button aria-disabled={mutation.isPending || undefined} onClick={submit}>
             {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
             {t('reviews.submit')}
           </Button>

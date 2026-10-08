@@ -6,6 +6,7 @@ import { Eye, Heart, LoaderCircle, PenLine, Trash2, type LucideIcon } from 'luci
 import { ModalActions } from '@/components/account/ModalActions';
 import { Button } from '@/components/design-system/Button';
 import { cardVariants } from '@/components/design-system/Card';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { Modal } from '@/components/design-system/Modal';
 import type { Ad } from '@/lib/api/types';
@@ -15,7 +16,6 @@ import { t } from '@/lib/i18n/messages';
 import { formatDate } from '@/lib/post-ad/format';
 import { cn } from '@/lib/utils';
 
-import { visibleFocus, visibleFocusRing } from './FormParts';
 import type { PostAdAction } from './usePostAdActions';
 
 export interface YourAdPanelProps {
@@ -75,11 +75,11 @@ export function YourAdPanel({ ad, running, onEdit, onDelete }: YourAdPanelProps)
         description={t('ads.actions.delete_confirm_body')}
       >
         <ModalActions className="mt-2">
-          <Button size="sm" disabled={running !== null} aria-busy={deleting || undefined} onClick={onDelete} className={visibleFocus}>
+          <Button size="sm" disabled={running !== null} aria-busy={deleting || undefined} onClick={onDelete}>
             {deleting ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
             {t('common.delete')}
           </Button>
-          <Button variant="muted" size="sm" disabled={deleting} onClick={() => setConfirmDelete(false)} className={visibleFocus}>
+          <Button variant="muted" size="sm" disabled={deleting} onClick={() => setConfirmDelete(false)}>
             {t('common.cancel')}
           </Button>
         </ModalActions>
@@ -113,7 +113,7 @@ function PanelAction({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={cn('flex items-center gap-3 rounded-qb-xs hover:text-qb-ink disabled:cursor-not-allowed disabled:opacity-50', visibleFocusRing)}
+      className={cn('flex items-center gap-3 rounded-qb-xs hover:text-qb-ink disabled:cursor-not-allowed disabled:opacity-50', focusRing)}
     >
       <Icon icon={icon} className="size-[17px]" />
       {children}

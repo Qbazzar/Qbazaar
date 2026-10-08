@@ -72,8 +72,8 @@ export function FavoriteButton({
 
   const handleClick = useMemo(() => {
     return (event: React.MouseEvent<HTMLButtonElement>) => {
-      // The button sits inside a Link on AdCard — swallow the click so the
-      // parent <a> doesn't navigate to the ad detail page.
+      // The button floats over a card's stretched link or a gallery photo;
+      // the click must not reach them.
       event.preventDefault();
       event.stopPropagation();
 
@@ -112,7 +112,7 @@ export function FavoriteButton({
       disabled={toggleMutation.isPending}
       className={cn(
         'inline-flex items-center justify-center rounded-full bg-white/90 text-ink-700 shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition-colors',
-        'hover:bg-white hover:text-coral focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2',
+        'hover:bg-white hover:text-coral focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2',
         'disabled:cursor-progress disabled:opacity-70',
         withLabel ? 'gap-2 px-3 py-2 text-sm' : SIZE_CLS[size],
         favorited && 'text-coral',

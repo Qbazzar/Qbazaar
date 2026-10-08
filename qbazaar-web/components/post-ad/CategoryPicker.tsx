@@ -5,14 +5,14 @@ import { Dialog } from '@base-ui/react/dialog';
 import { ArrowLeft, ChevronRight, X } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { modalBackdrop } from '@/components/design-system/Modal';
 import type { CategoryNode } from '@/lib/api/types';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { findPath, isLeaf } from '@/lib/post-ad/tree';
 import { cn } from '@/lib/utils';
-
-import { visibleFocus, visibleFocusRing } from './FormParts';
 
 export interface CategoryPickerProps {
   open: boolean;
@@ -36,7 +36,7 @@ export function CategoryPicker({ open, onOpenChange, tree, value, onSelect }: Ca
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-qb-overlay transition-opacity duration-200 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-reduce:transition-none" />
+        <Dialog.Backdrop className={modalBackdrop} />
         <Dialog.Popup
           className={cn(
             'fixed inset-x-4 top-1/2 z-50 mx-auto flex max-h-[calc(100dvh-32px)] max-w-[760px] -translate-y-1/2 flex-col overflow-hidden',
@@ -100,7 +100,7 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
             type="button"
             onClick={() => showLevel(phoneLevel - 1)}
             aria-label={t('post_ad.picker.back')}
-            className={cn('-ms-2 inline-flex size-10 items-center justify-center rounded-qb-md hover:bg-qb-fill qb-tablet:hidden', visibleFocusRing)}
+            className={cn('-ms-2 inline-flex size-10 items-center justify-center rounded-qb-md hover:bg-qb-fill qb-tablet:hidden', focusRing)}
           >
             <Icon icon={ArrowLeft} size="lg" flipInRtl />
           </button>
@@ -111,7 +111,7 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
         </Dialog.Title>
         <Dialog.Close
           aria-label={t('ui.close')}
-          className={cn('-me-2 inline-flex size-10 items-center justify-center rounded-qb-md text-qb-ink-subtle hover:bg-qb-fill', visibleFocusRing)}
+          className={cn('-me-2 inline-flex size-10 items-center justify-center rounded-qb-md text-qb-ink-subtle hover:bg-qb-fill', focusRing)}
         >
           <Icon icon={X} size="lg" />
         </Dialog.Close>
@@ -141,7 +141,7 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
           size="sm"
           disabled={!leaf}
           onClick={() => leaf && onSelect(leaf.id)}
-          className={cn('h-auto px-[34px] py-[11px] text-qb-body-sm', visibleFocus)}
+          className="h-auto px-[34px] py-[11px] text-qb-body-sm"
         >
           {t('post_ad.picker.add')}
         </Button>
@@ -196,7 +196,7 @@ function PickerColumn({
                   onClick={() => onChoose(node)}
                   className={cn(
                     'flex w-full items-center justify-between gap-2 rounded-qb-sm px-3 py-[11px] text-start text-qb-caption transition-colors',
-                    visibleFocusRing,
+                    focusRing,
                     selected ? 'bg-qb-brand text-qb-on-brand' : 'text-qb-ink-body hover:bg-qb-hover',
                   )}
                 >

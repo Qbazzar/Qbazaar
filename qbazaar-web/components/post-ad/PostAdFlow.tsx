@@ -20,7 +20,6 @@ import { usePostAdStore } from '@/store/post-ad';
 
 import { AdFormView } from './AdFormView';
 import { AdPreviewView } from './AdPreviewView';
-import { visibleFocus } from './FormParts';
 import { PostAdLoading, formBreadcrumbClass } from './PostAdPage';
 import type { SellerSummary } from './ProfileCard';
 import { ReviewState } from './ReviewState';
@@ -94,7 +93,6 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
         action={
           <Button
             disabled={treeQuery.isFetching || citiesQuery.isFetching}
-            className={visibleFocus}
             onClick={() => {
               if (treeQuery.isError) void treeQuery.refetch();
               if (citiesQuery.isError) void citiesQuery.refetch();

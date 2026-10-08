@@ -49,7 +49,7 @@ export function ShareAdButton({ title, className }: ShareAdButtonProps) {
         size="sm"
         onClick={share}
         className={cn(
-          'font-normal focus-visible:outline-solid',
+          'font-normal',
           copied
             ? 'border-qb-success bg-qb-success-soft text-qb-success hover:bg-qb-success-soft'
             : 'text-qb-ink-subtle hover:text-qb-ink',

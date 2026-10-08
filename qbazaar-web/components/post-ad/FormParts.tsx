@@ -2,19 +2,10 @@ import type { ChangeEvent, InputHTMLAttributes, ReactNode } from 'react';
 import { CircleAlert } from 'lucide-react';
 
 import { cardVariants } from '@/components/design-system/Card';
-import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { translateMaybeKey } from '@/lib/i18n/messages';
 import type { AdFormField } from '@/lib/post-ad/form';
 import { cn } from '@/lib/utils';
-
-/**
- * In Tailwind 4, focusRing's `outline-none` also sets the outline-style
- * variable that its `focus-visible:outline-2` reads, so the ring never shows.
- * This puts the style back, on design-system controls and our own.
- */
-export const visibleFocus = 'focus-visible:outline-solid';
-export const visibleFocusRing = cn(focusRing, visibleFocus);
 
 /** Text boxes of add-ads.html: 15 px text and 14 px side padding on the design-system controls. */
 export const controlSize = 'h-[53px] px-3.5 text-qb-body-sm';

@@ -10,7 +10,6 @@ import type { Ad } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-import { visibleFocus } from './FormParts';
 import { VIEW_HEADING_ID } from './view-heading';
 
 /**
@@ -40,15 +39,15 @@ export function ReviewState({ ad, onPostAnother }: { ad: Ad | null; onPostAnothe
       </p>
       <div className="mt-8 flex w-full flex-col justify-center gap-3 qb-tablet:w-auto qb-tablet:flex-row">
         {live && ad ? (
-          <Link href={`/ads/${ad.id}`} className={cn(buttonVariants({ size: 'md' }), visibleFocus)}>
+          <Link href={`/ads/${ad.id}`} className={buttonVariants({ size: 'md' })}>
             {t('post_ad.actions.view_ad')}
           </Link>
         ) : (
-          <Link href="/account/ads" className={cn(buttonVariants({ size: 'md' }), visibleFocus)}>
+          <Link href="/account/ads" className={buttonVariants({ size: 'md' })}>
             {t('post_ad.actions.my_ads')}
           </Link>
         )}
-        <Button variant="secondary" onClick={onPostAnother} className={visibleFocus}>
+        <Button variant="secondary" onClick={onPostAnother}>
           {t('post_ad.actions.post_another')}
         </Button>
       </div>

@@ -67,7 +67,7 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
         variant="secondary"
         size="sm"
         onClick={() => toast.info(t('users.profile.send_message_soon'))}
-        className="h-10 w-full font-medium focus-visible:outline-solid qb-tablet:w-auto qb-tablet:min-w-[106px]"
+        className="h-10 w-full font-medium qb-tablet:w-auto qb-tablet:min-w-[106px]"
       >
         <MessageSquareText aria-hidden />
         {isBusiness ? t('users.profile.message') : t('ads.actions.send_message')}

@@ -50,7 +50,7 @@ export function CompanyTabs({ business, adsCount, locale, defaultTab, ads }: Com
           <Sheet
             title={t('users.profile.info')}
             trigger={
-              <Button variant="ghost" size="sm" className="text-qb-body-lg font-medium text-qb-ink focus-visible:outline-solid">
+              <Button variant="ghost" size="sm" className="text-qb-body-lg font-medium text-qb-ink">
                 {t('users.profile.info')}
                 <Info aria-hidden />
               </Button>
@@ -80,7 +80,7 @@ function CompanyTabTrigger({ value, children }: { value: CompanyTab; children: R
       value={value}
       className={cn(
         // Three pills share a phone's width, so a long label (Arabic "Legal Info") wraps instead of spilling over.
-        'h-[51px] min-w-0 flex-1 rounded-qb-xl bg-qb-surface px-2 text-center text-qb-body-sm leading-tight font-medium whitespace-normal data-active:font-medium focus-visible:outline-solid',
+        'h-[51px] min-w-0 flex-1 rounded-qb-xl bg-qb-surface px-2 text-center text-qb-body-sm leading-tight font-medium whitespace-normal data-active:font-medium',
         'qb-tablet:h-14 qb-tablet:rounded-qb-xl qb-tablet:border-0 qb-tablet:px-4 qb-tablet:text-qb-body-lg qb-tablet:leading-normal qb-tablet:whitespace-nowrap qb-tablet:shadow-none',
         'qb-desktop:h-14 qb-desktop:text-qb-body-lg',
       )}
