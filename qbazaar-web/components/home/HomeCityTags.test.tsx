@@ -7,7 +7,7 @@ import { setClientLocale } from '@/lib/i18n/locale';
 const locations = vi.hoisted(() => ({ data: undefined as Location[] | undefined, isLoading: false, isError: false }));
 vi.mock('@/lib/queries/locations', () => ({ useQatarLocationsQuery: () => locations }));
 
-import { HomeCityTags, collagePlaces } from './HomeCityTags';
+import { HomeCityTags, collagePlaces, slotsFit } from './HomeCityTags';
 
 function place(slug: string, en: string, ar: string, children: Location[] = []): Location {
   return { id: slug, parent_id: null, slug, name: { en, ar }, type: 'city', lat: null, lng: null, children } as Location;
@@ -49,5 +49,25 @@ describe('HomeCityTags', () => {
     const { container } = render(<HomeCityTags />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe('slotsFit', () => {
+  const pill = (width: number) => ({ width, height: 45, insetX: 21, insetY: 11 });
+
+  it('keeps the scattered slots while every label stays clear', () => {
+    expect(slotsFit(Array.from({ length: 16 }, () => pill(100)), 1360)).toBe(true);
+  });
+
+  it('lets pills overlap in their padding, as Doha and Al Wakra do in the reference', () => {
+    expect(slotsFit([pill(94), pill(100), pill(130)], 1360)).toBe(true);
+  });
+
+  it("gives up the slots once a pill would cover a neighbour's label", () => {
+    expect(slotsFit(Array.from({ length: 16 }, () => pill(180)), 1360)).toBe(false);
+  });
+
+  it('gives up the slots when a pill would leave the collage', () => {
+    expect(slotsFit([...Array.from({ length: 15 }, () => pill(100)), pill(200)], 1360)).toBe(false);
   });
 });

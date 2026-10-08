@@ -15,6 +15,7 @@ import { ChevronDown, MapPin, Search } from 'lucide-react';
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { useRenderedQatarPlaces } from '@/components/locations/QatarPlacesProvider';
 import type { Location } from '@/lib/api/types';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -22,8 +23,13 @@ import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { cn } from '@/lib/utils';
 
 const field = 'flex min-w-0 items-center gap-2.5 rounded-qb-md px-3.5 py-2.5';
-/** The text field in use gets its own ring, next to the brand border of the whole bar. */
-const typingRing = 'focus-within:ring-2 focus-within:ring-qb-brand-active focus-within:ring-inset';
+/**
+ * The text field in use gets its own ring, next to the brand border of the whole bar. Forced-colors mode drops
+ * the ring (a shadow), so outline-hidden draws an outline there instead.
+ */
+const typingRing = 'focus-within:ring-2 focus-within:ring-qb-brand-active focus-within:ring-inset focus-within:outline-hidden';
+/** The two text fields keep room for a readable placeholder, their only visible label. */
+const textFieldWidth = 'min-w-24';
 const input =
   'w-full min-w-0 bg-transparent text-qb-body text-qb-ink outline-none placeholder:text-qb-placeholder [&::-webkit-calendar-picker-indicator]:hidden! [&::-webkit-search-cancel-button]:hidden';
 /** "Choose Category" and "Distance" stay on one line and read larger on desktop (the reference's .qb-hlabel). */
@@ -62,7 +68,7 @@ export function HomeSearchBar() {
   const locationRef = useRef<HTMLInputElement>(null);
   const errorId = useId();
   // Shares the cached tree with the "Find places" collage below.
-  const { data: cities } = useQatarLocationsQuery();
+  const { data: cities } = useQatarLocationsQuery(useRenderedQatarPlaces());
   const places = useMemo(() => flattenPlaces(cities ?? []), [cities]);
 
   const submit = (event: React.FormEvent) => {
@@ -80,7 +86,7 @@ export function HomeSearchBar() {
   return (
     <form role="search" onSubmit={submit} className="mx-auto mt-7 w-full max-w-[1000px] font-qb">
       <div className="flex w-full items-stretch rounded-qb-xl border border-qb-line bg-qb-surface/97 py-1.5 ps-1 pe-1.5 shadow-qb-card has-[input:focus-visible]:border-qb-brand qb-tablet:ps-2.5 qb-desktop:p-2">
-        <label className={cn(field, typingRing, 'flex-[2_1_200px] qb-desktop:min-w-[150px]')}>
+        <label className={cn(field, typingRing, textFieldWidth, 'flex-[2_1_200px] qb-desktop:min-w-[150px]')}>
           <Icon icon={Search} className="text-qb-ink" />
           <input
             type="search"
@@ -97,7 +103,7 @@ export function HomeSearchBar() {
           <span className={choiceLabel}>{t('home.search.category', 'اختر القسم')}</span>
         </Link>
         <Divider />
-        <ExtraField className={cn(typingRing, 'flex-[1_1_130px] gap-1.5 px-2.5 qb-desktop:min-w-[120px] qb-desktop:gap-2 qb-desktop:px-3.5')}>
+        <ExtraField className={cn(typingRing, textFieldWidth, 'flex-[1_1_130px] gap-1.5 px-2.5 qb-desktop:min-w-[120px] qb-desktop:gap-2 qb-desktop:px-3.5')}>
           <Icon icon={MapPin} className={fieldIcon} />
           <input
             ref={locationRef}
@@ -120,11 +126,14 @@ export function HomeSearchBar() {
             ))}
           </datalist>
         </ExtraField>
-        <Divider />
-        <ExtraField className="min-w-fit flex-[1_1_120px] justify-between gap-1 qb-desktop:gap-2" decorative>
-          <span className={choiceLabel}>{t('home.search.distance', 'المسافة')}</span>
-          <Icon icon={ChevronDown} className={fieldIcon} />
-        </ExtraField>
+        {/* The inert distance field needs room the small tablets lack, so it joins from 720 px. */}
+        <div className="hidden min-[720px]:contents">
+          <Divider />
+          <ExtraField className="min-w-fit flex-[1_1_120px] justify-between gap-1 qb-desktop:gap-2" decorative>
+            <span className={choiceLabel}>{t('home.search.distance', 'المسافة')}</span>
+            <Icon icon={ChevronDown} className={fieldIcon} />
+          </ExtraField>
+        </div>
         <button
           type="submit"
           className={cn(buttonVariants({ size: 'md' }), 'm-1 h-auto min-h-11 shrink-0 px-[26px] max-[600px]:not-focus-visible:sr-only')}

@@ -171,7 +171,8 @@
       "resend_success": "A fresh verification link is on its way",
       "resend_failed": "We couldn't send the link, please try again",
       "missing_params_title": "Incomplete link",
-      "missing_params_body": "The link you followed is missing the data we need to verify your email."
+      "missing_params_body": "The link you followed is missing the data we need to verify your email.",
+      "meta_description": "Confirm your QBazaar email address."
     },
     "errors": {
       "full_name_min": "Name is too short (min 3 characters)",
@@ -2202,6 +2203,9 @@
     "rail": {
       "previous": "Previous",
       "next": "Next"
+    },
+    "toasts": {
+      "region": "Notifications"
     }
   },
   "layout": {

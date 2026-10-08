@@ -135,7 +135,7 @@ function RailDots({ page, pages }: { page: number; pages: number }) {
       {Array.from({ length: pages }, (_, index) => (
         <span
           key={index}
-          className={cn('h-[9px] rounded-qb-pill transition-[width]', index === page ? 'w-10 bg-qb-brand' : 'w-[9px] bg-qb-brand-tint')}
+          className={cn('h-[9px] rounded-qb-pill transition-[width] motion-reduce:transition-none', index === page ? 'w-10 bg-qb-brand' : 'w-[9px] bg-qb-brand-tint')}
         />
       ))}
     </div>

@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: t('auth.verify_email.title', 'تأكيد البريد الإلكتروني'),
-    description: 'صفحة تأكيد البريد الإلكتروني لـ QBazaar.',
+    description: t('auth.verify_email.meta_description', 'صفحة تأكيد البريد الإلكتروني لـ QBazaar.'),
   };
 }
 

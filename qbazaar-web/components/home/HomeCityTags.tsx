@@ -6,9 +6,10 @@
  */
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
+import { useRenderedQatarPlaces } from '@/components/locations/QatarPlacesProvider';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { localized, getLocale, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -62,27 +63,102 @@ function slotStyle(index: number): CSSProperties {
   return { '--slot-x': x, '--slot-y': y, '--slot-tilt': tilt } as CSSProperties;
 }
 
-// The collage needs about 1280 px: with the live place names the pills overlap on narrower desktops.
-// Arabic mirrors the tilts along with the positions (--flip).
-const collage =
-  'relative mx-auto flex max-w-[1400px] flex-wrap justify-center gap-3 py-1.5 [--flip:1] rtl:[--flip:-1] min-[1280px]:block min-[1280px]:h-[200px] min-[1280px]:py-0';
-const slot =
-  'rotate-[calc(var(--tilt)*var(--flip))] min-[1280px]:absolute min-[1280px]:start-(--slot-x) min-[1280px]:top-(--slot-y) min-[1280px]:mt-0 min-[1280px]:-translate-x-1/2 min-[1280px]:[--tilt:var(--slot-tilt)] rtl:min-[1280px]:translate-x-1/2';
+interface Box {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+/** A pill's size and the room its padding and border leave around the label. */
+export interface PillMetrics {
+  width: number;
+  height: number;
+  insetX: number;
+  insetY: number;
+}
+
+const overlap = (a: Box, b: Box) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
+/**
+ * Whether every label stays readable in the scattered slots: no pill covers
+ * another one's label and none leaves the collage. Pills may still touch, as
+ * in the reference. Mirroring for Arabic keeps the answer; the small tilts are
+ * left out.
+ */
+export function slotsFit(pills: PillMetrics[], collageWidth: number): boolean {
+  const placed = pills.map(({ width, height, insetX, insetY }, index) => {
+    const [x, y] = DESKTOP_SLOTS[index];
+    const centre = (parseFloat(x) / 100) * collageWidth;
+    const top = parseFloat(y);
+    const pill = { left: centre - width / 2, right: centre + width / 2, top, bottom: top + height };
+    const label = { left: pill.left + insetX, right: pill.right - insetX, top: top + insetY, bottom: pill.bottom - insetY };
+    return { pill, label };
+  });
+  return placed.every(
+    ({ pill }, index) =>
+      pill.left >= 0 && pill.right <= collageWidth && placed.every((other, j) => j === index || !overlap(pill, other.label)),
+  );
+}
+
+function pillMetrics(pill: HTMLElement): PillMetrics {
+  const style = getComputedStyle(pill);
+  const px = (value: string) => parseFloat(value) || 0;
+  return {
+    width: pill.offsetWidth,
+    height: pill.offsetHeight,
+    insetX: px(style.paddingLeft) + px(style.borderLeftWidth),
+    insetY: px(style.paddingTop) + px(style.borderTopWidth),
+  };
+}
+
+/**
+ * Longer place names, or the wider letter and word spacing a reader may set,
+ * can make the scattered pills cover each other's labels. The list then keeps
+ * the wrapped rows of the narrower screens. Pills keep their size in either
+ * layout, so the answer does not flip back and forth.
+ */
+function useSlotsFit(places: readonly Place[]) {
+  const listRef = useRef<HTMLUListElement>(null);
+  const [fits, setFits] = useState(true);
+
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const pills = Array.from(list.querySelectorAll<HTMLElement>('a'));
+    const check = () => setFits(slotsFit(pills.map(pillMetrics), list.clientWidth));
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(list);
+    pills.forEach((pill) => observer.observe(pill));
+    return () => observer.disconnect();
+  }, [places]);
+
+  return { listRef, fits };
+}
+
+// Arabic mirrors the tilts along with the positions (--flip). The scattered slots need about 1280 px.
+const collage = 'relative mx-auto flex max-w-[1400px] flex-wrap justify-center gap-3 py-1.5 [--flip:1] rtl:[--flip:-1]';
+const scatteredCollage = 'min-[1280px]:block min-[1280px]:h-[200px] min-[1280px]:py-0';
+const slot = 'rotate-[calc(var(--tilt)*var(--flip))]';
+const scatteredSlot =
+  'min-[1280px]:absolute min-[1280px]:start-(--slot-x) min-[1280px]:top-(--slot-y) min-[1280px]:mt-0 min-[1280px]:-translate-x-1/2 min-[1280px]:[--tilt:var(--slot-tilt)] rtl:min-[1280px]:translate-x-1/2';
 
 export function HomeCityTags() {
   const locale = getLocale();
-  const { data, isLoading, isError } = useQatarLocationsQuery();
+  const { data, isLoading, isError } = useQatarLocationsQuery(useRenderedQatarPlaces());
   const places = useMemo(() => (data ? collagePlaces(data, locale) : []), [data, locale]);
+  const { listRef, fits } = useSlotsFit(places);
 
   if (isLoading) {
     return (
-      <div className={collage} aria-busy="true">
+      <div className={cn(collage, scatteredCollage)} aria-busy="true">
         {DESKTOP_SLOTS.map((_, i) => (
           <span
             key={i}
             aria-hidden="true"
             style={slotStyle(i)}
-            className={cn(pill, ROW_TILTS[i % 3], slot, 'h-[45px] w-28 animate-pulse motion-reduce:animate-none')}
+            className={cn(pill, ROW_TILTS[i % 3], slot, scatteredSlot, 'h-[45px] w-28 animate-pulse motion-reduce:animate-none')}
           />
         ))}
       </div>
@@ -91,9 +167,9 @@ export function HomeCityTags() {
   if (isError || places.length === 0) return null;
 
   return (
-    <ul className={collage}>
+    <ul ref={listRef} className={cn(collage, fits && scatteredCollage)}>
       {places.map((place, i) => (
-        <li key={place.slug} style={slotStyle(i)} className={cn(ROW_TILTS[i % 3], slot)}>
+        <li key={place.slug} style={slotStyle(i)} className={cn(ROW_TILTS[i % 3], slot, fits && scatteredSlot)}>
           <Link
             href={`/search?location_slug=${encodeURIComponent(place.slug)}`}
             aria-label={t('home.cities.browse_aria', { city: place.label }, `تصفح الإعلانات في ${place.label}`)}

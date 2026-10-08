@@ -18,6 +18,8 @@ import { siteFrame } from '@/components/design-system/site-frame';
 import { LanguageMenu } from '@/components/i18n/LanguageMenu';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserChannel } from '@/lib/echo/useUserChannel';
+import { formatNumber } from '@/lib/i18n/format';
+import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { useUnreadCountQuery } from '@/lib/queries/messaging';
 import { useUnreadNotificationsCountQuery } from '@/lib/queries/notifications';
@@ -134,7 +136,8 @@ interface HeaderIconLinkProps {
 
 function HeaderIconLink({ href, icon, label, unread = 0, variant = 'desktop' }: HeaderIconLinkProps) {
   const style = ICON_LINK[variant];
-  const name = unread > 0 ? t('layout.header.unread', { label, count: unread }, `${label} (${unread})`) : label;
+  const count = formatNumber(unread, getLocale());
+  const name = unread > 0 ? t('layout.header.unread', { label, count }, `${label} (${count})`) : label;
   return (
     <Link href={href} aria-label={name} className={style.link}>
       <Icon icon={icon} className={style.icon} />
