@@ -3,6 +3,7 @@
 import { CompanyCard } from '@/components/design-system/CompanyCard';
 import { siteFrame } from '@/components/design-system/site-frame';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
+import type { HomeFeed } from '@/lib/api/home';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
@@ -15,9 +16,9 @@ const grid =
   'grid grid-cols-2 gap-3 qb-tablet:grid-cols-3 qb-tablet:gap-4 qb-desktop:grid-cols-5 qb-desktop:gap-5 max-[600px]:[&>*:nth-child(n+3)]:hidden';
 
 /** "Featured Companies" of the home feed: the business sellers with the most live ads. */
-export function HomeFeaturedCompanies() {
+export function HomeFeaturedCompanies({ initialFeed }: { initialFeed?: HomeFeed }) {
   const locale = getLocale();
-  const { data, isLoading, isError } = useHomeFeedQuery();
+  const { data, isLoading, isError } = useHomeFeedQuery(initialFeed);
   const sellers = data?.featured_sellers.slice(0, COMPANY_COUNT) ?? [];
   if ((!data && isError) || (!isLoading && sellers.length === 0)) return null;
 

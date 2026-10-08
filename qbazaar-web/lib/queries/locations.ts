@@ -18,12 +18,14 @@ export const locationKeys = {
   qatar: () => [...locationKeys.all, 'qatar'] as const,
 };
 
-export function useQatarLocationsQuery(): UseQueryResult<Location[]> {
+/** `initialPlaces` is the tree the page fetched on the server; it counts as fresh. */
+export function useQatarLocationsQuery(initialPlaces?: Location[]): UseQueryResult<Location[]> {
   const setQatar = useLocationsStore((s) => s.setQatar);
   const query = useQuery({
     queryKey: locationKeys.qatar(),
     queryFn: getQatarLocations,
     staleTime: DAY,
+    initialData: initialPlaces,
   });
 
   useEffect(() => {

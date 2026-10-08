@@ -6,50 +6,72 @@ import { HomeFeaturedCompanies } from '@/components/home/HomeFeaturedCompanies';
 import { HomeFeedAds } from '@/components/home/HomeFeedAds';
 import { HomeRecentlyViewed } from '@/components/home/HomeRecentlyViewed';
 import { HomeSearchBar } from '@/components/home/HomeSearchBar';
+import { QatarPlacesProvider } from '@/components/locations/QatarPlacesProvider';
+import type { HomeFeed } from '@/lib/api/home';
+import type { Location } from '@/lib/api/types';
+import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
+import { fetchApiData } from '@/lib/seo';
 import { cn } from '@/lib/utils';
+
+/** The anonymous home feed of the page language and the locations tree; undefined where the API failed. */
+async function fetchHomeData(locale: Locale) {
+  const [feed, places] = await Promise.all([
+    // The API rebuilds the feed every two minutes, so the cached copy is shared that long.
+    fetchApiData<HomeFeed>(`/api/v1/home?lang=${locale}`, 120),
+    // The card places and the collage read the locations tree, which rarely changes.
+    fetchApiData<Location[]>('/api/v1/locations/qatar'),
+  ]);
+  return { feed: feed ?? undefined, places: places ?? undefined };
+}
 
 /**
  * Home page on the new design (728:44663 / 561:22024 / 584:25249). The page
  * is a server component; each data-driven section is a client island reading
- * the one cached home feed query.
+ * the one cached home feed query, seeded with the copy fetched here so the
+ * first HTML carries the categories, ads, companies and places.
  */
 export default async function HomePage() {
   // Pages render in parallel with the root layout, so prime the request
   // locale here too before the server-side t() calls below.
-  await resolveServerLocale();
+  const locale = await resolveServerLocale();
+  const { feed, places } = await fetchHomeData(locale);
   return (
-    <main className="bg-qb-page font-qb text-qb-ink">
-      <HomeHero />
-      <section aria-labelledby="home-categories" className={cn(siteFrame, 'py-5')}>
-        <SectionHeader
-          id="home-categories"
-          title={t('home.sections.categories_title', 'تصفّح الأقسام')}
-          subtitle={t('home.sections.categories_sub', 'أهم ما يُعرض في منطقتك')}
-          action={{ href: '/categories', label: t('home.sections.view_all', 'عرض الكل') }}
-          className="mb-[22px]"
+    <QatarPlacesProvider places={places}>
+      <main className="bg-qb-page font-qb text-qb-ink">
+        <HomeHero />
+        <section aria-labelledby="home-categories" className={cn(siteFrame, 'py-5')}>
+          <SectionHeader
+            id="home-categories"
+            title={t('home.sections.categories_title', 'تصفّح الأقسام')}
+            subtitle={t('home.sections.categories_sub', 'أهم ما يُعرض في منطقتك')}
+            action={{ href: '/categories', label: t('home.sections.view_all', 'عرض الكل') }}
+            className="mb-[22px]"
+          />
+          <HomeCategoryStrip initialFeed={feed} />
+        </section>
+        <HomeFeedAds
+          list="recommended"
+          id="home-recommended"
+          title={t('home.sections.recommended_title', 'مختارة لك')}
+          subtitle={t('home.sections.recommended_sub', 'عروض منتقاة قريبة منك')}
+          eager
+          initialFeed={feed}
         />
-        <HomeCategoryStrip />
-      </section>
-      <HomeFeedAds
-        list="recommended"
-        id="home-recommended"
-        title={t('home.sections.recommended_title', 'مختارة لك')}
-        subtitle={t('home.sections.recommended_sub', 'عروض منتقاة قريبة منك')}
-        eager
-      />
-      <HomeRecentlyViewed />
-      <HomeFeaturedCompanies />
-      <HomeFeedAds
-        list="best_selling"
-        id="home-best-selling"
-        title={t('home.sections.best_selling_title', 'الأكثر مبيعاً')}
-        subtitle={t('home.sections.best_selling_sub', 'منتجات رائجة يحبها الناس.')}
-        className="pb-10"
-      />
-      <FindPlaces />
-    </main>
+        <HomeRecentlyViewed />
+        <HomeFeaturedCompanies initialFeed={feed} />
+        <HomeFeedAds
+          list="best_selling"
+          id="home-best-selling"
+          title={t('home.sections.best_selling_title', 'الأكثر مبيعاً')}
+          subtitle={t('home.sections.best_selling_sub', 'منتجات رائجة يحبها الناس.')}
+          className="pb-10"
+          initialFeed={feed}
+        />
+        <FindPlaces />
+      </main>
+    </QatarPlacesProvider>
   );
 }
 

@@ -4,11 +4,11 @@ import Image from 'next/image';
 
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { AdCard } from '@/components/design-system/AdCard';
+import { useQatarPlace } from '@/components/locations/QatarPlacesProvider';
 import { formatAdAge, formatAdPrice, placeLabel } from '@/lib/ads/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import type { AdSummary } from '@/lib/api/types';
-import { useLocationsStore } from '@/store/locations';
 
 interface AdSummaryCardProps {
   ad: AdSummary;
@@ -28,7 +28,7 @@ const IMAGE_SIZES = {
 /** An `AdSummary` from the API shown as the design-system listing card. */
 export function AdSummaryCard({ ad, layout = 'grid', eager = false, headingLevel, className }: AdSummaryCardProps) {
   const locale = getLocale();
-  const place = useLocationsStore((state) => state.findBySlug(ad.location_slug));
+  const place = useQatarPlace(ad.location_slug);
   const image = ad.primary_image;
   const imageUrl = image ? image.sizes.medium || image.url : null;
 

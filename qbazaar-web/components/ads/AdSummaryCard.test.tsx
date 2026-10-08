@@ -9,6 +9,7 @@ vi.mock('@/components/ads/FavoriteButton', () => ({
   FavoriteButton: () => <button type="button">Save</button>,
 }));
 
+import { QatarPlacesProvider } from '@/components/locations/QatarPlacesProvider';
 import { setClientLocale } from '@/lib/i18n/locale';
 import type { AdSummary, Location, Media } from '@/lib/api/types';
 import { useLocationsStore } from '@/store/locations';
@@ -65,6 +66,16 @@ describe('AdSummaryCard', () => {
     expect(screen.getByText('al wakrah')).toBeInTheDocument();
 
     act(() => useLocationsStore.getState().setQatar([wakrah]));
+    expect(screen.getByText('Al Wakrah')).toBeInTheDocument();
+  });
+
+  it('names the place from the tree the page was rendered with until the store has one', () => {
+    render(
+      <QatarPlacesProvider places={[wakrah]}>
+        <AdSummaryCard ad={ad} />
+      </QatarPlacesProvider>,
+    );
+
     expect(screen.getByText('Al Wakrah')).toBeInTheDocument();
   });
 

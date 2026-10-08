@@ -168,7 +168,10 @@ function AdMeta({ location, postedAt, isList }: { location?: string; postedAt?: 
       )}
     >
       <Icon icon={MapPin} size="sm" />
-      <span className="truncate">{text}</span>
+      {/* The age is worked out again at hydration, when it may have moved on by a minute. */}
+      <span className="truncate" suppressHydrationWarning>
+        {text}
+      </span>
     </p>
   );
 }

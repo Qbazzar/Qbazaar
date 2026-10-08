@@ -1,5 +1,6 @@
 'use client';
 
+import type { HomeFeed } from '@/lib/api/home';
 import { useHomeFeedQuery } from '@/lib/queries/home';
 
 import { HomeAdSection } from './HomeAdSection';
@@ -13,14 +14,16 @@ interface HomeFeedAdsProps {
   /** The first slider on the page loads its first photos eagerly. */
   eager?: boolean;
   className?: string;
+  /** The feed the page fetched on the server. */
+  initialFeed?: HomeFeed;
 }
 
 /**
  * "Recommended for you" or "Best Selling" from the home feed; hidden when the
  * list is empty or the feed failed before it had any data.
  */
-export function HomeFeedAds({ list, id, title, subtitle, eager, className }: HomeFeedAdsProps) {
-  const { data, isLoading, isError } = useHomeFeedQuery();
+export function HomeFeedAds({ list, id, title, subtitle, eager, className, initialFeed }: HomeFeedAdsProps) {
+  const { data, isLoading, isError } = useHomeFeedQuery(initialFeed);
 
   return (
     <HomeAdSection

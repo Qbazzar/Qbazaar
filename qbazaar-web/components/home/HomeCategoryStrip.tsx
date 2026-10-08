@@ -11,6 +11,7 @@ import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
 import { useRetry } from '@/hooks/useRetry';
+import type { HomeFeed } from '@/lib/api/home';
 import { localized, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
@@ -22,9 +23,9 @@ const grid =
   'grid grid-cols-2 gap-3 qb-tablet:grid-cols-4 qb-tablet:gap-3.5 qb-desktop:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] qb-desktop:gap-5';
 const tile = 'flex flex-col gap-[22px] rounded-qb-xl border border-qb-line bg-qb-surface p-[22px]';
 
-export function HomeCategoryStrip() {
+export function HomeCategoryStrip({ initialFeed }: { initialFeed?: HomeFeed }) {
   const locale = getLocale();
-  const { data, isError, refetch } = useHomeFeedQuery();
+  const { data, isError, refetch } = useHomeFeedQuery(initialFeed);
   const { retrying, retry } = useRetry(refetch);
   const firstTileRef = useRef<HTMLAnchorElement>(null);
   const focusTilesOnLoad = useRef(false);
