@@ -41,9 +41,9 @@ export function SiteHeaderGate() {
   );
 }
 
-/** Off screen until a keyboard user reaches it, then shown above the header. */
+/** Off screen until a keyboard user reaches it, then shown above the header. The shadow waits too, or it shows at the top edge. */
 const skipLink = cn(
-  'fixed start-4 top-3 z-50 -translate-y-[calc(100%+1rem)] rounded-qb-md bg-qb-surface px-4 py-3 font-qb text-qb-body font-medium text-qb-ink shadow-qb-popover focus:translate-y-0 motion-safe:transition-transform',
+  'fixed start-4 top-3 z-50 -translate-y-[calc(100%+1rem)] rounded-qb-md bg-qb-surface px-4 py-3 font-qb text-qb-body font-medium text-qb-ink focus:translate-y-0 focus:shadow-qb-popover motion-safe:transition-transform',
   focusRing,
 );
 
