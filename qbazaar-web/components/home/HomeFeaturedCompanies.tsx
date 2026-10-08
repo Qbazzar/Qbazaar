@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 /** One row of five on desktop, three a row on tablets and the first two on phones, as in the design. */
 const COMPANY_COUNT = 5;
 const grid =
-  '[display:grid] grid-cols-2 gap-3 qb-tablet:grid-cols-3 qb-tablet:gap-4 qb-desktop:grid-cols-5 qb-desktop:gap-5 max-[600px]:[&>*:nth-child(n+3)]:hidden';
+  'grid grid-cols-2 gap-3 qb-tablet:grid-cols-3 qb-tablet:gap-4 qb-desktop:grid-cols-5 qb-desktop:gap-5 max-[600px]:[&>*:nth-child(n+3)]:hidden';
 
 /** "Featured Companies" of the home feed: the business sellers with the most live ads. */
 export function HomeFeaturedCompanies() {

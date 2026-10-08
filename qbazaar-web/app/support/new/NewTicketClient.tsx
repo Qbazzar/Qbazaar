@@ -199,8 +199,7 @@ export function NewTicketClient() {
 
           <Turnstile ref={turnstile} />
 
-          {/* `[display:grid]`, not `grid`: the old stylesheet's unlayered `.grid` rule would override the gap. */}
-          <div className="mt-1 [display:grid] grid-cols-2 gap-3 qb-tablet:gap-[22px]">
+          <div className="mt-1 grid grid-cols-2 gap-3 qb-tablet:gap-[22px]">
             {/* aria-disabled rather than disabled keeps keyboard focus on the button while the ticket is sent. */}
             <Button type="submit" aria-disabled={submitting || undefined} className={actionClass}>
               {submitting ? <Icon icon={LoaderCircle} className="motion-safe:animate-spin" /> : null}

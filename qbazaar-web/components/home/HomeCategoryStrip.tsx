@@ -18,9 +18,8 @@ import { useHomeFeedQuery } from '@/lib/queries/home';
 import { cn } from '@/lib/utils';
 
 const TILE_COUNT = 8;
-// `[display:grid]` because qbfront.css still forces a 20px gap on the `.grid` class.
 const grid =
-  '[display:grid] grid-cols-2 gap-3 qb-tablet:grid-cols-4 qb-tablet:gap-3.5 qb-desktop:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] qb-desktop:gap-5';
+  'grid grid-cols-2 gap-3 qb-tablet:grid-cols-4 qb-tablet:gap-3.5 qb-desktop:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] qb-desktop:gap-5';
 const tile = 'flex flex-col gap-[22px] rounded-qb-xl border border-qb-line bg-qb-surface p-[22px]';
 
 export function HomeCategoryStrip() {

@@ -13,11 +13,10 @@ export function HelpTopics({ categories }: { categories: HelpCategory[] }) {
     return <StatePanel icon={<StateIcon icon={LifeBuoy} />} title={t('help.no_categories')} />;
   }
 
-  // `[display:grid]` rather than `grid`: the old stylesheet's unlayered `.grid` rule would override the gaps.
   return (
     <ul
       aria-label={t('help.categories_title')}
-      className="[display:grid] grid-cols-2 gap-2 qb-tablet:grid-cols-3 qb-tablet:gap-3 qb-desktop:grid-cols-4 qb-desktop:gap-4"
+      className="grid grid-cols-2 gap-2 qb-tablet:grid-cols-3 qb-tablet:gap-3 qb-desktop:grid-cols-4 qb-desktop:gap-4"
     >
       {categories.map((category) => (
         <li key={category.id}>
