@@ -63,6 +63,8 @@ describe('MobileMenu', () => {
     await user.click(screen.getByRole('button', { name: 'Open menu' }));
 
     expect(await screen.findByRole('link', { name: 'My Ads' })).toHaveAttribute('href', '/account/ads');
+    expect(screen.getByRole('link', { name: 'My orders' })).toHaveAttribute('href', '/account/orders');
+    expect(screen.getByRole('link', { name: 'Wallet' })).toHaveAttribute('href', '/account/wallet');
     expect(screen.getByRole('link', { name: 'Add Ads' })).toHaveAttribute('href', '/post-ad');
     expect(screen.queryByRole('link', { name: 'Sign Up' })).toBeNull();
   });

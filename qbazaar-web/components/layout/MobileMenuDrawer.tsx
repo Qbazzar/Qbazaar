@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Bell,
+  ChartColumn,
   ChevronRight,
   Heart,
   House,
@@ -14,6 +15,7 @@ import {
   Search,
   Settings,
   Tag,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -33,7 +35,10 @@ interface NavItem {
   icon: LucideIcon;
 }
 
-/** Guests get the browsing rows (741:46578); members also get their own pages (648:47458). */
+/**
+ * Guests get the browsing rows (741:46578); members also get their own pages
+ * (648:47458), where the reference's "Sales Overview" is the orders page.
+ */
 function navItems(signedIn: boolean): NavItem[] {
   const browsing: NavItem[] = [
     { href: '/', label: t('layout.menu.home', 'الرئيسية'), icon: House },
@@ -52,7 +57,9 @@ function navItems(signedIn: boolean): NavItem[] {
     { href: '/account/notifications', label: t('account.nav.notifications', 'الإشعارات'), icon: Bell },
     savedSearches,
     { href: '/account/ads', label: t('layout.menu.my_ads', 'إعلاناتي'), icon: Tag },
+    { href: '/account/orders', label: t('account.nav.orders', 'طلباتي'), icon: ChartColumn },
     { href: '/account', label: t('layout.menu.account', 'إعدادات الحساب'), icon: Settings },
+    { href: '/account/wallet', label: t('account.nav.wallet', 'المحفظة'), icon: Wallet },
   ];
 }
 
