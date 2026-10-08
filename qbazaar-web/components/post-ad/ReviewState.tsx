@@ -35,7 +35,7 @@ export function ReviewState({ ad, onPostAnother }: { ad: Ad | null; onPostAnothe
       >
         {t(live ? 'post_ad.review.live_title' : 'post_ad.review.title')}
       </h1>
-      <p className="mt-2 max-w-[806px] text-qb-body text-qb-ink-disabled qb-tablet:text-qb-h5">
+      <p className="mt-2 max-w-[806px] text-qb-body text-qb-ink-muted qb-tablet:text-qb-h5">
         {t(live ? 'post_ad.review.live_body' : 'post_ad.review.body')}
       </p>
       <div className="mt-8 flex w-full flex-col justify-center gap-3 qb-tablet:w-auto qb-tablet:flex-row">
