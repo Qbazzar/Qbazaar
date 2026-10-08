@@ -5,8 +5,10 @@ import { SiteHeaderGate } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteFooterGate } from '@/components/layout/SiteFooterGate';
 import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner';
+import { MAIN_CONTENT_ID } from '@/components/layout/main-content';
 import { LocaleProvider } from '@/components/i18n/LocaleProvider';
 import { dirFor } from '@/lib/i18n/locale';
+import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { siteUrl } from '@/lib/seo';
 import { fontVariables } from './fonts';
@@ -14,21 +16,26 @@ import { Providers } from './providers';
 import './globals.css';
 import '../styles/qbfront.css';
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
-  title: {
-    default: "QBazaar — Qatar's friendly classifieds marketplace",
-    template: '%s · QBazaar',
-  },
-  description: 'QBazaar — buy, sell and discover near you in Qatar.',
-  openGraph: {
-    siteName: 'QBazaar',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+  const brand = t('brand.name', 'QBazaar');
+
+  return {
+    metadataBase: new URL(siteUrl()),
+    title: {
+      default: `${brand} — ${t('brand.tagline', 'سوق قطر الودود للإعلانات المبوبة')}`,
+      template: `%s · ${brand}`,
+    },
+    description: t('brand.description', 'بِع واشترِ واكتشف ما حولك في قطر.'),
+    openGraph: {
+      siteName: brand,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -40,7 +47,8 @@ export default async function RootLayout({
       lang={locale}
       dir={dirFor(locale)}
       suppressHydrationWarning
-      className={fontVariables}
+      // The sticky header is 88 px tall: keep focused and linked-to elements below it.
+      className={`${fontVariables} scroll-pt-24`}
     >
       <body className="min-h-full flex flex-col">
         <LocaleProvider locale={locale}>
@@ -48,7 +56,9 @@ export default async function RootLayout({
           <ThemeProvider attribute="class" forcedTheme="light">
             <Providers>
               <SiteHeaderGate />
-              <div className="flex-1">{children}</div>
+              <div id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 outline-none">
+                {children}
+              </div>
               <SiteFooterGate>
                 <SiteFooter />
               </SiteFooterGate>

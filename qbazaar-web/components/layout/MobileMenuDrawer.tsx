@@ -57,7 +57,8 @@ function navItems(signedIn: boolean): NavItem[] {
 }
 
 const row = 'flex w-full items-center gap-3.5 rounded-qb-lg px-3.5 py-[13px] text-qb-body-sm font-medium';
-const footerButton = 'h-auto py-3.5 text-qb-body-sm';
+/** The reference's drawer buttons keep a 16 px icon, where the large button size draws 20. */
+const footerButton = 'h-auto py-3.5 text-qb-body-sm [&_svg]:size-4';
 
 interface MobileMenuDrawerProps {
   open: boolean;
@@ -97,7 +98,7 @@ export function MobileMenuDrawer({ open, onOpenChange, signedIn }: MobileMenuDra
         <div className="flex flex-col gap-3 border-t border-qb-line px-5 pt-3.5 pb-[22px]">
           {signedIn ? (
             <Link href="/post-ad" onClick={close} className={cn(buttonVariants({ size: 'lg', fullWidth: true }), footerButton)}>
-              <Icon icon={Plus} size="sm" strokeWidth={2.2} />
+              <Icon icon={Plus} strokeWidth={2.2} />
               {t('layout.header.add_ad', 'أضف إعلاناً')}
             </Link>
           ) : (
@@ -130,9 +131,13 @@ function MenuLink({ item, active, onNavigate }: { item: NavItem; active: boolean
     >
       <Icon icon={item.icon} className="size-[21px]" />
       <span className="flex-1">{item.label}</span>
-      <Icon icon={ChevronRight} size="sm" flipInRtl className={active ? 'text-qb-on-brand/80' : 'text-qb-ink-subtle'} />
+      <RowChevron className={active ? 'text-qb-on-brand/80' : undefined} />
     </Link>
   );
+}
+
+function RowChevron({ className }: { className?: string }) {
+  return <Icon icon={ChevronRight} size="sm" flipInRtl className={cn('text-qb-icon-muted', className)} />;
 }
 
 function SignOutRow() {
@@ -141,6 +146,7 @@ function SignOutRow() {
     <button type="button" onClick={signOut} disabled={pending} className={cn(row, focusRing, 'cursor-pointer text-qb-brand hover:bg-qb-hover')}>
       <Icon icon={LogOut} flipInRtl className="size-[21px]" />
       <span className="flex-1 text-start">{t('account.nav.sign_out', 'تسجيل الخروج')}</span>
+      <RowChevron />
     </button>
   );
 }

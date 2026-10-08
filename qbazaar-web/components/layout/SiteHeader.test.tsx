@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { User } from '@/lib/api/types';
@@ -54,10 +55,31 @@ describe('SiteHeader', () => {
     unread.messages = 3;
     render(<SiteHeader />);
 
-    expect(screen.getByRole('link', { name: 'Account' })).toHaveAttribute('href', '/account');
-    expect(screen.getByRole('img', { name: 'Farah Alzinati' })).toHaveTextContent('FA');
+    // The name starts with the initials the avatar shows.
+    const account = screen.getByRole('link', { name: 'FA, Account' });
+    expect(account).toHaveAttribute('href', '/account');
+    expect(account).toHaveTextContent('FA');
     expect(screen.getByRole('link', { name: 'Messages (3 unread)' })).toHaveAttribute('href', '/account/messages');
     expect(screen.queryByRole('link', { name: 'Login' })).toBeNull();
+  });
+
+  it('draws the Add Ads icon at the reference size', () => {
+    render(<SiteHeader />);
+
+    expect(screen.getByRole('link', { name: 'Add Ads' })).toHaveClass('[&_svg]:size-5');
+    expect(screen.getByRole('link', { name: 'Add Ads' })).not.toHaveClass('[&_svg]:size-4');
+  });
+
+  it('opens the language panel from the globe', async () => {
+    const user = userEvent.setup();
+    render(<SiteHeader />);
+
+    const [globe] = screen.getAllByRole('button', { name: 'Language' });
+    await user.click(globe);
+
+    const panel = screen.getByRole('group', { name: 'Choose your language' });
+    expect(within(panel).getByRole('button', { name: 'English' })).toHaveAttribute('aria-current', 'true');
+    expect(within(panel).getByRole('button', { name: 'العربية' })).toHaveAttribute('lang', 'ar');
   });
 
   it('shows guests no unread markers', () => {
@@ -73,12 +95,20 @@ describe('SiteHeaderGate', () => {
   it.each([
     ['/', true],
     ['/ads/1', true],
+    ['/post-ad', true],
     ['/login', false],
-    ['/post-ad/details', false],
+    ['/verify-email', false],
   ])('on %s shows the header: %s', (path, shown) => {
     pathname.current = path;
     render(<SiteHeaderGate />);
 
     expect(screen.queryByRole('banner') !== null).toBe(shown);
+  });
+
+  it('starts with a link that skips to the content', () => {
+    render(<SiteHeaderGate />);
+
+    expect(screen.getAllByRole('link')[0]).toHaveAccessibleName('Skip to content');
+    expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', '#main-content');
   });
 });

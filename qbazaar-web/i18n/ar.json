@@ -1,7 +1,8 @@
 {
   "brand": {
     "name": "QBazaar",
-    "tagline": "سوق قطر الودود للإعلانات المبوبة"
+    "tagline": "سوق قطر الودود للإعلانات المبوبة",
+    "description": "بِع واشترِ واكتشف ما حولك في قطر."
   },
   "common": {
     "loading": "جاري التحميل…",
@@ -573,7 +574,6 @@
     "ads_coming_soon_subtitle": "نعمل على إطلاق صفحة الإعلانات. تابعنا — هي قادمة في القريب العاجل.",
     "no_subcategories": "لا توجد أقسام فرعية بعد",
     "no_filters": "لا توجد فلاتر متاحة",
-    "ads_count": "{count} إعلان",
     "errors": {
       "not_found": "لم نعثر على هذا القسم"
     }
@@ -782,7 +782,8 @@
       "category": "اختر القسم",
       "location": "الموقع",
       "distance": "المسافة",
-      "submit": "بحث"
+      "submit": "بحث",
+      "unknown_place": "اختر مكاناً من الاقتراحات"
     },
     "places": {
       "title_start": "استكشف الأماكن",
@@ -1023,6 +1024,7 @@
       "add": "حفظ",
       "remove": "إلغاء الحفظ"
     },
+    "save_named": "احفظ {title}",
     "sign_in_required": "سجّل دخولك لحفظ الإعلانات",
     "errors": {
       "ad_not_found": "لم نعثر على هذا الإعلان"
@@ -1385,8 +1387,14 @@
       "add_ad": "أضف إعلاناً",
       "login": "تسجيل الدخول",
       "sign_up": "إنشاء حساب",
-      "unread": "{label} ({count} غير مقروءة)"
+      "unread": "{label} ({count} غير مقروءة)",
+      "account_named": "{initials}، حسابي"
     },
+    "language": {
+      "label": "اللغة",
+      "title": "اختر لغتك"
+    },
+    "skip_to_content": "انتقل إلى المحتوى",
     "menu": {
       "title": "القائمة",
       "open": "فتح القائمة",
@@ -1410,7 +1418,8 @@
       "privacy": "سياسة الخصوصية",
       "terms": "شروط الاستخدام",
       "search": "البحث",
-      "latest": "أحدث الإعلانات",
+      "companies": "الشركات",
+      "nav_label": "روابط الموقع",
       "wordmark": "Q BAZAAR",
       "copyright": "كيو بازار. جميع الحقوق محفوظة"
     }

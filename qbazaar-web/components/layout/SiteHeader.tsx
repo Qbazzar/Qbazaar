@@ -2,7 +2,7 @@
 
 /**
  * Global site header on the new design (728:44663 desktop, 648:47458 menu).
- * Hidden on routes with their own chrome (auth pages, the post-ad wizard).
+ * Hidden on routes with their own chrome (the auth pages).
  * Subscribes the signed-in user's channel and shows the unread markers from
  * the live queries.
  */
@@ -10,11 +10,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bell, Globe, Heart, MapPinPlus, MessageCircle, type LucideIcon } from 'lucide-react';
 
-import { Avatar } from '@/components/design-system/Avatar';
+import { Avatar, initialsOf } from '@/components/design-system/Avatar';
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
-import { LocaleSwitcher } from '@/components/i18n/LocaleSwitcher';
+import { siteFrame } from '@/components/design-system/site-frame';
+import { LanguageMenu } from '@/components/i18n/LanguageMenu';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserChannel } from '@/lib/echo/useUserChannel';
 import { t } from '@/lib/i18n/messages';
@@ -22,14 +23,29 @@ import { useUnreadCountQuery } from '@/lib/queries/messaging';
 import { useUnreadNotificationsCountQuery } from '@/lib/queries/notifications';
 import { cn } from '@/lib/utils';
 
+import { MAIN_CONTENT_ID } from './main-content';
 import { MobileMenu, mobileIconButton } from './MobileMenu';
 import { hasOwnChrome } from './own-chrome';
 import { SiteLogo } from './SiteLogo';
 
 export function SiteHeaderGate() {
   const pathname = usePathname() ?? '/';
-  return hasOwnChrome(pathname) ? null : <SiteHeader />;
+  if (hasOwnChrome(pathname)) return null;
+  return (
+    <>
+      <a href={`#${MAIN_CONTENT_ID}`} className={skipLink}>
+        {t('layout.skip_to_content', 'انتقل إلى المحتوى')}
+      </a>
+      <SiteHeader />
+    </>
+  );
 }
+
+/** Off screen until a keyboard user reaches it, then shown above the header. */
+const skipLink = cn(
+  'fixed start-4 top-3 z-50 -translate-y-[calc(100%+1rem)] rounded-qb-md bg-qb-surface px-4 py-3 font-qb text-qb-body font-medium text-qb-ink shadow-qb-popover focus:translate-y-0 motion-safe:transition-transform',
+  focusRing,
+);
 
 export function SiteHeader() {
   const { isAuthenticated, isHydrated, user } = useAuth();
@@ -46,20 +62,24 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 bg-qb-surface font-qb text-qb-ink shadow-qb-raised">
-      <div className="mx-auto flex h-[88px] max-w-[1440px] items-center justify-between gap-4 px-qb-gutter">
+      <div className={cn(siteFrame, 'flex h-[88px] items-center justify-between gap-4')}>
         <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('shrink-0 rounded-qb-sm', focusRing)}>
           <SiteLogo width={139} height={52} eager />
         </Link>
 
-        <div className="hidden items-center gap-[clamp(14px,1.6vw,20px)] min-[761px]:flex">
-          <Link href="/post-ad" className={cn(buttonVariants({ size: 'sm' }), 'h-auto gap-[7px] py-2.5 text-qb-body-sm leading-[1.15]')}>
-            <Icon icon={MapPinPlus} className="size-5" />
+        {/* Arabic labels are wider, so the gaps shrink sooner and the bar keeps its gutter at 761 px. */}
+        <div className="hidden items-center gap-[clamp(14px,1.6vw,20px)] rtl:gap-[clamp(10px,1.4vw,20px)] min-[761px]:flex">
+          <Link
+            href="/post-ad"
+            className={cn(buttonVariants({ size: 'sm' }), 'h-auto gap-[7px] py-2.5 text-qb-body-sm leading-[1.15] [&_svg]:size-5')}
+          >
+            <Icon icon={MapPinPlus} />
             {t('layout.header.add_ad', 'أضف إعلاناً')}
           </Link>
           <span aria-hidden="true" className="h-[30px] w-px bg-qb-line" />
-          <LocaleSwitcher className={headerIcon}>
+          <LanguageMenu className={headerIcon}>
             <Icon icon={Globe} className="size-[23px]" />
-          </LocaleSwitcher>
+          </LanguageMenu>
           <HeaderIconLink href="/account/favorites" icon={Heart} label={t('account.nav.favorites', 'المحفوظات')} />
           <HeaderIconLink
             href="/account/notifications"
@@ -69,18 +89,16 @@ export function SiteHeader() {
           />
           <HeaderIconLink href="/account/messages" icon={MessageCircle} label={t('account.nav.messages', 'الرسائل')} unread={unread.messages} />
           {signedIn ? (
-            <Link href="/account" aria-label={t('account.nav.title', 'حسابي')} className={cn('rounded-full', focusRing)}>
-              <Avatar name={user?.full_name || user?.email || 'Q'} />
-            </Link>
+            <AccountLink name={user?.full_name || user?.email || 'Q'} />
           ) : (
             <GuestButtons />
           )}
         </div>
 
-        <div className="flex items-center gap-2 self-start pt-3.5 min-[761px]:hidden">
-          <LocaleSwitcher className={mobileIconButton}>
+        <div className="relative flex items-center gap-2 self-start pt-3.5 min-[761px]:hidden">
+          <LanguageMenu className={mobileIconButton} anchor="container">
             <Icon icon={Globe} />
-          </LocaleSwitcher>
+          </LanguageMenu>
           <HeaderIconLink
             href="/account/notifications"
             icon={Bell}
@@ -121,6 +139,20 @@ function HeaderIconLink({ href, icon, label, unread = 0, variant = 'desktop' }: 
     <Link href={href} aria-label={name} className={style.link}>
       <Icon icon={icon} className={style.icon} />
       {unread > 0 ? <span aria-hidden="true" className={cn('absolute rounded-full bg-qb-brand', style.dot)} /> : null}
+    </Link>
+  );
+}
+
+/** The avatar opens the account; its name starts with the initials it shows. */
+function AccountLink({ name }: { name: string }) {
+  const initials = initialsOf(name);
+  return (
+    <Link
+      href="/account"
+      aria-label={t('layout.header.account_named', { initials }, `${initials}، حسابي`)}
+      className={cn('rounded-full', focusRing)}
+    >
+      <Avatar name={name} decorative />
     </Link>
   );
 }

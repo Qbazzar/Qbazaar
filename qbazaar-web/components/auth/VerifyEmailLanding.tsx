@@ -14,7 +14,6 @@ import {
   sendEmailVerification,
   verifyEmail,
 } from '@/lib/api/auth';
-import { AuthCard } from './AuthCard';
 import { authSubmitClass } from './AuthFooter';
 import { AuthHeading } from './AuthHeading';
 
@@ -146,7 +145,7 @@ export function VerifyEmailLanding() {
   );
 }
 
-/** "Check your email" card of 739:36548 with the result's icon, title and next step. */
+/** "Check your email" card content of 739:36548 (the auth layout draws the card) with the result's icon, title and next step. */
 function ResultCard({
   icon,
   title,
@@ -159,11 +158,9 @@ function ResultCard({
   children?: ReactNode;
 }) {
   return (
-    <AuthCard>
-      <div role="status" className="flex flex-col items-center gap-8">
-        <AuthHeading icon={icon} title={title} subtitle={body} />
-        {children ? <div className="flex w-full max-w-[420px] flex-col gap-3">{children}</div> : null}
-      </div>
-    </AuthCard>
+    <div role="status" className="flex flex-col items-center gap-8">
+      <AuthHeading icon={icon} title={title} subtitle={body} />
+      {children ? <div className="flex w-full max-w-[420px] flex-col gap-3">{children}</div> : null}
+    </div>
   );
 }

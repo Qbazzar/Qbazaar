@@ -4,6 +4,7 @@ import { ChevronDown, Copyright } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { siteFrame } from '@/components/design-system/site-frame';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -54,7 +55,7 @@ function footerColumns(): FooterColumn[] {
       links: [
         { href: '/search', label: t('layout.footer.search', 'البحث') },
         { href: '/categories', label: t('layout.menu.categories', 'الأقسام') },
-        { href: '/ads?sort=newest', label: t('layout.footer.latest', 'أحدث الإعلانات') },
+        { href: '/companies', label: t('layout.footer.companies', 'الشركات') },
       ],
     },
   ];
@@ -65,16 +66,18 @@ const linkClass = cn('rounded-qb-xs text-qb-body-sm font-medium text-qb-ink-seco
 export function SiteFooter() {
   const columns = footerColumns();
   return (
-    // Skipped until it nears the viewport, so the wordmark's font is not fetched during page load.
-    <footer className="border-t border-qb-line bg-qb-page font-qb font-medium text-qb-ink [contain-intrinsic-size:auto_640px] [content-visibility:auto] qb-desktop:[contain-intrinsic-size:auto_400px]">
-      <div className="mx-auto max-w-[1440px] px-5 pt-12 pb-7 qb-desktop:px-qb-gutter">
+    <footer className="border-t border-qb-line bg-qb-page font-qb font-medium text-qb-ink">
+      <div className={cn(siteFrame, 'px-5 pt-12 pb-7 qb-desktop:px-qb-gutter')}>
         <div className="flex flex-col gap-[26px] qb-desktop:flex-row qb-desktop:justify-between qb-desktop:gap-10">
           <FooterBrand />
-          <div className="flex flex-col qb-desktop:max-w-[898px] qb-desktop:flex-1 qb-desktop:flex-row qb-desktop:justify-between qb-desktop:gap-16">
+          <nav
+            aria-label={t('layout.footer.nav_label', 'روابط الموقع')}
+            className="flex flex-col qb-desktop:max-w-[898px] qb-desktop:flex-1 qb-desktop:flex-row qb-desktop:justify-between qb-desktop:gap-16"
+          >
             {columns.map((column) => (
               <FooterColumnBlock key={column.title} column={column} />
             ))}
-          </div>
+          </nav>
         </div>
         <div className="mt-9 flex flex-col items-center gap-3 border-t border-qb-line-strong pt-5 text-center qb-desktop:flex-row qb-desktop:justify-between qb-desktop:text-start">
           <span className="font-qb-brand text-qb-body font-normal text-qb-brand">{t('layout.footer.wordmark', 'Q BAZAAR')}</span>
@@ -91,7 +94,7 @@ export function SiteFooter() {
 function FooterBrand() {
   return (
     <div className="qb-desktop:max-w-[360px]">
-      <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('mb-4 inline-block rounded-qb-sm', focusRing)}>
+      <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('mb-4 block w-fit rounded-qb-sm', focusRing)}>
         <SiteLogo width={123} height={46} />
       </Link>
       <p className="mb-5 leading-6 text-qb-ink-secondary">{t('layout.footer.tagline', 'نربط العلامات التجارية بجمهورها عبر رسائل وتفاعل مدروس')}</p>
@@ -129,13 +132,13 @@ function FooterColumnBlock({ column }: { column: FooterColumn }) {
   return (
     <>
       <div className="hidden qb-desktop:block">
-        <h3 className="mb-5 text-qb-h3 font-semibold tracking-normal">{column.title}</h3>
+        <h2 className="mb-5 text-qb-h3 font-semibold tracking-normal">{column.title}</h2>
         {links}
       </div>
       <details className="group border-b border-qb-divider first-of-type:border-t qb-desktop:hidden">
         <summary className={cn('flex cursor-pointer list-none items-center justify-between px-0.5 py-4 text-qb-body font-semibold [&::-webkit-details-marker]:hidden', focusRing)}>
           {column.title}
-          <Icon icon={ChevronDown} className="text-qb-ink-subtle transition-transform group-open:rotate-180" />
+          <Icon icon={ChevronDown} className="text-qb-icon-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" />
         </summary>
         <div className="pb-3.5">{links}</div>
       </details>

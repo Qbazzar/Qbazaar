@@ -15,7 +15,8 @@ describe('SiteFooter', () => {
   it('renders every column as a heading list and as a collapsible row', () => {
     const { container } = render(<SiteFooter />);
 
-    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
+    expect(screen.getByRole('navigation', { name: 'Site links' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
       'Classifieds',
       'Information',
       'Account',
@@ -34,6 +35,7 @@ describe('SiteFooter', () => {
     const links = within(screen.getByRole('contentinfo')).getAllByRole('link');
 
     expect(screen.getAllByRole('link', { name: 'Privacy Policy' })[0]).toHaveAttribute('href', '/p/privacy');
+    expect(screen.getAllByRole('link', { name: 'Companies' })[0]).toHaveAttribute('href', '/companies');
     expect(links.every((link) => link.getAttribute('href')?.startsWith('/'))).toBe(true);
     expect(screen.queryByRole('link', { name: 'Instagram' })).toBeNull();
     expect(screen.getByText('Q BAZAAR')).toHaveClass('font-qb-brand');
@@ -44,8 +46,9 @@ describe('SiteFooterGate', () => {
   it.each([
     ['/', true],
     ['/ads/1', true],
+    ['/post-ad', true],
     ['/login', false],
-    ['/post-ad', false],
+    ['/verify-email', false],
   ])('on %s shows the footer: %s', (path, shown) => {
     pathname.current = path;
     render(

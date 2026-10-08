@@ -1,7 +1,8 @@
 {
   "brand": {
     "name": "QBazaar",
-    "tagline": "Qatar's friendly classifieds marketplace"
+    "tagline": "Qatar's friendly classifieds marketplace",
+    "description": "Buy, sell and discover near you in Qatar."
   },
   "common": {
     "loading": "Loading…",
@@ -561,7 +562,6 @@
     "ads_coming_soon_subtitle": "We're building the listing page. Stay tuned — it's landing very soon.",
     "no_subcategories": "No subcategories yet",
     "no_filters": "No filters available",
-    "ads_count": "{count} ads",
     "errors": {
       "not_found": "We couldn't find this category"
     }
@@ -734,7 +734,8 @@
       "category": "Choose Category",
       "location": "Location",
       "distance": "Distance",
-      "submit": "Search"
+      "submit": "Search",
+      "unknown_place": "Choose a place from the suggestions"
     },
     "places": {
       "title_start": "Find Places",
@@ -975,6 +976,7 @@
       "add": "Save",
       "remove": "Unsave"
     },
+    "save_named": "Save {title}",
     "sign_in_required": "Sign in to save ads",
     "errors": {
       "ad_not_found": "We couldn't find that ad"
@@ -1317,8 +1319,14 @@
       "add_ad": "Add Ads",
       "login": "Login",
       "sign_up": "Sign Up",
-      "unread": "{label} ({count} unread)"
+      "unread": "{label} ({count} unread)",
+      "account_named": "{initials}, Account"
     },
+    "language": {
+      "label": "Language",
+      "title": "Choose your language"
+    },
+    "skip_to_content": "Skip to content",
     "menu": {
       "title": "Menu",
       "open": "Open menu",
@@ -1342,7 +1350,8 @@
       "privacy": "Privacy Policy",
       "terms": "Terms of Use",
       "search": "Search",
-      "latest": "Latest ads",
+      "companies": "Companies",
+      "nav_label": "Site links",
       "wordmark": "Q BAZAAR",
       "copyright": "Q BAZAAR Inc. All rights reserved"
     }

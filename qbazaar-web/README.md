@@ -70,4 +70,4 @@ CI (`.github/workflows/web-ci.yml`) runs `typecheck`, `test` and `build` on pull
 
 ## Deploy
 
-Production runs `next start` under systemd on the same cPanel server as the API, behind an Apache reverse proxy (`qbazaar.fleeteye.de`). Pushing to the `production` branch runs `.github/workflows/deploy-web.yml`, which builds on the server with `deploy/scripts/deploy-web.sh`. See [deploy/README.md](../deploy/README.md).
+Production runs `next start` under systemd on the same cPanel server as the API, behind an Apache reverse proxy and Cloudflare (`qbazaar.qa`). Pushing to the `production` branch runs `.github/workflows/deploy-web.yml`, which builds on the server with `deploy/scripts/deploy-web.sh`. See [deploy/README.md](../deploy/README.md).
