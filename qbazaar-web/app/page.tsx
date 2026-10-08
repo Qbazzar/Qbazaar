@@ -56,7 +56,6 @@ export default async function HomePage() {
           id="home-recommended"
           title={t('home.sections.recommended_title', 'مختارة لك')}
           subtitle={t('home.sections.recommended_sub', 'عروض منتقاة قريبة منك')}
-          eager
           initialFeed={feed}
         />
         <HomeRecentlyViewed />

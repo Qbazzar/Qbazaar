@@ -11,8 +11,6 @@ interface HomeFeedAdsProps {
   id: string;
   title: string;
   subtitle: string;
-  /** The first slider on the page loads its first photos eagerly. */
-  eager?: boolean;
   className?: string;
   /** The feed the page fetched on the server. */
   initialFeed?: HomeFeed;
@@ -22,7 +20,7 @@ interface HomeFeedAdsProps {
  * "Recommended for you" or "Best Selling" from the home feed; hidden when the
  * list is empty or the feed failed before it had any data.
  */
-export function HomeFeedAds({ list, id, title, subtitle, eager, className, initialFeed }: HomeFeedAdsProps) {
+export function HomeFeedAds({ list, id, title, subtitle, className, initialFeed }: HomeFeedAdsProps) {
   const { data, isLoading, isError } = useHomeFeedQuery(initialFeed);
 
   return (
@@ -32,7 +30,6 @@ export function HomeFeedAds({ list, id, title, subtitle, eager, className, initi
       subtitle={subtitle}
       ads={data?.[list] ?? (isError ? [] : undefined)}
       isLoading={isLoading}
-      eager={eager}
       className={className}
     />
   );
