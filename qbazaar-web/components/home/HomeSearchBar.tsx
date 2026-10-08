@@ -29,7 +29,7 @@ const field = 'flex min-w-0 items-center gap-2.5 rounded-qb-md px-3.5 py-2.5';
  */
 const typingRing = 'focus-within:ring-2 focus-within:ring-qb-brand-active focus-within:ring-inset focus-within:outline-hidden';
 /** The two text fields keep room for a readable placeholder, their only visible label. */
-const textFieldWidth = 'min-w-24';
+const textFieldWidth = 'min-w-28';
 const input =
   'w-full min-w-0 bg-transparent text-qb-body text-qb-ink outline-none placeholder:text-qb-placeholder [&::-webkit-calendar-picker-indicator]:hidden! [&::-webkit-search-cancel-button]:hidden';
 /** "Choose Category" and "Distance" stay on one line and read larger on desktop (the reference's .qb-hlabel). */
@@ -126,8 +126,8 @@ export function HomeSearchBar() {
             ))}
           </datalist>
         </ExtraField>
-        {/* The inert distance field needs room the small tablets lack, so it joins from 720 px. */}
-        <div className="hidden min-[720px]:contents">
+        {/* The inert distance field needs room the small tablets lack, so it joins at the 744 px tablet frame. */}
+        <div className="hidden min-[744px]:contents">
           <Divider />
           <ExtraField className="min-w-fit flex-[1_1_120px] justify-between gap-1 qb-desktop:gap-2" decorative>
             <span className={choiceLabel}>{t('home.search.distance', 'المسافة')}</span>

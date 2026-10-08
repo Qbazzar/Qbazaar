@@ -80,6 +80,9 @@ export interface PillMetrics {
 
 const overlap = (a: Box, b: Box) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
+/** A label's outer pixels are the empty side bearings of its first and last letters, so a neighbour may touch them. */
+const LABEL_BEARING = 3;
+
 /**
  * Whether every label stays readable in the scattered slots: no pill covers
  * another one's label and none leaves the collage. Pills may still touch, as
@@ -92,7 +95,8 @@ export function slotsFit(pills: PillMetrics[], collageWidth: number): boolean {
     const centre = (parseFloat(x) / 100) * collageWidth;
     const top = parseFloat(y);
     const pill = { left: centre - width / 2, right: centre + width / 2, top, bottom: top + height };
-    const label = { left: pill.left + insetX, right: pill.right - insetX, top: top + insetY, bottom: pill.bottom - insetY };
+    const inset = insetX + LABEL_BEARING;
+    const label = { left: pill.left + inset, right: pill.right - inset, top: top + insetY, bottom: pill.bottom - insetY };
     return { pill, label };
   });
   return placed.every(
