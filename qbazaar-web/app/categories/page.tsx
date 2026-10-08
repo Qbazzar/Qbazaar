@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 
 import { CatalogHeader } from '@/components/catalog/CatalogHeader';
 import { CategoryIndex, CategoryIndexStats } from '@/components/catalog/CategoryIndex';
-import { catalogContainer, catalogPageTop, headingFont } from '@/components/catalog/layout';
+import { siteFrame } from '@/components/design-system/site-frame';
+import { catalogPageTop, headingFont } from '@/components/catalog/layout';
 import { parsePage } from '@/components/catalog/listing-query';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
@@ -28,7 +29,7 @@ export default async function CategoriesIndexPage({ searchParams }: PageProps) {
 
   return (
     <main className={cn('bg-qb-page font-qb text-qb-ink', headingFont)}>
-      <div className={cn(catalogContainer, catalogPageTop)}>
+      <div className={cn(siteFrame, catalogPageTop)}>
         <CatalogHeader
           title={title}
           breadcrumb={[{ label: t('home.breadcrumb', 'الرئيسية'), href: '/' }, { label: title }]}

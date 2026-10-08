@@ -28,12 +28,11 @@ describe('HelpTopics', () => {
     expect(screen.getByRole('link', { name: 'Selling 1 article' })).toBeInTheDocument();
   });
 
-  it('lays the tiles out without the legacy grid class, whose fixed gap would win', () => {
+  it('lays the tiles out in a grid with the design gaps', () => {
     render(<HelpTopics categories={[topic('buying', 'Buying', 3)]} />);
 
     const grid = screen.getByRole('list', { name: 'Browse by topic' });
-    expect(grid).toHaveClass('[display:grid]', 'gap-2', 'qb-desktop:gap-4');
-    expect(grid).not.toHaveClass('grid');
+    expect(grid).toHaveClass('grid', 'gap-2', 'qb-desktop:gap-4');
   });
 
   it('says when there are no topics yet', () => {

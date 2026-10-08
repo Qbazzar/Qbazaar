@@ -18,7 +18,7 @@ import { ApiClientError, register as apiRegister } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
-import { FieldError, announcedError } from './FieldError';
+import { FieldError, fieldErrorText } from './FieldError';
 import { PasswordInput } from './PasswordInput';
 import { PhoneInput } from './PhoneInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
@@ -93,7 +93,7 @@ export function RegisterForm() {
       <fieldset>
         <legend className={cn(sectionTitle, 'mb-5')}>{t('auth.register.login_details')}</legend>
         <div className="flex flex-col gap-6">
-          <Field label={t('auth.register.full_name_label')} required error={announcedError(errors.full_name?.message)}>
+          <Field label={t('auth.register.full_name_label')} required error={fieldErrorText(errors.full_name?.message)}>
             {(control) => (
               <Input
                 {...control}
@@ -105,7 +105,7 @@ export function RegisterForm() {
             )}
           </Field>
 
-          <Field label={t('auth.register.email_label')} required error={announcedError(errors.email?.message)}>
+          <Field label={t('auth.register.email_label')} required error={fieldErrorText(errors.email?.message)}>
             {(control) => (
               <Input
                 {...control}
@@ -118,7 +118,7 @@ export function RegisterForm() {
             )}
           </Field>
 
-          <Field label={t('auth.register.phone_label')} required error={announcedError(errors.phone?.message)}>
+          <Field label={t('auth.register.phone_label')} required error={fieldErrorText(errors.phone?.message)}>
             {(control) => (
               <Controller
                 control={form.control}
@@ -141,7 +141,7 @@ export function RegisterForm() {
             )}
           </Field>
 
-          <Field label={t('auth.register.password_label')} required error={announcedError(errors.password?.message)}>
+          <Field label={t('auth.register.password_label')} required error={fieldErrorText(errors.password?.message)}>
             {(control) => (
               <div className="flex flex-col gap-3">
                 <PasswordInput

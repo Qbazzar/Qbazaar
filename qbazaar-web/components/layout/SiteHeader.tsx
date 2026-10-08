@@ -1,254 +1,174 @@
 'use client';
 
 /**
- * Global site header — QBFront port.
- *
- * Structure mirrors QBFront/index.html `header.site-header`:
- *   logo  · spacer  · "Add Ads" CTA  · icon buttons (saved · notifs · messages)
- *         · avatar  · theme toggle  · mobile burger
- *
- * Behaviour is identical to before: gated by `SiteHeaderGate` (hides on auth
- * pages + post-ad wizard), wires the user-channel subscription, and lights
- * up the unread badges via the live queries. Inline SVGs match QBFront —
- * lucide-react is avoided in this file so the marks stay 1:1 with the
- * prototype.
+ * Global site header on the new design (728:44663 desktop, 648:47458 menu).
+ * Hidden on routes with their own chrome (the auth pages).
+ * Subscribes the signed-in user's channel and shows the unread markers from
+ * the live queries.
  */
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Logo } from '@/components/ui/logo';
-import { LocaleSwitcher } from '@/components/i18n/LocaleSwitcher';
-import { cn } from '@/lib/utils';
-import { t } from '@/lib/i18n/messages';
+import { Bell, Globe, Heart, MapPinPlus, MessageCircle, type LucideIcon } from 'lucide-react';
+
+import { Avatar, initialsOf } from '@/components/design-system/Avatar';
+import { buttonVariants } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { Icon } from '@/components/design-system/Icon';
+import { siteFrame } from '@/components/design-system/site-frame';
+import { LanguageMenu } from '@/components/i18n/LanguageMenu';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserChannel } from '@/lib/echo/useUserChannel';
+import { formatNumber } from '@/lib/i18n/format';
+import { getLocale } from '@/lib/i18n/locale';
+import { t } from '@/lib/i18n/messages';
 import { useUnreadCountQuery } from '@/lib/queries/messaging';
 import { useUnreadNotificationsCountQuery } from '@/lib/queries/notifications';
+import { cn } from '@/lib/utils';
+
+import { MAIN_CONTENT_ID } from './main-content';
+import { MobileMenu, mobileIconButton } from './MobileMenu';
+import { hasOwnChrome } from './own-chrome';
+import { SiteLogo } from './SiteLogo';
+
+export function SiteHeaderGate() {
+  const pathname = usePathname() ?? '/';
+  if (hasOwnChrome(pathname)) return null;
+  return (
+    <>
+      <a href={`#${MAIN_CONTENT_ID}`} className={skipLink}>
+        {t('layout.skip_to_content', 'انتقل إلى المحتوى')}
+      </a>
+      <SiteHeader />
+    </>
+  );
+}
+
+/** Off screen until a keyboard user reaches it, then shown above the header. The shadow waits too, or it shows at the top edge. */
+const skipLink = cn(
+  'fixed start-4 top-3 z-50 -translate-y-[calc(100%+1rem)] rounded-qb-md bg-qb-surface px-4 py-3 font-qb text-qb-body font-medium text-qb-ink focus:translate-y-0 focus:shadow-qb-popover motion-safe:transition-transform',
+  focusRing,
+);
 
 export function SiteHeader() {
-  const pathname = usePathname() ?? '/';
   const { isAuthenticated, isHydrated, user } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   useUserChannel(isAuthenticated ? user?.id : null);
 
-  // Badges are no-ops when signed out (the hooks short-circuit themselves).
+  // Both hooks do nothing while signed out.
   const { data: msgCount } = useUnreadCountQuery();
   const { data: notifCount } = useUnreadNotificationsCountQuery();
-
-  const messages = isHydrated && isAuthenticated ? msgCount?.total ?? 0 : 0;
-  const notifications = isHydrated && isAuthenticated ? notifCount?.total ?? 0 : 0;
-
-  const initials = userInitials(user?.full_name ?? user?.email ?? '');
-  const navItems = [
-    { href: '/ads', label: t('ads.list.title', 'تصفّح') },
-    { href: '/account/favorites', label: t('account.nav.favorites', 'المحفوظات') },
-    { href: '/account/messages', label: t('account.nav.messages', 'الرسائل') },
-    { href: '/account/notifications', label: t('account.nav.notifications', 'الإشعارات') },
-    { href: '/account', label: t('account.nav.title', 'حسابي') },
-    { href: '/help', label: t('footer.help', 'المساعدة') },
-  ];
+  const signedIn = isHydrated && isAuthenticated;
+  const unread = {
+    messages: signedIn ? (msgCount?.total ?? 0) : 0,
+    notifications: signedIn ? (notifCount?.total ?? 0) : 0,
+  };
 
   return (
-    <header className="site-header">
-      <div className="container site-header__inner">
-        <Link
-          href="/"
-          className="logo"
-          aria-label={t('brand.name', 'QBazaar')}
-        >
-          <Logo />
+    <header className="sticky top-0 z-40 bg-qb-surface font-qb text-qb-ink shadow-qb-raised">
+      <div className={cn(siteFrame, 'flex h-[88px] items-center justify-between gap-4')}>
+        <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('shrink-0 rounded-qb-sm', focusRing)}>
+          <SiteLogo width={139} height={52} eager />
         </Link>
 
-        <div className="site-header__spacer" />
-
-        {/* Desktop actions */}
-        <div className="site-header__actions desktop-only">
-          <Link href="/post-ad" className="btn btn--primary btn--pill">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            {t('home.hero.cta_post', 'انشر إعلانك')}
-          </Link>
-
+        {/* Arabic labels are wider, so the gaps shrink sooner and the bar keeps its gutter at 761 px. */}
+        <div className="hidden items-center gap-[clamp(14px,1.6vw,20px)] rtl:gap-[clamp(10px,1.4vw,20px)] min-[761px]:flex">
           <Link
-            href="/account/favorites"
-            className="icon-btn"
-            aria-label={t('account.nav.favorites', 'المحفوظات')}
+            href="/post-ad"
+            className={cn(buttonVariants({ size: 'sm' }), 'h-auto gap-[7px] py-2.5 text-qb-body-sm leading-[1.15] [&_svg]:size-5')}
           >
-            <SaveIcon />
+            <Icon icon={MapPinPlus} />
+            {t('layout.header.add_ad', 'أضف إعلاناً')}
           </Link>
-
-          <Link
+          <span aria-hidden="true" className="h-[30px] w-px bg-qb-line" />
+          <LanguageMenu className={headerIcon}>
+            <Icon icon={Globe} className="size-[23px]" />
+          </LanguageMenu>
+          <HeaderIconLink href="/account/favorites" icon={Heart} label={t('account.nav.favorites', 'المحفوظات')} />
+          <HeaderIconLink
             href="/account/notifications"
-            className="icon-btn"
-            aria-label={t('account.nav.notifications', 'الإشعارات')}
-          >
-            <BellIcon />
-            {notifications > 0 ? (
-              <span className="icon-btn__badge">
-                {notifications > 99 ? '99+' : notifications}
-              </span>
-            ) : null}
-          </Link>
-
-          <Link
-            href="/account/messages"
-            className="icon-btn"
-            aria-label={t('account.nav.messages', 'الرسائل')}
-          >
-            <ChatIcon />
-            {messages > 0 ? (
-              <span className="icon-btn__badge">
-                {messages > 99 ? '99+' : messages}
-              </span>
-            ) : null}
-          </Link>
-
-          <LocaleSwitcher className="icon-btn" />
-
-          {isHydrated && isAuthenticated ? (
-            <Link href="/account" className="avatar-link" aria-label={t('account.nav.title', 'حسابي')}>
-              {initials || 'Q'}
-            </Link>
+            icon={Bell}
+            label={t('account.nav.notifications', 'الإشعارات')}
+            unread={unread.notifications}
+          />
+          <HeaderIconLink href="/account/messages" icon={MessageCircle} label={t('account.nav.messages', 'الرسائل')} unread={unread.messages} />
+          {signedIn ? (
+            <AccountLink name={user?.full_name || user?.email || 'Q'} />
           ) : (
-            <Link href="/login" className="btn btn--ghost btn--sm btn--pill">
-              {t('auth.tabs.login', 'تسجيل الدخول')}
-            </Link>
+            <GuestButtons />
           )}
         </div>
 
-        {/* Mobile shortcut bar */}
-        <div className="site-header__mobile">
-          <Link href="/post-ad" className="btn btn--primary btn--sm btn--pill">
-            + {t('home.hero.cta_post_short', 'انشر')}
-          </Link>
-          <LocaleSwitcher className="btn-mobile-toggle" />
-          <button
-            type="button"
-            className="btn-mobile-toggle"
-            aria-expanded={mobileOpen}
-            aria-label={t('account.nav.title', 'القائمة')}
-            onClick={() => setMobileOpen((v) => !v)}
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            >
-              <path d="M3 6h18M3 12h18M3 18h18" />
-            </svg>
-          </button>
+        <div className="relative flex items-center gap-2 self-start pt-3.5 min-[761px]:hidden">
+          <LanguageMenu className={mobileIconButton} anchor="container">
+            <Icon icon={Globe} />
+          </LanguageMenu>
+          <HeaderIconLink
+            href="/account/notifications"
+            icon={Bell}
+            label={t('account.nav.notifications', 'الإشعارات')}
+            unread={unread.notifications}
+            variant="phone"
+          />
+          <MobileMenu signedIn={signedIn} />
         </div>
       </div>
-
-      <nav className={cn('mobile-nav', mobileOpen && 'is-open')}>
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setMobileOpen(false)}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
     </header>
   );
 }
 
-function SaveIcon() {
+const headerIcon = cn(
+  'relative inline-flex size-[27px] cursor-pointer items-center justify-center rounded-qb-xs text-qb-ink-body transition-colors hover:text-qb-brand',
+  focusRing,
+);
+
+/** The bare icons of the desktop bar and the bordered squares of the phone header. */
+const ICON_LINK = {
+  desktop: { link: headerIcon, icon: 'size-[23px]', dot: 'end-0 top-0 size-2 border-[1.5px] border-qb-surface' },
+  phone: { link: mobileIconButton, icon: 'size-5', dot: 'end-3 top-[11px] size-[7px]' },
+} as const;
+
+interface HeaderIconLinkProps {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  unread?: number;
+  variant?: keyof typeof ICON_LINK;
+}
+
+function HeaderIconLink({ href, icon, label, unread = 0, variant = 'desktop' }: HeaderIconLinkProps) {
+  const style = ICON_LINK[variant];
+  const count = formatNumber(unread, getLocale());
+  const name = unread > 0 ? t('layout.header.unread', { label, count }, `${label} (${count})`) : label;
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" />
-    </svg>
+    <Link href={href} aria-label={name} className={style.link}>
+      <Icon icon={icon} className={style.icon} />
+      {unread > 0 ? <span aria-hidden="true" className={cn('absolute rounded-full bg-qb-brand', style.dot)} /> : null}
+    </Link>
   );
 }
 
-function BellIcon() {
+/** The avatar opens the account; its name starts with the initials it shows. */
+function AccountLink({ name }: { name: string }) {
+  const initials = initialsOf(name);
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+    <Link
+      href="/account"
+      aria-label={t('layout.header.account_named', { initials }, `${initials}، حسابي`)}
+      className={cn('rounded-full', focusRing)}
     >
-      <path d="M6 16V10a6 6 0 1 1 12 0v6l2 2H4z" />
-      <path d="M10 20a2 2 0 0 0 4 0" />
-    </svg>
+      <Avatar name={name} decorative />
+    </Link>
   );
 }
 
-function ChatIcon() {
+function GuestButtons() {
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 12a8 8 0 0 1-12 7l-5 1 1-5A8 8 0 1 1 21 12z" />
-    </svg>
+    <span className="ms-1 flex items-center gap-2.5">
+      <Link href="/login" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-[43px]')}>
+        {t('layout.header.login', 'تسجيل الدخول')}
+      </Link>
+      <Link href="/register" className={cn(buttonVariants({ size: 'sm' }), 'h-[41px]')}>
+        {t('layout.header.sign_up', 'إنشاء حساب')}
+      </Link>
+    </span>
   );
-}
-
-function userInitials(input: string): string {
-  const trimmed = input.trim();
-  if (!trimmed) return '';
-  if (trimmed.includes('@')) return trimmed[0]?.toUpperCase() ?? '';
-  return trimmed
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-}
-
-/**
- * Wrapper that hides the header on routes with their own chrome (auth pages
- * and the post-ad wizard).
- */
-const HIDE_HEADER_PREFIXES = [
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-  '/verify-otp',
-  '/post-ad',
-];
-
-export function SiteHeaderGate() {
-  const pathname = usePathname() ?? '/';
-  if (HIDE_HEADER_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
-    return null;
-  }
-  return <SiteHeader />;
 }

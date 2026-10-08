@@ -18,7 +18,6 @@ export function HelpArticleCard({ article }: { article: HelpArticleListItem }) {
         'group flex items-center gap-4 rounded-qb-xl border border-qb-line bg-qb-surface px-5 py-4 font-qb shadow-qb-card transition-colors hover:bg-qb-hover',
         'qb-tablet:rounded-qb-2xl qb-tablet:px-6 qb-tablet:py-5 qb-desktop:py-6',
         focusRing,
-        'focus-visible:outline-solid',
       )}
     >
       <span className="min-w-0 flex-1">

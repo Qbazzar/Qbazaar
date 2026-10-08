@@ -19,7 +19,7 @@ import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { safeReturnTo } from '@/lib/navigation/safe-return-to';
 import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
-import { announcedError } from './FieldError';
+import { fieldErrorText } from './FieldError';
 import { PasswordInput } from './PasswordInput';
 
 export function LoginForm() {
@@ -70,7 +70,7 @@ export function LoginForm() {
         </p>
       ) : null}
 
-      <Field label={t('auth.login.identifier_label')} required error={announcedError(errors.identifier?.message)}>
+      <Field label={t('auth.login.identifier_label')} required error={fieldErrorText(errors.identifier?.message)}>
         {(control) => (
           <Input
             {...control}
@@ -85,7 +85,7 @@ export function LoginForm() {
       </Field>
 
       <div className="flex flex-col gap-4">
-        <Field label={t('auth.login.password_label')} required error={announcedError(errors.password?.message)}>
+        <Field label={t('auth.login.password_label')} required error={fieldErrorText(errors.password?.message)}>
           {(control) => (
             <PasswordInput
               {...control}

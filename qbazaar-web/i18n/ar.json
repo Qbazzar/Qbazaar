@@ -1,7 +1,8 @@
 {
   "brand": {
     "name": "QBazaar",
-    "tagline": "سوق قطر الودود للإعلانات المبوبة"
+    "tagline": "سوق قطر الودود للإعلانات المبوبة",
+    "description": "بِع واشترِ واكتشف ما حولك في قطر."
   },
   "common": {
     "loading": "جاري التحميل…",
@@ -170,7 +171,8 @@
       "resend_success": "أرسلنا لك رابطاً جديداً",
       "resend_failed": "تعذّر إرسال الرابط، حاول لاحقاً",
       "missing_params_title": "رابط غير مكتمل",
-      "missing_params_body": "الرابط الذي اتبعته لا يحوي البيانات اللازمة للتحقق."
+      "missing_params_body": "الرابط الذي اتبعته لا يحوي البيانات اللازمة للتحقق.",
+      "meta_description": "صفحة تأكيد البريد الإلكتروني لـ QBazaar."
     },
     "errors": {
       "full_name_min": "الاسم قصير جداً (3 أحرف على الأقل)",
@@ -663,7 +665,6 @@
     "ads_coming_soon_subtitle": "نعمل على إطلاق صفحة الإعلانات. تابعنا — هي قادمة في القريب العاجل.",
     "no_subcategories": "لا توجد أقسام فرعية بعد",
     "no_filters": "لا توجد فلاتر متاحة",
-    "ads_count": "{count} إعلان",
     "errors": {
       "not_found": "لم نعثر على هذا القسم"
     }
@@ -1067,20 +1068,44 @@
     "hero": {
       "eyebrow": "سوق قطر",
       "headline": "سوق قطر الودود للإعلانات المبوبة",
-      "subtitle": "بيع واشترِ واكتشف من جيرانك — من سيارة مستعملة في الخليج الغربي إلى قطة صغيرة في الخور. مجاناً، آمناً، وبلمسة قطرية.",
-      "cta_post": "انشر إعلانك",
-      "cta_browse": "تصفّح الإعلانات"
+      "cta_browse": "تصفّح الإعلانات",
+      "title_start": "اعثر على أي شيء",
+      "title_accent": "قريب",
+      "title_end": "منك",
+      "tagline": "بيع واشترِ محلياً — سيارات، شقق، إلكترونيات، أثاث والمزيد. يثق بنا الملايين."
     },
     "sections": {
       "top_categories": "أهم الأقسام",
-      "top_categories_title": "كل الأسواق في قطر",
       "latest_ads": "أحدث الإعلانات",
-      "latest_ads_title": "رائج الآن",
-      "view_more": "عرض الكل"
+      "categories_title": "تصفّح الأقسام",
+      "categories_sub": "أهم ما يُعرض في منطقتك",
+      "view_all": "عرض الكل",
+      "recommended_title": "مختارة لك",
+      "recommended_sub": "عروض منتقاة قريبة منك",
+      "companies_title": "شركات مميزة",
+      "companies_sub": "اعثر على أعمال موثوقة قريبة منك.",
+      "best_selling_title": "الأكثر مبيعاً",
+      "best_selling_sub": "منتجات رائجة يحبها الناس."
     },
     "trust": {
       "verified": "بائعون موثّقون",
       "free_to_post": "النشر مجاني"
+    },
+    "search": {
+      "keyword": "ابحث",
+      "category": "اختر القسم",
+      "location": "الموقع",
+      "distance": "المسافة",
+      "submit": "بحث",
+      "unknown_place": "اختر مكاناً من الاقتراحات"
+    },
+    "places": {
+      "title_start": "استكشف الأماكن",
+      "title_middle": "حول",
+      "title_accent": "موقعك"
+    },
+    "cities": {
+      "browse_aria": "تصفّح الإعلانات في {city}"
     }
   },
   "media": {
@@ -1265,10 +1290,6 @@
     },
     "similar_section": {
       "title": "إعلانات مشابهة"
-    },
-    "featured_section": {
-      "kicker": "اختيارنا",
-      "title": "إعلانات مختارة"
     }
   },
   "search": {
@@ -1342,6 +1363,7 @@
       "add": "حفظ",
       "remove": "إلغاء الحفظ"
     },
+    "save_named": "احفظ {title}",
     "sign_in_required": "سجّل دخولك لحفظ الإعلانات",
     "errors": {
       "ad_not_found": "لم نعثر على هذا الإعلان"
@@ -2118,10 +2140,6 @@
       "description_max": "التفاصيل طويلة جداً"
     }
   },
-  "footer": {
-    "support": "الدعم الفني",
-    "contact": "تواصل معنا"
-  },
   "cms": {
     "last_updated": "آخر تحديث"
   },
@@ -2293,6 +2311,55 @@
       "next": "الصفحة التالية",
       "last": "الصفحة الأخيرة",
       "page": "الصفحة {page}"
+    },
+    "rail": {
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "toasts": {
+      "region": "الإشعارات"
+    }
+  },
+  "layout": {
+    "header": {
+      "add_ad": "أضف إعلاناً",
+      "login": "تسجيل الدخول",
+      "sign_up": "إنشاء حساب",
+      "unread": "{label} ({count} غير مقروءة)",
+      "account_named": "{initials}، حسابي"
+    },
+    "language": {
+      "label": "اللغة",
+      "title": "اختر لغتك"
+    },
+    "skip_to_content": "انتقل إلى المحتوى",
+    "menu": {
+      "title": "القائمة",
+      "open": "فتح القائمة",
+      "home": "الرئيسية",
+      "categories": "الأقسام",
+      "my_ads": "إعلاناتي",
+      "account": "إعدادات الحساب"
+    },
+    "footer": {
+      "tagline": "نربط العلامات التجارية بجمهورها عبر رسائل وتفاعل مدروس",
+      "col_classifieds": "الإعلانات",
+      "col_information": "معلومات",
+      "col_account": "الحساب",
+      "col_discover": "استكشف",
+      "about": "من نحن",
+      "browse": "تصفّح الإعلانات",
+      "categories": "كل الأقسام",
+      "help": "المساعدة",
+      "support": "الدعم الفني",
+      "contact": "تواصل معنا",
+      "privacy": "سياسة الخصوصية",
+      "terms": "شروط الاستخدام",
+      "search": "البحث",
+      "companies": "الشركات",
+      "nav_label": "روابط الموقع",
+      "wordmark": "Q BAZAAR",
+      "copyright": "كيو بازار. جميع الحقوق محفوظة"
     }
   },
   "companies": {

@@ -11,7 +11,6 @@ import { FileQuestion } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
-import { visibleFocus } from '@/components/post-ad/FormParts';
 import { PostAdFlow } from '@/components/post-ad/PostAdFlow';
 import { PostAdFrame, PostAdLoading } from '@/components/post-ad/PostAdPage';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -19,7 +18,6 @@ import { t } from '@/lib/i18n/messages';
 import { useAdQuery } from '@/lib/queries/ads';
 import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
-import { cn } from '@/lib/utils';
 
 interface Props {
   adId: string;
@@ -43,7 +41,7 @@ export function EditAdClient({ adId }: Props) {
         title={t('ads.errors.ad_not_found', 'لم نعثر على هذا الإعلان')}
         description={t('ads.errors.ad_not_found_body', 'الإعلان ربما تم حذفه أو الرابط غير صحيح.')}
         action={
-          <Link href="/account/ads" className={cn(buttonVariants(), visibleFocus)}>
+          <Link href="/account/ads" className={buttonVariants()}>
             {t('ads.my.title', 'إعلاناتي')}
           </Link>
         }

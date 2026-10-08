@@ -7,7 +7,7 @@ import type { PaginatedEnvelope } from '@/lib/api/types';
  * `NEXT_PUBLIC_API_URL` is the API origin the server-side SEO fetches hit.
  */
 
-const DEFAULT_SITE_URL = 'https://qbazaar.fleeteye.de';
+const DEFAULT_SITE_URL = 'https://qbazaar.qa';
 const DEFAULT_API_URL = 'http://localhost:8000';
 
 // `next build` prerenders the sitemap and fails a page that takes over 60 s, so

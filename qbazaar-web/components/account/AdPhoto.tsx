@@ -31,7 +31,7 @@ export function AdPhoto({ image, sizes, children, compact = false, className }: 
       ) : (
         <span className="flex size-full flex-col items-center justify-center gap-2 text-qb-ink-disabled">
           <ImageOff className={compact ? 'size-5' : 'size-8'} aria-hidden="true" />
-          {/* ink-disabled only reaches 4.5:1 on white, so the label on the grey fill takes the muted ink. */}
+          {/* ink-disabled is a 3:1 control grey, so the label takes the muted ink. */}
           {compact ? null : <span className="text-qb-h5 text-qb-ink-muted">{t('account.my_ads.without_photo')}</span>}
         </span>
       )}

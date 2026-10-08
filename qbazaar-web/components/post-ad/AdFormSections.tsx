@@ -38,7 +38,6 @@ import {
   errorId,
   fieldId,
   selectSize,
-  visibleFocus,
 } from './FormParts';
 import { PhotoUploader } from './PhotoUploader';
 
@@ -124,7 +123,6 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
             className={cn(
               'h-auto shrink-0 px-[26px] text-qb-body-sm font-medium shadow-qb-brand',
               'max-qb-tablet:rounded-qb-pill max-qb-tablet:border max-qb-tablet:border-qb-brand max-qb-tablet:px-4 max-qb-tablet:py-[9px] max-qb-tablet:text-qb-micro',
-              visibleFocus,
             )}
           >
             {t('post_ad.basic.category_select')}

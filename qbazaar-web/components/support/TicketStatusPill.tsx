@@ -23,7 +23,7 @@ const STATUS_TONES: Record<SupportTicketStatus, Tone> = {
 
 export function TicketStatusPill({ status, className }: { status: SupportTicketStatus; className?: string }) {
   return (
-    <Badge tone={STATUS_TONES[status]} className={cn(statusChipClass, className)}>
+    <Badge tone={STATUS_TONES[status]} font="label" className={cn(statusChipClass, className)}>
       {t(`support.status.${status}`, status)}
     </Badge>
   );

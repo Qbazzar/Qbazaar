@@ -1,84 +1,40 @@
 import type { Metadata } from 'next';
-import {
-  Cairo,
-  DM_Sans,
-  Geist_Mono,
-  IBM_Plex_Sans_Arabic,
-  Instrument_Serif,
-  Poppins,
-} from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
-import { SiteFooterGate } from '@/components/layout/SiteFooter';
+import { SiteFooter } from '@/components/layout/SiteFooter';
+import { SiteFooterGate } from '@/components/layout/SiteFooterGate';
 import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner';
+import { MAIN_CONTENT_ID } from '@/components/layout/main-content';
 import { LocaleProvider } from '@/components/i18n/LocaleProvider';
 import { dirFor } from '@/lib/i18n/locale';
+import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { siteUrl } from '@/lib/seo';
+import { fontVariables } from './fonts';
 import { Providers } from './providers';
 import './globals.css';
-import '../styles/qbfront.css';
 
-// Brand Latin faces (design system): DM Sans for body/UI, Instrument Serif for
-// large display headings. Arabic always uses Cairo.
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-dm-sans',
-});
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+  const brand = t('brand.name', 'QBazaar');
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ['latin'],
-  weight: ['400'],
-  style: ['normal', 'italic'],
-  variable: '--font-instrument-serif',
-});
-
-// Cairo for all Arabic text (body + headings). User preference.
-const cairo = Cairo({
-  subsets: ['arabic'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  variable: '--font-cairo',
-});
-
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
-});
-
-// New design system faces (`font-qb`). Not preloaded while no page uses them
-// yet, so the old-design pages download nothing extra; turn preload on with the
-// FE-16.3 reskin.
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-poppins',
-  preload: false,
-});
-
-const ibmPlexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ['arabic'],
-  weight: ['400', '500', '600'],
-  variable: '--font-ibm-plex-arabic',
-  preload: false,
-});
-
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
-  title: {
-    default: "QBazaar — Qatar's friendly classifieds marketplace",
-    template: '%s · QBazaar',
-  },
-  description: 'QBazaar — buy, sell and discover near you in Qatar.',
-  openGraph: {
-    siteName: 'QBazaar',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-  },
-};
+  return {
+    metadataBase: new URL(siteUrl()),
+    title: {
+      default: `${brand} — ${t('brand.tagline', 'سوق قطر الودود للإعلانات المبوبة')}`,
+      template: `%s · ${brand}`,
+    },
+    description: t('brand.description', 'بِع واشترِ واكتشف ما حولك في قطر.'),
+    openGraph: {
+      siteName: brand,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -90,16 +46,21 @@ export default async function RootLayout({
       lang={locale}
       dir={dirFor(locale)}
       suppressHydrationWarning
-      className={`${dmSans.variable} ${instrumentSerif.variable} ${cairo.variable} ${geistMono.variable} ${poppins.variable} ${ibmPlexArabic.variable}`}
+      // The sticky header is 88 px tall: keep focused and linked-to elements below it.
+      className={`${fontVariables} scroll-pt-24`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col bg-qb-page">
         <LocaleProvider locale={locale}>
           {/* Light-only product — force light and ignore the OS/system theme. */}
           <ThemeProvider attribute="class" forcedTheme="light">
             <Providers>
               <SiteHeaderGate />
-              <div className="flex-1">{children}</div>
-              <SiteFooterGate />
+              <div id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 outline-none">
+                {children}
+              </div>
+              <SiteFooterGate>
+                <SiteFooter />
+              </SiteFooterGate>
               <ImpersonationBanner />
             </Providers>
             <Toaster richColors closeButton position="top-center" />

@@ -26,6 +26,18 @@ describe('Tabs', () => {
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Every notification');
   });
 
+  it('can scroll the tabs sideways on phones instead of wrapping them', () => {
+    render(
+      <Tabs defaultValue="all">
+        <TabList aria-label="My ads" scrollOnPhones>
+          <Tab value="all">All</Tab>
+        </TabList>
+      </Tabs>,
+    );
+
+    expect(screen.getByRole('tablist', { name: 'My ads' })).toHaveClass('max-qb-tablet:flex-nowrap', 'max-qb-tablet:overflow-x-auto');
+  });
+
   it('switches the panel when another tab is chosen', async () => {
     const user = userEvent.setup();
     render(<NotificationTabs />);

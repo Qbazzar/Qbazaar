@@ -45,7 +45,7 @@ export function Pagination({ page, totalPages, getHref, className }: PaginationP
               href={getHref(number)}
               aria-label={t('ui.pagination.page', { page: number })}
               aria-current={number === current ? 'page' : undefined}
-              className={cn(cell, focusRing, number === current ? 'bg-qb-brand text-white' : 'hover:bg-qb-hover')}
+              className={cn(cell, focusRing, number === current ? 'bg-qb-brand text-qb-on-brand' : 'hover:bg-qb-hover')}
             >
               {number}
             </Link>

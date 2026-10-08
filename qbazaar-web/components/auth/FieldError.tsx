@@ -23,7 +23,7 @@ export function FieldError({
   );
 }
 
-/** Error for the design-system `Field`: translated, and announced when it appears. */
-export function announcedError(message?: string): ReactNode {
-  return message ? <span role="alert">{translateMaybeKey(message)}</span> : undefined;
+/** Translated error text for the design-system `Field`, which announces it and links it to the control. */
+export function fieldErrorText(message?: string): ReactNode {
+  return message ? translateMaybeKey(message) : undefined;
 }

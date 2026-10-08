@@ -1,11 +1,5 @@
-/**
- * Page frame shared by the catalog pages: the 1360 px content column with the
- * header's side gutter (40 px at 1440, 30 at 744, 16 at 390).
- */
-export const catalogContainer = 'mx-auto box-content max-w-qb-content px-[clamp(16px,4vw,40px)]';
-
 /** Pulls a horizontal scroller out to the screen edge on phones and tablets. */
-export const catalogBleed = '-mx-[clamp(16px,4vw,40px)] px-[clamp(16px,4vw,40px)] scroll-px-[clamp(16px,4vw,40px)]';
+export const catalogBleed = '-mx-qb-gutter px-qb-gutter scroll-px-qb-gutter';
 
 /** Vertical rhythm of the page top, measured on 185:6576, 536:32620 and 621:27193. */
 export const catalogPageTop = 'pt-10 pb-16 qb-tablet:pt-[62px] qb-desktop:pt-[65px] qb-desktop:pb-24';

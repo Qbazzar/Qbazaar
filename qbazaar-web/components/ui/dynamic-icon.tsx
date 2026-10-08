@@ -1,31 +1,121 @@
 'use client';
 
 /**
- * Resolves a lucide-react icon by string name at render time.
+ * Resolves a lucide-react icon by the name a backend payload carries:
+ * categories and help topics use PascalCase (`"Car"`), notifications kebab
+ * case (`"shield-alert"`).
  *
- * Backend payloads (categories, etc.) reference icons as plain strings like
- * `"Car"`. We can't statically import them, so we read the icon off the
- * lucide-react module and fall back to `Layers` when the name is unknown.
+ * Every name the API sends today renders at once. Any other name (an admin's
+ * pick) loads the whole lucide set on demand, so no page ships all of lucide
+ * up front; `Layers` stands in while it loads and for unknown names.
  *
  * This component is tiny but it lives in `components/ui` because every
  * categories surface uses it.
  */
-import * as Lucide from 'lucide-react';
-import { Layers, type LucideProps } from 'lucide-react';
+import { lazy, Suspense, type ComponentType } from 'react';
+import {
+  BadgeCheck,
+  BellRing,
+  Bike,
+  BookOpen,
+  Briefcase,
+  Car,
+  CircleAlert,
+  CircleX,
+  Clock,
+  ClockAlert,
+  Download,
+  Factory,
+  Flag,
+  House,
+  Inbox,
+  Layers,
+  LifeBuoy,
+  Lock,
+  Megaphone,
+  PackageCheck,
+  PawPrint,
+  Shield,
+  ShieldAlert,
+  Shirt,
+  ShoppingBag,
+  Smartphone,
+  Sofa,
+  Sparkles,
+  Tag,
+  Wallet,
+  Wrench,
+  type LucideIcon,
+  type LucideProps,
+} from 'lucide-react';
 
-interface Props extends Omit<LucideProps, 'name'> {
-  /** Lucide-react icon name resolved at render time (e.g. "Car", "Home"). */
+type IconProps = Omit<LucideProps, 'name'>;
+
+interface Props extends IconProps {
+  /** Lucide-react icon name resolved at render time (e.g. "Car", "Home", "shield-alert"). */
   name: string | null | undefined;
 }
 
-const ICON_REGISTRY = Lucide as unknown as Record<
-  string,
-  React.ComponentType<LucideProps>
->;
+const KNOWN_ICONS = new Map<string, LucideIcon>(
+  Object.entries({
+    // Category seeds
+    Bike,
+    Briefcase,
+    Car,
+    Factory,
+    Home: House,
+    PawPrint,
+    Shirt,
+    Smartphone,
+    Sofa,
+    Wrench,
+    // Help topic seeds and the help pages' default
+    BookOpen,
+    Lock,
+    Shield,
+    ShoppingBag,
+    Sparkles,
+    Tag,
+    // Notification types (the API's app/Notifications and OrderNotice); lucide has no "Alert"
+    Alert: CircleAlert,
+    BadgeCheck,
+    BellRing,
+    CircleX,
+    Clock,
+    ClockAlert,
+    Download,
+    Flag,
+    Inbox,
+    LifeBuoy,
+    Megaphone,
+    PackageCheck,
+    ShieldAlert,
+    Wallet,
+  }),
+);
+
+/** "shield-alert" and "ShieldAlert" both name lucide's ShieldAlert. */
+function pascalCase(name: string): string {
+  return name.replace(/(^|-)([a-z0-9])/g, (_match, _dash, character: string) => character.toUpperCase());
+}
+
+const IconFromFullSet = lazy(async () => {
+  const registry = (await import('lucide-react')) as unknown as Record<string, ComponentType<IconProps>>;
+  function IconByName({ name, ...rest }: IconProps & { name: string }) {
+    const Glyph = registry[name] ?? Layers;
+    return <Glyph {...rest} />;
+  }
+  return { default: IconByName };
+});
 
 export function DynamicIcon({ name, ...rest }: Props) {
   if (!name) return <Layers {...rest} />;
-  const Comp = ICON_REGISTRY[name];
-  if (!Comp) return <Layers {...rest} />;
-  return <Comp {...rest} />;
+  const iconName = pascalCase(name);
+  const Known = KNOWN_ICONS.get(iconName);
+  if (Known) return <Known {...rest} />;
+  return (
+    <Suspense fallback={<Layers {...rest} />}>
+      <IconFromFullSet name={iconName} {...rest} />
+    </Suspense>
+  );
 }

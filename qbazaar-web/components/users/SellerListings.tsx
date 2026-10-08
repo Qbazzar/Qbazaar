@@ -116,7 +116,7 @@ export function SellerListings({ userId, sellerName, layout }: SellerListingsPro
             onClick={loadMore}
             aria-disabled={isFetchingNextPage || undefined}
             aria-busy={isFetchingNextPage || undefined}
-            className="h-[37px] px-[13px] text-qb-body focus-visible:outline-solid"
+            className="h-[37px] px-[13px] text-qb-body"
           >
             {isFetchingNextPage ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
             {t('users.profile.load_more')}

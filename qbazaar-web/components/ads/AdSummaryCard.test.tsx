@@ -9,6 +9,7 @@ vi.mock('@/components/ads/FavoriteButton', () => ({
   FavoriteButton: () => <button type="button">Save</button>,
 }));
 
+import { QatarPlacesProvider } from '@/components/locations/QatarPlacesProvider';
 import { setClientLocale } from '@/lib/i18n/locale';
 import type { AdSummary, Location, Media } from '@/lib/api/types';
 import { useLocationsStore } from '@/store/locations';
@@ -68,11 +69,24 @@ describe('AdSummaryCard', () => {
     expect(screen.getByText('Al Wakrah')).toBeInTheDocument();
   });
 
+  it('names the place from the tree the page was rendered with until the store has one', () => {
+    render(
+      <QatarPlacesProvider places={[wakrah]}>
+        <AdSummaryCard ad={ad} />
+      </QatarPlacesProvider>,
+    );
+
+    expect(screen.getByText('Al Wakrah')).toBeInTheDocument();
+  });
+
   it('marks promoted ads as "Top Ad" in the list layout', () => {
     render(<AdSummaryCard ad={{ ...ad, promotion: 'premium' }} layout="list" />);
 
-    expect(screen.getByText('Top Ad')).toHaveClass('bg-qb-brand');
-    expect(screen.getByText('QAR 285,000')).not.toHaveClass('bg-qb-brand');
+    expect(screen.getByText('Top Ad')).toHaveClass('bg-qb-brand', 'qb-tablet:inline-flex');
+    // The price stays on the photo on phones only, and sits next to the title from tablets up.
+    const [onPhoto, besideTitle] = screen.getAllByText('QAR 285,000');
+    expect(onPhoto).toHaveClass('bg-qb-brand', 'qb-tablet:hidden');
+    expect(besideTitle).not.toHaveClass('bg-qb-brand');
   });
 
   it('shows the summary and the spec chips in the list layout', () => {

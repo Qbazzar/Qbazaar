@@ -20,7 +20,6 @@ import { findPath } from '@/lib/post-ad/tree';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { usePostAdStore } from '@/store/post-ad';
 
-import { visibleFocus } from './FormParts';
 import { SellerIdentity, type SellerSummary } from './ProfileCard';
 import { PreviewGallery } from './PreviewGallery';
 import type { PostAdAction } from './usePostAdActions';
@@ -62,11 +61,11 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
             {t('post_ad.preview.banner')}
           </p>
           <div className="flex shrink-0 gap-2.5">
-            <Button variant="secondary" size="sm" onClick={onEdit} className={cn('h-11 px-[22px]', visibleFocus)}>
+            <Button variant="secondary" size="sm" onClick={onEdit} className="h-11 px-[22px]">
               {t('post_ad.actions.edit')}
             </Button>
             {canPublish ? (
-              <Button size="sm" onClick={onPublish} className={cn('h-11 px-[22px]', visibleFocus)}>
+              <Button size="sm" onClick={onPublish} className="h-11 px-[22px]">
                 {t('post_ad.actions.publish')}
               </Button>
             ) : null}
@@ -308,7 +307,7 @@ function PublishCard({ running, onConfirm }: { running: PostAdAction | null; onC
           {t('post_ad.publish.terms_required')}
         </p>
       ) : null}
-      <Button fullWidth disabled={running !== null} aria-busy={busy || undefined} onClick={confirm} className={cn('mt-5 h-12', visibleFocus)}>
+      <Button fullWidth disabled={running !== null} aria-busy={busy || undefined} onClick={confirm} className="mt-5 h-12">
         {busy ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
         {t('post_ad.actions.confirm_publish')}
       </Button>

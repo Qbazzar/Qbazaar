@@ -156,7 +156,7 @@ export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, clas
                     <Link
                       href={`/help/articles/${article.slug}`}
                       onClick={() => setOpen(false)}
-                      className={cn('block px-5 py-3 hover:bg-qb-hover', focusRing, 'focus-visible:outline-solid focus-visible:-outline-offset-2')}
+                      className={cn('block px-5 py-3 hover:bg-qb-hover', focusRing, 'focus-visible:-outline-offset-2')}
                     >
                       <span className="block text-qb-body font-medium text-qb-ink-body">{localized(article.title)}</span>
                       {excerpt ? (

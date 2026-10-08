@@ -1,132 +1,163 @@
 'use client';
 
 /**
- * Hero search bar for the homepage — QBFront `.search-bar` markup.
- *
- * Routes to `/search?q=...&location=...` on submit. Category and distance
- * are placeholder UI for now (the real category browse already lives at
- * `/categories` and on `/search` itself).
+ * Hero search bar of the home page (728:44663). Routes to
+ * `/search?q=...&location_slug=...` on submit, the location being one of the
+ * Qatar places suggested under the field; "Choose Category" opens
+ * `/categories`, and distance stays a placeholder until search takes a
+ * radius. Phones show the keyword field only, as in the design.
  */
-import { useState } from 'react';
+import { useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ChevronDown, MapPin, Search } from 'lucide-react';
+
+import { buttonVariants } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
+import { Icon } from '@/components/design-system/Icon';
+import { useRenderedQatarPlaces } from '@/components/locations/QatarPlacesProvider';
+import type { Location } from '@/lib/api/types';
+import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { useQatarLocationsQuery } from '@/lib/queries/locations';
+import { cn } from '@/lib/utils';
+
+const field = 'flex min-w-0 items-center gap-2.5 rounded-qb-md px-3.5 py-2.5';
+/**
+ * The text field in use gets its own ring, next to the brand border of the whole bar. Forced-colors mode drops
+ * the ring (a shadow), so outline-hidden draws an outline there instead.
+ */
+const typingRing = 'focus-within:ring-2 focus-within:ring-qb-brand-active focus-within:ring-inset focus-within:outline-hidden';
+/** The two text fields keep room for a readable placeholder, their only visible label. */
+const textFieldWidth = 'min-w-28';
+const input =
+  'w-full min-w-0 bg-transparent text-qb-body text-qb-ink outline-none placeholder:text-qb-placeholder [&::-webkit-calendar-picker-indicator]:hidden! [&::-webkit-search-cancel-button]:hidden';
+/** "Choose Category" and "Distance" stay on one line and read larger on desktop (the reference's .qb-hlabel). */
+const choiceLabel = 'whitespace-nowrap text-qb-caption text-qb-placeholder qb-desktop:text-qb-h5';
+/** Tablet fields are narrow, so their icons shrink there instead of clipping the text. */
+const fieldIcon = 'size-4 text-qb-icon-muted qb-desktop:size-5';
+
+const PLACES_LIST_ID = 'home-search-places';
+
+export function searchHref(keyword: string, locationSlug: string | null): string {
+  const params = new URLSearchParams();
+  if (keyword.trim()) params.set('q', keyword.trim());
+  if (locationSlug) params.set('location_slug', locationSlug);
+  const query = params.toString();
+  return query ? `/search?${query}` : '/search';
+}
+
+/** Every place of the tree, parents before their children. */
+function flattenPlaces(nodes: Location[]): Location[] {
+  return nodes.flatMap((node) => [node, ...flattenPlaces(node.children)]);
+}
+
+/** The place whose English or Arabic name is the typed text, ignoring case and outer spaces. */
+export function findPlaceByName(places: Location[], text: string): Location | null {
+  const wanted = text.trim().toLocaleLowerCase();
+  if (!wanted) return null;
+  return places.find(({ name }) => [name.en, name.ar].some((value) => value?.toLocaleLowerCase() === wanted)) ?? null;
+}
 
 export function HomeSearchBar() {
   const router = useRouter();
+  const locale = getLocale();
   const [q, setQ] = useState('');
   const [location, setLocation] = useState('');
+  const [unknownPlace, setUnknownPlace] = useState(false);
+  const locationRef = useRef<HTMLInputElement>(null);
+  const errorId = useId();
+  // Shares the cached tree with the "Find places" collage below.
+  const { data: cities } = useQatarLocationsQuery(useRenderedQatarPlaces());
+  const places = useMemo(() => flattenPlaces(cities ?? []), [cities]);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (q.trim()) params.set('q', q.trim());
-    if (location.trim()) params.set('location', location.trim());
-    const qs = params.toString();
-    router.push(qs ? `/search?${qs}` : '/search');
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const place = findPlaceByName(places, location);
+    // Until the places load, a typed location cannot be checked, so the search runs without it.
+    if (location.trim() && places.length > 0 && !place) {
+      setUnknownPlace(true);
+      locationRef.current?.focus();
+      return;
+    }
+    router.push(searchHref(q, place?.slug ?? null));
   };
 
   return (
-    <form className="search-bar" role="search" onSubmit={submit}>
-      <div className="search-field">
-        <svg
-          className="search-field__icon"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
+    <form role="search" onSubmit={submit} className="mx-auto mt-7 w-full max-w-[1000px] font-qb">
+      <div className="flex w-full items-stretch rounded-qb-xl border border-qb-line bg-qb-surface/97 py-1.5 ps-1 pe-1.5 shadow-qb-card has-[input:focus-visible]:border-qb-brand qb-tablet:ps-2.5 qb-desktop:p-2">
+        <label className={cn(field, typingRing, textFieldWidth, 'flex-[2_1_200px] qb-desktop:min-w-[150px]')}>
+          <Icon icon={Search} className="text-qb-ink" />
+          <input
+            type="search"
+            className={input}
+            placeholder={t('home.search.keyword', 'ابحث')}
+            aria-label={t('home.search.keyword', 'ابحث')}
+            value={q}
+            onChange={(event) => setQ(event.target.value)}
+          />
+        </label>
+        <Divider />
+        {/* Never narrower than its label, so the words are not cut off on small tablets or with wider text spacing. */}
+        <Link href="/categories" className={cn(field, 'hidden min-w-fit flex-[1_1_160px] qb-tablet:flex', focusRing)}>
+          <span className={choiceLabel}>{t('home.search.category', 'اختر القسم')}</span>
+        </Link>
+        <Divider />
+        <ExtraField className={cn(typingRing, textFieldWidth, 'flex-[1_1_130px] gap-1.5 px-2.5 qb-desktop:min-w-[120px] qb-desktop:gap-2 qb-desktop:px-3.5')}>
+          <Icon icon={MapPin} className={fieldIcon} />
+          <input
+            ref={locationRef}
+            className={input}
+            list={PLACES_LIST_ID}
+            autoComplete="off"
+            placeholder={t('home.search.location', 'الموقع')}
+            aria-label={t('home.search.location', 'الموقع')}
+            aria-invalid={unknownPlace || undefined}
+            aria-describedby={unknownPlace ? errorId : undefined}
+            value={location}
+            onChange={(event) => {
+              setLocation(event.target.value);
+              setUnknownPlace(false);
+            }}
+          />
+          <datalist id={PLACES_LIST_ID}>
+            {places.map((place) => (
+              <option key={place.slug} value={localized(place.name, locale)} />
+            ))}
+          </datalist>
+        </ExtraField>
+        {/* The inert distance field needs room the small tablets lack, so it joins at the 744 px tablet frame. */}
+        <div className="hidden min-[744px]:contents">
+          <Divider />
+          <ExtraField className="min-w-fit flex-[1_1_120px] justify-between gap-1 qb-desktop:gap-2" decorative>
+            <span className={choiceLabel}>{t('home.search.distance', 'المسافة')}</span>
+            <Icon icon={ChevronDown} className={fieldIcon} />
+          </ExtraField>
+        </div>
+        <button
+          type="submit"
+          className={cn(buttonVariants({ size: 'md' }), 'm-1 h-auto min-h-11 shrink-0 px-[26px] max-[600px]:not-focus-visible:sr-only')}
         >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
-        <input
-          type="search"
-          placeholder={t('search.placeholder', 'ابحث')}
-          aria-label={t('search.placeholder', 'ابحث')}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
+          {t('home.search.submit', 'بحث')}
+        </button>
       </div>
-      <div className="search-field">
-        <svg
-          className="search-field__icon"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-        >
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-        <input
-          placeholder={t('categories.pick', 'اختر القسم')}
-          aria-label={t('categories.pick', 'اختر القسم')}
-          readOnly
-          onFocus={() => router.push('/categories')}
-        />
-        <svg
-          className="search-field__chevron"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
-      </div>
-      <div className="search-field">
-        <svg
-          className="search-field__icon"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 22s7-7 7-13a7 7 0 1 0-14 0c0 6 7 13 7 13z" />
-          <circle cx="12" cy="9" r="2.5" />
-        </svg>
-        <input
-          placeholder={t('search.location_placeholder', 'الموقع')}
-          aria-label={t('search.location_placeholder', 'الموقع')}
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
-      </div>
-      <div className="search-field">
-        <input
-          placeholder={t('search.distance_placeholder', 'المسافة')}
-          aria-label={t('search.distance_placeholder', 'المسافة')}
-          readOnly
-        />
-        <svg
-          className="search-field__chevron"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
-      </div>
-      <button type="submit" className="btn btn--primary">
-        {t('search.submit', 'بحث')}
-      </button>
+      {unknownPlace ? (
+        <p id={errorId} role="alert" className="mt-2 text-qb-caption text-qb-danger">
+          {t('home.search.unknown_place', 'اختر مكاناً من الاقتراحات')}
+        </p>
+      ) : null}
     </form>
   );
+}
+
+function ExtraField({ className, decorative, children }: { className?: string; decorative?: boolean; children: ReactNode }) {
+  return (
+    <div aria-hidden={decorative || undefined} className={cn(field, 'hidden qb-tablet:flex', className)}>
+      {children}
+    </div>
+  );
+}
+
+function Divider() {
+  return <span aria-hidden="true" className="my-2 hidden w-px shrink-0 bg-qb-line qb-tablet:block" />;
 }

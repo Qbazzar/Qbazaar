@@ -9,7 +9,8 @@ describe('SectionHeader', () => {
     const heading = screen.getByRole('heading', { level: 2, name: 'Browse Categories' });
 
     expect(heading).toHaveAttribute('id', 'browse');
-    expect(heading).toHaveClass('text-qb-h4', 'qb-desktop:text-qb-h2', 'tracking-normal');
+    // The heading carries the face itself: globals.css sets every h1-h6 in the old font.
+    expect(heading).toHaveClass('font-qb', 'text-[clamp(22px,3vw,28px)]', 'tracking-normal');
     expect(screen.getByText('Explore top items in your area')).toBeInTheDocument();
   });
 

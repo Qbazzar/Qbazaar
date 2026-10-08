@@ -26,7 +26,8 @@ export interface FieldProps {
 /**
  * Label + control + hint/error, as on the auth and settings forms
  * (`.qb-field` in Qbazaar-front). The required star follows the reference:
- * brand-coloured, not part of the accessible name.
+ * brand-coloured, not part of the accessible name. An error is announced
+ * when it appears.
  */
 export function Field({ label, children, hint, error, required, hideLabel, id, className }: FieldProps) {
   const generatedId = useId();
@@ -60,7 +61,7 @@ export function Field({ label, children, hint, error, required, hideLabel, id, c
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} className="text-qb-caption text-qb-danger">
+        <p id={errorId} role="alert" className="text-qb-caption text-qb-danger">
           {error}
         </p>
       ) : null}

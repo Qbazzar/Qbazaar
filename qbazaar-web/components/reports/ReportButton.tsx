@@ -55,7 +55,7 @@ export function ReportButton({ target_type, target_id, label, className }: Repor
         onClick={onClick}
         aria-disabled={reported || undefined}
         className={cn(
-          'font-normal text-qb-ink-subtle hover:text-qb-ink focus-visible:outline-solid',
+          'font-normal text-qb-ink-subtle hover:text-qb-ink',
           // No warning token yet: the design's amber "Reported!" takes the brand colour.
           reported && 'text-qb-brand aria-disabled:opacity-100',
           className,

@@ -22,7 +22,7 @@ export function safeWebsiteHref(website: string): string | null {
 }
 
 // focusRing's outline-none also clears the style its focus outline reads; outline-solid restores it.
-const linkClass = cn('rounded-qb-xs hover:text-qb-brand', focusRing, 'focus-visible:outline-solid');
+const linkClass = cn('rounded-qb-xs hover:text-qb-brand', focusRing);
 
 /** "https://www.example.qa/" -> "www.example.qa" */
 function websiteLabel(website: string): string {

@@ -18,12 +18,12 @@ const STATUS_TONES: Record<AdStatus, Tone> = {
   blocked: 'danger',
 };
 
-/** Outlined Montserrat 14 px status chip of 518:20536, shared with the support ticket rows. */
-export const statusChipClass = 'border border-current font-qb-label text-qb-caption';
+/** Outlined 14 px status chip of 518:20536 (in the label face, `font="label"`), shared with the support ticket rows. */
+export const statusChipClass = 'border border-current text-qb-caption';
 
 export function AdStatusBadge({ status, className }: { status: AdStatus; className?: string }) {
   return (
-    <Badge tone={STATUS_TONES[status]} className={cn(statusChipClass, className)}>
+    <Badge tone={STATUS_TONES[status]} font="label" className={cn(statusChipClass, className)}>
       {t(`ads.status.${status}`)}
     </Badge>
   );

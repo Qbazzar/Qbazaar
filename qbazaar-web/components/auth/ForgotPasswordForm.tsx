@@ -20,7 +20,7 @@ import { ApiClientError, forgotPassword } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
 import { AuthHeading } from './AuthHeading';
-import { announcedError } from './FieldError';
+import { fieldErrorText } from './FieldError';
 import { Turnstile, type TurnstileHandle } from './Turnstile';
 
 export function ForgotPasswordForm() {
@@ -70,7 +70,7 @@ export function ForgotPasswordForm() {
     <>
       <AuthHeading icon={<Mail />} title={t('auth.forgot_password.title')} subtitle={t('auth.forgot_password.subtitle')} />
       <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
-        <Field label={t('auth.forgot_password.email_label')} required error={announcedError(emailError)}>
+        <Field label={t('auth.forgot_password.email_label')} required error={fieldErrorText(emailError)}>
           {(control) => (
             <Input
               {...control}

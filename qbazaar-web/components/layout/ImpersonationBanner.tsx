@@ -6,6 +6,8 @@
  * one-click exit that fully logs out and reloads.
  */
 import { useEffect, useState } from 'react';
+
+import { Button } from '@/components/design-system/Button';
 import { logout } from '@/lib/api/auth';
 import { clearAuthNonReactive } from '@/store/auth';
 import { t } from '@/lib/i18n/messages';
@@ -31,17 +33,14 @@ export function ImpersonationBanner() {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-3 bg-ink-900 px-4 py-2.5 text-sm text-white">
+    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-3 bg-qb-ink px-4 py-2.5 font-qb text-qb-caption text-qb-surface">
       <span>
         {t('impersonate.banner', { name }, `أنت تتصفّح كـ ${name}`)}
       </span>
-      <button
-        type="button"
-        onClick={onExit}
-        className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold transition hover:bg-white/25"
-      >
+      {/* The brand focus colour is too dark on the ink bar. */}
+      <Button variant="outline" size="sm" onClick={onExit} className="h-8 rounded-qb-pill px-3 text-qb-label focus-visible:outline-qb-surface">
         {t('impersonate.exit', 'إنهاء الانتحال')}
-      </button>
+      </Button>
     </div>
   );
 }

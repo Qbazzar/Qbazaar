@@ -9,7 +9,8 @@ import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Input } from '@/components/design-system/Input';
 import { AdRow } from '@/components/catalog/AdRow';
-import { catalogContainer, catalogPageTop, headingFont } from '@/components/catalog/layout';
+import { siteFrame } from '@/components/design-system/site-frame';
+import { catalogPageTop, headingFont } from '@/components/catalog/layout';
 import { useResultsFocusTarget } from '@/components/catalog/results-focus';
 import { t } from '@/lib/i18n/messages';
 import { useFeaturedAdsQuery } from '@/lib/queries/ads';
@@ -47,7 +48,7 @@ export function SearchNotFound({ query, breadcrumb, searching, onSearch, onReset
 
   return (
     <main className={cn('bg-qb-page font-qb text-qb-ink', headingFont)}>
-      <div className={cn(catalogContainer, catalogPageTop)}>
+      <div className={cn(siteFrame, catalogPageTop)}>
         <Breadcrumb items={breadcrumb} className="mb-[68px] hidden qb-tablet:block qb-desktop:mb-[83px]" />
         <h1 ref={headingRef} tabIndex={-1} className="sr-only">
           {t('catalog.not_found.heading', 'لا توجد نتائج')}

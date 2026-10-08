@@ -14,8 +14,6 @@ import { tPlural } from '@/lib/i18n/plural';
 import { formatDate } from '@/lib/post-ad/format';
 import { cn } from '@/lib/utils';
 
-import { visibleFocus } from './FormParts';
-
 export interface SellerSummary {
   name: string;
   avatarUrl: string | null;
@@ -149,7 +147,6 @@ function ActionButton({
       onClick={action.onClick}
       className={cn(
         'px-3.5 max-qb-tablet:h-[42px] max-qb-tablet:min-w-0 max-qb-tablet:flex-1 max-qb-tablet:px-1.5 max-qb-tablet:text-qb-caption',
-        visibleFocus,
         className,
       )}
     >

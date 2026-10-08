@@ -8,11 +8,11 @@ import { Icon } from '@/components/design-system/Icon';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-import { visibleFocusRing } from './FormParts';
+import { focusRing } from '@/components/design-system/focus-ring';
 
 const arrowButton = cn(
   'absolute top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-qb-surface text-qb-ink shadow-qb-raised transition-colors hover:bg-qb-hover',
-  visibleFocusRing,
+  focusRing,
 );
 
 /** Product-page gallery of preview.html: one photo, arrows and the "1/4" counter. */

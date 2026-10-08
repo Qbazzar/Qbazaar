@@ -32,6 +32,11 @@ interface Props {
   className?: string;
   /** Render a label next to the heart (used in the ad-detail sidebar). */
   withLabel?: boolean;
+  /**
+   * Title of the ad, for a heart on a card: the button is then named after
+   * the ad ("Save Toyota Corolla"), and `aria-pressed` alone tells the state.
+   */
+  adTitle?: string;
 }
 
 const SIZE_CLS: Record<NonNullable<Props['size']>, string> = {
@@ -45,6 +50,7 @@ export function FavoriteButton({
   size = 'sm',
   className,
   withLabel = false,
+  adTitle,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -62,11 +68,12 @@ export function FavoriteButton({
     ? 'favorites.tooltip.remove'
     : 'favorites.tooltip.add';
   const label = t(labelKey);
+  const name = adTitle ? t('favorites.save_named', { title: adTitle }) : label;
 
   const handleClick = useMemo(() => {
     return (event: React.MouseEvent<HTMLButtonElement>) => {
-      // The button sits inside a Link on AdCard — swallow the click so the
-      // parent <a> doesn't navigate to the ad detail page.
+      // The button floats over a card's stretched link or a gallery photo;
+      // the click must not reach them.
       event.preventDefault();
       event.stopPropagation();
 
@@ -99,13 +106,13 @@ export function FavoriteButton({
     <button
       type="button"
       onClick={handleClick}
-      aria-label={label}
+      aria-label={name}
       aria-pressed={favorited}
       title={label}
       disabled={toggleMutation.isPending}
       className={cn(
         'inline-flex items-center justify-center rounded-full bg-white/90 text-ink-700 shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition-colors',
-        'hover:bg-white hover:text-coral focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2',
+        'hover:bg-white hover:text-coral focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2',
         'disabled:cursor-progress disabled:opacity-70',
         withLabel ? 'gap-2 px-3 py-2 text-sm' : SIZE_CLS[size],
         favorited && 'text-coral',

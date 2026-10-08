@@ -63,7 +63,6 @@ export function AdDescription({ text, className }: AdDescriptionProps) {
               'rounded-qb-xs text-qb-caption font-medium text-qb-brand hover:text-qb-brand-active',
               lineHeight,
               focusRing,
-              'focus-visible:outline-solid',
               expanded
                 ? 'mt-2'
                 : 'absolute end-0 bottom-0 from-qb-surface from-60% to-transparent ps-10 ltr:bg-linear-to-l rtl:bg-linear-to-r',

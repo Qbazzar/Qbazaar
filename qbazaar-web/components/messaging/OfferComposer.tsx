@@ -21,7 +21,7 @@ import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Input, Textarea } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
-import { announcedError } from '@/components/auth/FieldError';
+import { fieldErrorText } from '@/components/auth/FieldError';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { useMakeOfferMutation } from '@/lib/queries/offers';
 import { AuthErrorCode } from '@/lib/api/types';
@@ -157,7 +157,7 @@ export function OfferComposer({ conversationId }: Props) {
           id="offer-amount"
           label={t('messaging.offer.amount_label', 'المبلغ (QAR)')}
           required
-          error={announcedError(errors.amount?.message)}
+          error={fieldErrorText(errors.amount?.message)}
         >
           {(control) => (
             <Input
@@ -177,7 +177,7 @@ export function OfferComposer({ conversationId }: Props) {
         <Field
           id="offer-note"
           label={t('messaging.offer.note_label', 'ملاحظة (اختياري)')}
-          error={announcedError(errors.note?.message)}
+          error={fieldErrorText(errors.note?.message)}
         >
           {(control) => (
             <Textarea

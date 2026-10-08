@@ -28,7 +28,7 @@ const BLOCK_ERROR_KEYS: Record<string, string> = {
 };
 
 /** The two equal buttons of the reference: 34 px from 601 px, 46 px on phones. */
-const dialogButton = 'h-[46px] flex-1 rounded-qb-lg px-4 focus-visible:outline-solid qb-tablet:h-[34px] qb-tablet:rounded-qb-sm';
+const dialogButton = 'h-[46px] flex-1 rounded-qb-lg px-4 qb-tablet:h-[34px] qb-tablet:rounded-qb-sm';
 
 export interface BlockUserButtonProps {
   userId: string;
@@ -73,7 +73,7 @@ export function BlockUserButton({ userId, userName, onBlocked, className }: Bloc
         variant="ghost"
         size="sm"
         onClick={openDialog}
-        className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink focus-visible:outline-solid', className)}
+        className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink', className)}
       >
         <Ban aria-hidden />
         {t('users.block.button')}

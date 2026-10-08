@@ -1,7 +1,8 @@
 {
   "brand": {
     "name": "QBazaar",
-    "tagline": "Qatar's friendly classifieds marketplace"
+    "tagline": "Qatar's friendly classifieds marketplace",
+    "description": "Buy, sell and discover near you in Qatar."
   },
   "common": {
     "loading": "Loading…",
@@ -170,7 +171,8 @@
       "resend_success": "A fresh verification link is on its way",
       "resend_failed": "We couldn't send the link, please try again",
       "missing_params_title": "Incomplete link",
-      "missing_params_body": "The link you followed is missing the data we need to verify your email."
+      "missing_params_body": "The link you followed is missing the data we need to verify your email.",
+      "meta_description": "Confirm your QBazaar email address."
     },
     "errors": {
       "full_name_min": "Name is too short (min 3 characters)",
@@ -635,7 +637,6 @@
     "ads_coming_soon_subtitle": "We're building the listing page. Stay tuned — it's landing very soon.",
     "no_subcategories": "No subcategories yet",
     "no_filters": "No filters available",
-    "ads_count": "{count} ads",
     "errors": {
       "not_found": "We couldn't find this category"
     }
@@ -995,20 +996,44 @@
     "hero": {
       "eyebrow": "Qatar marketplace",
       "headline": "Qatar's friendly classifieds marketplace",
-      "subtitle": "Buy, sell, and discover near you — from a used car in West Bay to a kitten in Al Khor. Free, safe, and built for Qatar.",
-      "cta_post": "Post an ad",
-      "cta_browse": "Browse ads"
+      "cta_browse": "Browse ads",
+      "title_start": "Find Anything",
+      "title_accent": "Near",
+      "title_end": "You",
+      "tagline": "Buy and sell locally — cars, apartments, electronics, furniture & more. Trusted by millions."
     },
     "sections": {
       "top_categories": "Top categories",
-      "top_categories_title": "Every market in Qatar",
       "latest_ads": "Latest ads",
-      "latest_ads_title": "Trending now",
-      "view_more": "View all"
+      "categories_title": "Browse Categories",
+      "categories_sub": "Explore top items in your area",
+      "view_all": "View All",
+      "recommended_title": "Recommended for you",
+      "recommended_sub": "Hand-picked deals near you",
+      "companies_title": "Featured Companies",
+      "companies_sub": "Find trusted businesses near you.",
+      "best_selling_title": "Best Selling",
+      "best_selling_sub": "Trending items people love."
     },
     "trust": {
       "verified": "Verified sellers",
       "free_to_post": "Free to post"
+    },
+    "search": {
+      "keyword": "Search",
+      "category": "Choose Category",
+      "location": "Location",
+      "distance": "Distance",
+      "submit": "Search",
+      "unknown_place": "Choose a place from the suggestions"
+    },
+    "places": {
+      "title_start": "Find Places",
+      "title_middle": "Around Your",
+      "title_accent": "Location"
+    },
+    "cities": {
+      "browse_aria": "Browse ads in {city}"
     }
   },
   "media": {
@@ -1185,10 +1210,6 @@
     },
     "similar_section": {
       "title": "Similar ads"
-    },
-    "featured_section": {
-      "kicker": "Hand-picked",
-      "title": "Featured ads"
     }
   },
   "search": {
@@ -1262,6 +1283,7 @@
       "add": "Save",
       "remove": "Unsave"
     },
+    "save_named": "Save {title}",
     "sign_in_required": "Sign in to save ads",
     "errors": {
       "ad_not_found": "We couldn't find that ad"
@@ -2026,10 +2048,6 @@
       "description_max": "Description is too long"
     }
   },
-  "footer": {
-    "support": "Support",
-    "contact": "Contact us"
-  },
   "cms": {
     "last_updated": "Last updated"
   },
@@ -2181,6 +2199,55 @@
       "next": "Next page",
       "last": "Last page",
       "page": "Page {page}"
+    },
+    "rail": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "toasts": {
+      "region": "Notifications"
+    }
+  },
+  "layout": {
+    "header": {
+      "add_ad": "Add Ads",
+      "login": "Login",
+      "sign_up": "Sign Up",
+      "unread": "{label} ({count} unread)",
+      "account_named": "{initials}, Account"
+    },
+    "language": {
+      "label": "Language",
+      "title": "Choose your language"
+    },
+    "skip_to_content": "Skip to content",
+    "menu": {
+      "title": "Menu",
+      "open": "Open menu",
+      "home": "Home",
+      "categories": "Categories",
+      "my_ads": "My Ads",
+      "account": "Account Settings"
+    },
+    "footer": {
+      "tagline": "Connecting brands with audiences through strategic messaging and engagement",
+      "col_classifieds": "Classifieds",
+      "col_information": "Information",
+      "col_account": "Account",
+      "col_discover": "Discover",
+      "about": "About Us",
+      "browse": "Browse ads",
+      "categories": "All categories",
+      "help": "Help",
+      "support": "Support",
+      "contact": "Contact us",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Use",
+      "search": "Search",
+      "companies": "Companies",
+      "nav_label": "Site links",
+      "wordmark": "Q BAZAAR",
+      "copyright": "Q BAZAAR Inc. All rights reserved"
     }
   },
   "companies": {

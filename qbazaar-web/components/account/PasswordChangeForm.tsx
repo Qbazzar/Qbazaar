@@ -15,7 +15,7 @@ import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
-import { announcedError } from '@/components/auth/FieldError';
+import { fieldErrorText } from '@/components/auth/FieldError';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -80,7 +80,7 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
       <Field
         label={t('account.security.current_password_label')}
         required
-        error={announcedError(errors.current_password?.message)}
+        error={fieldErrorText(errors.current_password?.message)}
       >
         {(control) => (
           <PasswordInput
@@ -92,7 +92,7 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
         )}
       </Field>
 
-      <Field label={t('account.security.new_password_label')} required error={announcedError(errors.new_password?.message)}>
+      <Field label={t('account.security.new_password_label')} required error={fieldErrorText(errors.new_password?.message)}>
         {(control) => (
           <div className="flex flex-col gap-3">
             <PasswordInput
@@ -109,7 +109,7 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
       <Field
         label={t('account.security.password_confirmation_label')}
         required
-        error={announcedError(errors.password_confirmation?.message)}
+        error={fieldErrorText(errors.password_confirmation?.message)}
       >
         {(control) => (
           <PasswordInput

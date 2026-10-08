@@ -40,7 +40,7 @@ interface AdSellerCardProps {
   locale: Locale;
 }
 
-const actionButton = 'h-12 rounded-qb-lg font-medium focus-visible:outline-solid qb-tablet:h-10 qb-tablet:rounded-qb-md';
+const actionButton = 'h-12 rounded-qb-lg font-medium qb-tablet:h-10 qb-tablet:rounded-qb-md';
 
 export function AdSellerCard({ ad, seller, isOwner, locale }: AdSellerCardProps) {
   return (
@@ -61,7 +61,7 @@ function SellerSummary({ seller, locale }: { seller: PublicUser; locale: Locale 
       <div className="flex items-center justify-between gap-3">
         <Link
           href={`/u/${seller.id}`}
-          className={cn('flex min-w-0 items-center gap-3 rounded-qb-md qb-desktop:gap-2.5', focusRing, 'focus-visible:outline-solid')}
+          className={cn('flex min-w-0 items-center gap-3 rounded-qb-md qb-desktop:gap-2.5', focusRing)}
         >
           {/* The name follows in text, so the picture stays out of the link's name. */}
           <span aria-hidden="true" className="flex shrink-0">
@@ -108,7 +108,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
   if (ad.status === 'sold') {
     return (
       <>
-        <Badge tone="neutral" className="h-10 justify-center rounded-qb-md font-qb-label text-qb-caption">
+        <Badge tone="neutral" font="label" className="h-10 justify-center rounded-qb-md text-qb-caption">
           {t('ads.status.sold')}
         </Badge>
         {rateSeller}
@@ -117,7 +117,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
   }
   if (isOwner) {
     return (
-      <Badge tone="brand" className="h-10 justify-center rounded-qb-md font-qb-label text-qb-caption">
+      <Badge tone="brand" font="label" className="h-10 justify-center rounded-qb-md text-qb-caption">
         {t('messaging.own_ad_badge')}
       </Badge>
     );

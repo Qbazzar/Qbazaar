@@ -23,7 +23,6 @@ import {
   useMarkNotificationReadMutation,
 } from '@/lib/queries/notifications';
 import { formatRelativeTime } from '@/components/messaging/relative-time';
-import { lucideIconName } from './icon-name';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { ApiClientError } from '@/lib/api/auth';
@@ -78,7 +77,7 @@ export function NotificationRow({ notification: n }: Props) {
           unread ? 'bg-qb-brand-soft text-qb-brand' : 'bg-qb-fill text-qb-ink-secondary',
         )}
       >
-        <DynamicIcon name={lucideIconName(n.icon)} className="size-8 qb-tablet:size-12" strokeWidth={1.5} />
+        <DynamicIcon name={n.icon} className="size-8 qb-tablet:size-12" strokeWidth={1.5} />
       </span>
 
       <div className="min-w-0 flex-1 py-1 qb-tablet:py-3">

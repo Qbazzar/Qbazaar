@@ -70,7 +70,7 @@ export function FollowButton({ userId, name, isFollowing, stateKnown, label, siz
       disabled={waiting}
       aria-disabled={mutation.isPending || undefined}
       aria-busy={mutation.isPending || undefined}
-      className={cn('font-medium focus-visible:outline-solid', className)}
+      className={cn('font-medium', className)}
     >
       {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
       {!mutation.isPending && isFollowing ? <Check aria-hidden /> : null}

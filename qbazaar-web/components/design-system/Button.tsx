@@ -16,11 +16,11 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-qb-brand text-white hover:bg-qb-brand-hover active:bg-qb-brand-active',
-        secondary: 'border border-qb-brand bg-qb-surface text-qb-brand hover:bg-qb-brand-soft',
+        primary: 'bg-qb-brand text-qb-on-brand hover:bg-qb-brand-hover active:bg-qb-brand-active',
+        secondary: 'border border-qb-brand bg-qb-surface text-qb-brand hover:bg-qb-brand-soft hover:text-qb-brand-on-soft',
         outline: 'border border-qb-line bg-qb-surface text-qb-ink-title hover:bg-qb-hover',
-        soft: 'bg-qb-brand-soft text-qb-brand hover:bg-qb-brand hover:text-white',
-        muted: 'bg-qb-fill font-normal text-qb-ink-muted hover:bg-qb-line',
+        soft: 'bg-qb-brand-soft text-qb-brand-on-soft hover:bg-qb-brand hover:text-qb-on-brand',
+        muted: 'bg-qb-fill font-normal text-qb-ink-muted hover:bg-qb-line hover:text-qb-ink-secondary',
         ghost: 'font-medium text-qb-ink-muted hover:bg-qb-fill',
         danger: 'border border-qb-line bg-qb-surface text-qb-danger hover:bg-qb-danger-soft',
       },

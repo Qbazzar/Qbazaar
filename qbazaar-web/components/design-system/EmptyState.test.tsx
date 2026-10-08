@@ -1,3 +1,4 @@
+import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import { Heart } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
@@ -17,9 +18,17 @@ describe('EmptyState', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Found something interesting?' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Found something interesting?' })).toHaveClass('font-qb');
     expect(screen.getByText('Click the heart on a listing to save it here.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Browse Ads' })).toBeInTheDocument();
+  });
+
+  it('can be the page heading and take the focus', () => {
+    const headingRef = createRef<HTMLHeadingElement>();
+    render(<EmptyState icon={<Icon icon={Heart} />} title="Ad not found" headingLevel="h1" headingRef={headingRef} />);
+
+    headingRef.current?.focus();
+    expect(screen.getByRole('heading', { level: 1, name: 'Ad not found' })).toHaveFocus();
   });
 
   it('keeps the icon tile out of the accessibility tree', () => {

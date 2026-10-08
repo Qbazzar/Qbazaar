@@ -20,7 +20,7 @@ import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
 import { AuthHeading } from './AuthHeading';
-import { announcedError } from './FieldError';
+import { fieldErrorText } from './FieldError';
 import { PasswordInput } from './PasswordInput';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
@@ -119,7 +119,7 @@ export function ResetPasswordForm() {
         <input type="hidden" {...form.register('email')} />
         <input type="hidden" {...form.register('token')} />
 
-        <Field label={t('auth.reset_password.password_label')} required error={announcedError(errors.password?.message)}>
+        <Field label={t('auth.reset_password.password_label')} required error={fieldErrorText(errors.password?.message)}>
           {(control) => (
             <div className="flex flex-col gap-3">
               <PasswordInput
@@ -136,7 +136,7 @@ export function ResetPasswordForm() {
         <Field
           label={t('auth.reset_password.password_confirmation_label')}
           required
-          error={announcedError(errors.password_confirmation?.message)}
+          error={fieldErrorText(errors.password_confirmation?.message)}
         >
           {(control) => (
             <PasswordInput

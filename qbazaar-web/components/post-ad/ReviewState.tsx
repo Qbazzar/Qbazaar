@@ -10,7 +10,6 @@ import type { Ad } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-import { visibleFocus } from './FormParts';
 import { VIEW_HEADING_ID } from './view-heading';
 
 /**
@@ -35,20 +34,20 @@ export function ReviewState({ ad, onPostAnother }: { ad: Ad | null; onPostAnothe
       >
         {t(live ? 'post_ad.review.live_title' : 'post_ad.review.title')}
       </h1>
-      <p className="mt-2 max-w-[806px] text-qb-body text-qb-ink-disabled qb-tablet:text-qb-h5">
+      <p className="mt-2 max-w-[806px] text-qb-body text-qb-ink-muted qb-tablet:text-qb-h5">
         {t(live ? 'post_ad.review.live_body' : 'post_ad.review.body')}
       </p>
       <div className="mt-8 flex w-full flex-col justify-center gap-3 qb-tablet:w-auto qb-tablet:flex-row">
         {live && ad ? (
-          <Link href={`/ads/${ad.id}`} className={cn(buttonVariants({ size: 'md' }), visibleFocus)}>
+          <Link href={`/ads/${ad.id}`} className={buttonVariants({ size: 'md' })}>
             {t('post_ad.actions.view_ad')}
           </Link>
         ) : (
-          <Link href="/account/ads" className={cn(buttonVariants({ size: 'md' }), visibleFocus)}>
+          <Link href="/account/ads" className={buttonVariants({ size: 'md' })}>
             {t('post_ad.actions.my_ads')}
           </Link>
         )}
-        <Button variant="secondary" onClick={onPostAnother} className={visibleFocus}>
+        <Button variant="secondary" onClick={onPostAnother}>
           {t('post_ad.actions.post_another')}
         </Button>
       </div>

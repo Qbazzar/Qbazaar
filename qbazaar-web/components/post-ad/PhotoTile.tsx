@@ -6,13 +6,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ChevronLeft, ChevronRight, CircleAlert, LoaderCircle, RotateCw, Star, X } from 'lucide-react';
 
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { t } from '@/lib/i18n/messages';
 import { AD_LIMITS } from '@/lib/post-ad/form';
 import type { PhotoItem } from '@/lib/post-ad/photos';
 import { cn } from '@/lib/utils';
-
-import { visibleFocusRing } from './FormParts';
 
 /** -1 moves a photo towards the cover, 1 away from it. */
 export type PhotoStep = -1 | 1;
@@ -29,7 +28,7 @@ export interface PhotoTileProps {
 
 const cornerButton = cn(
   'absolute flex size-[22px] items-center justify-center rounded-full bg-qb-ink/60 text-qb-surface transition-colors hover:bg-qb-ink/80',
-  visibleFocusRing,
+  focusRing,
 );
 
 /** DOM id of a tile's move button, so focus can follow the photo it moved. */
@@ -131,7 +130,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
               type="button"
               onClick={() => onRetry(photo.key)}
               aria-label={t('post_ad.photos.retry', { n: position })}
-              className={cn('inline-flex items-center gap-1 rounded-qb-xs px-1.5 py-0.5 text-qb-tiny font-medium underline-offset-2 hover:underline', visibleFocusRing)}
+              className={cn('inline-flex items-center gap-1 rounded-qb-xs px-1.5 py-0.5 text-qb-tiny font-medium underline-offset-2 hover:underline', focusRing)}
             >
               <Icon icon={RotateCw} size="sm" className="size-3" />
               {t('post_ad.photos.retry_short')}

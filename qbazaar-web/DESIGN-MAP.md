@@ -23,7 +23,7 @@ Every route in `qbazaar-web/app` mapped to its pixel reference for the M3 reskin
 
 | Route | Next.js file | Reference | 1440 | 744 | 390 | Status | Notes |
 |---|---|---|---|---|---|---|---|
-| `/` | `app/page.tsx` | `index.html` | 728:44663 · guest 741:38067 · search open 489:14809 | 561:22024 · guest 741:47591 | 584:25249 · guest 741:48614 | partial | The recently viewed strip has no frame: build it as one more "Best Selling" style slider section of the same page. "Featured Companies" waits for the companies API (FE-16.6). |
+| `/` | `app/page.tsx` | `index.html` | 728:44663 · guest 741:38067 · search open 489:14809 | 561:22024 · guest 741:47591 | 584:25249 · guest 741:48614 | partial | The recently viewed strip has no frame: build it as one more "Best Selling" style slider section of the same page. Every section reads `GET /api/v1/home` (Recommended, Featured Companies, Best Selling). |
 | `/categories` | `app/categories/page.tsx` | `all-categories.html` | 185:6576 | 536:32620 | 621:27193 | matches | |
 | `/c/[slug]` | `app/c/[slug]/page.tsx` | `parent-category.html` (sub-category rows and tiles) + `category.html` (its listings) | overview 18:912 · listing 69:467 (list), 81:1629 (grid) | overview 539:35503 · listing 544:38513 | overview 623:28688 · listing 623:30012 | matches | A parent category opens on the overview; a leaf category, or a filtered, sorted or paged URL, shows the listing. |
 | `/ads` | `app/ads/page.tsx` | `category.html` (list/grid + filter sidebar) | 69:467 · 81:1629 · filter 250:4405 · filter open 264:4818 | 544:38513 · filters 244:3508 | 623:30012 · filter sheet 618:26974 | matches | Filters become a bottom sheet under 1000 px. |
@@ -88,7 +88,7 @@ The purchase-request and offer cards of the chat follow 667:30685, 667:31850, 72
 | `/verify-otp` | `app/(auth)/verify-otp/page.tsx` | `signup-verify.html` / `enter-code.html` | 741:36808 · 741:37607 | 779:40048 | 779:40384 | matches | |
 | `/forgot-password` | `app/(auth)/forgot-password/page.tsx` | `forgot-password.html` | 739:36152 | 779:40111 | 779:40422 | matches | |
 | `/reset-password` | `app/(auth)/reset-password/page.tsx` | `new-password.html` | 745:38739 | 779:39915 | 779:40473 | matches | |
-| `/verify-email` | `app/verify-email/page.tsx` | `send-code.html` ("Check your email") | 739:36548 | 779:40163 | 779:40344 | partial | The verified / expired-link results have no frame: same card with the EmptyState icon tile. |
+| `/verify-email` | `app/(auth)/verify-email/page.tsx` | `send-code.html` ("Check your email") | 739:36548 | 779:40163 | 779:40344 | partial | The verified / expired-link results have no frame: same card with the EmptyState icon tile. |
 
 ## Help, support and system pages
 
