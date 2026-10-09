@@ -129,7 +129,7 @@ function StatementRow({ entry }: { entry: WalletEntry }) {
           {signedAmount(entry)}
         </span>
       </td>
-      <td className={cn(tc.td, tc.amount, 'hidden font-medium text-qb-ink-secondary qb-desktop:table-cell')}>
+      <td className={cn(tc.td, tc.amount, 'hidden font-medium qb-tablet:text-qb-ink-secondary qb-desktop:table-cell')}>
         {formatMoney(entry.balance_after, entry.currency)}
       </td>
     </tr>
