@@ -118,22 +118,22 @@
   /* Families as Qbazaar-front uses them: Poppins for everything, Montserrat
      for status labels and notes, Story Script for the big "Location" word
      (Dancing Script where the reference shrinks it), Acme for the "Q BAZAAR"
-     wordmark. Arabic glyphs come from IBM Plex Sans Arabic, the Arabic face of
-     the Figma file, so Latin text and digits keep the reference face in both
+     wordmark. Arabic glyphs come from Noto Kufi Arabic (owner choice,
+     2026-10-09), so Latin text and digits keep the reference face in both
      directions.
 
      The names are the faces app/fonts declares (next/font names each family
      after its const). The stacks list them instead of the font variables
      because each variable ends in a metric-matched Arial fallback, which has
      Arabic glyphs and would win over the Arabic face. */
-  --font-qb: "poppins", "ibmPlexArabic", "poppins Fallback", system-ui, sans-serif;
-  --font-qb-label: "montserrat", "ibmPlexArabic", "montserrat Fallback", system-ui, sans-serif;
-  --font-qb-script: "storyScript", "ibmPlexArabic", "storyScript Fallback", cursive;
-  --font-qb-script-compact: "dancingScript", "ibmPlexArabic", "dancingScript Fallback", cursive;
+  --font-qb: "poppins", "notoKufiArabic", "poppins Fallback", system-ui, sans-serif;
+  --font-qb-label: "montserrat", "notoKufiArabic", "montserrat Fallback", system-ui, sans-serif;
+  --font-qb-script: "storyScript", "notoKufiArabic", "storyScript Fallback", cursive;
+  --font-qb-script-compact: "dancingScript", "notoKufiArabic", "dancingScript Fallback", cursive;
   --font-qb-brand: "acme", "acme Fallback", sans-serif;
 }
 
-/* Arabic pages: IBM Plex Sans Arabic leads every stack. Its Arabic subset
+/* Arabic pages: Noto Kufi Arabic leads every stack. Its variable Arabic subset
    holds the Arabic letters and punctuation, the space and the hyphen, and
    nothing else. With Poppins first, Poppins won the space between every pair
    of Arabic words (and the other shared glyphs), so a line mixed two fonts and
@@ -141,10 +141,10 @@
    in the Arabic subset, so they still fall through to the same Latin faces as
    before. Unlayered so it beats the @theme values. */
 :root:lang(ar) {
-  --font-qb: "ibmPlexArabic", "poppins", "poppins Fallback", system-ui, sans-serif;
-  --font-qb-label: "ibmPlexArabic", "montserrat", "montserrat Fallback", system-ui, sans-serif;
-  --font-qb-script: "ibmPlexArabic", "storyScript", "storyScript Fallback", cursive;
-  --font-qb-script-compact: "ibmPlexArabic", "dancingScript", "dancingScript Fallback", cursive;
+  --font-qb: "notoKufiArabic", "poppins", "poppins Fallback", system-ui, sans-serif;
+  --font-qb-label: "notoKufiArabic", "montserrat", "montserrat Fallback", system-ui, sans-serif;
+  --font-qb-script: "notoKufiArabic", "storyScript", "storyScript Fallback", cursive;
+  --font-qb-script-compact: "notoKufiArabic", "dancingScript", "dancingScript Fallback", cursive;
 }
 
 /* Letter-spacing breaks Arabic joining; the Latin tracking utilities must not
