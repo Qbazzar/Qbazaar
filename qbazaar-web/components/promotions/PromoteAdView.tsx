@@ -2,18 +2,18 @@
 
 import { useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Crown, Highlighter, Images, Landmark, Rocket, Wallet as WalletIcon } from 'lucide-react';
+import { Landmark, Wallet as WalletIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { Notice } from '@/components/design-system/Notice';
-import { RadioCard } from '@/components/design-system/RadioCard';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
 import { FormError } from '@/components/orders/NoteField';
+import { OptionTile } from '@/components/orders/OptionTile';
 import { PageState } from '@/components/orders/PageState';
 import { useAuth } from '@/hooks/useAuth';
 import { useIdempotencyKey } from '@/hooks/useIdempotencyKey';
@@ -30,13 +30,9 @@ import { LIMITS } from '@/lib/orders/validation';
 import { useAdQuery } from '@/lib/queries/ads';
 import { usePromotionOffersQuery, usePurchasePromotionMutation } from '@/lib/queries/promotions';
 import { useWalletQuery } from '@/lib/queries/wallet';
+import { cn } from '@/lib/utils';
 
-const TYPE_ICON: Record<PromotionType, typeof Crown> = {
-  highlight: Highlighter,
-  push_up: Rocket,
-  gallery: Images,
-  premium: Crown,
-};
+import '@/styles/design-tokens-sell.css';
 
 const TRANSFER_REFERENCE = /^[A-Za-z0-9][A-Za-z0-9 /._-]*$/;
 
@@ -166,36 +162,17 @@ function PromoteForm({ ad, offers, wallet, initialType }: { ad: Ad; offers: Prom
   return (
     <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-6">
       <CheckoutPanel title={t('orders.promotion.choose')} titleId="promote-type">
-        <div role="radiogroup" aria-labelledby="promote-type" className="[display:grid] grid-cols-1 gap-3 qb-desktop:grid-cols-2 qb-desktop:gap-5">
-          {offers.map((candidate) => {
-            const TypeIcon = TYPE_ICON[candidate.type];
-            return (
-              <RadioCard
-                key={candidate.type}
-                name="promotion_type"
-                value={candidate.type}
-                checked={type === candidate.type}
-                onChange={() => setType(candidate.type)}
-                icon={<TypeIcon />}
-                label={
-                  <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-                    <span>{t(`orders.promotion.types.${candidate.type}`)}</span>
-                    <span className="text-qb-caption font-semibold text-qb-ink">
-                      {formatMoney(candidate.price, candidate.currency)} · {tPlural('orders.promotion.duration', candidate.duration_days)}
-                    </span>
-                  </span>
-                }
-                description={t(`orders.promotion.types.${candidate.type}_body`)}
-              />
-            );
-          })}
+        <div role="radiogroup" aria-labelledby="promote-type" className="flex flex-col gap-3.5">
+          {offers.map((candidate) => (
+            <PromotionRow key={candidate.type} offer={candidate} checked={type === candidate.type} onChange={() => setType(candidate.type)} />
+          ))}
         </div>
       </CheckoutPanel>
 
       <CheckoutPanel title={t('orders.promotion.pay_with')} titleId="promote-pay">
         <div className="flex flex-col gap-4">
-          <div role="radiogroup" aria-labelledby="promote-pay" className="[display:grid] grid-cols-1 gap-3 qb-desktop:grid-cols-2 qb-desktop:gap-5">
-            <RadioCard
+          <div role="radiogroup" aria-labelledby="promote-pay" className="[display:grid] grid-cols-1 gap-3.5 qb-tablet:grid-cols-2">
+            <OptionTile
               name="payment_method"
               value="wallet"
               checked={payByWallet}
@@ -203,20 +180,20 @@ function PromoteForm({ ad, offers, wallet, initialType }: { ad: Ad; offers: Prom
               onChange={() => setMethod('wallet')}
               icon={<WalletIcon />}
               label={t('orders.promotion.wallet')}
-              description={t('orders.promotion.wallet_hint', { amount: formatMoney(withdrawable, wallet.currency) })}
+              details={t('orders.promotion.wallet_hint', { amount: formatMoney(withdrawable, wallet.currency) })}
             />
-            <RadioCard
+            <OptionTile
               name="payment_method"
               value="bank_transfer"
               checked={!payByWallet}
               onChange={() => setMethod('bank_transfer')}
               icon={<Landmark />}
               label={t('orders.promotion.bank_transfer')}
-              description={t('orders.promotion.bank_hint')}
+              details={t('orders.promotion.bank_hint')}
             />
           </div>
           {!walletCovers ? (
-            <Notice tone="info" role="status">
+            <Notice tone="brand" role="status">
               {t('orders.promotion.cap', { amount: formatMoney(withdrawable, wallet.currency) })}
             </Notice>
           ) : null}
@@ -242,5 +219,39 @@ function PromoteForm({ ad, offers, wallet, initialType }: { ad: Ad; offers: Prom
         </div>
       </CheckoutPanel>
     </form>
+  );
+}
+
+/**
+ * One promotion as a full-width row, in the style of the add-ads promotion
+ * rows (323:10693): a 20 px title, its effect in grey and the price on the end
+ * side; the chosen row turns peach with an orange border. One promotion is
+ * bought at a time, so the rows are radios.
+ */
+function PromotionRow({ offer, checked, onChange }: { offer: PromotionOffer; checked: boolean; onChange: () => void }) {
+  return (
+    <label
+      className={cn(
+        'flex cursor-pointer items-center gap-4 rounded-qb-lg border-[1.5px] px-5 py-[18px] font-qb transition-colors',
+        'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active',
+        checked ? 'border-qb-brand bg-(--color-qb-promo-active)' : 'border-qb-line bg-qb-surface',
+      )}
+    >
+      <input type="radio" name="promotion_type" value={offer.type} checked={checked} onChange={onChange} className="peer sr-only" />
+      <span
+        aria-hidden="true"
+        className="flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-(--color-qb-check-ring) peer-checked:border-qb-brand peer-checked:bg-qb-brand [&>span]:invisible peer-checked:[&>span]:visible"
+      >
+        <span className="size-2 rounded-full bg-qb-surface" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-qb-body-lg font-medium text-qb-ink-title qb-tablet:text-qb-h5">{t(`orders.promotion.types.${offer.type}`)}</span>
+        <span className="mt-1 block text-qb-caption text-(--color-qb-ink-meta)">{t(`orders.promotion.types.${offer.type}_body`)}</span>
+      </span>
+      <span className="shrink-0 text-end">
+        <span className="block text-qb-body font-semibold whitespace-nowrap text-qb-ink">{formatMoney(offer.price, offer.currency)}</span>
+        <span className="mt-0.5 block text-qb-label whitespace-nowrap text-(--color-qb-ink-meta)">{tPlural('orders.promotion.duration', offer.duration_days)}</span>
+      </span>
+    </label>
   );
 }
