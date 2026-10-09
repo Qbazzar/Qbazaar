@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 
 import { dropdownPanel } from './dropdown-panel';
 import { Icon } from './Icon';
+import { keepInViewport } from './keep-in-viewport';
 
 export interface SelectMenuOption {
   value: string;
@@ -194,7 +195,7 @@ export function SelectMenu({
           entry.option.label
         )}
         {expanded ? (
-          <ul role="group" className={cn(dropdownPanel.card, dropdownPanel.subCard, 'top-0.5')}>
+          <ul ref={keepInViewport} role="group" className={cn(dropdownPanel.card, dropdownPanel.subCard, 'top-0.5')}>
             {entry.children.map((child) => (
               <li
                 key={child.id}
@@ -253,7 +254,11 @@ export function SelectMenu({
       </div>
       {open ? (
         // Pressing in the panel keeps the focus on the field, so the field's blur does not close it before the click.
-        <div className={cn(dropdownPanel.card, dropdownPanel.placement)} onMouseDown={(event) => event.preventDefault()}>
+        <div
+          ref={keepInViewport}
+          className={cn(dropdownPanel.card, dropdownPanel.placement)}
+          onMouseDown={(event) => event.preventDefault()}
+        >
           <ul id={listId} role={nested ? 'tree' : 'listbox'} aria-label={label}>
             {headingEntry ? (
               <li

@@ -5,6 +5,7 @@ import { useEffect, useId, useMemo, useState, type ComponentProps, type Keyboard
 import { cn } from '@/lib/utils';
 
 import { dropdownPanel } from './dropdown-panel';
+import { keepInViewport } from './keep-in-viewport';
 
 export interface AutocompleteSuggestion {
   value: string;
@@ -121,6 +122,7 @@ export function AutocompleteInput({
       />
       {shown ? (
         <ul
+          ref={keepInViewport}
           id={listId}
           role="listbox"
           aria-label={inputProps['aria-label']}
