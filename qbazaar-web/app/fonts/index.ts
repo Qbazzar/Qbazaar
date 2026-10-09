@@ -1,7 +1,7 @@
 import localFont from 'next/font/local';
 
 /*
- * Self-hosted faces (the Google Fonts subsets, SIL Open Font License 1.1), so
+ * Self-hosted faces (the Google Fonts subsets and the Noto Kufi Arabic release, SIL Open Font License 1.1), so
  * the build downloads nothing.
  *
  * next/font names each family after its const (`poppins`, its metric-matched
@@ -33,24 +33,13 @@ const poppinsBold = localFont({
   adjustFontFallback: false,
 });
 
-// Arabic pages need the body weight first; the others load as soon as the CSS asks for them, so
-// English pages preload one Arabic file instead of three.
-const ibmPlexArabic = localFont({
-  src: './ibm-plex-sans-arabic-400.woff2',
-  weight: '400',
-  variable: '--font-ibm-plex-arabic',
-});
-
-const ibmPlexArabicWeights = localFont({
-  src: [
-    { path: './ibm-plex-sans-arabic-500.woff2', weight: '500' },
-    { path: './ibm-plex-sans-arabic-600.woff2', weight: '600' },
-    { path: './ibm-plex-sans-arabic-700.woff2', weight: '700' },
-  ],
-  declarations: [{ prop: 'font-family', value: 'ibmPlexArabic' }],
-  variable: '--font-ibm-plex-arabic-weights',
-  preload: false,
-  adjustFontFallback: false,
+// One variable file (wght 100-900, Arabic blocks only) serves every Arabic weight, so Arabic pages
+// download a single font and Latin letters and digits keep falling through to Poppins. Next can only
+// preload per layout, not per locale, so English pages carry this preload too (about 110 KB).
+const notoKufiArabic = localFont({
+  src: './noto-kufi-arabic-variable.woff2',
+  weight: '100 900',
+  variable: '--font-noto-kufi-arabic',
 });
 
 const montserrat = localFont({
@@ -92,8 +81,7 @@ const geistMono = localFont({
 export const fontVariables = [
   poppins,
   poppinsBold,
-  ibmPlexArabic,
-  ibmPlexArabicWeights,
+  notoKufiArabic,
   montserrat,
   storyScript,
   dancingScript,

@@ -14,11 +14,11 @@ const messages = (lang) => JSON.parse(readFileSync(`i18n/${lang}.json`, 'utf8'))
 
 const page = (lang) => `<!doctype html><html lang="${lang}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}"><style>
 @font-face { font-family: Poppins; font-weight: 600; src: url(${url('app/fonts/poppins-latin-600.woff2')}); }
-@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 600; src: url(${url('app/fonts/ibm-plex-sans-arabic-600.woff2')}); }
+@font-face { font-family: 'Noto Kufi Arabic'; font-weight: 100 900; src: url(${url('app/fonts/noto-kufi-arabic-variable.woff2')}); }
 body { margin: 0; width: 1200px; height: 630px; box-sizing: border-box; background: #fff; border-bottom: 28px solid #f38057;
   display: flex; flex-direction: column; align-items: center; justify-content: center; }
 img { width: 760px; display: block; }
-p { margin: 36px 0 0; max-width: 1100px; text-align: center; font: 600 48px/1.3 Poppins, 'IBM Plex Sans Arabic'; color: #231f20; }
+p { margin: 36px 0 0; max-width: 1100px; text-align: center; font: 600 48px/1.3 Poppins, 'Noto Kufi Arabic'; color: #231f20; }
 </style><body><img src="${url('public/brand/qb-logo.svg')}"><p>${messages(lang).tagline}</p></body></html>`;
 
 const browser = await chromium.launch({ channel: 'chrome' });

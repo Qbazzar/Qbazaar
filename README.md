@@ -16,7 +16,7 @@ Swagger UI (`/docs`) is switched off in production; run the API locally or read 
 **Status (2026-10-09):**
 
 - The MVP backend and the V2 M1 backend gaps are merged.
-- **M3, web on the new design:** fully on the new Figma design and live on qbazaar.qa (PRs #218-#231): exact design colours, fonts Poppins (Latin), IBM Plex Sans Arabic (Arabic), Montserrat (small labels) and Acme (wordmark), and SEO (favicon, Open Graph/Twitter share images, JSON-LD, sitemap). Remaining: FE-16.7, the Lighthouse/axe audit.
+- **M3, web on the new design:** fully on the new Figma design and live on qbazaar.qa (PRs #218-#231): exact design colours, fonts Poppins (Latin), Noto Kufi Arabic (Arabic), Montserrat (small labels) and Acme (wordmark), and SEO (favicon, Open Graph/Twitter share images, JSON-LD, sitemap). Remaining: FE-16.7, the Lighthouse/axe audit.
 - **M5, deployment:** production runs on a cPanel VPS behind Cloudflare (Full strict), media on Cloudflare R2, and deploys only through GitHub Actions on a push to `production`.
 - **M2, mobile app:** the API layer is in Qbazaar-mobile PR #24; the tab bar and account hub are merged in #25.
 
@@ -120,7 +120,7 @@ Scripts, units, runbooks and checklists are in [deploy/README.md](deploy/README.
 ## Design rules
 
 - Colours are the design's exact values and are never darkened.
-- Fonts: Poppins (Latin), IBM Plex Sans Arabic (Arabic), Montserrat (small labels), Acme (wordmark). Cairo is not used.
+- Fonts: Poppins (Latin), Noto Kufi Arabic (Arabic), Montserrat (small labels), Acme (wordmark). Cairo is not used.
 - The pixel reference is [`Qbazzar/Qbazaar-front`](https://github.com/Qbazzar/Qbazaar-front).
 
 ## Demo accounts
