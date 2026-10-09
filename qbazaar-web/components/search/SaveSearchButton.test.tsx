@@ -68,6 +68,24 @@ describe('SaveSearchButton', () => {
     expect(toast.success).toHaveBeenCalledWith('Search saved');
   });
 
+  it('turns into the "Saved" pill linking to the saved searches, until the filters change', async () => {
+    signIn(true);
+    mutate.mockImplementation((_payload, options) => options.onSuccess());
+    const user = userEvent.setup();
+    const { rerender } = render(<SaveSearchButton params={{ q: 'car' }} />);
+
+    await user.click(screen.getByRole('button', { name: 'Save Search' }));
+    await user.type(await screen.findByLabelText(/Search name/), 'Cars');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    const saved = await screen.findByRole('link', { name: 'Saved, open your saved searches' });
+    expect(saved).toHaveAttribute('href', '/account/saved-searches');
+    expect(saved).toHaveTextContent('Saved');
+
+    rerender(<SaveSearchButton params={{ q: 'van' }} />);
+    expect(screen.getByRole('button', { name: 'Save Search' })).toBeInTheDocument();
+  });
+
   it('caps the name at the contract length', async () => {
     signIn(true);
     const user = userEvent.setup();

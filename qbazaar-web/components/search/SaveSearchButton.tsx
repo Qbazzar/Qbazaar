@@ -4,6 +4,8 @@
  * "Save Search" pill and its dialog. Signed-out visitors get a link to the
  * login page instead of a request that would fail; until the auth store
  * hydrates the button renders but is disabled, so the layout does not jump.
+ * Once saved, the pill turns into the green "Saved" state (256:5238) and links
+ * to the saved searches, until the filters change.
  */
 import { useState } from 'react';
 import Link from 'next/link';
@@ -21,6 +23,7 @@ import { Icon } from '@/components/design-system/Icon';
 import { Input } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
 import { t } from '@/lib/i18n/messages';
+import '@/components/catalog/catalog-tokens.css';
 import { headingFont, toolbarPill } from '@/components/catalog/layout';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -55,11 +58,16 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
   const [open, setOpen] = useState(false);
   const mutation = useSaveSearchMutation();
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { name: '' } });
+  const paramsKey = JSON.stringify(params);
+  const [savedKey, setSavedKey] = useState<string | null>(null);
+  const saved = savedKey === paramsKey;
 
-  const label = t('catalog.save_search', 'احفظ البحث');
+  const label = saved ? t('search.save_search.saved', 'تم الحفظ') : t('catalog.save_search', 'احفظ البحث');
   const triggerClass = cn(
     toolbarPill,
-    'shrink-0 cursor-pointer font-qb transition-colors hover:bg-qb-hover disabled:pointer-events-none disabled:opacity-50',
+    'shrink-0 cursor-pointer font-qb transition-[background-color,box-shadow,translate] duration-200 motion-reduce:transition-none',
+    'hover:-translate-y-[3px] hover:bg-qb-hover hover:shadow-qb-hover motion-reduce:hover:translate-y-0 disabled:pointer-events-none disabled:opacity-50',
+    saved && 'border-(--color-qb-saved) bg-(--color-qb-saved-soft) text-(--color-qb-saved) hover:bg-(--color-qb-saved-soft)',
     TRIGGER[variant],
     focusRing,
     className,
@@ -70,6 +78,14 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
       <span className={cn(variant === 'toolbar' && 'sr-only qb-tablet:not-sr-only')}>{label}</span>
     </>
   );
+
+  if (saved) {
+    return (
+      <Link href="/account/saved-searches" aria-label={t('search.save_search.saved_link', 'تم الحفظ، افتح عمليات البحث المحفوظة')} className={triggerClass}>
+        {content}
+      </Link>
+    );
+  }
 
   if (isHydrated && !isAuthenticated) {
     return (
@@ -87,6 +103,7 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
           toast.success(t('search.save_search.success_toast', 'تم حفظ البحث'));
           form.reset();
           setOpen(false);
+          setSavedKey(paramsKey);
         },
         onError: (err) => toast.error(saveErrorMessage(err)),
       },

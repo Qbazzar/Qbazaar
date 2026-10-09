@@ -1261,6 +1261,8 @@
       "saving": "Saving…",
       "cancel": "Cancel",
       "success_toast": "Search saved",
+      "saved": "Saved",
+      "saved_link": "Saved, open your saved searches",
       "sign_in_required": "Sign in to save searches"
     },
     "errors": {
