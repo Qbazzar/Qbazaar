@@ -1027,7 +1027,11 @@
       "location": "Location",
       "distance": "Distance",
       "submit": "Search",
-      "unknown_place": "Choose a place from the suggestions"
+      "unknown_place": "Choose a place from the suggestions",
+      "all_categories": "All Categories",
+      "all_qatar": "All Qatar",
+      "distance_km": "+{km} km",
+      "distance_needs_place": "Choose a location to search by distance"
     },
     "places": {
       "title_start": "Find Places",
@@ -2204,7 +2208,8 @@
     },
     "rail": {
       "previous": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "go_to": "Go to slide {n}"
     },
     "toasts": {
       "region": "Notifications"
@@ -2229,7 +2234,13 @@
       "home": "Home",
       "categories": "Categories",
       "my_ads": "My Ads",
-      "account": "Account Settings"
+      "account": "Account Settings",
+      "favorites": "Favorites",
+      "saved_search": "Saved Search",
+      "save_search": "Save Search",
+      "sales_overview": "Sales Overview",
+      "log_out": "Log Out",
+      "account_menu": "Account menu"
     },
     "footer": {
       "tagline": "Connecting brands with audiences through strategic messaging and engagement",

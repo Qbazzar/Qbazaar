@@ -15,6 +15,7 @@ export const QB_TOKEN_NAMES = {
   shadow: [
     "qb-card", "qb-raised", "qb-soft", "qb-hover", "qb-brand", "qb-header",
     "qb-popover", "qb-float", "qb-control", "qb-lift", "qb-drawer",
+    "qb-dropdown", "qb-menu", "qb-panel",
   ],
 } as const
 

@@ -28,8 +28,11 @@
   --color-qb-placeholder: #bfbfbf;
   --color-qb-icon: #231f20;
   --color-qb-icon-muted: #a19f9f; /* chevrons in the menu drawer */
-  --color-qb-icon-faint: #bdbdbd; /* hero search field icons */
+  --color-qb-icon-faint: #bdbdbd; /* hero search field icons, labels and placeholders */
+  --color-qb-icon-search: #828282; /* hero search magnifier (Figma 728:45181) */
   --color-qb-icon-accordion: #aaaaaa; /* footer accordion chevrons */
+  --color-qb-ink-caption: #aaaaaa; /* the menu drawer's MENU caption */
+  --color-qb-radio: #e0e0e0; /* unchecked radio ring of the desktop language panel */
   --color-qb-navy: #000640;
   --color-qb-black: #000000;
   --color-qb-breadcrumb: #a4adba;
@@ -47,6 +50,14 @@
   --color-qb-divider: rgb(0 0 0 / 0.09);
   --color-qb-overlay: rgb(0 0 0 / 0.3);
   --color-qb-overlay-strong: rgb(20 20 20 / 0.45);
+
+  /* Dropdown panels (the hero selects, selects.js of the reference) */
+  --color-qb-menu-heading: #575555;
+  --color-qb-menu-item: #787878;
+  --color-qb-menu-item-active: #3c3c3c;
+  --color-qb-menu-active: #f0f0f0;
+  --color-qb-menu-divider: #f3f3f3;
+  --color-qb-menu-caret: #a0a0a0;
 
   /* Status */
   --color-qb-success: #1bad07;
@@ -101,6 +112,10 @@
   --shadow-qb-brand: 0 4px 40px 0 rgb(243 128 87 / 0.2);
   --shadow-qb-header: 0 2px 12px 0 rgb(161 161 161 / 0.18);
   --shadow-qb-popover: 0 16px 40px 0 rgb(0 0 0 / 0.14);
+  /* Dropdowns: the hero selects; the account menu; the desktop language panel (728:45875) */
+  --shadow-qb-dropdown: 0 18px 44px 0 rgb(0 0 0 / 0.14);
+  --shadow-qb-menu: 0 16px 44px 0 rgb(0 0 0 / 0.14);
+  --shadow-qb-panel: 0 4px 25px 0 rgb(161 161 161 / 0.1);
   --shadow-qb-float: 0 4px 20px 0 rgb(161 161 161 / 0.1);
   --shadow-qb-control: 0 2px 10px 0 rgb(0 0 0 / 0.06);
   --shadow-qb-lift: 0 6px 18px 0 rgb(0 0 0 / 0.14);
