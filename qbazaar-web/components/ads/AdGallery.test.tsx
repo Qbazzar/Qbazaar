@@ -8,7 +8,6 @@ const emblaApi = {
   selectedScrollSnap: vi.fn(() => 0),
   scrollPrev: vi.fn(),
   scrollNext: vi.fn(),
-  scrollTo: vi.fn(),
 };
 emblaApi.on.mockReturnValue(emblaApi);
 emblaApi.off.mockReturnValue(emblaApi);
@@ -56,14 +55,13 @@ describe('AdGallery', () => {
     expect(screen.getByRole('img', { name: 'BMW M3 — 1' })).toBeInTheDocument();
   });
 
-  it('moves with the arrows; at the first photo "Previous" does nothing but keeps its focus', async () => {
+  it('cycles with both arrows: "Previous" on the first photo goes to the last one', async () => {
     render(<AdGallery images={[media(1), media(2)]} alt="BMW M3" />);
     const previous = screen.getByRole('button', { name: 'Previous' });
 
-    expect(previous).toHaveAttribute('aria-disabled', 'true');
-    expect(previous).toBeEnabled();
+    expect(previous).not.toHaveAttribute('aria-disabled');
     await userEvent.click(previous);
-    expect(emblaApi.scrollPrev).not.toHaveBeenCalled();
+    expect(emblaApi.scrollPrev).toHaveBeenCalledOnce();
 
     await userEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(emblaApi.scrollNext).toHaveBeenCalledOnce();
@@ -87,13 +85,10 @@ describe('AdGallery', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
   });
 
-  it('opens the photo full screen and closes it again', async () => {
+  it('leaves the photo itself inert, as the reference does', () => {
     render(<AdGallery images={[media(1), media(2)]} alt="BMW M3" />);
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Open fullscreen' })[0]);
-    expect(await screen.findByRole('dialog')).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(emblaApi.scrollTo).toHaveBeenCalledWith(0, true);
+    expect(screen.queryByRole('button', { name: 'Open fullscreen' })).toBeNull();
+    expect(screen.getAllByRole('button')).toHaveLength(2);
   });
 });

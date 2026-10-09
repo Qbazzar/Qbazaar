@@ -10,7 +10,7 @@
  * completed deal.
  */
 import Link from 'next/link';
-import { CalendarDays, LayoutGrid, MessageSquareText, ShoppingBag, Star, Tag, type LucideIcon } from 'lucide-react';
+import { CalendarDays, MessageSquareText, ShoppingBag, Tag, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { Avatar } from '@/components/design-system/Avatar';
@@ -21,7 +21,8 @@ import { Icon } from '@/components/design-system/Icon';
 import { StartConversationButton } from '@/components/messaging/StartConversationButton';
 import { ReviewSellerButton } from '@/components/reviews/ReviewSellerButton';
 import { SellerTypeChip, VerifiedMark, isVerifiedSeller, sellerDisplayName } from '@/components/users/SellerBadges';
-import { formatAdDate, formatRating } from '@/lib/ads/display';
+import { formatDottedDate } from '@/lib/ads/dates';
+import { formatRating } from '@/lib/ads/display';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
@@ -40,13 +41,18 @@ interface AdSellerCardProps {
   locale: Locale;
 }
 
-const actionButton = 'h-12 rounded-qb-lg font-medium qb-tablet:h-10 qb-tablet:rounded-qb-md';
+/**
+ * The reference's 52 px, r10, 14 px / 500 action buttons. Only the orange
+ * one reacts to the pointer (polish.css darkens it); the outlined and the
+ * text button keep their look.
+ */
+const actionButton = 'h-auto min-h-[52px] w-full rounded-qb-md px-3.5 text-qb-caption font-medium [&_svg]:size-[18px]';
 
 export function AdSellerCard({ ad, seller, isOwner, locale }: AdSellerCardProps) {
   return (
     <section aria-label={t('ads.detail.seller')} className={cn(detailCard, detailCardSide)}>
       {seller ? <SellerSummary seller={seller} locale={locale} /> : null}
-      <div className="mt-5 flex flex-col gap-3 first:mt-0 qb-desktop:mt-4">
+      <div className="mt-5 flex flex-col gap-3 first:mt-0">
         <SellerActions ad={ad} isOwner={isOwner} />
       </div>
     </section>
@@ -58,45 +64,29 @@ function SellerSummary({ seller, locale }: { seller: PublicUser; locale: Locale 
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href={`/u/${seller.id}`}
-          className={cn('flex min-w-0 items-center gap-3 rounded-qb-md qb-desktop:gap-2.5', focusRing)}
-        >
+      {/* In the 260 px tablet sidebar the chip drops under the name rather than squeezing it. */}
+      <div className="mb-[18px] flex flex-wrap items-center justify-between gap-2.5">
+        <Link href={`/u/${seller.id}`} className={cn('flex min-w-0 items-center gap-3 rounded-qb-md', focusRing)}>
           {/* The name follows in text, so the picture stays out of the link's name. */}
-          <span aria-hidden="true" className="flex shrink-0">
-            <Avatar
-              name={name}
-              src={seller.avatar_url}
-              className="size-14 border border-qb-line bg-qb-hover text-qb-body text-qb-ink qb-tablet:size-12 qb-desktop:size-[50px]"
-            />
-          </span>
-          <span className="flex min-w-0 flex-col gap-1.5">
-            <span className="flex min-w-0 items-center gap-1">
-              <span dir="auto" className="truncate text-qb-body font-semibold text-qb-ink">
-                {name}
-              </span>
-              {isVerifiedSeller(seller) ? <VerifiedMark /> : null}
+          <Avatar name={name} src={seller.avatar_url} tone="brand" decorative className="size-11 text-qb-body" />
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span dir="auto" className="min-w-0 text-[17px] font-semibold text-qb-ink">
+              {name}
             </span>
-            <SellerTypeChip accountType={seller.account_type} className="qb-desktop:hidden" />
+            {isVerifiedSeller(seller) ? <VerifiedMark className="size-4" /> : null}
           </span>
         </Link>
-        <SellerTypeChip accountType={seller.account_type} className="hidden qb-desktop:inline-flex" />
+        <SellerTypeChip accountType={seller.account_type} />
       </div>
 
-      <ul
-        className={cn(
-          'mt-4 flex flex-wrap gap-x-6 gap-y-3.5 text-qb-label text-qb-ink-subtle qb-tablet:flex-col qb-tablet:text-qb-caption',
-          'qb-desktop:-mx-6 qb-desktop:border-y qb-desktop:border-qb-line qb-desktop:px-6 qb-desktop:py-4 qb-desktop:text-qb-body',
-        )}
-      >
+      <ul className="flex flex-col gap-4 border-t border-qb-line pt-[18px] text-qb-body-sm text-qb-ink-secondary">
         {seller.rating_count > 0 ? (
-          <InfoRow icon={Star}>
+          <InfoRow icon={MessageSquareText}>
             {`${formatRating(seller.rating_avg, locale)} · ${tPlural('reviews.count', seller.rating_count, locale)}`}
           </InfoRow>
         ) : null}
-        <InfoRow icon={LayoutGrid}>{tPlural('ads.detail.seller_ads', seller.ads_count, locale)}</InfoRow>
-        <InfoRow icon={CalendarDays}>{t('users.profile.joined', { date: formatAdDate(seller.joined_at, locale) })}</InfoRow>
+        <InfoRow icon={Tag}>{tPlural('ads.detail.seller_ads', seller.ads_count, locale)}</InfoRow>
+        <InfoRow icon={CalendarDays}>{t('ads.detail.active_since', { date: formatDottedDate(seller.joined_at) })}</InfoRow>
       </ul>
     </>
   );
@@ -108,7 +98,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
   if (ad.status === 'sold') {
     return (
       <>
-        <Badge tone="neutral" font="label" className="h-10 justify-center rounded-qb-md text-qb-caption">
+        <Badge tone="neutral" font="label" className="min-h-[52px] justify-center rounded-qb-md text-qb-caption">
           {t('ads.status.sold')}
         </Badge>
         {rateSeller}
@@ -117,7 +107,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
   }
   if (isOwner) {
     return (
-      <Badge tone="brand" font="label" className="h-10 justify-center rounded-qb-md text-qb-caption">
+      <Badge tone="brand" font="label" className="min-h-[52px] justify-center rounded-qb-md text-qb-caption">
         {t('messaging.own_ad_badge')}
       </Badge>
     );
@@ -135,7 +125,10 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
         </Link>
       ) : null}
       {canOffer ? (
-        <Link href={`/ads/${ad.id}/offer`} className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), actionButton)}>
+        <Link
+          href={`/ads/${ad.id}/offer`}
+          className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), actionButton, 'hover:bg-qb-surface hover:text-qb-brand')}
+        >
           <Tag aria-hidden />
           {t('ads.actions.make_offer')}
         </Link>
@@ -145,7 +138,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
         variant="ghost"
         size="sm"
         icon={MessageSquareText}
-        className={cn(actionButton, 'text-qb-brand hover:bg-qb-brand-soft hover:text-qb-brand-active')}
+        className={cn(actionButton, 'text-qb-brand hover:bg-transparent')}
       >
         {t('ads.actions.send_message')}
       </StartConversationButton>
@@ -154,11 +147,12 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
   );
 }
 
+/** One fact about the seller with its 18 px grey line icon. */
 function InfoRow({ icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
-    <li className="flex items-center gap-2">
-      <Icon icon={icon} size="sm" className="qb-desktop:size-[18px]" />
-      {children}
+    <li className="flex items-center gap-3">
+      <Icon icon={icon} strokeWidth={1.7} className="size-[18px] text-qb-ink-subtle" />
+      <span className="min-w-0">{children}</span>
     </li>
   );
 }

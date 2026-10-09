@@ -1,15 +1,14 @@
 import { cardVariants } from '@/components/design-system/Card';
 import { cn } from '@/lib/utils';
 
-/** White r24 panel the ad detail page is built from. */
-export const detailCard = cn(cardVariants({ large: true, elevated: true, padding: 'none' }));
+/** The flat white r16 panel product.html builds the ad detail from (1px line, no shadow). */
+export const detailCard = cn(cardVariants({ padding: 'none' }));
 
-/** Padding of the main-column panels (title, description, specs). */
-export const detailCardMain = 'p-[17px] qb-tablet:p-5 qb-desktop:p-8';
+/** Padding of the main-column panels (title, description, specs): 24 px at every width. */
+export const detailCardMain = 'p-6';
 
-/** Padding of the sidebar panels (seller, ad facts, location). */
-export const detailCardSide = 'p-5 qb-tablet:p-6';
+/** Padding of the sidebar panels (seller, ad facts). */
+export const detailCardSide = 'p-[22px]';
 
-/** "Description", "Technical Data"... */
-export const detailCardTitle =
-  'text-qb-body leading-[1.25] font-medium tracking-normal text-qb-ink-title qb-tablet:text-qb-caption qb-desktop:text-qb-h4';
+/** "Description", "Technical Data"...: 22 px / 500 in #333 at every width (typo.css). */
+export const detailCardTitle = 'text-qb-h4 font-medium tracking-normal text-qb-ink-title';

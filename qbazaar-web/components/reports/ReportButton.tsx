@@ -19,9 +19,6 @@ import type { ReportTarget } from '@/lib/api/types';
 
 import { ReportDialog } from './ReportDialog';
 
-/** Below the reference's 601 px tablet breakpoint the form is a bottom sheet. */
-const PHONE_QUERY = '(max-width: 600px)';
-
 interface ReportButtonProps {
   target_type: ReportTarget;
   target_id: string;
@@ -34,7 +31,6 @@ export function ReportButton({ target_type, target_id, label, className }: Repor
   const router = useRouter();
   const { isAuthenticated, isHydrated } = useAuth();
   const [open, setOpen] = useState(false);
-  const [asSheet, setAsSheet] = useState(false);
   const [reported, setReported] = useState(false);
 
   const onClick = () => {
@@ -43,7 +39,6 @@ export function ReportButton({ target_type, target_id, label, className }: Repor
       router.push(`/login?from=${encodeURIComponent(currentLocationPath())}`);
       return;
     }
-    setAsSheet(window.matchMedia(PHONE_QUERY).matches);
     setOpen(true);
   };
 
@@ -68,7 +63,6 @@ export function ReportButton({ target_type, target_id, label, className }: Repor
       <ReportDialog
         open={open}
         onOpenChange={setOpen}
-        asSheet={asSheet}
         target_type={target_type}
         target_id={target_id}
         onReported={() => setReported(true)}

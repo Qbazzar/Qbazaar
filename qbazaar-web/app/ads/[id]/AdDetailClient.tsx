@@ -10,7 +10,6 @@ import Link from 'next/link';
 
 import { AdDetailView } from '@/components/ads/AdDetailView';
 import { buttonVariants } from '@/components/design-system/Button';
-import { pageFrame } from '@/components/design-system/page-frame';
 import { ErrorView } from '@/components/status/ErrorView';
 import { NotFoundView } from '@/components/status/NotFoundView';
 import { useAdQuery } from '@/lib/queries/ads';
@@ -62,21 +61,20 @@ export function AdDetailClient({ id, initialAd }: AdDetailClientProps) {
 
 /** Same frame as the page, so nothing jumps when the ad arrives. */
 function AdDetailSkeleton() {
-  const block = 'animate-pulse rounded-qb-2xl bg-qb-fill motion-reduce:animate-none';
+  const block = 'animate-pulse rounded-qb-xl bg-qb-fill motion-reduce:animate-none';
   return (
     <main aria-busy="true" className="bg-qb-page pb-16">
       <span className="sr-only">{t('common.loading')}</span>
-      <div aria-hidden="true" className={`${pageFrame} qb-tablet:pt-[72px] qb-desktop:pt-[65px]`}>
-        <div className="hidden h-7 w-72 animate-pulse rounded-qb-sm bg-qb-fill motion-reduce:animate-none qb-tablet:block" />
-        <div className="[display:grid] grid-cols-1 gap-4 qb-tablet:mt-[49px] qb-tablet:grid-cols-[minmax(0,1fr)_263px] qb-tablet:gap-x-[17px] qb-tablet:gap-y-6 qb-desktop:grid-cols-[minmax(0,1fr)_421px] qb-desktop:gap-x-8">
-          <div className={`-mx-4 h-80 qb-tablet:col-span-2 qb-tablet:mx-0 qb-tablet:h-[322px] qb-desktop:col-span-1 qb-desktop:h-[502px] ${block}`} />
-          <div className="flex flex-col gap-4 qb-tablet:col-start-1 qb-tablet:row-start-2 qb-desktop:gap-6">
-            <div className={`h-[176px] qb-desktop:h-[298px] ${block}`} />
-            <div className={`h-[280px] ${block}`} />
+      <div aria-hidden="true" className="mx-auto max-w-[1440px] px-qb-gutter pt-[clamp(20px,4vw,40px)]">
+        <div className="mb-[18px] hidden h-[30px] w-72 animate-pulse rounded-qb-sm bg-qb-fill motion-reduce:animate-none qb-tablet:block" />
+        <div className="flex flex-col gap-6 qb-tablet:flex-row qb-tablet:items-start">
+          <div className="flex min-w-0 flex-col gap-6 qb-tablet:flex-1 qb-desktop:flex-[2_1_560px]">
+            <div className={`h-[min(56vw,420px)] ${block}`} />
+            <div className={`h-[277px] ${block}`} />
           </div>
-          <div className="flex flex-col gap-4 qb-tablet:col-start-2 qb-tablet:row-start-2 qb-desktop:[grid-row:1/span_2] qb-desktop:gap-6">
-            <div className={`h-[374px] qb-desktop:h-[444px] ${block}`} />
-            <div className={`h-[200px] ${block}`} />
+          <div className="flex min-w-0 flex-col gap-5 qb-tablet:w-[260px] qb-tablet:shrink-0 qb-desktop:w-auto qb-desktop:flex-[1_1_300px]">
+            <div className={`h-[467px] ${block}`} />
+            <div className={`h-[196px] ${block}`} />
           </div>
         </div>
       </div>

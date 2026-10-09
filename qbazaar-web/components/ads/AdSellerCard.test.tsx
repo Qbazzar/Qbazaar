@@ -59,7 +59,7 @@ describe('AdSellerCard', () => {
     expect(screen.getAllByText('Private Seller').length).toBeGreaterThan(0);
     expect(screen.getByText('4.5 · 12 reviews')).toBeInTheDocument();
     expect(screen.getByText('3 Ads')).toBeInTheDocument();
-    expect(screen.getByText('Member since Jan 08, 2016')).toBeInTheDocument();
+    expect(screen.getByText('Active since 08.01.2016')).toBeInTheDocument();
   });
 
   it('offers "Buy Now", "Make an Offer" and "Send Message" to buyers', () => {
