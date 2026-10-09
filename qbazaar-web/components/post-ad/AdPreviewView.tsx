@@ -26,6 +26,8 @@ import type { PostAdAction } from './usePostAdActions';
 import { VIEW_HEADING_ID } from './view-heading';
 import { YourAdPanel } from './YourAdPanel';
 
+import '@/styles/design-tokens-sell.css';
+
 export interface AdPreviewViewProps {
   variant: 'preview' | 'publish';
   seller: SellerSummary;
@@ -199,16 +201,28 @@ function BuyerView({ seller }: { seller: SellerSummary }) {
           fullWidth
           disabled
           aria-describedby={BUYER_NOTE_ID}
-          className="h-[46px] bg-qb-fill-strong text-qb-caption font-medium text-qb-surface disabled:opacity-100"
+          className="h-[46px] bg-(--color-qb-fill-disabled) text-qb-caption font-medium text-qb-surface disabled:opacity-100"
         >
           <Icon icon={MessageSquare} size="sm" />
           {t('post_ad.preview.send_message')}
         </Button>
-        <Button variant="secondary" fullWidth disabled aria-describedby={BUYER_NOTE_ID} className="h-12">
+        <Button
+          variant="secondary"
+          fullWidth
+          disabled
+          aria-describedby={BUYER_NOTE_ID}
+          className="h-12 border-(--color-qb-brand-faded) text-(--color-qb-brand-faded) disabled:opacity-100"
+        >
           <Icon icon={Star} size="sm" />
           {t('post_ad.preview.follow')}
         </Button>
-        <Button variant="ghost" fullWidth disabled aria-describedby={BUYER_NOTE_ID} className="h-[30px] font-semibold text-qb-brand">
+        <Button
+          variant="ghost"
+          fullWidth
+          disabled
+          aria-describedby={BUYER_NOTE_ID}
+          className="h-[30px] font-semibold text-(--color-qb-brand-faded) disabled:opacity-100"
+        >
           <Icon icon={Heart} size="sm" />
           {t('post_ad.preview.favorite')}
         </Button>

@@ -76,7 +76,6 @@ function statusText(photo: PhotoItem): string {
 export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRemove, onRetry, onMakeCover, onMove }: PhotoTileProps) {
   const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: photo.key });
   const isCover = position === 1;
-  const settled = photo.status === 'uploaded';
   const label = t('post_ad.photos.photo_label', { n: position, total });
 
   return (
@@ -96,7 +95,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
           fill
           sizes="(min-width: 1001px) 100px, 30vw"
           draggable={false}
-          className={cn('object-cover transition-opacity', !settled && 'opacity-60')}
+          className="object-cover"
         />
       ) : (
         <span role="img" aria-label={label} className="absolute inset-0" />

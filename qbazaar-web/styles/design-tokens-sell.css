@@ -1,0 +1,29 @@
+/* Exact reference values of the sell pages (post-ad, offer and buy-now,
+   checkout, orders, wallet, promotions) that styles/design-tokens.css has no
+   token for yet: D:/Doc/q-bazaar add-ads.html, preview.html, publish.html,
+   checkout.html and the Figma frames they follow. Same rules as
+   design-tokens.css: the design's values, never darkened. They carry @theme
+   names, so they can move into that file unchanged; until then the classes
+   read them as text-(--color-qb-…). */
+:root {
+  /* The "saved" toast (324:13009; polish.css, cropper.js) */
+  --color-qb-mint: #07bd74;
+  --color-qb-mint-soft: #eafff7;
+
+  /* Card headings of the add-ads aside and the category picker (typo.css),
+     and "How its work" of the buy-now and offer forms (659:58417) */
+  --color-qb-ink-heading: #454545;
+
+  /* Disabled buyer buttons of preview.html */
+  --color-qb-brand-faded: #facfbc;
+  --color-qb-fill-disabled: #f0f0f0;
+
+  /* Promotion rows of add-ads.html and the publish.html table */
+  --color-qb-promo-active: #fff4ef;
+  --color-qb-check-ring: #cbcbcb;
+  --color-qb-check-ring-hover: #636363; /* CheckBox 367:15366, hover */
+  --color-qb-row-divider: #f0f0f0;
+
+  /* The add-ads "Select" button */
+  --shadow-qb-brand-tight: 0 6px 16px 0 rgb(243 128 87 / 0.2);
+}

@@ -1,18 +1,21 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { BadgeCheck, CalendarDays, LoaderCircle, Tag } from 'lucide-react';
+import { CalendarDays, Check, LoaderCircle, Tag } from 'lucide-react';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { Button } from '@/components/design-system/Button';
 import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
+import { VerifiedMark } from '@/components/users/SellerBadges';
 import type { AccountType } from '@/lib/api/types';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
 import { formatDate } from '@/lib/post-ad/format';
 import { cn } from '@/lib/utils';
+
+import '@/styles/design-tokens-sell.css';
 
 export interface SellerSummary {
   name: string;
@@ -33,7 +36,7 @@ export interface ProfileAction {
 /** Card heading of the right column ("Your Profile", "Tips"): 24 px at every width. */
 export function AsideTitle({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <h2 id={id} className="mb-[18px] text-qb-h3 font-medium tracking-normal text-qb-ink-body">
+    <h2 id={id} className="mb-[18px] text-qb-h3 font-medium tracking-normal text-(--color-qb-ink-heading)">
       {children}
     </h2>
   );
@@ -45,12 +48,14 @@ const IDENTITY_STYLES = {
     name: 'text-qb-h5 text-qb-ink-title',
     badge: 'bg-qb-brand-soft text-qb-brand-on-soft',
     rows: 'gap-2.5',
+    adsIcon: Check,
   },
   /** The seller card of preview.html. */
   preview: {
     name: 'text-[17px] text-qb-ink',
     badge: 'border border-qb-brand bg-qb-surface text-qb-brand',
     rows: 'gap-3',
+    adsIcon: Tag,
   },
 } as const;
 
@@ -60,16 +65,11 @@ export function SellerIdentity({ seller, variant = 'form' }: { seller: SellerSum
   const styles = IDENTITY_STYLES[variant];
   return (
     <>
-      {/* The badge moves under the name when a narrow card can't hold both. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-2.5 gap-y-2">
+      {/* The seller badge moves under the name when a narrow card can't hold both. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
         <div className="flex min-w-0 flex-[1_1_180px] items-center gap-3">
           <Avatar name={seller.name} src={seller.avatarUrl} tone="brand" className="size-11 text-qb-body" />
-          <span className={cn('min-w-0 font-semibold break-words', styles.name)}>
-            {seller.name}
-            {seller.verified ? (
-              <Icon icon={BadgeCheck} size="sm" label={t('post_ad.profile.verified')} className="ms-1.5 inline-block align-[-2px] text-qb-info" />
-            ) : null}
-          </span>
+          <NameWithMark name={seller.name} verified={seller.verified} className={cn('min-w-0 font-semibold break-words', styles.name)} />
         </div>
         <span className={cn('shrink-0 rounded-qb-sm px-3 py-[5px] font-qb-label text-qb-tiny font-medium', styles.badge)}>
           {t(`post_ad.profile.${seller.accountType}`)}
@@ -77,7 +77,7 @@ export function SellerIdentity({ seller, variant = 'form' }: { seller: SellerSum
       </div>
       <ul className="mt-[18px] flex flex-col gap-3.5 border-t border-qb-line pt-[18px] text-qb-body-sm text-qb-ink-secondary">
         <li className={cn('flex items-center', styles.rows)}>
-          <Icon icon={Tag} size="sm" className="size-[18px] text-qb-ink-subtle" />
+          <Icon icon={styles.adsIcon} size="sm" className="size-[18px] text-qb-ink-subtle" />
           {seller.adsCount === undefined ? (
             <span className="h-4 w-14 animate-pulse rounded-qb-xs bg-qb-fill motion-reduce:animate-none" />
           ) : (
@@ -90,6 +90,25 @@ export function SellerIdentity({ seller, variant = 'form' }: { seller: SellerSum
         </li>
       </ul>
     </>
+  );
+}
+
+/**
+ * The name with the filled blue tick right after it, as on add-ads.html. The
+ * tick stays on the line of the last word, so a long name wraps its words
+ * instead of leaving the tick alone on a line.
+ */
+function NameWithMark({ name, verified, className }: { name: string; verified: boolean; className: string }) {
+  if (!verified) return <span className={className}>{name}</span>;
+  const lastSpace = name.lastIndexOf(' ');
+  return (
+    <span className={className}>
+      {name.slice(0, lastSpace + 1)}
+      <span className="whitespace-nowrap">
+        {name.slice(lastSpace + 1)}
+        <VerifiedMark className="ms-1.5 inline-block size-4 align-[-2px]" />
+      </span>
+    </span>
   );
 }
 

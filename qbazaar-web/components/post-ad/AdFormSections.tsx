@@ -42,6 +42,8 @@ import {
 } from './FormParts';
 import { PhotoUploader } from './PhotoUploader';
 
+import '@/styles/design-tokens-sell.css';
+
 /** Store access shared by the sections: values, errors and an edit that clears the field's error. */
 function useFormField() {
   const values = usePostAdStore((state) => state.values);
@@ -127,7 +129,9 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
             aria-describedby={[categoryValueId, errors.categoryId ? errorId('categoryId') : null].filter(Boolean).join(' ')}
             onClick={() => setPickerOpen(true)}
             className={cn(
-              'h-auto shrink-0 px-[26px] text-qb-body-sm font-medium shadow-qb-brand',
+              'h-auto shrink-0 px-[26px] text-qb-body-sm font-medium shadow-(--shadow-qb-brand-tight)',
+              // The design keeps the peach fill on hover (selects.js); the soft variant would turn solid orange.
+              'hover:bg-qb-brand-soft hover:text-qb-brand-on-soft',
               'max-qb-tablet:rounded-qb-pill max-qb-tablet:border max-qb-tablet:border-qb-brand max-qb-tablet:px-4 max-qb-tablet:py-[9px] max-qb-tablet:text-qb-micro',
             )}
           >
