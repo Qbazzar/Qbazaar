@@ -16,12 +16,12 @@ const conversation = {
 } satisfies ConversationListItem;
 
 describe('ConversationRow', () => {
-  it('shows who, which ad, the last message and the unread count', () => {
+  it('shows who, the last message and the unread count', () => {
     render(<ConversationRow conversation={conversation} active={false} onSelect={vi.fn()} />);
     const row = screen.getByRole('button');
 
     expect(row).toHaveTextContent('Noora Al Sulaiti');
-    expect(row).toHaveTextContent('Canon EOS R6 body');
+    expect(row).not.toHaveTextContent('Canon EOS R6 body');
     expect(row).toHaveTextContent('Offer accepted');
     expect(row).toHaveTextContent(`3 ${t('messaging.unread_label')}`);
     expect(row).not.toHaveAttribute('aria-current');
@@ -37,5 +37,20 @@ describe('ConversationRow', () => {
 
     fireEvent.click(row);
     expect(onSelect).toHaveBeenCalledWith('c1');
+  });
+
+  it('leads the row with a checkbox in select mode', () => {
+    const onChange = vi.fn();
+    render(
+      <ConversationRow
+        conversation={conversation}
+        active={false}
+        onSelect={vi.fn()}
+        selection={{ checked: false, onChange }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('checkbox', { name: t('messaging.select_one', { name: 'Noora Al Sulaiti' }) }));
+    expect(onChange).toHaveBeenCalledWith(true);
   });
 });

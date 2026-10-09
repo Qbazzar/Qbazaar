@@ -93,8 +93,8 @@ describe('OfferCard', () => {
       />,
     );
 
-    expect(screen.getByRole('article', { name: /Counter-offer/ })).toBeInTheDocument();
-    expect(screen.getByText('Message from the seller')).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: /Counter Offer/ })).toBeInTheDocument();
+    expect(screen.getByText('Message from Seller')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Counter' })).toBeInTheDocument();
   });
 
@@ -124,9 +124,9 @@ describe('OfferCard', () => {
 
   it.each([
     ['countered', 'Answered with a counter-offer.'],
-    ['rejected', 'Offer rejected.'],
-    ['withdrawn', 'Offer withdrawn.'],
-    ['expired', 'This offer has expired.'],
+    ['rejected', 'This request was rejected'],
+    ['withdrawn', 'This request is no longer active'],
+    ['expired', 'This request is no longer active'],
   ] as const)('explains a %s offer without actions', (status, line) => {
     renderWithClient(<OfferCard offer={buildOffer({ status })} role="seller" ad={ad} listedPrice={null} align="start" now={NOW} />);
 

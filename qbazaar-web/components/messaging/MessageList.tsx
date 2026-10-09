@@ -118,7 +118,7 @@ export function MessageList({ conversationId }: Props) {
         '-outline-offset-2',
       )}
     >
-      <SafetyNotice />
+      {messages.length === 0 ? <SafetyNotice /> : null}
 
       {messages.length === 0 ? (
         <p className="px-6 py-10 text-center text-qb-caption text-qb-ink-subtle">
@@ -153,10 +153,12 @@ export function MessageList({ conversationId }: Props) {
         return (
           <div key={message.id} className="flex flex-col gap-4">
             {!sameDayAsPrev ? (
-              <p className="self-center rounded-qb-xs bg-qb-fill px-4 py-2 font-qb-label text-qb-micro font-medium text-qb-ink-secondary qb-tablet:text-qb-body qb-desktop:text-qb-h5">
+              <p className="self-center rounded-qb-md bg-qb-fill-strong px-5 py-2 text-qb-caption text-qb-ink-body">
                 {formatDaySeparator(message.created_at)}
               </p>
             ) : null}
+            {/* messages.html shows the reminder under the first day's chip. */}
+            {index === 0 ? <SafetyNotice /> : null}
             {isDeal ? (
               <DealCardForMessage message={message} isMine={isMine} />
             ) : (
@@ -203,11 +205,11 @@ function useIncomingAnnouncement(conversationId: string, messages: Message[], vi
   return announcement;
 }
 
-/** "Safe Pay" reminder at the top of every chat (365:14788). */
+/** "Safe Pay" reminder of messages.html: centred, left-aligned on phones as chat.js has it. */
 function SafetyNotice() {
   return (
-    <p className="mx-auto flex max-w-[626px] items-start gap-3 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-label text-qb-brand-on-soft qb-tablet:items-center qb-tablet:rounded-qb-md qb-tablet:px-6 qb-tablet:text-qb-body">
-      <ShieldCheck className="mt-0.5 size-5 shrink-0 text-qb-brand qb-tablet:mt-0" aria-hidden="true" />
+    <p className="flex max-w-[80%] items-center gap-2.5 self-center rounded-[14px] border border-qb-brand bg-qb-brand-soft px-[18px] py-3.5 text-start text-qb-body-sm text-qb-brand-active qb-tablet:text-center">
+      <ShieldCheck className="size-5 shrink-0 text-qb-brand" strokeWidth={1.6} aria-hidden="true" />
       {t('messaging.safety_notice')}
     </p>
   );
