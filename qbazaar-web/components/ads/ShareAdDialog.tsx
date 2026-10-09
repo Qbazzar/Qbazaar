@@ -86,8 +86,9 @@ export function ShareAdDialog({ open, onOpenChange, title, url }: ShareAdDialogP
         })}
       </ul>
       <div className="flex items-center gap-2.5 rounded-qb-lg border border-qb-line px-3.5 py-3">
-        <span className="min-w-0 flex-1 truncate text-qb-caption text-qb-ink-faint">
-          <bdi dir="ltr">{url.replace(/^https?:\/\//, '')}</bdi>
+        {/* Left-to-right in Arabic too, so a long link keeps its start and loses its end, as in English. */}
+        <span dir="ltr" className="min-w-0 flex-1 truncate text-qb-caption text-qb-ink-faint rtl:text-right">
+          {url.replace(/^https?:\/\//, '')}
         </span>
         <button
           type="button"
