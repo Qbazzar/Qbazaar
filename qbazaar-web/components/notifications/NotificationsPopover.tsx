@@ -46,7 +46,7 @@ export function NotificationsPopover() {
   return (
     <div className="flex max-h-[28rem] flex-col">
       <header className="border-ink-200 flex items-center justify-between gap-2 border-b px-3 py-2.5">
-        <h2 className="font-display text-ink-900 text-sm font-semibold">
+        <h2 className="font-qb text-ink-900 text-sm font-semibold">
           {t('notifications.title', 'الإشعارات')}
         </h2>
       </header>

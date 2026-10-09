@@ -81,48 +81,6 @@ const acme = localFont({
   preload: false,
 });
 
-/*
- * Old look (DM Sans, Instrument Serif, Cairo, Geist Mono) for the pages not yet
- * reskinned; app/globals.css reads them through these variables.
- */
-const dmSans = localFont({
-  src: './dm-sans-latin-variable.woff2',
-  weight: '400 800',
-  variable: '--font-dm-sans',
-  preload: false,
-});
-
-const instrumentSerif = localFont({
-  src: [
-    { path: './instrument-serif-latin-400.woff2', style: 'normal' },
-    { path: './instrument-serif-latin-400-italic.woff2', style: 'italic' },
-  ],
-  weight: '400',
-  variable: '--font-instrument-serif',
-  preload: false,
-});
-
-// Cairo comes in two subset files, so each declares the characters it covers.
-const cairo = localFont({
-  src: './cairo-arabic-variable.woff2',
-  weight: '400 900',
-  declarations: [{ prop: 'unicode-range', value: 'U+0600-06FF, U+0750-077F, U+0870-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFC' }],
-  variable: '--font-cairo',
-  preload: false,
-});
-
-const cairoLatin = localFont({
-  src: './cairo-latin-variable.woff2',
-  weight: '400 900',
-  declarations: [
-    { prop: 'font-family', value: 'cairo' },
-    { prop: 'unicode-range', value: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD' },
-  ],
-  variable: '--font-cairo-latin',
-  preload: false,
-  adjustFontFallback: false,
-});
-
 const geistMono = localFont({
   src: './geist-mono-latin-variable.woff2',
   weight: '100 900',
@@ -140,10 +98,6 @@ export const fontVariables = [
   storyScript,
   dancingScript,
   acme,
-  dmSans,
-  instrumentSerif,
-  cairo,
-  cairoLatin,
   geistMono,
 ]
   .map((font) => font.variable)

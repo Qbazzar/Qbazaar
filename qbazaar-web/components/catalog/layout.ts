@@ -5,9 +5,9 @@ export const catalogBleed = '-mx-qb-gutter px-qb-gutter scroll-px-qb-gutter';
 export const catalogPageTop = 'pt-10 pb-16 qb-tablet:pt-[62px] qb-desktop:pt-[65px] qb-desktop:pb-24';
 
 /**
- * The base layer gives h1–h6 the old fonts (DM Sans, Cairo), which beats the
- * inherited `font-qb` on the headings of AdCard, SectionHeader, EmptyState and
- * the dialogs; this puts them back on the design font.
+ * The base layer sets h1–h6 to its own weight and tracking; this keeps the
+ * headings of AdCard, SectionHeader, EmptyState and the dialogs on the
+ * `font-qb` stack explicitly.
  */
 export const headingFont = '[&_:is(h1,h2,h3,h4,h5,h6)]:font-qb';
 

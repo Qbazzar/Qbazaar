@@ -3,7 +3,7 @@
  * "My Ads" page.
  *
  * Stateless + server-friendly (no hooks). Translated from the Bazzar mockup's
- * ListingCard with the warm coral palette and Instrument-Serif italic for the
+ * ListingCard with the warm coral palette and the design font for the
  * price line. Saving / messaging affordances land in Sprint 7/8 — for now the
  * card is a plain link to `/ads/{id}`.
  */

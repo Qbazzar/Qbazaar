@@ -26,7 +26,7 @@ interface Props {
 const SIZE_CLS: Record<NonNullable<Props['size']>, string> = {
   sm: 'text-base',
   md: 'text-lg',
-  lg: 'font-display text-4xl md:text-5xl italic',
+  lg: 'font-qb text-4xl md:text-5xl',
 };
 
 const CURRENCY_LABEL_AR = 'ر.ق';
