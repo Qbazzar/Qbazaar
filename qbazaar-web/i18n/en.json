@@ -1526,6 +1526,7 @@
       "send_offer": "Send offer",
       "asking_price": "Asking price:",
       "verified": "Verified",
+      "member_since": "Member since {year}",
       "own_ad": "This is your ad, so you can't buy it or make an offer on it.",
       "not_buyable": "Buy Now isn't available for this ad: it needs a price and must be live. You can still message the seller.",
       "not_offerable": "This ad isn't taking offers right now.",
@@ -1544,6 +1545,8 @@
       "address_title": "Shipping address",
       "new_address": "Add a new address",
       "default_address": "Default",
+      "edit_address": "Edit",
+      "save_address": "Save Address",
       "fields": {
         "full_name": "Full name",
         "phone": "Phone number",

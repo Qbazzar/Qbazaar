@@ -48,19 +48,20 @@ export function OrderSummaryCard({ title, subtitle, currency, lines, total, foot
         </div>
       </div>
 
-      <h2 id="order-summary-title" className="mt-4 font-qb text-qb-body font-medium tracking-normal text-qb-ink-body">
+      {/* The type of checkout.html: a 15 px title, 14 px lines and the total in bold brand orange. */}
+      <h2 id="order-summary-title" className="mt-4 font-qb text-qb-body-sm font-semibold tracking-normal text-qb-ink">
         {t('orders.checkout.summary_title')}
       </h2>
-      <dl className="mt-4 flex flex-col gap-4 text-qb-caption">
+      <dl className="mt-3 flex flex-col gap-[11px] text-qb-caption">
         {lines.map((line) => (
           <div key={line.label} className="flex items-center justify-between gap-4">
-            <dt className="text-qb-ink-subtle">{line.label}</dt>
+            <dt className="text-qb-ink-secondary">{line.label}</dt>
             <dd className="font-semibold text-qb-ink">{line.formatted ? line.amount : formatMoney(line.amount, currency)}</dd>
           </div>
         ))}
-        <div className="flex items-center justify-between gap-4 border-t border-qb-line pt-4">
-          <dt className="font-medium text-qb-ink-secondary">{t('orders.checkout.total')}</dt>
-          <dd className="text-qb-body font-semibold text-qb-ink">{formatMoney(total, currency)}</dd>
+        <div className="mt-1.5 flex items-center justify-between gap-4 border-t border-qb-line pt-4 text-qb-body">
+          <dt className="font-semibold text-qb-ink">{t('orders.checkout.total')}</dt>
+          <dd className="font-bold text-qb-brand">{formatMoney(total, currency)}</dd>
         </div>
       </dl>
       {footer ? <div className="mt-4">{footer}</div> : null}

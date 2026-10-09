@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Banknote, CheckCircle2, Loader2, Store, Truck, XCircle } from 'lucide-react';
+import { Banknote, CheckCircle2, Loader2, ShieldCheck, Store, Truck, XCircle } from 'lucide-react';
 
 import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { Button, buttonVariants } from '@/components/design-system/Button';
@@ -11,7 +11,6 @@ import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { Modal } from '@/components/design-system/Modal';
 import { Notice } from '@/components/design-system/Notice';
-import { RadioCard } from '@/components/design-system/RadioCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useIdempotencyKey } from '@/hooks/useIdempotencyKey';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -24,19 +23,31 @@ import { formatMoney, isPositiveAmount } from '@/lib/orders/money';
 import { useCheckoutQuery, useSubmitCheckoutMutation } from '@/lib/queries/orders';
 import { cn } from '@/lib/utils';
 
+import '@/styles/design-tokens-sell.css';
+
 import { pageFrame } from './AccountPageFrame';
-import { AddressPicker, type AddressChoice } from './AddressPicker';
+import { ShippingAddressPanel, type AddressChoice } from './AddressPicker';
 import { CheckoutPanel } from './CheckoutPanel';
 import { focusFirstInvalid } from './focus-invalid';
 import { FormError } from './NoteField';
+import { OptionTile } from './OptionTile';
 import { OrderSummaryCard, type SummaryLine } from './OrderSummaryCard';
 import { PageState } from './PageState';
 import { orderNumber } from './order-number';
 
-const ctaButton = 'h-10 rounded-qb-sm text-qb-caption';
+/** The CTA of checkout.html: 47 px, radius 10, 15 px semibold. */
+const ctaButton = 'h-[47px] rounded-qb-md text-qb-body-sm';
 
-/** The compact result dialog of 684:33194 and 689:33489: 421 px wide, a 20 px title and a 14 px grey line. */
-const resultDialog = 'max-w-[421px] pt-[100px] [&_h2]:text-qb-h5 [&_h2]:font-medium [&_p]:text-qb-caption [&_p]:text-qb-ink-subtle';
+/**
+ * The result dialog of 684:33194 and 689:33489 (buynow.js payModal): 430 px,
+ * radius 20, the peach icon circle over a 20 px title and a 14 px grey line.
+ */
+const resultDialog =
+  'max-w-[430px] rounded-[20px] px-[34px] pt-[110px] pb-[26px] [&_h2]:text-qb-h5 [&_h2]:font-semibold [&_h2]:text-qb-ink [&_p]:text-qb-caption [&_p]:leading-[1.65] [&_p]:text-(--color-qb-ink-dialog)';
+const resultButton = 'h-auto rounded-qb-md py-3.5 text-qb-caption';
+const resultLink = 'h-auto p-0 text-qb-caption text-qb-brand hover:bg-transparent hover:underline';
+/** Two tiles a row at every width, as checkout.html. */
+const optionGrid = '[display:grid] grid-cols-2 gap-3.5';
 
 /** Plain text link under a notice. */
 const noticeLink = cn('mt-2 inline-block rounded-qb-xs font-semibold text-qb-ink underline underline-offset-2', focusRing);
@@ -69,7 +80,7 @@ export function CheckoutView({ orderId }: { orderId: string }) {
           ) : query.isError ? (
             <CheckoutError error={query.error} orderHref={orderHref} onRetry={() => query.refetch()} />
           ) : query.data.order.status !== 'created' ? (
-            <Notice tone="info" role="status" className="max-w-2xl">
+            <Notice tone="brand" role="status" className="max-w-2xl">
               <p>{t(query.data.order.status === 'awaiting_handover' ? 'orders.checkout.already_done' : 'orders.checkout.closed')}</p>
               <Link href={orderHref} className={noticeLink}>
                 {t('orders.checkout.view_order')}
@@ -91,11 +102,11 @@ export function CheckoutView({ orderId }: { orderId: string }) {
           className={resultDialog}
         >
           <ResultIcon tone="success" />
-          <div className="mt-6 flex flex-col items-center gap-3">
-            <Link href={orderHref} className={cn(buttonVariants({ fullWidth: true }), ctaButton)}>
+          <div className="mt-1.5 flex flex-col items-center gap-3.5">
+            <Link href={orderHref} className={cn(buttonVariants({ fullWidth: true }), resultButton)}>
               {t('orders.checkout.view_order')}
             </Link>
-            <Link href="/" className={cn(buttonVariants({ variant: 'ghost' }), 'text-qb-brand')}>
+            <Link href="/" className={cn(buttonVariants({ variant: 'ghost' }), resultLink)}>
               {t('orders.checkout.back_home')}
             </Link>
           </div>
@@ -108,7 +119,7 @@ export function CheckoutView({ orderId }: { orderId: string }) {
 function CheckoutError({ error, orderHref, onRetry }: { error: ApiClientError; orderHref: string; onRetry: () => void }) {
   if (error.status === 403) {
     return (
-      <Notice tone="info" role="status" className="max-w-2xl">
+      <Notice tone="brand" role="status" className="max-w-2xl">
         <p>{t('orders.checkout.seller_view')}</p>
         <Link href={orderHref} className={noticeLink}>
           {t('orders.checkout.view_order')}
@@ -167,12 +178,17 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
     return out;
   }, [checkout.currency, isDelivery, quote]);
 
+  /** Checks the typed address and shows its errors; true when it can be sent. */
+  const checkAddress = (): boolean => {
+    const errors = validateAddress(address);
+    setAddressErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const payload = (): CheckoutPayload | null => {
     if (!isDelivery) return { fulfillment, payment_method: 'cash' };
     if (choice.kind === 'saved') return { fulfillment, payment_method: 'cash', address_id: choice.id };
-    const errors = validateAddress(address);
-    setAddressErrors(errors);
-    if (Object.keys(errors).length > 0) return null;
+    if (!checkAddress()) return null;
     return { fulfillment, payment_method: 'cash', address: toAddressPayload(address) };
   };
 
@@ -219,9 +235,9 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
     <form ref={formRef} onSubmit={onSubmit} noValidate className="flex flex-col gap-6 qb-tablet:flex-row qb-tablet:items-start qb-desktop:gap-[33px]">
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <CheckoutPanel title={t('orders.checkout.fulfillment_title')} titleId="checkout-fulfillment">
-          <div role="radiogroup" aria-labelledby="checkout-fulfillment" className="[display:grid] grid-cols-1 gap-3 qb-desktop:grid-cols-2 qb-desktop:gap-5">
+          <div role="radiogroup" aria-labelledby="checkout-fulfillment" className={optionGrid}>
             {checkout.fulfillment_options.map((option) => (
-              <RadioCard
+              <OptionTile
                 key={option}
                 name="fulfillment"
                 value={option}
@@ -229,7 +245,7 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
                 onChange={() => setFulfillment(option)}
                 icon={option === 'delivery' ? <Truck /> : <Store />}
                 label={t(`orders.common.${option}`)}
-                description={
+                srDescription={
                   option === 'pickup'
                     ? t('orders.checkout.pickup_hint')
                     : checkout.delivery_fee && isPositiveAmount(checkout.delivery_fee)
@@ -242,30 +258,28 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
         </CheckoutPanel>
 
         {isDelivery ? (
-          <CheckoutPanel title={t('orders.checkout.address_title')} titleId="checkout-address">
-            <AddressPicker
-              addresses={checkout.saved_addresses}
-              choice={choice}
-              onChoiceChange={setChoice}
-              address={address}
-              onAddressChange={setAddress}
-              errors={addressErrors}
-              labelledBy="checkout-address"
-            />
-          </CheckoutPanel>
+          <ShippingAddressPanel
+            addresses={checkout.saved_addresses}
+            choice={choice}
+            onChoiceChange={setChoice}
+            address={address}
+            onAddressChange={setAddress}
+            errors={addressErrors}
+            onCheckAddress={checkAddress}
+          />
         ) : null}
 
         <CheckoutPanel title={t('orders.checkout.payment_title')} titleId="checkout-payment">
-          <div role="radiogroup" aria-labelledby="checkout-payment" className="[display:grid] grid-cols-1 gap-3 qb-desktop:grid-cols-2 qb-desktop:gap-5">
+          <div role="radiogroup" aria-labelledby="checkout-payment" className={optionGrid}>
             {checkout.payment_methods.map((method) => (
-              <RadioCard
+              <OptionTile
                 key={method}
                 name="payment_method"
                 value={method}
                 defaultChecked
                 icon={<Banknote />}
                 label={t('orders.common.cash')}
-                description={t('orders.checkout.cash_hint')}
+                srDescription={t('orders.checkout.cash_hint')}
               />
             ))}
           </div>
@@ -287,8 +301,8 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
                 {submit.isPending ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
                 {t('orders.checkout.place_order')}
               </Button>
-              <p className="mt-4 flex items-center justify-center gap-1.5 text-qb-micro text-qb-ink-subtle">
-                <Icon icon={Banknote} size="sm" className="text-qb-success" />
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-qb-label text-qb-ink-subtle">
+                <Icon icon={ShieldCheck} size="sm" className="size-3.5 text-qb-success" />
                 {t('orders.checkout.cash_note')}
               </p>
             </>
@@ -304,11 +318,11 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
         className={resultDialog}
       >
         <ResultIcon tone="danger" />
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <Button fullWidth className={ctaButton} onClick={() => void send()} disabled={submit.isPending} aria-busy={submit.isPending}>
+        <div className="mt-1.5 flex flex-col items-center gap-3.5">
+          <Button fullWidth className={resultButton} onClick={() => void send()} disabled={submit.isPending} aria-busy={submit.isPending}>
             {t('orders.common.retry')}
           </Button>
-          <Button variant="ghost" className="text-qb-brand" onClick={() => setFailure(null)}>
+          <Button variant="ghost" className={resultLink} onClick={() => setFailure(null)}>
             {t('orders.checkout.change_details')}
           </Button>
         </div>
@@ -321,9 +335,9 @@ function ResultIcon({ tone }: { tone: 'success' | 'danger' }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute inset-x-0 top-6 mx-auto flex size-[54px] items-center justify-center rounded-full bg-qb-brand-soft text-qb-brand"
+      className="absolute inset-x-0 top-[38px] mx-auto flex size-[54px] items-center justify-center rounded-full bg-qb-brand-soft text-qb-brand"
     >
-      <Icon icon={tone === 'success' ? CheckCircle2 : XCircle} size="lg" />
+      <Icon icon={tone === 'success' ? CheckCircle2 : XCircle} className="size-[26px]" />
     </span>
   );
 }

@@ -24,6 +24,15 @@
   --color-qb-check-ring-hover: #636363; /* CheckBox 367:15366, hover */
   --color-qb-row-divider: #f0f0f0;
 
+  /* Buy Now and Make an Offer (659:58417, 657:57378, 709:32483) */
+  --color-qb-ink-optional: #909090; /* "(optional)", the seller's "Member since" */
+  --color-qb-ink-step: #5a5a5a; /* "How it works" steps */
+  --color-qb-ink-asking: #6a6767; /* "Asking Price" at 1440 */
+  --color-qb-ink-place: #999999; /* the item's place at 1440 */
+
+  /* Checkout result dialog body (buynow.js payModal) */
+  --color-qb-ink-dialog: #9a9a9a;
+
   /* The add-ads "Select" button */
   --shadow-qb-brand-tight: 0 6px 16px 0 rgb(243 128 87 / 0.2);
 }

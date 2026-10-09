@@ -112,13 +112,53 @@ describe('CheckoutView', () => {
     );
     renderWithClient(<CheckoutView orderId="order-1" />);
 
-    expect(await screen.findByRole('radio', { name: /Home · Hessa Al Mulla/ })).toBeChecked();
+    // The chosen address shows as text with an Edit link (682:32513).
+    const panel = (await screen.findByRole('heading', { name: 'Shipping address' })).closest('section')!;
+    expect(within(panel).getByText('Al Sadd Street', { exact: false })).toBeInTheDocument();
+    expect(within(panel).queryByRole('radio')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Confirm order' }));
 
     await waitFor(() =>
       expect(submitCheckout).toHaveBeenCalledWith(
         'order-1',
         { fulfillment: 'delivery', payment_method: 'cash', address_id: 'addr-1' },
+        expect.any(String),
+      ),
+    );
+  });
+
+  it('edits the address: Cancel goes back, Save Address checks and keeps a typed one', async () => {
+    vi.mocked(getCheckout).mockResolvedValue(
+      buildCheckout({ order: buildOrder({ id: 'order-1' }), fulfillment_options: ['delivery'], saved_addresses: [savedAddress] }),
+    );
+    renderWithClient(<CheckoutView orderId="order-1" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    expect(screen.getByRole('radio', { name: /Home · Hessa Al Mulla/ })).toBeChecked();
+    await userEvent.click(screen.getByRole('radio', { name: /Add a new address/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('radio', { name: /Add a new address/ })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    await userEvent.click(screen.getByRole('radio', { name: /Add a new address/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save Address' }));
+    expect((await screen.findAllByText('This field is required.')).length).toBe(3);
+
+    await userEvent.click(screen.getByLabelText(/^Street/));
+    await userEvent.paste('Corniche Street');
+    await userEvent.click(screen.getByLabelText(/Building or house number/));
+    await userEvent.paste('7');
+    await userEvent.click(screen.getByLabelText(/^City/));
+    await userEvent.paste('Doha');
+    await userEvent.click(screen.getByRole('button', { name: 'Save Address' }));
+    expect(screen.getByText('7, Corniche Street')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm order' }));
+    await waitFor(() =>
+      expect(submitCheckout).toHaveBeenCalledWith(
+        'order-1',
+        expect.objectContaining({ fulfillment: 'delivery', address: expect.objectContaining({ street: 'Corniche Street', house_number: '7' }) }),
         expect.any(String),
       ),
     );
