@@ -63,6 +63,40 @@ describe('SiteHeader', () => {
     expect(screen.queryByRole('link', { name: 'Login' })).toBeNull();
   });
 
+  it('opens the account menu under the avatar while the mouse rests on it', async () => {
+    const user = userEvent.setup();
+    signIn();
+    render(<SiteHeader />);
+    const avatar = screen.getByRole('link', { name: 'FA, Account' });
+
+    await user.hover(avatar);
+    const menu = screen.getByRole('navigation', { name: 'Account menu' });
+    expect(avatar).toHaveAttribute('aria-expanded', 'true');
+    expect(within(menu).getByText('farah@example.com')).toBeInTheDocument();
+    expect(within(menu).getByRole('link', { name: 'Save Search' })).toHaveAttribute('href', '/account/saved-searches');
+    expect(within(menu).getByRole('link', { name: 'My Ads' })).toHaveAttribute('href', '/account/ads');
+    expect(within(menu).getByRole('link', { name: 'Sales Overview' })).toHaveAttribute('href', '/account/orders');
+    expect(within(menu).getByRole('link', { name: 'Account Settings' })).toHaveAttribute('href', '/account');
+    expect(within(menu).getByRole('button', { name: 'Log Out' })).toBeInTheDocument();
+  });
+
+  it('opens the account menu to the keyboard and closes it on Escape', async () => {
+    const user = userEvent.setup();
+    signIn();
+    render(<SiteHeader />);
+    const avatar = screen.getByRole('link', { name: 'FA, Account' });
+
+    // Tabbing (not a bare focus()) fires the focusin events React listens to.
+    for (let step = 0; step < 20 && document.activeElement !== avatar; step++) await user.tab();
+    expect(avatar).toHaveFocus();
+    expect(screen.getByRole('navigation', { name: 'Account menu' })).toBeInTheDocument();
+    await user.tab();
+    expect(screen.getByRole('link', { name: /Farah Alzinati/ })).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('navigation', { name: 'Account menu' })).toBeNull();
+    expect(avatar).toHaveFocus();
+  });
+
   it('draws the Add Ads icon at the reference size', () => {
     render(<SiteHeader />);
 
