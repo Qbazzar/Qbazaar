@@ -19,6 +19,7 @@ describe('sitemap', () => {
     fetchApiData.mockReset();
     fetchApiData.mockImplementation(async (path: string) => {
       if (path === '/api/v1/categories/tree') return tree;
+      if (path === '/api/v1/companies') return [{ id: '01co' }];
       if (path === '/api/v1/ads') return [{ id: '01ad', updated_at: '2026-10-01T10:00:00Z' }];
       return null;
     });
@@ -34,6 +35,8 @@ describe('sitemap', () => {
         'https://qbazaar.qa/c/cars',
         'https://qbazaar.qa/c/electronics',
         'https://qbazaar.qa/ads/01ad',
+        'https://qbazaar.qa/companies',
+        'https://qbazaar.qa/u/01co',
       ]),
     );
   });

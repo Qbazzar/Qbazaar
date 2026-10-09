@@ -3,9 +3,10 @@ import type { MetadataRoute } from 'next';
 import { fetchApiData, siteUrl } from '@/lib/seo';
 
 /** Public, crawlable static routes. */
-const STATIC_PATHS = ['', '/ads', '/categories', '/search', '/help', '/support'];
+const STATIC_PATHS = ['', '/ads', '/categories', '/companies', '/search', '/help', '/support'];
 
 type CategoryNode = { slug?: string; children?: CategoryNode[] };
+type CompanyRow = { id: string };
 type AdRow = { id: string; updated_at?: string; published_at?: string };
 
 function flattenCategorySlugs(nodes: CategoryNode[] | null): string[] {
@@ -23,7 +24,7 @@ function flattenCategorySlugs(nodes: CategoryNode[] | null): string[] {
 }
 
 /**
- * Dynamic sitemap: static routes + every category + the most recent ads.
+ * Dynamic sitemap: static routes + every category + the top companies + the most recent ads.
  *
  * The public `/ads` feed is capped at one page, so only recent ads are listed
  * here — a complete ad sitemap needs a dedicated lightweight backend endpoint
@@ -48,6 +49,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.6,
+    });
+  }
+
+  const companies = await fetchApiData<CompanyRow[]>('/api/v1/companies');
+  for (const company of Array.isArray(companies) ? companies : []) {
+    if (!company?.id) continue;
+    entries.push({
+      url: `${base}/u/${company.id}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.4,
     });
   }
 

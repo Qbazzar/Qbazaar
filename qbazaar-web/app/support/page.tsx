@@ -7,16 +7,12 @@ import { PageShell } from '@/components/design-system/PageShell';
 import { HelpHero } from '@/components/help/HelpHero';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
-import { absoluteUrl } from '@/lib/seo';
+import { pageMetadata } from '@/lib/page-metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
 
-  return {
-    title: t('support.title'),
-    description: t('support.subtitle'),
-    alternates: { canonical: absoluteUrl('/support') },
-  };
+  return pageMetadata({ title: t('support.title'), description: t('support.subtitle'), path: '/support' });
 }
 
 /**

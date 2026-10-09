@@ -20,7 +20,7 @@ import { intlLocale } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
-import { absoluteUrl } from '@/lib/seo';
+import { pageMetadata } from '@/lib/page-metadata';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -38,11 +38,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const page = await fetchPage(slug);
   if (!page) return { title: t('errors.not_found_title') };
 
-  return {
+  return pageMetadata({
     title: localized(page.title),
     description: localized(page.meta_description) || undefined,
-    alternates: { canonical: absoluteUrl(`/p/${slug}`) },
-  };
+    path: `/p/${slug}`,
+  });
 }
 
 export default async function CmsPage({ params }: PageProps) {

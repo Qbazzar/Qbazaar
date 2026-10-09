@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteHeaderGate } from '@/components/layout/SiteHeader';
@@ -10,10 +10,15 @@ import { LocaleProvider } from '@/components/i18n/LocaleProvider';
 import { dirFor } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
+import { openGraphLocale } from '@/lib/page-metadata';
 import { siteUrl } from '@/lib/seo';
 import { fontVariables } from './fonts';
 import { Providers } from './providers';
 import './globals.css';
+
+export const viewport: Viewport = {
+  themeColor: '#f38057',
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
@@ -23,12 +28,13 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(siteUrl()),
     title: {
       default: `${brand} — ${t('brand.tagline', 'سوق قطر الودود للإعلانات المبوبة')}`,
-      template: `%s · ${brand}`,
+      template: `%s | ${brand}`,
     },
     description: t('brand.description', 'بِع واشترِ واكتشف ما حولك في قطر.'),
     openGraph: {
       siteName: brand,
       type: 'website',
+      ...openGraphLocale(),
     },
     twitter: {
       card: 'summary_large_image',

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import { AuthCard } from '@/components/auth/AuthCard';
@@ -9,6 +10,8 @@ import { LocaleSwitcher } from '@/components/i18n/LocaleSwitcher';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { cn } from '@/lib/utils';
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
  * Auth shell of the new design (`.qb-ahead` + `.qb-card`, frames 736:65208,

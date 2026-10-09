@@ -5,7 +5,7 @@ import { fetchHelpCategory } from '@/lib/api/help-server';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
-import { absoluteUrl } from '@/lib/seo';
+import { pageMetadata } from '@/lib/page-metadata';
 
 import { HelpCategoryDetail } from './HelpCategoryDetail';
 
@@ -20,11 +20,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const category = await fetchHelpCategory(slug);
   if (!category) return { title: t('errors.not_found_title') };
 
-  return {
+  return pageMetadata({
     title: `${localized(category.name)} · ${t('help.title')}`,
     description: localized(category.description) || t('help.subtitle'),
-    alternates: { canonical: absoluteUrl(`/help/c/${slug}`) },
-  };
+    path: `/help/c/${slug}`,
+  });
 }
 
 /** A missing topic answers 404; otherwise the topic renders on the server. */

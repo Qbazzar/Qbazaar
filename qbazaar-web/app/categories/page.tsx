@@ -7,14 +7,13 @@ import { catalogPageTop, headingFont } from '@/components/catalog/layout';
 import { parsePage } from '@/components/catalog/listing-query';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
+import { pageMetadata } from '@/lib/page-metadata';
 import { cn } from '@/lib/utils';
 
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
 
-  return {
-    title: t('categories.all', 'الأقسام'),
-  };
+  return pageMetadata({ title: t('categories.all', 'الأقسام'), path: '/categories' });
 }
 
 interface PageProps {

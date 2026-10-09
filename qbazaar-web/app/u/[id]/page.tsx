@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 
 import { sellerDisplayName } from '@/components/users/SellerBadges';
 import type { PublicUserProfile } from '@/lib/api/types';
-import { absoluteUrl, fetchApiData } from '@/lib/seo';
+import { pageMetadata } from '@/lib/page-metadata';
+import { fetchApiData } from '@/lib/seo';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { SellerProfileClient } from './SellerProfileClient';
@@ -22,13 +23,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!profile) return { title: t('users.profile.not_found_title') };
 
   const name = sellerDisplayName(profile);
-  const description = profile.business_profile?.about?.replace(/\s+/g, ' ').trim().slice(0, 160) || undefined;
-  return {
+  const about = profile.business_profile?.about?.replace(/\s+/g, ' ').trim().slice(0, 160);
+  return pageMetadata({
     title: name,
-    description,
-    alternates: { canonical: absoluteUrl(`/u/${id}`) },
-    openGraph: { title: name, description, url: absoluteUrl(`/u/${id}`), type: 'profile' },
-  };
+    description: about || t('brand.seller_description', { name }),
+    path: `/u/${id}`,
+    image: profile.avatar_url ?? profile.business_profile?.cover_url,
+    type: 'profile',
+  });
 }
 
 /**

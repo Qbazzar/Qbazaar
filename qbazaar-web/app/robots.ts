@@ -9,10 +9,13 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      // Private / auth-only surfaces and the post-ad wizard carry no SEO value
-      // and shouldn't be crawled.
+      // Private / auth-only surfaces, the post-ad wizard and the JSON API carry
+      // no SEO value and shouldn't be crawled.
       disallow: [
         '/account/',
+        '/checkout/',
+        '/api/',
+        '/impersonate',
         '/post-ad',
         '/login',
         '/register',

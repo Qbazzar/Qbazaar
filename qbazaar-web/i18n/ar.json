@@ -2,7 +2,9 @@
   "brand": {
     "name": "QBazaar",
     "tagline": "سوق قطر الودود للإعلانات المبوبة",
-    "description": "بِع واشترِ واكتشف ما حولك في قطر."
+    "description": "بِع واشترِ واكتشف ما حولك في قطر.",
+    "category_description": "تصفّح إعلانات {name} في قطر على QBazaar.",
+    "seller_description": "{name} على QBazaar: إعلانات وعروض من بائع في قطر."
   },
   "common": {
     "loading": "جاري التحميل…",
