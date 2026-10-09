@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Receipt } from 'lucide-react';
 
@@ -26,7 +26,7 @@ export function signedAmount(entry: Pick<WalletEntry, 'amount' | 'currency' | 'd
 }
 
 /** The ledger statement of the wallet and the commission account, newest first. */
-export function StatementTable() {
+export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
   const [account, setAccount] = useState<WalletAccount | ''>('');
   const query = useWalletEntriesQuery(account || undefined);
   const entries = query.data?.pages.flatMap((page) => page.data) ?? [];
@@ -36,7 +36,8 @@ export function StatementTable() {
       title={t('orders.wallet.history_title')}
       titleId="wallet-history"
       action={
-        <div className="flex items-center gap-3 text-qb-caption text-qb-ink-body">
+        <div className="flex flex-wrap items-center gap-3 text-qb-caption text-qb-ink-body">
+          {headerAction}
           <span id="wallet-history-filter" className="shrink-0">
             {t('orders.wallet.filter_label')}
           </span>
@@ -102,8 +103,8 @@ function StatementRow({ entry }: { entry: WalletEntry }) {
   return (
     <tr className={tc.row}>
       <td className={tc.td}>
-        <p className="font-semibold text-qb-ink-title">{t(`orders.wallet.type.${entry.type}`, entry.description)}</p>
-        <p className="mt-0.5 text-qb-micro font-normal text-qb-ink-subtle qb-desktop:text-qb-caption">
+        <p className={tc.itemTitle}>{t(`orders.wallet.type.${entry.type}`, entry.description)}</p>
+        <p className={tc.itemMeta}>
           {reference?.type === 'order' ? (
             <Link
               href={`/account/orders/${encodeURIComponent(reference.id)}`}

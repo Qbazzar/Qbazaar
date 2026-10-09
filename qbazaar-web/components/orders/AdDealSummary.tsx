@@ -63,7 +63,7 @@ export function AdDealSummary({ ad }: { ad: DealAd }) {
             </p>
           ) : null}
           {place ? (
-            <p className="mt-2 flex items-center gap-1.5 text-qb-micro text-(--color-qb-ink-optional) qb-desktop:mt-4 qb-desktop:text-qb-caption qb-desktop:text-(--color-qb-ink-place)">
+            <p className="mt-2 flex items-center gap-1.5 text-qb-micro text-(--color-qb-ink-optional) qb-desktop:mt-4 qb-desktop:text-qb-caption qb-desktop:text-(--color-qb-ink-meta)">
               <Icon icon={MapPin} size="sm" />
               <span className="truncate">{place}</span>
             </p>

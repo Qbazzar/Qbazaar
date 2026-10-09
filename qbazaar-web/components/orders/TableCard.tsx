@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 
 import { panelClass } from './CheckoutPanel';
 
+import '@/styles/design-tokens-sell.css';
+
 export interface TableCardProps {
   title: string;
   titleId: string;
@@ -34,16 +36,24 @@ export function TableCard({ title, titleId, action, children, className }: Table
   );
 }
 
-/** Header cell, data cell and row classes shared by the order and wallet tables. */
+/**
+ * Header cell, data cell and row classes shared by the order and wallet
+ * tables, in the type of 502:21437 and 502:22401: #8E8E8E headers and cells,
+ * #221122 amounts; the item's title and its #999 sub line (#A4ADBA on phones).
+ */
 export const tableClasses = {
   table: 'w-full border-collapse text-start',
   headRow: 'border-y border-qb-line max-qb-tablet:border-b-0',
-  th: 'px-3 py-4 text-start text-qb-caption font-medium whitespace-nowrap text-qb-ink-muted first:ps-5 last:pe-5 max-qb-tablet:py-0 qb-desktop:text-qb-body qb-desktop:first:ps-8 qb-desktop:last:pe-8',
+  th: 'px-3 py-4 text-start text-qb-caption font-medium whitespace-nowrap text-(--color-qb-ink-table) first:ps-5 last:pe-5 max-qb-tablet:py-0 qb-desktop:text-qb-body qb-desktop:first:ps-8 qb-desktop:last:pe-8',
   row: 'border-b border-qb-line last:border-b-0',
-  td: 'px-3 py-4 align-middle text-qb-caption font-medium text-qb-ink-muted first:ps-5 last:pe-5 qb-desktop:text-qb-body qb-desktop:first:ps-8 qb-desktop:last:pe-8',
+  td: 'px-3 py-4 align-middle text-qb-caption font-medium text-(--color-qb-ink-table) first:ps-5 last:pe-5 qb-desktop:text-qb-body qb-desktop:first:ps-8 qb-desktop:last:pe-8',
   /** Columns the phone layout folds into the first and last cells. */
   wide: 'hidden qb-tablet:table-cell',
-  amount: 'text-end font-semibold whitespace-nowrap text-qb-ink',
+  amount: 'text-end font-semibold whitespace-nowrap text-qb-ink max-qb-tablet:text-qb-body-sm qb-tablet:text-(--color-qb-ink-amount)',
+  /** The item's title in the first cell. */
+  itemTitle: 'font-medium text-qb-ink qb-tablet:font-semibold qb-tablet:text-qb-ink-title',
+  /** The line under the item's title. */
+  itemMeta: 'mt-0.5 text-qb-micro font-normal text-qb-breadcrumb qb-tablet:text-(--color-qb-ink-meta) qb-desktop:text-qb-body',
 } as const;
 
 /**

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { AlertTriangle, ArrowUpRight, CreditCard, Landmark, Receipt, Wallet as WalletIcon } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Notice } from '@/components/design-system/Notice';
 import { StatTile } from '@/components/design-system/StatTile';
 import { AccountPageHeader, HeaderButtonLabel, headerButton } from '@/components/orders/AccountPageHeader';
@@ -34,7 +35,8 @@ export function WalletView() {
               <CreditCard aria-hidden="true" />
               <HeaderButtonLabel>{t('orders.wallet.payout_accounts')}</HeaderButtonLabel>
             </Link>
-            <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), headerButton)}>
+            {/* Under 1001 px Withdraw Funds moves into the Transaction History card (563:31406, 613:31879). */}
+            <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), headerButton, 'hidden qb-desktop:inline-flex')}>
               <ArrowUpRight aria-hidden="true" />
               <HeaderButtonLabel>{t('orders.wallet.withdraw')}</HeaderButtonLabel>
             </Link>
@@ -60,7 +62,16 @@ export function WalletView() {
               value={formatMoney(query.data.commission_debt, query.data.currency)}
               icon={<Receipt />}
               tone="info"
-              hint={t('orders.wallet.ceiling_hint', { ceiling: formatMoney(query.data.debt_ceiling, query.data.currency) })}
+              hint={
+                <>
+                  {t('orders.wallet.ceiling_hint', { ceiling: formatMoney(query.data.debt_ceiling, query.data.currency) })}
+                  {isPositiveAmount(query.data.commission_debt) ? (
+                    <Link href="/account/wallet/settlements" className={cn('mt-1 block w-fit rounded-qb-xs font-semibold text-qb-brand hover:underline', focusRing)}>
+                      {t('orders.wallet.pay_commission')}
+                    </Link>
+                  ) : null}
+                </>
+              }
             />
             <StatTile
               label={t('orders.wallet.withdrawable')}
@@ -70,23 +81,20 @@ export function WalletView() {
               className="col-span-2 qb-tablet:col-span-1"
             />
           </div>
-          <div className="flex flex-wrap gap-3">
-            {isPositiveAmount(query.data.commission_debt) ? (
-              <Link href="/account/wallet/settlements" className={cn(buttonVariants({ size: 'sm' }), 'h-11 rounded-qb-sm')}>
-                {t('orders.wallet.pay_commission')}
-              </Link>
-            ) : null}
-            <Link href="/account/orders?role=seller" className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }), 'h-11')}>
-              {t('orders.wallet.orders')}
-            </Link>
-            <Link href="/account/promotions" className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }), 'h-11')}>
-              {t('orders.wallet.promotions')}
-            </Link>
-          </div>
         </>
       )}
 
-      <StatementTable />
+      <StatementTable
+        headerAction={
+          <Link
+            href="/account/wallet/withdrawals"
+            className={cn(buttonVariants({ size: 'sm' }), 'h-8 gap-1.5 rounded-qb-md px-3 text-qb-micro font-normal qb-desktop:hidden [&_svg]:size-4')}
+          >
+            <WalletIcon aria-hidden="true" />
+            {t('orders.wallet.withdraw')}
+          </Link>
+        }
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
-import { Package, ShoppingBag, Wallet } from 'lucide-react';
+import { ArrowUpRight, CreditCard, Package, ShoppingBag } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
@@ -20,7 +20,7 @@ import { useOrdersQuery } from '@/lib/queries/orders';
 import { cn } from '@/lib/utils';
 
 import { AccountPageFrame } from './AccountPageFrame';
-import { HeaderButtonLabel, headerButton } from './AccountPageHeader';
+import { HeaderButtonLabel, pageHeaderButton } from './AccountPageHeader';
 import { panelClass } from './CheckoutPanel';
 import { orderNumber } from './order-number';
 import { PageState } from './PageState';
@@ -40,10 +40,16 @@ export function OrdersListView() {
       breadcrumb={[{ label: t('orders.list.title') }]}
       title={t('orders.list.title')}
       actions={
-        <Link href="/account/wallet" className={cn(buttonVariants({ variant: 'outline' }), headerButton)}>
-          <Wallet aria-hidden="true" />
-          <HeaderButtonLabel>{t('orders.list.wallet')}</HeaderButtonLabel>
-        </Link>
+        <>
+          <Link href="/account/wallet/bank-accounts" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton)}>
+            <CreditCard aria-hidden="true" />
+            <HeaderButtonLabel>{t('orders.wallet.payout_accounts')}</HeaderButtonLabel>
+          </Link>
+          <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton, 'max-qb-tablet:hidden')}>
+            <ArrowUpRight aria-hidden="true" />
+            <HeaderButtonLabel>{t('orders.wallet.withdraw')}</HeaderButtonLabel>
+          </Link>
+        </>
       }
     >
       <Tabs value={role} onValueChange={(value) => void setRole(value as DealRole)}>
@@ -136,11 +142,11 @@ function OrderRow({ order }: { order: Order }) {
             <Link
               href={`/account/orders/${encodeURIComponent(order.id)}`}
               aria-label={`${isolate(order.ad.title)}, ${t('orders.list.open', { number })}`}
-              className={cn('line-clamp-2 rounded-qb-xs font-semibold text-qb-ink-title hover:underline', focusRing)}
+              className={cn('line-clamp-2 rounded-qb-xs hover:underline', tc.itemTitle, focusRing)}
             >
               <bdi>{order.ad.title}</bdi>
             </Link>
-            <p className="mt-0.5 text-qb-micro font-normal text-qb-ink-subtle qb-desktop:text-qb-body">
+            <p className={tc.itemMeta}>
               {t('orders.common.order_number', { number })}
               {order.quantity > 1 ? ` · × ${order.quantity}` : null}
               <span className="qb-tablet:hidden"> · {date}</span>
