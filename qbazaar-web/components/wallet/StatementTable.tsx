@@ -7,7 +7,7 @@ import { Receipt } from 'lucide-react';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
-import { Select } from '@/components/design-system/Input';
+import { FieldSelect } from '@/components/design-system/FieldSelect';
 import { orderNumber } from '@/components/orders/order-number';
 import { PageState } from '@/components/orders/PageState';
 import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
@@ -17,6 +17,8 @@ import { formatDate, isoDate } from '@/lib/orders/dates';
 import { formatMoney } from '@/lib/orders/money';
 import { useWalletEntriesQuery } from '@/lib/queries/wallet';
 import { cn } from '@/lib/utils';
+
+const ACCOUNTS: WalletAccount[] = ['wallet', 'commission_receivable'];
 
 /** "+QAR 10.00" or "−QAR 10.00", kept left to right so the sign stays with the number in Arabic. */
 export function signedAmount(entry: Pick<WalletEntry, 'amount' | 'currency' | 'direction'>): string {
@@ -34,18 +36,22 @@ export function StatementTable() {
       title={t('orders.wallet.history_title')}
       titleId="wallet-history"
       action={
-        <label className="flex items-center gap-3 text-qb-caption text-qb-ink-body">
-          <span className="shrink-0">{t('orders.wallet.filter_label')}</span>
-          <Select
+        <div className="flex items-center gap-3 text-qb-caption text-qb-ink-body">
+          <span id="wallet-history-filter" className="shrink-0">
+            {t('orders.wallet.filter_label')}
+          </span>
+          <FieldSelect
+            label={t('orders.wallet.filter_label')}
+            aria-labelledby="wallet-history-filter"
             value={account}
-            onChange={(event) => setAccount(event.target.value as WalletAccount | '')}
-            className="h-10 min-w-44 text-qb-caption"
-          >
-            <option value="">{t('orders.wallet.filter.all')}</option>
-            <option value="wallet">{t('orders.wallet.filter.wallet')}</option>
-            <option value="commission_receivable">{t('orders.wallet.filter.commission_receivable')}</option>
-          </Select>
-        </label>
+            options={[
+              { value: '', label: t('orders.wallet.filter.all') },
+              ...ACCOUNTS.map((value) => ({ value, label: t(`orders.wallet.filter.${value}`) })),
+            ]}
+            onChange={(next) => setAccount(ACCOUNTS.find((value) => value === next) ?? '')}
+            className="h-10 w-auto min-w-44 text-qb-caption"
+          />
+        </div>
       }
     >
       {query.isPending ? (

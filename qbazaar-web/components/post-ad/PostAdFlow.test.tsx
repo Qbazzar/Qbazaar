@@ -136,7 +136,11 @@ async function fillRequiredFields() {
     target: { value: 'One owner, full service history, no accidents.' },
   });
   fireEvent.change(screen.getByRole('textbox', { name: t('post_ad.price.price') }), { target: { value: '١٨٥٠٠٠' } });
-  fireEvent.change(screen.getByLabelText(t('post_ad.location.area')), { target: { value: 'west-bay' } });
+  fireEvent.click(screen.getByRole('combobox', { name: t('post_ad.location.area') }));
+  const doha = screen.getByRole('treeitem', { name: 'الدوحة' }).firstElementChild!;
+  fireEvent.pointerDown(doha, { pointerType: 'touch' });
+  fireEvent.click(doha);
+  fireEvent.click(screen.getByRole('treeitem', { name: 'الخليج الغربي' }));
 }
 
 beforeEach(() => {
@@ -151,7 +155,7 @@ beforeEach(() => {
 describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('gives every element of the form its own id, so labels and focus find the right control', async () => {
     renderFlow();
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
     expect(screen.getByRole('textbox', { name: t('post_ad.price.price') })).toHaveAttribute('id', 'post-ad-price');
 
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('post_ad.basic.category_select')) }));
@@ -179,7 +183,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     vi.mocked(publishAd).mockResolvedValue(ad({ status: 'pending' }));
     renderFlow();
     await screen.findByRole('heading', { name: t('post_ad.basic.title') });
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     await fillRequiredFields();
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.save_draft') }));
@@ -212,7 +216,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('opens the preview from a saved draft and goes back to editing', async () => {
     vi.mocked(createAd).mockResolvedValue(ad());
     renderFlow();
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
     await fillRequiredFields();
 
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.preview') }));
@@ -226,7 +230,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('previews a live ad without saving it, since saving can send it back to review', async () => {
     const live = ad({ status: 'active', images: [MEDIA] });
     renderFlow(live);
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.ad_title')), { target: { value: 'Toyota Land Cruiser 2021 GXR' } });
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.preview') }));
@@ -241,7 +245,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     const live = ad({ status: 'active', images: [MEDIA], custom_fields: null as unknown as Ad['custom_fields'] });
     vi.mocked(updateAd).mockResolvedValue({ ...live, price: 179000 });
     renderFlow(live);
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     expect(screen.queryByRole('button', { name: t('post_ad.actions.save_draft') })).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole('textbox', { name: t('post_ad.price.price') }), { target: { value: '179000' } });
@@ -256,7 +260,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     const live = ad({ status: 'active', images: [MEDIA] });
     vi.mocked(updateAd).mockResolvedValue({ ...live, title: 'Toyota Land Cruiser 2021 GXR', status: 'pending' });
     renderFlow(live);
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.ad_title')), { target: { value: 'Toyota Land Cruiser 2021 GXR' } });
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.save_changes') }));
@@ -269,7 +273,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('holds the new photos of a live ad until Save Changes', async () => {
     const live = ad({ status: 'active', images: [MEDIA] });
     renderFlow(live);
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     const file = new File([new Uint8Array(2000)], 'car.jpg', { type: 'image/jpeg' });
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.images')), { target: { files: [file] } });
@@ -288,7 +292,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('deletes the draft from the publish step', async () => {
     vi.mocked(deleteAd).mockResolvedValue(undefined);
     renderFlow(ad({ images: [MEDIA] }));
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.add_ads') }));
     await screen.findByRole('heading', { name: t('post_ad.your_ad.title') });

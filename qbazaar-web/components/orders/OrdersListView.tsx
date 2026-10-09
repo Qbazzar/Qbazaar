@@ -8,7 +8,7 @@ import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
-import { Select } from '@/components/design-system/Input';
+import { FieldSelect } from '@/components/design-system/FieldSelect';
 import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
 import type { DealRole, Order, OrderStatus } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
@@ -52,21 +52,22 @@ export function OrdersListView() {
             <Tab value="buyer">{t('orders.list.purchases')}</Tab>
             <Tab value="seller">{t('orders.list.sales')}</Tab>
           </TabList>
-          <label className="flex items-center gap-3 text-qb-caption text-qb-ink-body">
-            <span className="shrink-0">{t('orders.list.status_filter')}</span>
-            <Select
+          <div className="flex items-center gap-3 text-qb-caption text-qb-ink-body">
+            <span id="orders-status-filter" className="shrink-0">
+              {t('orders.list.status_filter')}
+            </span>
+            <FieldSelect
+              label={t('orders.list.status_filter')}
+              aria-labelledby="orders-status-filter"
               value={status ?? ''}
-              onChange={(event) => void setStatus((event.target.value || null) as OrderStatus | null)}
-              className="h-11 min-w-48 text-qb-caption"
-            >
-              <option value="">{t('orders.list.all_statuses')}</option>
-              {STATUSES.map((value) => (
-                <option key={value} value={value}>
-                  {t(`orders.status.order.${value}`)}
-                </option>
-              ))}
-            </Select>
-          </label>
+              options={[
+                { value: '', label: t('orders.list.all_statuses') },
+                ...STATUSES.map((value) => ({ value, label: t(`orders.status.order.${value}`) })),
+              ]}
+              onChange={(next) => void setStatus(STATUSES.find((value) => value === next) ?? null)}
+              className="h-11 w-auto min-w-48 text-qb-caption"
+            />
+          </div>
         </div>
         {ROLES.map((value) => (
           <TabPanel key={value} value={value}>

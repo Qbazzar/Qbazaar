@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils';
 
 /** Text boxes of add-ads.html: 15 px text and 14 px side padding on the design-system controls. */
 export const controlSize = 'h-[53px] px-3.5 text-qb-body-sm';
-/** The same for a select, whose end padding stays clear of its chevron. */
-export const selectSize = 'h-[53px] ps-3.5 text-qb-body-sm';
+/** The same for a select, whose end padding stays clear of its chevron; a value reads in #4B4B4B. */
+export const selectSize = 'h-[53px] ps-3.5 text-qb-body-sm text-qb-ink-body';
 
 /** DOM id of a form field, also used to focus the first invalid one. */
 export function fieldId(name: AdFormField): string {

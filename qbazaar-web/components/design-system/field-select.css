@@ -1,0 +1,13 @@
+/* The dropdown card of the reference selects (D:/Doc/q-bazaar/assets/selects.js,
+   `.qb-ddpanel`). Exact design values; design-tokens.css has no tokens for them
+   yet. They carry the @theme names, so they can move into that file unchanged;
+   until then the classes read them as bg-(--color-qb-…). */
+:root {
+  --color-qb-menu-heading: #575555;
+  --color-qb-menu-item: #787878;
+  --color-qb-menu-item-active: #3c3c3c;
+  --color-qb-menu-active: #f0f0f0;
+  --color-qb-menu-divider: #f3f3f3;
+  --color-qb-menu-caret: #a0a0a0;
+  --shadow-qb-dropdown: 0 18px 44px 0 rgb(0 0 0 / 0.14);
+}

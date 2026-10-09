@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Info } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
-import { Input, Select, Textarea } from '@/components/design-system/Input';
+import { FieldSelect, type FieldSelectOption } from '@/components/design-system/FieldSelect';
+import { Input, Textarea } from '@/components/design-system/Input';
 import type { CategoryField, CategoryNode, Location } from '@/lib/api/types';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -55,6 +56,11 @@ function useFormField() {
 }
 
 const fieldGap = 'mb-[22px]';
+
+/** An optional select keeps its "Choose" row, so a value can be taken back. */
+function withEmptyChoice(options: FieldSelectOption[]): FieldSelectOption[] {
+  return [{ value: '', label: t('post_ad.details.choose') }, ...options];
+}
 
 export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
   const { values, errors, update } = useFormField();
@@ -178,22 +184,15 @@ export function DetailsSection({ fields }: { fields: readonly CategoryField[] })
           <FieldLabel htmlFor="post-ad-condition" optional={t('post_ad.optional')}>
             {t('post_ad.details.condition')}
           </FieldLabel>
-          <Select
+          <FieldSelect
             id="post-ad-condition"
+            label={t('post_ad.details.condition')}
             value={values.condition ?? ''}
-            onChange={(event) => {
-              const condition = CONDITIONS.find((item) => item === event.target.value) ?? null;
-              update({ condition });
-            }}
-            className={cn(selectSize, values.condition ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
-          >
-            <option value="">{t('post_ad.details.choose')}</option>
-            {CONDITIONS.map((condition) => (
-              <option key={condition} value={condition}>
-                {t(`ads.condition.${condition}`)}
-              </option>
-            ))}
-          </Select>
+            placeholder={t('post_ad.details.choose')}
+            options={withEmptyChoice(CONDITIONS.map((condition) => ({ value: condition, label: t(`ads.condition.${condition}`) })))}
+            onChange={(next) => update({ condition: CONDITIONS.find((item) => item === next) ?? null })}
+            className={selectSize}
+          />
         </div>
 
         {fields.map((field) => (
@@ -252,21 +251,17 @@ function CustomField({
         {label}
       </FieldLabel>
       {field.type === 'select' && field.options ? (
-        <Select
+        <FieldSelect
           id={id}
+          label={label}
           value={text}
+          placeholder={t('post_ad.details.choose')}
+          options={withEmptyChoice(selectOptions(field))}
           aria-required={field.required || undefined}
-          onChange={(event) => onChange(event.target.value)}
-          className={cn(selectSize, text ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
+          onChange={onChange}
+          className={selectSize}
           {...describedBy(name, error)}
-        >
-          <option value="">{t('post_ad.details.choose')}</option>
-          {selectOptions(field).map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+        />
       ) : (
         <Input
           id={id}
@@ -342,29 +337,37 @@ export function PriceSection() {
         </div>
         <div>
           <FieldLabel htmlFor="post-ad-price-type">{t('post_ad.price.price_type')}</FieldLabel>
-          <Select
+          <FieldSelect
             id="post-ad-price-type"
+            label={t('post_ad.price.price_type')}
             value={values.priceType}
-            onChange={(event) => {
-              const priceType = PRICE_TYPES.find((type) => type === event.target.value);
+            options={PRICE_TYPES.map((type) => ({ value: type, label: t(`ads.price.${type}`) }))}
+            onChange={(next) => {
+              const priceType = PRICE_TYPES.find((type) => type === next);
               if (priceType) update({ priceType }, 'price');
             }}
-            className={cn(selectSize, 'text-qb-ink-body')}
-          >
-            {PRICE_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {t(`ads.price.${type}`)}
-              </option>
-            ))}
-          </Select>
+            className={selectSize}
+          />
         </div>
       </div>
     </FormSection>
   );
 }
 
+/** A city opens its districts beside it, as the design's category list opens its sub-categories. */
+function cityOptions(cities: readonly Location[]): FieldSelectOption[] {
+  return cities.map((city) => ({
+    value: city.id,
+    label: localized(city.name),
+    children: city.children.map((district) => ({ value: district.id, label: localized(district.name) })),
+  }));
+}
+
+const wholeCityLabel = (city: FieldSelectOption) => t('post_ad.location.whole_city', { city: city.label });
+
 export function LocationSection({ cities }: { cities: readonly Location[] }) {
   const { values, errors, update } = useFormField();
+  const areaOptions = useMemo(() => cityOptions(cities), [cities]);
   const noteId = 'post-ad-address-note';
 
   return (
@@ -388,26 +391,18 @@ export function LocationSection({ cities }: { cities: readonly Location[] }) {
         </div>
         <div>
           <FieldLabel htmlFor={fieldId('locationId')}>{t('post_ad.location.area')}</FieldLabel>
-          <Select
+          <FieldSelect
             id={fieldId('locationId')}
+            label={t('post_ad.location.area')}
             value={values.locationId ?? ''}
+            placeholder={t('post_ad.location.area_placeholder')}
+            options={areaOptions}
+            parentLabel={wholeCityLabel}
             aria-required
-            onChange={(event) => update({ locationId: event.target.value || null }, 'locationId')}
-            className={cn(selectSize, values.locationId ? 'text-qb-ink-body' : 'text-qb-ink-subtle')}
+            onChange={(locationId) => update({ locationId: locationId || null }, 'locationId')}
+            className={selectSize}
             {...describedBy('locationId', errors.locationId)}
-          >
-            <option value="">{t('post_ad.location.area_placeholder')}</option>
-            {cities.map((city) => (
-              <optgroup key={city.id} label={localized(city.name)}>
-                <option value={city.id}>{t('post_ad.location.whole_city', { city: localized(city.name) })}</option>
-                {city.children.map((district) => (
-                  <option key={district.id} value={district.id}>
-                    {localized(district.name)}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </Select>
+          />
           <FieldError name="locationId" message={errors.locationId} />
         </div>
       </div>
