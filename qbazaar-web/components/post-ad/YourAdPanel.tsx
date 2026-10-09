@@ -16,6 +16,7 @@ import { t } from '@/lib/i18n/messages';
 import { formatDate } from '@/lib/post-ad/format';
 import { cn } from '@/lib/utils';
 
+import { FeaturedAdTable, usePromotionChoices } from './PromotionChoices';
 import type { PostAdAction } from './usePostAdActions';
 
 export interface YourAdPanelProps {
@@ -26,45 +27,54 @@ export interface YourAdPanelProps {
 }
 
 /**
- * "Your Ad" at the top of publish.html (355:7297, 532:23641, 638:36533): the
- * ad's visits, wishlist count and publish date, with Edit and Delete. The
+ * The card at the top of publish.html (355:7297, 532:23641, 638:36533): "Your
+ * Ad" with the ad's visits, wishlist count and publish date, Edit and Delete,
+ * beside the "Featured Ad" promotion table (under it below 1001 px). The
  * design's Report and Reserved are left out: a seller doesn't report their
  * own ad, and only a live ad can be reserved.
  */
 export function YourAdPanel({ ad, running, onEdit, onDelete }: YourAdPanelProps) {
   const locale = getLocale();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { offers, chosen, toggle } = usePromotionChoices();
   const deleting = running === 'delete';
+  const withPromotions = offers.length > 0;
 
   return (
-    <section aria-labelledby="post-ad-your-ad" className={cn(cardVariants({ padding: 'none' }), 'p-[26px] text-qb-ink qb-desktop:w-[390px]')}>
-      <h2 id="post-ad-your-ad" className="flex items-center gap-2.5 text-qb-body-lg font-semibold tracking-normal">
-        <span aria-hidden="true" className="h-5 w-1 rounded-[2px] bg-qb-brand" />
-        {t('post_ad.your_ad.title')}
-      </h2>
-      <dl className="mt-[22px] flex flex-col gap-4 border-b border-qb-line pb-[18px] text-qb-body-sm">
-        <SummaryRow label={t('post_ad.your_ad.visits')}>
-          <Icon icon={Eye} size="sm" />
-          {formatNumber(ad.views_count, locale)}
-        </SummaryRow>
-        <SummaryRow label={t('post_ad.your_ad.wishlist')}>
-          <Icon icon={Heart} size="sm" />
-          {formatNumber(ad.favorites_count, locale)}
-        </SummaryRow>
-        <SummaryRow label={t('post_ad.your_ad.published')}>{formatDate(ad.published_at ?? new Date().toISOString(), locale)}</SummaryRow>
-      </dl>
-      <ul className="mt-[18px] flex flex-col gap-4 text-qb-body-sm text-qb-ink-secondary">
-        <li>
-          <PanelAction icon={PenLine} disabled={running !== null} onClick={onEdit}>
-            {t('post_ad.actions.edit')}
-          </PanelAction>
-        </li>
-        <li>
-          <PanelAction icon={Trash2} disabled={running !== null} onClick={() => setConfirmDelete(true)}>
-            {t('common.delete')}
-          </PanelAction>
-        </li>
-      </ul>
+    <section
+      aria-labelledby="post-ad-your-ad"
+      className={cn(cardVariants({ padding: 'none' }), 'flex flex-col text-qb-ink qb-desktop:flex-row', !withPromotions && 'qb-desktop:w-[390px]')}
+    >
+      <div className={cn('p-[26px]', withPromotions && 'qb-desktop:w-[390px] qb-desktop:shrink-0 qb-desktop:border-e qb-desktop:border-qb-line')}>
+        <h2 id="post-ad-your-ad" className="flex items-center gap-2.5 text-qb-body-lg font-semibold tracking-normal">
+          <span aria-hidden="true" className="h-5 w-1 rounded-[2px] bg-qb-brand" />
+          {t('post_ad.your_ad.title')}
+        </h2>
+        <dl className="mt-[22px] flex flex-col gap-4 border-b border-qb-line pb-[18px] text-qb-body-sm">
+          <SummaryRow label={t('post_ad.your_ad.visits')}>
+            <Icon icon={Eye} size="sm" />
+            {formatNumber(ad.views_count, locale)}
+          </SummaryRow>
+          <SummaryRow label={t('post_ad.your_ad.wishlist')}>
+            <Icon icon={Heart} size="sm" />
+            {formatNumber(ad.favorites_count, locale)}
+          </SummaryRow>
+          <SummaryRow label={t('post_ad.your_ad.published')}>{formatDate(ad.published_at ?? new Date().toISOString(), locale)}</SummaryRow>
+        </dl>
+        <ul className="mt-[18px] flex flex-col gap-4 text-qb-body-sm text-qb-ink-secondary">
+          <li>
+            <PanelAction icon={PenLine} disabled={running !== null} onClick={onEdit}>
+              {t('post_ad.actions.edit')}
+            </PanelAction>
+          </li>
+          <li>
+            <PanelAction icon={Trash2} disabled={running !== null} onClick={() => setConfirmDelete(true)}>
+              {t('common.delete')}
+            </PanelAction>
+          </li>
+        </ul>
+      </div>
+      {withPromotions ? <FeaturedAdTable offers={offers} chosen={chosen} onToggle={toggle} /> : null}
 
       <Modal
         open={confirmDelete}

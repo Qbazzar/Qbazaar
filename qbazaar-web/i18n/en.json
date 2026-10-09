@@ -899,6 +899,13 @@
       "details": "Include important details such as brand, size, color, and specifications.",
       "light": "Use natural lighting when taking photos."
     },
+    "promote": {
+      "title": "Increase Sales Opportunities: Highlight your ad",
+      "featured": "Featured Ad",
+      "duration": "Duration",
+      "price": "Price",
+      "pay_later": "Promotions are paid once your ad is live: you can buy the ones you tick from Promotions."
+    },
     "actions": {
       "add_ads": "Add Ads",
       "save_draft": "Save Draft",
@@ -952,7 +959,12 @@
       "title": "Your ad is under review",
       "body": "We check every ad before it goes live and will notify you as soon as yours is approved.",
       "live_title": "Your ad is live",
-      "live_body": "Buyers can find it now."
+      "live_body": "Buyers can find it now.",
+      "promotions_title": "Promotions you chose",
+      "promotions_live": "Your ad is live, so you can promote it now.",
+      "promotions_pending": "You can buy them from Promotions as soon as your ad is approved.",
+      "promote": "Promote",
+      "go_promotions": "Go to Promotions"
     },
     "toast": {
       "draft_saved": "Your ad was saved as a draft",

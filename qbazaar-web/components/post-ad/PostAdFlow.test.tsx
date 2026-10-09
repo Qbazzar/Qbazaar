@@ -39,6 +39,10 @@ vi.mock('@/lib/api/ad-images', async (importOriginal) => ({
   reorderAdImages: vi.fn(),
   deleteMedia: vi.fn(),
 }));
+vi.mock('@/lib/api/promotions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/api/promotions')>()),
+  listPromotionOffers: vi.fn(),
+}));
 vi.mock('@/lib/images/prepare-photo', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/images/prepare-photo')>()),
   preparePhoto: vi.fn(async () => ({ blob: new Blob(['jpeg'], { type: 'image/jpeg' }), width: 2048, height: 1536 })),
@@ -50,6 +54,7 @@ import { uploadAdImages } from '@/lib/api/ad-images';
 import { createAd, deleteAd, publishAd, updateAd } from '@/lib/api/ads';
 import { getCategoryTree } from '@/lib/api/categories';
 import { getQatarLocations } from '@/lib/api/locations';
+import { listPromotionOffers } from '@/lib/api/promotions';
 import type { AccountSummary, Ad, CategoryNode, Location, Media, User } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
 import { usePostAdStore } from '@/store/post-ad';
@@ -150,6 +155,10 @@ beforeEach(() => {
   vi.mocked(getQatarLocations).mockResolvedValue(CITIES);
   vi.mocked(getAccountSummary).mockResolvedValue({ ads_by_status: { active: 3 } } as AccountSummary);
   vi.mocked(uploadAdImages).mockResolvedValue([MEDIA]);
+  vi.mocked(listPromotionOffers).mockResolvedValue([
+    { type: 'highlight', price: '15.00', currency: 'QAR', duration_days: 7 },
+    { type: 'push_up', price: '10.00', currency: 'QAR', duration_days: 3 },
+  ]);
 });
 
 describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
@@ -197,8 +206,13 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.images')), { target: { files: [file] } });
     await waitFor(() => expect(uploadAdImages).toHaveBeenCalledWith('ad-1', [expect.any(Blob)], expect.objectContaining({ onProgress: expect.any(Function) })));
 
+    fireEvent.click(await screen.findByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.push_up')}`) }));
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.add_ads') }));
     const confirm = await screen.findByRole('button', { name: t('post_ad.actions.confirm_publish') });
+    // The promotion ticked on the form stays ticked in the publish step's table.
+    const featured = screen.getByRole('group', { name: t('post_ad.promote.featured') });
+    expect(within(featured).getByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.push_up')}`) })).toBeChecked();
+    expect(within(featured).getByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.highlight')}`) })).not.toBeChecked();
     // Nothing changed since the draft was saved, so there was nothing to send.
     expect(updateAd).not.toHaveBeenCalled();
 
@@ -211,6 +225,10 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
 
     expect(await screen.findByRole('heading', { name: t('post_ad.review.title') })).toBeInTheDocument();
     expect(publishAd).toHaveBeenCalledWith('ad-1', { acceptedTerms: true, idempotencyKey: expect.any(String) });
+    // An ad in review can't be promoted yet, so the chosen promotion points to Promotions.
+    expect(screen.getByRole('heading', { name: t('post_ad.review.promotions_title') })).toBeInTheDocument();
+    expect(screen.getByText(t('post_ad.review.promotions_pending'))).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: t('post_ad.review.go_promotions') })).toHaveAttribute('href', '/account/promotions');
   });
 
   it('opens the preview from a saved draft and goes back to editing', async () => {

@@ -40,8 +40,11 @@ const TYPE_ICON: Record<PromotionType, typeof Crown> = {
 
 const TRANSFER_REFERENCE = /^[A-Za-z0-9][A-Za-z0-9 /._-]*$/;
 
-/** `/account/ads/{id}/promote`: buy a promotion for one of the viewer's live ads. */
-export function PromoteAdView({ adId }: { adId: string }) {
+/**
+ * `/account/ads/{id}/promote`: buy a promotion for one of the viewer's live
+ * ads. `initialType` preselects the promotion ticked while posting the ad.
+ */
+export function PromoteAdView({ adId, initialType }: { adId: string; initialType?: string }) {
   const { user } = useAuth();
   const ad = useAdQuery(adId);
   const offers = usePromotionOffersQuery();
@@ -78,7 +81,7 @@ export function PromoteAdView({ adId }: { adId: string }) {
           {t('orders.promotion.not_live')}
         </Notice>
       ) : (
-        <PromoteForm ad={ad.data} offers={offers.data} wallet={wallet.data} />
+        <PromoteForm ad={ad.data} offers={offers.data} wallet={wallet.data} initialType={initialType} />
       )}
     </AccountPageFrame>
   );
@@ -89,12 +92,14 @@ interface FormErrors {
   form?: string;
 }
 
-function PromoteForm({ ad, offers, wallet }: { ad: Ad; offers: PromotionOffer[]; wallet: Wallet }) {
+function PromoteForm({ ad, offers, wallet, initialType }: { ad: Ad; offers: PromotionOffer[]; wallet: Wallet; initialType?: string }) {
   const router = useRouter();
   const purchase = usePurchasePromotionMutation(ad.id);
   const { key, renew } = useIdempotencyKey();
   const formRef = useRef<HTMLFormElement>(null);
-  const [type, setType] = useState<PromotionType>(offers[0]?.type ?? 'highlight');
+  const [type, setType] = useState<PromotionType>(
+    offers.find((offer) => offer.type === initialType)?.type ?? offers[0]?.type ?? 'highlight',
+  );
   const [method, setMethod] = useState<PromotionPaymentMethod>('wallet');
   const [reference, setReference] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
