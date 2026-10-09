@@ -8,6 +8,7 @@ import { useSignOut } from '@/components/account/useSignOut';
 import { Avatar, initialsOf } from '@/components/design-system/Avatar';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { menuEnter } from '@/components/design-system/menu-enter';
 import { useHoverOpen } from '@/components/design-system/use-hover-open';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -15,9 +16,9 @@ import { cn } from '@/lib/utils';
 /** The reference closes the menu 160 ms after the mouse leaves, so the pointer can cross the gap to it. */
 const CLOSE_DELAY_MS = 160;
 
-/** The reference's rows dim slightly under the pointer (`.qb-btn:hover`). */
+/** The reference's rows (`.qb-btn`): 1.15 line height, and they dim slightly under the pointer. */
 const row = cn(
-  'flex w-full cursor-pointer items-center gap-3 rounded-qb-md bg-qb-surface px-3 py-[11px] text-start text-qb-body-sm transition-[filter] duration-150 hover:brightness-[0.96] motion-reduce:transition-none',
+  'flex w-full cursor-pointer items-center gap-3 rounded-qb-md bg-qb-surface px-3 py-[11px] text-start text-qb-body-sm leading-[1.15] transition-[filter] duration-150 hover:brightness-[0.96] motion-reduce:transition-none',
   focusRing,
   'focus-visible:-outline-offset-2',
 );
@@ -94,13 +95,16 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
         <nav
           id={panelId}
           aria-label={t('layout.menu.account_menu', 'قائمة الحساب')}
-          className="absolute end-0 top-full z-50 mt-3 w-[270px] rounded-qb-xl border border-qb-line bg-qb-surface p-2 font-qb shadow-qb-menu before:absolute before:inset-x-0 before:-top-3 before:h-3"
+          className={cn(
+            'absolute end-0 top-full z-50 mt-3 w-[270px] rounded-qb-xl border border-qb-line bg-qb-surface p-2 font-qb shadow-qb-menu before:absolute before:inset-x-0 before:-top-3 before:h-3',
+            menuEnter,
+          )}
         >
           <Link href="/account" onClick={close} className={cn(row, 'mb-1.5 rounded-none border-b border-qb-line p-3')}>
             <Avatar name={name} decorative className="size-[42px] text-qb-body-sm" />
             <span className="min-w-0">
-              <span className="block truncate text-qb-body-sm font-semibold text-qb-ink">{name}</span>
-              {email ? <span className="block truncate text-qb-label text-qb-ink-subtle">{email}</span> : null}
+              <span className="block truncate text-qb-body-sm leading-[1.15] font-semibold text-qb-ink">{name}</span>
+              {email ? <span className="block truncate text-qb-label leading-[1.15] text-qb-ink-subtle">{email}</span> : null}
             </span>
           </Link>
           <ul>

@@ -112,6 +112,7 @@
   --shadow-qb-brand: 0 4px 40px 0 rgb(243 128 87 / 0.2);
   --shadow-qb-header: 0 2px 12px 0 rgb(161 161 161 / 0.18);
   --shadow-qb-popover: 0 16px 40px 0 rgb(0 0 0 / 0.14);
+  --shadow-qb-langpop: 0 16px 40px 0 rgb(0 0 0 / 0.18); /* phone and tablet language popup (mobilemenu.js .qb-langpop) */
   /* Dropdowns: the hero selects; the account menu; the desktop language panel (728:45875) */
   --shadow-qb-dropdown: 0 18px 44px 0 rgb(0 0 0 / 0.14);
   --shadow-qb-menu: 0 16px 44px 0 rgb(0 0 0 / 0.14);

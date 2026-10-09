@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
+import { menuEnter } from '@/components/design-system/menu-enter';
 import { useHoverOpen } from '@/components/design-system/use-hover-open';
 import { getLocale, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -26,8 +27,10 @@ const LANGUAGES: { locale: Locale; name: string; country: string }[] = [
 const VARIANTS = {
   desktop: {
     root: 'relative',
-    panel:
+    panel: cn(
       '-end-[51px] mt-7 w-[303px] rounded-qb-2xl pb-[7px] shadow-qb-panel before:absolute before:inset-x-0 before:-top-7 before:h-7',
+      menuEnter,
+    ),
     title: 'px-6 pt-6 pb-4 text-qb-h5 leading-[30px]',
     list: 'pt-2',
     row: 'gap-2 px-6 py-2 text-qb-body font-medium text-qb-ink-secondary',
@@ -35,7 +38,7 @@ const VARIANTS = {
   },
   phone: {
     root: '',
-    panel: 'end-0 mt-1.5 w-[262px] rounded-qb-xl pt-1.5 pb-2 shadow-qb-popover',
+    panel: 'end-0 mt-1.5 w-[262px] rounded-qb-xl pt-1.5 pb-2 shadow-qb-langpop',
     title: 'px-[18px] pt-3 pb-2.5 text-qb-body',
     list: '',
     row: 'gap-2.5 px-[18px] py-[11px] text-qb-body-sm',
