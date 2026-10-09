@@ -1614,7 +1614,6 @@
       "empty_sales": "No sales yet",
       "empty_sales_body": "Orders on your ads show up here once you accept a request or an offer.",
       "my_ads": "My ads",
-      "wallet": "Wallet",
       "open": "Open order {number}"
     },
     "detail": {
@@ -1706,8 +1705,6 @@
       "pay_commission": "Pay commission",
       "withdraw": "Withdraw funds",
       "payout_accounts": "Payout accounts",
-      "promotions": "Promotions",
-      "orders": "My orders",
       "actions": "Wallet actions",
       "blocked_title": "You can't accept new orders",
       "blocked_body": "You owe {debt}, which reached the limit of {ceiling}. Pay your commission to take orders again.",
