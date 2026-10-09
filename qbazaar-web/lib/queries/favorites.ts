@@ -15,7 +15,9 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 import {
+  listFavoriteIds,
   listFavorites,
+  removeFavorite,
   toggleFavorite,
   type ListFavoritesParams,
 } from '@/lib/api/favorites';
@@ -119,6 +121,32 @@ export function useToggleFavoriteMutation(): UseMutationResult<
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: favoritesKeys.lists() });
+    },
+  });
+}
+
+/** Removals sent at once while clearing; keeps the burst well under the API's rate limit. */
+const CLEAR_BATCH_SIZE = 4;
+
+/**
+ * "Clear all" of the wishlist. The API has no bulk delete, so every saved
+ * ad is removed on its own, a few at a time. The hearts and the list are
+ * refreshed afterwards whether or not every removal went through.
+ */
+export function useClearFavoritesMutation(): UseMutationResult<void, ApiClientError, void> {
+  const qc = useQueryClient();
+  const clearLocal = useFavoritesStore((s) => s.clear);
+
+  return useMutation<void, ApiClientError, void>({
+    mutationFn: async () => {
+      const ids = await listFavoriteIds();
+      for (let start = 0; start < ids.length; start += CLEAR_BATCH_SIZE) {
+        await Promise.all(ids.slice(start, start + CLEAR_BATCH_SIZE).map(removeFavorite));
+      }
+    },
+    onSuccess: () => clearLocal(),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: favoritesKeys.all });
     },
   });
 }

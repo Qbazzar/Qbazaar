@@ -93,3 +93,22 @@ export async function listFavorites(
     throw toApiClientError(err);
   }
 }
+
+/** Every favourited ad id of the caller, newest first (the API caps the list). */
+export async function listFavoriteIds(): Promise<string[]> {
+  try {
+    const { data } = await api.get<{ ids: string[] }>(`${ACCOUNT_BASE}/ids`);
+    return data.ids;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Idempotent remove: an ad that is not saved stays not saved. */
+export async function removeFavorite(adId: string): Promise<void> {
+  try {
+    await api.delete(`${ADS_BASE}/${encodeURIComponent(adId)}/favorite`);
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
