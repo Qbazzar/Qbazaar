@@ -23,15 +23,15 @@
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
 | M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
-| M1 Closing the backend gaps | 14 | 73 | 70 | 3 | Performance batch merged (#199–#203); left: R2 test, new-device SMS, Google/Apple (waiting for credentials) |
+| M1 Closing the backend gaps | 14 | 73 | 71 | 2 | Performance batch merged (#199–#203); R2 storage live; left: new-device SMS, Google/Apple (waiting for credentials) |
 | M1b Orders and payments | 14 | 10 | 10 | 0 | Backend done: ledger, orders, checkout, settlements, withdrawals, disputes, promotions, notifications (#207–#212); demo data in progress |
 | M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
-| M3 Web on the new design | 16 | 11 | 2 | 9 | Phone verification (#157) and Turnstile (#206) done; FE-16.8 (orders on the web) can start now that M1b is in |
+| M3 Web on the new design | 16 | 11 | 10 | 1 | Every page is on the new design, orders included (#218, #221–#227); left: Lighthouse and axe reports (FE-16.7) |
 | M4 Admin additions | 17 | 15 | 0 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, AD-17.7 still needs orders and the revenue report |
-| M5 Deployment on the new server | 18 | 18 | 4 | 14 | Live on qbazaar.qa through Cloudflare (Mumbai box); push-to-deploy works (#215); left: secrets, backups, alerts, the rest of Cloudflare, tuning |
+| M5 Deployment on the new server | 18 | 18 | 4 | 14 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; left: secrets, backups, alerts, the rest of Cloudflare, tuning |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **179** | **104** | **75** | |
+| **Total** | | **179** | **113** | **66** | |
 
 ---
 
@@ -157,7 +157,7 @@
 
 ### Done — batch 1 (merged 2026-10-01)
 
-> Status: ✅ done. #160 → BE-13.4, BE-14.17, BE-14.2, BE-13.15 · #161 → BE-14.43 · #162 → BE-14.20, BE-13.7, BE-13.6, BE-13.8, BE-14.23, BE-13.20 · #163 → SEC-13.9, SEC-13.10, SEC-13.11, SEC-13.12 · #164 → BE-14.3, BE-14.4, BE-14.5, BE-13.10, BE-13.11, BE-14.7. BE-14.42 (R2) is merged in #161 but stays open until it is tested against a real bucket.
+> Status: ✅ done. #160 → BE-13.4, BE-14.17, BE-14.2, BE-13.15 · #161 → BE-14.43 · #162 → BE-14.20, BE-13.7, BE-13.6, BE-13.8, BE-14.23, BE-13.20 · #163 → SEC-13.9, SEC-13.10, SEC-13.11, SEC-13.12 · #164 → BE-14.3, BE-14.4, BE-14.5, BE-13.10, BE-13.11, BE-14.7.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -198,7 +198,9 @@
 
 ### Cloudflare (storage and bot protection)
 
-> BE-14.42 needs an R2 bucket and keys for development; OPS-18.10 creates the production ones.
+### Done — R2 storage (live on production, migrated October 2026)
+
+> Status: ✅ done. #161 → BE-14.42. Images are served from `cdn.qbazaar.qa` (Cloudflare R2); the existing media was migrated in October.
 
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
@@ -307,7 +309,7 @@
 
 **Goal:** reskin the existing Next.js app to the new Figma design, using `Qbazaar-front` as the pixel reference. The routing, data layer and API connection stay; the old QBFront styles (`styles/qbfront.css`) go away in stages.
 
-**Entry:** FE-16.1 to FE-16.3 and FE-16.10 can start now; the rest needs the matching M1 (and M1b for FE-16.8) endpoints.
+**Entry:** done for every task except FE-16.7, which needs the finished pages.
 
 **Exit criteria:** every page matches its reference at 1440/744/390 in both languages · the cash order cycle works on the web · Lighthouse and axe reports attached.
 
@@ -320,7 +322,9 @@
 | FE-16.10 | Web phone-verification flow: route AUTH_003 and gated actions (post ad, chat, offers) to verification and back, all scenarios | [P0] | A user without a verified phone who publishes an ad, starts a chat, sends a message or makes an offer is taken to phone verification and returned to the same action; any `AUTH_003` response does the same; guests go to login first; tests for every entry point |
 | FE-16.9 | Turnstile on the web's registration and code-request pages | [P0] | The token goes with the request; clear error on failure |
 
-### Open
+### Done — web on the new design (merged October 2026)
+
+> Status: ✅ done. #218 → FE-16.1, FE-16.2 · #227 (home), #225 (catalog), #222 (product) → FE-16.3 · #223 → FE-16.4 · #224 → FE-16.5, FE-16.11 · #222 → FE-16.6 · #226 → FE-16.8 · #221 → static and help pages
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -331,8 +335,13 @@
 | FE-16.5 | Post-an-ad flow on the new design | [P0] | Draft → preview → publish |
 | FE-16.6 | Seller profile, companies, follows | [P1] | — |
 | FE-16.8 | Orders and payments on the web: request/offer cards, checkout (cash), orders, wallet, settlements | [P0] | Same cycle as the app |
-| FE-16.7 | RTL + Lighthouse (≥ 90 performance on mobile) + axe with no serious violations | [P1] | Report attached |
 | FE-16.11 | Resize and compress photos in the browser before upload (long side 2048px, quality ~0.8) | [P1] | Large photos upload small and fast; orientation kept, metadata stripped |
+
+### Open
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| FE-16.7 | RTL + Lighthouse (≥ 90 performance on mobile) + axe with no serious violations | [P1] | Report attached |
 
 ## Sprint 17 — M4 Admin additions (`/admin`)
 

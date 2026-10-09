@@ -51,7 +51,6 @@ export function MapView({ lat, lng, label = 'map', className }: Props) {
       map.remove();
       mapRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lng]);
 
   return (
