@@ -59,3 +59,31 @@ describe('app/fonts', () => {
 ${globalsCss}`).not.toMatch(/cairo|dm-?sans|instrument/i);
   });
 });
+
+describe('Arabic typography', () => {
+  const arabicBlock = tokensCss.match(/:root:lang\(ar\) \{([^}]*)\}/)?.[1] ?? '';
+  const arabicStacks = [...arabicBlock.matchAll(/--(font-qb[\w-]*): ([^;]+);/g)].map(([, token, stack]) => ({
+    token,
+    names: [...stack.matchAll(/"([^"]+)"/g)].map((match) => match[1]),
+  }));
+
+  it('restacks every Latin-first font-qb token with IBM Plex Sans Arabic first on Arabic pages', () => {
+    const latinFirst = [...new Set(qbStacks.map(({ token }) => token))].filter((token) => token !== 'font-qb-brand');
+    expect(arabicStacks.map(({ token }) => token).sort()).toEqual([...latinFirst].sort());
+    for (const { token, names } of arabicStacks) {
+      expect(names[0], token).toBe('ibmPlexArabic');
+      expect(names.length, token).toBeGreaterThan(2);
+    }
+  });
+
+  it('keeps the Latin faces behind it so Latin text and digits do not change', () => {
+    for (const { token, names } of arabicStacks) {
+      const latin = qbStacks.find((stack) => stack.token === token)?.names[0];
+      expect(names, token).toContain(latin);
+    }
+  });
+
+  it('keeps Latin letter-spacing off Arabic text', () => {
+    expect(tokensCss).toMatch(/:lang\(ar\) :not\(:lang\(en\)\) \{\s*letter-spacing: normal;/);
+  });
+});
