@@ -37,13 +37,14 @@ const choiceRing = 'outline-none focus-visible:ring-2 focus-visible:ring-qb-bran
 const textFieldWidth = 'min-w-28 qb-tablet:max-[743px]:min-w-0 qb-tablet:max-[743px]:flex-[1_1_0]';
 /**
  * All four labels read as one bar: 20 px on desktop, 14 px below (the reference's .qb-hlabel). Typed text
- * stays 16 px under the desktop, so phones do not zoom into the field.
+ * stays 16 px under the desktop, so phones do not zoom into the field. The labels keep Poppins' normal
+ * line height (1.5) in Arabic too, where the taller Arabic face would otherwise make the bar taller.
  */
 const input =
-  'w-full min-w-0 bg-transparent text-qb-body text-qb-ink outline-none placeholder:text-qb-caption placeholder:text-qb-icon-faint qb-desktop:text-qb-h5 qb-desktop:placeholder:text-qb-h5 [&::-webkit-search-cancel-button]:hidden';
+  'w-full min-w-0 bg-transparent text-qb-body leading-[1.5] text-qb-ink outline-none placeholder:text-qb-caption placeholder:leading-[1.5] placeholder:text-qb-icon-faint qb-desktop:text-qb-h5 qb-desktop:placeholder:text-qb-h5 [&::-webkit-search-cancel-button]:hidden';
 /** On small tablets the selects keep their label's width and leave the rest to the text fields. */
 const choiceFieldWidth = 'qb-tablet:max-[743px]:flex-none';
-const choiceLabel = 'text-qb-caption qb-desktop:text-qb-h5';
+const choiceLabel = 'text-qb-caption leading-[1.5] qb-desktop:text-qb-h5';
 /** Tablet fields are narrow, so their icons shrink there instead of clipping the text. */
 const fieldIcon = 'size-4 text-qb-icon-faint qb-desktop:size-5';
 const chevron = 'size-[19px] text-qb-icon-faint qb-desktop:size-6';
@@ -269,11 +270,11 @@ export function HomeSearchBar() {
   );
 }
 
-/** The label and chosen-value look of both selects (492:18987: the choice turns dark). */
+/** The label and chosen-value look of both selects (selects.js setValue: the choice turns #333, same size and weight). */
 const CHOICE_TEXT = {
   textClassName: choiceLabel,
   placeholderClassName: 'text-qb-icon-faint',
-  valueClassName: 'font-medium text-qb-ink-title',
+  valueClassName: 'text-qb-ink-title',
   chevronClassName: chevron,
 } as const;
 
