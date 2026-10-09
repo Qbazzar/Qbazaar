@@ -764,8 +764,8 @@
     "sort": {
       "latest": "Newest",
       "oldest": "Oldest",
-      "price_asc": "Price: Low to High",
-      "price_desc": "Price: High to Low"
+      "price_asc": "Low Price",
+      "price_desc": "High Price"
     },
     "save_search": "Save Search"
   },

@@ -1,0 +1,25 @@
+/* Exact design colours the catalog controls need that styles/design-tokens.css
+   does not have yet. They carry the @theme names, so they can move into that
+   file unchanged; until then the classes read them as bg-(--color-qb-…). */
+:root {
+  /* Dropdown rows: text, and the pressed or chosen row (259:5246, 264:4818) */
+  --color-qb-option-ink: #1f1f1f;
+  --color-qb-option-active: #efefef;
+  /* Search row, divider and scrollbar of the select panel (264:4818) */
+  --color-qb-search-hint: #a9a9a9;
+  --color-qb-search-icon: #828282;
+  --color-qb-select-divider: #dbdbdb;
+  --color-qb-scrollbar: #cfcfcf;
+  /* Radio rings, default and hover (245:4549) */
+  --color-qb-radio-ring: #e0e0e0;
+  --color-qb-radio-ring-hover: #636363;
+  /* Price slider track (250:4405) */
+  --color-qb-range-track: #ffebe4;
+  /* "Saved" state of the Save Search pill (256:5238) */
+  --color-qb-saved: #00c35b;
+  --color-qb-saved-soft: #effff6;
+  /* Category tile names (621:27193, 18:912, 623:28688) */
+  --color-qb-tile-name: #555555;
+  /* Price slider handle (category.html aside) */
+  --shadow-qb-thumb: 0 1px 4px 0 rgb(0 0 0 / 0.15);
+}

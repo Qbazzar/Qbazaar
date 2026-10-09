@@ -4,7 +4,8 @@ import { EMPTY_FILTERS, parsePrice, type FilterValues } from './filters/filter-v
 
 export type ViewMode = 'list' | 'grid';
 
-export const SORT_MODES: readonly SortMode[] = ['latest', 'oldest', 'price_asc', 'price_desc'];
+/** In the order of the sort menu (259:5246): Newest, Oldest, High Price, Low Price. */
+export const SORT_MODES: readonly SortMode[] = ['latest', 'oldest', 'price_desc', 'price_asc'];
 export const VIEW_MODES: readonly ViewMode[] = ['list', 'grid'];
 
 const DEFAULT_SORT: SortMode = 'latest';
