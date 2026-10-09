@@ -133,6 +133,26 @@
   --font-qb-brand: "acme", "acme Fallback", sans-serif;
 }
 
+/* Arabic pages: IBM Plex Sans Arabic leads every stack. Its Arabic subset
+   holds the Arabic letters and punctuation, the space and the hyphen, and
+   nothing else. With Poppins first, Poppins won the space between every pair
+   of Arabic words (and the other shared glyphs), so a line mixed two fonts and
+   two word-space widths. Latin letters, digits and ASCII punctuation are not
+   in the Arabic subset, so they still fall through to the same Latin faces as
+   before. Unlayered so it beats the @theme values. */
+:root:lang(ar) {
+  --font-qb: "ibmPlexArabic", "poppins", "poppins Fallback", system-ui, sans-serif;
+  --font-qb-label: "ibmPlexArabic", "montserrat", "montserrat Fallback", system-ui, sans-serif;
+  --font-qb-script: "ibmPlexArabic", "storyScript", "storyScript Fallback", cursive;
+  --font-qb-script-compact: "ibmPlexArabic", "dancingScript", "dancingScript Fallback", cursive;
+}
+
+/* Letter-spacing breaks Arabic joining; the Latin tracking utilities must not
+   reach Arabic text. Latin runs marked lang="en" keep theirs. */
+:lang(ar) :not(:lang(en)) {
+  letter-spacing: normal;
+}
+
 /* globals.css gives every heading the old look (family, weight, tracking,
    line height). Headings inside new-design markup take their type from the
    font-qb container and the design-system classes instead. */
