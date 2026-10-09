@@ -73,8 +73,9 @@ function CompanyTabTrigger({ value, children }: { value: CompanyTab; children: R
     <Tab
       value={value}
       className={cn(
-        // Three tabs share a phone's width, so a long label (Arabic "Legal Info") wraps instead of spilling over.
-        'h-auto min-w-0 flex-1 rounded-qb-md border-0 bg-qb-surface px-1.5 py-[11px] text-center text-qb-label leading-tight font-medium whitespace-normal text-qb-ink-body shadow-none',
+        // Three equal tabs share a phone's width. Arabic "Legal Info" is wider than a third, so there the
+        // tabs size to their labels and it stays on one line; a label that still can't fit wraps.
+        'h-auto min-w-0 flex-1 rounded-qb-md border-0 bg-qb-surface px-1.5 py-[11px] text-center text-qb-label leading-tight font-medium whitespace-normal text-qb-ink-body shadow-none max-qb-tablet:rtl:flex-auto',
         'qb-tablet:h-auto qb-tablet:flex-[1_1_120px] qb-tablet:px-[18px] qb-tablet:py-3.5 qb-tablet:text-qb-body qb-tablet:leading-normal qb-desktop:h-auto qb-desktop:text-qb-body',
         'hover:bg-qb-hover data-active:font-medium data-active:hover:bg-qb-brand',
       )}

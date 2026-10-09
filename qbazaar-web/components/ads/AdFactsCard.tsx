@@ -37,7 +37,8 @@ function FactRow({ label, value, className }: { label: string; value: string; cl
   return (
     <div className={cn('flex items-start justify-between gap-4', className)}>
       <dt className="shrink-0 text-qb-ink-faint">{label}</dt>
-      <dd className="min-w-0 text-end font-semibold [overflow-wrap:anywhere] text-qb-ink">{value}</dd>
+      {/* The 26-character ad id breaks in a narrow sidebar; balancing keeps a lone character off the last line. */}
+      <dd className="min-w-0 text-end font-semibold text-balance break-all text-qb-ink">{value}</dd>
     </div>
   );
 }

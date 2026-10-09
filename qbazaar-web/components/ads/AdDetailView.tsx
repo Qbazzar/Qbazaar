@@ -24,6 +24,7 @@ import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/design-system/Breadcrumb';
 import { useAuth } from '@/hooks/useAuth';
 import { localized, type Locale } from '@/lib/i18n/locale';
+import { isolate } from '@/lib/orders/text';
 import { t } from '@/lib/i18n/messages';
 import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { findCategoryPath } from '@/store/categories';
@@ -31,10 +32,13 @@ import type { Ad, Category, CategoryNode } from '@/lib/api/types';
 
 const CRUMB_TITLE_LENGTH = 24;
 
-/** The design ends the breadcrumb with the first words of the title. */
+/**
+ * The design ends the breadcrumb with the first words of the title, isolated
+ * so an English title keeps its order in Arabic ("24/7 plumber", not "plumber 24/7").
+ */
 function crumbTitle(title: string): string {
   const characters = Array.from(title);
-  return characters.length > CRUMB_TITLE_LENGTH ? `${characters.slice(0, CRUMB_TITLE_LENGTH).join('').trimEnd()}…` : title;
+  return isolate(characters.length > CRUMB_TITLE_LENGTH ? `${characters.slice(0, CRUMB_TITLE_LENGTH).join('').trimEnd()}…` : title);
 }
 
 /** Home > Car & Vehicles > Cars > title: the whole category chain once the tree is known. */
