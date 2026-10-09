@@ -63,7 +63,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Typography: every utility and primitive resolves to the design stack
-     (Poppins, IBM Plex Sans Arabic for Arabic glyphs) from design-tokens.css. */
+     (Poppins, Noto Kufi Arabic for Arabic glyphs) from design-tokens.css. */
   --font-sans: var(--font-qb);
   --font-heading: var(--font-qb);
   --font-mono: var(--font-mono), ui-monospace, monospace;

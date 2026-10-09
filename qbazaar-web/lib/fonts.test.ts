@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -67,13 +67,27 @@ describe('Arabic typography', () => {
     names: [...stack.matchAll(/"([^"]+)"/g)].map((match) => match[1]),
   }));
 
-  it('restacks every Latin-first font-qb token with IBM Plex Sans Arabic first on Arabic pages', () => {
+  it('restacks every Latin-first font-qb token with Noto Kufi Arabic first on Arabic pages', () => {
     const latinFirst = [...new Set(qbStacks.map(({ token }) => token))].filter((token) => token !== 'font-qb-brand');
     expect(arabicStacks.map(({ token }) => token).sort()).toEqual([...latinFirst].sort());
     for (const { token, names } of arabicStacks) {
-      expect(names[0], token).toBe('ibmPlexArabic');
+      expect(names[0], token).toBe('notoKufiArabic');
       expect(names.length, token).toBeGreaterThan(2);
     }
+  });
+
+  it('loads Noto Kufi Arabic as one preloaded variable file covering weights 400-700', () => {
+    const noto = fontsTs.match(/const notoKufiArabic = localFont\(\{([\s\S]*?)\n\}\);/)?.[1] ?? '';
+    expect(noto).toContain("'./noto-kufi-arabic-variable.woff2'");
+    expect(noto).toContain("weight: '100 900'");
+    expect(noto).not.toContain('preload: false');
+    expect(noto).not.toContain('adjustFontFallback: false');
+    expect(existsSync(join(fontsDir, 'OFL-NotoKufiArabic.txt'))).toBe(true);
+  });
+
+  it('no longer ships IBM Plex Sans Arabic', () => {
+    expect(readdirSync(fontsDir).filter((file) => /plex/i.test(file))).toEqual([]);
+    expect(`${fontsTs}\n${tokensCss}`).not.toMatch(/plex/i);
   });
 
   it('keeps the Latin faces behind it so Latin text and digits do not change', () => {
