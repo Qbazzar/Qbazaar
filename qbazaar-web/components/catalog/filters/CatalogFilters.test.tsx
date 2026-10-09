@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setClientLocale } from '@/lib/i18n/locale';
+import type { Location } from '@/lib/api/types';
 
 import { ResultsFocusProvider } from '../results-focus';
 import { ResultsHeading } from '../ResultsHeading';
@@ -67,7 +68,7 @@ describe('FilterSheet', () => {
   it('chooses the city from the designed select inside the sheet', async () => {
     const onApply = vi.fn();
     const user = userEvent.setup();
-    const doha = { id: 'doha', parent_id: null, slug: 'doha', name: { ar: 'الدوحة', en: 'Doha' }, type: 'city', lat: null, lng: null, children: [] };
+    const doha: Location = { id: 'doha', parent_id: null, slug: 'doha', name: { ar: 'الدوحة', en: 'Doha' }, type: 'city', lat: null, lng: null, children: [] };
     render(<FilterSheet groups={['location']} values={EMPTY_FILTERS} locations={[doha]} onApply={onApply} onReset={vi.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'Filter' }));
