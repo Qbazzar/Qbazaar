@@ -39,7 +39,7 @@ export function HelpArticleClient({ slug }: { slug: string }) {
       // The page answered 200 before the browser learnt the article is gone, so keep it out of the index.
       return (
         <>
-          <title>{`${t('errors.not_found_title')} · QBazaar`}</title>
+          <title>{`${t('errors.not_found_title')} | QBazaar`}</title>
           <meta name="robots" content="noindex" />
           <NotFoundView
             trail={trail}
@@ -93,7 +93,7 @@ export function HelpArticleClient({ slug }: { slug: string }) {
       meta={tPlural('help.view_count', article.views_count)}
     >
       {/* The server titles the page by its slug: reading the article there would count a view. */}
-      <title>{`${title} · ${t('help.title')} · QBazaar`}</title>
+      <title>{`${title} · ${t('help.title')} | QBazaar`}</title>
       <ContentPanel>
         <MarkdownContent html={localized(article.body)} />
       </ContentPanel>

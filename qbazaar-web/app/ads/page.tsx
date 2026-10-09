@@ -4,15 +4,14 @@ import { Suspense } from 'react';
 import { CatalogPageSkeleton } from '@/components/catalog/CatalogPageSkeleton';
 import { ResultsFocusProvider } from '@/components/catalog/results-focus';
 import { resolveServerLocale } from '@/lib/i18n/server';
+import { pageMetadata } from '@/lib/page-metadata';
 import { t } from '@/lib/i18n/messages';
 import { AdsListClient } from './AdsListClient';
 
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
 
-  return {
-    title: t('ads.list.title', 'الإعلانات'),
-  };
+  return pageMetadata({ title: t('ads.list.title', 'الإعلانات'), path: '/ads' });
 }
 
 /**

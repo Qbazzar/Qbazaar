@@ -4,19 +4,27 @@ import type { Ad } from '@/lib/api/types';
 import { localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
-import { absoluteUrl, breadcrumbJsonLd, fetchApiData } from '@/lib/seo';
+import { formatAdPrice, publicImageUrl } from '@/lib/ads/format';
+import { pageMetadata } from '@/lib/page-metadata';
+import { breadcrumbJsonLd, fetchApiData } from '@/lib/seo';
+import { productJsonLd } from '@/lib/structured-data';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { ProductMeta } from '@/components/seo/ProductMeta';
 import { AdDetailClient } from './AdDetailClient';
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-/** Trim a body to a single-line meta description of at most ~160 chars. */
-function metaDescription(body: string | null | undefined): string | undefined {
-  if (!body) return undefined;
-  const flat = body.replace(/\s+/g, ' ').trim();
-  return flat.length > 160 ? `${flat.slice(0, 157)}…` : flat;
+const META_DESCRIPTION_MAX = 160;
+
+/** "QAR 52,000 · Doha — first lines of the text", cut to a single line of a meta description. */
+function metaDescription(ad: Ad, locale: Locale): string | undefined {
+  const city = localized(ad.location?.name, locale);
+  const body = ad.description?.replace(/\s+/g, ' ').trim() ?? '';
+  const lead = [formatAdPrice(ad, locale), city].filter(Boolean).join(' · ');
+  const text = body ? `${lead} — ${body}` : lead;
+  return text.length > META_DESCRIPTION_MAX ? `${text.slice(0, META_DESCRIPTION_MAX - 1)}…` : text;
 }
 
 /**
@@ -38,55 +46,13 @@ export async function generateMetadata({
     return { title: t('ads.errors.ad_not_found') };
   }
 
-  const url = absoluteUrl(`/ads/${id}`);
-  const description = metaDescription(ad.description);
-  const image = ad.images?.[0]?.url;
-
-  return {
+  return pageMetadata({
     title: ad.title,
-    description,
-    alternates: { canonical: url },
-    openGraph: {
-      title: ad.title,
-      description,
-      url,
-      type: 'website',
-      images: image ? [{ url: image }] : undefined,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: ad.title,
-      description,
-      images: image ? [image] : undefined,
-    },
-  };
-}
-
-/** Schema.org Product graph for the listing. */
-function adProductJsonLd(ad: Ad): Record<string, unknown> {
-  const images = (ad.images ?? []).map((media) => media.url).filter(Boolean);
-
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: ad.title,
-    description: ad.description,
-    ...(images.length > 0 ? { image: images } : {}),
-    ...(ad.price != null
-      ? {
-          offers: {
-            '@type': 'Offer',
-            price: ad.price,
-            priceCurrency: ad.currency,
-            availability:
-              ad.status === 'sold'
-                ? 'https://schema.org/SoldOut'
-                : 'https://schema.org/InStock',
-            url: absoluteUrl(`/ads/${ad.id}`),
-          },
-        }
-      : {}),
-  };
+    description: metaDescription(ad, locale),
+    path: `/ads/${id}`,
+    image: ad.images?.[0] ? publicImageUrl(ad.images[0]) : undefined,
+    type: 'product',
+  });
 }
 
 /** Home › Categories › {category} › {ad} breadcrumb. */
@@ -124,7 +90,10 @@ export default async function AdDetailPage({ params }: PageProps) {
   return (
     <>
       {ad ? (
-        <JsonLd data={[adProductJsonLd(ad), adBreadcrumbJsonLd(ad)]} />
+        <>
+          <ProductMeta ad={ad} />
+          <JsonLd data={[productJsonLd(ad), adBreadcrumbJsonLd(ad)]} />
+        </>
       ) : null}
       <AdDetailClient id={id} initialAd={ad ?? undefined} />
     </>

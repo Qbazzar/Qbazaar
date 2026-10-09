@@ -5,7 +5,8 @@ import type { CategoryNode } from '@/lib/api/types';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
-import { absoluteUrl, breadcrumbJsonLd, fetchApiData } from '@/lib/seo';
+import { pageMetadata } from '@/lib/page-metadata';
+import { breadcrumbJsonLd, fetchApiData } from '@/lib/seo';
 import { findCategoryPath } from '@/store/categories';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { CatalogPageSkeleton } from '@/components/catalog/CatalogPageSkeleton';
@@ -32,13 +33,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const path = await findPath(slug);
   const name = (path && localized(path[path.length - 1].name)) || slug;
-  const url = absoluteUrl(`/c/${slug}`);
 
-  return {
+  return pageMetadata({
     title: name,
-    alternates: { canonical: url },
-    openGraph: { title: name, url, type: 'website' },
-  };
+    description: t('brand.category_description', { name }),
+    path: `/c/${slug}`,
+  });
 }
 
 /**

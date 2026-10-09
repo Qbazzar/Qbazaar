@@ -1,7 +1,7 @@
 import { formatNumber, intlLocale } from '@/lib/i18n/format';
 import { localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
-import type { AdSummary, Location } from '@/lib/api/types';
+import type { Ad, AdSummary, Location, Media } from '@/lib/api/types';
 
 /** Price label of a listing card: "QAR 2,350", "Free" or "Contact for price". */
 export function formatAdPrice(ad: Pick<AdSummary, 'price' | 'price_type'>, locale: Locale): string {
@@ -27,4 +27,15 @@ export function formatAdAge(iso: string | null, locale: Locale): string {
  */
 export function placeLabel(slug: string, locale: Locale, place?: Pick<Location, 'name'> | null): string {
   return place ? localized(place.name, locale) : slug.replace(/-/g, ' ');
+}
+
+/** Price an ad is offered at, or null when it has none ("contact for price"). */
+export function adOfferPrice(ad: Pick<Ad, 'price' | 'price_type'>): number | null {
+  if (ad.price_type === 'free') return 0;
+  return ad.price_type === 'contact' ? null : ad.price;
+}
+
+/** The stable CDN rendition of a photo: `url` is a signed link that expires, which a shared preview outlives. */
+export function publicImageUrl(media: Pick<Media, 'url'> & { sizes?: Partial<Media['sizes']> }): string {
+  return media.sizes?.large || media.url;
 }

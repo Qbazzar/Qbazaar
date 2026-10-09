@@ -2,7 +2,9 @@
   "brand": {
     "name": "QBazaar",
     "tagline": "Qatar's friendly classifieds marketplace",
-    "description": "Buy, sell and discover near you in Qatar."
+    "description": "Buy, sell and discover near you in Qatar.",
+    "category_description": "Browse {name} ads in Qatar on QBazaar.",
+    "seller_description": "{name} on QBazaar: ads and offers from a seller in Qatar."
   },
   "common": {
     "loading": "Loading…",

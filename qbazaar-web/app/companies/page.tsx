@@ -17,7 +17,8 @@ import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
 import { resolveServerLocale } from '@/lib/i18n/server';
-import { absoluteUrl, fetchApiPage } from '@/lib/seo';
+import { pageMetadata } from '@/lib/page-metadata';
+import { fetchApiPage } from '@/lib/seo';
 
 interface PageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -28,13 +29,13 @@ const DIRECTORY_REVALIDATE_SECONDS = 300;
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const [params] = await Promise.all([searchParams.then(readCompaniesParams), resolveServerLocale()]);
-  return {
+  return pageMetadata({
     title: t('companies.title'),
     description: t('companies.subtitle'),
-    alternates: { canonical: absoluteUrl(companiesHref({ query: '', page: params.page })) },
+    path: companiesHref({ query: '', page: params.page }),
     // Search results are thin, ever-changing pages: keep them out of the index.
     robots: params.query ? { index: false, follow: true } : undefined,
-  };
+  });
 }
 
 /**

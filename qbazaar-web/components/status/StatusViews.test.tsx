@@ -67,6 +67,6 @@ describe('ErrorView', () => {
   it('names the tab after the failure, not the page that failed', () => {
     render(<ErrorView onRetry={vi.fn()} />);
 
-    expect(document.title).toBe('Something went wrong · QBazaar');
+    expect(document.title).toBe('Something went wrong | QBazaar');
   });
 });

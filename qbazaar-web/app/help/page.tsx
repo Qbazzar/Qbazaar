@@ -8,16 +8,12 @@ import { HelpTopics, helpTopicsSummary } from '@/components/help/HelpTopics';
 import { fetchHelpCategories } from '@/lib/api/help-server';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
-import { absoluteUrl } from '@/lib/seo';
+import { pageMetadata } from '@/lib/page-metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
 
-  return {
-    title: t('help.title'),
-    description: t('help.subtitle'),
-    alternates: { canonical: absoluteUrl('/help') },
-  };
+  return pageMetadata({ title: t('help.title'), description: t('help.subtitle'), path: '/help' });
 }
 
 /**

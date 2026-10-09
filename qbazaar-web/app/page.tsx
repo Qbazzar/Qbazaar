@@ -1,3 +1,6 @@
+import type { Metadata } from 'next';
+
+import { JsonLd } from '@/components/seo/JsonLd';
 import { siteFrame } from '@/components/design-system/site-frame';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { HomeCategoryStrip } from '@/components/home/HomeCategoryStrip';
@@ -13,7 +16,14 @@ import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
 import { fetchApiData } from '@/lib/seo';
+import { organizationJsonLd, websiteJsonLd } from '@/lib/structured-data';
 import { cn } from '@/lib/utils';
+
+export async function generateMetadata(): Promise<Metadata> {
+  await resolveServerLocale();
+  // Title, description and share image come from the root layout; only the canonical is the home's own.
+  return { alternates: { canonical: '/' } };
+}
 
 /** The anonymous home feed of the page language and the locations tree; undefined where the API failed. */
 async function fetchHomeData(locale: Locale) {
@@ -37,8 +47,10 @@ export default async function HomePage() {
   // locale here too before the server-side t() calls below.
   const locale = await resolveServerLocale();
   const { feed, places } = await fetchHomeData(locale);
+  const brand = t('brand.name', 'QBazaar');
   return (
     <QatarPlacesProvider places={places}>
+      <JsonLd data={[organizationJsonLd(brand), websiteJsonLd(brand)]} />
       <main className="bg-qb-page font-qb text-qb-ink">
         <HomeHero />
         <section aria-labelledby="home-categories" className={cn(siteFrame, 'py-5')}>

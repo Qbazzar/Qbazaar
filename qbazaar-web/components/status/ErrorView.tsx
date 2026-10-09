@@ -22,7 +22,7 @@ export function ErrorView({ onRetry, retrying = false, trail = [] }: ErrorViewPr
   return (
     <PageShell breadcrumb={[{ label: t('home.breadcrumb'), href: '/' }, ...trail, { label: title }]} title={title}>
       {/* The failed route's own title would otherwise stay on the tab. */}
-      <title>{`${title} · QBazaar`}</title>
+      <title>{`${title} | QBazaar`}</title>
       <RetryPanel
         onRetry={onRetry}
         retrying={retrying}

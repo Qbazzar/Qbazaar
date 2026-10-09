@@ -62,7 +62,7 @@ describe('HelpArticleClient', () => {
     const related = screen.getByRole('region', { name: 'Related articles' });
     expect(related.querySelectorAll('a')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'Contacting sellers' })).toBeInTheDocument();
-    expect(document.title).toBe('Making an offer · Help center · QBazaar');
+    expect(document.title).toBe('Making an offer · Help center | QBazaar');
   });
 
   it('holds the layout while the article loads', () => {
@@ -79,7 +79,7 @@ describe('HelpArticleClient', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: "We couldn't find this article" })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Browse help topics' })).toHaveAttribute('href', '/help');
-    expect(document.title).toBe('Page not found · QBazaar');
+    expect(document.title).toBe('Page not found | QBazaar');
     expect(document.head.querySelector('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
   });
 

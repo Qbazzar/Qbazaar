@@ -9,14 +9,18 @@ import { CatalogPageSkeleton } from '@/components/catalog/CatalogPageSkeleton';
 import { ResultsFocusProvider } from '@/components/catalog/results-focus';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
+import { pageMetadata } from '@/lib/page-metadata';
 import { SearchClient } from './SearchClient';
 
 export async function generateMetadata(): Promise<Metadata> {
   await resolveServerLocale();
 
-  return {
+  // Result pages are one visitor's question, not content worth indexing.
+  return pageMetadata({
     title: t('search.title', 'نتائج البحث'),
-  };
+    path: '/search',
+    robots: { index: false, follow: true },
+  });
 }
 
 export default async function SearchPage() {
