@@ -5,6 +5,7 @@
  * `POST /api/v1/auth/refresh` on Laravel (or Prism in dev), rotates the cookie
  * with the new refresh token, and returns ONLY the new access token to the
  * client. The refresh token itself never crosses the JS boundary.
+ * Responds 204 when the visitor has no refresh cookie.
  */
 import { NextResponse, type NextRequest } from 'next/server';
 import {
@@ -30,18 +31,9 @@ interface UpstreamAuthResponse {
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const refreshToken = readRefreshCookie(req);
   if (!refreshToken) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: 'AUTH_010',
-          message_key: 'errors.auth.token_invalid',
-          message: 'Refresh token missing',
-          details: null,
-        },
-      },
-      { status: 401 },
-    );
+    // Anonymous visitor: nothing to restore. 204 (not 401) keeps the
+    // browser console clean on every first page load.
+    return new NextResponse(null, { status: 204 });
   }
 
   const upstream = await fetch(`${getUpstreamApiUrl()}/api/v1/auth/refresh`, {

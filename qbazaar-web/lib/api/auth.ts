@@ -176,12 +176,14 @@ export async function logout(): Promise<void> {
  */
 export async function refresh(): Promise<{ token: Token; user?: never } | null> {
   try {
-    const { data } = await axios.post<SuccessEnvelope<{ token: Token }>>(
+    const res = await axios.post<SuccessEnvelope<{ token: Token }>>(
       '/api/auth/refresh',
       undefined,
       { withCredentials: true },
     );
-    return { token: data.data.token };
+    // 204: anonymous visitor, no refresh cookie.
+    if (res.status === 204 || !res.data?.data?.token) return null;
+    return { token: res.data.data.token };
   } catch {
     return null;
   }
