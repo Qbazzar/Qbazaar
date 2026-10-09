@@ -2,7 +2,25 @@
 
 > A classifieds marketplace for Qatar (QAR, Arabic + English). This monorepo holds the Laravel API and admin panel, the Next.js web client, the API contract and planning docs, and the deploy files.
 
-**Status (2026-09-30):** the MVP is live; V2 is under way. M0 (audit fixes, CI) is merged, M1 (backend gaps) is next. See [ROADMAP.md](qbazaar-contracts/ROADMAP.md).
+## Live
+
+| What | URL |
+|------|-----|
+| Web (Arabic by default, English through the language switcher) | https://qbazaar.qa |
+| API | https://api.qbazaar.qa/api/v1 (health: `/api/v1/health`) |
+| Admin panel (staff login) | https://api.qbazaar.qa/admin |
+| Media CDN (Cloudflare R2) | https://cdn.qbazaar.qa |
+
+Swagger UI (`/docs`) is switched off in production; run the API locally or read [the OpenAPI spec](qbazaar-contracts/openapi/v1.yaml).
+
+**Status (2026-10-09):**
+
+- The MVP backend and the V2 M1 backend gaps are merged.
+- **M3, web on the new design:** fully on the new Figma design and live on qbazaar.qa (PRs #218-#231): exact design colours, fonts Poppins (Latin), IBM Plex Sans Arabic (Arabic), Montserrat (small labels) and Acme (wordmark), and SEO (favicon, Open Graph/Twitter share images, JSON-LD, sitemap). Remaining: FE-16.7, the Lighthouse/axe audit.
+- **M5, deployment:** production runs on a cPanel VPS behind Cloudflare (Full strict), media on Cloudflare R2, and deploys only through GitHub Actions on a push to `production`.
+- **M2, mobile app:** the API layer is in Qbazaar-mobile PR #24; the tab bar and account hub are merged in #25.
+
+See [ROADMAP.md](qbazaar-contracts/ROADMAP.md) for the full picture.
 
 ## Progress
 
@@ -91,9 +109,36 @@ npm run typecheck && npm test              # tsc + Vitest
 
 CI (`.github/workflows/ci.yml`) runs Pint, PHPStan and Pest for the API on every push and pull request to `main` and `develop`. `progress.yml` fails when the progress block is stale. `web-ci.yml` runs the web typecheck, Vitest and `next build` on pull requests and on pushes to `main` and `develop` that touch `qbazaar-web/`.
 
-## Deploy
+## Production and deploy
 
-`main` is the development branch. Pushing to the `production` branch deploys over SSH: `deploy-api.yml` runs CI first, `deploy-web.yml` builds on the server. Production today is a cPanel server (`qbazaar.fleeteye.de`, `api.qbazaar.fleeteye.de`); M5 moves it to a new VPS behind Cloudflare. Details in [deploy/README.md](deploy/README.md).
+- **Branches:** `main` is development; `production` is live.
+- **Promotion:** merge `main` into `production`. The push triggers `deploy-api.yml` (runs CI first) and `deploy-web.yml` (builds on the server).
+- **Server stack:** PHP 8.4, MariaDB, Redis, Meilisearch, Horizon, Reverb, Next.js under systemd, Apache behind Cloudflare.
+
+Scripts, units, runbooks and checklists are in [deploy/README.md](deploy/README.md).
+
+## Design rules
+
+- Colours are the design's exact values and are never darkened.
+- Fonts: Poppins (Latin), IBM Plex Sans Arabic (Arabic), Montserrat (small labels), Acme (wordmark). Cairo is not used.
+- The pixel reference is [`Qbazzar/Qbazaar-front`](https://github.com/Qbazzar/Qbazaar-front).
+
+## Demo accounts
+
+The demo data (listings, chats, offers, reports) is built by the demo seeder. Every account below is on `@demo.qbazaar.qa`.
+
+| Role | Email | What it can do |
+|------|-------|----------------|
+| Super admin | `super-admin@demo.qbazaar.qa` | Full admin panel: users (ban, delete, impersonate), roles, ads, categories, locations, CMS, settings, finance |
+| Moderator | `moderator@demo.qbazaar.qa` | Ad moderation (approve, reject, suspend, feature), reports, user bans, moderation rules, support replies; no user deletion, impersonation, CMS or finance |
+| Support | `support@demo.qbazaar.qa` | Support tickets and broadcasts; read-only on users, ads and reports |
+| Buyer | `buyer@demo.qbazaar.qa` | Private member (Arabic): browses, buys, chats and makes offers |
+| Seller | `seller@demo.qbazaar.qa` | Business member with a company profile: posts listings and handles offers |
+| Members | `member01@demo.qbazaar.qa`, `member02@...` | More private and business members with mixed languages and verification states |
+
+All demo accounts share one password. `php artisan qbazaar:demo --fresh --force` generates it randomly on production and prints it once; the owner shares it privately. Staff accounts sign in at the admin panel, members at the web client.
+
+`qbazaar:demo --fresh` wipes and rebuilds the demo data.
 
 ## License
 
