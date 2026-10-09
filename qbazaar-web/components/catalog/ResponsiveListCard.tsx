@@ -9,9 +9,8 @@ interface ResponsiveListCardProps {
 }
 
 /**
- * The list card from 1001 px (69:467) and the grid card below it. AdCard's
- * list photo is a fixed 341 px, which leaves tablets too little room for the
- * text, and AdCard has no responsive layout, so both render and CSS shows one.
+ * The list card from 1001 px (69:467) and, below it, the grid card of the
+ * swipeable overview rows (539:35503, 623:28688). Both render and CSS shows one.
  */
 export function ResponsiveListCard({ ad, eager = false }: ResponsiveListCardProps) {
   return (
