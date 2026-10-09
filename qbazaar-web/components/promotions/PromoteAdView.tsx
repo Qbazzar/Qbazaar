@@ -15,6 +15,7 @@ import { focusFirstInvalid } from '@/components/orders/focus-invalid';
 import { FormError } from '@/components/orders/NoteField';
 import { OptionTile } from '@/components/orders/OptionTile';
 import { PageState } from '@/components/orders/PageState';
+import { promotionRow } from '@/components/post-ad/promotion-row';
 import { useAuth } from '@/hooks/useAuth';
 import { useIdempotencyKey } from '@/hooks/useIdempotencyKey';
 import { ApiClientError } from '@/lib/api/auth';
@@ -223,20 +224,13 @@ function PromoteForm({ ad, offers, wallet, initialType }: { ad: Ad; offers: Prom
 }
 
 /**
- * One promotion as a full-width row, in the style of the add-ads promotion
- * rows (323:10693): a 20 px title, its effect in grey and the price on the end
- * side; the chosen row turns peach with an orange border. One promotion is
- * bought at a time, so the rows are radios.
+ * One promotion as a row of the add-ads promotion list (323:10693), with the
+ * duration under the price. One promotion is bought at a time, so the rows
+ * are radios.
  */
 function PromotionRow({ offer, checked, onChange }: { offer: PromotionOffer; checked: boolean; onChange: () => void }) {
   return (
-    <label
-      className={cn(
-        'flex cursor-pointer items-center gap-4 rounded-qb-lg border-[1.5px] px-5 py-[18px] font-qb transition-colors',
-        'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active',
-        checked ? 'border-qb-brand bg-(--color-qb-promo-active)' : 'border-qb-line bg-qb-surface',
-      )}
-    >
+    <label className={promotionRow.shell(checked)}>
       <input type="radio" name="promotion_type" value={offer.type} checked={checked} onChange={onChange} className="peer sr-only" />
       <span
         aria-hidden="true"
@@ -245,12 +239,12 @@ function PromotionRow({ offer, checked, onChange }: { offer: PromotionOffer; che
         <span className="size-2 rounded-full bg-qb-surface" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-qb-body-lg font-medium text-qb-ink-title qb-tablet:text-qb-h5">{t(`orders.promotion.types.${offer.type}`)}</span>
-        <span className="mt-1 block text-qb-caption text-(--color-qb-ink-meta)">{t(`orders.promotion.types.${offer.type}_body`)}</span>
+        <span className={promotionRow.title}>{t(`orders.promotion.types.${offer.type}`)}</span>
+        <span className={promotionRow.body}>{t(`orders.promotion.types.${offer.type}_body`)}</span>
       </span>
       <span className="shrink-0 text-end">
-        <span className="block text-qb-body font-semibold whitespace-nowrap text-qb-ink">{formatMoney(offer.price, offer.currency)}</span>
-        <span className="mt-0.5 block text-qb-label whitespace-nowrap text-(--color-qb-ink-meta)">{tPlural('orders.promotion.duration', offer.duration_days)}</span>
+        <span className={cn(promotionRow.price, 'block')}>{formatMoney(offer.price, offer.currency)}</span>
+        <span className="mt-0.5 block text-qb-label whitespace-nowrap text-qb-ink-subtle">{tPlural('orders.promotion.duration', offer.duration_days)}</span>
       </span>
     </label>
   );

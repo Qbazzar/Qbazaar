@@ -206,7 +206,11 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.images')), { target: { files: [file] } });
     await waitFor(() => expect(uploadAdImages).toHaveBeenCalledWith('ad-1', [expect.any(Blob)], expect.objectContaining({ onProgress: expect.any(Function) })));
 
-    fireEvent.click(await screen.findByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.push_up')}`) }));
+    // Highlight starts ticked, as on add-ads.html; the seller swaps it for Push up.
+    const highlight = await screen.findByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.highlight')}`) });
+    expect(highlight).toBeChecked();
+    fireEvent.click(highlight);
+    fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.push_up')}`) }));
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.add_ads') }));
     const confirm = await screen.findByRole('button', { name: t('post_ad.actions.confirm_publish') });
     // The promotion ticked on the form stays ticked in the publish step's table.

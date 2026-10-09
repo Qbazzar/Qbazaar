@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { usePostAdStore } from '@/store/post-ad';
 
 import { FormSection } from './FormParts';
+import { focusWithinRow, promotionRow } from './promotion-row';
 
 import '@/styles/design-tokens-sell.css';
 
@@ -27,7 +28,6 @@ export function promotionTitle(type: PromotionType): string {
   return t(`orders.promotion.types.${type}`);
 }
 
-const focusWithin = 'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active';
 
 /** The 22 px tick box of the promotion rows; its ring darkens under the pointer (CheckBox 367:15366). */
 function TickBox({ checked, className }: { checked: boolean; className?: string }) {
@@ -76,23 +76,16 @@ export function HighlightSection() {
         {offers.map((offer) => {
           const checked = chosen.includes(offer.type);
           return (
-            <label
-              key={offer.type}
-              className={cn(
-                'group flex cursor-pointer items-center gap-4 rounded-qb-lg border-[1.5px] px-5 py-[18px] transition-colors',
-                focusWithin,
-                checked ? 'border-qb-brand bg-(--color-qb-promo-active)' : 'border-qb-line bg-qb-surface',
-              )}
-            >
+            <label key={offer.type} className={promotionRow.shell(checked)}>
               <PromotionCheckbox offer={offer} checked={checked} onToggle={() => toggle(offer.type)} />
               <TickBox checked={checked} />
               <span className="min-w-0 flex-1">
-                <span className="block text-qb-h5 font-medium text-qb-ink-title">{promotionTitle(offer.type)}</span>
-                <span id={`promotion-${offer.type}-body`} className="mt-1 block text-qb-caption text-qb-ink-subtle">
+                <span className={promotionRow.title}>{promotionTitle(offer.type)}</span>
+                <span id={`promotion-${offer.type}-body`} className={promotionRow.body}>
                   {t(`orders.promotion.types.${offer.type}_body`)}
                 </span>
               </span>
-              <span className="shrink-0 text-qb-body font-semibold whitespace-nowrap text-qb-ink">{formatMoney(offer.price, offer.currency)}</span>
+              <span className={promotionRow.price}>{formatMoney(offer.price, offer.currency)}</span>
             </label>
           );
         })}
@@ -132,7 +125,7 @@ export function FeaturedAdTable({ offers, chosen, onToggle }: { offers: Promotio
               className={cn(
                 'group grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-qb-lg border border-qb-line p-4',
                 'qb-tablet:grid-cols-[minmax(0,1fr)_130px_130px] qb-tablet:gap-y-0 qb-tablet:rounded-none qb-tablet:border-0 qb-tablet:border-b qb-tablet:border-(--color-qb-row-divider) qb-tablet:px-[26px] qb-tablet:py-[18px]',
-                focusWithin,
+                focusWithinRow,
               )}
             >
               <PromotionCheckbox offer={offer} checked={checked} onToggle={() => onToggle(offer.type)} />

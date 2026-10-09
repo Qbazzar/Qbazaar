@@ -45,6 +45,9 @@ export interface PostAdState {
   togglePromotion: (type: PromotionType) => void;
 }
 
+/** add-ads.html and publish.html open with Highlight Points ticked (323:10693, 355:7297, 638:35196). */
+const DEFAULT_PROMOTIONS: readonly PromotionType[] = ['highlight'];
+
 export const usePostAdStore = create<PostAdState>((set) => ({
   session: null,
   view: 'form',
@@ -52,7 +55,7 @@ export const usePostAdStore = create<PostAdState>((set) => ({
   values: EMPTY_AD_FORM,
   errors: {},
   photos: [],
-  promotions: [],
+  promotions: [...DEFAULT_PROMOTIONS],
 
   begin: (session, ad) =>
     set({
@@ -61,7 +64,7 @@ export const usePostAdStore = create<PostAdState>((set) => ({
       ad,
       values: ad ? adFormFromAd(ad) : EMPTY_AD_FORM,
       errors: {},
-      promotions: [],
+      promotions: [...DEFAULT_PROMOTIONS],
     }),
   setValues: (patch) => set((state) => ({ values: { ...state.values, ...patch } })),
   setErrors: (errors) => set({ errors }),
