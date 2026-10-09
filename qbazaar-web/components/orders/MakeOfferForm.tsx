@@ -115,7 +115,9 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
                   aria-label={t('orders.deal.suggested_label', { amount: label, percent: suggestion.percent })}
                   onClick={() => setAmount(suggestion.amount.replace(/\.00$/, ''))}
                   className={cn(
-                    'h-[47px] rounded-qb-lg border border-qb-line bg-qb-surface px-4 text-qb-caption font-medium text-qb-ink transition-colors hover:bg-qb-hover qb-desktop:px-6 qb-desktop:text-qb-body',
+                    // Compact pills on phones (709:33285), 47 px chips from the tablet up (709:32645, 657:57378).
+                    'h-8 rounded-qb-pill border border-qb-line bg-qb-surface px-3 text-qb-label font-medium text-qb-ink transition-colors hover:bg-qb-hover',
+                    'qb-tablet:h-[47px] qb-tablet:rounded-qb-lg qb-tablet:px-4 qb-tablet:text-qb-caption qb-desktop:px-6 qb-desktop:text-qb-body',
                     'aria-pressed:border-qb-brand aria-pressed:bg-qb-brand-soft aria-pressed:text-qb-brand-on-soft',
                     focusRing,
                   )}

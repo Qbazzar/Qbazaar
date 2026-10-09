@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 
 import { panelClass, panelPadding } from './CheckoutPanel';
 
+import '@/styles/design-tokens-sell.css';
+
 /**
  * Shape of the form buttons of the deal pages: 44 px with 14 px text on
  * phones and desktop (659:58417), 48 px with 16 px text on tablets (709:32483).
@@ -41,12 +43,12 @@ export function InfoHint({ children }: { children: ReactNode }) {
 export function HowItWorks({ title, steps }: { title: string; steps: string[] }) {
   return (
     <div className="mt-2 qb-tablet:mt-0 qb-tablet:rounded-qb-2xl qb-tablet:border qb-tablet:border-qb-line qb-tablet:bg-qb-surface qb-tablet:p-4">
-      <h2 className="font-qb text-qb-body-lg font-medium tracking-normal text-qb-ink-title qb-tablet:text-qb-body qb-tablet:font-normal qb-tablet:text-qb-ink-body">
+      <h2 className="font-qb text-qb-body-lg font-medium tracking-normal text-(--color-qb-ink-heading) qb-tablet:text-qb-body qb-tablet:font-semibold qb-desktop:font-normal">
         {title}
       </h2>
       <ul className="mt-4 flex flex-col gap-3">
         {steps.map((step) => (
-          <li key={step} className="flex items-start gap-2 text-qb-caption text-qb-ink-secondary">
+          <li key={step} className="flex items-start gap-2 text-qb-caption text-(--color-qb-ink-step)">
             <span aria-hidden="true" className="mt-1 size-[13px] shrink-0 rounded-full bg-qb-brand" />
             <span>{step}</span>
           </li>
