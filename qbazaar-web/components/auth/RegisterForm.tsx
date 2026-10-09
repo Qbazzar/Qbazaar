@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -17,11 +18,11 @@ import { registerSchema, type RegisterInput } from '@/lib/validation/auth';
 import { ApiClientError, register as apiRegister } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
-import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
+import { verifyOtpHref } from '@/lib/auth/phone-gate';
+import { AuthFooter, authInputClass, authLinkClass, authSubmitClass } from './AuthFooter';
 import { FieldError, fieldErrorText } from './FieldError';
 import { PasswordInput } from './PasswordInput';
-import { PhoneInput } from './PhoneInput';
-import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { PhoneNumberFields } from './PhoneNumberFields';
 import { Turnstile, type TurnstileHandle } from './Turnstile';
 
 const ACCOUNT_TYPES = [
@@ -29,7 +30,11 @@ const ACCOUNT_TYPES = [
   { value: 'business', labelKey: 'auth.register.account_type_business' },
 ] as const;
 
-const sectionTitle = 'text-qb-body-lg font-medium text-qb-ink-title qb-tablet:text-qb-h5';
+/** `.qb-sec`: 500 20 px section title. */
+const sectionTitle = 'text-qb-h5 font-medium text-qb-auth-section';
+
+/** Links inside `.qb-terms`: orange and underlined, in the sentence's own size and weight. */
+const termsLinkClass = cn('rounded-qb-xs text-qb-brand underline hover:text-qb-brand-hover', focusRing);
 
 export function RegisterForm() {
   const router = useRouter();
@@ -51,131 +56,138 @@ export function RegisterForm() {
     mode: 'onBlur',
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
-    try {
-      const data = await apiRegister(values, await turnstile.current?.getToken());
-      setAuth({ user: data.user, accessToken: data.tokens.access_token });
-      setHydrated(true);
-      toast.success(t('auth.register.success'));
-      router.replace('/');
-    } catch (err) {
-      handleSubmitError(err, form);
-    } finally {
-      turnstile.current?.reset();
-    }
-  });
+  // handleSubmit runs inside the event, so the Turnstile ref is never read while rendering.
+  const onSubmit = (event: FormEvent<HTMLFormElement>) =>
+    form.handleSubmit(async (values) => {
+      try {
+        const data = await apiRegister(values, await turnstile.current?.getToken());
+        setAuth({ user: data.user, accessToken: data.tokens.access_token });
+        setHydrated(true);
+        toast.success(t('auth.register.success'));
+        // The reference journey: sign-up → "Verify Your Identity" → number → code.
+        router.replace(`${verifyOtpHref(values.phone, '/')}&intro=1`);
+      } catch (err) {
+        handleSubmitError(err, form);
+      } finally {
+        turnstile.current?.reset();
+      }
+    })(event);
 
   const errors = form.formState.errors;
   const submitting = form.formState.isSubmitting;
-  const passwordValue = form.watch('password');
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
-      <fieldset>
+    <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col">
+      <fieldset className="mt-[26px]">
         <legend className={sectionTitle}>{t('auth.register.usage_question')}</legend>
-        <div className="mt-3.5 [display:grid] gap-3 qb-tablet:grid-cols-2 qb-tablet:gap-3.5">
+        <div className="mt-3.5 flex gap-3.5">
           {ACCOUNT_TYPES.map(({ value, labelKey }) => (
             <label
               key={value}
               className={cn(
-                'flex h-11 cursor-pointer items-center gap-2.5 rounded-qb-md border border-qb-line bg-qb-surface px-4 text-qb-caption text-qb-ink transition-colors',
+                'flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-qb-md border border-qb-line bg-qb-surface px-4 py-[15px] text-qb-caption text-qb-ink transition-colors',
                 'has-[:checked]:border-qb-brand has-[:checked]:bg-qb-brand-soft',
                 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
               )}
             >
-              <input type="radio" value={value} className="size-[18px] accent-qb-brand" {...form.register('account_type')} />
+              <input type="radio" value={value} className="size-[18px] shrink-0 accent-qb-brand" {...form.register('account_type')} />
               {t(labelKey)}
             </label>
           ))}
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend className={cn(sectionTitle, 'mb-5')}>{t('auth.register.login_details')}</legend>
-        <div className="flex flex-col gap-6">
-          <Field label={t('auth.register.full_name_label')} required error={fieldErrorText(errors.full_name?.message)}>
-            {(control) => (
-              <Input
-                {...control}
-                type="text"
-                autoComplete="name"
-                placeholder={t('auth.register.full_name_placeholder')}
-                {...form.register('full_name')}
-              />
-            )}
-          </Field>
+      <fieldset className="mt-[26px]">
+        <legend className={sectionTitle}>{t('auth.register.login_details')}</legend>
+        <Field
+          label={t('auth.register.full_name_label')}
+          required
+          error={fieldErrorText(errors.full_name?.message)}
+          className="mt-[18px]"
+        >
+          {(control) => (
+            <Input
+              {...control}
+              type="text"
+              autoComplete="name"
+              className={authInputClass}
+              placeholder={t('auth.register.full_name_placeholder')}
+              {...form.register('full_name')}
+            />
+          )}
+        </Field>
 
-          <Field label={t('auth.register.email_label')} required error={fieldErrorText(errors.email?.message)}>
-            {(control) => (
-              <Input
-                {...control}
-                type="email"
-                autoComplete="email"
-                dir="ltr"
-                placeholder={t('auth.register.email_placeholder')}
-                {...form.register('email')}
-              />
-            )}
-          </Field>
+        <Field
+          label={t('auth.register.email_label')}
+          required
+          error={fieldErrorText(errors.email?.message)}
+          className="mt-[18px]"
+        >
+          {(control) => (
+            <Input
+              {...control}
+              type="email"
+              autoComplete="email"
+              dir="ltr"
+              className={cn(authInputClass, 'rtl:placeholder:text-right')}
+              placeholder={t('auth.register.email_placeholder')}
+              {...form.register('email')}
+            />
+          )}
+        </Field>
 
-          <Field label={t('auth.register.phone_label')} required error={fieldErrorText(errors.phone?.message)}>
-            {(control) => (
-              <Controller
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <PhoneInput
-                    ref={field.ref}
-                    id={control.id}
-                    name={field.name}
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    required
-                    ariaInvalid={control['aria-invalid']}
-                    ariaDescribedBy={control['aria-describedby']}
-                    placeholder={t('auth.register.phone_placeholder')}
-                  />
-                )}
-              />
-            )}
-          </Field>
+        <Controller
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <PhoneNumberFields
+              inputRef={field.ref}
+              name={field.name}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              error={fieldErrorText(errors.phone?.message)}
+              className="mt-[18px]"
+            />
+          )}
+        />
 
-          <Field label={t('auth.register.password_label')} required error={fieldErrorText(errors.password?.message)}>
-            {(control) => (
-              <div className="flex flex-col gap-3">
-                <PasswordInput
-                  {...control}
-                  autoComplete="new-password"
-                  placeholder={t('auth.register.password_placeholder')}
-                  {...form.register('password')}
-                />
-                <PasswordStrengthIndicator password={passwordValue ?? ''} />
-              </div>
-            )}
-          </Field>
-        </div>
+        <Field
+          label={t('auth.register.password_label')}
+          required
+          error={fieldErrorText(errors.password?.message)}
+          className="mt-[18px]"
+        >
+          {(control) => (
+            <PasswordInput
+              {...control}
+              autoComplete="new-password"
+              placeholder={t('auth.register.password_placeholder')}
+              {...form.register('password')}
+            />
+          )}
+        </Field>
       </fieldset>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="flex items-start gap-2.5 text-qb-caption leading-relaxed text-qb-ink-subtle qb-tablet:text-qb-body-sm">
+      <div className="mt-5 flex flex-col gap-1.5">
+        <label className="flex items-start gap-2.5 text-start text-qb-body-sm leading-[1.55] text-qb-auth-terms">
           <input
             type="checkbox"
-            className="mt-1 size-[17px] shrink-0 accent-qb-ink"
+            className="mt-[3px] size-[17px] shrink-0 accent-qb-ink"
             aria-invalid={errors.accepted_terms ? true : undefined}
             aria-describedby={errors.accepted_terms ? 'terms-error' : undefined}
             {...form.register('accepted_terms')}
           />
           <span>
             {t('auth.register.terms_prefix')}{' '}
-            <Link href="/terms" className={authLinkClass}>
+            <Link href="/terms" className={termsLinkClass}>
               {t('auth.register.terms_link')}
             </Link>{' '}
             {t('auth.register.terms_and')}{' '}
-            <Link href="/privacy" className={authLinkClass}>
+            <Link href="/privacy" className={termsLinkClass}>
               {t('auth.register.privacy_link')}
             </Link>
-            .
+            {t('auth.register.terms_suffix')}
           </span>
         </label>
         <FieldError id="terms-error" message={errors.accepted_terms?.message} />
@@ -183,7 +195,12 @@ export function RegisterForm() {
 
       <Turnstile ref={turnstile} />
 
-      <Button type="submit" fullWidth disabled={submitting} className={cn(authSubmitClass, submitting && 'cursor-progress')}>
+      <Button
+        type="submit"
+        fullWidth
+        disabled={submitting}
+        className={cn(authSubmitClass, 'mt-[26px]', submitting && 'cursor-progress')}
+      >
         {submitting ? (
           <>
             <Loader2 className="animate-spin" aria-hidden="true" />

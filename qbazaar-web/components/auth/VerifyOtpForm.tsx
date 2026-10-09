@@ -5,27 +5,21 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { CircleCheck, Loader2, ShieldCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/design-system/Button';
-import { focusRing } from '@/components/design-system/focus-ring';
+import { Button } from '@/components/design-system/Button';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { qatarPhoneRegex } from '@/lib/validation/auth';
-import {
-  ApiClientError,
-  resendOtp,
-  sendOtp,
-  verifyOtp,
-} from '@/lib/api/auth';
+import { ApiClientError, resendOtp, sendOtp, verifyOtp } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { safeReturnTo } from '@/lib/navigation/safe-return-to';
-import { PHONE_VERIFICATION_PATH, isPhoneVerificationPath } from '@/lib/auth/phone-gate';
 import { useAuthStore } from '@/store/auth';
-import { authSubmitClass } from './AuthFooter';
+import { authLinkClass, authSubmitClass } from './AuthFooter';
 import { AuthHeading } from './AuthHeading';
 import { FieldError } from './FieldError';
 import { OtpInput } from './OtpInput';
+import { PhoneNumberFields, maskPhoneForCode } from './PhoneNumberFields';
 import { Turnstile, type TurnstileHandle } from './Turnstile';
 
 const CODE_LENGTH = 6;
@@ -34,10 +28,12 @@ const CODE_LENGTH = 6;
 const RATE_LIMITED_RESEND_SECONDS = 60;
 
 /**
- * Status machine: 'editing' is the default form, 'success' shows the inline
- * confirmation card. We never auto-navigate so the user can read the result.
+ * The verification journey of the reference: signup-verify.html ("Continue"),
+ * enter-number.html (country + number + "Send"), enter-code.html (the six
+ * boxes, "Edit" back to the number). Sign-up starts on the first screen
+ * (`?intro=1`); the account's "Verify phone" opens straight on the code.
  */
-type Status = 'editing' | 'success';
+type Step = 'intro' | 'number' | 'code';
 
 export function VerifyOtpForm() {
   const router = useRouter();
@@ -46,255 +42,269 @@ export function VerifyOtpForm() {
   const signedInUser = useAuthStore((s) => s.user);
   const setPhoneVerified = useAuthStore((s) => s.setPhoneVerified);
 
-  const phone = (search.get('phone') ?? '').trim();
+  const linkPhone = (search.get('phone') ?? '').trim();
   const continueTarget = safeReturnTo(search.get('continue'));
-  const resumesAction =
-    continueTarget !== '/' && !isPhoneVerificationPath(continueTarget);
+  const linkPhoneIsValid = qatarPhoneRegex.test(linkPhone);
 
-  const phoneIsValid = qatarPhoneRegex.test(phone);
-
+  const [step, setStep] = useState<Step>(() => {
+    if (!linkPhoneIsValid) return 'number';
+    return search.get('intro') === '1' ? 'intro' : 'code';
+  });
+  const [phone, setPhone] = useState(linkPhoneIsValid ? linkPhone : '');
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [numberProblem, setNumberProblem] = useState<'invalid' | 'not_yours' | null>(null);
+  const [sending, setSending] = useState(false);
   const [code, setCode] = useState('');
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState<Status>('editing');
 
-  // Cooldowns are managed as deadlines so background tabs don't drift.
+  // The cooldown is a deadline so background tabs don't drift.
   const [resendDeadline, setResendDeadline] = useState<number | null>(null);
-  const [expiresDeadline, setExpiresDeadline] = useState<number | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
-  const initialSendDone = useRef(false);
+  const autoSendDone = useRef(false);
   const turnstile = useRef<TurnstileHandle>(null);
 
-  // Tick once per second while either timer is active.
   useEffect(() => {
-    if (resendDeadline === null && expiresDeadline === null) return;
+    if (resendDeadline === null) return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [resendDeadline, expiresDeadline]);
+  }, [resendDeadline]);
 
-  const applyCooldowns = useCallback(
-    (canResendIn: number, expiresIn: number) => {
-      const t0 = Date.now();
-      setResendDeadline(t0 + canResendIn * 1000);
-      setExpiresDeadline(t0 + expiresIn * 1000);
-      setNow(t0);
-    },
-    [],
-  );
+  const resendSeconds = secondsUntil(resendDeadline, now);
 
-  const handleSendError = useCallback((err: unknown) => {
-    if (isRateLimited(err)) {
-      setResendDeadline(Date.now() + RATE_LIMITED_RESEND_SECONDS * 1000);
-      setNow(Date.now());
-      toast.error(t('auth.phone_gate.send_limited'));
-      return;
-    }
-    const message =
-      err instanceof ApiClientError
-        ? translateMaybeKey(`auth.errors.${err.code}`) || err.message
-        : t('auth.verify_otp.send_failed');
-    toast.error(message);
+  const startCooldown = useCallback((seconds: number) => {
+    const at = Date.now();
+    setResendDeadline(at + seconds * 1000);
+    setNow(at);
   }, []);
 
-  // Auto-request the first OTP when the page loads with a valid phone.
-  useEffect(() => {
-    if (!phoneIsValid || initialSendDone.current) return;
-    initialSendDone.current = true;
-    (async () => {
+  const handleSendError = useCallback(
+    (err: unknown) => {
+      if (isRateLimited(err)) {
+        startCooldown(RATE_LIMITED_RESEND_SECONDS);
+        toast.error(t('auth.phone_gate.send_limited'));
+        return;
+      }
+      toast.error(
+        err instanceof ApiClientError
+          ? translateMaybeKey(`auth.errors.${err.code}`) || err.message
+          : t('auth.verify_otp.send_failed'),
+      );
+    },
+    [startCooldown],
+  );
+
+  /** Texts a code to `target` and opens the code screen; `resend` uses the stricter resend endpoint. */
+  const sendCode = useCallback(
+    async (target: string, resend = false) => {
+      setSending(true);
       try {
-        const data = await sendOtp({ phone }, await turnstile.current?.getToken());
-        applyCooldowns(data.can_resend_in, data.expires_in);
+        const token = await turnstile.current?.getToken();
+        const data = resend ? await resendOtp({ phone: target }, token) : await sendOtp({ phone: target }, token);
+        startCooldown(data.can_resend_in);
+        setSentTo(target);
+        setCode('');
+        setCodeError(null);
+        setStep('code');
+        if (resend) toast.success(t('auth.verify_otp.sent_again'));
       } catch (err) {
         handleSendError(err);
       } finally {
         turnstile.current?.reset();
-      }
-    })();
-  }, [applyCooldowns, handleSendError, phone, phoneIsValid]);
-
-  const resendSeconds = secondsUntil(resendDeadline, now);
-  const expiresSeconds = secondsUntil(expiresDeadline, now);
-  const canResend = resendSeconds === 0;
-
-  const submit = useCallback(
-    async (codeValue: string) => {
-      if (!phoneIsValid) return;
-      if (codeValue.length !== CODE_LENGTH) {
-        setSubmitError(t('auth.errors.otp_invalid_format'));
-        return;
-      }
-      setSubmitError(null);
-      setSubmitting(true);
-      try {
-        await verifyOtp({ phone, code: codeValue });
-        if (signedInUser?.phone === phone) setPhoneVerified(true);
-        void queryClient.invalidateQueries({ queryKey: ['account'] });
-        setStatus('success');
-        toast.success(t('auth.verify_otp.success_title'));
-      } catch (err) {
-        handleVerifyError(err, {
-          setError: (msg) => setSubmitError(msg),
-          clearCode: () => setCode(''),
-        });
-      } finally {
-        setSubmitting(false);
+        setSending(false);
       }
     },
-    [phone, phoneIsValid, queryClient, setPhoneVerified, signedInUser?.phone],
+    [handleSendError, startCooldown],
   );
 
-  const onComplete = useCallback(
-    (full: string) => {
-      // Avoid retriggering submit on a stale full code (e.g. paste then edit).
-      if (submitting || status !== 'editing') return;
-      void submit(full);
-    },
-    [submit, submitting, status],
-  );
+  // Opened on the code screen: text the first code right away.
+  useEffect(() => {
+    if (step !== 'code' || autoSendDone.current || sentTo !== null) return;
+    autoSendDone.current = true;
+    void sendCode(phone);
+  }, [phone, sendCode, sentTo, step]);
 
-  const onResend = useCallback(async () => {
-    if (!phoneIsValid || !canResend) return;
-    setSubmitError(null);
-    setCode('');
-    try {
-      const data = await resendOtp({ phone }, await turnstile.current?.getToken());
-      applyCooldowns(data.can_resend_in, data.expires_in);
-      toast.success(t('auth.verify_otp.sent_again'));
-    } catch (err) {
-      handleSendError(err);
-    } finally {
-      turnstile.current?.reset();
+  const submitNumber = () => {
+    if (!qatarPhoneRegex.test(phone)) {
+      setNumberProblem('invalid');
+      return;
     }
-  }, [applyCooldowns, canResend, handleSendError, phone, phoneIsValid]);
+    // A signed-in account verifies its own number; another one is changed in the account settings first.
+    if (signedInUser && signedInUser.phone !== phone) {
+      setNumberProblem('not_yours');
+      return;
+    }
+    setNumberProblem(null);
+    if (phone === sentTo && resendSeconds > 0) {
+      setStep('code');
+      return;
+    }
+    void sendCode(phone);
+  };
 
-  if (!phoneIsValid) {
-    return (
-      <div className="flex flex-col items-center gap-8">
-        <AuthHeading
-          icon={<ShieldCheck />}
-          title={t('auth.verify_otp.missing_phone_title')}
-          subtitle={t('auth.verify_otp.missing_phone_body')}
-        />
-        <Link
-          href={signedInUser ? PHONE_VERIFICATION_PATH : '/login'}
-          className={cn(buttonVariants({ fullWidth: true }), authSubmitClass, 'max-w-[420px]')}
-        >
-          {signedInUser ? t('account.verification.title') : t('auth.verify_otp.back_to_login')}
-        </Link>
-      </div>
-    );
-  }
-
-  if (status === 'success') {
-    return (
-      <div className="flex flex-col items-center gap-8">
-        <AuthHeading
-          icon={<CircleCheck />}
-          title={t('auth.verify_otp.success_title')}
-          subtitle={t('auth.verify_otp.success_body')}
-        />
-        <Button
-          onClick={() => router.replace(continueTarget)}
-          fullWidth
-          className={cn(authSubmitClass, 'max-w-[420px]')}
-        >
-          {resumesAction
-            ? t('auth.phone_gate.resume')
-            : t('auth.verify_otp.continue')}
-        </Button>
-      </div>
-    );
-  }
+  const submitCode = async (value: string) => {
+    if (value.length !== CODE_LENGTH) {
+      setCodeError(t('auth.errors.otp_invalid_format'));
+      return;
+    }
+    setCodeError(null);
+    setSubmitting(true);
+    try {
+      await verifyOtp({ phone, code: value });
+      if (signedInUser?.phone === phone) setPhoneVerified(true);
+      void queryClient.invalidateQueries({ queryKey: ['account'] });
+      toast.success(t('auth.verify_otp.success_title'));
+      router.replace(continueTarget);
+    } catch (err) {
+      handleVerifyError(err, {
+        setError: setCodeError,
+        clearCode: () => setCode(''),
+      });
+      setSubmitting(false);
+    }
+  };
 
   return (
     <>
-      <AuthHeading
-        icon={<ShieldCheck />}
-        title={t('auth.verify_otp.heading')}
-        subtitle={
-          <>
-            {t('auth.verify_otp.subtitle')}{' '}
-            <span className="font-semibold text-qb-ink-body" dir="ltr">
-              {phone}
-            </span>
-            <br />
-            {t('auth.verify_otp.enter_below')}
-          </>
-        }
-      />
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submit(code);
-        }}
-        noValidate
-        className="mt-8 flex flex-col gap-5 qb-desktop:mt-12"
-      >
-        <div className="flex flex-col gap-3">
-          <OtpInput
-            value={code}
-            onChange={(next) => {
-              setSubmitError(null);
-              setCode(next);
-            }}
-            onComplete={onComplete}
-            length={CODE_LENGTH}
-            disabled={submitting}
-            ariaInvalid={Boolean(submitError)}
-            ariaDescribedBy={submitError ? 'otp-error' : undefined}
-            autoFocus
-          />
-          <div className="flex min-h-5 items-center justify-center">
-            <FieldError id="otp-error" message={submitError ?? undefined} />
-          </div>
-          {expiresSeconds > 0 && !submitError ? (
-            <p className="text-center text-qb-label text-qb-ink-subtle">
-              {t('auth.verify_otp.expires_in').replace(
-                '{seconds}',
-                String(expiresSeconds),
-              )}
-            </p>
-          ) : null}
+      {step === 'intro' ? (
+        <div className="text-center">
+          <AuthHeading title={t('auth.verify_otp.heading')} subtitle={t('auth.verify_otp.intro')} />
+          <Button
+            fullWidth
+            onClick={() => setStep('number')}
+            className={cn(authSubmitClass, 'mx-auto mt-[34px] max-w-[420px]')}
+          >
+            {t('auth.verify_otp.continue')}
+          </Button>
         </div>
+      ) : null}
 
-        <p className="text-center text-qb-caption text-qb-ink-subtle qb-tablet:text-qb-body">
-          {t('auth.verify_otp.no_code')}{' '}
-          {canResend ? (
-            <button
-              type="button"
-              onClick={onResend}
-              className={cn('rounded-qb-xs font-medium text-qb-brand underline underline-offset-2 hover:text-qb-brand-hover', focusRing)}
+      {step === 'number' ? (
+        <>
+          <AuthHeading title={t('auth.verify_otp.heading')} subtitle={t('auth.verify_otp.intro')} />
+          <form
+            method="post"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              submitNumber();
+            }}
+            className="flex flex-col"
+          >
+            <PhoneNumberFields
+              value={phone}
+              onChange={(next) => {
+                setNumberProblem(null);
+                setPhone(next);
+              }}
+              error={
+                numberProblem === 'invalid'
+                  ? t('auth.errors.phone_invalid')
+                  : numberProblem === 'not_yours'
+                    ? t('auth.verify_otp.change_in_settings')
+                    : undefined
+              }
+              className="mt-[26px]"
+            />
+            {numberProblem === 'not_yours' ? (
+              <Link href="/account/security" className={cn(authLinkClass, 'mt-2 self-start text-qb-caption')}>
+                {t('account.nav.account_settings')}
+              </Link>
+            ) : null}
+            <Button
+              type="submit"
+              fullWidth
+              disabled={sending}
+              className={cn(authSubmitClass, 'mt-[26px]', sending && 'cursor-progress')}
             >
-              {t('auth.verify_otp.resend_now')}
-            </button>
-          ) : (
-            <span className="font-medium text-qb-ink">
-              {t('auth.verify_otp.resend_in').replace(
-                '{seconds}',
-                String(resendSeconds),
+              {sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+              {t('auth.verify_otp.send')}
+            </Button>
+          </form>
+        </>
+      ) : null}
+
+      {step === 'code' ? (
+        <div className="text-center">
+          <AuthHeading
+            title={t('auth.verify_otp.heading')}
+            subtitle={
+              <>
+                {t('auth.verify_otp.subtitle')}{' '}
+                <span dir="ltr">{maskPhoneForCode(phone)}</span>{' '}
+                <button
+                  type="button"
+                  onClick={() => setStep('number')}
+                  className={cn(authLinkClass, 'cursor-pointer text-qb-body')}
+                >
+                  {t('common.edit')}
+                </button>
+                <br />
+                {t('auth.verify_otp.enter_below')}
+              </>
+            }
+          />
+          <form
+            method="post"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitCode(code);
+            }}
+            noValidate
+          >
+            <OtpInput
+              value={code}
+              onChange={(next) => {
+                setCodeError(null);
+                setCode(next);
+              }}
+              onComplete={(full) => {
+                if (!submitting) void submitCode(full);
+              }}
+              length={CODE_LENGTH}
+              disabled={submitting}
+              ariaInvalid={Boolean(codeError)}
+              ariaDescribedBy={codeError ? 'otp-error' : undefined}
+              autoFocus
+              className="mt-[34px] mb-1.5"
+            />
+            <FieldError id="otp-error" message={codeError ?? undefined} />
+
+            <p className="mt-[18px] text-start text-qb-body font-medium text-qb-auth-resend">
+              {t('auth.verify_otp.no_code')}{' '}
+              <button
+                type="button"
+                onClick={() => void sendCode(phone, true)}
+                disabled={resendSeconds > 0 || sending}
+                className="cursor-pointer rounded-qb-xs underline disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {t('auth.verify_otp.resend_now')}
+              </button>
+              {resendSeconds > 0 ? (
+                <span className="ms-1 tabular-nums">{t('auth.verify_otp.resend_wait', { seconds: resendSeconds })}</span>
+              ) : null}
+            </p>
+
+            <Button
+              type="submit"
+              fullWidth
+              disabled={submitting || code.length !== CODE_LENGTH}
+              className={cn(authSubmitClass, 'mx-auto mt-[30px] max-w-[420px]', submitting && 'cursor-progress')}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="animate-spin" aria-hidden="true" />
+                  {t('auth.verify_otp.submitting')}
+                </>
+              ) : (
+                t('auth.verify_otp.submit')
               )}
-            </span>
-          )}
-        </p>
+            </Button>
+          </form>
+        </div>
+      ) : null}
 
-        <Turnstile ref={turnstile} />
-
-        <Button
-          type="submit"
-          fullWidth
-          disabled={submitting || code.length !== CODE_LENGTH}
-          className={cn(authSubmitClass, 'mt-3', submitting && 'cursor-progress')}
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="animate-spin" aria-hidden="true" />
-              {t('auth.verify_otp.submitting')}
-            </>
-          ) : (
-            t('auth.verify_otp.submit')
-          )}
-        </Button>
-      </form>
+      <Turnstile ref={turnstile} />
     </>
   );
 }

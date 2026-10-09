@@ -12,16 +12,23 @@
 import { api } from './client';
 import { ApiClientError } from './auth';
 import { isAxiosError } from 'axios';
+import type { SavedAddress } from './commerce-types';
 import type {
   AccountProfile,
   AccountSummary,
   BlockedUser,
+  BusinessProfile,
   ChangePasswordRequest,
+  ContactChangeRequest,
   DataExportResponse,
   DeactivateAccountRequest,
   DeleteAccountRequest,
+  EmailPreferences,
   ErrorEnvelope,
+  OtpSendResponseData,
   PrivacySettings,
+  ReauthCodeResponse,
+  SavedAddressInput,
   SuccessEnvelope,
   UpdateProfileRequest,
   UserSession,
@@ -223,6 +230,128 @@ export async function requestAccountDeletion(
 ): Promise<void> {
   try {
     await api.delete('/api/v1/account/delete-request', { data: payload });
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+// ── Contact changes (step-up code, then the new email or phone) ────────────
+
+/** Emails a 6-digit step-up code to the current address. */
+export async function requestReauthCode(): Promise<ReauthCodeResponse> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<ReauthCodeResponse>>('/api/v1/account/reauth-code');
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Sends a confirmation link to the new address; nothing changes until it is opened. */
+export async function requestEmailChange(payload: ContactChangeRequest<'email'>): Promise<void> {
+  try {
+    await api.post('/api/v1/account/email', payload);
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Texts an OTP to the new number; `confirmPhoneChange` finishes the move. */
+export async function requestPhoneChange(payload: ContactChangeRequest<'phone'>): Promise<OtpSendResponseData> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<OtpSendResponseData>>('/api/v1/account/phone', payload);
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+export async function confirmPhoneChange(code: string): Promise<AccountProfile> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<AccountProfile>>('/api/v1/account/phone/verify', { code });
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+// ── Delivery addresses ──────────────────────────────────────────────────────
+
+export async function listAddresses(): Promise<SavedAddress[]> {
+  try {
+    const { data } = await api.get<SuccessEnvelope<SavedAddress[]>>('/api/v1/account/addresses');
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+export async function createAddress(payload: SavedAddressInput): Promise<SavedAddress> {
+  try {
+    const { data } = await api.post<SuccessEnvelope<SavedAddress>>('/api/v1/account/addresses', payload);
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+export async function updateAddress(id: string, payload: Partial<SavedAddressInput>): Promise<SavedAddress> {
+  try {
+    const { data } = await api.patch<SuccessEnvelope<SavedAddress>>(
+      `/api/v1/account/addresses/${encodeURIComponent(id)}`,
+      payload,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+export async function deleteAddress(id: string): Promise<void> {
+  try {
+    await api.delete(`/api/v1/account/addresses/${encodeURIComponent(id)}`);
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+// ── Email preferences ───────────────────────────────────────────────────────
+
+export async function getEmailPreferences(): Promise<EmailPreferences> {
+  try {
+    const { data } = await api.get<SuccessEnvelope<EmailPreferences>>('/api/v1/account/email-preferences');
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Topics left out keep their value. */
+export async function updateEmailPreferences(payload: Partial<EmailPreferences>): Promise<EmailPreferences> {
+  try {
+    const { data } = await api.patch<SuccessEnvelope<EmailPreferences>>('/api/v1/account/email-preferences', payload);
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+// ── Business profile (business accounts only) ──────────────────────────────
+
+export async function getBusinessProfile(): Promise<BusinessProfile> {
+  try {
+    const { data } = await api.get<SuccessEnvelope<BusinessProfile>>('/api/v1/account/business-profile');
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Only the fields sent change; `null` clears one. */
+export async function updateBusinessProfile(payload: Partial<BusinessProfile>): Promise<BusinessProfile> {
+  try {
+    const { data } = await api.put<SuccessEnvelope<BusinessProfile>>('/api/v1/account/business-profile', payload);
+    return data.data;
   } catch (err) {
     throw toApiClientError(err);
   }

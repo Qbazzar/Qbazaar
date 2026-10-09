@@ -20,9 +20,11 @@ describe('PasswordInput', () => {
     expect(toggle).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('keeps the eye clear of the text on the end side', () => {
+  it('keeps the eye clear of the left-to-right text on the end side of either direction', () => {
     render(<PasswordInput aria-label="Password" />);
+    const input = screen.getByLabelText('Password');
 
-    expect(screen.getByLabelText('Password')).toHaveClass('pe-12');
+    expect(input).toHaveAttribute('dir', 'ltr');
+    expect(input).toHaveClass('pr-12', 'rtl:pl-12');
   });
 });

@@ -264,3 +264,26 @@ export function useDeleteNotificationMutation(): UseMutationResult<
     },
   });
 }
+
+/**
+ * "Read All" / "Delete" on the selected rows. The API has no bulk call, so
+ * the ids (at most one page) go out in parallel; the lists and the count are
+ * refetched afterwards. Resolves with how many requests failed.
+ */
+export function useBulkNotificationsMutation(): UseMutationResult<
+  number,
+  ApiClientError,
+  { action: 'read' | 'delete'; ids: readonly string[] }
+> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ action, ids }) => {
+      const run = action === 'read' ? markNotificationRead : deleteNotification;
+      const results = await Promise.allSettled(ids.map((id) => run(id)));
+      return results.filter((result) => result.status === 'rejected').length;
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: notificationsKeys.all });
+    },
+  });
+}

@@ -216,6 +216,35 @@ export interface UserSession {
   is_current: boolean;
 }
 
+/** `POST /account/reauth-code`: the step-up code asked before an email or phone change. */
+export interface ReauthCodeResponse {
+  expires_in: number;
+  can_resend_in: number;
+}
+
+/** `POST /account/email` and `POST /account/phone`. */
+export type ContactChangeRequest<K extends 'email' | 'phone'> = Record<K, string> & { reauth_code: string };
+
+/** The email switch of each notification topic (`/account/email-preferences`). */
+export interface EmailPreferences {
+  user_messages: boolean;
+  offers: boolean;
+  listing_updates: boolean;
+  saved_search_alerts: boolean;
+  newsletters: boolean;
+}
+
+/** Body of `POST /account/addresses` (and, partly, `PATCH /account/addresses/{id}`). */
+export interface SavedAddressInput {
+  full_name: string;
+  street: string;
+  house_number: string;
+  supplement?: string | null;
+  postal_code?: string | null;
+  city: string;
+  is_default?: boolean;
+}
+
 export interface BlockedUser {
   id: string;
   full_name: string;
@@ -617,6 +646,8 @@ export interface AdSummary {
   status: AdStatus;
   views_count: number;
   favorites_count: number;
+  /** The seller holds this live ad for a buyer. */
+  is_reserved?: boolean;
   primary_image: Media | null;
   location_slug: string;
   category_slug: string;
@@ -749,7 +780,10 @@ export interface SavedSearch {
   id: string;
   name: string;
   query_params: SearchQueryParams;
+  /** Sends a `search.match` notification for every new matching ad. */
+  alerts_enabled: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 /** `qbazaar-contracts/error-codes.md`: index down, saved search missing, invalid filters, saved-search limit. */
@@ -783,7 +817,7 @@ export type RecentlyViewedErrorCode = 'RECENTLY_VIEWED_AD_NOT_FOUND';
 // powered by Reverb (over the Pusher protocol); the shapes below mirror the
 // `BE-8.x` contract additions and stay decoupled from the broadcaster.
 
-export type MessageType = 'text' | 'offer' | 'system';
+export type MessageType = 'text' | 'image' | 'offer' | 'system' | 'purchase_request';
 
 /**
  * Lean row used by the conversations index. The ad slice is kept small —
@@ -834,12 +868,23 @@ export interface Message {
     full_name: string;
     avatar_thumb_url: string | null;
   };
+  /** The photo of an `image` message. */
+  media?: ChatImage | null;
   /**
    * Populated when `type === 'offer'`. The backend bundles the offer envelope
    * onto the message so the chat timeline can render the offer card inline
    * without an extra round-trip.
    */
   offer?: Offer | null;
+}
+
+/** Photo of an `image` chat message; the URLs are signed and expire. */
+export interface ChatImage {
+  id: string;
+  url: string;
+  original_url: string;
+  mime_type: string;
+  size_bytes: number;
 }
 
 export interface UnreadCountResponse {

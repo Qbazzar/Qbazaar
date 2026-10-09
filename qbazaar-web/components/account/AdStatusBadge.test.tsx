@@ -13,10 +13,11 @@ describe('AdStatusBadge', () => {
     ['pending', 'text-qb-info'],
     ['sold', 'text-qb-ink-secondary'],
     ['rejected', 'text-qb-danger'],
-  ])('labels a %s ad in its status colour, outlined like the design chips', (status, colour) => {
+  ])('labels a %s ad in its status colour on the soft chip of the design', (status, colour) => {
     render(<AdStatusBadge status={status} />);
     const badge = screen.getByText(t(`ads.status.${status}`));
 
-    expect(badge).toHaveClass(colour, 'border', 'border-current', 'font-qb-label');
+    expect(badge).toHaveClass(colour, 'font-qb-label', 'text-qb-label');
+    expect(badge).not.toHaveClass('border');
   });
 });

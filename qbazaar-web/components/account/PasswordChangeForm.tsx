@@ -3,9 +3,9 @@
 /**
  * PasswordChangeForm — `PUT /account/password`.
  *
- * Reuses the same strength scoring + UI as registration so the standard
- * stays consistent. On success: success toast + reset form fields, and the
- * caller closes the "Edit Password" dialog (411:9755).
+ * The "Change Password" dialog of account.html: current, new and confirm.
+ * On success: success toast + reset form fields, and the caller closes the
+ * dialog. The API signs the other devices out, which the toast says.
  */
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,11 +13,9 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
+import { Input } from '@/components/design-system/Input';
 import { fieldErrorText } from '@/components/auth/FieldError';
-import { PasswordInput } from '@/components/auth/PasswordInput';
-import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import {
@@ -27,7 +25,7 @@ import {
 import { changePassword } from '@/lib/api/account';
 import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode, UserErrorCode } from '@/lib/api/types';
-import { ModalActions } from './ModalActions';
+import { AccountDialogActions, accountCancelClass, accountInputClass, accountSaveClass } from './AccountDialog';
 
 export interface PasswordChangeFormProps {
   /** Called after a successful change, e.g. to close the dialog. */
@@ -69,75 +67,40 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
 
   const errors = form.formState.errors;
   const submitting = form.formState.isSubmitting || mutation.isPending;
-  const newPasswordValue = form.watch('new_password');
+
+  const passwordField = (name: keyof ChangePasswordInput, labelKey: string, autoComplete: string) => (
+    <Field label={t(labelKey)} error={fieldErrorText(errors[name]?.message)}>
+      {(control) => (
+        <Input
+          {...control}
+          type="password"
+          dir="ltr"
+          autoComplete={autoComplete}
+          placeholder="*******"
+          className={cn(accountInputClass, 'rtl:placeholder:text-right')}
+          {...form.register(name)}
+        />
+      )}
+    </Field>
+  );
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6 text-start">
-      <p className="rounded-qb-md bg-qb-brand-soft px-4 py-3 text-qb-caption text-qb-ink-body">
-        {t('account.security.sign_out_notice')}
-      </p>
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-[18px] text-start">
+      {passwordField('current_password', 'account.security.current_password_label', 'current-password')}
+      {passwordField('new_password', 'account.security.new_password_label', 'new-password')}
+      {passwordField('password_confirmation', 'account.security.password_confirmation_label', 'new-password')}
 
-      <Field
-        label={t('account.security.current_password_label')}
-        required
-        error={fieldErrorText(errors.current_password?.message)}
-      >
-        {(control) => (
-          <PasswordInput
-            {...control}
-            autoComplete="current-password"
-            placeholder="••••••••"
-            {...form.register('current_password')}
-          />
-        )}
-      </Field>
-
-      <Field label={t('account.security.new_password_label')} required error={fieldErrorText(errors.new_password?.message)}>
-        {(control) => (
-          <div className="flex flex-col gap-3">
-            <PasswordInput
-              {...control}
-              autoComplete="new-password"
-              placeholder="••••••••"
-              {...form.register('new_password')}
-            />
-            <PasswordStrengthIndicator password={newPasswordValue ?? ''} />
-          </div>
-        )}
-      </Field>
-
-      <Field
-        label={t('account.security.password_confirmation_label')}
-        required
-        error={fieldErrorText(errors.password_confirmation?.message)}
-      >
-        {(control) => (
-          <PasswordInput
-            {...control}
-            autoComplete="new-password"
-            placeholder="••••••••"
-            {...form.register('password_confirmation')}
-          />
-        )}
-      </Field>
-
-      <ModalActions>
-        <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
-          {submitting ? (
-            <>
-              <Loader2 className="animate-spin" aria-hidden="true" />
-              {t('account.security.submitting')}
-            </>
-          ) : (
-            t('common.save')
-          )}
-        </Button>
+      <AccountDialogActions className="mt-2">
+        <button type="submit" disabled={submitting} className={cn(accountSaveClass, submitting && 'cursor-progress')}>
+          {submitting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+          {t('common.save')}
+        </button>
         {onCancel ? (
-          <Button type="button" variant="muted" size="sm" onClick={onCancel} disabled={submitting}>
+          <button type="button" onClick={onCancel} disabled={submitting} className={accountCancelClass}>
             {t('common.cancel')}
-          </Button>
+          </button>
         ) : null}
-      </ModalActions>
+      </AccountDialogActions>
     </form>
   );
 }

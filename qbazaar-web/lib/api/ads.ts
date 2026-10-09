@@ -236,6 +236,19 @@ export async function renewAd(id: string): Promise<Ad> {
   }
 }
 
+/** Holds a live ad for a buyer (`reserved: true`) or releases it again. */
+export async function setAdReserved(id: string, reserved: boolean): Promise<Ad> {
+  try {
+    const url = `${BASE}/${encodeURIComponent(id)}/reserve`;
+    const { data } = reserved
+      ? await api.post<SuccessEnvelope<Ad>>(url)
+      : await api.delete<SuccessEnvelope<Ad>>(url);
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
 // ── Account scope ──────────────────────────────────────────────────────────
 
 export interface MyAdsParams extends Record<string, unknown> {

@@ -1,0 +1,51 @@
+/* Exact reference colours of the auth and account pages that
+   design-tokens.css has no token for yet (D:/Doc/q-bazaar auth.css and the
+   account, my-ads, notifications, saved-search and messages screens of the
+   app template). Same rules as design-tokens.css: the design's values,
+   never darkened. */
+
+@theme {
+  /* Auth shell (auth.css) */
+  --color-qb-auth-lang-ink: #364153; /* language pill text */
+  --color-qb-auth-caret: #c2c2c2; /* language pill caret */
+  --color-qb-auth-lang-caption: #999999; /* "CHOOSE YOUR LANGUAGE" */
+  --color-qb-auth-muted: #a19f9f; /* subtitles, "Didn't get it?" and its tips */
+  --color-qb-auth-foot: #6b7280; /* "You didn't have an account?" */
+  --color-qb-auth-eye: #9aa0a6; /* password eye */
+  --color-qb-auth-section: #525252; /* sign-up section titles */
+  --color-qb-auth-terms: #909090; /* terms sentence */
+  --color-qb-auth-note: #5a5a5a; /* SMS note under the phone number */
+  --color-qb-auth-resend: #ff0000; /* "You haven't received any code? Resend" */
+  --color-qb-auth-btn-hover: #ef6f42; /* `.qb-btn:hover` */
+  --shadow-qb-auth-card: 0 10px 40px 0 rgb(0 0 0 / 0.06);
+
+  /* Settings screen, My Ads, notifications, saved searches (app template, acct.js) */
+  --color-qb-acct-tile: #f7f7f7; /* "Overview of your sales", "Complete" / "Reserve" */
+  --color-qb-acct-meta: #777777; /* row buttons, the visitors line, notification bodies */
+  --color-qb-acct-danger: #d33c3c; /* "Log Out", the my-ads trash */
+  --color-qb-acct-overlay: rgb(35 31 32 / 0.45); /* behind the edit dialogs */
+  --color-qb-acct-field: #e0e0e0; /* dialog inputs */
+  --color-qb-acct-hub-divider: #f0f0f0; /* under the phone hub's identity row */
+  --color-qb-acct-avatar: #eeeeee; /* phone hub initials */
+  --color-qb-acct-chevron: #bbbbbb; /* phone hub "›" */
+  --color-qb-acct-check-ring: #cbcbcb; /* select boxes, "Without Photo" dashes */
+  --color-qb-acct-placeholder: #b3b3b3; /* "Without Photo" */
+  --color-qb-acct-toggle-off: #d2d2d2; /* settings switch, off */
+  --color-qb-acct-alert-on-soft: #efffed; /* "Notification on" pill */
+  --color-qb-acct-active: #fff4ef; /* the open inbox row */
+  --color-qb-acct-banner: #fff7f3; /* "Clean up inactive items" */
+  --color-qb-acct-banner-line: #fadcce;
+  --shadow-qb-acct-card: 0 4px 40px 0 rgb(161 161 161 / 0.1); /* my-ads rows and profile card */
+  --shadow-qb-acct-pill: 0 4px 30px 0 rgb(161 161 161 / 0.15); /* filter pills, off */
+  --shadow-qb-acct-notification: inset 0 0 0 1px #ededed, 0 4px 40px 0 rgb(161 161 161 / 0.15);
+  --shadow-qb-acct-modal: 0 30px 80px 0 rgb(0 0 0 / 0.25);
+
+  /* Messages (chat.js) */
+  --color-qb-chat-block: #e04a4a; /* "Block" in the "⋯" menu */
+  --color-qb-chat-overlay: rgb(30 30 30 / 0.45); /* behind "Block User?" */
+  --color-qb-chat-dialog-body: #787878;
+  --shadow-qb-chat-menu: 0 12px 44px 0 rgb(0 0 0 / 0.16);
+  --shadow-qb-chat-dialog: 0 24px 64px 0 rgb(0 0 0 / 0.25);
+  --color-qb-chat-delete-overlay: rgb(35 31 32 / 0.5); /* behind "Delete this conversation?" */
+  --shadow-qb-chat-delete: 0 20px 60px 0 rgb(0 0 0 / 0.3);
+}

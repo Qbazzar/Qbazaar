@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { CircleCheck, Loader2, TriangleAlert } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ import {
   sendEmailVerification,
   verifyEmail,
 } from '@/lib/api/auth';
-import { authSubmitClass } from './AuthFooter';
+import { authButtonClass, authSubmitClass } from './AuthFooter';
 import { AuthHeading } from './AuthHeading';
 
 type Status = 'checking' | 'success' | 'expired' | 'missing';
@@ -86,7 +86,6 @@ export function VerifyEmailLanding() {
   if (status === 'checking') {
     return (
       <ResultCard
-        icon={<Loader2 className="animate-spin motion-reduce:animate-none" />}
         title={t('auth.verify_email.checking_title')}
         body={t('auth.verify_email.checking_body')}
       />
@@ -96,7 +95,6 @@ export function VerifyEmailLanding() {
   if (status === 'success') {
     return (
       <ResultCard
-        icon={<CircleCheck />}
         title={t('auth.verify_email.success_title')}
         body={t('auth.verify_email.success_body')}
       >
@@ -110,7 +108,6 @@ export function VerifyEmailLanding() {
   if (status === 'expired') {
     return (
       <ResultCard
-        icon={<TriangleAlert />}
         title={t('auth.verify_email.expired_title')}
         body={t('auth.verify_email.expired_body')}
       >
@@ -124,7 +121,7 @@ export function VerifyEmailLanding() {
             t('auth.verify_email.resend')
           )}
         </Button>
-        <Link href="/login" className={cn(buttonVariants({ variant: 'outline', fullWidth: true }), authSubmitClass)}>
+        <Link href="/login" className={cn(buttonVariants({ variant: 'outline', fullWidth: true }), authButtonClass)}>
           {t('auth.verify_otp.back_to_login')}
         </Link>
       </ResultCard>
@@ -134,7 +131,6 @@ export function VerifyEmailLanding() {
   // status === 'missing'
   return (
     <ResultCard
-      icon={<TriangleAlert />}
       title={t('auth.verify_email.missing_params_title')}
       body={t('auth.verify_email.missing_params_body')}
     >
@@ -145,22 +141,20 @@ export function VerifyEmailLanding() {
   );
 }
 
-/** "Check your email" card content of 739:36548 (the auth layout draws the card) with the result's icon, title and next step. */
+/** Result card of the email link: the `.qb-card center` layout of signup-verify.html with the next step under the copy. */
 function ResultCard({
-  icon,
   title,
   body,
   children,
 }: {
-  icon: ReactNode;
   title: string;
   body: string;
   children?: ReactNode;
 }) {
   return (
-    <div role="status" className="flex flex-col items-center gap-8">
-      <AuthHeading icon={icon} title={title} subtitle={body} />
-      {children ? <div className="flex w-full max-w-[420px] flex-col gap-3">{children}</div> : null}
+    <div role="status" className="text-center">
+      <AuthHeading title={title} subtitle={body} />
+      {children ? <div className="mx-auto mt-[34px] flex w-full max-w-[420px] flex-col gap-3">{children}</div> : null}
     </div>
   );
 }

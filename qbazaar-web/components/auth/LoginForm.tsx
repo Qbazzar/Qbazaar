@@ -18,7 +18,7 @@ import { ApiClientError, login } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { safeReturnTo } from '@/lib/navigation/safe-return-to';
-import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
+import { AuthFooter, authInputClass, authLinkClass, authSubmitClass } from './AuthFooter';
 import { fieldErrorText } from './FieldError';
 import { PasswordInput } from './PasswordInput';
 
@@ -60,11 +60,12 @@ export function LoginForm() {
         : null;
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
+    // method="post" keeps the credentials out of the URL if the form is sent before React takes over.
+    <form method="post" onSubmit={onSubmit} noValidate className="mt-[26px] flex flex-col">
       {lifecycleNotice ? (
         <p
           role="status"
-          className="rounded-qb-md border border-qb-brand/30 bg-qb-brand-soft px-4 py-3 text-qb-caption text-qb-ink-body"
+          className="mb-[18px] rounded-qb-md border border-qb-brand/30 bg-qb-brand-soft px-4 py-3 text-qb-caption text-qb-ink-body"
         >
           {lifecycleNotice}
         </p>
@@ -77,36 +78,45 @@ export function LoginForm() {
             type="text"
             autoComplete="username"
             dir="ltr"
-            className="rtl:placeholder:text-right"
+            className={cn(authInputClass, 'rtl:placeholder:text-right')}
             placeholder={t('auth.login.identifier_placeholder')}
             {...form.register('identifier')}
           />
         )}
       </Field>
 
-      <div className="flex flex-col gap-4">
-        <Field label={t('auth.login.password_label')} required error={fieldErrorText(errors.password?.message)}>
-          {(control) => (
-            <PasswordInput
-              {...control}
-              autoComplete="current-password"
-              placeholder={t('auth.login.password_placeholder')}
-              {...form.register('password')}
-            />
-          )}
-        </Field>
-        <Link
-          href="/forgot-password"
-          className={cn(
-            'self-end rounded-qb-xs text-qb-caption font-medium text-qb-danger hover:underline qb-tablet:text-qb-body',
-            focusRing,
-          )}
-        >
-          {t('auth.login.forgot')}
-        </Link>
-      </div>
+      <Field
+        label={t('auth.login.password_label')}
+        required
+        error={fieldErrorText(errors.password?.message)}
+        className="mt-[18px]"
+      >
+        {(control) => (
+          <PasswordInput
+            {...control}
+            autoComplete="current-password"
+            placeholder={t('auth.login.password_placeholder')}
+            {...form.register('password')}
+          />
+        )}
+      </Field>
 
-      <Button type="submit" fullWidth disabled={submitting} className={cn(authSubmitClass, submitting && 'cursor-progress')}>
+      <Link
+        href="/forgot-password"
+        className={cn(
+          'mt-4 self-end rounded-qb-xs text-qb-body-sm font-medium text-qb-brand hover:underline',
+          focusRing,
+        )}
+      >
+        {t('auth.login.forgot')}
+      </Link>
+
+      <Button
+        type="submit"
+        fullWidth
+        disabled={submitting}
+        className={cn(authSubmitClass, 'mt-[26px]', submitting && 'cursor-progress')}
+      >
         {submitting ? (
           <>
             <Loader2 className="animate-spin" aria-hidden="true" />
