@@ -81,15 +81,15 @@ export function AdDealSummary({ ad }: { ad: DealAd }) {
             />
           </span>
           <div className="min-w-0 flex-1">
-            {/* The narrow tablet card wraps a long name instead of cutting it short. */}
-            <p className="flex items-center gap-1 text-qb-caption font-semibold text-qb-ink qb-desktop:text-qb-body">
-              <span dir="auto" className="min-w-0 break-words qb-desktop:truncate">
+            {/* Below 1001 px the name wraps between words on the narrow card, the tick after its last word. */}
+            <p className="text-qb-caption font-semibold break-words text-qb-ink qb-desktop:flex qb-desktop:items-center qb-desktop:gap-1 qb-desktop:text-qb-body">
+              <span dir="auto" className="qb-desktop:min-w-0 qb-desktop:truncate">
                 {sellerName}
               </span>
-              {verified ? <VerifiedMark className="size-4" /> : null}
+              {verified ? <VerifiedMark className="ms-1 inline-block size-4 align-[-3px] qb-desktop:ms-0" /> : null}
             </p>
             {memberSince ? (
-              <p className="mt-0.5 hidden text-[11px] text-(--color-qb-ink-optional) qb-tablet:block qb-desktop:hidden">
+              <p className="mt-0.5 hidden text-[11px] whitespace-nowrap text-(--color-qb-ink-optional) qb-tablet:block qb-desktop:hidden">
                 {t('orders.deal.member_since', { year: memberSince })}
               </p>
             ) : null}
