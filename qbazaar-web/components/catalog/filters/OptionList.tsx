@@ -1,3 +1,5 @@
+import '../catalog-tokens.css';
+
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
@@ -15,36 +17,35 @@ interface OptionListProps {
   labelledBy: string;
   options: FilterOption[];
   value: string | null;
-  onChange: (value: string | null) => void;
-  /** Label of the first option, which clears the filter. */
-  anyLabel: string;
+  onChange: (value: string) => void;
 }
 
+/**
+ * The 19 px radio of 245:4549: a light ring, a dark ring on hover, an inner
+ * ring while pressed, and an orange ring round an orange dot once chosen.
+ */
 const radio = [
-  'size-[18px] shrink-0 cursor-pointer appearance-none rounded-full border border-qb-ink-disabled bg-qb-surface transition-[border-width,border-color]',
-  'checked:border-[5px] checked:border-qb-brand motion-reduce:transition-none',
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-qb-brand-active',
+  'size-[19px] shrink-0 cursor-pointer appearance-none rounded-full border border-(--color-qb-radio-ring) bg-qb-surface transition-[border-color,box-shadow] motion-reduce:transition-none',
+  'not-checked:hover:border-(--color-qb-radio-ring-hover)',
+  'not-checked:active:border-(--color-qb-radio-ring-hover) not-checked:active:shadow-[inset_0_0_0_1px_var(--color-qb-surface),inset_0_0_0_2px_var(--color-qb-radio-ring)]',
+  'checked:border-qb-brand checked:bg-qb-brand checked:shadow-[inset_0_0_0_2px_var(--color-qb-surface)]',
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-qb-brand-active focus-visible:outline-solid',
 ].join(' ');
 
-/** Radio rows of a filter group ("Available (7,592,369)"), with an "any" row to clear it. */
-export function OptionList({ name, labelledBy, options, value, onChange, anyLabel }: OptionListProps) {
+/**
+ * Radio rows of a filter group ("Available (7,592,369)"). The design lists the
+ * real options only; a chosen one is cleared from its chip or "Reset All".
+ */
+export function OptionList({ name, labelledBy, options, value, onChange }: OptionListProps) {
   const locale = getLocale();
-  const rows: FilterOption[] = [{ value: '', label: anyLabel }, ...options];
 
   return (
     <div role="radiogroup" aria-labelledby={labelledBy} className="flex flex-col gap-3">
-      {rows.map((option) => {
-        const checked = (value ?? '') === option.value;
+      {options.map((option) => {
+        const checked = value === option.value;
         return (
-          <label key={option.value || 'any'} className="flex cursor-pointer items-center gap-2.5 font-qb text-qb-body text-qb-ink-subtle">
-            <input
-              type="radio"
-              name={name}
-              value={option.value}
-              checked={checked}
-              onChange={() => onChange(option.value || null)}
-              className={radio}
-            />
+          <label key={option.value} className="flex cursor-pointer items-center gap-2 font-qb text-qb-body text-qb-ink-subtle">
+            <input type="radio" name={name} value={option.value} checked={checked} onChange={() => onChange(option.value)} className={radio} />
             <span className={cn('min-w-0', checked && 'text-qb-ink-body')}>
               {option.label}
               {option.count ? <span className="tabular-nums"> ({formatNumber(option.count, locale)})</span> : null}

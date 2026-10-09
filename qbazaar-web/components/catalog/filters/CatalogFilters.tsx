@@ -96,6 +96,7 @@ export function FilterSheet({ triggerClassName, onApply, onReset, ...props }: Fi
           setOpen(false);
           focusing.onReset();
         }}
+        onKeep={() => setOpen(false)}
       />
     </Sheet>
   );
