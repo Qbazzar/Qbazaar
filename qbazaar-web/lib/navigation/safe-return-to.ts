@@ -4,7 +4,6 @@ const INTERNAL_ORIGIN = 'http://internal.invalid';
 // browsers normalise into an external origin.
 const LOOKS_EXTERNAL = /^\/[\\/]|\\/;
 
-// eslint-disable-next-line no-control-regex
 const CONTROL_OR_SPACE = /[\u0000-\u001F\u007F\s]/;
 
 /**

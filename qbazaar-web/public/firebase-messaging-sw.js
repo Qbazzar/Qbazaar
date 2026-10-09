@@ -11,7 +11,6 @@
  * source of truth; nothing is hardcoded here. When the config is absent or
  * malformed the worker installs as an inert no-op.
  */
-/* eslint-disable no-undef */
 importScripts(
   'https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js',
 );
