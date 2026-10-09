@@ -1,10 +1,17 @@
 import { readFile } from 'node:fs/promises';
 
+import type { Locale } from '@/lib/i18n/locale';
 import { resolveServerLocale } from '@/lib/i18n/server';
 
 import { OG_CONTENT_TYPE } from './constants';
 
 const ONE_DAY_SECONDS = 86_400;
+
+// Literal URLs, so the bundler can trace both files (a template string is not followed).
+const CARDS: Record<Locale, URL> = {
+  ar: new URL('./cards/og-ar.png', import.meta.url),
+  en: new URL('./cards/og-en.png', import.meta.url),
+};
 
 /**
  * The default share card in the page language. The cards are pre-rendered
@@ -13,7 +20,7 @@ const ONE_DAY_SECONDS = 86_400;
  */
 export async function brandCardResponse(): Promise<Response> {
   const locale = await resolveServerLocale();
-  const png = await readFile(new URL(`./cards/og-${locale}.png`, import.meta.url));
+  const png = await readFile(CARDS[locale]);
 
   return new Response(new Uint8Array(png), {
     headers: {
