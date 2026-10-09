@@ -2,11 +2,9 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 
 import { Avatar } from '@/components/design-system/Avatar';
-import { cardVariants } from '@/components/design-system/Card';
 import { formatNumber } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
 import { tPlural } from '@/lib/i18n/plural';
-import { cn } from '@/lib/utils';
 import type { PublicUserProfile } from '@/lib/api/types';
 
 import { VerifiedMark, isVerifiedSeller, sellerDisplayName } from './SellerBadges';
@@ -21,60 +19,49 @@ interface CompanyHeaderProps {
 }
 
 /**
- * Cover photo across the page with the company card overlapping its lower
- * edge (145:1063 / 532:27700 / 616:26793).
+ * The company page's head (seller-organization.html with mobilemenu.js
+ * sellerHero): a 200 px grey band across the page, the cover inside the
+ * content width with r16 top corners (190 px, 140 on phones), and the r20
+ * company card pulled 100 px up over it. The round logo rises out of the
+ * card; name and stats sit beside it and the buttons on the end side. On
+ * phones the card wraps: logo and name, the stats, then the buttons.
  */
 export function CompanyHeader({ profile, locale, actions, secondaryActions }: CompanyHeaderProps) {
   const name = sellerDisplayName(profile);
   const cover = profile.business_profile?.cover_url;
 
   return (
-    <div className="font-qb">
-      <div className="relative h-[140px] overflow-hidden bg-qb-brand-soft qb-tablet:h-[184px] qb-desktop:h-[228px]">
-        {cover ? <Image src={cover} alt="" fill preload fetchPriority="high" sizes="100vw" className="object-cover" /> : null}
-      </div>
+    <div className="relative font-qb">
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[200px] bg-qb-band" />
+      <div className="relative mx-auto max-w-[1440px] px-qb-gutter pt-[30px]">
+        <div className="relative h-[140px] overflow-hidden rounded-t-qb-xl bg-qb-brand-soft qb-tablet:h-[190px]">
+          {cover ? <Image src={cover} alt="" fill preload fetchPriority="high" sizes="(min-width: 1440px) 1360px, 100vw" className="object-cover" /> : null}
+        </div>
 
-      <div className="mx-auto -mt-20 max-w-[1344px] px-4 qb-tablet:-mt-[92px] qb-tablet:px-6 qb-desktop:-mt-[120px] qb-desktop:px-12">
         <section
           aria-label={name}
-          className={cn(
-            cardVariants({ large: true, elevated: true, padding: 'none' }),
-            'relative flex flex-col gap-5 p-4 qb-tablet:flex-row qb-tablet:items-center qb-tablet:justify-between qb-tablet:px-6 qb-tablet:py-[25px] qb-desktop:px-5 qb-desktop:py-[17px]',
-          )}
+          className="relative -mt-[100px] flex flex-wrap items-center justify-between gap-[18px] rounded-[20px] border border-qb-line bg-qb-surface p-6 shadow-qb-card qb-tablet:grid qb-tablet:grid-cols-[auto_minmax(0,1fr)_auto] qb-tablet:gap-y-0 qb-desktop:px-[clamp(24px,3vw,40px)] qb-desktop:py-[clamp(24px,3vw,36px)]"
         >
-          <div className="flex min-w-0 items-center gap-4 qb-desktop:gap-[18px]">
-            {/* The name is the heading beside it. */}
-            <span aria-hidden="true" className="flex shrink-0">
-              <Avatar
-                name={name}
-                src={profile.avatar_url}
-                size="lg"
-                tone="brand"
-                className="size-16 border-2 border-qb-line text-qb-h4 qb-tablet:size-20 qb-desktop:size-[120px] qb-desktop:text-qb-h2"
-              />
+          <Avatar
+            name={name}
+            src={profile.avatar_url}
+            decorative
+            className="-mt-[50px] size-[76px] border-4 border-qb-surface bg-qb-surface text-[26px] text-qb-ink-logo shadow-qb-logo qb-tablet:row-span-2 qb-tablet:-mt-16 qb-tablet:size-24"
+          />
+          <h1 className="flex min-w-0 items-center gap-2.5 text-[clamp(24px,3vw,30px)] font-semibold tracking-normal text-qb-ink qb-tablet:col-start-2 qb-tablet:self-end">
+            <span dir="auto" className="min-w-0 break-words">
+              {name}
             </span>
-            <div className="min-w-0">
-              <h1 className="flex items-center gap-1.5 text-qb-body-lg font-semibold tracking-normal text-qb-ink qb-desktop:text-qb-h3">
-                <span dir="auto" className="truncate">
-                  {name}
-                </span>
-                {isVerifiedSeller(profile) ? <VerifiedMark /> : null}
-              </h1>
-              <p className="mt-2 flex flex-wrap items-center gap-x-2 text-qb-micro text-qb-breadcrumb qb-tablet:text-qb-caption qb-desktop:mt-3 qb-desktop:text-qb-h5">
-                <span>
-                  <span className="font-medium text-qb-ink-body">{formatNumber(profile.ads_count, locale)}</span>{' '}
-                  {tPlural('users.profile.ads_label', profile.ads_count, locale)}
-                </span>
-                <span aria-hidden="true">•</span>
-                <span>
-                  <span className="font-medium text-qb-ink-body">{formatNumber(profile.followers_count, locale)}</span>{' '}
-                  {tPlural('users.profile.followers_label', profile.followers_count, locale)}
-                </span>
-              </p>
-            </div>
-          </div>
-          <div className="flex shrink-0 flex-col gap-2">
-            <div className="[display:grid] grid-cols-2 gap-3 qb-tablet:flex">{actions}</div>
+            {isVerifiedSeller(profile) ? <VerifiedMark className="size-[22px]" /> : null}
+          </h1>
+          <p className="basis-full text-[13.5px] text-qb-icon-muted qb-tablet:col-start-2 qb-tablet:row-start-2 qb-tablet:mt-[5px] qb-tablet:self-start qb-tablet:text-qb-h5">
+            {formatNumber(profile.ads_count, locale)}{' '}
+            <span className="text-qb-ink-disabled">{tPlural('users.profile.ads_label', profile.ads_count, locale)}</span>
+            <span aria-hidden="true"> &nbsp;•&nbsp; </span>
+            {formatNumber(profile.followers_count, locale)} {tPlural('users.profile.followers_label', profile.followers_count, locale)}
+          </p>
+          <div className="flex flex-col gap-2 qb-tablet:col-start-3 qb-tablet:row-span-2 qb-tablet:row-start-1">
+            <div className="flex flex-wrap gap-3">{actions}</div>
             {secondaryActions ? <div className="flex flex-wrap justify-center gap-1 qb-tablet:justify-end">{secondaryActions}</div> : null}
           </div>
         </section>
