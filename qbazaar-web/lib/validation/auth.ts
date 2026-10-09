@@ -7,9 +7,11 @@
  * Reference: openapi/v1.yaml → components.schemas.{RegisterRequest,LoginRequest,RefreshRequest}
  */
 import { z } from 'zod';
+import { qatarPhoneRegex } from './phone';
 
-// Qatar mobile numbers always carry the +974 prefix followed by 8 digits.
-export const qatarPhoneRegex = /^\+974[0-9]{8}$/;
+// Re-exported so existing imports keep working; the regex itself lives in a
+// zod-free module so the app-wide bundle does not pull zod in.
+export { qatarPhoneRegex };
 
 // Backend rule: ≥ 8 chars, at least one uppercase, one lowercase, one number, one symbol.
 const passwordRules = z

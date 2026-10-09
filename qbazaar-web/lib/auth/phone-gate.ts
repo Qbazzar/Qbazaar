@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios';
 import { AuthErrorCode, type User } from '@/lib/api/types';
-import { qatarPhoneRegex } from '@/lib/validation/auth';
+import { qatarPhoneRegex } from '@/lib/validation/phone';
 import { safeReturnTo } from '@/lib/navigation/safe-return-to';
 
 /**
