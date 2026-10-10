@@ -1,15 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Building2, Users } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
+import { CompanyDirectoryCard } from '@/components/companies/CompanyDirectoryCard';
 import { CompanySearchForm } from '@/components/companies/CompanySearchForm';
-import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { buttonVariants } from '@/components/design-system/Button';
-import { CompanyCard } from '@/components/design-system/CompanyCard';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Pagination } from '@/components/design-system/Pagination';
-import { pageFrame } from '@/components/design-system/page-frame';
 import type { Company } from '@/lib/api/types';
 import { companiesApiPath, companiesHref, readCompaniesParams, type CompaniesParams } from '@/lib/companies/directory';
 import { formatNumber } from '@/lib/i18n/format';
@@ -39,9 +37,11 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 }
 
 /**
- * Companies directory — `/companies` (179:4492 / 532:31445 / 620:28373).
- * Business accounts, most followed first, 20 to a page, rendered on the
- * server: the search is a GET form and every page is a real link.
+ * Companies directory — `/companies` (companies.html). Business accounts,
+ * most followed first, 20 to a page, rendered on the server: the search is
+ * a GET form and every page is a real link. The title, the centred
+ * "Find the Right Companies" block and the search bar scale with the page
+ * width as the reference's clamp() sizes do.
  */
 export default async function CompaniesPage({ searchParams }: PageProps) {
   const params = readCompaniesParams(await searchParams);
@@ -50,49 +50,29 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
     fetchApiPage<Company>(companiesApiPath(params), params.query ? 0 : DIRECTORY_REVALIDATE_SECONDS),
   ]);
   const total = result?.meta.total ?? 0;
-  const [heroBefore, heroAfter = ''] = t('companies.hero').split('{highlight}');
 
   return (
     <main className="bg-qb-page pb-16 font-qb text-qb-ink">
-      <div className={`${pageFrame} pt-11 qb-tablet:pt-[72px] qb-desktop:pt-[65px]`}>
-        <Breadcrumb
-          items={[{ label: t('home.breadcrumb'), href: '/' }, { label: t('companies.title') }]}
-          className="hidden qb-tablet:block"
-        />
-
-        <h1 className="text-qb-h2 leading-none font-semibold tracking-normal text-qb-ink qb-tablet:mt-[73px] qb-tablet:text-[32px] qb-desktop:mt-[49px] qb-desktop:text-qb-h1">
-          {t('companies.title')}
-        </h1>
+      <div className="mx-auto max-w-[1440px] px-qb-gutter pt-[clamp(20px,4vw,40px)]">
+        <h1 className="text-[clamp(30px,5vw,48px)] font-semibold tracking-normal text-qb-ink">{t('companies.title')}</h1>
         {/* Present in every state, so a new search's count is read out when the results change in place. */}
-        <div role="status">
-          {result ? (
-            <p className="mt-[19px] text-qb-caption text-qb-breadcrumb qb-tablet:mt-7 qb-tablet:text-qb-body qb-desktop:mt-[37px] qb-desktop:text-qb-h5">
-              <span className="font-semibold text-qb-ink-body qb-tablet:font-medium">{formatNumber(total, locale)}</span>{' '}
-              {tPlural('companies.count', total, locale)}
-            </p>
-          ) : null}
-        </div>
+        <p role="status" className="sr-only">
+          {result ? `${formatNumber(total, locale)} ${tPlural('companies.count', total, locale)}` : ''}
+        </p>
 
-        <section aria-labelledby="companies-search-title" className="mt-[45px] qb-tablet:mt-[42px] qb-desktop:mt-[77px]">
-          <div className="mx-auto max-w-[1109px] text-center">
-            <h2
-              id="companies-search-title"
-              className="text-qb-h3 leading-none font-semibold tracking-normal text-qb-black qb-tablet:text-[36px] qb-desktop:text-qb-h1"
-            >
-              {heroBefore}
-              <span className="text-qb-brand">{t('companies.hero_highlight')}</span>
-              {heroAfter}
+        <section aria-labelledby="companies-search-title" className="mt-[clamp(30px,6vw,70px)]">
+          <div className="mx-auto max-w-[760px] text-center">
+            <h2 id="companies-search-title" className="text-[clamp(28px,4vw,42px)] font-bold tracking-normal text-qb-ink">
+              {t('companies.hero')}
             </h2>
-            <p className="mx-auto mt-2.5 max-w-[629px] text-qb-micro text-qb-ink-muted qb-tablet:mt-[26px] qb-tablet:text-qb-body qb-desktop:mt-10 qb-desktop:max-w-none qb-desktop:text-qb-h3 qb-desktop:leading-none">
-              {t('companies.subtitle')}
-            </p>
+            <p className="mt-4 text-qb-body-sm leading-[1.55] text-qb-ink-subtle qb-desktop:text-qb-body-lg">{t('companies.subtitle')}</p>
           </div>
-          <div className="mx-auto mt-4 max-w-[1227px] qb-tablet:mt-8 qb-desktop:mt-11">
+          <div className="mt-[34px]">
             <CompanySearchForm query={params.query} />
           </div>
         </section>
 
-        <div className="mt-6 qb-tablet:mt-8 qb-desktop:mt-14">
+        <div className="mt-10">
           {result ? (
             <CompanyResults companies={result.data} params={params} lastPage={result.meta.last_page} locale={locale} />
           ) : (
@@ -132,18 +112,16 @@ function CompanyResults({ companies, params, lastPage, locale }: CompanyResultsP
 
   return (
     <>
-      <ul className="[display:grid] grid-cols-2 gap-3 qb-tablet:grid-cols-3 qb-tablet:gap-4 qb-desktop:grid-cols-5 qb-desktop:gap-x-[27px] qb-desktop:gap-y-8">
+      <ul className="[display:grid] grid-cols-2 gap-3 qb-tablet:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] qb-tablet:gap-[22px]">
         {companies.map((company) => (
           <li key={company.id}>
-            <CompanyCard
+            <CompanyDirectoryCard
               href={`/u/${company.id}`}
               name={company.business_name}
               logoUrl={company.avatar_url}
               toneKey={company.id}
               meta={tPlural('companies.followers', company.followers_count, locale)}
-              metaIcon={Users}
               count={tPlural('companies.ads', company.active_ads_count, locale)}
-              className="h-full"
             />
           </li>
         ))}

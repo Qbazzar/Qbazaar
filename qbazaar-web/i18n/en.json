@@ -557,7 +557,8 @@
         "one": "{count} Ad Available",
         "other": "{count} Ads Available"
       },
-      "load_more": "Load more ads",
+      "load_more": "Loading More Ads",
+      "load_more_rows": "Loading more Ads",
       "message": "Message",
       "ads_label": {
         "one": "Ad",
@@ -598,13 +599,37 @@
     },
     "follow": {
       "follow": "Follow",
-      "follow_seller": "Follow Seller",
+      "follow_seller": "+ Follow",
       "following": "Following",
       "followed": "You're following {name}",
       "unfollowed": "You unfollowed {name}",
       "errors": {
         "self": "You can't follow yourself",
         "blocked": "You can't follow this user"
+      }
+    },
+    "connections": {
+      "title": "Users",
+      "tabs": {
+        "following": "Following",
+        "followers": "Followers"
+      },
+      "follow_back": "Follow back",
+      "followed": "You now follow {name}",
+      "unfollowed": "Unfollowed {name}",
+      "message_named": "Message {name}",
+      "load_more": "Load more",
+      "empty": {
+        "following": {
+          "title": "You're not following anyone yet",
+          "body": "Discover sellers and follow them to keep up with their latest ads and offers.",
+          "cta": "Discover sellers"
+        },
+        "followers": {
+          "title": "You don't have any followers yet",
+          "body": "When people follow you, they'll show up here so you can connect back.",
+          "cta": "Browse marketplace"
+        }
       }
     }
   },
@@ -1121,13 +1146,15 @@
         "one": "{count} Ad",
         "other": "{count} Ads"
       },
-      "seller_ads_title": "More Ads From Seller",
+      "seller_ads_title": "Another Ads From Seller",
       "facts": "Ad details",
       "ad_id_label": "Ad ID",
       "posted_on": "Posted on",
       "share_ad": "Share Ad",
       "report_ad": "Report Ad",
-      "map_label": "Map of {place}"
+      "map_label": "Map of {place}",
+      "active_since": "Active since {date}",
+      "view_all": "View All"
     },
     "form": {
       "title": "Ad title",
@@ -1212,6 +1239,17 @@
     },
     "similar_section": {
       "title": "Similar ads"
+    },
+    "share": {
+      "title": "Share this ad",
+      "channels": {
+        "whatsapp": "WhatsApp",
+        "facebook": "Facebook",
+        "x": "X",
+        "email": "Email"
+      },
+      "copy": "Copy",
+      "copied": "Link copied to clipboard"
     }
   },
   "search": {
@@ -1272,7 +1310,7 @@
     }
   },
   "favorites": {
-    "wishlist_title": "My Wishlist",
+    "wishlist_title": "Wishlist",
     "remove_label": "Remove {title} from your wishlist",
     "title": "Saved ads",
     "count": "{count} ads",
@@ -1289,6 +1327,12 @@
     "sign_in_required": "Sign in to save ads",
     "errors": {
       "ad_not_found": "We couldn't find that ad"
+    },
+    "clear_all": "Clear all",
+    "wishlist_empty": {
+      "title": "Your wishlist is empty",
+      "description": "Tap the heart on any listing to save it here and keep an eye on the deals you love.",
+      "cta": "Browse Listings"
     }
   },
   "orders": {
@@ -2012,11 +2056,15 @@
   "reports": {
     "title": "Report",
     "dialog": {
-      "heading": "Select a problem to report"
+      "heading": "Select a problem to report",
+      "title_ad": "Report this ad",
+      "title_user": "Report this user",
+      "subtitle_ad": "Tell us what's wrong with this listing.",
+      "subtitle_user": "Tell us what's wrong with this account."
     },
     "description_label": "Additional details (optional)",
     "description_placeholder": "Add any context that helps us review the report.",
-    "submit": "Submit report",
+    "submit": "Submit Report",
     "categories": {
       "spam": {
         "label": "Spam"
@@ -2040,7 +2088,7 @@
         "label": "Other"
       }
     },
-    "success_toast": "Report submitted",
+    "success_toast": "Report submitted. Thank you.",
     "reported": "Reported!",
     "errors": {
       "invalid_target": "This item can't be reported",
@@ -2048,6 +2096,13 @@
       "recent_duplicate": "Already reported",
       "category_required": "Pick a reason",
       "description_max": "Description is too long"
+    },
+    "ad_reasons": {
+      "fraud": "Fraud or scam",
+      "inappropriate": "Prohibited item",
+      "wrong_category": "Wrong category",
+      "duplicate": "Duplicate listing",
+      "offensive": "Offensive content"
     }
   },
   "cms": {
@@ -2258,8 +2313,7 @@
       "one": "Local Company in Qatar",
       "other": "Local Companies in Qatar"
     },
-    "hero": "Find the Right {highlight}",
-    "hero_highlight": "Companies",
+    "hero": "Find the Right Companies",
     "subtitle": "Explore companies, discover their details, and easily search for the services or opportunities that match your needs.",
     "search_label": "Search companies",
     "search_placeholder": "Search Companies..",

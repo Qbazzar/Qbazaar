@@ -1,15 +1,13 @@
 'use client';
 
 /**
- * The company page's "Ads / About us / Legal Info" tabs (145:1063, 167:1827,
- * 167:2754): a segmented bar from 601 px, separate pills on phones.
+ * The company page's "Ads / About us / Legal Info" tabs
+ * (seller-organization.html): one white segmented bar at every width, the
+ * active tab orange. Below 1001 px an "Info" trigger under the bar opens the
+ * company's contact card as a bottom sheet.
  */
-import { Info } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { Button } from '@/components/design-system/Button';
-import { cardVariants } from '@/components/design-system/Card';
-import { Sheet } from '@/components/design-system/Modal';
 import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
 import { formatNumber } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
@@ -17,7 +15,8 @@ import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import type { BusinessProfile } from '@/lib/api/types';
 
-import { CompanyInfoList, hasCompanyContacts, safeWebsiteHref } from './CompanyInfoCard';
+import { hasCompanyContacts, safeWebsiteHref } from './CompanyInfoCard';
+import { CompanyInfoSheet } from './CompanyInfoSheet';
 
 export type CompanyTab = 'ads' | 'about' | 'legal';
 
@@ -34,55 +33,51 @@ interface CompanyTabsProps {
   ads: ReactNode;
 }
 
-const panelCard = cn(cardVariants({ large: true, elevated: true, padding: 'none' }), 'p-5 qb-tablet:px-[30px] qb-tablet:py-[38px]');
+const panelCard = 'rounded-qb-xl border border-qb-line bg-qb-surface p-[clamp(24px,3vw,34px)]';
 
 export function CompanyTabs({ business, adsCount, locale, defaultTab, ads }: CompanyTabsProps) {
   return (
     <Tabs defaultValue={defaultTab}>
-      <TabList className="gap-2 qb-tablet:flex-nowrap qb-tablet:gap-0 qb-tablet:rounded-qb-xl qb-tablet:border qb-tablet:border-qb-line qb-tablet:bg-qb-surface qb-tablet:shadow-qb-card qb-desktop:gap-0">
+      <TabList className="flex-nowrap gap-2 rounded-[14px] border border-qb-line bg-qb-surface p-2 qb-desktop:gap-2">
         <CompanyTabTrigger value="ads">{t('users.profile.tabs.company_ads', { count: formatNumber(adsCount, locale) })}</CompanyTabTrigger>
         <CompanyTabTrigger value="about">{t('users.profile.tabs.about_us')}</CompanyTabTrigger>
         <CompanyTabTrigger value="legal">{t('users.profile.tabs.legal')}</CompanyTabTrigger>
       </TabList>
 
       {hasCompanyContacts(business) ? (
-        <div className="mt-6 flex justify-end qb-desktop:hidden">
-          <Sheet
-            title={t('users.profile.info')}
-            trigger={
-              <Button variant="ghost" size="sm" className="text-qb-body-lg font-medium text-qb-ink">
-                {t('users.profile.info')}
-                <Info aria-hidden />
-              </Button>
-            }
-          >
-            <CompanyInfoList business={business} locale={locale} />
-          </Sheet>
+        <div className="mx-0.5 mt-7 mb-3.5 flex justify-end qb-desktop:hidden">
+          <CompanyInfoSheet business={business} locale={locale} />
         </div>
       ) : null}
 
-      <TabPanel value="ads" className="mt-6 qb-desktop:mt-8">
+      <TabPanel value="ads" className="mt-6">
         {ads}
       </TabPanel>
-      <TabPanel value="about" className="mt-6 qb-desktop:mt-8">
+      <TabPanel value="about" className="mt-6">
         <AboutPanel business={business} />
       </TabPanel>
-      <TabPanel value="legal" className="mt-6 qb-desktop:mt-8">
+      <TabPanel value="legal" className="mt-6">
         <LegalPanel business={business} />
       </TabPanel>
     </Tabs>
   );
 }
 
+/**
+ * A tab of the segmented bar: 16 px / 500 in #4b4b4b on white, orange with
+ * white text when active (also under the pointer, where the design-system
+ * tab would turn it white); an inactive tab greys to #fafafa (273:4687).
+ */
 function CompanyTabTrigger({ value, children }: { value: CompanyTab; children: ReactNode }) {
   return (
     <Tab
       value={value}
       className={cn(
-        // Three pills share a phone's width, so a long label (Arabic "Legal Info") wraps instead of spilling over.
-        'h-[51px] min-w-0 flex-1 rounded-qb-xl bg-qb-surface px-2 text-center text-qb-body-sm leading-tight font-medium whitespace-normal data-active:font-medium',
-        'qb-tablet:h-14 qb-tablet:rounded-qb-xl qb-tablet:border-0 qb-tablet:px-4 qb-tablet:text-qb-body-lg qb-tablet:leading-normal qb-tablet:whitespace-nowrap qb-tablet:shadow-none',
-        'qb-desktop:h-14 qb-desktop:text-qb-body-lg',
+        // Three equal tabs share a phone's width. Arabic "Legal Info" is wider than a third, so there the
+        // tabs size to their labels and it stays on one line; a label that still can't fit wraps.
+        'h-auto min-w-0 flex-1 rounded-qb-md border-0 bg-qb-surface px-1.5 py-[11px] text-center text-qb-label leading-tight font-medium whitespace-normal text-qb-ink-body shadow-none max-qb-tablet:rtl:flex-auto',
+        'qb-tablet:h-auto qb-tablet:flex-[1_1_120px] qb-tablet:px-[18px] qb-tablet:py-3.5 qb-tablet:text-qb-body qb-tablet:leading-normal qb-desktop:h-auto qb-desktop:text-qb-body',
+        'hover:bg-qb-hover data-active:font-medium data-active:hover:bg-qb-brand',
       )}
     >
       {children}
@@ -95,11 +90,11 @@ function AboutPanel({ business }: { business: BusinessProfile | null }) {
   return (
     <div className={panelCard}>
       {about ? (
-        <p dir="auto" className="text-qb-body leading-[1.6] break-words whitespace-pre-line text-qb-ink-muted">
+        <p dir="auto" className="text-qb-body-sm leading-[1.6] break-words whitespace-pre-line text-qb-ink-faint">
           {about}
         </p>
       ) : (
-        <p className="text-qb-body text-qb-ink-subtle">{t('users.profile.about_empty')}</p>
+        <p className="text-qb-body-sm text-qb-ink-subtle">{t('users.profile.about_empty')}</p>
       )}
     </div>
   );
@@ -118,13 +113,13 @@ function LegalPanel({ business }: { business: BusinessProfile | null }) {
   if (!imprint.length && !registration && !contact.length) {
     return (
       <div className={panelCard}>
-        <p className="text-qb-body text-qb-ink-subtle">{t('users.profile.legal_empty')}</p>
+        <p className="text-qb-body-sm text-qb-ink-subtle">{t('users.profile.legal_empty')}</p>
       </div>
     );
   }
 
   return (
-    <div className={`${panelCard} flex flex-col gap-[30px]`}>
+    <div className={`${panelCard} flex flex-col gap-[26px]`}>
       {imprint.length || registration ? (
         <LegalSection title={t('users.profile.legal.imprint')}>
           {imprint.map((line) => (
@@ -156,8 +151,8 @@ function LegalPanel({ business }: { business: BusinessProfile | null }) {
 function LegalSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="text-qb-h5 font-medium tracking-normal text-qb-ink">{title}</h2>
-      <div className="mt-3 flex flex-col gap-2.5 text-qb-caption text-qb-ink-subtle">{children}</div>
+      <h2 className="mb-2.5 text-qb-h5 font-semibold tracking-normal text-qb-ink">{title}</h2>
+      <div className="flex flex-col gap-1 text-qb-body-sm leading-[1.6] text-qb-ink-faint">{children}</div>
     </section>
   );
 }

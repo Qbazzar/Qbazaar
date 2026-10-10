@@ -1,7 +1,7 @@
 import Form from 'next/form';
 import { Search } from 'lucide-react';
 
-import { buttonVariants } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { COMPANY_QUERY_MAX_LENGTH } from '@/lib/companies/directory';
 import { t } from '@/lib/i18n/messages';
@@ -10,9 +10,12 @@ import { cn } from '@/lib/utils';
 const INPUT_ID = 'company-search';
 
 /**
- * The directory's search bar. A plain GET form, so it works before the page
- * is interactive; once it is, `next/form` turns the submit into a client-side
- * navigation. A new search starts again on page 1.
+ * The directory's search bar (companies.html): a white r14 bar with 8 px
+ * padding and a soft shadow, the search field, and the 125 x 43 orange
+ * "Search" button (phones submit with the keyboard's search key). A plain
+ * GET form, so it works before the page is interactive; once it is,
+ * `next/form` turns the submit into a client-side navigation. A new search
+ * starts again on page 1.
  */
 export function CompanySearchForm({ query }: { query: string }) {
   return (
@@ -20,15 +23,14 @@ export function CompanySearchForm({ query }: { query: string }) {
       action="/companies"
       role="search"
       className={cn(
-        'flex h-11 items-center gap-2 rounded-[14px] border border-qb-line bg-qb-surface ps-[15px] pe-1.5 shadow-qb-card',
-        'focus-within:border-qb-brand focus-within:ring-2 focus-within:ring-qb-brand/20',
-        'qb-tablet:h-14 qb-tablet:gap-3 qb-tablet:rounded-qb-xl qb-tablet:ps-6 qb-desktop:pe-2.5',
+        'flex min-h-[67px] items-center gap-3 rounded-[14px] bg-qb-surface p-2 ps-4 shadow-qb-search',
+        'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active has-[input:focus-visible]:outline-solid',
       )}
     >
       <label htmlFor={INPUT_ID} className="sr-only">
         {t('companies.search_label')}
       </label>
-      <Icon icon={Search} size="md" className="text-qb-ink-subtle qb-tablet:size-6" />
+      <Icon icon={Search} className="size-5 text-qb-ink-subtle" />
       <input
         id={INPUT_ID}
         name="q"
@@ -38,12 +40,14 @@ export function CompanySearchForm({ query }: { query: string }) {
         placeholder={t('companies.search_placeholder')}
         enterKeyHint="search"
         autoComplete="off"
-        className="h-full min-w-0 flex-1 bg-transparent font-qb text-qb-caption text-qb-ink outline-none placeholder:text-qb-placeholder qb-tablet:text-qb-body qb-desktop:text-qb-h5"
+        className="h-[51px] min-w-0 flex-1 bg-transparent font-qb text-qb-body text-qb-ink-title outline-none placeholder:text-qb-ink-subtle"
       />
-      {/* The phone frame has no button: the keyboard's search key submits. */}
       <button
         type="submit"
-        className={cn(buttonVariants({ size: 'sm' }), 'hidden h-10 rounded-qb-lg px-[22px] text-qb-body qb-tablet:inline-flex qb-desktop:rounded-qb-md qb-desktop:px-6')}
+        className={cn(
+          'hidden h-[43px] shrink-0 cursor-pointer items-center rounded-qb-md bg-qb-brand px-[34px] font-qb text-qb-body font-semibold text-qb-on-brand transition-colors hover:bg-qb-brand-hover qb-tablet:inline-flex',
+          focusRing,
+        )}
       >
         {t('companies.search')}
       </button>

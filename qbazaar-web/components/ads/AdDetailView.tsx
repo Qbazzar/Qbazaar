@@ -1,15 +1,16 @@
 'use client';
 
 /**
- * Ad detail page on the new design (88:776 / 547:39923 / 623:29490).
+ * Ad detail page as product.html lays it out:
  *
- *  - 1440: photos and the content panels on the start side, the seller and
- *    ad-facts panels beside them from the top.
- *  - 744: photos across the page, then the two columns.
- *  - 390: one column with full-bleed photos and no breadcrumb.
+ *  - from 601 px: the photos and the content panels on the start side, the
+ *    seller and ad-facts panels beside them from the top, kept on screen
+ *    while the content scrolls (position: sticky; top: 120px). The columns
+ *    share the width 2 : 1 on desktop; the tablet sidebar is 260 px.
+ *  - 390: one column, the seller panels after the content, no breadcrumb.
  *
- * Under the panels: the seller's other ads (the design's "Another Ads From
- * Seller") and the similar ads.
+ * Under the panels: the seller's other ads ("Another Ads From Seller") and
+ * the similar ads in the same cards.
  */
 import { AdDescription } from '@/components/ads/AdDescription';
 import { AdFactsCard } from '@/components/ads/AdFactsCard';
@@ -20,23 +21,35 @@ import { AdSellerAds, AdSimilarAds } from '@/components/ads/AdRelatedAds';
 import { AdSellerCard } from '@/components/ads/AdSellerCard';
 import { AdSpecs } from '@/components/ads/AdSpecs';
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
-import { Breadcrumb } from '@/components/design-system/Breadcrumb';
-import { pageFrame } from '@/components/design-system/page-frame';
+import type { BreadcrumbItem } from '@/components/design-system/Breadcrumb';
+import { TextBreadcrumb } from '@/components/design-system/TextBreadcrumb';
 import { useAuth } from '@/hooks/useAuth';
 import { localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
-import type { Ad } from '@/lib/api/types';
+import { useCategoryTreeQuery } from '@/lib/queries/categories';
+import { findCategoryPath } from '@/store/categories';
+import type { Ad, Category, CategoryNode } from '@/lib/api/types';
 
-const CRUMB_TITLE_LENGTH = 24;
+const CRUMB_TITLE_LENGTH = 18;
 
-/** The design ends the breadcrumb with the first words of the title. */
+/** The design ends the breadcrumb with the title's first 18 characters and ".." ("BMW M3 Competition.."). */
 function crumbTitle(title: string): string {
   const characters = Array.from(title);
-  return characters.length > CRUMB_TITLE_LENGTH ? `${characters.slice(0, CRUMB_TITLE_LENGTH).join('').trimEnd()}…` : title;
+  return characters.length > CRUMB_TITLE_LENGTH ? `${characters.slice(0, CRUMB_TITLE_LENGTH).join('').trimEnd()}..` : title;
 }
 
-const favoriteClassName =
-  'size-[42px] bg-qb-surface text-qb-ink ring-0 shadow-none backdrop-blur-none hover:text-qb-brand focus-visible:ring-qb-brand-active [&_svg]:size-6 qb-desktop:size-[45px] qb-desktop:[&_svg]:size-[26px]';
+/** Home > Car & Vehicles > Cars > title: the whole category chain once the tree is known. */
+function adCrumbs(ad: Ad, tree: CategoryNode[] | undefined, locale: Locale): BreadcrumbItem[] {
+  const chain: Pick<Category, 'name' | 'slug'>[] = ad.category ? (findCategoryPath(tree, ad.category.slug) ?? [ad.category]) : [];
+  return [
+    { label: t('home.breadcrumb'), href: '/' },
+    ...chain.map((category) => ({ label: localized(category.name, locale), href: `/c/${category.slug}` })),
+    { label: crumbTitle(ad.title) },
+  ];
+}
+
+/** The reference's 40 px white heart on the photo: an 18 px grey outline, 16 px from the corner. */
+const favoriteClassName = 'size-10 [&_svg]:size-[18px] [&_svg]:stroke-[1.6]';
 
 interface AdDetailViewProps {
   ad: Ad;
@@ -45,41 +58,33 @@ interface AdDetailViewProps {
 
 export function AdDetailView({ ad, locale }: AdDetailViewProps) {
   const { user, isAuthenticated, isHydrated } = useAuth();
+  const { data: tree } = useCategoryTreeQuery();
   const isOwner = isHydrated && isAuthenticated && user?.id === ad.user_id;
-  const categoryName = ad.category ? localized(ad.category.name, locale) : '';
   const locationName = ad.location ? localized(ad.location.name, locale) : '';
-
-  const crumbs = [
-    { label: t('home.breadcrumb'), href: '/' },
-    ...(ad.category ? [{ label: categoryName, href: `/c/${ad.category.slug}` }] : []),
-    { label: crumbTitle(ad.title) },
-  ];
 
   return (
     <main className="bg-qb-page pb-16 font-qb text-qb-ink">
-      <div className={`${pageFrame} qb-tablet:pt-[72px] qb-desktop:pt-[65px]`}>
-        <Breadcrumb items={crumbs} className="hidden qb-tablet:block" />
+      <div className="mx-auto max-w-[1440px] px-qb-gutter pt-[clamp(20px,4vw,40px)]">
+        <TextBreadcrumb items={adCrumbs(ad, tree, locale)} className="mb-[18px] hidden qb-tablet:block" />
 
-        <div className="[display:grid] grid-cols-1 gap-4 qb-tablet:mt-[49px] qb-tablet:grid-cols-[minmax(0,1fr)_263px] qb-tablet:gap-x-[17px] qb-tablet:gap-y-6 qb-desktop:grid-cols-[minmax(0,1fr)_421px] qb-desktop:gap-x-8">
-          <AdGallery
-            images={ad.images ?? []}
-            alt={ad.title}
-            favorite={isOwner ? null : <FavoriteButton adId={ad.id} className={favoriteClassName} />}
-            className="-mx-4 qb-tablet:col-span-2 qb-tablet:mx-0 qb-desktop:col-span-1"
-          />
-
-          <div className="flex min-w-0 flex-col gap-4 qb-tablet:col-start-1 qb-tablet:row-start-2 qb-desktop:gap-6">
+        <div className="flex flex-col gap-6 qb-tablet:flex-row qb-tablet:items-start">
+          <div className="flex min-w-0 flex-col gap-6 qb-tablet:flex-1 qb-desktop:flex-[2_1_560px]">
+            <AdGallery
+              images={ad.images ?? []}
+              alt={ad.title}
+              favorite={isOwner ? null : <FavoriteButton adId={ad.id} className={favoriteClassName} />}
+            />
             <AdOverviewCard ad={ad} locale={locale} />
             {ad.description ? <AdDescription text={ad.description} /> : null}
             <AdSpecs ad={ad} locale={locale} />
-          </div>
-
-          <aside className="flex min-w-0 flex-col gap-4 self-start qb-tablet:col-start-2 qb-tablet:row-start-2 qb-desktop:[grid-row:1/span_2] qb-desktop:gap-6">
-            <AdSellerCard ad={ad} seller={ad.user} isOwner={isOwner} locale={locale} />
-            <AdFactsCard ad={ad} isOwner={isOwner} locale={locale} />
             {locationName ? (
               <AdLocationCard locationName={locationName} latitude={ad.latitude} longitude={ad.longitude} />
             ) : null}
+          </div>
+
+          <aside className="flex min-w-0 flex-col gap-5 qb-tablet:sticky qb-tablet:top-[120px] qb-tablet:w-[260px] qb-tablet:shrink-0 qb-desktop:w-auto qb-desktop:flex-[1_1_300px]">
+            <AdSellerCard ad={ad} seller={ad.user} isOwner={isOwner} locale={locale} />
+            <AdFactsCard ad={ad} isOwner={isOwner} />
           </aside>
         </div>
 

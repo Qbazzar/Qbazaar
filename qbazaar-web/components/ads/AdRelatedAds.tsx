@@ -1,15 +1,16 @@
 'use client';
 
 /**
- * The rows of listing cards under the ad detail: the seller's other ads, in
- * the place of the design's "Another Ads From Seller" (88:776), then the
- * similar ads. Four cards on desktop, two on tablets, one per row on phones.
- * A row with nothing to show is left out; while it loads, placeholders of the
- * cards' size hold its place.
+ * The rows of listing cards under the ad detail: the seller's other ads
+ * (product.html's "Another Ads From Seller", up to two rows of four), then
+ * the similar ads in the same cards. The grid fits as many 260 px columns as
+ * the page holds: four at 1440, two at 744, one on phones. A row with
+ * nothing to show is left out; while it loads, placeholders of the cards'
+ * size hold its place.
  */
 import { useId } from 'react';
 
-import { AdSummaryCard } from '@/components/ads/AdSummaryCard';
+import { ListingCard } from '@/components/ads/ListingCard';
 import { SectionHeader } from '@/components/design-system/SectionHeader';
 import { t } from '@/lib/i18n/messages';
 import { useSimilarAdsQuery } from '@/lib/queries/ads';
@@ -17,19 +18,22 @@ import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { useUserAdsQuery } from '@/lib/queries/users';
 import type { AdSummary } from '@/lib/api/types';
 
-const ROW_LENGTH = 4;
+const SELLER_ADS_SHOWN = 8;
+const SIMILAR_ADS_SHOWN = 4;
 
-const list = '[display:grid] grid-cols-1 gap-4 qb-tablet:grid-cols-2 qb-desktop:grid-cols-4 qb-desktop:gap-6';
+const list = '[display:grid] grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5';
 
 interface RelatedAdsRowProps {
   title: string;
   viewAll?: { href: string; label: string };
   ads: AdSummary[] | undefined;
+  /** How many cards the row shows at most. */
+  limit: number;
   isPending: boolean;
   isError: boolean;
 }
 
-function RelatedAdsRow({ title, viewAll, ads, isPending, isError }: RelatedAdsRowProps) {
+function RelatedAdsRow({ title, viewAll, ads, limit, isPending, isError }: RelatedAdsRowProps) {
   const titleId = useId();
   // Cards name their place from the locations tree in the store.
   useQatarLocationsQuery();
@@ -37,25 +41,22 @@ function RelatedAdsRow({ title, viewAll, ads, isPending, isError }: RelatedAdsRo
   if (isError || (!isPending && !ads?.length)) return null;
 
   return (
-    <section aria-labelledby={titleId} aria-busy={isPending || undefined} className="mt-8">
-      <SectionHeader id={titleId} title={title} action={viewAll} className="mb-6" />
+    <section aria-labelledby={titleId} aria-busy={isPending || undefined} className="mt-10">
+      {/* No gap, as in the reference: a phone keeps "Another Ads From Seller" on one line beside "View All". */}
+      <SectionHeader id={titleId} title={title} action={viewAll} className="mb-[22px] items-center gap-0" />
       {isPending ? (
         <div className={list}>
           <span className="sr-only">{t('common.loading')}</span>
-          {Array.from({ length: ROW_LENGTH }, (_, index) => (
-            // The card's size with two title lines, its spec chips and the place line.
-            <div
-              key={index}
-              aria-hidden="true"
-              className="h-[328px] animate-pulse rounded-qb-xl bg-qb-fill motion-reduce:animate-none"
-            />
+          {Array.from({ length: SIMILAR_ADS_SHOWN }, (_, index) => (
+            // The card's size: the photo, two title lines and the place line.
+            <div key={index} aria-hidden="true" className="h-[265px] animate-pulse rounded-qb-xl bg-qb-fill motion-reduce:animate-none" />
           ))}
         </div>
       ) : (
         <ul className={list}>
-          {ads?.slice(0, ROW_LENGTH).map((ad) => (
+          {ads?.slice(0, limit).map((ad) => (
             <li key={ad.id}>
-              <AdSummaryCard ad={ad} className="h-full shadow-qb-card" />
+              <ListingCard ad={ad} variant="related" />
             </li>
           ))}
         </ul>
@@ -73,8 +74,9 @@ export function AdSellerAds({ adId, sellerId }: { adId: string; sellerId: string
   return (
     <RelatedAdsRow
       title={t('ads.detail.seller_ads_title')}
-      viewAll={{ href: `/u/${sellerId}`, label: t('common.view_all') }}
+      viewAll={{ href: `/u/${sellerId}`, label: t('ads.detail.view_all') }}
       ads={others}
+      limit={SELLER_ADS_SHOWN}
       isPending={isPending}
       isError={isError}
     />
@@ -88,8 +90,9 @@ export function AdSimilarAds({ adId, categorySlug }: { adId: string; categorySlu
   return (
     <RelatedAdsRow
       title={t('ads.similar_section.title')}
-      viewAll={categorySlug ? { href: `/c/${categorySlug}`, label: t('common.view_all') } : undefined}
+      viewAll={categorySlug ? { href: `/c/${categorySlug}`, label: t('ads.detail.view_all') } : undefined}
       ads={data}
+      limit={SIMILAR_ADS_SHOWN}
       isPending={isPending}
       isError={isError}
     />

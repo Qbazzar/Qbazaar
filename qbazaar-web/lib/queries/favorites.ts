@@ -15,18 +15,23 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 import {
+  listFavoriteIds,
   listFavorites,
+  removeFavorite,
   toggleFavorite,
   type ListFavoritesParams,
 } from '@/lib/api/favorites';
 import type { ApiClientError } from '@/lib/api/auth';
 import type {
+  Ad,
   FavoriteToggleResponse,
   FavoritedAdSummary,
   PaginatedResponse,
 } from '@/lib/api/types';
 import { useFavoritesStore } from '@/store/favorites';
 import { useAuthStore } from '@/store/auth';
+
+import { adKeys } from './ads';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -53,7 +58,6 @@ export function useFavoritesQuery(
 ): UseQueryResult<PaginatedResponse<FavoritedAdSummary>, ApiClientError> {
   const isAuthenticated = useAuthStore((s) => Boolean(s.user && s.accessToken));
   const mergeIds = useFavoritesStore((s) => s.mergeIds);
-  const setIds = useFavoritesStore((s) => s.setIds);
 
   const result = useQuery<
     PaginatedResponse<FavoritedAdSummary>,
@@ -67,13 +71,13 @@ export function useFavoritesQuery(
   });
 
   // Sync server truth into the local store so AdCard hearts stay accurate.
-  // Page 1 = reset; subsequent pages = merge so we don't drop already-known ids.
+  // Always merge: a page holds only part of the saved set, so replacing would
+  // drop the hearts further down. Removals reach the store through the toggle.
   useEffect(() => {
     if (!result.data) return;
     const ids = result.data.data.map((ad) => ad.id);
-    if ((params.page ?? 1) <= 1) setIds(ids);
-    else mergeIds(ids);
-  }, [result.data, params.page, mergeIds, setIds]);
+    mergeIds(ids);
+  }, [result.data, mergeIds]);
 
   return result;
 }
@@ -116,9 +120,56 @@ export function useToggleFavoriteMutation(): UseMutationResult<
     onSuccess: (response, adId) => {
       // Reconcile in case the server disagrees with our optimistic flip.
       setOne(adId, response.favorited);
+      // A cached ad page lays its own flag over the store when it mounts again.
+      qc.setQueryData<Ad>(adKeys.detail(adId), (ad) => (ad ? { ...ad, is_favorited: response.favorited } : ad));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: favoritesKeys.lists() });
     },
   });
+}
+
+/** Removals sent at once while clearing; keeps the burst well under the API's rate limit. */
+const CLEAR_BATCH_SIZE = 4;
+
+/**
+ * "Clear all" of the wishlist. The API has no bulk delete, so every saved
+ * ad is removed on its own, a few at a time. The hearts and the list are
+ * refreshed afterwards whether or not every removal went through.
+ */
+export function useClearFavoritesMutation(): UseMutationResult<void, ApiClientError, void> {
+  const qc = useQueryClient();
+  const setIds = useFavoritesStore((s) => s.setIds);
+
+  return useMutation<void, ApiClientError, void>({
+    mutationFn: async () => {
+      const ids = await listFavoriteIds();
+      for (let start = 0; start < ids.length; start += CLEAR_BATCH_SIZE) {
+        await Promise.all(ids.slice(start, start + CLEAR_BATCH_SIZE).map(removeFavorite));
+      }
+    },
+    onSuccess: () => {
+      // Keeps the ads marked as known, so a wishlist card empties its heart at once.
+      setIds([]);
+      qc.setQueriesData<Ad>({ queryKey: adKeys.details() }, (ad) => (ad ? { ...ad, is_favorited: false } : ad));
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: favoritesKeys.all });
+    },
+  });
+}
+
+/**
+ * Lays an ad's saved state, as the API returned it for the viewer, over the
+ * hearts' store: a saved ad then shows its filled heart however the page was
+ * reached (a refresh, a shared link), not only after the wishlist loaded.
+ * `favorited` stays undefined while the copy at hand is not the viewer's own
+ * (the anonymous server render).
+ */
+export function useSyncAdFavorite(adId: string | undefined, favorited: boolean | undefined): void {
+  const setOne = useFavoritesStore((s) => s.setOne);
+
+  useEffect(() => {
+    if (adId && favorited !== undefined) setOne(adId, favorited);
+  }, [adId, favorited, setOne]);
 }

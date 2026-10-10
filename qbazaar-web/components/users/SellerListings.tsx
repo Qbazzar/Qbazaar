@@ -1,16 +1,15 @@
 'use client';
 
 /**
- * A seller's active ads, newest first, 20 at a time with "Load more ads".
- * Private sellers list them as rows (136:1562), companies as a card grid
- * (145:1063); both stack into cards on phones.
+ * A seller's active ads, newest first, 20 at a time with the peach "Loading
+ * More Ads" button while more are left. Private sellers list them as rows
+ * (seller-individual.html), companies as a grid of 230 px cards, three
+ * across on desktop (seller-organization.html, polish.css).
  */
 import { useEffect, useRef } from 'react';
 import { Loader2Icon, PackageOpen } from 'lucide-react';
 
-import { AdSummaryCard } from '@/components/ads/AdSummaryCard';
-import { AdSummaryRowCard } from '@/components/ads/AdSummaryRowCard';
-import { Button } from '@/components/design-system/Button';
+import { ListingCard } from '@/components/ads/ListingCard';
 import { cardVariants } from '@/components/design-system/Card';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
@@ -19,6 +18,9 @@ import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { useUserAdsQuery } from '@/lib/queries/users';
 import { cn } from '@/lib/utils';
 
+import { loadMoreButton } from './load-more';
+import { SellerAdRow } from './SellerAdRow';
+
 interface SellerListingsProps {
   userId: string;
   sellerName: string;
@@ -26,18 +28,21 @@ interface SellerListingsProps {
 }
 
 const listClassName = {
-  rows: 'flex flex-col gap-4 qb-tablet:gap-6',
-  grid: '[display:grid] grid-cols-1 gap-4 qb-tablet:grid-cols-2 qb-tablet:gap-5 qb-desktop:grid-cols-3 qb-desktop:gap-x-4 qb-desktop:gap-y-6',
+  rows: 'flex flex-col gap-[18px]',
+  grid: '[display:grid] grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5 qb-desktop:grid-cols-3',
 };
 
-/** The cards' own size (a description line, the spec chips and the place line), so nothing jumps when they arrive. */
+/** The cards' own size, so nothing jumps when they arrive. */
 const placeholderClassName = {
-  rows: 'h-[356px] rounded-qb-2xl qb-tablet:h-[207px] qb-desktop:h-[220px]',
-  grid: 'h-[328px] rounded-qb-xl',
+  rows: 'h-[168px] rounded-qb-xl',
+  grid: 'h-[296px] rounded-qb-xl',
 };
 
 // Rows sit under the "Active Listings" heading; the company grid has none above it.
 const headingLevel = { rows: 'h3', grid: 'h2' } as const;
+
+// The design capitalises the button differently on the two pages: "Loading more Ads" / "Loading More Ads".
+const loadMoreLabel = { rows: 'users.profile.load_more_rows', grid: 'users.profile.load_more' } as const;
 
 export function SellerListings({ userId, sellerName, layout }: SellerListingsProps) {
   const { data, isPending, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useUserAdsQuery(userId);
@@ -102,25 +107,25 @@ export function SellerListings({ userId, sellerName, layout }: SellerListingsPro
         {ads.map((ad) => (
           <li key={ad.id}>
             {layout === 'rows' ? (
-              <AdSummaryRowCard ad={ad} headingLevel={headingLevel.rows} />
+              <SellerAdRow ad={ad} headingLevel={headingLevel.rows} />
             ) : (
-              <AdSummaryCard ad={ad} headingLevel={headingLevel.grid} className="h-full shadow-qb-card" />
+              <ListingCard ad={ad} variant="company" headingLevel={headingLevel.grid} />
             )}
           </li>
         ))}
       </ul>
       {hasNextPage ? (
         <div className="mt-6 flex justify-center">
-          <Button
-            size="sm"
+          <button
+            type="button"
             onClick={loadMore}
             aria-disabled={isFetchingNextPage || undefined}
             aria-busy={isFetchingNextPage || undefined}
-            className="h-[37px] px-[13px] text-qb-body"
+            className={loadMoreButton}
           >
-            {isFetchingNextPage ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
-            {t('users.profile.load_more')}
-          </Button>
+            {isFetchingNextPage ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : null}
+            {t(loadMoreLabel[layout])}
+          </button>
         </div>
       ) : null}
     </>

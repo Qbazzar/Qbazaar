@@ -40,7 +40,7 @@ describe('SellerProfileCard', () => {
     const info = screen.getByRole('region', { name: 'Info' });
 
     expect(within(info).getByText('Followers').closest('div')).toHaveTextContent('124');
-    expect(within(info).getByText('Member Since').closest('div')).toHaveTextContent('Jan 08, 2016');
+    expect(within(info).getByText('Member Since').closest('div')).toHaveTextContent('08 Jan 2016');
     expect(within(info).getByText('Ads no.').closest('div')).toHaveTextContent('3');
   });
 

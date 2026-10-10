@@ -5,8 +5,12 @@
  * button is not shown on your own profile. While the viewer's own copy of the
  * profile is still loading, the state isn't known yet, so the button waits.
  * During the request it keeps its focus, and the result is announced.
+ *
+ * Looks: the orange button of the seller pages (it darkens under the
+ * pointer, as polish.css does for every orange button); once followed it
+ * turns peach with a brand outline and a star, "Following" (283:6955).
  */
-import { Check, Loader2Icon } from 'lucide-react';
+import { Loader2Icon, Star, type LucideIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -25,8 +29,10 @@ interface FollowButtonProps extends Pick<ButtonProps, 'size' | 'className'> {
   isFollowing: boolean;
   /** False until the profile has been fetched with the viewer's session. */
   stateKnown: boolean;
-  /** "Follow Seller" on the private seller card, "Follow" elsewhere. */
+  /** "+ Follow" on the private seller card, "Follow" elsewhere. */
   label?: string;
+  /** Icon before "Follow" (the company card's star); the followed state always shows the star. */
+  icon?: LucideIcon;
 }
 
 const ERROR_KEYS: Record<string, string> = {
@@ -36,7 +42,7 @@ const ERROR_KEYS: Record<string, string> = {
   RATE_LIMIT_EXCEEDED: 'auth.errors.RATE_LIMIT_EXCEEDED',
 };
 
-export function FollowButton({ userId, name, isFollowing, stateKnown, label, size, className }: FollowButtonProps) {
+export function FollowButton({ userId, name, isFollowing, stateKnown, label, icon, size, className }: FollowButtonProps) {
   const router = useRouter();
   const { user, isAuthenticated, isHydrated } = useAuth();
   const mutation = useFollowMutation(userId);
@@ -62,6 +68,8 @@ export function FollowButton({ userId, name, isFollowing, stateKnown, label, siz
     });
   };
 
+  const Glyph = isFollowing ? Star : icon;
+
   return (
     <Button
       variant={isFollowing ? 'secondary' : 'primary'}
@@ -70,10 +78,10 @@ export function FollowButton({ userId, name, isFollowing, stateKnown, label, siz
       disabled={waiting}
       aria-disabled={mutation.isPending || undefined}
       aria-busy={mutation.isPending || undefined}
-      className={cn('font-medium', className)}
+      className={cn('font-medium', isFollowing && 'bg-qb-brand-soft hover:bg-qb-surface hover:text-qb-brand', className)}
     >
       {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
-      {!mutation.isPending && isFollowing ? <Check aria-hidden /> : null}
+      {!mutation.isPending && Glyph ? <Glyph aria-hidden strokeWidth={1.7} /> : null}
       <span>
         {isFollowing ? t('users.follow.following') : (label ?? t('users.follow.follow'))}
         <span className="sr-only"> {name}</span>

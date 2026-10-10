@@ -39,7 +39,7 @@ export function SellerProfileClient({ id, initialProfile }: SellerProfileClientP
 
   if (isPending) {
     return (
-      <main aria-busy="true" className="bg-qb-page px-4 pt-10 pb-16 qb-tablet:px-6 qb-tablet:pt-[165px] qb-desktop:px-10">
+      <main aria-busy="true" className="bg-qb-page px-qb-gutter pt-[clamp(20px,4vw,40px)] pb-16">
         <span className="sr-only">{t('common.loading')}</span>
         <div aria-hidden="true" className="mx-auto h-[600px] max-w-[1360px] animate-pulse rounded-qb-2xl bg-qb-fill motion-reduce:animate-none" />
       </main>
