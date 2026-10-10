@@ -21,7 +21,7 @@ import { useMakeOfferMutation } from '@/lib/queries/offers';
 import { cn } from '@/lib/utils';
 
 import { AmountField } from './AmountField';
-import { DealActions, DealPanel, HowItWorks, InfoHint, dealButton } from './DealFormParts';
+import { DealActions, DealPanel, HowItWorks, InfoHint, dealButton, dealLabel } from './DealFormParts';
 import { focusFirstInvalid } from './focus-invalid';
 import { FormError, NoteField } from './NoteField';
 
@@ -54,7 +54,7 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
   if (blocker) {
     return (
       <DealPanel title={t('orders.deal.offer_title')} titleId="offer-title">
-        <Notice tone={blocker === 'own_ad' ? 'info' : 'neutral'} role="status">
+        <Notice tone={blocker === 'own_ad' ? 'brand' : 'neutral'} role="status">
           {t(`orders.deal.${blocker}`)}
         </Notice>
         <Link href={adHref} className={cn(buttonVariants({ variant: 'outline' }), dealButton, 'self-start')}>
@@ -102,6 +102,7 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
           error={errors.amount}
           currency={ad.currency}
           required
+          className={dealLabel.offer}
         />
         {suggestions.length > 0 ? (
           <div role="group" aria-label={t('orders.deal.suggested')} className="flex flex-wrap gap-2.5">
@@ -136,6 +137,7 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
           max={LIMITS.noteMax}
           error={errors.note}
           placeholder={t('orders.deal.message_placeholder')}
+          className={dealLabel.offer}
         />
         <InfoHint>{t('orders.deal.offer_hint')}</InfoHint>
 
@@ -145,7 +147,7 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
         />
 
         <FormError>{errors.form}</FormError>
-        <DealActions submitLabel={t('orders.deal.send_offer')} busy={busy} cancelLabel={t('common.cancel')} cancelHref={adHref} />
+        <DealActions page="offer" submitLabel={t('orders.deal.send_offer')} busy={busy} cancelLabel={t('common.cancel')} cancelHref={adHref} />
       </form>
     </DealPanel>
   );

@@ -24,7 +24,8 @@ function joinedYear(iso: string | undefined): string | null {
 /**
  * The item card beside the Buy Now and Make an Offer forms (659:58417,
  * 709:32645): photo, title, asking price, place and seller. On phones it
- * turns into a compact row above the form (709:33450).
+ * turns into a compact row above the form (709:33450). The tablet frames set
+ * the title and the Verified pill semibold (709:32483, 709:32645).
  */
 export function AdDealSummary({ ad }: { ad: DealAd }) {
   const photo = ad.images?.[0];
@@ -51,7 +52,7 @@ export function AdDealSummary({ ad }: { ad: DealAd }) {
         <div className="min-w-0 flex-1 qb-tablet:px-5 qb-tablet:pt-4">
           <h2
             id="deal-ad-title"
-            className="line-clamp-2 font-qb text-qb-caption leading-snug font-semibold tracking-normal text-qb-ink-title qb-tablet:text-qb-body qb-tablet:font-medium qb-desktop:text-qb-h5"
+            className="line-clamp-2 font-qb text-qb-caption leading-snug font-medium tracking-normal text-qb-ink-title qb-tablet:text-qb-body qb-tablet:font-semibold qb-desktop:text-qb-h5 qb-desktop:font-medium"
           >
             <Link href={`/ads/${encodeURIComponent(ad.id)}`} dir="auto" className={cn('rounded-qb-xs hover:underline', focusRing)}>
               {ad.title}
@@ -95,7 +96,7 @@ export function AdDealSummary({ ad }: { ad: DealAd }) {
             ) : null}
           </div>
           {verified ? (
-            <span className="shrink-0 rounded-qb-xs border border-qb-success bg-qb-success-soft px-2 py-0.5 font-qb-label text-qb-tiny font-medium text-qb-success">
+            <span className="shrink-0 rounded-qb-xs border border-qb-success bg-qb-success-soft px-2 py-0.5 font-qb-label text-qb-tiny font-medium text-qb-success qb-tablet:font-semibold qb-desktop:font-medium">
               {t('orders.deal.verified')}
             </span>
           ) : null}
