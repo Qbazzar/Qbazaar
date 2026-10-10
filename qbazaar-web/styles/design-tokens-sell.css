@@ -38,6 +38,9 @@
   /* Checkout result dialog body (buynow.js payModal) */
   --color-qb-ink-dialog: #9a9a9a;
 
+  /* Icons of the phone "Your Ad" action buttons (638:36533) */
+  --color-qb-icon-action: #6c6c6c;
+
   /* The add-ads "Select" button */
   --shadow-qb-brand-tight: 0 6px 16px 0 rgb(243 128 87 / 0.2);
 }

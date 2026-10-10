@@ -15,6 +15,8 @@ import { tPlural } from '@/lib/i18n/plural';
 import { formatDate } from '@/lib/post-ad/format';
 import { cn } from '@/lib/utils';
 
+import { buttonLeading } from './FormParts';
+
 import '@/styles/design-tokens-sell.css';
 
 export interface SellerSummary {
@@ -167,6 +169,8 @@ function ActionButton({
       className={cn(
         'px-3.5 max-qb-tablet:h-[42px] max-qb-tablet:min-w-0 max-qb-tablet:flex-1 max-qb-tablet:px-1.5 max-qb-tablet:text-qb-caption',
         className,
+        // After the text size, which tailwind-merge lets replace a line height.
+        buttonLeading,
       )}
     >
       {action.busy ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}

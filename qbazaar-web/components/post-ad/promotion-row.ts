@@ -19,5 +19,5 @@ export const promotionRow = {
     ),
   title: 'block text-qb-h5 leading-[1.15] font-medium text-qb-ink-title rtl:leading-normal',
   body: 'mt-1 block text-qb-caption leading-[1.15] text-qb-ink-subtle rtl:leading-normal',
-  price: 'shrink-0 text-qb-body font-semibold whitespace-nowrap text-qb-ink',
+  price: 'shrink-0 text-qb-body leading-[1.15] font-semibold whitespace-nowrap text-qb-ink',
 } as const;

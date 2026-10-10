@@ -29,9 +29,10 @@ export interface YourAdPanelProps {
 /**
  * The card at the top of publish.html (355:7297, 532:23641, 638:36533): "Your
  * Ad" with the ad's visits, wishlist count and publish date, Edit and Delete,
- * beside the "Featured Ad" promotion table (under it below 1001 px). The
- * design's Report and Reserved are left out: a seller doesn't report their
- * own ad, and only a live ad can be reserved.
+ * beside the "Featured Ad" promotion table (under it below 1001 px). On
+ * phones the actions are a row of grey icon buttons at the bottom of the
+ * card. The design's Report and Reserved are left out: a seller doesn't
+ * report their own ad, and only a live ad can be reserved.
  */
 export function YourAdPanel({ ad, running, onEdit, onDelete }: YourAdPanelProps) {
   const locale = getLocale();
@@ -39,6 +40,7 @@ export function YourAdPanel({ ad, running, onEdit, onDelete }: YourAdPanelProps)
   const { offers, chosen, toggle } = usePromotionChoices();
   const deleting = running === 'delete';
   const withPromotions = offers.length > 0;
+  const actions = { disabled: running !== null, onEdit, onDelete: () => setConfirmDelete(true) };
 
   return (
     <section
@@ -61,20 +63,10 @@ export function YourAdPanel({ ad, running, onEdit, onDelete }: YourAdPanelProps)
           </SummaryRow>
           <SummaryRow label={t('post_ad.your_ad.published')}>{formatDate(ad.published_at ?? new Date().toISOString(), locale)}</SummaryRow>
         </dl>
-        <ul className="mt-[18px] flex flex-col gap-4 text-qb-body-sm text-qb-ink-secondary">
-          <li>
-            <PanelAction icon={PenLine} disabled={running !== null} onClick={onEdit}>
-              {t('post_ad.actions.edit')}
-            </PanelAction>
-          </li>
-          <li>
-            <PanelAction icon={Trash2} disabled={running !== null} onClick={() => setConfirmDelete(true)}>
-              {t('common.delete')}
-            </PanelAction>
-          </li>
-        </ul>
+        <PanelActions layout="rows" {...actions} />
       </div>
       {withPromotions ? <FeaturedAdTable offers={offers} chosen={chosen} onToggle={toggle} /> : null}
+      <PanelActions layout="icons" {...actions} />
 
       <Modal
         open={confirmDelete}
@@ -107,26 +99,53 @@ function SummaryRow({ label, children }: { label: string; children: ReactNode })
   );
 }
 
-function PanelAction({
-  icon,
+const ACTION_LAYOUTS = {
+  /** Text rows under the figures, from the tablet up (355:7297, 532:23641). */
+  rows: {
+    list: 'mt-[18px] flex flex-col gap-4 text-qb-body-sm text-qb-ink-secondary max-qb-tablet:hidden',
+    button: 'flex items-center gap-3 rounded-qb-xs hover:text-qb-ink [&_svg]:size-[17px] [&_svg]:text-qb-ink-subtle',
+    label: undefined,
+  },
+  /** 40 px grey icon buttons, four to a row, at the bottom of the phone card (638:36533). */
+  icons: {
+    list: '[display:grid] grid-cols-4 gap-2 px-[26px] pb-[26px] qb-tablet:hidden',
+    button:
+      'flex h-10 w-full items-center justify-center rounded-qb-sm bg-qb-fill text-(--color-qb-icon-action) transition-colors hover:bg-qb-line [&_svg]:size-6',
+    label: 'sr-only',
+  },
+} as const;
+
+function PanelActions({
+  layout,
   disabled,
-  onClick,
-  children,
+  onEdit,
+  onDelete,
 }: {
-  icon: LucideIcon;
+  layout: keyof typeof ACTION_LAYOUTS;
   disabled: boolean;
-  onClick: () => void;
-  children: ReactNode;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
+  const styles = ACTION_LAYOUTS[layout];
+  const items: Array<{ icon: LucideIcon; label: string; onClick: () => void }> = [
+    { icon: PenLine, label: t('post_ad.actions.edit'), onClick: onEdit },
+    { icon: Trash2, label: t('common.delete'), onClick: onDelete },
+  ];
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={cn('flex items-center gap-3 rounded-qb-xs hover:text-qb-ink disabled:cursor-not-allowed disabled:opacity-50', focusRing)}
-    >
-      <Icon icon={icon} className="size-[17px]" />
-      {children}
-    </button>
+    <ul className={styles.list}>
+      {items.map((item) => (
+        <li key={item.label}>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={item.onClick}
+            className={cn(styles.button, 'disabled:cursor-not-allowed disabled:opacity-50', focusRing)}
+          >
+            <Icon icon={item.icon} />
+            <span className={styles.label}>{item.label}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }

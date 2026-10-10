@@ -20,6 +20,7 @@ import { findPath } from '@/lib/post-ad/tree';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { usePostAdStore } from '@/store/post-ad';
 
+import { buttonLeading } from './FormParts';
 import { SellerIdentity, type SellerSummary } from './ProfileCard';
 import { PreviewGallery } from './PreviewGallery';
 import type { PostAdAction } from './usePostAdActions';
@@ -63,11 +64,11 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
             {t('post_ad.preview.banner')}
           </p>
           <div className="flex shrink-0 gap-2.5">
-            <Button variant="secondary" size="sm" onClick={onEdit} className="h-11 px-[22px]">
+            <Button variant="secondary" size="sm" onClick={onEdit} className={cn('h-11 px-[22px]', buttonLeading)}>
               {t('post_ad.actions.edit')}
             </Button>
             {canPublish ? (
-              <Button size="sm" onClick={onPublish} className="h-11 px-[22px]">
+              <Button size="sm" onClick={onPublish} className={cn('h-11 px-[22px]', buttonLeading)}>
                 {t('post_ad.actions.publish')}
               </Button>
             ) : null}
@@ -130,7 +131,7 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
         </div>
 
         <aside aria-label={t('post_ad.preview.aside_label')} className="flex min-w-[min(280px,100%)] flex-[1_1_300px] flex-col gap-5">
-          <BuyerView seller={seller} />
+          <BuyerView seller={seller} faded={variant === 'preview'} />
           <section className={cn(card, 'p-[22px]')}>
             <dl className="text-qb-body">
               <div className="flex items-center justify-between gap-4 pb-3.5">
@@ -146,11 +147,11 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
             </dl>
             {/* Inert in the preview, but drawn as buyers will see them. */}
             <div className="flex gap-2.5 border-t border-qb-line pt-4">
-              <Button variant="outline" size="sm" disabled className="min-w-0 flex-1 font-normal text-qb-ink-body disabled:opacity-100">
+              <Button variant="outline" size="sm" disabled className={cn('min-w-0 flex-1 font-normal text-qb-ink-body disabled:opacity-100', buttonLeading)}>
                 <Icon icon={Share2} size="sm" />
                 {t('post_ad.preview.share')}
               </Button>
-              <Button variant="outline" size="sm" disabled className="min-w-0 flex-1 font-normal text-qb-ink-body disabled:opacity-100">
+              <Button variant="outline" size="sm" disabled className={cn('min-w-0 flex-1 font-normal text-qb-ink-body disabled:opacity-100', buttonLeading)}>
                 <Icon icon={Flag} size="sm" />
                 {t('post_ad.preview.report')}
               </Button>
@@ -188,8 +189,12 @@ function priceText(values: AdFormValues, locale: Locale): string {
 
 const BUYER_NOTE_ID = 'post-ad-buyer-note';
 
-/** Seller card as buyers see it; its buttons work once the ad is live. */
-function BuyerView({ seller }: { seller: SellerSummary }) {
+/**
+ * Seller card as buyers see it; its buttons work once the ad is live. The
+ * preview draws Follow Seller and Add to Favorite in faded orange
+ * (preview.html), the publish step in full orange (publish.html).
+ */
+function BuyerView({ seller, faded }: { seller: SellerSummary; faded: boolean }) {
   return (
     <section className={cn(card, 'p-[22px]')}>
       <SellerIdentity seller={seller} variant="preview" />
@@ -201,7 +206,7 @@ function BuyerView({ seller }: { seller: SellerSummary }) {
           fullWidth
           disabled
           aria-describedby={BUYER_NOTE_ID}
-          className="h-[46px] bg-(--color-qb-fill-disabled) text-qb-caption font-medium text-qb-surface disabled:opacity-100"
+          className={cn('h-[46px] bg-(--color-qb-fill-disabled) text-qb-caption font-medium text-qb-surface disabled:opacity-100', buttonLeading)}
         >
           <Icon icon={MessageSquare} size="sm" />
           {t('post_ad.preview.send_message')}
@@ -211,7 +216,7 @@ function BuyerView({ seller }: { seller: SellerSummary }) {
           fullWidth
           disabled
           aria-describedby={BUYER_NOTE_ID}
-          className="h-12 border-(--color-qb-brand-faded) text-(--color-qb-brand-faded) disabled:opacity-100"
+          className={cn('h-12 disabled:opacity-100', buttonLeading, faded && 'border-(--color-qb-brand-faded) text-(--color-qb-brand-faded)')}
         >
           <Icon icon={Star} size="sm" />
           {t('post_ad.preview.follow')}
@@ -221,7 +226,7 @@ function BuyerView({ seller }: { seller: SellerSummary }) {
           fullWidth
           disabled
           aria-describedby={BUYER_NOTE_ID}
-          className="h-[30px] font-semibold text-(--color-qb-brand-faded) disabled:opacity-100"
+          className={cn('h-[30px] font-semibold disabled:opacity-100', buttonLeading, faded ? 'text-(--color-qb-brand-faded)' : 'text-qb-brand')}
         >
           <Icon icon={Heart} size="sm" />
           {t('post_ad.preview.favorite')}
@@ -321,7 +326,7 @@ function PublishCard({ running, onConfirm }: { running: PostAdAction | null; onC
           {t('post_ad.publish.terms_required')}
         </p>
       ) : null}
-      <Button fullWidth disabled={running !== null} aria-busy={busy || undefined} onClick={confirm} className="mt-5 h-12">
+      <Button fullWidth disabled={running !== null} aria-busy={busy || undefined} onClick={confirm} className={cn('mt-5 h-12', buttonLeading)}>
         {busy ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
         {t('post_ad.actions.confirm_publish')}
       </Button>

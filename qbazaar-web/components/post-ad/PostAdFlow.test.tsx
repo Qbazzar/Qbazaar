@@ -318,7 +318,10 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
 
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.add_ads') }));
     await screen.findByRole('heading', { name: t('post_ad.your_ad.title') });
-    fireEvent.click(screen.getByRole('button', { name: t('common.delete') }));
+    // The text row from the tablet up and the phone's icon button; CSS shows one of them.
+    const deleteButtons = screen.getAllByRole('button', { name: t('common.delete') });
+    expect(deleteButtons).toHaveLength(2);
+    fireEvent.click(deleteButtons[1]);
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: t('common.delete') }));
 

@@ -12,6 +12,9 @@ export const controlSize = 'h-[53px] px-3.5 text-qb-body-sm';
 /** The same for a select, whose end padding stays clear of its chevron; a value reads in #4B4B4B. */
 export const selectSize = 'h-[53px] ps-3.5 text-qb-body-sm text-qb-ink-body';
 
+/** The HTML app sets its buttons and radio cards at a 1.15 line height (`.qb-btn`, responsive.css). */
+export const buttonLeading = 'leading-[1.15]';
+
 /** DOM id of a form field, also used to focus the first invalid one. */
 export function fieldId(name: AdFormField): string {
   return `post-ad-${name.replace('.', '-')}`;
@@ -104,6 +107,7 @@ export function ChoiceGroup<T extends string>({
               key={option.value}
               className={cn(
                 'flex cursor-pointer items-center gap-3 border-[1.5px] text-qb-body-sm font-medium transition-colors',
+                buttonLeading,
                 'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active',
                 size === 'lg' ? 'rounded-qb-lg px-[18px] py-[17px]' : 'rounded-qb-md px-4 py-[15px]',
                 checked

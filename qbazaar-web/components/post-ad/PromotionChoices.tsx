@@ -103,7 +103,7 @@ export function HighlightSection() {
 export function FeaturedAdTable({ offers, chosen, onToggle }: { offers: PromotionOffer[]; chosen: PromotionType[]; onToggle: (type: PromotionType) => void }) {
   const locale = getLocale();
   return (
-    <fieldset className="min-w-0 flex-1 px-[26px] pb-[26px] qb-tablet:px-0 qb-tablet:pb-0" aria-describedby={NOTE_ID}>
+    <fieldset className="min-w-0 flex-1 px-[26px] pb-[18px] qb-tablet:px-0 qb-tablet:pb-0" aria-describedby={NOTE_ID}>
       <legend className="sr-only">{t('post_ad.promote.featured')}</legend>
       <p aria-hidden="true" className="mb-4 text-qb-body-lg font-semibold text-qb-ink qb-tablet:hidden">
         {t('post_ad.promote.featured')}
@@ -141,7 +141,7 @@ export function FeaturedAdTable({ offers, chosen, onToggle }: { offers: Promotio
               <span className="text-qb-caption text-qb-ink-secondary qb-tablet:text-center qb-tablet:text-qb-body-sm">
                 {tPlural('orders.promotion.duration', offer.duration_days, locale)}
               </span>
-              <span className="text-end text-qb-body font-semibold whitespace-nowrap text-qb-ink">{formatMoney(offer.price, offer.currency)}</span>
+              <span className={cn(promotionRow.price, 'text-end')}>{formatMoney(offer.price, offer.currency)}</span>
             </label>
           );
         })}
