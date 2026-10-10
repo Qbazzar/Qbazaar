@@ -19,8 +19,9 @@ interface PriceSliderProps {
   onChange: (next: { priceMin: number | null; priceMax: number | null }) => void;
 }
 
+/** The reference's polish.css replaces the handle's inline shadow with the soft token. */
 const thumb = cn(
-  'size-4 rounded-full border-[3px] border-qb-brand bg-qb-surface shadow-(--shadow-qb-thumb)',
+  'size-4 rounded-full border-[3px] border-qb-brand bg-qb-surface shadow-qb-soft',
   'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active has-[:focus-visible]:outline-solid',
 );
 

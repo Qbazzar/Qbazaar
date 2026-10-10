@@ -11,7 +11,7 @@ import { dirFor, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-import { selectPanel, selectRow, selectScrollbar } from '../dropdown';
+import { selectFirstRowHint, selectPanel, selectRow, selectScrollbar } from '../dropdown';
 
 export interface SelectOption {
   value: string;
@@ -96,7 +96,7 @@ export function SelectField({ labelledBy, options, searchOnlyOptions = [], value
               <Combobox.Empty className="px-4 py-3 text-qb-micro text-qb-ink-subtle empty:hidden">
                 {t('catalog.filters.select_empty', 'لا توجد نتائج')}
               </Combobox.Empty>
-              <Combobox.List className={cn('max-h-[166px] overflow-y-auto py-2.5 empty:hidden', selectScrollbar)}>
+              <Combobox.List className={cn('max-h-[166px] overflow-y-auto py-2.5 empty:hidden', selectScrollbar, selectFirstRowHint)}>
                 {(option: SelectOption) => (
                   <Combobox.Item key={option.value} value={option} className={selectRow}>
                     {option.label}

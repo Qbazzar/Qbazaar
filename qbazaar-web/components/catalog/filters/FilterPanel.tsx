@@ -56,6 +56,20 @@ interface PanelProps extends FilterPanelProps {
 }
 
 /**
+ * The sheet is at least as tall as 618:26974 (584 px, 88 px of it the handle
+ * and the title row above this form), so the City / Region panel has room to
+ * open below its field (264:4818) instead of flipping over the title.
+ */
+const sheetBodyHeight = 'min-h-[min(496px,calc(90dvh-88px))]';
+
+/** The sheet leads with the fields of 618:26974; the radio groups follow in the page's order. */
+const SHEET_FIELDS: FilterGroupKey[] = ['keyword', 'price', 'location'];
+
+function sheetOrder(groups: FilterGroupKey[]): FilterGroupKey[] {
+  return [...groups.filter((key) => SHEET_FIELDS.includes(key)), ...groups.filter((key) => !SHEET_FIELDS.includes(key))];
+}
+
+/**
  * The filter form of the listing pages: the sidebar card on desktop (250:4405)
  * and the body of the bottom sheet on tablets and phones (618:26974). It stays
  * mounted when new filters apply, so the focus survives, and restarts its
@@ -76,8 +90,8 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
 
   const invalid = hasInvalidRange(draft);
   const dirty = !filtersEqual(normalizeFilters(draft), values);
-  // Pale only while nothing is chosen; with filters set it stays solid (250:4405).
-  const canApply = !invalid && (dirty || countActiveFilters(values) > 0);
+  // The card's button is pale while nothing is chosen (250:4405); the sheet's is always solid and then just closes it (618:26974).
+  const canApply = !invalid && (sheet || dirty || countActiveFilters(values) > 0);
   const customFields = filterableFields(draft.category ? findCategoryBySlug(categories, draft.category)?.custom_fields : null);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -229,8 +243,9 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
     />
   );
 
+  // 16 / 500 on the card (250:4405), 16 / 700 in the sheet (618:26974).
   const apply = (
-    <Button type="submit" fullWidth disabled={!canApply} className="h-[46px] rounded-qb-lg font-medium">
+    <Button type="submit" fullWidth disabled={!canApply} className={cn('h-[46px] rounded-qb-lg', sheet ? 'font-bold' : 'font-medium')}>
       {t('catalog.filters.apply', 'تطبيق الفلتر')}
     </Button>
   );
@@ -238,12 +253,15 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
 
   if (sheet) {
     return (
-      <form onSubmit={submit} noValidate aria-label={t('catalog.filters.title', 'الفلتر')} className="font-qb">
-        {chips}
-        <div>{groups.map(group)}</div>
-        <div className="sticky -bottom-6 -mx-6 -mb-6 flex flex-col items-center gap-3 border-t border-qb-line bg-qb-surface px-6 pt-4 pb-5">
+      <form onSubmit={submit} noValidate aria-label={t('catalog.filters.title', 'الفلتر')} className={cn('flex flex-1 flex-col font-qb text-qb-ink', sheetBodyHeight)}>
+        {/* Only the fields scroll; the buttons stay at the bottom of the sheet. */}
+        <div className="-mx-6 min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-2">
+          {chips}
+          {sheetOrder(groups).map(group)}
+        </div>
+        <div className="-mx-6 flex flex-col items-center gap-3 border-t border-qb-line bg-qb-surface px-6 pt-4 pb-5">
           {apply}
-          <button type="button" onClick={reset} className={cn('rounded-qb-xs text-qb-body font-medium text-qb-brand', focusRing)}>
+          <button type="button" onClick={reset} className={cn('rounded-qb-xs text-qb-body font-medium text-qb-brand hover:text-qb-brand-active', focusRing)}>
             {resetLabel}
           </button>
         </div>

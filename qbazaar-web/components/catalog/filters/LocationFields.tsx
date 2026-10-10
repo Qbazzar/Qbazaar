@@ -43,8 +43,9 @@ function districtLabel(city: Location, district: Location, locale: Locale): stri
 
 /**
  * The cities as radio rows in the desktop filter card ("Cites Services",
- * 69:467). A district chosen elsewhere (the sheet, a saved search) stays
- * listed first, so the current filter is always visible.
+ * 69:467), their names in the medium weight the reference gives every city
+ * name (typo.js). A district chosen elsewhere (the sheet, a saved search)
+ * stays listed first, so the current filter is always visible.
  */
 export function CityOptions({ labelledBy, value, onChange, locations, counts, name }: LocationFieldProps & { name: string }) {
   const locale = getLocale();
@@ -55,7 +56,7 @@ export function CityOptions({ labelledBy, value, onChange, locations, counts, na
     options.unshift({ value: chosen.district.slug, label: districtLabel(chosen.city, chosen.district, locale), count: subtreeCount(chosen.district, counts) });
   }
 
-  return <OptionList name={name} labelledBy={labelledBy} options={options} value={value} onChange={onChange} />;
+  return <OptionList name={name} labelledBy={labelledBy} options={options} value={value} onChange={onChange} labelClassName="font-medium" />;
 }
 
 /**

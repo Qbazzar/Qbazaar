@@ -41,7 +41,12 @@ import type { SearchQueryParams } from '@/lib/api/types';
 
 const PER_PAGE = 24;
 
-const GROUPS: FilterGroupKey[] = ['keyword', 'category', 'price', 'location', 'condition', 'adType', 'shipping', 'customFields'];
+/**
+ * After the keyword, the groups in the order of category.html's filter card
+ * (Price, Offer, Shipping & Delivery, Cities), then the filters only the
+ * search API has.
+ */
+const GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'shipping', 'location', 'category', 'condition', 'customFields'];
 
 export function SearchClient() {
   const locale = getLocale();

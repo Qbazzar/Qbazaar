@@ -67,7 +67,7 @@ export function CustomFieldFilters({ fields, value, onChange, compact = false }:
                 options={selectOptions(field)}
                 value={typeof current === 'string' ? current : null}
                 onChange={(next) => setField(field.key, next)}
-                placeholder={t('catalog.filters.any', 'الكل')}
+                placeholder={t('catalog.filters.all_type', 'كل الأنواع')}
               />
             </div>
           );

@@ -62,6 +62,31 @@ describe('FilterPanel', () => {
     expect(screen.getByRole('button', { name: 'Apply Filter' })).toBeEnabled();
   });
 
+  it('keeps the sheet’s "Apply Filter" solid with nothing chosen, and closes the sheet from it', async () => {
+    const onKeep = vi.fn();
+    const { onApply, user } = renderPanel({ variant: 'sheet', onKeep });
+    const apply = screen.getByRole('button', { name: 'Apply Filter' });
+
+    expect(apply).toBeEnabled();
+    expect(apply).toHaveClass('font-bold');
+    await user.click(apply);
+    expect(onKeep).toHaveBeenCalledOnce();
+    expect(onApply).not.toHaveBeenCalled();
+  });
+
+  it('leads the sheet with the fields of the design, then the radio groups', () => {
+    renderPanel({ variant: 'sheet', groups: ['category', 'price', 'location', 'condition'] });
+    const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
+
+    expect(headings).toEqual(['Price Range (QAR)', 'City / Region', 'Category', 'Condition']);
+  });
+
+  it('sets the city names in the medium weight of the reference', () => {
+    renderPanel();
+
+    expect(screen.getByText('Al Wakrah')).toHaveClass('font-medium');
+  });
+
   it('lists only the real options of a group, without an "any" row', () => {
     renderPanel();
 

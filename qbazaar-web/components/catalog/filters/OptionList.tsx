@@ -18,6 +18,8 @@ interface OptionListProps {
   options: FilterOption[];
   value: string | null;
   onChange: (value: string) => void;
+  /** Classes for every option's label. */
+  labelClassName?: string;
 }
 
 /**
@@ -36,7 +38,7 @@ const radio = [
  * Radio rows of a filter group ("Available (7,592,369)"). The design lists the
  * real options only; a chosen one is cleared from its chip or "Reset All".
  */
-export function OptionList({ name, labelledBy, options, value, onChange }: OptionListProps) {
+export function OptionList({ name, labelledBy, options, value, onChange, labelClassName }: OptionListProps) {
   const locale = getLocale();
 
   return (
@@ -46,9 +48,9 @@ export function OptionList({ name, labelledBy, options, value, onChange }: Optio
         return (
           <label key={option.value} className="flex cursor-pointer items-center gap-2 font-qb text-qb-body text-qb-ink-subtle">
             <input type="radio" name={name} value={option.value} checked={checked} onChange={() => onChange(option.value)} className={radio} />
-            <span className={cn('min-w-0', checked && 'text-qb-ink-body')}>
+            <span className={cn('min-w-0', labelClassName, checked && 'text-qb-ink-body')}>
               {option.label}
-              {option.count ? <span className="tabular-nums"> ({formatNumber(option.count, locale)})</span> : null}
+              {option.count ? <span className="font-normal tabular-nums"> ({formatNumber(option.count, locale)})</span> : null}
             </span>
           </label>
         );

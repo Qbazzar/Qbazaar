@@ -27,6 +27,13 @@ export const selectRow = [
   'data-highlighted:bg-(--color-qb-option-active) aria-selected:bg-(--color-qb-option-active)',
 ].join(' ');
 
+/**
+ * The panel opens with its first row grey (264:4818) while no row is
+ * highlighted or chosen; a hovered or arrowed-to row takes the grey over.
+ */
+export const selectFirstRowHint =
+  '[&:not(:has([data-highlighted])):not(:has([aria-selected=true]))>[role=option]:first-child]:bg-(--color-qb-option-active)';
+
 /** The thin grey scrollbar of the select list (264:4818). */
 export const selectScrollbar =
   '[scrollbar-color:var(--color-qb-scrollbar)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-qb-lg [&::-webkit-scrollbar-thumb]:bg-(--color-qb-scrollbar)';
