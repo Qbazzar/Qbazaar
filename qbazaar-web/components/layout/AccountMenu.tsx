@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 import { CirclePercent, LogOut, MapPin, Search, Settings, type LucideIcon } from 'lucide-react';
 
@@ -29,29 +29,63 @@ interface AccountMenuProps {
 }
 
 /**
+ * closed; peek: opened by the focus arriving, shown but out of the tab order so it
+ * adds no tab stops; full: opened by hover, a tap or the keyboard, its rows reachable.
+ */
+type Mode = 'closed' | 'peek' | 'full';
+type InputKind = 'mouse' | 'touch' | 'key';
+
+/**
  * The header avatar (728:44663) and its account menu: the avatar opens the
  * account, and the mouse resting on it (or the keyboard focus reaching it)
- * opens the menu under it. Escape, a click outside or the focus leaving
- * closes it.
+ * opens the menu under it. A tap or Enter opens it first and a second one
+ * goes to the account. Focus alone shows the menu without adding tab stops.
+ * Escape, a click outside or the focus leaving closes it.
  */
 export function AccountMenu({ name, email }: AccountMenuProps) {
-  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<Mode>('closed');
   const rootRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLAnchorElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const inputKind = useRef<InputKind>('mouse');
+  const focusFirstRow = useRef(false);
   const panelId = useId();
-  const { hoverHandlers } = useHoverOpen(setOpen, CLOSE_DELAY_MS);
+  const open = mode !== 'closed';
+  const rowTab = mode === 'full' ? undefined : -1;
+  const { hoverHandlers } = useHoverOpen((hovered) => setMode(hovered ? 'full' : 'closed'), CLOSE_DELAY_MS);
   const { signOut, pending } = useSignOut();
   const initials = initialsOf(name);
-  const close = () => setOpen(false);
+  const close = () => setMode('closed');
 
   useEffect(() => {
     if (!open) return;
     const closeOnOutsidePress = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!rootRef.current?.contains(event.target as Node)) setMode('closed');
     };
     document.addEventListener('pointerdown', closeOnOutsidePress);
     return () => document.removeEventListener('pointerdown', closeOnOutsidePress);
   }, [open]);
+
+  useEffect(() => {
+    if (mode !== 'full' || !focusFirstRow.current) return;
+    focusFirstRow.current = false;
+    panelRef.current?.querySelector<HTMLElement>('a, button')?.focus();
+  }, [mode]);
+
+  /** Makes the rows reachable; the keyboard also moves into them. */
+  const enterMenu = (withFocus: boolean) => {
+    focusFirstRow.current = withFocus;
+    if (mode === 'full' && withFocus) panelRef.current?.querySelector<HTMLElement>('a, button')?.focus();
+    setMode('full');
+  };
+
+  const onAvatarClick = (event: MouseEvent) => {
+    if (inputKind.current === 'mouse') return;
+    if (mode === 'full') return close();
+    // The first tap or Enter opens the menu; the next one, or its "account" row, goes to the account.
+    event.preventDefault();
+    enterMenu(inputKind.current === 'key');
+  };
 
   const items: { href: string; label: string; icon: LucideIcon }[] = [
     { href: '/account/saved-searches', label: t('layout.menu.save_search', 'البحث المحفوظ'), icon: Search },
@@ -65,17 +99,25 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
       ref={rootRef}
       className="relative flex"
       {...hoverHandlers}
+      onPointerDown={(event) => {
+        inputKind.current = event.pointerType === 'mouse' ? 'mouse' : 'touch';
+      }}
       onFocus={(event) => {
         // Only focus arriving from outside opens it; Escape hands the focus back to the avatar inside.
-        if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(true);
+        if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setMode((current) => (current === 'closed' ? 'peek' : current));
       }}
       onBlur={(event) => {
-        if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false);
+        if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setMode('closed');
       }}
       onKeyDown={(event) => {
-        if (!open || event.key !== 'Escape') return;
-        setOpen(false);
-        avatarRef.current?.focus();
+        inputKind.current = 'key';
+        if (event.key === 'ArrowDown' && event.target === avatarRef.current) {
+          event.preventDefault();
+          enterMenu(true);
+        } else if (open && event.key === 'Escape') {
+          close();
+          avatarRef.current?.focus();
+        }
       }}
     >
       <Link
@@ -83,6 +125,7 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
         href="/account"
         aria-label={t('layout.header.account_named', { initials }, `${initials}، حسابي`)}
         aria-expanded={open}
+        onClick={onAvatarClick}
         aria-controls={open ? panelId : undefined}
         className={cn(
           'relative rounded-full after:absolute after:inset-0 after:rounded-full after:bg-qb-overlay after:opacity-0 after:transition-opacity hover:after:opacity-100 motion-reduce:after:transition-none',
@@ -93,6 +136,7 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
       </Link>
       {open ? (
         <nav
+          ref={panelRef}
           id={panelId}
           aria-label={t('layout.menu.account_menu', 'قائمة الحساب')}
           className={cn(
@@ -100,7 +144,7 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
             menuEnter,
           )}
         >
-          <Link href="/account" onClick={close} className={cn(row, 'mb-1.5 rounded-none border-b border-qb-line p-3')}>
+          <Link href="/account" tabIndex={rowTab} onClick={close} className={cn(row, 'mb-1.5 rounded-none border-b border-qb-line p-3')}>
             <Avatar name={name} decorative className="size-[42px] text-qb-body-sm" />
             <span className="min-w-0">
               <span className="block truncate text-qb-body-sm leading-[1.15] font-semibold text-qb-ink">{name}</span>
@@ -110,14 +154,14 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
           <ul>
             {items.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} onClick={close} className={cn(row, 'text-qb-ink-body')}>
+                <Link href={item.href} tabIndex={rowTab} onClick={close} className={cn(row, 'text-qb-ink-body')}>
                   <Icon icon={item.icon} strokeWidth={1.7} />
                   {item.label}
                 </Link>
               </li>
             ))}
             <li>
-              <button type="button" onClick={signOut} disabled={pending} className={cn(row, 'text-qb-brand')}>
+              <button type="button" tabIndex={rowTab} onClick={signOut} disabled={pending} className={cn(row, 'text-qb-brand')}>
                 <Icon icon={LogOut} strokeWidth={1.7} flipInRtl />
                 {t('layout.menu.log_out', 'تسجيل الخروج')}
               </button>

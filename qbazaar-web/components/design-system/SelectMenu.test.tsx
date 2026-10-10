@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -44,7 +44,7 @@ function Harness({ nested = true, onChange = vi.fn() }: { nested?: boolean; onCh
   );
 }
 
-const field = (name = 'Choose Category') => screen.getByRole('combobox', { name });
+const field = (name = 'Choose Category') => screen.getByRole('combobox', { name: new RegExp(`^${name}`) });
 const activeRow = (combobox: HTMLElement) => document.getElementById(combobox.getAttribute('aria-activedescendant') ?? '');
 
 describe('SelectMenu', () => {
@@ -199,5 +199,50 @@ describe('SelectMenu', () => {
 
     await user.hover(field());
     expect(onIntent).toHaveBeenCalled();
+  });
+
+  describe('touch', () => {
+    const tap = (element: HTMLElement) => {
+      fireEvent.pointerDown(element, { pointerType: 'touch' });
+      fireEvent.mouseEnter(element);
+      fireEvent.click(element);
+    };
+
+    it('opens a parent row on the first tap and picks a sub-category with the next', async () => {
+      const onChange = vi.fn();
+      render(<Harness onChange={onChange} />);
+      fireEvent.click(field());
+
+      tap(screen.getByRole('treeitem', { name: 'Vehicles' }));
+      expect(onChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('treeitem', { name: 'Vehicles' })).toHaveAttribute('aria-expanded', 'true');
+
+      tap(screen.getByRole('treeitem', { name: 'Boats' }));
+      expect(onChange).toHaveBeenCalledWith({ value: 'boats', label: 'Boats' });
+      expect(screen.queryByRole('tree')).toBeNull();
+    });
+
+    it('picks the parent itself with a second tap, and a leaf with the first', () => {
+      const onChange = vi.fn();
+      render(<Harness onChange={onChange} />);
+      fireEvent.click(field());
+
+      tap(screen.getByRole('treeitem', { name: 'Vehicles' }));
+      tap(screen.getByRole('treeitem', { name: 'Vehicles' }));
+      expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ value: 'vehicles' }));
+
+      fireEvent.click(field());
+      tap(screen.getByRole('treeitem', { name: 'Pets' }));
+      expect(onChange).toHaveBeenLastCalledWith({ value: 'pets', label: 'Pets' });
+    });
+  });
+
+  it('names the chosen value for screen readers', async () => {
+    const user = userEvent.setup();
+    render(<Harness nested={false} />);
+    await user.click(field('Distance'));
+    await user.click(screen.getByRole('option', { name: '+5 km' }));
+
+    expect(screen.getByRole('combobox', { name: 'Distance: +5 km' })).toBeInTheDocument();
   });
 });

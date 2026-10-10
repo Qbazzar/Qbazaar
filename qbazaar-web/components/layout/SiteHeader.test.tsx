@@ -90,7 +90,8 @@ describe('SiteHeader', () => {
     for (let step = 0; step < 20 && document.activeElement !== avatar; step++) await user.tab();
     expect(avatar).toHaveFocus();
     expect(screen.getByRole('navigation', { name: 'Account menu' })).toBeInTheDocument();
-    await user.tab();
+    // The focus alone adds no tab stops; ArrowDown moves into the menu.
+    await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('link', { name: /Farah Alzinati/ })).toHaveFocus();
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('navigation', { name: 'Account menu' })).toBeNull();

@@ -18,8 +18,9 @@ function category(slug: string, en: string, children: CategoryNode[] = []): Cate
 }
 
 const doha = place('doha', 'Doha', 'الدوحة', [place('west-bay', 'West Bay', 'الخليج الغربي', [], [25.3215, 51.5311])], [25.2854, 51.531]);
+const alKhor = place('al-khor', 'Al Khor', 'الخور');
 const tree = [category('vehicles', 'Vehicles', [category('cars', 'Cars')]), category('pets', 'Pets')];
-vi.mock('@/lib/queries/locations', () => ({ useQatarLocationsQuery: () => ({ data: [doha] }) }));
+vi.mock('@/lib/queries/locations', () => ({ useQatarLocationsQuery: () => ({ data: [doha, alKhor] }) }));
 vi.mock('@/lib/queries/categories', () => ({ useCategoryTreeQuery: treeQuery }));
 
 import { HomeSearchBar, categoryOptions, findPlaceByName, searchHref } from './HomeSearchBar';
@@ -128,7 +129,7 @@ describe('HomeSearchBar', () => {
     await user.type(screen.getByRole('combobox', { name: 'Location' }), 'Doha');
     await user.click(screen.getByRole('combobox', { name: 'Distance' }));
     await user.click(screen.getByRole('option', { name: '+10 km' }));
-    expect(screen.getByRole('combobox', { name: 'Distance' })).toHaveTextContent('+10 km');
+    expect(screen.getByRole('combobox', { name: 'Distance: +10 km' })).toHaveTextContent('+10 km');
     await user.click(screen.getByRole('button', { name: 'Search' }));
 
     expect(push).toHaveBeenCalledWith('/search?location_slug=doha&lat=25.2854&lng=51.5310&radius_km=10');
@@ -153,6 +154,22 @@ describe('HomeSearchBar', () => {
     expect(push).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent('Choose a location to search by distance');
     expect(screen.getByRole('combobox', { name: 'Location' })).toHaveFocus();
+  });
+
+  it('does not fall back to the visitor position when a typed location gives no centre', async () => {
+    const user = userEvent.setup();
+    const getCurrentPosition = vi.fn();
+    vi.stubGlobal('navigator', { ...navigator, geolocation: { getCurrentPosition } });
+    render(<HomeSearchBar />);
+
+    await user.type(screen.getByRole('combobox', { name: 'Location' }), 'Al Khor');
+    await user.click(screen.getByRole('combobox', { name: 'Distance' }));
+    await user.click(screen.getByRole('option', { name: '+5 km' }));
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    expect(getCurrentPosition).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Choose a location to search by distance');
   });
 
   it('searches all of Qatar when "All Qatar" is the distance', async () => {

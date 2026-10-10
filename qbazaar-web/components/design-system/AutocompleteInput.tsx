@@ -34,7 +34,9 @@ export function matchSuggestions(suggestions: AutocompleteSuggestion[], text: st
  * A text field whose suggestions open in the design's dropdown card instead
  * of the browser's datalist popup (an editable combobox with list
  * autocomplete). The card is placed under the nearest positioned ancestor,
- * so the caller wraps the field in one.
+ * so the caller wraps the field in one. It is not portaled (see SelectMenu): a
+ * portal would leave a modal dialog's focus scope, so inside a sheet or dialog
+ * the wrapper must not clip overflow.
  */
 export function AutocompleteInput({
   value,

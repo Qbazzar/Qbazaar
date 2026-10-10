@@ -183,7 +183,8 @@ export function HomeSearchBar() {
     if (radiusKm) {
       // The radius is measured from the chosen place, or from the visitor without one.
       setLocating(true);
-      const centre = pointOf(place) ?? (await currentPosition());
+      // A typed place that gave no centre must not be swapped for the visitor's position.
+      const centre = pointOf(place) ?? (location.trim() ? null : await currentPosition());
       setLocating(false);
       if (!centre) {
         showLocationError('needed');

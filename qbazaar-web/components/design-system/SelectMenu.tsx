@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -76,6 +76,11 @@ function buildEntries(baseId: string, options: SelectMenuOption[], heading?: Sel
  * on hover or with the arrow key towards it. A select-only combobox: the
  * focus stays on the field and the arrow keys move the highlighted row.
  * Arabic mirrors the cards and the keys.
+ *
+ * Limit: the cards are absolutely placed inside the field's wrapper, not portaled. A portal
+ * would drop them out of a modal dialog's focus scope and inert outside (base-ui) and out of
+ * its transformed popup, so inside a sheet or dialog keep the field's ancestors free of
+ * overflow clipping instead.
  */
 export function SelectMenu({
   label,
@@ -98,6 +103,8 @@ export function SelectMenu({
   const [open, setOpen] = useState(false);
   const [activeValue, setActiveValue] = useState<string | null>(null);
   const [expandedValue, setExpandedValue] = useState<string | null>(null);
+  // A tap fires an emulated mouseenter before its click, so the row cannot tell a hover from a tap without this.
+  const touchPointer = useRef(false);
 
   const { top, byValue } = useMemo(() => buildEntries(baseId, options, heading), [baseId, options, heading]);
   const nested = top.some((entry) => entry.children.length > 0);
@@ -133,6 +140,16 @@ export function SelectMenu({
   const choose = (entry: Entry) => {
     onChange(entry.option);
     setOpen(false);
+  };
+
+  const notePointer = (event: PointerEvent) => {
+    touchPointer.current = event.pointerType !== 'mouse';
+  };
+
+  /** A mouse picks on click. A tap on a row with children opens it first; a second tap picks it. */
+  const pressRow = (entry: Entry, expanded: boolean) => {
+    if (touchPointer.current && entry.children.length > 0 && !expanded) highlight(entry);
+    else choose(entry);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -181,8 +198,10 @@ export function SelectMenu({
         // A parent's name is its own label, not the text of the children inside it.
         aria-label={hasChildren ? entry.option.label : undefined}
         className={hasChildren ? 'relative' : look}
-        onMouseEnter={() => highlight(entry)}
-        onClick={() => choose(entry)}
+        onPointerEnter={notePointer}
+        onPointerDown={notePointer}
+        onMouseEnter={() => !touchPointer.current && highlight(entry)}
+        onClick={() => pressRow(entry, expanded)}
       >
         {hasChildren ? (
           <div className={look}>
@@ -203,7 +222,7 @@ export function SelectMenu({
                 role={itemRole}
                 aria-selected={child === chosen}
                 className={cn(dropdownPanel.row, child === active && dropdownPanel.activeRow)}
-                onMouseEnter={() => highlight(child)}
+                onMouseEnter={() => !touchPointer.current && highlight(child)}
                 onClick={(event) => {
                   // The parent row around it would pick itself next.
                   event.stopPropagation();
@@ -227,7 +246,7 @@ export function SelectMenu({
       <div
         role="combobox"
         tabIndex={0}
-        aria-label={label}
+        aria-label={chosen ? `${label}: ${chosen.option.label}` : label}
         aria-haspopup={nested ? 'tree' : 'listbox'}
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
