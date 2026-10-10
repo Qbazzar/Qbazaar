@@ -97,8 +97,8 @@ export async function listFavorites(
 /** Every favourited ad id of the caller, newest first (the API caps the list). */
 export async function listFavoriteIds(): Promise<string[]> {
   try {
-    const { data } = await api.get<{ ids: string[] }>(`${ACCOUNT_BASE}/ids`);
-    return data.ids;
+    const { data } = await api.get<SuccessEnvelope<{ ids: string[] }>>(`${ACCOUNT_BASE}/ids`);
+    return data.data.ids;
   } catch (err) {
     throw toApiClientError(err);
   }
