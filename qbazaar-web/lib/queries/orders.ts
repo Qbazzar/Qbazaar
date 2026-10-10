@@ -12,7 +12,7 @@ import {
 } from '@tanstack/react-query';
 
 import type { ApiClientError } from '@/lib/api/auth';
-import type { Checkout, CheckoutPayload, DealRole, Order, OrderStatus } from '@/lib/api/commerce-types';
+import type { Checkout, CheckoutAddressInput, CheckoutPayload, DealRole, Order, OrderStatus, SavedAddress } from '@/lib/api/commerce-types';
 import {
   cancelOrder,
   confirmHandover,
@@ -20,6 +20,7 @@ import {
   getOrder,
   listOrders,
   reportOrderProblem,
+  saveAddress,
   submitCheckout,
 } from '@/lib/api/orders';
 import { useIsAuthenticated } from '@/hooks/useIsAuthenticated';
@@ -86,6 +87,19 @@ export function useSubmitCheckoutMutation(orderId: string) {
   return useMutation<Order, ApiClientError, WithKey & { payload: CheckoutPayload }>({
     mutationFn: ({ payload, idempotencyKey }) => submitCheckout(orderId, payload, idempotencyKey),
     onSuccess: (order) => settleOrder(qc, order),
+  });
+}
+
+/** Saves a typed delivery address to the account and adds it to this checkout's saved addresses at once. */
+export function useSaveAddressMutation(orderId: string) {
+  const qc = useQueryClient();
+  return useMutation<SavedAddress, ApiClientError, CheckoutAddressInput>({
+    mutationFn: (address) => saveAddress(address),
+    onSuccess: (address) => {
+      qc.setQueryData<Checkout>(orderKeys.checkout(orderId), (checkout) =>
+        checkout ? { ...checkout, saved_addresses: [...checkout.saved_addresses, address] } : checkout,
+      );
+    },
   });
 }
 

@@ -2,27 +2,25 @@
 
 import './field-select.css';
 
-import {
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type KeyboardEvent,
-  type PointerEvent,
-} from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-export interface FieldSelectOption {
-  value: string;
-  label: string;
-  /** A second level, listed in a card beside the row (in its place where there is no room). One level deep. */
-  children?: readonly FieldSelectOption[];
-}
+import {
+  buildEntries,
+  isPrintable,
+  matchTyped,
+  measure,
+  resolveKey,
+  type Entry,
+  type FieldSelectOption,
+  type Placement,
+  type TypedText,
+} from './field-select-model';
+
+export type { FieldSelectOption } from './field-select-model';
 
 export interface FieldSelectProps {
   id?: string;
@@ -44,14 +42,6 @@ export interface FieldSelectProps {
   'aria-required'?: boolean;
 }
 
-/** selects.js portal(): the card opens 14 px under the field, at least 190 px or the field's width. */
-const PANEL_GAP = 14;
-const PANEL_MIN_WIDTH = 190;
-/** `.qb-ddsub`: the second card, 14 px beside the first and at least 260 px wide. */
-const SUB_GAP = 14;
-const SUB_MIN_WIDTH = 260;
-const TYPEAHEAD_RESET_MS = 500;
-
 /** The box of the design-system Input and Select (`controlBase` in Input.tsx). */
 const fieldBox = [
   'relative flex h-[52px] w-full cursor-pointer items-center rounded-qb-md border border-qb-field-border bg-qb-surface ps-4 pe-11',
@@ -72,60 +62,9 @@ const panel = {
   caret: 'text-[15px] leading-none text-(--color-qb-menu-caret)',
 } as const;
 
-interface Entry {
-  id: string;
-  value: string;
-  label: string;
-  parent: Entry | null;
-  children: Entry[];
-}
-
-interface Placement {
-  style: CSSProperties;
-  /** The second card fits beside the first; otherwise a parent's list replaces the first. */
-  beside: boolean;
-}
-
-function buildEntries(baseId: string, options: readonly FieldSelectOption[], parentLabel?: FieldSelectProps['parentLabel']) {
-  const top: Entry[] = [];
-  const byId = new Map<string, Entry>();
-  const byValue = new Map<string, Entry>();
-  const add = (entry: Entry, lookup: boolean) => {
-    byId.set(entry.id, entry);
-    if (lookup && !byValue.has(entry.value)) byValue.set(entry.value, entry);
-    return entry;
-  };
-
-  options.forEach((option, index) => {
-    const entry = add({ id: `${baseId}-${index}`, value: option.value, label: option.label, parent: null, children: [] }, true);
-    const children = option.children ?? [];
-    if (children.length > 0 && parentLabel) {
-      entry.children.push(add({ id: `${entry.id}-all`, value: option.value, label: parentLabel(option), parent: entry, children: [] }, false));
-    }
-    children.forEach((child, childIndex) => {
-      entry.children.push(add({ id: `${entry.id}-${childIndex}`, value: child.value, label: child.label, parent: entry, children: [] }, true));
-    });
-    top.push(entry);
-  });
-  return { top, byId, byValue };
-}
-
-function measure(field: HTMLElement): Placement {
-  const rect = field.getBoundingClientRect();
-  const viewport = document.documentElement.clientWidth;
-  const rtl = getComputedStyle(field).direction === 'rtl';
-  const room = rtl ? rect.left : viewport - rect.right;
-  const style: CSSProperties = {
-    top: rect.bottom + window.scrollY + PANEL_GAP,
-    minWidth: Math.max(PANEL_MIN_WIDTH, rect.width),
-  };
-  if (rtl) style.right = viewport - rect.right;
-  else style.left = rect.left + window.scrollX;
-  return { style, beside: room >= SUB_GAP + SUB_MIN_WIDTH };
-}
-
-function isPrintable(event: KeyboardEvent): boolean {
-  return event.key.length === 1 && event.key !== ' ' && !event.ctrlKey && !event.metaKey && !event.altKey;
+/** A moved card keeps the side the second card was laid out on, so a row open at the time does not jump. */
+function withSameSide(current: Placement | null, next: Placement): Placement {
+  return current ? { ...next, beside: current.beside } : next;
 }
 
 /**
@@ -135,8 +74,9 @@ function isPrintable(event: KeyboardEvent): boolean {
  * beside it, or in place of the first where there is no room. A select-only
  * combobox: focus stays on the field, the arrow keys move the highlighted row
  * (towards a second card and back too), letters jump to a row, Enter or Space
- * chooses, Escape, Tab or a press outside closes. Arabic mirrors the cards
- * and the arrow keys.
+ * chooses, Escape, Tab, a blur or a press outside closes. The card follows the
+ * field on scroll and resize. Arabic mirrors the cards and the arrow keys.
+ * A flat list is a listbox; only the two-level city cascade is a tree.
  */
 export function FieldSelect({
   id,
@@ -156,7 +96,7 @@ export function FieldSelect({
   const panelRef = useRef<HTMLDivElement>(null);
   const pointerType = useRef('mouse');
   const spaceChose = useRef(false);
-  const typed = useRef({ text: '', at: 0 });
+  const typed = useRef<TypedText>({ text: '', at: 0 });
   const [open, setOpen] = useState(false);
   const [placement, setPlacement] = useState<Placement | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -189,16 +129,25 @@ export function FieldSelect({
       const target = event.target as Node;
       if (!fieldRef.current?.contains(target) && !panelRef.current?.contains(target)) dismiss();
     };
-    // The card is placed once, so a new layout width closes it; phones also resize as their toolbars slide while scrolling.
+    // A new layout width closes the card (phones also resize as their toolbars slide while scrolling);
+    // otherwise it follows its field, which moves when the page or a scrolling parent such as a dialog scrolls.
     const openWidth = window.innerWidth;
-    const closeOnNewWidth = () => {
-      if (window.innerWidth !== openWidth) dismiss();
+    let frame = 0;
+    const follow = () => {
+      if (window.innerWidth !== openWidth) return dismiss();
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (fieldRef.current) setPlacement((current) => withSameSide(current, measure(fieldRef.current as HTMLElement)));
+      });
     };
     document.addEventListener('pointerdown', closeOnOutsidePress);
-    window.addEventListener('resize', closeOnNewWidth);
+    window.addEventListener('resize', follow);
+    window.addEventListener('scroll', follow, true);
     return () => {
+      cancelAnimationFrame(frame);
       document.removeEventListener('pointerdown', closeOnOutsidePress);
-      window.removeEventListener('resize', closeOnNewWidth);
+      window.removeEventListener('resize', follow);
+      window.removeEventListener('scroll', follow, true);
     };
   }, [open]);
 
@@ -235,54 +184,50 @@ export function FieldSelect({
     setActiveId(entry.parent.id);
   };
 
-  const matchTyped = (key: string, rows: Entry[], from: Entry | undefined) => {
-    const now = Date.now();
-    const text = (now - typed.current.at > TYPEAHEAD_RESET_MS ? '' : typed.current.text) + key.toLowerCase();
-    typed.current = { text, at: now };
-    const start = from ? rows.indexOf(from) + (text.length === 1 ? 1 : 0) : 0;
-    return [...rows.slice(start), ...rows.slice(0, start)].find((entry) => entry.label.toLowerCase().startsWith(text));
+  const jumpTo = (key: string, rows: Entry[], from: Entry | undefined) => {
+    const { entry, next } = matchTyped(key, rows, from, typed.current, Date.now());
+    typed.current = next;
+    return entry;
+  };
+
+  const onClosedKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      openPanel();
+    } else if (isPrintable(event)) {
+      event.preventDefault();
+      openPanel(jumpTo(event.key, top, chosen) ?? chosen ?? top[0]);
+    }
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (!open) {
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    if (disabled) return;
+    if (!open) return onClosedKeyDown(event);
+    if (event.key === 'Tab') return close();
+    const rtl = getComputedStyle(event.currentTarget).direction === 'rtl';
+    const action = resolveKey(event.key, level, active, rtl);
+    if (!action) {
+      if (isPrintable(event)) {
         event.preventDefault();
-        openPanel();
-      } else if (isPrintable(event)) {
-        event.preventDefault();
-        openPanel(matchTyped(event.key, top, chosen) ?? chosen ?? top[0]);
+        highlight(jumpTo(event.key, level, active));
       }
       return;
     }
-    if (event.key === 'Tab') {
-      close();
-      return;
-    }
-    const rtl = getComputedStyle(event.currentTarget).direction === 'rtl';
-    const index = active ? level.indexOf(active) : -1;
-    const highlight = (entry: Entry | undefined) => entry && setActiveId(entry.id);
-    const actions: Record<string, () => void> = {
-      ArrowDown: () => highlight(level[Math.min(level.length - 1, index + 1)]),
-      ArrowUp: () => highlight(level[Math.max(0, index - 1)]),
-      Home: () => highlight(level[0]),
-      End: () => highlight(level[level.length - 1]),
-      [rtl ? 'ArrowLeft' : 'ArrowRight']: () => enter(active),
-      [rtl ? 'ArrowRight' : 'ArrowLeft']: () => leave(active),
-      Enter: () => active && choose(active),
-      ' ': () => {
-        spaceChose.current = true;
-        if (active) choose(active);
-      },
-      Escape: close,
-    };
-    const action = actions[event.key];
-    if (action) {
-      event.preventDefault();
-      if (event.key === 'Escape') event.stopPropagation();
-      action();
-    } else if (isPrintable(event)) {
-      event.preventDefault();
-      highlight(matchTyped(event.key, level, active));
+    event.preventDefault();
+    if (action.type === 'close') event.stopPropagation();
+    runKeyAction(action);
+  };
+
+  const highlight = (entry: Entry | undefined) => entry && setActiveId(entry.id);
+
+  const runKeyAction = (action: NonNullable<ReturnType<typeof resolveKey>>) => {
+    if (action.type === 'highlight') highlight(action.entry);
+    else if (action.type === 'enter') enter(active);
+    else if (action.type === 'leave') leave(active);
+    else if (action.type === 'close') close();
+    else {
+      spaceChose.current = action.viaSpace;
+      if (active) choose(active);
     }
   };
 
@@ -309,13 +254,17 @@ export function FieldSelect({
 
   const isLit = (entry: Entry) => entry === active || entry === chosen || entry === expanded;
   const itemRole = nested ? 'treeitem' : 'option';
+  /** A tree item says where it sits; the items of a listbox are counted by the browser. */
+  const position = (index: number, siblings: Entry[], depth: number) =>
+    nested ? { 'aria-level': depth, 'aria-setsize': siblings.length, 'aria-posinset': index + 1 } : {};
 
-  const renderOption = (entry: Entry) => (
+  const renderOption = (entry: Entry, index: number, siblings: Entry[], depth: number) => (
     <li
       key={entry.id}
       id={entry.id}
       role={itemRole}
       aria-selected={entry === chosen}
+      {...position(index, siblings, depth)}
       className={cn(panel.row, isLit(entry) && panel.activeRow)}
       {...rowHandlers(entry)}
     >
@@ -323,8 +272,8 @@ export function FieldSelect({
     </li>
   );
 
-  const renderRow = (entry: Entry) => {
-    if (entry.children.length === 0) return renderOption(entry);
+  const renderRow = (entry: Entry, index: number, siblings: Entry[]) => {
+    if (entry.children.length === 0) return renderOption(entry, index, siblings, 1);
     const showsChildren = entry === expanded;
     return (
       <li
@@ -334,6 +283,7 @@ export function FieldSelect({
         aria-selected={entry === chosen}
         aria-expanded={showsChildren}
         aria-label={entry.label}
+        {...position(index, siblings, 1)}
         className="relative"
       >
         <div className={cn(panel.row, isLit(entry) && panel.activeRow)} {...rowHandlers(entry)}>
@@ -344,7 +294,7 @@ export function FieldSelect({
         </div>
         {showsChildren ? (
           <ul role="group" className={cn(panel.card, 'absolute start-[calc(100%+14px)] top-0.5 min-w-[260px]')}>
-            {entry.children.map(renderOption)}
+            {entry.children.map((child, childIndex, children) => renderOption(child, childIndex, children, 2))}
           </ul>
         ) : null}
       </li>

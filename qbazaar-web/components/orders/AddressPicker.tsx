@@ -10,9 +10,11 @@ import { Input } from '@/components/design-system/Input';
 import type { CheckoutAddressInput, DeliveryAddress, SavedAddress } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
 import { addressLines, toAddressPayload, type AddressField } from '@/lib/orders/address';
+import { dealErrorMessage, isHandledGlobally } from '@/lib/orders/errors';
 import { cn } from '@/lib/utils';
 
 import { CheckoutPanel } from './CheckoutPanel';
+import { FormError } from './NoteField';
 import { OptionTile } from './OptionTile';
 
 import '@/styles/design-tokens-sell.css';
@@ -28,6 +30,16 @@ export interface ShippingAddressPanelProps {
   errors: Partial<Record<AddressField, string>>;
   /** Checks the typed address and shows its errors; true when it can be used. */
   onCheckAddress: () => boolean;
+  /** Clears the shown field errors, when Cancel puts the earlier address back. */
+  onClearErrors: () => void;
+  /** Saves the typed address to the account (`POST /account/addresses`); rejects when the API refuses it. */
+  onSaveAddress: (address: CheckoutAddressInput) => Promise<SavedAddress>;
+}
+
+/** What Cancel puts back: the choice and the typed fields as they were when editing began. */
+interface Snapshot {
+  choice: AddressChoice;
+  address: CheckoutAddressInput;
 }
 
 /** The form of 689:33725 on six columns: two fields a row, then street and number, then three. */
@@ -49,28 +61,56 @@ const headerLink = cn('rounded-qb-xs text-qb-body font-medium text-qb-brand hove
  * Cancel and opens the saved addresses and the address form with a Save
  * Address button. Without a saved or confirmed address the form is open.
  */
-export function ShippingAddressPanel({ addresses, choice, onChoiceChange, address, onAddressChange, errors, onCheckAddress }: ShippingAddressPanelProps) {
-  const [editingFrom, setEditingFrom] = useState<AddressChoice | null>(null);
-  const [typedConfirmed, setTypedConfirmed] = useState(false);
+export function ShippingAddressPanel({
+  addresses,
+  choice,
+  onChoiceChange,
+  address,
+  onAddressChange,
+  errors,
+  onCheckAddress,
+  onClearErrors,
+  onSaveAddress,
+}: ShippingAddressPanelProps) {
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const saved = choice.kind === 'saved' ? addresses.find((candidate) => candidate.id === choice.id) : undefined;
-  const confirmed = saved !== undefined || typedConfirmed;
-  const editing = editingFrom !== null || !confirmed || Object.keys(errors).length > 0;
+  const editing = snapshot !== null || saved === undefined || Object.keys(errors).length > 0;
 
-  const startEditing = () => setEditingFrom(choice);
-  const cancel = () => {
-    if (editingFrom) onChoiceChange(editingFrom);
-    setEditingFrom(null);
+  const startEditing = () => setSnapshot({ choice, address });
+  const stopEditing = () => {
+    setSnapshot(null);
+    setSaveError(null);
   };
-  const save = () => {
+  const cancel = () => {
+    if (snapshot) {
+      onChoiceChange(snapshot.choice);
+      onAddressChange(snapshot.address);
+      onClearErrors();
+    }
+    stopEditing();
+  };
+  const save = async () => {
     if (choice.kind === 'new') {
       if (!onCheckAddress()) return;
-      setTypedConfirmed(true);
+      setSaving(true);
+      setSaveError(null);
+      try {
+        const created = await onSaveAddress(toAddressPayload(address));
+        onChoiceChange({ kind: 'saved', id: created.id });
+      } catch (error) {
+        if (!isHandledGlobally(error)) setSaveError(dealErrorMessage(error));
+        return;
+      } finally {
+        setSaving(false);
+      }
     }
-    setEditingFrom(null);
+    stopEditing();
   };
 
   const action = editing ? (
-    editingFrom ? (
+    snapshot ? (
       <button type="button" onClick={cancel} className={headerLink}>
         {t('common.cancel')}
       </button>
@@ -114,12 +154,19 @@ export function ShippingAddressPanel({ addresses, choice, onChoiceChange, addres
             </div>
           ) : null}
           {choice.kind === 'new' ? <AddressForm address={address} onAddressChange={onAddressChange} errors={errors} /> : null}
-          <Button size="sm" onClick={save} className="h-10 self-end rounded-qb-md px-[18px] text-qb-caption">
+          <FormError>{saveError}</FormError>
+          <Button
+            size="sm"
+            onClick={() => void save()}
+            disabled={saving}
+            aria-busy={saving}
+            className="h-10 self-end rounded-qb-md px-[18px] text-qb-caption"
+          >
             {t('orders.checkout.save_address')}
           </Button>
         </div>
       ) : (
-        <AddressText address={saved ?? toAddressPayload(address)} />
+        <AddressText address={saved} />
       )}
     </CheckoutPanel>
   );

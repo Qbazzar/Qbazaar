@@ -23,6 +23,8 @@ export interface OrderSummaryCardProps {
   /** The item's photo; a parcel icon stands in without one. */
   photoUrl?: string;
   subtitle?: string;
+  /** Holds the subtitle's line while it is still being fetched, so the card does not grow when it arrives. */
+  subtitlePending?: boolean;
   currency: string;
   lines: SummaryLine[];
   total: string;
@@ -36,7 +38,7 @@ export interface OrderSummaryCardProps {
  * title and seller, the amounts and the total, with the confirm button
  * underneath.
  */
-export function OrderSummaryCard({ title, photoUrl, subtitle, currency, lines, total, footer, className }: OrderSummaryCardProps) {
+export function OrderSummaryCard({ title, photoUrl, subtitle, subtitlePending, currency, lines, total, footer, className }: OrderSummaryCardProps) {
   return (
     <section aria-labelledby="order-summary-title" className={cn(panelClass, 'p-4', className)}>
       <div className="flex items-center gap-2.5 border-b border-qb-line pb-4">
@@ -51,7 +53,11 @@ export function OrderSummaryCard({ title, photoUrl, subtitle, currency, lines, t
           <p className="line-clamp-2 text-qb-body font-medium text-qb-ink">
             <bdi>{title}</bdi>
           </p>
-          {subtitle ? <p className="mt-1 text-qb-micro text-(--color-qb-ink-meta)">{subtitle}</p> : null}
+          {subtitle || subtitlePending ? (
+            <p aria-hidden={subtitle ? undefined : true} className="mt-1 text-qb-micro text-(--color-qb-ink-meta)">
+              {subtitle ?? '\u00A0'}
+            </p>
+          ) : null}
         </div>
       </div>
 

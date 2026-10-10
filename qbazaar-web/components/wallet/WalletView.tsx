@@ -22,12 +22,8 @@ import '@/styles/design-tokens-sell.css';
 /** Share of the debt ceiling from which the wallet warns before orders are blocked. */
 const WARN_AT_PERCENT = BigInt(60);
 
-/**
- * The tile labels are #999 (502:22401, 563:31406) and #A4ADBA on phones
- * (613:31879). StatTile draws its label in ink-subtle, so the tiles remap
- * that token until StatTile takes the design's colour itself.
- */
-const walletTile = '[--color-qb-ink-subtle:var(--color-qb-ink-meta)] max-qb-tablet:[--color-qb-ink-subtle:var(--color-qb-breadcrumb)]';
+/** The tile labels are #999 (502:22401, 563:31406) and #A4ADBA on phones (613:31879). */
+const walletTileLabel = 'text-(--color-qb-ink-meta) max-qb-tablet:text-qb-breadcrumb';
 
 /** `/account/wallet`: balance, commission owed, what can be withdrawn and the statement (502:22401). */
 export function WalletView() {
@@ -65,14 +61,14 @@ export function WalletView() {
               label={t('orders.wallet.balance')}
               value={formatMoney(query.data.available_balance, query.data.currency)}
               icon={<WalletIcon />}
-              className={walletTile}
+              labelClassName={walletTileLabel}
             />
             <StatTile
               label={t('orders.wallet.commission_owed')}
               value={formatMoney(query.data.commission_debt, query.data.currency)}
               icon={<Receipt />}
               tone="info"
-              className={walletTile}
+              labelClassName={walletTileLabel}
               hint={
                 <>
                   {t('orders.wallet.ceiling_hint', { ceiling: formatMoney(query.data.debt_ceiling, query.data.currency) })}
@@ -89,7 +85,8 @@ export function WalletView() {
               value={formatMoney(query.data.withdrawable_balance, query.data.currency)}
               icon={<Landmark />}
               hint={t('orders.wallet.withdrawable_hint')}
-              className={cn(walletTile, 'col-span-2 qb-tablet:col-span-1')}
+              labelClassName={walletTileLabel}
+              className="col-span-2 qb-tablet:col-span-1"
             />
           </div>
         </>

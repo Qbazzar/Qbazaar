@@ -9,6 +9,7 @@ import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { Notice } from '@/components/design-system/Notice';
+import { RadioDot } from '@/components/design-system/RadioDot';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
@@ -233,12 +234,7 @@ function PromotionRow({ offer, checked, onChange }: { offer: PromotionOffer; che
   return (
     <label className={promotionRow.shell(checked)}>
       <input type="radio" name="promotion_type" value={offer.type} checked={checked} onChange={onChange} className="peer sr-only" />
-      <span
-        aria-hidden="true"
-        className="flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-(--color-qb-check-ring) transition-colors group-hover:border-(--color-qb-check-ring-hover) peer-checked:border-qb-brand peer-checked:bg-qb-brand [&>span]:invisible peer-checked:[&>span]:visible"
-      >
-        <span className="size-2 rounded-full bg-qb-surface" />
-      </span>
+      <RadioDot />
       <span className="min-w-0 flex-1">
         <span className={promotionRow.title}>{t(`orders.promotion.types.${offer.type}`)}</span>
         <span className={promotionRow.body}>{t(`orders.promotion.types.${offer.type}_body`)}</span>

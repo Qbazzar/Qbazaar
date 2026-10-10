@@ -17,6 +17,8 @@ export interface StatTileProps {
   tone?: keyof typeof ICON_TONES;
   /** Short line under the value, e.g. a limit or a link. */
   hint?: ReactNode;
+  /** Recolours the label alone, for a screen whose frames grey it differently; the hint keeps its own colour. */
+  labelClassName?: string;
   className?: string;
 }
 
@@ -24,7 +26,7 @@ export interface StatTileProps {
  * Figure tile of the sales-overview and wallet screens (502:21437, 573:33241,
  * 600:30639): tinted icon tile, label, large value.
  */
-export function StatTile({ label, value, icon, tone = 'brand', hint, className }: StatTileProps) {
+export function StatTile({ label, value, icon, tone = 'brand', hint, labelClassName, className }: StatTileProps) {
   return (
     <div
       className={cn(
@@ -43,7 +45,7 @@ export function StatTile({ label, value, icon, tone = 'brand', hint, className }
       >
         {icon}
       </span>
-      <p className="mt-2.5 text-qb-micro text-qb-ink-subtle qb-desktop:mt-2 qb-desktop:text-qb-body">{label}</p>
+      <p className={cn('mt-2.5 text-qb-micro text-qb-ink-subtle qb-desktop:mt-2 qb-desktop:text-qb-body', labelClassName)}>{label}</p>
       <p className="mt-0.5 text-qb-body-lg font-semibold break-words text-qb-ink-title qb-tablet:text-qb-body qb-desktop:mt-1 qb-desktop:text-qb-h2">
         {value}
       </p>

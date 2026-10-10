@@ -1,5 +1,6 @@
 import type { InputHTMLAttributes, ReactNode } from 'react';
 
+import { RadioDot } from '@/components/design-system/RadioDot';
 import { cn } from '@/lib/utils';
 
 import '@/styles/design-tokens-sell.css';
@@ -44,12 +45,7 @@ export function OptionTile({ label, srDescription, details, icon, className, ...
         {srDescription ? <span className="sr-only">{srDescription}</span> : null}
       </span>
       <input type="radio" className="peer sr-only" {...input} />
-      <span
-        aria-hidden="true"
-        className="flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-(--color-qb-check-ring) peer-checked:border-qb-brand peer-checked:bg-qb-brand [&>span]:invisible peer-checked:[&>span]:visible"
-      >
-        <span className="size-2 rounded-full bg-qb-surface" />
-      </span>
+      <RadioDot />
     </label>
   );
 }

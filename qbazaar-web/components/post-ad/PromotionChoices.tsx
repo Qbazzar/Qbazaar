@@ -28,7 +28,6 @@ export function promotionTitle(type: PromotionType): string {
   return t(`orders.promotion.types.${type}`);
 }
 
-
 /** The 22 px tick box of the promotion rows; its ring darkens under the pointer (CheckBox 367:15366). */
 function TickBox({ checked, className }: { checked: boolean; className?: string }) {
   return (
@@ -45,10 +44,6 @@ function TickBox({ checked, className }: { checked: boolean; className?: string 
       {checked ? <Check className="size-[13px]" strokeWidth={3} /> : null}
     </span>
   );
-}
-
-function PromotionCheckbox({ offer, checked, onToggle }: { offer: PromotionOffer; checked: boolean; onToggle: () => void }) {
-  return <input type="checkbox" checked={checked} onChange={onToggle} className="sr-only" aria-describedby={`promotion-${offer.type}-body`} />;
 }
 
 const NOTE_ID = 'post-ad-promotions-note';
@@ -77,7 +72,7 @@ export function HighlightSection() {
           const checked = chosen.includes(offer.type);
           return (
             <label key={offer.type} className={promotionRow.shell(checked)}>
-              <PromotionCheckbox offer={offer} checked={checked} onToggle={() => toggle(offer.type)} />
+              <input type="checkbox" checked={checked} onChange={() => toggle(offer.type)} className="sr-only" aria-describedby={`promotion-${offer.type}-body`} />
               <TickBox checked={checked} />
               <span className="min-w-0 flex-1">
                 <span className={promotionRow.title}>{promotionTitle(offer.type)}</span>
@@ -128,7 +123,7 @@ export function FeaturedAdTable({ offers, chosen, onToggle }: { offers: Promotio
                 focusWithinRow,
               )}
             >
-              <PromotionCheckbox offer={offer} checked={checked} onToggle={() => onToggle(offer.type)} />
+              <input type="checkbox" checked={checked} onChange={() => onToggle(offer.type)} className="sr-only" aria-describedby={`promotion-${offer.type}-body`} />
               <span className="col-span-2 flex items-start gap-3.5 qb-tablet:col-span-1">
                 <TickBox checked={checked} className="mt-px" />
                 <span className="min-w-0">

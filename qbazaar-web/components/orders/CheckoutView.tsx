@@ -22,7 +22,7 @@ import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/e
 import { formatMoney, isPositiveAmount } from '@/lib/orders/money';
 import { isolate } from '@/lib/orders/text';
 import { useAdQuery } from '@/lib/queries/ads';
-import { useCheckoutQuery, useSubmitCheckoutMutation } from '@/lib/queries/orders';
+import { useCheckoutQuery, useSaveAddressMutation, useSubmitCheckoutMutation } from '@/lib/queries/orders';
 import { cn } from '@/lib/utils';
 
 import '@/styles/design-tokens-sell.css';
@@ -141,9 +141,10 @@ function defaultChoice(checkout: Checkout): AddressChoice {
 function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: () => void }) {
   const { user } = useAuth();
   const { order } = checkout;
-  // The order carries only the ad's id and title; its photo and seller come from the ad.
+  // The order (openapi Order.ad) carries only the ad's id and title; its photo and seller come from the ad.
   const adQuery = useAdQuery(order.ad.id);
   const submit = useSubmitCheckoutMutation(order.id);
+  const saveAddress = useSaveAddressMutation(order.id);
   const { key, renew } = useIdempotencyKey();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -189,6 +190,16 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
     const errors = validateAddress(address);
     setAddressErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  /** Saves the typed address to the account; a field the API refuses is shown on the form. */
+  const saveTypedAddress = async (body: CheckoutAddressInput) => {
+    try {
+      return await saveAddress.mutateAsync(body);
+    } catch (error) {
+      setAddressErrors(fieldErrors(error) as Partial<Record<AddressField, string>>);
+      throw error;
+    }
   };
 
   const payload = (): CheckoutPayload | null => {
@@ -272,6 +283,8 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
             onAddressChange={setAddress}
             errors={addressErrors}
             onCheckAddress={checkAddress}
+            onClearErrors={() => setAddressErrors({})}
+            onSaveAddress={saveTypedAddress}
           />
         ) : null}
 
@@ -297,6 +310,7 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
         <OrderSummaryCard
           title={order.ad.title}
           photoUrl={adPhoto?.sizes.thumbnail || adPhoto?.sizes.medium}
+          subtitlePending={adQuery.isLoading}
           subtitle={
             sellerName
               ? t('orders.checkout.sold_by', { name: isolate(sellerName) })
