@@ -57,13 +57,24 @@ describe('ListingResults', () => {
     expect(screen.getAllByText('A short summary')).toHaveLength(1);
   });
 
-  it('keeps the list cards under 1001 px in the grid view and shows the grid cards from there, for CSS to pick one', () => {
+  it('renders one card per ad in the grid view, switching layout with CSS', () => {
     render(<ListingResults ads={ads} view="grid" isLoading={false} empty={null} label="Cars" />);
-    const [rowCard, gridCard] = screen.getAllByRole('link', { name: 'Ad 1' }).map((link) => link.closest('article'));
+    const links = screen.getAllByRole('link', { name: 'Ad 1' });
 
-    expect(rowCard).toHaveClass('qb-desktop:hidden', 'flex-wrap');
-    expect(gridCard).toHaveClass('hidden', 'qb-desktop:flex');
+    expect(links).toHaveLength(1);
+    expect(links[0].closest('article')).toHaveClass('flex-wrap', 'qb-desktop:flex-col');
     expect(screen.getByRole('list', { name: 'Cars' })).toHaveClass('qb-desktop:grid-cols-3');
+  });
+
+  it('renders one photo and one favourite button per ad in the grid view', () => {
+    const photo = { url: 'https://cdn.example/a.jpg', sizes: { medium: 'https://cdn.example/a-m.jpg' } } as AdSummary['primary_image'];
+    const withPhotos = ['1', '2', '3'].map((id) => ad(id, { primary_image: photo }));
+    render(<ListingResults ads={withPhotos} view="grid" isLoading={false} empty={null} label="Cars" />);
+
+    expect(screen.getAllByRole('button', { name: /^Save / })).toHaveLength(3);
+    const images = document.querySelectorAll('img');
+    expect(images).toHaveLength(3);
+    expect([...images].map((image) => image.getAttribute('loading'))).toEqual(['eager', 'eager', 'lazy']);
   });
 
   it('names places from the location tree, or from the slug before it loads', () => {

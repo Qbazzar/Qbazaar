@@ -1,4 +1,4 @@
-import type { CustomFieldsFilter } from '@/lib/api/types';
+import type { CustomFieldsFilter, SearchQueryParams } from '@/lib/api/types';
 
 function isRange(value: unknown): value is { min?: number; max?: number } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -48,4 +48,23 @@ export function isSameSearch(a: Record<string, unknown>, b: Record<string, unkno
   const filters = (params: Record<string, unknown>) =>
     JSON.stringify(stableFilters(Object.fromEntries(Object.entries(params).filter(([key]) => !VIEW_KEYS.has(key)))));
   return filters(a) === filters(b);
+}
+
+/** Sane bounds for a distance search: around Qatar, and the API's `geo_max_radius_km`. */
+const GEO_BOUNDS = { lat: [22, 29], lng: [48, 54], radiusKm: [1, 200] } as const;
+
+function within(value: number | null, [min, max]: readonly [number, number] | readonly number[]): value is number {
+  return value !== null && Number.isFinite(value) && value >= min && value <= max;
+}
+
+type GeoParams = Pick<SearchQueryParams, 'lat' | 'lng' | 'radius_km'>;
+
+/**
+ * The distance filter from the URL: all of `lat`, `lng` and `radius_km`, or
+ * nothing, since the API needs the point with the radius. A value outside the
+ * bounds drops the whole filter rather than failing the request.
+ */
+export function readGeoFilter(lat: number | null, lng: number | null, radiusKm: number | null): GeoParams | null {
+  if (!within(lat, GEO_BOUNDS.lat) || !within(lng, GEO_BOUNDS.lng) || !within(radiusKm, GEO_BOUNDS.radiusKm)) return null;
+  return { lat, lng, radius_km: radiusKm };
 }

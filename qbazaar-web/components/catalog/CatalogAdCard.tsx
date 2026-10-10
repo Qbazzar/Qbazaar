@@ -18,7 +18,8 @@ import type { AdSummary } from '@/lib/api/types';
  * The three cards of the reference's listing pages:
  * - `row`: a list result of category.html. The photo sits beside the text and
  *   wraps above it on phones.
- * - `grid`: a result of category.html's grid view (desktop only).
+ * - `grid`: a result of category.html's grid view. Below 1001 px it is the
+ *   `row` card, so one card serves every width and CSS switches the layout.
  * - `tile`: a card of parent-category.html's listing rows.
  */
 export type CatalogCardLayout = 'row' | 'grid' | 'tile';
@@ -33,7 +34,7 @@ interface CatalogAdCardProps {
 
 const IMAGE_SIZES: Record<CatalogCardLayout, string> = {
   row: '(min-width: 1001px) 341px, (min-width: 601px) 245px, 100vw',
-  grid: '320px',
+  grid: '(min-width: 1001px) 320px, (min-width: 601px) 245px, 100vw',
   tile: '(min-width: 601px) 335px, 72vw',
 };
 
@@ -64,17 +65,22 @@ const LAYOUTS = {
     heart: '[&_svg]:size-4',
   },
   grid: {
-    card: 'flex h-full flex-col',
-    media: 'h-[150px]',
-    body: 'p-4',
-    title: 'mb-4 text-qb-body leading-[1.3] font-medium text-qb-ink-title',
-    description: 'mb-2.5 line-clamp-2 text-qb-label leading-[1.5] text-qb-ink-faint',
-    tags: 'mb-3 gap-1.5',
-    chip: 'sm',
-    meta: 'pt-2.5 text-qb-label',
-    pin: 'size-[13px]',
-    pinStroke: 1.7,
-    heart: '[&_svg]:size-[15px]',
+    card: 'flex flex-wrap gap-[18px] p-4 qb-desktop:h-full qb-desktop:flex-col qb-desktop:flex-nowrap qb-desktop:gap-0 qb-desktop:p-0',
+    media:
+      'min-h-[150px] min-w-[180px] flex-[1_1_200px] rounded-qb-lg qb-desktop:h-[150px] qb-desktop:min-h-0 qb-desktop:min-w-0 qb-desktop:flex-[0_0_auto] qb-desktop:rounded-none',
+    body: 'flex min-w-[240px] flex-[2_1_300px] flex-col qb-desktop:block qb-desktop:min-w-0 qb-desktop:flex-[0_1_auto] qb-desktop:p-4',
+    title:
+      'text-qb-h4 font-semibold text-qb-ink qb-desktop:mb-4 qb-desktop:text-qb-body qb-desktop:leading-[1.3] qb-desktop:font-medium qb-desktop:text-qb-ink-title',
+    description:
+      'mt-2.5 mb-3.5 text-qb-body-sm leading-[1.5] text-qb-ink-faint qb-desktop:mt-0 qb-desktop:mb-2.5 qb-desktop:line-clamp-2 qb-desktop:text-qb-label',
+    tags: 'mb-auto gap-2 qb-desktop:mb-3 qb-desktop:gap-1.5',
+    chip: 'md',
+    chipFit: 'qb-desktop:px-2.5 qb-desktop:py-1 qb-desktop:text-qb-micro',
+    meta: 'mt-4 pt-3 text-qb-caption qb-desktop:mt-0 qb-desktop:pt-2.5 qb-desktop:text-qb-label',
+    pin: 'size-[15px] qb-desktop:size-[13px]',
+    pinStroke: 1.6,
+    pinFit: 'qb-desktop:stroke-[1.7]',
+    heart: '[&_svg]:size-4 qb-desktop:[&_svg]:size-[15px]',
   },
   tile: {
     card: 'flex h-full flex-col',
@@ -101,7 +107,8 @@ export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogA
   const locale = getLocale();
   const place = useQatarPlace(ad.location_slug);
   const styles = LAYOUTS[layout];
-  const isRow = layout === 'row';
+  const hasInlinePrice = layout !== 'tile';
+  const gridFromDesktop = layout === 'grid';
   const price = formatAdPrice(ad, locale);
   const description = layout !== 'tile' && ad.summary ? ad.summary : null;
   const tags = ad.spec_chips?.map((chip) => chip.value) ?? [];
@@ -111,10 +118,10 @@ export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogA
     <article className={cn(card, styles.card, className)}>
       <div className={cn('min-w-0', styles.body)}>
         {/* The title and the description each take the direction, and so the alignment, of their own words. */}
-        {isRow ? (
-          <div className="flex items-start justify-between gap-3.5">
+        {hasInlinePrice ? (
+          <div className={cn('flex items-start justify-between gap-3.5', gridFromDesktop && 'qb-desktop:block')}>
             <CardTitle ad={ad} className={styles.title} />
-            <span className="hidden shrink-0 text-qb-h4 font-semibold whitespace-nowrap text-qb-ink qb-tablet:block">{price}</span>
+            <span className={cn('hidden shrink-0 text-qb-h4 font-semibold whitespace-nowrap text-qb-ink qb-tablet:block', gridFromDesktop && 'qb-desktop:hidden')}>{price}</span>
           </div>
         ) : (
           <CardTitle ad={ad} className={styles.title} />
@@ -129,14 +136,14 @@ export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogA
             {tags.map((tag, index) => (
               // Two yes/no specs can read the same.
               <li key={`${index}-${tag}`}>
-                <Chip size={styles.chip}>{tag}</Chip>
+                <Chip size={styles.chip} className={'chipFit' in styles ? styles.chipFit : undefined}>{tag}</Chip>
               </li>
             ))}
           </ul>
         ) : null}
         {where ? (
           <p className={cn(meta, styles.meta)}>
-            <Icon icon={MapPin} strokeWidth={styles.pinStroke} className={styles.pin} />
+            <Icon icon={MapPin} strokeWidth={styles.pinStroke} className={cn(styles.pin, 'pinFit' in styles && styles.pinFit)} />
             {/* The age is worked out again at hydration, when it may have moved on by a minute. */}
             <span className="truncate" suppressHydrationWarning>
               {where}
@@ -148,7 +155,11 @@ export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogA
       {/* Shown first, but after the title link in the DOM, so the heart on the photo is the second tab stop. */}
       <div className={cn('relative order-first shrink-0 overflow-hidden bg-qb-line', styles.media)}>
         <AdPhoto ad={ad} layout={layout} eager={eager} />
-        {isRow ? <RowPhotoTag price={price} promoted={Boolean(ad.promotion)} /> : <PhotoTag className="inline-flex">{price}</PhotoTag>}
+        {hasInlinePrice ? (
+          <RowPhotoTag price={price} promoted={layout === 'row' && Boolean(ad.promotion)} gridFromDesktop={gridFromDesktop} />
+        ) : (
+          <PhotoTag className="inline-flex">{price}</PhotoTag>
+        )}
         <div className="absolute end-3 top-3 z-10">
           <FavoriteButton
             adId={ad.id}
@@ -194,11 +205,12 @@ function PhotoTag({ className, children }: { className: string; children: string
 /**
  * The list card's photo tag: "Top Ad" on desktop for a promoted ad, none on
  * tablets, and the price on phones, where the price beside the title hides.
+ * The grid card keeps the price on the photo from desktop on.
  */
-function RowPhotoTag({ price, promoted }: { price: string; promoted: boolean }) {
+function RowPhotoTag({ price, promoted, gridFromDesktop }: { price: string; promoted: boolean; gridFromDesktop: boolean }) {
   return (
     <>
-      <PhotoTag className="inline-flex qb-tablet:hidden">{price}</PhotoTag>
+      <PhotoTag className={cn('inline-flex qb-tablet:hidden', gridFromDesktop && 'qb-desktop:inline-flex')}>{price}</PhotoTag>
       {promoted ? <PhotoTag className="hidden qb-desktop:inline-flex">{t('catalog.card.top_ad', 'إعلان مميز')}</PhotoTag> : null}
     </>
   );

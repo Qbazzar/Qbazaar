@@ -709,6 +709,10 @@ export interface SearchQueryParams extends Record<string, unknown> {
   ad_type?: AdType;
   shipping?: AdShipping;
   sort?: SortMode;
+  /** Distance search: the point and the radius (1-200 km) around it; the API needs all three. */
+  lat?: number;
+  lng?: number;
+  radius_km?: number;
   page?: number;
   per_page?: number;
   /** Category-specific filters: { make: 'Toyota', year: { min: 2015 } }. */

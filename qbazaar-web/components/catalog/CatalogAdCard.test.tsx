@@ -66,11 +66,13 @@ describe('CatalogAdCard', () => {
     expect(screen.getByText('2019')).toHaveClass('text-qb-label', 'text-qb-ink-faint');
   });
 
-  it('gives the grid card a two-line description and the overview card none', () => {
+  it('gives the grid card a two-line description from desktop and the overview card none', () => {
     const { rerender } = render(<CatalogAdCard ad={ad} layout="grid" />);
-    expect(screen.getByText(ad.summary as string)).toHaveClass('line-clamp-2', 'text-qb-label', 'text-qb-ink-faint');
-    expect(screen.getByRole('heading', { level: 3 })).toHaveClass('text-qb-body', 'font-medium', 'text-qb-ink-title');
-    expect(screen.getByText('QAR 287,000')).toHaveClass('text-qb-micro', 'font-medium');
+    expect(screen.getByText(ad.summary as string)).toHaveClass('qb-desktop:line-clamp-2', 'qb-desktop:text-qb-label', 'text-qb-ink-faint');
+    expect(screen.getByRole('heading', { level: 3 })).toHaveClass('qb-desktop:text-qb-body', 'qb-desktop:font-medium', 'qb-desktop:text-qb-ink-title');
+    const [beside, onPhoto] = screen.getAllByText('QAR 287,000');
+    expect(beside).toHaveClass('qb-desktop:hidden');
+    expect(onPhoto).toHaveClass('qb-desktop:inline-flex', 'text-qb-micro', 'font-medium');
     expect(screen.queryByText('Top Ad')).not.toBeInTheDocument();
 
     rerender(<CatalogAdCard ad={ad} layout="tile" />);

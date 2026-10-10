@@ -43,21 +43,11 @@ export function ListingResults({ ads, view, isLoading, isFetching = false, empty
       aria-busy={isFetching || undefined}
       className={cn(view === 'grid' ? gridList : rowList, 'transition-opacity motion-reduce:transition-none', isFetching && 'opacity-70')}
     >
-      {ads.map((ad, index) => {
-        const card = { ad, eager: index < EAGER_CARDS };
-        return (
-          <li key={ad.id}>
-            {view === 'grid' ? (
-              <>
-                <CatalogAdCard {...card} layout="row" className="qb-desktop:hidden" />
-                <CatalogAdCard {...card} layout="grid" className="hidden qb-desktop:flex" />
-              </>
-            ) : (
-              <CatalogAdCard {...card} layout="row" />
-            )}
-          </li>
-        );
-      })}
+      {ads.map((ad, index) => (
+        <li key={ad.id}>
+          <CatalogAdCard ad={ad} layout={view === 'grid' ? 'grid' : 'row'} eager={index < EAGER_CARDS} />
+        </li>
+      ))}
     </ul>
   );
 }

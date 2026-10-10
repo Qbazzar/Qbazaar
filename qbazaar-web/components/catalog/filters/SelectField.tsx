@@ -36,6 +36,12 @@ function matches(option: SelectOption, query: string, locale: string): boolean {
   return (option.searchText ?? option.label).toLocaleLowerCase(locale).includes(query.toLocaleLowerCase(locale));
 }
 
+/** A value no option carries (a stale URL, a saved search, a removed option) still shows, so an active filter is never hidden. */
+function findSelected(options: SelectOption[], value: string | null): SelectOption | null {
+  if (!value) return null;
+  return options.find((option) => option.value === value) ?? { value, label: value };
+}
+
 /**
  * The designed select of the filters (264:4818): a 44 px field with a chevron
  * that opens a panel with a "Search.." box over the options. Base UI provides
@@ -48,7 +54,7 @@ export function SelectField({ labelledBy, options, searchOnlyOptions = [], value
   const [query, setQuery] = useState('');
   const trimmed = query.trim();
   const listed = trimmed ? [...options, ...searchOnlyOptions].filter((option) => matches(option, trimmed, locale)) : options;
-  const selected = [...options, ...searchOnlyOptions].find((option) => option.value === value) ?? null;
+  const selected = findSelected([...options, ...searchOnlyOptions], value);
 
   return (
     <DirectionProvider direction={dirFor(locale)}>
