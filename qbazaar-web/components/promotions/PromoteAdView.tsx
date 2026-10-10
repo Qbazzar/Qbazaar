@@ -78,7 +78,8 @@ export function PromoteAdView({ adId, initialType }: { adId: string; initialType
           {t('orders.promotion.not_live')}
         </Notice>
       ) : (
-        <PromoteForm ad={ad.data} offers={offers.data} wallet={wallet.data} initialType={initialType} />
+        // Keyed so a new ?type= preselects its promotion on client navigation too.
+        <PromoteForm key={initialType ?? ''} ad={ad.data} offers={offers.data} wallet={wallet.data} initialType={initialType} />
       )}
     </AccountPageFrame>
   );
@@ -225,8 +226,8 @@ function PromoteForm({ ad, offers, wallet, initialType }: { ad: Ad; offers: Prom
 
 /**
  * One promotion as a row of the add-ads promotion list (323:10693), with the
- * duration under the price. One promotion is bought at a time, so the rows
- * are radios.
+ * duration under the price; the ring darkens under the pointer (CheckBox
+ * 367:15366). One promotion is bought at a time, so the rows are radios.
  */
 function PromotionRow({ offer, checked, onChange }: { offer: PromotionOffer; checked: boolean; onChange: () => void }) {
   return (
@@ -234,7 +235,7 @@ function PromotionRow({ offer, checked, onChange }: { offer: PromotionOffer; che
       <input type="radio" name="promotion_type" value={offer.type} checked={checked} onChange={onChange} className="peer sr-only" />
       <span
         aria-hidden="true"
-        className="flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-(--color-qb-check-ring) peer-checked:border-qb-brand peer-checked:bg-qb-brand [&>span]:invisible peer-checked:[&>span]:visible"
+        className="flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-(--color-qb-check-ring) transition-colors group-hover:border-(--color-qb-check-ring-hover) peer-checked:border-qb-brand peer-checked:bg-qb-brand [&>span]:invisible peer-checked:[&>span]:visible"
       >
         <span className="size-2 rounded-full bg-qb-surface" />
       </span>

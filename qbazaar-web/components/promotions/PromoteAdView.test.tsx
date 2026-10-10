@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -46,6 +47,21 @@ describe('PromoteAdView', () => {
 
     expect(await screen.findByRole('radio', { name: /Premium/ })).toBeChecked();
     expect(screen.getByRole('button', { name: 'Promote for QAR 50.00' })).toBeInTheDocument();
+  });
+
+  it('preselects the promotion of a new ?type= without a reload', async () => {
+    vi.mocked(getWallet).mockResolvedValue(buildWallet({ withdrawable_balance: '60.00' }));
+    const { client, rerender } = renderWithClient(<PromoteAdView adId="ad-2" initialType="premium" />);
+    expect(await screen.findByRole('radio', { name: /Premium/ })).toBeChecked();
+
+    rerender(
+      <QueryClientProvider client={client}>
+        <PromoteAdView adId="ad-2" initialType="highlight" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByRole('radio', { name: /Highlight/ })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Promote for QAR 15.00' })).toBeInTheDocument();
   });
 
   it('pays from the wallet when the withdrawable amount covers the price', async () => {
