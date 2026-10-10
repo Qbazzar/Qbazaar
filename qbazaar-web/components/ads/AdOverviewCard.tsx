@@ -61,11 +61,11 @@ export function AdOverviewCard({ ad, locale }: AdOverviewCardProps) {
   );
 }
 
-/** One meta line with its 18 px orange line icon. */
+/** One meta line with its 18 px grey line icon. */
 function MetaRow({ icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
     <li className="flex items-center gap-2.5">
-      <Icon icon={icon} strokeWidth={1.6} className="size-[18px] text-qb-brand" />
+      <Icon icon={icon} strokeWidth={1.6} className="size-[18px] text-qb-ink-subtle" />
       <span className="min-w-0">{children}</span>
     </li>
   );
