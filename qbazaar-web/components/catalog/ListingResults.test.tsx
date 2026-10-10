@@ -34,7 +34,7 @@ function ad(id: string, overrides: Partial<AdSummary> = {}): AdSummary {
   };
 }
 
-const ads = [ad('1'), ad('2', { location_slug: 'souq-waqif-area' })];
+const ads = [ad('1', { summary: 'A short summary' }), ad('2', { location_slug: 'souq-waqif-area' })];
 
 describe('ListingResults', () => {
   beforeEach(() => {
@@ -45,27 +45,29 @@ describe('ListingResults', () => {
     });
   });
 
-  it('renders each ad as the grid card under 1001 px and the list card from there, for CSS to pick one', () => {
+  it('renders one list card per ad in the list view, its photo wrapping above the text when narrow', () => {
     render(<ListingResults ads={ads} view="list" isLoading={false} empty={null} label="Cars" />);
     const list = screen.getByRole('list', { name: 'Cars' });
     const links = screen.getAllByRole('link', { name: 'Ad 1' });
 
     expect(list.children).toHaveLength(2);
-    expect(links).toHaveLength(2);
-    expect(links[0].closest('article')).toHaveClass('qb-desktop:hidden');
-    expect(links[1].closest('article')).toHaveClass('hidden', 'qb-desktop:flex');
-    expect(list).toHaveClass('qb-tablet:grid-cols-2', 'qb-desktop:flex-col');
+    expect(links).toHaveLength(1);
+    expect(links[0].closest('article')).toHaveClass('flex-wrap');
+    expect(list).toHaveClass('flex-col');
+    expect(screen.getAllByText('A short summary')).toHaveLength(1);
   });
 
-  it('renders one grid card per ad in the grid view', () => {
+  it('keeps the list cards under 1001 px in the grid view and shows the grid cards from there, for CSS to pick one', () => {
     render(<ListingResults ads={ads} view="grid" isLoading={false} empty={null} label="Cars" />);
+    const [rowCard, gridCard] = screen.getAllByRole('link', { name: 'Ad 1' }).map((link) => link.closest('article'));
 
-    expect(screen.getAllByRole('link', { name: 'Ad 1' })).toHaveLength(1);
+    expect(rowCard).toHaveClass('qb-desktop:hidden', 'flex-wrap');
+    expect(gridCard).toHaveClass('hidden', 'qb-desktop:flex');
     expect(screen.getByRole('list', { name: 'Cars' })).toHaveClass('qb-desktop:grid-cols-3');
   });
 
   it('names places from the location tree, or from the slug before it loads', () => {
-    render(<ListingResults ads={ads} view="grid" isLoading={false} empty={null} label="Cars" />);
+    render(<ListingResults ads={ads} view="list" isLoading={false} empty={null} label="Cars" />);
 
     expect(screen.getByText('Al Wakrah')).toBeInTheDocument();
     expect(screen.getByText('souq waqif area')).toBeInTheDocument();

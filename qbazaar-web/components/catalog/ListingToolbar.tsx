@@ -1,7 +1,7 @@
 'use client';
 
-import { useId, type ReactNode } from 'react';
-import { ChevronDown, LayoutGrid, List } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { LayoutGrid, List } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
@@ -10,7 +10,8 @@ import { cn } from '@/lib/utils';
 import type { SortMode } from '@/lib/api/types';
 
 import { toolbarPill } from './layout';
-import { SORT_MODES, type ViewMode } from './listing-query';
+import type { ViewMode } from './listing-query';
+import { SortMenu } from './SortMenu';
 
 interface ListingToolbarProps {
   /** `<FilterSheet>`; shown under 1001 px, where the sidebar is hidden. */
@@ -33,7 +34,7 @@ export function ListingToolbar({ filters, sort, view, actions }: ListingToolbarP
         <div className={cn(toolbarPill, 'h-10 qb-tablet:h-11 qb-desktop:h-14 qb-desktop:rounded-qb-sm', !sort && 'qb-desktop:hidden')}>
           {filters ? <div className="flex h-full qb-desktop:hidden">{filters}</div> : null}
           {filters && sort ? <span aria-hidden="true" className="w-px self-stretch bg-qb-line qb-desktop:hidden" /> : null}
-          {sort ? <SortSelect {...sort} /> : null}
+          {sort ? <SortMenu {...sort} /> : null}
         </div>
       ) : (
         <span />
@@ -42,34 +43,6 @@ export function ListingToolbar({ filters, sort, view, actions }: ListingToolbarP
         {actions ? <div className="flex items-center gap-2.5 qb-desktop:hidden">{actions}</div> : null}
         {view ? <ViewToggle {...view} /> : null}
       </div>
-    </div>
-  );
-}
-
-function SortSelect({ value, onChange }: { value: SortMode; onChange: (next: SortMode) => void }) {
-  const id = useId();
-  return (
-    <div className="relative flex h-full items-center">
-      <label htmlFor={id} className="sr-only">
-        {t('search.sort.label', 'الترتيب')}
-      </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(event) => onChange(SORT_MODES.find((mode) => mode === event.target.value) ?? 'latest')}
-        className={cn(
-          'field-sizing-content h-full cursor-pointer appearance-none rounded-qb-md bg-transparent ps-3 pe-8 font-qb text-qb-micro text-qb-ink',
-          'qb-tablet:ps-4 qb-tablet:pe-10 qb-tablet:text-qb-body qb-desktop:min-w-[221px] qb-desktop:pe-12 qb-desktop:text-qb-h5',
-          focusRing,
-        )}
-      >
-        {SORT_MODES.map((mode) => (
-          <option key={mode} value={mode}>
-            {t(`catalog.sort.${mode}`)}
-          </option>
-        ))}
-      </select>
-      <Icon icon={ChevronDown} size="sm" className="pointer-events-none absolute end-2.5 qb-tablet:size-5 qb-desktop:end-4 qb-desktop:size-6" />
     </div>
   );
 }

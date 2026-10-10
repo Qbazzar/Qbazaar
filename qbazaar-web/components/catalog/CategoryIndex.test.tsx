@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const replace = vi.fn();
+const push = vi.fn();
 vi.mock('next/navigation', () => ({
   usePathname: () => '/categories',
-  useRouter: () => ({ replace }),
+  useRouter: () => ({ push }),
 }));
 vi.mock('@/lib/queries/categories', () => ({
   useMainCategoriesQuery: vi.fn(),
@@ -15,7 +15,7 @@ import { setClientLocale } from '@/lib/i18n/locale';
 import { useMainCategoriesQuery } from '@/lib/queries/categories';
 import type { Category } from '@/lib/api/types';
 
-import { CategoryIndex, CategoryIndexStats, filterCategories } from './CategoryIndex';
+import { CategoryIndex, CategoryIndexStats, listingSearchHref } from './CategoryIndex';
 
 function category(slug: string, en: string, ar: string, extra: Partial<Category> = {}): Category {
   return {
@@ -47,18 +47,17 @@ function mockQuery(data: Category[] | undefined, state: Partial<{ isLoading: boo
   vi.mocked(useMainCategoriesQuery).mockReturnValue({ data, isLoading: false, isError: false, refetch: vi.fn(), ...state } as never);
 }
 
-describe('filterCategories', () => {
-  it('matches the name in either language, ignoring case and spaces', () => {
-    expect(filterCategories(categories, '  real ').map((c) => c.slug)).toEqual(['real-estate']);
-    expect(filterCategories(categories, 'حيوانات').map((c) => c.slug)).toEqual(['pets']);
-    expect(filterCategories(categories, '')).toHaveLength(3);
+describe('listingSearchHref', () => {
+  it('searches the ads for the trimmed words, or opens the whole listing', () => {
+    expect(listingSearchHref('  red car ')).toBe('/search?q=red+car');
+    expect(listingSearchHref('   ')).toBe('/search');
   });
 });
 
 describe('CategoryIndex', () => {
   beforeEach(() => {
     setClientLocale('en');
-    replace.mockClear();
+    push.mockClear();
   });
 
   it('links every category card to its page with its ad count', () => {
@@ -69,18 +68,16 @@ describe('CategoryIndex', () => {
     expect(screen.getAllByText('1,200 Ads')).toHaveLength(3);
   });
 
-  it('filters the cards while typing and says when nothing matches', async () => {
+  it('opens the ad listing for the words on submit and keeps every card while typing', async () => {
     mockQuery(categories);
     const user = userEvent.setup();
     render(<CategoryIndex page={1} />);
-    const search = screen.getByRole('searchbox', { name: 'Search categories' });
 
-    await user.type(search, 'pet');
-    expect(screen.getAllByRole('link')).toHaveLength(1);
+    await user.type(screen.getByRole('searchbox', { name: 'Search categories' }), 'pet');
+    expect(screen.getAllByRole('link')).toHaveLength(3);
 
-    await user.clear(search);
-    await user.type(search, 'boats');
-    expect(screen.getByRole('heading', { name: 'No matching categories' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+    expect(push).toHaveBeenCalledWith('/search?q=pet');
   });
 
   it('paginates by 24 with crawlable links', () => {

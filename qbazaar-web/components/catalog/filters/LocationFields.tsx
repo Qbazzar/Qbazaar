@@ -1,84 +1,88 @@
 'use client';
 
-import { useMemo } from 'react';
-
-import { Field } from '@/components/design-system/Field';
-import { Select } from '@/components/design-system/Input';
 import { formatNumber } from '@/lib/i18n/format';
-import { getLocale, localized } from '@/lib/i18n/locale';
+import { getLocale, localized, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { findLocationBySlug } from '@/store/locations';
 import type { Location } from '@/lib/api/types';
 
 import { subtreeCount } from './facet-counts';
+import { OptionList, type FilterOption } from './OptionList';
+import { SelectField, type SelectOption } from './SelectField';
 
-interface LocationFieldsProps {
-  /** Slug of the city or of one of its districts. */
+interface LocationFieldProps {
+  /** Id of the group heading that names the field. */
+  labelledBy: string;
+  /** Slug of a city or of one of its districts. */
   value: string | null;
-  onChange: (slug: string | null) => void;
+  onChange: (slug: string) => void;
   locations: Location[] | undefined;
   /** Search facet counts by location slug. */
   counts?: Record<string, number> | null;
-  /** When the group heading already says "City / Region" (the bottom sheet). */
-  hideCityLabel?: boolean;
 }
 
-const select = 'h-11 rounded-qb-lg text-qb-caption';
+function placeName(node: Location, locale: Locale, counts: LocationFieldProps['counts']): string {
+  const name = localized(node.name, locale);
+  const count = subtreeCount(node, counts);
+  return count ? `${name} (${formatNumber(count, locale)})` : name;
+}
 
-/** City and district pickers ("City / Region", 264:4818); the district list follows the city. */
-export function LocationFields({ value, onChange, locations, counts, hideCityLabel = false }: LocationFieldsProps) {
+/** The district a slug names, with its city; null for a city or an unknown slug. */
+function findDistrict(cities: Location[], slug: string | null): { city: Location; district: Location } | null {
+  if (!slug) return null;
+  for (const city of cities) {
+    const district = city.slug === slug ? null : findLocationBySlug(city.children, slug);
+    if (district) return { city, district };
+  }
+  return null;
+}
+
+function districtLabel(city: Location, district: Location, locale: Locale): string {
+  return t('catalog.filters.place_in', { place: localized(district.name, locale), city: localized(city.name, locale) }, '{place}، {city}');
+}
+
+/**
+ * The cities as radio rows in the desktop filter card ("Cites Services",
+ * 69:467), their names in the medium weight the reference gives every city
+ * name (typo.js). A district chosen elsewhere (the sheet, a saved search)
+ * stays listed first, so the current filter is always visible.
+ */
+export function CityOptions({ labelledBy, value, onChange, locations, counts, name }: LocationFieldProps & { name: string }) {
   const locale = getLocale();
-  const cities = useMemo(() => locations ?? [], [locations]);
+  const cities = locations ?? [];
+  const options: FilterOption[] = cities.map((city) => ({ value: city.slug, label: localized(city.name, locale), count: subtreeCount(city, counts) }));
+  const chosen = findDistrict(cities, value);
+  if (chosen) {
+    options.unshift({ value: chosen.district.slug, label: districtLabel(chosen.city, chosen.district, locale), count: subtreeCount(chosen.district, counts) });
+  }
 
-  const { city, districtSlug } = useMemo(() => {
-    if (!value) return { city: null, districtSlug: null };
-    for (const node of cities) {
-      if (node.slug === value) return { city: node, districtSlug: null };
-      const district = findLocationBySlug(node.children, value);
-      if (district) return { city: node, districtSlug: district.slug };
-    }
-    return { city: null, districtSlug: null };
-  }, [cities, value]);
+  return <OptionList name={name} labelledBy={labelledBy} options={options} value={value} onChange={onChange} labelClassName="font-medium" />;
+}
 
-  const label = (node: Location) => {
-    const count = subtreeCount(node, counts);
-    const name = localized(node.name, locale);
-    return count ? `${name} (${formatNumber(count, locale)})` : name;
-  };
+/**
+ * "City / Region" select of the filter sheet (618:26974, 264:4818). It lists
+ * the cities; typing in its search box also finds their districts.
+ */
+export function CitySelect({ labelledBy, value, onChange, locations, counts }: LocationFieldProps) {
+  const locale = getLocale();
+  const cities = locations ?? [];
+  const options: SelectOption[] = cities.map((city) => ({ value: city.slug, label: placeName(city, locale, counts) }));
+  const districts: SelectOption[] = cities.flatMap((city) =>
+    city.children.map((district) => {
+      const count = subtreeCount(district, counts);
+      const label = districtLabel(city, district, locale);
+      return { value: district.slug, label: count ? `${label} (${formatNumber(count, locale)})` : label, searchText: localized(district.name, locale) };
+    }),
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      <Field label={t('catalog.filters.city', 'المدينة / المنطقة')} hideLabel={hideCityLabel}>
-        {(control) => (
-          <Select {...control} value={city?.slug ?? ''} onChange={(event) => onChange(event.target.value || null)} className={select}>
-            <option value="">{t('catalog.filters.all_regions', 'كل المناطق')}</option>
-            {cities.map((node) => (
-              <option key={node.id} value={node.slug}>
-                {label(node)}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
-      {city && city.children.length > 0 ? (
-        <Field label={t('catalog.filters.district', 'الحي')}>
-          {(control) => (
-            <Select
-              {...control}
-              value={districtSlug ?? ''}
-              onChange={(event) => onChange(event.target.value || city.slug)}
-              className={select}
-            >
-              <option value="">{t('catalog.filters.all_districts', 'كل الأحياء')}</option>
-              {city.children.map((node) => (
-                <option key={node.id} value={node.slug}>
-                  {label(node)}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-      ) : null}
-    </div>
+    <SelectField
+      labelledBy={labelledBy}
+      options={options}
+      searchOnlyOptions={districts}
+      value={value}
+      onChange={onChange}
+      placeholder={t('catalog.filters.all_regions', 'كل المناطق')}
+    />
   );
 }

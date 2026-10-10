@@ -683,13 +683,7 @@
       "discover_text": "Browse through different categories and quickly find what you need in one place.",
       "search_label": "Search categories",
       "search_placeholder": "Search categories…",
-      "search_submit": "Search",
-      "matches": {
-        "one": "{count} category",
-        "other": "{count} categories"
-      },
-      "no_matches_title": "No matching categories",
-      "no_matches": "We couldn’t find a category called “{query}”."
+      "search_submit": "Search"
     },
     "view": {
       "label": "View",
@@ -718,18 +712,20 @@
       },
       "apply": "Apply Filter",
       "reset_all": "Reset All",
-      "any": "Any",
+      "all_type": "All Type",
       "category": "Category",
-      "all_categories": "All categories",
       "price": "Price",
       "price_min_label": "Minimum price (QAR)",
       "price_max_label": "Maximum price (QAR)",
+      "price_range": "Price Range (QAR)",
       "price_range_error": "The maximum price can’t be lower than the minimum.",
-      "location": "Location",
       "city": "City / Region",
-      "district": "District",
       "all_regions": "All Regions",
-      "all_districts": "All districts",
+      "cities": "Cities",
+      "place_in": "{place}, {city}",
+      "select_search": "Search the options",
+      "select_search_placeholder": "Search..",
+      "select_empty": "No matches",
       "condition": "Condition",
       "offer": "Offer",
       "ad_type": {
@@ -764,8 +760,8 @@
     "sort": {
       "latest": "Newest",
       "oldest": "Oldest",
-      "price_asc": "Price: Low to High",
-      "price_desc": "Price: High to Low"
+      "price_asc": "Low Price",
+      "price_desc": "High Price"
     },
     "save_search": "Save Search"
   },
@@ -1259,6 +1255,8 @@
       "saving": "Saving…",
       "cancel": "Cancel",
       "success_toast": "Search saved",
+      "saved": "Saved",
+      "saved_link": "Saved, open your saved searches",
       "sign_in_required": "Sign in to save searches"
     },
     "errors": {

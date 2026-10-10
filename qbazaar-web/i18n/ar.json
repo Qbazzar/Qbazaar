@@ -731,17 +731,7 @@
       "discover_text": "تصفّح الأقسام المختلفة واعثر بسرعة على ما تحتاجه في مكان واحد.",
       "search_label": "ابحث في الأقسام",
       "search_placeholder": "ابحث في الأقسام…",
-      "search_submit": "بحث",
-      "matches": {
-        "zero": "لا توجد أقسام",
-        "one": "قسم واحد",
-        "two": "قسمان",
-        "few": "{count} أقسام",
-        "many": "{count} قسمًا",
-        "other": "{count} قسم"
-      },
-      "no_matches_title": "لا توجد أقسام مطابقة",
-      "no_matches": "لم نجد قسماً باسم «{query}»."
+      "search_submit": "بحث"
     },
     "view": {
       "label": "طريقة العرض",
@@ -774,18 +764,20 @@
       },
       "apply": "تطبيق الفلتر",
       "reset_all": "إعادة ضبط الكل",
-      "any": "الكل",
+      "all_type": "كل الأنواع",
       "category": "القسم",
-      "all_categories": "كل الأقسام",
       "price": "السعر",
       "price_min_label": "أقل سعر (ر.ق)",
       "price_max_label": "أعلى سعر (ر.ق)",
+      "price_range": "نطاق السعر (ر.ق)",
       "price_range_error": "لا يمكن أن يكون أعلى سعر أقل من أقل سعر.",
-      "location": "الموقع",
       "city": "المدينة / المنطقة",
-      "district": "الحي",
       "all_regions": "كل المناطق",
-      "all_districts": "كل الأحياء",
+      "cities": "المدن",
+      "place_in": "{place}، {city}",
+      "select_search": "ابحث في الخيارات",
+      "select_search_placeholder": "بحث..",
+      "select_empty": "لا توجد نتائج",
       "condition": "الحالة",
       "offer": "نوع الإعلان",
       "ad_type": {
@@ -828,8 +820,8 @@
     "sort": {
       "latest": "الأحدث",
       "oldest": "الأقدم",
-      "price_asc": "السعر: من الأقل للأعلى",
-      "price_desc": "السعر: من الأعلى للأقل"
+      "price_asc": "السعر الأقل",
+      "price_desc": "السعر الأعلى"
     },
     "save_search": "احفظ البحث"
   },
@@ -1339,6 +1331,8 @@
       "saving": "جاري الحفظ…",
       "cancel": "إلغاء",
       "success_toast": "تم حفظ البحث",
+      "saved": "تم الحفظ",
+      "saved_link": "تم الحفظ، افتح عمليات البحث المحفوظة",
       "sign_in_required": "سجّل دخولك لحفظ البحث"
     },
     "errors": {

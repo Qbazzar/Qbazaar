@@ -4,21 +4,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: vi.fn() }));
-vi.mock('@/lib/queries/search', () => ({ useSaveSearchMutation: vi.fn() }));
+vi.mock('@/lib/queries/search', () => ({ useSaveSearchMutation: vi.fn(), useSavedSearchesQuery: vi.fn() }));
 
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiClientError } from '@/lib/api/auth';
 import { setClientLocale } from '@/lib/i18n/locale';
-import { useSaveSearchMutation } from '@/lib/queries/search';
+import { useSaveSearchMutation, useSavedSearchesQuery } from '@/lib/queries/search';
+import type { SavedSearch } from '@/lib/api/types';
 
 import { SaveSearchButton } from './SaveSearchButton';
 
 const mutate = vi.fn();
 
-function signIn(isAuthenticated: boolean) {
+function signIn(isAuthenticated: boolean, savedSearches: SavedSearch[] = []) {
   vi.mocked(useAuth).mockReturnValue({ isAuthenticated, isHydrated: true } as never);
   vi.mocked(useSaveSearchMutation).mockReturnValue({ mutate, isPending: false } as never);
+  vi.mocked(useSavedSearchesQuery).mockReturnValue({ data: isAuthenticated ? savedSearches : undefined } as never);
 }
 
 describe('SaveSearchButton', () => {
@@ -66,6 +68,35 @@ describe('SaveSearchButton', () => {
       ),
     );
     expect(toast.success).toHaveBeenCalledWith('Search saved');
+  });
+
+  it('turns into the "Saved" pill linking to the saved searches, until the filters change', async () => {
+    signIn(true);
+    mutate.mockImplementation((_payload, options) => options.onSuccess());
+    const user = userEvent.setup();
+    const { rerender } = render(<SaveSearchButton params={{ q: 'car' }} />);
+
+    await user.click(screen.getByRole('button', { name: 'Save Search' }));
+    await user.type(await screen.findByLabelText(/Search name/), 'Cars');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    const saved = await screen.findByRole('link', { name: 'Saved, open your saved searches' });
+    expect(saved).toHaveAttribute('href', '/account/saved-searches');
+    expect(saved).toHaveTextContent('Saved');
+
+    rerender(<SaveSearchButton params={{ q: 'van' }} />);
+    expect(screen.getByRole('button', { name: 'Save Search' })).toBeInTheDocument();
+  });
+
+  it('shows a search the visitor saved before as "Saved", whatever its sort', () => {
+    signIn(true, [{ id: 's1', name: 'Cars', query_params: { category_slug: 'cars', sort: 'latest' }, created_at: '' }]);
+    const { rerender } = render(<SaveSearchButton params={{ category_slug: 'cars', sort: 'price_asc' }} />);
+
+    expect(screen.getByRole('link', { name: 'Saved, open your saved searches' })).toBeInTheDocument();
+    expect(useSavedSearchesQuery).toHaveBeenCalledWith(true);
+
+    rerender(<SaveSearchButton params={{ category_slug: 'boats' }} />);
+    expect(screen.getByRole('button', { name: 'Save Search' })).toBeInTheDocument();
   });
 
   it('caps the name at the contract length', async () => {

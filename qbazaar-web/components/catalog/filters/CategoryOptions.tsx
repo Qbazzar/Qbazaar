@@ -1,5 +1,4 @@
 import { getLocale, localized } from '@/lib/i18n/locale';
-import { t } from '@/lib/i18n/messages';
 import { findCategoryBySlug } from '@/store/categories';
 import type { CategoryNode } from '@/lib/api/types';
 
@@ -11,7 +10,7 @@ interface CategoryOptionsProps {
   labelledBy: string;
   categories: CategoryNode[] | undefined;
   value: string | null;
-  onChange: (slug: string | null) => void;
+  onChange: (slug: string) => void;
   /** Search facet counts by category slug. */
   counts?: Record<string, number> | null;
 }
@@ -33,14 +32,5 @@ export function CategoryOptions({ name, labelledBy, categories, value, onChange,
   const options = roots.map(toOption);
   if (selected && !roots.includes(selected)) options.unshift(toOption(selected));
 
-  return (
-    <OptionList
-      name={name}
-      labelledBy={labelledBy}
-      options={options}
-      value={value}
-      onChange={onChange}
-      anyLabel={t('catalog.filters.all_categories', 'كل الأقسام')}
-    />
-  );
+  return <OptionList name={name} labelledBy={labelledBy} options={options} value={value} onChange={onChange} />;
 }

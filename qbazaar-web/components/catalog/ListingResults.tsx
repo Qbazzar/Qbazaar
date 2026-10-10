@@ -2,13 +2,12 @@
 
 import type { ReactNode } from 'react';
 
-import { AdSummaryCard } from '@/components/ads/AdSummaryCard';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import type { AdSummary } from '@/lib/api/types';
 
+import { CatalogAdCard } from './CatalogAdCard';
 import type { ViewMode } from './listing-query';
-import { ResponsiveListCard } from './ResponsiveListCard';
 
 interface ListingResultsProps {
   ads: AdSummary[];
@@ -25,13 +24,14 @@ interface ListingResultsProps {
 const EAGER_CARDS = 2;
 const SKELETON_CARDS = 4;
 
-const belowDesktop = '[display:grid] grid-cols-1 gap-4 qb-tablet:grid-cols-2 qb-tablet:gap-5';
-const gridList = `${belowDesktop} qb-desktop:grid-cols-3 qb-desktop:gap-[19px]`;
-const rowList = `${belowDesktop} qb-desktop:flex qb-desktop:flex-col qb-desktop:gap-6`;
+/** One list card per line; the grid view has three columns, 18 px apart as the list cards (category.html). */
+const rowList = 'flex flex-col gap-[18px]';
+const gridList = `${rowList} qb-desktop:[display:grid] qb-desktop:grid-cols-3`;
 
 /**
- * Result cards in the list (69:467) or grid (81:1629) layout. The view toggle
- * is a desktop control: below 1001 px both views show the grid cards.
+ * Result cards in the list or grid layout of category.html. The view toggle
+ * is a desktop control: below 1001 px both views show the list cards, whose
+ * photo wraps above the text on phones.
  */
 export function ListingResults({ ads, view, isLoading, isFetching = false, empty, label }: ListingResultsProps) {
   if (isLoading) return <ResultsSkeleton view={view} />;
@@ -47,7 +47,14 @@ export function ListingResults({ ads, view, isLoading, isFetching = false, empty
         const card = { ad, eager: index < EAGER_CARDS };
         return (
           <li key={ad.id}>
-            {view === 'grid' ? <AdSummaryCard {...card} layout="grid" className="h-full" /> : <ResponsiveListCard {...card} />}
+            {view === 'grid' ? (
+              <>
+                <CatalogAdCard {...card} layout="row" className="qb-desktop:hidden" />
+                <CatalogAdCard {...card} layout="grid" className="hidden qb-desktop:flex" />
+              </>
+            ) : (
+              <CatalogAdCard {...card} layout="row" />
+            )}
           </li>
         );
       })}
@@ -61,7 +68,7 @@ function ResultsSkeleton({ view }: { view: ViewMode }) {
     <div aria-busy="true" aria-live="polite" className={view === 'grid' ? gridList : rowList}>
       <span className="sr-only">{t('common.loading', 'جاري التحميل…')}</span>
       {Array.from({ length: SKELETON_CARDS }, (_, index) => (
-        <div key={index} aria-hidden="true" className={cn(card, view === 'grid' ? 'h-[270px]' : 'h-[270px] qb-desktop:h-[194px]')} />
+        <div key={index} aria-hidden="true" className={cn(card, 'h-[384px] qb-tablet:h-[249px] qb-desktop:h-[194px]', view === 'grid' && 'qb-desktop:h-[331px]')} />
       ))}
     </div>
   );

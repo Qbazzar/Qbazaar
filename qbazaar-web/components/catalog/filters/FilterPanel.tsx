@@ -28,9 +28,10 @@ import {
   normalizeFilters,
   type FilterValues,
 } from './filter-values';
-import { LocationFields } from './LocationFields';
+import { CityOptions, CitySelect } from './LocationFields';
 import { OptionList } from './OptionList';
 import { PriceRangeFields } from './PriceRangeFields';
+import { PriceSlider } from './PriceSlider';
 
 export type FilterGroupKey = 'keyword' | 'category' | 'price' | 'location' | 'condition' | 'adType' | 'shipping' | 'customFields';
 
@@ -50,6 +51,22 @@ interface PanelProps extends FilterPanelProps {
   variant: 'sidebar' | 'sheet';
   /** Applies the filters without a removed chip; defaults to `onApply`. */
   onRemoveFilter?: (next: FilterValues) => void;
+  /** "Apply Filter" with the applied filters unchanged, e.g. to close the sheet. */
+  onKeep?: () => void;
+}
+
+/**
+ * The sheet is at least as tall as 618:26974 (584 px, 88 px of it the handle
+ * and the title row above this form), so the City / Region panel has room to
+ * open below its field (264:4818) instead of flipping over the title.
+ */
+const sheetBodyHeight = 'min-h-[min(496px,calc(90dvh-88px))]';
+
+/** The sheet leads with the fields of 618:26974; the radio groups follow in the page's order. */
+const SHEET_FIELDS: FilterGroupKey[] = ['keyword', 'price', 'location'];
+
+function sheetOrder(groups: FilterGroupKey[]): FilterGroupKey[] {
+  return [...groups.filter((key) => SHEET_FIELDS.includes(key)), ...groups.filter((key) => !SHEET_FIELDS.includes(key))];
 }
 
 /**
@@ -58,10 +75,10 @@ interface PanelProps extends FilterPanelProps {
  * mounted when new filters apply, so the focus survives, and restarts its
  * draft from them.
  */
-export function FilterPanel({ variant, groups, values, onApply, onReset, onRemoveFilter = onApply, categories, locations, facets }: PanelProps) {
+export function FilterPanel({ variant, groups, values, onApply, onReset, onRemoveFilter = onApply, onKeep, categories, locations, facets }: PanelProps) {
   const id = useId();
   const locale = getLocale();
-  const compact = variant === 'sheet';
+  const sheet = variant === 'sheet';
   const [draft, setDraft] = useState(values);
   const appliedKey = JSON.stringify(values);
   const [draftBase, setDraftBase] = useState(appliedKey);
@@ -73,18 +90,22 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
 
   const invalid = hasInvalidRange(draft);
   const dirty = !filtersEqual(normalizeFilters(draft), values);
+  // The card's button is pale while nothing is chosen (250:4405); the sheet's is always solid and then just closes it (618:26974).
+  const canApply = !invalid && (sheet || dirty || countActiveFilters(values) > 0);
   const customFields = filterableFields(draft.category ? findCategoryBySlug(categories, draft.category)?.custom_fields : null);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (dirty && !invalid) onApply(normalizeFilters(draft));
+    if (!canApply) return;
+    if (dirty) onApply(normalizeFilters(draft));
+    else onKeep?.();
   };
 
   const group = (key: FilterGroupKey) => {
     switch (key) {
       case 'keyword':
         return (
-          <FilterGroup key={key} compact={compact} title={t('catalog.filters.keyword', 'البحث')} collapsible={false}>
+          <FilterGroup key={key} field={sheet} title={t('catalog.filters.keyword', 'البحث')} collapsible={false}>
             {(headingId) => (
               <Input
                 type="search"
@@ -100,7 +121,7 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
         );
       case 'category':
         return (
-          <FilterGroup key={key} compact={compact} title={t('catalog.filters.category', 'القسم')}>
+          <FilterGroup key={key} title={t('catalog.filters.category', 'القسم')}>
             {(headingId) => (
               <CategoryOptions
                 name={`${id}-category`}
@@ -114,23 +135,36 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
           </FilterGroup>
         );
       case 'price':
-        return (
-          <FilterGroup key={key} compact={compact} title={t('catalog.filters.price', 'السعر')} collapsible={false}>
-            {() => (
-              <PriceRangeFields min={draft.priceMin} max={draft.priceMax} onChange={(next) => patch(next)} />
-            )}
+        // The card has the range slider (250:4405); the sheet the Min / Max fields (618:26974).
+        return sheet ? (
+          <FilterGroup key={key} field title={t('catalog.filters.price_range', 'نطاق السعر (ر.ق)')} collapsible={false}>
+            {() => <PriceRangeFields min={draft.priceMin} max={draft.priceMax} onChange={(next) => patch(next)} />}
+          </FilterGroup>
+        ) : (
+          <FilterGroup key={key} title={t('catalog.filters.price', 'السعر')} collapsible={false}>
+            {() => <PriceSlider min={draft.priceMin} max={draft.priceMax} onChange={(next) => patch(next)} />}
           </FilterGroup>
         );
       case 'location':
-        return (
-          <FilterGroup
-            key={key}
-            compact={compact}
-            title={compact ? t('catalog.filters.city', 'المدينة / المنطقة') : t('catalog.filters.location', 'الموقع')}
-          >
-            {() => (
-              <LocationFields
-                hideCityLabel={compact}
+        // The card lists the cities as radios (69:467); the sheet has the "City / Region" select (618:26974).
+        return sheet ? (
+          <FilterGroup key={key} field title={t('catalog.filters.city', 'المدينة / المنطقة')} collapsible={false}>
+            {(headingId) => (
+              <CitySelect
+                labelledBy={headingId}
+                value={draft.location}
+                locations={locations}
+                counts={facets?.locations}
+                onChange={(location) => patch({ location })}
+              />
+            )}
+          </FilterGroup>
+        ) : (
+          <FilterGroup key={key} title={t('catalog.filters.cities', 'المدن')}>
+            {(headingId) => (
+              <CityOptions
+                name={`${id}-location`}
+                labelledBy={headingId}
                 value={draft.location}
                 locations={locations}
                 counts={facets?.locations}
@@ -141,13 +175,12 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
         );
       case 'condition':
         return (
-          <FilterGroup key={key} compact={compact} title={t('catalog.filters.condition', 'الحالة')}>
+          <FilterGroup key={key} title={t('catalog.filters.condition', 'الحالة')}>
             {(headingId) => (
               <OptionList
                 name={`${id}-condition`}
                 labelledBy={headingId}
                 value={draft.condition}
-                anyLabel={t('catalog.filters.any', 'الكل')}
                 options={CONDITIONS.map((value) => ({ value, label: t(`ads.condition.${value}`), count: facets?.conditions?.[value] }))}
                 onChange={(condition) => patch({ condition: CONDITIONS.find((value) => value === condition) ?? null })}
               />
@@ -156,13 +189,12 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
         );
       case 'adType':
         return (
-          <FilterGroup key={key} compact={compact} title={t('catalog.filters.offer', 'نوع الإعلان')}>
+          <FilterGroup key={key} title={t('catalog.filters.offer', 'نوع الإعلان')}>
             {(headingId) => (
               <OptionList
                 name={`${id}-ad-type`}
                 labelledBy={headingId}
                 value={draft.adType}
-                anyLabel={t('catalog.filters.any', 'الكل')}
                 options={AD_TYPES.map((value) => ({ value, label: t(`catalog.filters.ad_type.${value}`) }))}
                 onChange={(adType) => patch({ adType: AD_TYPES.find((value) => value === adType) ?? null })}
               />
@@ -171,13 +203,12 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
         );
       case 'shipping':
         return (
-          <FilterGroup key={key} compact={compact} title={t('catalog.filters.shipping', 'الشحن والتوصيل')}>
+          <FilterGroup key={key} title={t('catalog.filters.shipping', 'الشحن والتوصيل')}>
             {(headingId) => (
               <OptionList
                 name={`${id}-shipping`}
                 labelledBy={headingId}
                 value={draft.shipping}
-                anyLabel={t('catalog.filters.any', 'الكل')}
                 options={SHIPPING_OPTIONS.map((value) => ({ value, label: t(`catalog.filters.shipping_options.${value}`) }))}
                 onChange={(shipping) => patch({ shipping: SHIPPING_OPTIONS.find((value) => value === shipping) ?? null })}
               />
@@ -185,17 +216,17 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
           </FilterGroup>
         );
       case 'customFields':
-        return customFields.length > 0 ? (
-          <FilterGroup key={key} compact={compact} title={t('catalog.filters.details', 'التفاصيل')}>
-            {() => (
-              <CustomFieldFilters
-                fields={customFields}
-                value={draft.customFields}
-                onChange={(next) => patch({ customFields: next })}
-              />
-            )}
+        if (customFields.length === 0) return null;
+        // The sheet lists the fields under their own labels (618:26974).
+        return sheet ? (
+          <div key={key} className="py-2.5">
+            <CustomFieldFilters compact fields={customFields} value={draft.customFields} onChange={(next) => patch({ customFields: next })} />
+          </div>
+        ) : (
+          <FilterGroup key={key} title={t('catalog.filters.details', 'التفاصيل')}>
+            {() => <CustomFieldFilters fields={customFields} value={draft.customFields} onChange={(next) => patch({ customFields: next })} />}
           </FilterGroup>
-        ) : null;
+        );
     }
   };
 
@@ -212,21 +243,25 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
     />
   );
 
+  // 16 / 500 on the card (250:4405), 16 / 700 in the sheet (618:26974).
   const apply = (
-    <Button type="submit" fullWidth disabled={!dirty || invalid} className="h-[46px] rounded-qb-lg font-medium">
+    <Button type="submit" fullWidth disabled={!canApply} className={cn('h-[46px] rounded-qb-lg', sheet ? 'font-bold' : 'font-medium')}>
       {t('catalog.filters.apply', 'تطبيق الفلتر')}
     </Button>
   );
   const resetLabel = t('catalog.filters.reset_all', 'إعادة ضبط الكل');
 
-  if (variant === 'sheet') {
+  if (sheet) {
     return (
-      <form onSubmit={submit} noValidate aria-label={t('catalog.filters.title', 'الفلتر')} className="font-qb">
-        {chips}
-        <div>{groups.map(group)}</div>
-        <div className="sticky -bottom-6 -mx-6 -mb-6 flex flex-col items-center gap-3 border-t border-qb-line bg-qb-surface px-6 pt-4 pb-5">
+      <form onSubmit={submit} noValidate aria-label={t('catalog.filters.title', 'الفلتر')} className={cn('flex flex-1 flex-col font-qb text-qb-ink', sheetBodyHeight)}>
+        {/* Only the fields scroll; the buttons stay at the bottom of the sheet. */}
+        <div className="-mx-6 min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-2">
+          {chips}
+          {sheetOrder(groups).map(group)}
+        </div>
+        <div className="-mx-6 flex flex-col items-center gap-3 border-t border-qb-line bg-qb-surface px-6 pt-4 pb-5">
           {apply}
-          <button type="button" onClick={reset} className={cn('rounded-qb-xs text-qb-body font-medium text-qb-brand', focusRing)}>
+          <button type="button" onClick={reset} className={cn('rounded-qb-xs text-qb-body font-medium text-qb-brand hover:text-qb-brand-active', focusRing)}>
             {resetLabel}
           </button>
         </div>

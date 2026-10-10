@@ -26,3 +26,26 @@ export function decodeCustomFields(raw: string | null): CustomFieldsFilter {
   }
   return filters;
 }
+
+/** Keys that only order or page the results. */
+const VIEW_KEYS = new Set(['sort', 'page', 'per_page']);
+
+/** Filters in a stable form: empty values dropped, keys sorted, numbers as strings. */
+function stableFilters(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return String(value);
+  return Object.entries(value)
+    .filter(([, inner]) => inner !== null && inner !== undefined && inner !== '')
+    .map(([key, inner]) => [key, stableFilters(inner)] as const)
+    .filter(([, inner]) => !(Array.isArray(inner) && inner.length === 0))
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+/**
+ * Whether two searches ask for the same ads: the same filters, whatever their
+ * sort or page and however the API echoes them back (`20` or `"20"`).
+ */
+export function isSameSearch(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  const filters = (params: Record<string, unknown>) =>
+    JSON.stringify(stableFilters(Object.fromEntries(Object.entries(params).filter(([key]) => !VIEW_KEYS.has(key)))));
+  return filters(a) === filters(b);
+}

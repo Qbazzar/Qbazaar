@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { ListFilter } from 'lucide-react';
 
+import '../catalog-tokens.css';
+
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { Sheet } from '@/components/design-system/Modal';
@@ -47,6 +49,13 @@ export function FilterSidebar({ onApply, onReset, ...props }: FilterPanelProps) 
   );
 }
 
+/**
+ * The sheet itself does not scroll: its handle, title and close button stay on
+ * top while the filter form scrolls under them (618:26974, 244:3508). The title
+ * takes the sheet's text colour; the form sets its own.
+ */
+const sheetLayout = 'overflow-hidden pb-0 text-(--color-qb-sheet-title) *:last:flex *:last:min-h-0 *:last:flex-col';
+
 interface FilterSheetProps extends FilterPanelProps {
   /** Classes for the trigger, which sits in the toolbar pill. */
   triggerClassName?: string;
@@ -64,7 +73,7 @@ export function FilterSheet({ triggerClassName, onApply, onReset, ...props }: Fi
       open={open}
       onOpenChange={setOpen}
       title={t('catalog.filters.sheet_title', 'فلاتر متقدمة')}
-      className={headingFont}
+      className={cn(headingFont, sheetLayout)}
       trigger={
         <button
           type="button"
@@ -96,6 +105,7 @@ export function FilterSheet({ triggerClassName, onApply, onReset, ...props }: Fi
           setOpen(false);
           focusing.onReset();
         }}
+        onKeep={() => setOpen(false)}
       />
     </Sheet>
   );
