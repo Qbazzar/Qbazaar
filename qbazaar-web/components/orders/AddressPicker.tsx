@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 import { CheckoutPanel } from './CheckoutPanel';
 import { OptionTile } from './OptionTile';
 
+import '@/styles/design-tokens-sell.css';
+
 export type AddressChoice = { kind: 'saved'; id: string } | { kind: 'new' };
 
 export interface ShippingAddressPanelProps {
@@ -174,7 +176,7 @@ function AddressForm({
               {t(`orders.checkout.fields.${field}`)}
               {/* The form's stars are red (689:33725), so the field draws its own. */}
               {required ? (
-                <span aria-hidden="true" className="text-qb-danger">
+                <span aria-hidden="true" className="text-(--color-qb-required)">
                   {' *'}
                 </span>
               ) : null}

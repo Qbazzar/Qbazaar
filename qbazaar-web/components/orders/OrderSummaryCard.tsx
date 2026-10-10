@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Image from 'next/image';
 import { Package } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
@@ -7,6 +8,8 @@ import { formatMoney } from '@/lib/orders/money';
 import { cn } from '@/lib/utils';
 
 import { panelClass } from './CheckoutPanel';
+
+import '@/styles/design-tokens-sell.css';
 
 export interface SummaryLine {
   label: string;
@@ -17,6 +20,8 @@ export interface SummaryLine {
 
 export interface OrderSummaryCardProps {
   title: string;
+  /** The item's photo; a parcel icon stands in without one. */
+  photoUrl?: string;
   subtitle?: string;
   currency: string;
   lines: SummaryLine[];
@@ -27,24 +32,26 @@ export interface OrderSummaryCardProps {
 }
 
 /**
- * The order card of the checkout (682:32513): the item, the amounts and the
- * total, with the confirm button underneath.
+ * The order card of the checkout (682:32513): the item's 63 x 58 photo, its
+ * title and seller, the amounts and the total, with the confirm button
+ * underneath.
  */
-export function OrderSummaryCard({ title, subtitle, currency, lines, total, footer, className }: OrderSummaryCardProps) {
+export function OrderSummaryCard({ title, photoUrl, subtitle, currency, lines, total, footer, className }: OrderSummaryCardProps) {
   return (
     <section aria-labelledby="order-summary-title" className={cn(panelClass, 'p-4', className)}>
       <div className="flex items-center gap-2.5 border-b border-qb-line pb-4">
+        {/* The title follows in text, so the photo is decorative. */}
         <span
           aria-hidden="true"
-          className="flex h-[58px] w-[63px] shrink-0 items-center justify-center rounded-qb-sm bg-qb-fill text-qb-ink-subtle"
+          className="relative flex h-[58px] w-[63px] shrink-0 items-center justify-center overflow-hidden rounded-qb-sm bg-qb-fill text-qb-ink-subtle"
         >
-          <Icon icon={Package} />
+          {photoUrl ? <Image src={photoUrl} alt="" fill sizes="63px" className="object-cover" /> : <Icon icon={Package} />}
         </span>
         <div className="min-w-0">
           <p className="line-clamp-2 text-qb-body font-medium text-qb-ink">
             <bdi>{title}</bdi>
           </p>
-          {subtitle ? <p className="mt-1 text-qb-micro text-qb-ink-subtle">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-1 text-qb-micro text-(--color-qb-ink-meta)">{subtitle}</p> : null}
         </div>
       </div>
 

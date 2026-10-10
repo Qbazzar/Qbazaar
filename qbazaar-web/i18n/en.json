@@ -1573,6 +1573,7 @@
       "address_needed": "Add or choose the address to deliver to.",
       "payment_title": "Payment method",
       "cash_hint": "Pay with cash upon collection or handover. No online transaction is needed.",
+      "sold_by": "Sold by {name}",
       "summary_title": "Order summary",
       "quantity": "Quantity",
       "subtotal": "Subtotal",

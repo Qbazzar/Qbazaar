@@ -20,6 +20,8 @@ import { t } from '@/lib/i18n/messages';
 import { EMPTY_ADDRESS, toAddressPayload, validateAddress, type AddressField } from '@/lib/orders/address';
 import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/errors';
 import { formatMoney, isPositiveAmount } from '@/lib/orders/money';
+import { isolate } from '@/lib/orders/text';
+import { useAdQuery } from '@/lib/queries/ads';
 import { useCheckoutQuery, useSubmitCheckoutMutation } from '@/lib/queries/orders';
 import { cn } from '@/lib/utils';
 
@@ -139,6 +141,8 @@ function defaultChoice(checkout: Checkout): AddressChoice {
 function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: () => void }) {
   const { user } = useAuth();
   const { order } = checkout;
+  // The order carries only the ad's id and title; its photo and seller come from the ad.
+  const adQuery = useAdQuery(order.ad.id);
   const submit = useSubmitCheckoutMutation(order.id);
   const { key, renew } = useIdempotencyKey();
   const formRef = useRef<HTMLFormElement>(null);
@@ -156,6 +160,8 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
 
   const quote = checkout.quotes[fulfillment];
   const isDelivery = fulfillment === 'delivery';
+  const adPhoto = adQuery.data?.images?.[0];
+  const sellerName = adQuery.data?.user?.business_name || adQuery.data?.user?.full_name;
 
   const lines = useMemo<SummaryLine[]>(() => {
     if (!quote) return [];
@@ -290,7 +296,14 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
       <div className="qb-tablet:w-[278px] qb-tablet:shrink-0 qb-desktop:sticky qb-desktop:top-[112px] qb-desktop:w-[421px]">
         <OrderSummaryCard
           title={order.ad.title}
-          subtitle={t('orders.common.order_number', { number: orderNumber(order.id) })}
+          photoUrl={adPhoto?.sizes.thumbnail || adPhoto?.sizes.medium}
+          subtitle={
+            sellerName
+              ? t('orders.checkout.sold_by', { name: isolate(sellerName) })
+              : adQuery.isError
+                ? t('orders.common.order_number', { number: orderNumber(order.id) })
+                : undefined
+          }
           currency={checkout.currency}
           lines={lines}
           total={quote?.total ?? order.total}

@@ -38,6 +38,9 @@
   /* Checkout result dialog body (buynow.js payModal) */
   --color-qb-ink-dialog: #9a9a9a;
 
+  /* Required-field stars of the checkout address form (689:33725) */
+  --color-qb-required: #ff0000;
+
   /* Icons of the phone "Your Ad" action buttons (638:36533) */
   --color-qb-icon-action: #6c6c6c;
 
