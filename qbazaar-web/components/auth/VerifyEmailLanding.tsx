@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import {
@@ -71,7 +72,7 @@ export function VerifyEmailLanding() {
     setResending(true);
     try {
       await sendEmailVerification();
-      toast.success(t('auth.verify_email.resend_success'));
+      showDesignToast(t('auth.verify_email.resend_success'));
     } catch (err) {
       const fallback =
         err instanceof ApiClientError

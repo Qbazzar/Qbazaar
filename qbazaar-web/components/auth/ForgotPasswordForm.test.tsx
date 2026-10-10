@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+vi.mock('@/components/design-system/design-toast', () => ({ showDesignToast: vi.fn() }));
 vi.mock('@/lib/turnstile', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/turnstile')>()),
   TURNSTILE_SITE_KEY: 'site-key',

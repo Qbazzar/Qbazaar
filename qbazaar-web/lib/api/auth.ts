@@ -17,6 +17,7 @@ import axios, { isAxiosError } from 'axios';
 import { api } from './client';
 import { withTurnstile } from './turnstile';
 import type {
+  AuthResponseData,
   AuthResponseEnvelope,
   ErrorEnvelope,
   ForgotPasswordRequest,
@@ -97,12 +98,14 @@ function toApiClientError(err: unknown): ApiClientError {
  * Hand the refresh token off to our Next.js route so it can set the HTTP-only
  * cookie. Best-effort: a failure here is logged but doesn't sink the flow,
  * because the in-memory tokens still work for the current session.
+ * `remember: false` ("Remember me" left unticked) makes it a browser-session
+ * cookie, so the sign-in ends when the browser closes.
  */
-async function persistRefreshToken(refreshToken: string): Promise<void> {
+async function persistRefreshToken(refreshToken: string, remember = true): Promise<void> {
   try {
     await axios.post(
       '/api/auth/session',
-      { refresh_token: refreshToken },
+      { refresh_token: refreshToken, remember },
       { withCredentials: true, headers: { 'Content-Type': 'application/json' } },
     );
   } catch {
@@ -135,15 +138,54 @@ export async function register(
   }
 }
 
-export async function login(
-  payload: LoginPayload,
-): Promise<AuthResponseEnvelope['data']> {
+export interface SignInOptions {
+  /** "Remember me": keep the sign-in after the browser closes (the default). */
+  remember?: boolean;
+}
+
+/**
+ * The 202 of a sign-in held at the API's new-device check: a code went by
+ * SMS to the account's phone and `POST /auth/device/verify` finishes it.
+ */
+export interface DeviceChallenge {
+  challenge_token: string;
+  /** The account's phone, masked by the API. */
+  sent_to: string;
+  expires_in: number;
+  can_resend_in: number;
+}
+
+export type LoginResult =
+  | { status: 'signed_in'; data: AuthResponseData }
+  | { status: 'device_check'; challenge: DeviceChallenge };
+
+interface DeviceChallengeBody extends DeviceChallenge {
+  device_verification_required: true;
+}
+
+export async function login(payload: LoginPayload, options: SignInOptions = {}): Promise<LoginResult> {
   try {
-    const { data } = await api.post<AuthResponseEnvelope>(
-      '/api/v1/auth/login',
-      payload,
-    );
-    await persistRefreshToken(data.data.tokens.refresh_token);
+    const response = await api.post<AuthResponseEnvelope | DeviceChallengeBody>('/api/v1/auth/login', payload);
+    if (response.status === 202 && 'device_verification_required' in response.data) {
+      const { challenge_token, sent_to, expires_in, can_resend_in } = response.data;
+      return { status: 'device_check', challenge: { challenge_token, sent_to, expires_in, can_resend_in } };
+    }
+    const data = (response.data as AuthResponseEnvelope).data;
+    await persistRefreshToken(data.tokens.refresh_token, options.remember);
+    return { status: 'signed_in', data };
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Finishes a sign-in held at the new-device check with the SMS code. */
+export async function verifyNewDevice(
+  payload: { challenge_token: string; code: string },
+  options: SignInOptions = {},
+): Promise<AuthResponseData> {
+  try {
+    const { data } = await api.post<AuthResponseEnvelope>('/api/v1/auth/device/verify', payload);
+    await persistRefreshToken(data.data.tokens.refresh_token, options.remember);
     return data.data;
   } catch (err) {
     throw toApiClientError(err);

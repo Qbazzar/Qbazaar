@@ -11,7 +11,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: t('auth.reset_password.title', 'تعيين كلمة مرور جديدة'),
-    description: t('auth.reset_password.subtitle', 'اختر كلمة مرور جديدة لحسابك.'),
+    // The subtitle's line break only shapes the card.
+    description: t('auth.reset_password.subtitle', 'اختر كلمة مرور جديدة لحسابك.').replace(/\n/g, ' '),
   };
 }
 

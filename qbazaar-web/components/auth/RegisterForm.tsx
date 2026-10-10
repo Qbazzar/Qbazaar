@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Input } from '@/components/design-system/Input';
@@ -63,7 +64,7 @@ export function RegisterForm() {
         const data = await apiRegister(values, await turnstile.current?.getToken());
         setAuth({ user: data.user, accessToken: data.tokens.access_token });
         setHydrated(true);
-        toast.success(t('auth.register.success'));
+        showDesignToast(t('auth.register.success'));
         // The reference journey: sign-up → "Verify Your Identity" → number → code.
         router.replace(`${verifyOtpHref(values.phone, '/')}&intro=1`);
       } catch (err) {
@@ -180,11 +181,11 @@ export function RegisterForm() {
           />
           <span>
             {t('auth.register.terms_prefix')}{' '}
-            <Link href="/terms" className={termsLinkClass}>
+            <Link href="/p/terms" className={termsLinkClass}>
               {t('auth.register.terms_link')}
             </Link>{' '}
             {t('auth.register.terms_and')}{' '}
-            <Link href="/privacy" className={termsLinkClass}>
+            <Link href="/p/privacy" className={termsLinkClass}>
               {t('auth.register.privacy_link')}
             </Link>
             {t('auth.register.terms_suffix')}

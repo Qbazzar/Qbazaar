@@ -17,7 +17,14 @@
   --color-qb-auth-note: #5a5a5a; /* SMS note under the phone number */
   --color-qb-auth-resend: #ff0000; /* "You haven't received any code? Resend" */
   --color-qb-auth-btn-hover: #ef6f42; /* `.qb-btn:hover` */
+  --color-qb-auth-check: #4b5563; /* "Remember me" */
+  --color-qb-auth-social-hover: #d8d8d8; /* social tile border on hover */
   --shadow-qb-auth-card: 0 10px 40px 0 rgb(0 0 0 / 0.06);
+
+  /* The mint confirmation toast (401:13703, `.qb-toast-design` of chat.js and cropper.js) */
+  --color-qb-toast-mint: #eafff7;
+  --color-qb-toast-mint-ink: #07bd74;
+  --shadow-qb-toast: 0 4px 40px 0 rgb(161 161 161 / 0.2);
 
   /* Settings screen, My Ads, notifications, saved searches (app template, acct.js) */
   --color-qb-acct-tile: #f7f7f7; /* "Overview of your sales", "Complete" / "Reserve" */
@@ -39,6 +46,7 @@
   --shadow-qb-acct-pill: 0 4px 30px 0 rgb(161 161 161 / 0.15); /* filter pills, off */
   --shadow-qb-acct-notification: inset 0 0 0 1px #ededed, 0 4px 40px 0 rgb(161 161 161 / 0.15);
   --shadow-qb-acct-modal: 0 30px 80px 0 rgb(0 0 0 / 0.25);
+  --color-qb-acct-delete-line: #ffd7cd; /* the "Delete Account" card border */
 
   /* Messages (chat.js) */
   --color-qb-chat-block: #e04a4a; /* "Block" in the "⋯" menu */
@@ -48,4 +56,8 @@
   --shadow-qb-chat-dialog: 0 24px 64px 0 rgb(0 0 0 / 0.25);
   --color-qb-chat-delete-overlay: rgb(35 31 32 / 0.5); /* behind "Delete this conversation?" */
   --shadow-qb-chat-delete: 0 20px 60px 0 rgb(0 0 0 / 0.3);
+  --color-qb-chat-empty-icon: #292d32; /* "No Messages Yet" chat icon */
+  --color-qb-chat-empty-tile: rgb(255 255 255 / 0.973); /* its tile */
+  --color-qb-chat-empty-cta: #fafafa; /* "Browse Ads" text */
+  --shadow-qb-chat-empty-tile: 0 4px 40px 0 rgb(243 128 87 / 0.15);
 }

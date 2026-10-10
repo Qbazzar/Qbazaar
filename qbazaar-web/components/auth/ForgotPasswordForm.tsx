@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
@@ -61,7 +62,7 @@ export function ForgotPasswordForm() {
   const resend = async () => {
     if (!sentTo) return;
     setResending(true);
-    if (await send({ email: sentTo })) toast.success(t('auth.forgot_password.resent'));
+    if (await send({ email: sentTo })) showDesignToast(t('auth.forgot_password.resent'));
     setResending(false);
   };
 

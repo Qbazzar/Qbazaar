@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, type ReactNode, type Ref } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 import { Input } from '@/components/design-system/Input';
 import { t } from '@/lib/i18n/messages';
@@ -51,6 +52,10 @@ export interface PhoneNumberFieldsProps {
   inputRef?: Ref<HTMLInputElement>;
   /** Hides the "You will then receive a text message…" note. */
   hideNote?: boolean;
+  /** The number's placeholder; enter-number.html's "5551 2345" by default. */
+  placeholder?: string;
+  /** A thin chevron instead of the browser's select arrow, as in the account's phone dialog. */
+  withChevron?: boolean;
   className?: string;
 }
 
@@ -67,6 +72,8 @@ export function PhoneNumberFields({
   disabled,
   inputRef,
   hideNote,
+  placeholder = t('auth.phone.number_placeholder'),
+  withChevron = false,
   className,
 }: PhoneNumberFieldsProps) {
   const id = useId();
@@ -83,18 +90,30 @@ export function PhoneNumberFields({
           <label htmlFor={selectId} className="text-qb-body text-qb-ink-body">
             {t('auth.phone.country_label')}
           </label>
-          <select
-            id={selectId}
-            defaultValue={SUPPORTED_DIAL}
-            disabled={disabled}
-            className="h-[52px] w-full rounded-qb-md border border-qb-field-border bg-qb-surface px-4 font-qb text-qb-body text-qb-ink outline-none focus-visible:border-qb-brand disabled:cursor-not-allowed disabled:bg-qb-fill"
-          >
-            {COUNTRY_CODES.map((country) => (
-              <option key={country.dial} value={country.dial} disabled={country.dial !== SUPPORTED_DIAL}>
-                {`${t(country.nameKey)} ${country.dial}`}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id={selectId}
+              defaultValue={SUPPORTED_DIAL}
+              disabled={disabled}
+              className={cn(
+                'h-[52px] w-full rounded-qb-md border border-qb-field-border bg-qb-surface px-4 font-qb text-qb-body text-qb-ink outline-none focus-visible:border-qb-brand disabled:cursor-not-allowed disabled:bg-qb-fill',
+                withChevron && 'cursor-pointer appearance-none pe-11',
+              )}
+            >
+              {COUNTRY_CODES.map((country) => (
+                <option key={country.dial} value={country.dial} disabled={country.dial !== SUPPORTED_DIAL}>
+                  {`${t(country.nameKey)} ${country.dial}`}
+                </option>
+              ))}
+            </select>
+            {withChevron ? (
+              <ChevronDown
+                aria-hidden="true"
+                strokeWidth={2}
+                className="pointer-events-none absolute end-4 top-1/2 size-[18px] -translate-y-1/2 text-qb-ink-subtle"
+              />
+            ) : null}
+          </div>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <label htmlFor={inputId} className="text-qb-body text-qb-ink-body">
@@ -111,7 +130,7 @@ export function PhoneNumberFields({
             value={localDigitsOf(value)}
             onChange={(event) => onChange(toQatarPhone(localDigitsOf(event.target.value)))}
             onBlur={onBlur}
-            placeholder={t('auth.phone.number_placeholder')}
+            placeholder={placeholder}
             aria-invalid={error ? true : undefined}
             aria-describedby={describedBy}
             required

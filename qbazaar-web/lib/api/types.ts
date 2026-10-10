@@ -136,6 +136,7 @@ export const AuthErrorCode = {
   PhoneExists: 'AUTH_008',
   TokenExpired: 'AUTH_009',
   TokenInvalid: 'AUTH_010',
+  DeviceChallengeInvalid: 'AUTH_012',
   ValidationFailed: 'VALIDATION_FAILED',
   RateLimited: 'RATE_LIMIT_EXCEEDED',
   TurnstileFailed: 'TURNSTILE_001',

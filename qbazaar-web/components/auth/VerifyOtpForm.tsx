@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { qatarPhoneRegex } from '@/lib/validation/auth';
@@ -19,6 +20,7 @@ import { authLinkClass, authSubmitClass } from './AuthFooter';
 import { AuthHeading } from './AuthHeading';
 import { FieldError } from './FieldError';
 import { OtpInput } from './OtpInput';
+import { handleCodeError } from './otp-errors';
 import { PhoneNumberFields, maskPhoneForCode } from './PhoneNumberFields';
 import { Turnstile, type TurnstileHandle } from './Turnstile';
 
@@ -106,7 +108,7 @@ export function VerifyOtpForm() {
         setCode('');
         setCodeError(null);
         setStep('code');
-        if (resend) toast.success(t('auth.verify_otp.sent_again'));
+        if (resend) showDesignToast(t('auth.verify_otp.sent_again'));
       } catch (err) {
         handleSendError(err);
       } finally {
@@ -153,10 +155,10 @@ export function VerifyOtpForm() {
       await verifyOtp({ phone, code: value });
       if (signedInUser?.phone === phone) setPhoneVerified(true);
       void queryClient.invalidateQueries({ queryKey: ['account'] });
-      toast.success(t('auth.verify_otp.success_title'));
+      showDesignToast(t('auth.verify_otp.success_title'));
       router.replace(continueTarget);
     } catch (err) {
-      handleVerifyError(err, {
+      handleCodeError(err, {
         setError: setCodeError,
         clearCode: () => setCode(''),
       });
@@ -204,7 +206,8 @@ export function VerifyOtpForm() {
                     ? t('auth.verify_otp.change_in_settings')
                     : undefined
               }
-              className="mt-[26px]"
+              // `.qb-phone` (26 px) plus its `.qb-field` (18 px) in enter-number.html.
+              className="mt-[44px]"
             />
             {numberProblem === 'not_yours' ? (
               <Link href="/account/security" className={cn(authLinkClass, 'mt-2 self-start text-qb-caption')}>
@@ -321,40 +324,4 @@ function isRateLimited(err: unknown): boolean {
     (err.code === AuthErrorCode.AuthRateLimited ||
       err.code === AuthErrorCode.RateLimited)
   );
-}
-
-function handleVerifyError(
-  err: unknown,
-  hooks: { setError: (msg: string) => void; clearCode: () => void },
-) {
-  if (err instanceof ApiClientError) {
-    if (err.code === AuthErrorCode.OtpExpired) {
-      const msg = t('auth.errors.AUTH_004');
-      hooks.setError(msg);
-      hooks.clearCode();
-      toast.error(msg);
-      return;
-    }
-    if (err.code === AuthErrorCode.OtpInvalid) {
-      const msg = t('auth.errors.AUTH_005');
-      hooks.setError(msg);
-      toast.error(msg);
-      return;
-    }
-    if (err.code === AuthErrorCode.ValidationFailed && err.details) {
-      const codeErrors = err.details.code ?? err.details.phone;
-      if (codeErrors?.length) {
-        hooks.setError(codeErrors[0]);
-        return;
-      }
-    }
-    const fallback =
-      translateMaybeKey(`auth.errors.${err.code}`) || err.message;
-    hooks.setError(fallback);
-    toast.error(fallback);
-    return;
-  }
-  const fallback = t('auth.errors.unknown');
-  hooks.setError(fallback);
-  toast.error(fallback);
 }

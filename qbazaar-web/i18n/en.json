@@ -46,7 +46,7 @@
     "login": {
       "welcome_prefix": "Welcome to",
       "welcome_brand": "QBAZAAR",
-      "tagline": "Discover, buy, and sell with ease. Connect with a diverse community and explore thousands of products all in one place.",
+      "tagline": "Discover, buy, and sell with ease. Connect with a diverse community and\nexplore thousands of products all in one place.",
       "title": "Welcome back",
       "subtitle": "Sign in to your QBazaar account.",
       "identifier_label": "Email",
@@ -60,7 +60,8 @@
       "go_to_register": "Signup",
       "success": "Signed in",
       "deactivated_notice": "Your account is deactivated. Sign in to reactivate it.",
-      "deleted_notice": "Your account is scheduled for deletion. Sign in within 30 days to cancel."
+      "deleted_notice": "Your account is scheduled for deletion. Sign in within 30 days to cancel.",
+      "remember": "Remember me"
     },
     "register": {
       "heading": "Create an account",
@@ -119,14 +120,14 @@
       "continue": "Continue",
       "sent_again": "A fresh code is on its way",
       "send_failed": "We couldn't send the code, please try again",
-      "intro": "For your security, we need to confirm that this phone number belongs to you before continuing.",
+      "intro": "For your security, we need to confirm that this phone number belongs\nto you before continuing.",
       "send": "Send",
       "resend_wait": "({seconds}s)",
       "change_in_settings": "This isn't the number on your account. To use it, change your phone number in Account Settings first."
     },
     "forgot_password": {
       "title": "Reset Password",
-      "subtitle": "Please enter your email address. You will then receive an email with further instructions.",
+      "subtitle": "Please enter your email address. You will then receive an\nemail with further instructions.",
       "email_label": "Email",
       "email_placeholder": "example@gmail.com",
       "submit": "Send",
@@ -145,7 +146,7 @@
     },
     "reset_password": {
       "title": "Change Password",
-      "subtitle": "Choose a strong password for your account.",
+      "subtitle": "Enter your current password, then choose a new password to\nsecure your account.",
       "password_label": "New Password",
       "password_placeholder": "********",
       "password_confirmation_label": "Confirm Password",
@@ -206,7 +207,8 @@
       "RATE_LIMIT_EXCEEDED": "Too many attempts, try again later",
       "TURNSTILE_001": "The security check failed, please try again",
       "network": "Could not reach the server",
-      "unknown": "An unexpected error occurred"
+      "unknown": "An unexpected error occurred",
+      "AUTH_012": "This verification has expired. Please sign in again."
     },
     "phone_gate": {
       "title": "Verify your phone to continue",
@@ -224,6 +226,14 @@
       "resume": "Continue where you left off",
       "verified_title": "Your phone is verified",
       "send_limited": "You requested too many codes. Use the last code you received or try again in a minute."
+    },
+    "social": {
+      "continue_with": "Continue with {provider}",
+      "divider": "or continue with",
+      "unavailable": "Signing in with {provider} isn't available yet. Use your email and password."
+    },
+    "device_check": {
+      "subtitle": "We've sent a verification code to {phone}. Enter the code below\nto continue."
     }
   },
   "account": {
@@ -333,9 +343,9 @@
       "edit_password": "Change Password",
       "title": "Security",
       "subtitle": "Change your password regularly to keep your account safe.",
-      "current_password_label": "Current password",
-      "new_password_label": "New password",
-      "password_confirmation_label": "Confirm new password",
+      "current_password_label": "Current Password",
+      "new_password_label": "New Password",
+      "password_confirmation_label": "Confirm New Password",
       "submit": "Update password",
       "submitting": "Updating…",
       "success": "Password updated. Your other devices were signed out.",
@@ -414,8 +424,6 @@
       "empty_body": "You haven't blocked anyone yet."
     },
     "data": {
-      "title": "Data & account",
-      "subtitle": "Export your data or close your account.",
       "export": {
         "title": "Export my data",
         "body": "Download a copy of your QBazaar data — profile, ads, messages, and activity history. We'll prepare the archive and email you a secure download link.",
@@ -436,30 +444,22 @@
         "reason_placeholder": "Tell us why you're leaving (optional, up to 280 characters).",
         "confirm": "Yes, deactivate",
         "confirming": "Deactivating…",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "instead": "Need a break instead?"
       },
       "delete": {
-        "reason_question": "Why are you leaving?",
-        "reasons": {
-          "not_using": "I don't use this website",
-          "other_account": "I have another account",
-          "problems": "The website has some problems",
-          "privacy": "Privacy concerns",
-          "prefer_not": "Prefer not to tell",
-          "something_else": "Something else"
-        },
-        "title": "Delete my account",
-        "body": "Schedules your account for permanent deletion in 30 days. After that we erase your profile, ads, and messages. Sign in again within the window to cancel.",
-        "submit": "Delete account",
+        "title": "Delete Account",
+        "body": "Deleting your account is permanent. All your ads, messages, saved searches, and payment methods will be removed and cannot be recovered.",
+        "submit": "Delete My Account",
         "dialog_title": "Delete your account?",
         "dialog_body": "Your account will be scheduled for deletion in 30 days. Sign in again within that window to cancel.",
         "password_label": "Password",
-        "reason_label": "Reason (optional)",
-        "reason_placeholder": "Tell us why you're leaving (optional, up to 280 characters).",
         "confirm": "Yes, delete",
         "confirming": "Scheduling deletion…",
         "cancel": "Cancel",
-        "scheduled_toast": "Account scheduled for deletion in 30 days. Sign in again to cancel."
+        "scheduled_toast": "Account scheduled for deletion in 30 days. Sign in again to cancel.",
+        "understand": "I understand this action cannot be undone.",
+        "understand_required": "Tick the box to confirm you understand."
       }
     },
     "avatar": {
@@ -542,7 +542,7 @@
       "clear_confirm_body": "Every saved search will be deleted. You won't be able to restore them.",
       "cleared": "All saved searches deleted",
       "cleanup_title": "Clean up inactive items",
-      "cleanup_body": "Remove items that have been sold or are no longer available in one click.",
+      "cleanup_body": "Remove the saved searches whose notifications are off in one click.",
       "cleanup": "Clean up",
       "cleanup_none": "Nothing to clean up: every saved search still has its notifications on.",
       "cleaned": {
@@ -602,7 +602,8 @@
           "body": "Another account registered this email in the meantime. Choose a different one."
         },
         "back": "Back to Account Settings"
-      }
+      },
+      "phone_placeholder": "+974 (157) XXXX XXXX"
     },
     "email_messages": {
       "subtitle": "Manage your email notifications and preferences",
@@ -2011,8 +2012,7 @@
       "preview": "No messages yet",
       "inbox_short": "No conversations yet.",
       "no_messages_title": "No Messages Yet",
-      "no_messages_body": "All your chats with buyers and sellers will appear here once you start interacting",
-      "pick_title": "Select a conversation"
+      "no_messages_body": "All your chats with buyers and sellers will appear here once you start interacting"
     },
     "back": "Back",
     "start_chat": "Message seller",
@@ -2097,6 +2097,23 @@
       "body": "The selected conversations will be removed from your inbox.",
       "confirm": "Delete",
       "done": "Removed from your inbox"
+    },
+    "report": {
+      "title": "Report",
+      "subtitle": "Select a problem to report",
+      "submit": "Submit Report",
+      "sent": "Your report has been sent successfully",
+      "reasons": {
+        "inappropriate_content": "Inappropriate Content",
+        "harassment": "Harassment or Bullying",
+        "privacy": "Privacy Violations",
+        "spam": "Spam and Unsolicited Messages",
+        "impersonation": "Impersonation",
+        "terms": "Violation of Terms of Service",
+        "security": "Cybersecurity Concerns",
+        "hate_speech": "Hate Speech or Discrimination",
+        "not_listed": "The Problem Isn't Listed Here"
+      }
     }
   },
   "notifications": {

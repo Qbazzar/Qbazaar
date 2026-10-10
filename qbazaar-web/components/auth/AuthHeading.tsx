@@ -10,7 +10,10 @@ export interface AuthHeadingProps {
   className?: string;
 }
 
-/** Title + muted subtitle at the top of every auth card (`.qb-card h1` + `.qb-sub`). */
+/**
+ * Title + muted subtitle at the top of every auth card (`.qb-card h1` + `.qb-sub`).
+ * A line break in the subtitle copy stands for the reference's `<br>`.
+ */
 export function AuthHeading({ title, subtitle, align = 'center', className }: AuthHeadingProps) {
   return (
     <div className={className}>
@@ -18,7 +21,7 @@ export function AuthHeading({ title, subtitle, align = 'center', className }: Au
       {subtitle ? (
         <p
           className={cn(
-            'mt-2.5 text-qb-body leading-[1.55] text-qb-auth-muted',
+            'mt-2.5 text-qb-body leading-[1.55] whitespace-pre-line text-qb-auth-muted',
             align === 'center' ? 'text-center' : 'mt-3.5 text-start',
           )}
         >

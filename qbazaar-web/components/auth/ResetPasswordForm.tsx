@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -51,19 +52,24 @@ export function ResetPasswordForm() {
       // instead of on the login page, where browser autofill would re-submit
       // their OLD saved password (the #1 "I reset but can't log in" cause).
       try {
-        const data = await login({
+        const result = await login({
           identifier: values.email,
           password: values.password,
         });
+        showDesignToast(t('auth.reset_password.success_toast'));
+        // A sign-in held at the new-device check finishes on the login page.
+        if (result.status !== 'signed_in') {
+          router.replace('/login');
+          return;
+        }
         setAuth({
-          user: data.user,
-          accessToken: data.tokens.access_token,
+          user: result.data.user,
+          accessToken: result.data.tokens.access_token,
         });
-        toast.success(t('auth.reset_password.success_toast'));
         router.replace('/account');
       } catch {
         // Reset succeeded but auto-login didn't — fall back to manual login.
-        toast.success(t('auth.reset_password.success_toast'));
+        showDesignToast(t('auth.reset_password.success_toast'));
         router.replace('/login');
       }
     } catch (err) {
@@ -100,12 +106,7 @@ export function ResetPasswordForm() {
     <>
       <AuthHeading
         title={t('auth.reset_password.title')}
-        subtitle={
-          <>
-            {t('auth.reset_password.subtitle')}{' '}
-            <span dir="ltr">{email}</span>
-          </>
-        }
+        subtitle={t('auth.reset_password.subtitle')}
       />
       <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col">
         {/* email + token are query-driven; we still register them so RHF posts
