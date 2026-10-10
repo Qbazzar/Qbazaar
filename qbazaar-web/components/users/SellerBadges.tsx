@@ -26,14 +26,14 @@ export function VerifiedMark({ className }: { className?: string }) {
 }
 
 /**
- * "Private Seller" chip of the seller card (Montserrat in the reference, like
- * every status chip there).
+ * "Private Seller" chip of the ad detail's seller card: white with a 1 px
+ * brand outline, r8, Montserrat 10 px / 500 (typo.js CHIPS).
  */
 export function SellerTypeChip({ accountType, className }: { accountType: AccountType; className?: string }) {
   return (
     <span
       className={cn(
-        'inline-flex h-5 w-fit items-center rounded-[4px] border border-qb-brand bg-qb-brand-soft px-2 font-qb-label text-qb-tiny leading-none font-medium whitespace-nowrap text-qb-brand-on-soft',
+        'inline-flex w-fit shrink-0 items-center rounded-qb-sm border border-qb-brand bg-qb-surface px-3 py-[5px] font-qb-label text-qb-tiny font-medium whitespace-nowrap text-qb-brand',
         className,
       )}
     >

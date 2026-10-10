@@ -1,16 +1,17 @@
 'use client';
 
 /**
- * Profile card of a private seller (136:1562 / 548:42879 / 625:31486):
- * avatar, name, follow and message, the info rows and the highlight chips.
+ * Profile card of a private seller (seller-individual.html): avatar, name,
+ * follow and message, the Info rows and the highlight chips, in a white r24
+ * card with 32 / 16 px padding and the canonical card shadow.
  */
-import { CalendarDays, LayoutGrid, MailCheck, ShieldCheck, Star, Users, type LucideIcon } from 'lucide-react';
+import { CalendarDays, MailCheck, ShieldCheck, Star, Tag, UserPlus, type LucideIcon } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 
 import { Avatar } from '@/components/design-system/Avatar';
-import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
-import { formatAdDate, formatRating } from '@/lib/ads/display';
+import { formatDayMonthYear } from '@/lib/ads/dates';
+import { formatRating } from '@/lib/ads/display';
 import { formatNumber } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -29,6 +30,9 @@ interface SellerProfileCardProps {
   secondaryActions?: ReactNode;
   className?: string;
 }
+
+/** The 18 px / 500 section titles of the card ("Info", "Seller Highlights"). */
+const sectionTitle = 'mb-3.5 text-qb-body-lg font-medium tracking-normal text-qb-ink';
 
 export function SellerProfileCard({ profile, locale, actions, secondaryActions, className }: SellerProfileCardProps) {
   const name = sellerDisplayName(profile);
@@ -49,55 +53,49 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
   return (
     <section
       aria-label={name}
-      className={cn(
-        cardVariants({ large: true, elevated: true, padding: 'none' }),
-        'px-5 pt-5 pb-6',
-        'qb-tablet:px-12 qb-tablet:pt-7 qb-tablet:pb-9 qb-desktop:px-[17px] qb-desktop:pt-[42px] qb-desktop:pb-9',
-        className,
-      )}
+      className={cn('rounded-qb-2xl border border-qb-line bg-qb-surface px-4 py-8 font-qb shadow-qb-card', className)}
     >
-      <div className="flex flex-col items-center text-center">
-        {/* The name is the heading below. */}
-        <span aria-hidden="true" className="flex">
-          <Avatar name={name} src={profile.avatar_url} size="lg" className="size-20 border border-qb-line bg-qb-hover text-qb-h3 text-qb-ink qb-tablet:size-[79px]" />
-        </span>
-        <h1 className="mt-3 flex items-center gap-1.5 text-qb-h5 font-medium tracking-normal text-qb-ink qb-tablet:mt-[14px] qb-tablet:text-qb-h4">
-          <span dir="auto">{name}</span>
-          {isVerifiedSeller(profile) ? <VerifiedMark /> : null}
-        </h1>
-        <p className="mt-3 font-qb-label text-qb-caption font-medium text-qb-ink-subtle qb-tablet:text-qb-body">
-          {t(`users.profile.seller_type.${profile.account_type}`)}
-        </p>
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <Avatar
+            name={name}
+            src={profile.avatar_url}
+            decorative
+            className="size-[79px] border border-qb-line bg-qb-avatar text-qb-h3 text-qb-ink"
+          />
+          <h1 className="flex items-center gap-1.5 text-qb-h3 font-medium tracking-normal text-qb-ink">
+            <span dir="auto">{name}</span>
+            {isVerifiedSeller(profile) ? <VerifiedMark className="size-[22px]" /> : null}
+          </h1>
+          <p className="font-qb-label text-qb-tiny font-medium text-qb-ink-label">{t(`users.profile.seller_type.${profile.account_type}`)}</p>
+        </div>
+        {actions ? <div className="[display:grid] w-full grid-cols-2 gap-[11px]">{actions}</div> : null}
       </div>
-
-      {actions ? (
-        <div className="mt-[22px] [display:grid] grid-cols-2 gap-3 qb-tablet:gap-5 qb-desktop:mt-5 qb-desktop:gap-[11px]">{actions}</div>
-      ) : null}
       {secondaryActions ? <div className="mt-3 flex flex-wrap items-center justify-center gap-1">{secondaryActions}</div> : null}
 
-      <section aria-labelledby={infoTitleId} className="mt-6 qb-desktop:mt-[29px]">
-        <h2 id={infoTitleId} className="text-qb-body-lg font-medium tracking-normal text-qb-ink">
+      <section aria-labelledby={infoTitleId} className="my-6 border-t border-qb-line pt-6">
+        <h2 id={infoTitleId} className={sectionTitle}>
           {t('users.profile.info')}
         </h2>
-        <dl className="mt-[18px] flex flex-col gap-3.5 text-qb-body">
-          <InfoRow icon={Users} label={t('users.profile.followers')} value={formatNumber(profile.followers_count, locale)} />
-          <InfoRow icon={CalendarDays} label={t('users.profile.member_since')} value={formatAdDate(profile.joined_at, locale)} />
-          <InfoRow icon={LayoutGrid} label={t('users.profile.ads_number')} value={formatNumber(profile.ads_count, locale)} />
+        <dl className="flex flex-col gap-3.5 text-qb-body">
+          <InfoRow icon={UserPlus} label={t('users.profile.followers')} value={formatNumber(profile.followers_count, locale)} />
+          <InfoRow icon={CalendarDays} label={t('users.profile.member_since')} value={formatDayMonthYear(profile.joined_at, locale)} />
+          <InfoRow icon={Tag} label={t('users.profile.ads_number')} value={formatNumber(profile.ads_count, locale)} />
         </dl>
       </section>
 
       {highlights.length ? (
-        <section aria-labelledby={highlightsTitleId} className="mt-7 border-t border-qb-line pt-7 qb-desktop:mt-9 qb-desktop:pt-8">
-          <h2 id={highlightsTitleId} className="text-qb-body-lg font-medium tracking-normal text-qb-ink">
+        <section aria-labelledby={highlightsTitleId} className="border-t border-qb-line pt-6">
+          <h2 id={highlightsTitleId} className={sectionTitle}>
             {t('users.profile.highlights')}
           </h2>
-          <ul className="mt-4 flex flex-wrap gap-2 qb-tablet:gap-3">
+          <ul className="flex flex-wrap gap-3">
             {highlights.map((item) => (
               <li
                 key={item.label}
-                className="flex h-9 items-center gap-1.5 rounded-qb-sm bg-qb-brand-soft px-3.5 text-qb-label text-qb-brand-on-soft qb-tablet:text-qb-body"
+                className="flex items-center gap-[5px] rounded-qb-sm bg-qb-brand-faint px-4 py-2 text-qb-body-sm text-qb-brand"
               >
-                <Icon icon={item.icon} size="sm" />
+                <Icon icon={item.icon} size="sm" strokeWidth={1.7} />
                 {item.label}
               </li>
             ))}
@@ -111,8 +109,8 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
 function InfoRow({ icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <dt className="flex items-center gap-1.5 text-qb-ink-subtle">
-        <Icon icon={icon} size="sm" />
+      <dt className="flex items-center gap-1.5 text-qb-ink-label">
+        <Icon icon={icon} size="sm" strokeWidth={1.7} />
         {label}
       </dt>
       <dd className="font-medium text-qb-ink">{value}</dd>

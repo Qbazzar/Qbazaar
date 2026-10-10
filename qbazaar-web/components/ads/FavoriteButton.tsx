@@ -6,13 +6,13 @@
  *
  * - Live state comes from `useFavoritesStore` so every instance of this button
  *   on the page stays in sync after a single optimistic toggle.
- * - Unauthenticated clicks redirect to `/login?next={current}` instead of
+ * - Unauthenticated clicks redirect to `/login?from={current}` instead of
  *   firing the mutation — the heart only fills for signed-in users.
  * - The mutation is optimistic at the store level; the success path simply
  *   reconciles with the server, and the error path rolls back.
  */
 import { useMemo } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { HeartIcon } from 'lucide-react';
 
@@ -20,7 +20,9 @@ import { useFavoritesStore } from '@/store/favorites';
 import { useToggleFavoriteMutation } from '@/lib/queries/favorites';
 import { useAuthStore } from '@/store/auth';
 import { ApiClientError } from '@/lib/api/auth';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { currentLocationPath } from '@/lib/navigation/safe-return-to';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -53,12 +55,13 @@ export function FavoriteButton({
   adTitle,
 }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
 
   const storeHasId = useFavoritesStore((s) => s.ids.has(adId));
-  // Until the store has been hydrated (no entry yet), we fall back to the
-  // server-provided `initialFavorited` so the heart doesn't flicker.
-  const favorited = storeHasId || initialFavorited;
+  const storeKnown = useFavoritesStore((s) => s.known.has(adId));
+  // Until the store has heard about this ad, the server-provided
+  // `initialFavorited` keeps the heart from flickering. Once it has, the store
+  // wins, so an unsave on the wishlist shows at once and a rollback is visible.
+  const favorited = storeKnown ? storeHasId : initialFavorited;
 
   const isAuthenticated = useAuthStore((s) => Boolean(s.user && s.accessToken));
   const isHydrated = useAuthStore((s) => s.isHydrated);
@@ -81,8 +84,7 @@ export function FavoriteButton({
       // just because the access token hasn't rehydrated yet.
       if (isHydrated && !isAuthenticated) {
         toast.info(t('favorites.sign_in_required'));
-        const next = encodeURIComponent(pathname || '/');
-        router.push(`/login?next=${next}`);
+        router.push(`/login?from=${encodeURIComponent(currentLocationPath())}`);
         return;
       }
 
@@ -100,7 +102,7 @@ export function FavoriteButton({
         },
       });
     };
-  }, [adId, isAuthenticated, isHydrated, pathname, router, toggleMutation]);
+  }, [adId, isAuthenticated, isHydrated, router, toggleMutation]);
 
   return (
     <button
@@ -111,20 +113,18 @@ export function FavoriteButton({
       title={label}
       disabled={toggleMutation.isPending}
       className={cn(
-        'inline-flex items-center justify-center rounded-full bg-white/90 text-ink-700 shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition-colors',
-        'hover:bg-white hover:text-coral focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-coral focus-visible:ring-offset-2',
+        // The reference's white round heart (0 4px 30px shadow); callers size and place it.
+        'inline-flex items-center justify-center rounded-full bg-qb-surface text-qb-ink-muted shadow-qb-raised transition-colors hover:text-qb-brand',
         'disabled:cursor-progress disabled:opacity-70',
-        withLabel ? 'gap-2 px-3 py-2 text-sm' : SIZE_CLS[size],
-        favorited && 'text-coral',
+        focusRing,
+        withLabel ? 'gap-2 px-3 py-2 text-qb-caption' : SIZE_CLS[size],
         className,
       )}
     >
+      {/* A saved ad's heart is filled with the brand colour (product.html favFill). */}
       <HeartIcon
         aria-hidden="true"
-        className={cn(
-          'transition-colors',
-          favorited ? 'fill-coral text-coral' : 'fill-transparent',
-        )}
+        className={cn('transition-colors', favorited ? 'fill-qb-brand text-qb-brand' : 'fill-transparent')}
       />
       {withLabel ? <span className="font-medium">{label}</span> : null}
     </button>
