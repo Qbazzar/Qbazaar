@@ -11,6 +11,7 @@ describe('design tokens', () => {
     ['text', QB_TOKEN_NAMES.text],
     ['radius', QB_TOKEN_NAMES.radius],
     ['shadow', QB_TOKEN_NAMES.shadow],
+    ['spacing', QB_TOKEN_NAMES.spacing],
   ] as const)('declares every %s token tailwind-merge is told about', (namespace, names) => {
     for (const name of names) {
       expect(tokensCss).toContain(`--${namespace}-${name}:`);
@@ -39,6 +40,11 @@ const DESIGN_COLOURS = {
   'icon-accordion': '#aaaaaa',
   breadcrumb: '#a4adba',
   'field-border': '#ededed',
+  'radio-ring': '#e0e0e0',
+  radio: '#cbcbcb',
+  'ink-meta': '#999999',
+  'toast-mint': '#eafff7',
+  'toast-mint-ink': '#07bd74',
   success: '#1bad07',
   danger: '#e64646',
   info: '#2b6fdb',
@@ -59,5 +65,10 @@ describe('cn with design tokens', () => {
     expect(cn('text-qb-body', 'text-qb-h2')).toBe('text-qb-h2');
     expect(cn('rounded-qb-md', 'rounded-qb-xl')).toBe('rounded-qb-xl');
     expect(cn('shadow-qb-card', 'shadow-qb-hover')).toBe('shadow-qb-hover');
+    expect(cn('shadow-qb-card', 'shadow-qb-modal')).toBe('shadow-qb-modal');
+  });
+
+  it('lets a later padding replace the site gutter', () => {
+    expect(cn('px-qb-gutter', 'px-5 qb-desktop:px-qb-gutter')).toBe('px-5 qb-desktop:px-qb-gutter');
   });
 });

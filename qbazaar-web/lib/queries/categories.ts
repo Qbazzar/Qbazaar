@@ -41,13 +41,15 @@ export const categoryKeys = {
 /**
  * Fetch the full category tree (categories + nested children) and mirror
  * it into the Zustand store so breadcrumbs and lookups can read it.
+ * `enabled: false` waits until the tree is about to be needed.
  */
-export function useCategoryTreeQuery(): UseQueryResult<CategoryNode[]> {
+export function useCategoryTreeQuery({ enabled = true }: { enabled?: boolean } = {}): UseQueryResult<CategoryNode[]> {
   const setTree = useCategoriesStore((s) => s.setTree);
   const query = useQuery({
     queryKey: categoryKeys.tree(),
     queryFn: getCategoryTree,
     staleTime: HOUR,
+    enabled,
   });
 
   useEffect(() => {

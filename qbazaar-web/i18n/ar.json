@@ -1099,7 +1099,11 @@
       "location": "الموقع",
       "distance": "المسافة",
       "submit": "بحث",
-      "unknown_place": "اختر مكاناً من الاقتراحات"
+      "unknown_place": "اختر مكاناً من الاقتراحات",
+      "all_categories": "كل الأقسام",
+      "all_qatar": "كل قطر",
+      "distance_km": "+{km} كم",
+      "distance_needs_place": "اختر موقعاً للبحث حسب المسافة"
     },
     "places": {
       "title_start": "استكشف الأماكن",
@@ -2316,7 +2320,8 @@
     },
     "rail": {
       "previous": "السابق",
-      "next": "التالي"
+      "next": "التالي",
+      "go_to": "انتقل إلى الشريحة {n}"
     },
     "toasts": {
       "region": "الإشعارات"
@@ -2341,7 +2346,13 @@
       "home": "الرئيسية",
       "categories": "الأقسام",
       "my_ads": "إعلاناتي",
-      "account": "إعدادات الحساب"
+      "account": "إعدادات الحساب",
+      "favorites": "المفضلة",
+      "saved_search": "البحث المحفوظ",
+      "save_search": "البحث المحفوظ",
+      "sales_overview": "نظرة على المبيعات",
+      "log_out": "تسجيل الخروج",
+      "account_menu": "قائمة الحساب"
     },
     "footer": {
       "tagline": "نربط العلامات التجارية بجمهورها عبر رسائل وتفاعل مدروس",

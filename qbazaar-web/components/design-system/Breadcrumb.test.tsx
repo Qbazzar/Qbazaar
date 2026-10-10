@@ -25,25 +25,39 @@ describe('Breadcrumb', () => {
   it('marks the last item as the current page', () => {
     render(<Breadcrumb items={items} />);
 
-    expect(screen.getByText('Cars')).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByText('Cars').closest('[aria-current]')).toHaveAttribute('aria-current', 'page');
     expect(screen.queryByRole('link', { name: 'Cars' })).toBeNull();
   });
 
-  it('uses mirrored, decorative separators', () => {
-    const { container } = render(<Breadcrumb items={items} />);
-    const separators = container.querySelectorAll('svg');
-
-    expect(separators).toHaveLength(2);
-    separators.forEach((svg) => {
-      expect(svg).toHaveAttribute('aria-hidden', 'true');
-      expect(svg).toHaveClass('rtl:-scale-x-100');
-    });
-  });
-
-  it('labels the landmark in Arabic', () => {
-    setClientLocale('ar');
+  it('turns the links orange under the pointer, as .qb-nav:hover does', () => {
     render(<Breadcrumb items={items} />);
 
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveClass('text-qb-breadcrumb', 'hover:text-qb-brand');
+  });
+
+  it('separates the items with a decorative ">" glyph that turns round in Arabic', () => {
+    const { container } = render(<Breadcrumb items={items} />);
+    const separators = container.querySelectorAll('[aria-hidden="true"]');
+
+    expect(separators).toHaveLength(2);
+    separators.forEach((separator) => {
+      expect(separator).toHaveTextContent('>');
+      expect(separator).toHaveClass('text-qb-breadcrumb', 'rtl:-scale-x-100');
+    });
+    expect(container.querySelector('svg')).toBeNull();
+  });
+
+  it('keeps the trail on one scrolling line on phones only', () => {
+    const { container } = render(<Breadcrumb items={items} />);
+
+    expect(container.querySelector('ol')).toHaveClass('flex-wrap', 'max-qb-tablet:flex-nowrap', 'max-qb-tablet:overflow-x-auto');
+  });
+
+  it('isolates every label, so a Latin label keeps its order in an Arabic trail', () => {
+    setClientLocale('ar');
+    const { container } = render(<Breadcrumb items={[{ label: 'الرئيسية', href: '/' }, { label: '24/7 plumber' }]} />);
+
     expect(screen.getByRole('navigation', { name: 'مسار التنقل' })).toBeInTheDocument();
+    expect([...container.querySelectorAll('bdi')].map((bdi) => bdi.textContent)).toEqual(['الرئيسية', '24/7 plumber']);
   });
 });

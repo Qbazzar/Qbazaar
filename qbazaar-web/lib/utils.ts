@@ -4,7 +4,8 @@ import { extendTailwindMerge } from "tailwind-merge"
 /**
  * Names of the `qb-` design tokens (styles/design-tokens.css) whose utilities
  * tailwind-merge cannot classify on its own: without them `text-qb-body` would
- * be read as a text colour and dropped next to `text-qb-ink`.
+ * be read as a text colour and dropped next to `text-qb-ink`, and a later
+ * `px-5` would not replace `px-qb-gutter`.
  */
 export const QB_TOKEN_NAMES = {
   text: [
@@ -15,7 +16,10 @@ export const QB_TOKEN_NAMES = {
   shadow: [
     "qb-card", "qb-raised", "qb-soft", "qb-hover", "qb-brand", "qb-header",
     "qb-popover", "qb-float", "qb-control", "qb-lift", "qb-drawer",
+    "qb-dropdown", "qb-menu", "qb-panel", "qb-langpop", "qb-toast",
+    "qb-modal", "qb-logo", "qb-sheet", "qb-search", "qb-brand-tight",
   ],
+  spacing: ["qb-gutter"],
 } as const
 
 const twMerge = extendTailwindMerge({
@@ -24,6 +28,7 @@ const twMerge = extendTailwindMerge({
       text: [...QB_TOKEN_NAMES.text],
       radius: [...QB_TOKEN_NAMES.radius],
       shadow: [...QB_TOKEN_NAMES.shadow],
+      spacing: [...QB_TOKEN_NAMES.spacing],
     },
   },
 })

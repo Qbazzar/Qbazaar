@@ -53,7 +53,7 @@ describe('MobileMenu', () => {
     expect(screen.getByRole('link', { name: 'Login' })).toHaveAttribute('href', '/login');
     expect(screen.queryByRole('link', { name: 'Add Ads' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'My Ads' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Sign out' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Log Out' })).toBeNull();
   });
 
   it('gives members their pages and the post-ad action', async () => {
@@ -74,7 +74,7 @@ describe('MobileMenu', () => {
     render(<MobileMenu signedIn />);
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }));
-    await user.click(await screen.findByRole('button', { name: 'Sign out' }));
+    await user.click(await screen.findByRole('button', { name: 'Log Out' }));
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith('/login'));
     expect(logout).toHaveBeenCalledOnce();

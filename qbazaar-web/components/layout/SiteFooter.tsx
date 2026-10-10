@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ChevronDown, Copyright } from 'lucide-react';
+import { Copyright } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
@@ -60,6 +60,18 @@ function footerColumns(): FooterColumn[] {
     },
   ];
 }
+
+/**
+ * The links slide open and shut (0.28 s), as the reference animates their
+ * max-height. ::details-content is the box a closed <details> hides; browsers
+ * without it open the column at once.
+ */
+const accordionBody =
+  '[&::details-content]:max-h-0 [&::details-content]:overflow-hidden [&::details-content]:transition-[max-height,content-visibility] [&::details-content]:duration-[280ms] [&::details-content]:ease-[ease] [&::details-content]:[transition-behavior:allow-discrete] [&[open]::details-content]:max-h-[640px] motion-reduce:[&::details-content]:transition-none';
+
+/** The reference's caret: an 8 px corner of two #aaa borders, turned down, and up while open. */
+const accordionCaret =
+  'me-1.5 mb-[5px] size-2 shrink-0 rotate-45 border-r-2 border-b-2 border-qb-icon-accordion transition-transform duration-200 group-open:mt-[5px] group-open:mb-0 group-open:-rotate-135 motion-reduce:transition-none';
 
 const linkClass = cn('rounded-qb-xs text-qb-body-sm font-medium text-qb-ink-secondary hover:text-qb-brand', focusRing);
 
@@ -135,10 +147,10 @@ function FooterColumnBlock({ column }: { column: FooterColumn }) {
         <h2 className="mb-5 text-qb-h3 font-semibold tracking-normal">{column.title}</h2>
         {links}
       </div>
-      <details className="group border-b border-qb-divider first-of-type:border-t qb-desktop:hidden">
+      <details className={cn('group border-b border-qb-divider first-of-type:border-t qb-desktop:hidden', accordionBody)}>
         <summary className={cn('flex cursor-pointer list-none items-center justify-between px-0.5 py-4 text-qb-body font-semibold [&::-webkit-details-marker]:hidden', focusRing)}>
           {column.title}
-          <Icon icon={ChevronDown} className="text-qb-icon-accordion transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+          <span aria-hidden="true" className={accordionCaret} />
         </summary>
         <div className="pb-3.5">{links}</div>
       </details>

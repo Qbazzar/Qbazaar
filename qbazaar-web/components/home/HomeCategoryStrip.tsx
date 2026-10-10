@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { CircleAlert } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { cardHover } from '@/components/design-system/card-hover';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
@@ -90,7 +91,8 @@ export function HomeCategoryStrip({ initialFeed }: { initialFeed?: HomeFeed }) {
             href={`/c/${cat.slug}`}
             className={cn(
               tile,
-              'h-full transition-[box-shadow,translate] duration-200 hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+              'h-full',
+              cardHover,
               focusRing,
             )}
           >

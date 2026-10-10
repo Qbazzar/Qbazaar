@@ -28,12 +28,13 @@
   --color-qb-placeholder: #bfbfbf;
   --color-qb-icon: #231f20;
   --color-qb-icon-muted: #a19f9f; /* chevrons in the menu drawer */
-  --color-qb-icon-faint: #bdbdbd; /* hero search field icons */
+  --color-qb-icon-faint: #bdbdbd; /* hero search field icons, labels and placeholders */
+  --color-qb-icon-search: #828282; /* hero search magnifier (Figma 728:45181) */
   --color-qb-icon-accordion: #aaaaaa; /* footer accordion chevrons */
+  --color-qb-ink-caption: #aaaaaa; /* the menu drawer's MENU caption */
   --color-qb-navy: #000640;
   --color-qb-black: #000000;
   --color-qb-breadcrumb: #a4adba;
-  --color-qb-breadcrumb-separator: #cfd1d5;
 
   /* Surfaces and lines */
   --color-qb-page: #f9f9f9;
@@ -47,6 +48,76 @@
   --color-qb-divider: rgb(0 0 0 / 0.09);
   --color-qb-overlay: rgb(0 0 0 / 0.3);
   --color-qb-overlay-strong: rgb(20 20 20 / 0.45);
+
+  /* Dropdown panels (the hero selects, selects.js of the reference) */
+  --color-qb-menu-heading: #575555;
+  --color-qb-menu-item: #787878;
+  --color-qb-menu-item-active: #3c3c3c;
+  --color-qb-menu-active: #f0f0f0;
+  --color-qb-menu-divider: #f3f3f3;
+  --color-qb-menu-caret: #a0a0a0;
+
+  /* Catalog controls (category.html, parent-category.html) */
+  --color-qb-option-ink: #1f1f1f; /* dropdown rows (259:5246, 264:4818) */
+  --color-qb-option-active: #efefef; /* the pressed or chosen row */
+  --color-qb-search-hint: #a9a9a9; /* search row of the select panel (264:4818) */
+  --color-qb-search-icon: #828282;
+  --color-qb-select-divider: #dbdbdb;
+  --color-qb-scrollbar: #cfcfcf;
+  --color-qb-radio-ring: #e0e0e0; /* filter radios (245:4549) and the desktop language panel */
+  --color-qb-radio-ring-hover: #636363;
+  --color-qb-range-track: #ffebe2; /* price slider track */
+  --color-qb-saved: #00c35b; /* "Saved" state of the Save Search pill (256:5238) */
+  --color-qb-saved-soft: #effff6;
+  --color-qb-tile-name: #555555; /* category tile names (621:27193, 18:912, 623:28688) */
+  --color-qb-sheet-title: #454545; /* "Advanced Filters" title of the filter sheet (618:26974) */
+
+  /* Product, seller, companies and wishlist pages (product.html, seller-*.html,
+     companies.html, users.html, wishlist.html) */
+  --color-qb-whatsapp: #25b764; /* share dialog channels */
+  --color-qb-facebook: #2b59c9;
+  --color-qb-x: #141414;
+  --color-qb-radio: #cbcbcb; /* empty radio ring of the report dialog */
+  --color-qb-tick: #00c35b; /* "Features & Extras": tick circle and label */
+  --color-qb-ink-feature: #999999;
+  --color-qb-ink-label: #909090; /* seller profile card: labels, avatar tile, highlight chips */
+  --color-qb-avatar: #fcfcfc;
+  --color-qb-brand-faint: #fff3ef;
+  --color-qb-ink-note: #8c8c8c; /* Following / Followers empty state */
+  --color-qb-band: #e0e0e0; /* company page: band behind the cover, logo initials */
+  --color-qb-ink-logo: #787878;
+  --color-qb-tile-blue-soft: #ebeeff; /* companies directory logo tints */
+  --color-qb-tile-cyan: #17a2d6;
+  --color-qb-tile-cyan-soft: #e0f6ff;
+  --color-qb-tile-red: #e83f3f;
+  --color-qb-tile-red-soft: #ffe8e8;
+
+  /* Sell pages (add-ads.html, preview.html, publish.html, checkout.html and
+     the buy-now, offer, orders, wallet and promotion frames) */
+  --color-qb-ink-heading: #454545; /* card headings, "How its work" (659:58417) */
+  --color-qb-brand-faded: #facfbc; /* disabled buyer buttons of preview.html */
+  --color-qb-fill-disabled: #f0f0f0;
+  --color-qb-promo-active: #fff4ef; /* promotion rows of add-ads.html and publish.html */
+  --color-qb-check-ring: #cbcbcb;
+  --color-qb-check-ring-hover: #636363; /* CheckBox 367:15366, hover */
+  --color-qb-row-divider: #f0f0f0;
+  --color-qb-ink-optional: #909090; /* "(optional)", the seller's "Member since" */
+  --color-qb-ink-step: #5a5a5a; /* "How it works" steps */
+  --color-qb-ink-asking: #6a6767; /* "Asking Price" at 1440 */
+  --color-qb-ink-meta: #999999; /* the item's place, table sub lines, stat labels (502:22401) */
+  --color-qb-ink-table: #8e8e8e; /* sales and wallet tables: headers, dates, methods (502:21437) */
+  --color-qb-ink-amount: #221122;
+  --color-qb-ink-panel: #424242; /* the wallet panel title */
+  --color-qb-ink-dialog: #9a9a9a; /* checkout result dialog body (buynow.js) */
+  --color-qb-required: #ff0000; /* required-field stars of the checkout address form (689:33725) */
+  --color-qb-icon-action: #6c6c6c; /* phone "Your Ad" action icons (638:36533) */
+
+  /* The mint confirmation toast (401:13703, .qb-toast-design of chat.js and
+     cropper.js). The sell pages call the same two colours mint and mint-soft. */
+  --color-qb-toast-mint: #eafff7;
+  --color-qb-toast-mint-ink: #07bd74;
+  --color-qb-mint: #07bd74;
+  --color-qb-mint-soft: #eafff7;
 
   /* Status */
   --color-qb-success: #1bad07;
@@ -101,10 +172,23 @@
   --shadow-qb-brand: 0 4px 40px 0 rgb(243 128 87 / 0.2);
   --shadow-qb-header: 0 2px 12px 0 rgb(161 161 161 / 0.18);
   --shadow-qb-popover: 0 16px 40px 0 rgb(0 0 0 / 0.14);
+  --shadow-qb-langpop: 0 16px 40px 0 rgb(0 0 0 / 0.18); /* phone and tablet language popup (mobilemenu.js .qb-langpop) */
+  /* Dropdowns: the hero selects; the account menu; the desktop language panel (728:45875) */
+  --shadow-qb-dropdown: 0 18px 44px 0 rgb(0 0 0 / 0.14);
+  --shadow-qb-menu: 0 16px 44px 0 rgb(0 0 0 / 0.14);
+  --shadow-qb-panel: 0 4px 25px 0 rgb(161 161 161 / 0.1);
   --shadow-qb-float: 0 4px 20px 0 rgb(161 161 161 / 0.1);
   --shadow-qb-control: 0 2px 10px 0 rgb(0 0 0 / 0.06);
   --shadow-qb-lift: 0 6px 18px 0 rgb(0 0 0 / 0.14);
   --shadow-qb-drawer: 0 0 40px 0 rgb(0 0 0 / 0.2);
+  --shadow-qb-toast: 0 4px 40px 0 rgb(161 161 161 / 0.2);
+  /* Centred dialogs (share, report), the company logo over its card, the cards
+     that slide up as bottom sheets and the companies directory search bar */
+  --shadow-qb-modal: 0 20px 60px 0 rgb(0 0 0 / 0.3);
+  --shadow-qb-logo: 0 4px 25px 0 rgb(188 188 188 / 0.3);
+  --shadow-qb-sheet: 0 -10px 44px 0 rgb(0 0 0 / 0.22);
+  --shadow-qb-search: 0 4px 40px 0 rgb(161 161 161 / 0.14);
+  --shadow-qb-brand-tight: 0 6px 16px 0 rgb(243 128 87 / 0.2); /* the add-ads "Select" button */
 
   /* Layout: page gutter (40 px at 1440, 30 at 744, 16 at 390, fluid between)
      and the 1440 frame's content width */
