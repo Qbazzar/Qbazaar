@@ -9,7 +9,7 @@ import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
-import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
+import { CheckoutPanel, panelPadding } from '@/components/orders/CheckoutPanel';
 import { ConfirmDialog } from '@/components/orders/ConfirmDialog';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
 import { FormError } from '@/components/orders/NoteField';
@@ -20,6 +20,7 @@ import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/e
 import { formatIbanForDisplay, isValidIban, normalizeIban } from '@/lib/orders/iban';
 import { LIMITS, validateText } from '@/lib/orders/validation';
 import { useAddBankAccountMutation, useBankAccountsQuery, useDeleteBankAccountMutation } from '@/lib/queries/wallet';
+import { cn } from '@/lib/utils';
 
 import { walletTrail } from './wallet-trail';
 
@@ -29,13 +30,13 @@ export function BankAccountsView() {
 
   return (
     <AccountPageFrame breadcrumb={walletTrail(t('orders.bank.title'))} title={t('orders.bank.title')} description={t('orders.bank.subtitle')}>
-      <CheckoutPanel title={t('orders.bank.saved_title')} titleId="bank-accounts">
+      <CheckoutPanel title={t('orders.bank.saved_title')} titleId="bank-accounts" layout="flush">
         {query.isPending ? (
           <PageState kind="loading" />
         ) : query.isError ? (
           <PageState kind="error" onRetry={() => query.refetch()} />
         ) : query.data.length === 0 ? (
-          <p className="text-qb-body text-qb-ink-secondary">{t('orders.bank.empty')}</p>
+          <p className={cn(panelPadding, 'text-qb-body text-qb-ink-secondary')}>{t('orders.bank.empty')}</p>
         ) : (
           <ul className="flex flex-col">
             {query.data.map((account) => (
@@ -65,15 +66,15 @@ function BankAccountRow({ account }: { account: BankAccount }) {
   };
 
   return (
-    <li className="flex items-center gap-4 border-b border-qb-line py-4 first:pt-0 last:border-b-0 last:pb-0">
+    <li className="flex items-center gap-4 border-b border-qb-line px-4 py-4 last:border-b-0 qb-tablet:px-6 qb-desktop:px-8 qb-desktop:py-5">
       <span
         aria-hidden="true"
-        className="flex size-14 shrink-0 items-center justify-center rounded-qb-lg bg-qb-brand-soft text-qb-brand [&_svg]:size-6"
+        className="flex size-[60px] shrink-0 items-center justify-center rounded-qb-md bg-qb-brand-soft text-qb-brand [&_svg]:size-6"
       >
         <Landmark />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-2 text-qb-body-lg font-medium text-qb-ink">
+        <p className="flex flex-wrap items-center gap-2 text-qb-body-lg font-semibold text-qb-ink">
           <span dir="auto" className="truncate">
             {account.holder_name}
           </span>
@@ -83,7 +84,7 @@ function BankAccountRow({ account }: { account: BankAccount }) {
             </Badge>
           ) : null}
         </p>
-        <p className="mt-1 text-qb-caption text-qb-ink-subtle">
+        <p className="mt-1 text-qb-body-sm text-qb-ink-subtle">
           <span dir="ltr" className="font-medium tracking-wide">
             {account.iban_masked}
           </span>
@@ -171,7 +172,7 @@ function AddBankAccountForm({ isFirst }: { isFirst: boolean }) {
   };
 
   return (
-    <CheckoutPanel title={t('orders.bank.add_title')} titleId="bank-add">
+    <CheckoutPanel title={t('orders.bank.add_title')} titleId="bank-add" layout="list">
       <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div className="[display:grid] grid-cols-1 gap-4 qb-tablet:grid-cols-2">
           <Field label={t('orders.bank.holder')} error={errors.holder} required>

@@ -1,3 +1,4 @@
+import type { ImgHTMLAttributes } from 'react';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -5,10 +6,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace: vi.fn() }), usePathname: () => '/checkout/order-1' }));
 vi.mock('@/lib/api/orders', () => ({ getCheckout: vi.fn(), submitCheckout: vi.fn() }));
+vi.mock('@/lib/api/ads', () => ({ getAd: vi.fn() }));
+vi.mock('next/image', () => ({
+  default: ({ fill, ...props }: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean }) => <img data-fill={fill} {...props} />,
+}));
 
+import { getAd } from '@/lib/api/ads';
 import { ApiClientError } from '@/lib/api/auth';
 import { getCheckout, submitCheckout } from '@/lib/api/orders';
-import type { User } from '@/lib/api/types';
+import type { Ad, User } from '@/lib/api/types';
 import { setClientLocale } from '@/lib/i18n/locale';
 import { buildCheckout, buildOrder } from '@/lib/orders/test-fixtures';
 import { useAuthStore } from '@/store/auth';
@@ -41,9 +47,32 @@ beforeEach(() => {
     isHydrated: true,
   });
   vi.mocked(submitCheckout).mockResolvedValue(buildOrder({ id: 'order-1', status: 'awaiting_handover' }));
+  vi.mocked(getAd).mockRejectedValue(new ApiClientError({ status: 404, code: 'AD_NOT_FOUND', messageKey: 'x', message: 'Not found' }));
 });
 
 describe('CheckoutView', () => {
+  it("shows the item's photo and seller in the summary", async () => {
+    vi.mocked(getCheckout).mockResolvedValue(buildCheckout({ order: buildOrder({ id: 'order-1' }) }));
+    vi.mocked(getAd).mockResolvedValue({
+      id: '01m48bam2zb1w4zm15wjes1esj',
+      images: [{ sizes: { thumbnail: 'https://cdn.test/thumb.webp', medium: 'https://cdn.test/medium.webp' } }],
+      user: { full_name: 'Mark Toro', business_name: null },
+    } as unknown as Ad);
+    const { container } = renderWithClient(<CheckoutView orderId="order-1" />);
+
+    expect(await screen.findByText('Sold by ⁨Mark Toro⁩')).toBeInTheDocument();
+    expect(container.querySelector('img[src="https://cdn.test/thumb.webp"]')).not.toBeNull();
+    expect(getAd).toHaveBeenCalledWith('01m48bam2zb1w4zm15wjes1esj', 'en');
+  });
+
+  it('falls back to the order number when the ad is gone', async () => {
+    vi.mocked(getCheckout).mockResolvedValue(buildCheckout({ order: buildOrder({ id: 'order-1' }) }));
+    renderWithClient(<CheckoutView orderId="order-1" />);
+
+    expect(await screen.findByText(/^Order #/)).toBeInTheDocument();
+    expect(screen.queryByText(/Sold by/)).not.toBeInTheDocument();
+  });
+
   it('confirms a pickup order paid in cash and keeps the confirmation once the order moves on', async () => {
     vi.mocked(getCheckout)
       .mockResolvedValueOnce(buildCheckout({ order: buildOrder({ id: 'order-1' }) }))
@@ -112,13 +141,53 @@ describe('CheckoutView', () => {
     );
     renderWithClient(<CheckoutView orderId="order-1" />);
 
-    expect(await screen.findByRole('radio', { name: /Home · Hessa Al Mulla/ })).toBeChecked();
+    // The chosen address shows as text with an Edit link (682:32513).
+    const panel = (await screen.findByRole('heading', { name: 'Shipping address' })).closest('section')!;
+    expect(within(panel).getByText('Al Sadd Street', { exact: false })).toBeInTheDocument();
+    expect(within(panel).queryByRole('radio')).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Confirm order' }));
 
     await waitFor(() =>
       expect(submitCheckout).toHaveBeenCalledWith(
         'order-1',
         { fulfillment: 'delivery', payment_method: 'cash', address_id: 'addr-1' },
+        expect.any(String),
+      ),
+    );
+  });
+
+  it('edits the address: Cancel goes back, Save Address checks and keeps a typed one', async () => {
+    vi.mocked(getCheckout).mockResolvedValue(
+      buildCheckout({ order: buildOrder({ id: 'order-1' }), fulfillment_options: ['delivery'], saved_addresses: [savedAddress] }),
+    );
+    renderWithClient(<CheckoutView orderId="order-1" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    expect(screen.getByRole('radio', { name: /Home · Hessa Al Mulla/ })).toBeChecked();
+    await userEvent.click(screen.getByRole('radio', { name: /Add a new address/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('radio', { name: /Add a new address/ })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    await userEvent.click(screen.getByRole('radio', { name: /Add a new address/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save Address' }));
+    expect((await screen.findAllByText('This field is required.')).length).toBe(3);
+
+    await userEvent.click(screen.getByLabelText(/^Street/));
+    await userEvent.paste('Corniche Street');
+    await userEvent.click(screen.getByLabelText(/Building or house number/));
+    await userEvent.paste('7');
+    await userEvent.click(screen.getByLabelText(/^City/));
+    await userEvent.paste('Doha');
+    await userEvent.click(screen.getByRole('button', { name: 'Save Address' }));
+    expect(screen.getByText('7, Corniche Street')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm order' }));
+    await waitFor(() =>
+      expect(submitCheckout).toHaveBeenCalledWith(
+        'order-1',
+        expect.objectContaining({ fulfillment: 'delivery', address: expect.objectContaining({ street: 'Corniche Street', house_number: '7' }) }),
         expect.any(String),
       ),
     );

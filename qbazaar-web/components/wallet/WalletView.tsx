@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { AlertTriangle, ArrowUpRight, CreditCard, Landmark, Receipt, Wallet as WalletIcon } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Notice } from '@/components/design-system/Notice';
 import { StatTile } from '@/components/design-system/StatTile';
 import { AccountPageHeader, HeaderButtonLabel, headerButton } from '@/components/orders/AccountPageHeader';
@@ -16,8 +17,17 @@ import { cn } from '@/lib/utils';
 
 import { StatementTable } from './StatementTable';
 
+import '@/styles/design-tokens-sell.css';
+
 /** Share of the debt ceiling from which the wallet warns before orders are blocked. */
 const WARN_AT_PERCENT = BigInt(60);
+
+/**
+ * The tile labels are #999 (502:22401, 563:31406) and #A4ADBA on phones
+ * (613:31879). StatTile draws its label in ink-subtle, so the tiles remap
+ * that token until StatTile takes the design's colour itself.
+ */
+const walletTile = '[--color-qb-ink-subtle:var(--color-qb-ink-meta)] max-qb-tablet:[--color-qb-ink-subtle:var(--color-qb-breadcrumb)]';
 
 /** `/account/wallet`: balance, commission owed, what can be withdrawn and the statement (502:22401). */
 export function WalletView() {
@@ -32,9 +42,10 @@ export function WalletView() {
           <nav aria-label={t('orders.wallet.actions')} className="flex flex-wrap gap-2">
             <Link href="/account/wallet/bank-accounts" className={cn(buttonVariants({ variant: 'outline' }), headerButton)}>
               <CreditCard aria-hidden="true" />
-              <HeaderButtonLabel>{t('orders.wallet.payout_accounts')}</HeaderButtonLabel>
+              <HeaderButtonLabel>{t('orders.wallet.payment_method')}</HeaderButtonLabel>
             </Link>
-            <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), headerButton)}>
+            {/* Under 1001 px Withdraw Funds moves into the Transaction History card (563:31406, 613:31879). */}
+            <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), headerButton, 'hidden qb-desktop:inline-flex')}>
               <ArrowUpRight aria-hidden="true" />
               <HeaderButtonLabel>{t('orders.wallet.withdraw')}</HeaderButtonLabel>
             </Link>
@@ -54,39 +65,47 @@ export function WalletView() {
               label={t('orders.wallet.balance')}
               value={formatMoney(query.data.available_balance, query.data.currency)}
               icon={<WalletIcon />}
+              className={walletTile}
             />
             <StatTile
               label={t('orders.wallet.commission_owed')}
               value={formatMoney(query.data.commission_debt, query.data.currency)}
               icon={<Receipt />}
               tone="info"
-              hint={t('orders.wallet.ceiling_hint', { ceiling: formatMoney(query.data.debt_ceiling, query.data.currency) })}
+              className={walletTile}
+              hint={
+                <>
+                  {t('orders.wallet.ceiling_hint', { ceiling: formatMoney(query.data.debt_ceiling, query.data.currency) })}
+                  {isPositiveAmount(query.data.commission_debt) ? (
+                    <Link href="/account/wallet/settlements" className={cn('mt-1 block w-fit rounded-qb-xs font-semibold text-qb-brand hover:underline', focusRing)}>
+                      {t('orders.wallet.pay_commission')}
+                    </Link>
+                  ) : null}
+                </>
+              }
             />
             <StatTile
               label={t('orders.wallet.withdrawable')}
               value={formatMoney(query.data.withdrawable_balance, query.data.currency)}
               icon={<Landmark />}
               hint={t('orders.wallet.withdrawable_hint')}
-              className="col-span-2 qb-tablet:col-span-1"
+              className={cn(walletTile, 'col-span-2 qb-tablet:col-span-1')}
             />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {isPositiveAmount(query.data.commission_debt) ? (
-              <Link href="/account/wallet/settlements" className={cn(buttonVariants({ size: 'sm' }), 'h-11 rounded-qb-sm')}>
-                {t('orders.wallet.pay_commission')}
-              </Link>
-            ) : null}
-            <Link href="/account/orders?role=seller" className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }), 'h-11')}>
-              {t('orders.wallet.orders')}
-            </Link>
-            <Link href="/account/promotions" className={cn(buttonVariants({ size: 'sm', variant: 'ghost' }), 'h-11')}>
-              {t('orders.wallet.promotions')}
-            </Link>
           </div>
         </>
       )}
 
-      <StatementTable />
+      <StatementTable
+        headerAction={
+          <Link
+            href="/account/wallet/withdrawals"
+            className={cn(buttonVariants({ size: 'sm' }), 'h-8 gap-1.5 rounded-qb-md px-3 text-qb-micro font-normal qb-desktop:hidden [&_svg]:size-4')}
+          >
+            <WalletIcon aria-hidden="true" />
+            {t('orders.wallet.withdraw')}
+          </Link>
+        }
+      />
     </div>
   );
 }

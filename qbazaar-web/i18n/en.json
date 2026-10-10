@@ -899,6 +899,13 @@
       "details": "Include important details such as brand, size, color, and specifications.",
       "light": "Use natural lighting when taking photos."
     },
+    "promote": {
+      "title": "Increase Sales Opportunities: Highlight your ad",
+      "featured": "Featured Ad",
+      "duration": "Duration",
+      "price": "Price",
+      "pay_later": "Promotions are paid once your ad is live: you can buy the ones you tick from Promotions."
+    },
     "actions": {
       "add_ads": "Add Ads",
       "save_draft": "Save Draft",
@@ -952,7 +959,12 @@
       "title": "Your ad is under review",
       "body": "We check every ad before it goes live and will notify you as soon as yours is approved.",
       "live_title": "Your ad is live",
-      "live_body": "Buyers can find it now."
+      "live_body": "Buyers can find it now.",
+      "promotions_title": "Promotions you chose",
+      "promotions_live": "Your ad is live, so you can promote it now.",
+      "promotions_pending": "You can buy them from Promotions as soon as your ad is approved.",
+      "promote": "Promote",
+      "go_promotions": "Go to Promotions"
     },
     "toast": {
       "draft_saved": "Your ad was saved as a draft",
@@ -1514,6 +1526,7 @@
       "send_offer": "Send offer",
       "asking_price": "Asking price:",
       "verified": "Verified",
+      "member_since": "Member since {year}",
       "own_ad": "This is your ad, so you can't buy it or make an offer on it.",
       "not_buyable": "Buy Now isn't available for this ad: it needs a price and must be live. You can still message the seller.",
       "not_offerable": "This ad isn't taking offers right now.",
@@ -1532,6 +1545,8 @@
       "address_title": "Shipping address",
       "new_address": "Add a new address",
       "default_address": "Default",
+      "edit_address": "Edit",
+      "save_address": "Save Address",
       "fields": {
         "full_name": "Full name",
         "phone": "Phone number",
@@ -1558,6 +1573,7 @@
       "address_needed": "Add or choose the address to deliver to.",
       "payment_title": "Payment method",
       "cash_hint": "Pay with cash upon collection or handover. No online transaction is needed.",
+      "sold_by": "Sold by {name}",
       "summary_title": "Order summary",
       "quantity": "Quantity",
       "subtotal": "Subtotal",
@@ -1599,7 +1615,6 @@
       "empty_sales": "No sales yet",
       "empty_sales_body": "Orders on your ads show up here once you accept a request or an offer.",
       "my_ads": "My ads",
-      "wallet": "Wallet",
       "open": "Open order {number}"
     },
     "detail": {
@@ -1689,16 +1704,15 @@
       "withdrawable_hint": "Your balance minus the commission you owe.",
       "ceiling_hint": "Limit: {ceiling}",
       "pay_commission": "Pay commission",
-      "withdraw": "Withdraw funds",
-      "payout_accounts": "Payout accounts",
-      "promotions": "Promotions",
-      "orders": "My orders",
+      "withdraw": "Withdraw Funds",
+      "payment_method": "Payment Method",
       "actions": "Wallet actions",
       "blocked_title": "You can't accept new orders",
       "blocked_body": "You owe {debt}, which reached the limit of {ceiling}. Pay your commission to take orders again.",
       "near_title": "Commission is building up",
       "near_body": "You owe {debt} of the {ceiling} limit. When you reach it, you can't accept new orders until you pay.",
       "history_title": "Transaction history",
+      "history_title_short": "Transactions",
       "filter_label": "Show",
       "filter": {
         "all": "All movements",

@@ -1,0 +1,49 @@
+/* Exact reference values of the sell pages (post-ad, offer and buy-now,
+   checkout, orders, wallet, promotions) that styles/design-tokens.css has no
+   token for yet: D:/Doc/q-bazaar add-ads.html, preview.html, publish.html,
+   checkout.html and the Figma frames they follow. Same rules as
+   design-tokens.css: the design's values, never darkened. They carry @theme
+   names, so they can move into that file unchanged; until then the classes
+   read them as text-(--color-qb-…). */
+:root {
+  /* The "saved" toast (324:13009; polish.css, cropper.js) */
+  --color-qb-mint: #07bd74;
+  --color-qb-mint-soft: #eafff7;
+
+  /* Card headings of the add-ads aside and the category picker (typo.css),
+     and "How its work" of the buy-now and offer forms (659:58417) */
+  --color-qb-ink-heading: #454545;
+
+  /* Disabled buyer buttons of preview.html */
+  --color-qb-brand-faded: #facfbc;
+  --color-qb-fill-disabled: #f0f0f0;
+
+  /* Promotion rows of add-ads.html and the publish.html table */
+  --color-qb-promo-active: #fff4ef;
+  --color-qb-check-ring: #cbcbcb;
+  --color-qb-check-ring-hover: #636363; /* CheckBox 367:15366, hover */
+  --color-qb-row-divider: #f0f0f0;
+
+  /* Buy Now and Make an Offer (659:58417, 657:57378, 709:32483) */
+  --color-qb-ink-optional: #909090; /* "(optional)", the seller's "Member since" */
+  --color-qb-ink-step: #5a5a5a; /* "How it works" steps */
+  --color-qb-ink-asking: #6a6767; /* "Asking Price" at 1440 */
+  --color-qb-ink-meta: #999999; /* the item's place at 1440, table sub lines, stat labels */
+
+  /* Sales overview and wallet tables (502:21437, 502:22401) */
+  --color-qb-ink-table: #8e8e8e; /* headers, dates, methods */
+  --color-qb-ink-amount: #221122;
+  --color-qb-ink-panel: #424242; /* the wallet panel title */
+
+  /* Checkout result dialog body (buynow.js payModal) */
+  --color-qb-ink-dialog: #9a9a9a;
+
+  /* Required-field stars of the checkout address form (689:33725) */
+  --color-qb-required: #ff0000;
+
+  /* Icons of the phone "Your Ad" action buttons (638:36533) */
+  --color-qb-icon-action: #6c6c6c;
+
+  /* The add-ads "Select" button */
+  --shadow-qb-brand-tight: 0 6px 16px 0 rgb(243 128 87 / 0.2);
+}

@@ -6,6 +6,7 @@ import { resolveServerLocale } from '@/lib/i18n/server';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ type?: string | string[] }>;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t('orders.promotion.page_title') };
 }
 
-export default async function PromoteAdPage({ params }: PageProps) {
-  const { id } = await params;
-  return <PromoteAdView adId={id} />;
+export default async function PromoteAdPage({ params, searchParams }: PageProps) {
+  const [{ id }, { type }] = await Promise.all([params, searchParams]);
+  return <PromoteAdView adId={id} initialType={typeof type === 'string' ? type : undefined} />;
 }

@@ -1,10 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { BadgeCheck, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { VerifiedMark } from '@/components/users/SellerBadges';
 import type { DealAd } from '@/lib/api/commerce-types';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -13,16 +14,25 @@ import { cn } from '@/lib/utils';
 
 import { panelClass } from './CheckoutPanel';
 
+import '@/styles/design-tokens-sell.css';
+
+function joinedYear(iso: string | undefined): string | null {
+  const year = iso ? new Date(iso).getFullYear() : Number.NaN;
+  return Number.isNaN(year) ? null : String(year);
+}
+
 /**
  * The item card beside the Buy Now and Make an Offer forms (659:58417,
  * 709:32645): photo, title, asking price, place and seller. On phones it
- * turns into a compact row above the form (709:33450).
+ * turns into a compact row above the form (709:33450). The tablet frames set
+ * the title and the Verified pill semibold (709:32483, 709:32645).
  */
 export function AdDealSummary({ ad }: { ad: DealAd }) {
   const photo = ad.images?.[0];
   const sellerName = ad.user?.business_name || ad.user?.full_name;
   const verified = Boolean(ad.user?.verification_badges?.phone_verified);
   const place = localized(ad.location?.name);
+  const memberSince = joinedYear(ad.user?.joined_at);
 
   return (
     <article aria-labelledby="deal-ad-title" className={cn(panelClass, 'overflow-hidden')}>
@@ -42,19 +52,19 @@ export function AdDealSummary({ ad }: { ad: DealAd }) {
         <div className="min-w-0 flex-1 qb-tablet:px-5 qb-tablet:pt-4">
           <h2
             id="deal-ad-title"
-            className="line-clamp-2 font-qb text-qb-caption leading-snug font-semibold tracking-normal text-qb-ink-title qb-tablet:text-qb-body qb-tablet:font-medium qb-desktop:text-qb-h5"
+            className="line-clamp-2 font-qb text-qb-caption leading-snug font-medium tracking-normal text-qb-ink-title qb-tablet:text-qb-body qb-tablet:font-semibold qb-desktop:text-qb-h5 qb-desktop:font-medium"
           >
             <Link href={`/ads/${encodeURIComponent(ad.id)}`} dir="auto" className={cn('rounded-qb-xs hover:underline', focusRing)}>
               {ad.title}
             </Link>
           </h2>
           {ad.price != null ? (
-            <p className="mt-1.5 text-qb-micro font-semibold text-qb-brand qb-tablet:mt-3 qb-tablet:text-qb-body-sm qb-desktop:text-qb-body qb-desktop:font-medium qb-desktop:text-qb-ink-secondary">
+            <p className="mt-1.5 text-qb-micro font-semibold text-qb-brand qb-tablet:mt-3 qb-tablet:text-qb-body-sm qb-desktop:text-qb-body qb-desktop:font-medium qb-desktop:text-(--color-qb-ink-asking)">
               {t('orders.deal.asking_price')} {formatListPrice(ad.price, ad.currency)}
             </p>
           ) : null}
           {place ? (
-            <p className="mt-2 flex items-center gap-1.5 text-qb-micro text-qb-ink-subtle qb-desktop:mt-4 qb-desktop:text-qb-caption">
+            <p className="mt-2 flex items-center gap-1.5 text-qb-micro text-(--color-qb-ink-optional) qb-desktop:mt-4 qb-desktop:text-qb-caption qb-desktop:text-(--color-qb-ink-meta)">
               <Icon icon={MapPin} size="sm" />
               <span className="truncate">{place}</span>
             </p>
@@ -71,14 +81,22 @@ export function AdDealSummary({ ad }: { ad: DealAd }) {
               className="size-10 border border-qb-line bg-qb-hover text-qb-caption text-qb-ink qb-desktop:size-[50px] qb-desktop:text-qb-body"
             />
           </span>
-          <p className="flex min-w-0 flex-1 items-center gap-1 text-qb-caption font-semibold text-qb-ink qb-desktop:text-qb-body">
-            <span dir="auto" className="truncate">
-              {sellerName}
-            </span>
-            {verified ? <Icon icon={BadgeCheck} size="sm" className="text-qb-info" /> : null}
-          </p>
+          <div className="min-w-0 flex-1">
+            {/* Below 1001 px the name wraps between words on the narrow card, the tick after its last word. */}
+            <p className="text-qb-caption font-semibold break-words text-qb-ink qb-desktop:flex qb-desktop:items-center qb-desktop:gap-1 qb-desktop:text-qb-body">
+              <span dir="auto" className="qb-desktop:min-w-0 qb-desktop:truncate">
+                {sellerName}
+              </span>
+              {verified ? <VerifiedMark className="ms-1 inline-block size-4 align-[-3px] qb-desktop:ms-0" /> : null}
+            </p>
+            {memberSince ? (
+              <p className="mt-0.5 hidden text-[11px] whitespace-nowrap text-(--color-qb-ink-optional) qb-tablet:block qb-desktop:hidden">
+                {t('orders.deal.member_since', { year: memberSince })}
+              </p>
+            ) : null}
+          </div>
           {verified ? (
-            <span className="shrink-0 rounded-qb-xs border border-qb-success bg-qb-success-soft px-2 py-0.5 font-qb-label text-qb-tiny font-medium text-qb-success">
+            <span className="shrink-0 rounded-qb-xs border border-qb-success bg-qb-success-soft px-2 py-0.5 font-qb-label text-qb-tiny font-medium text-qb-success qb-tablet:font-semibold qb-desktop:font-medium">
               {t('orders.deal.verified')}
             </span>
           ) : null}

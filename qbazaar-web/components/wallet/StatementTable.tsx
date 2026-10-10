@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Receipt } from 'lucide-react';
 
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
-import { Select } from '@/components/design-system/Input';
+import { FieldSelect } from '@/components/design-system/FieldSelect';
 import { orderNumber } from '@/components/orders/order-number';
 import { PageState } from '@/components/orders/PageState';
 import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
@@ -18,34 +18,53 @@ import { formatMoney } from '@/lib/orders/money';
 import { useWalletEntriesQuery } from '@/lib/queries/wallet';
 import { cn } from '@/lib/utils';
 
+const ACCOUNTS: WalletAccount[] = ['wallet', 'commission_receivable'];
+
 /** "+QAR 10.00" or "−QAR 10.00", kept left to right so the sign stays with the number in Arabic. */
 export function signedAmount(entry: Pick<WalletEntry, 'amount' | 'currency' | 'direction'>): string {
   return `${entry.direction === 'increase' ? '+' : '−'}${formatMoney(entry.amount, entry.currency)}`;
 }
 
-/** The ledger statement of the wallet and the commission account, newest first. */
-export function StatementTable() {
+/**
+ * The ledger statement of the wallet and the commission account, newest
+ * first. `headerAction` sits at the end of the title row (563:31406,
+ * 613:31879); the account filter then takes its own row below 1001 px.
+ */
+export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
   const [account, setAccount] = useState<WalletAccount | ''>('');
   const query = useWalletEntriesQuery(account || undefined);
   const entries = query.data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
     <TableCard
-      title={t('orders.wallet.history_title')}
+      title={
+        // Phones say "Transactions" (613:31879), which leaves room for Withdraw Funds beside it.
+        <>
+          <span className="max-qb-tablet:hidden">{t('orders.wallet.history_title')}</span>
+          <span className="qb-tablet:hidden">{t('orders.wallet.history_title_short')}</span>
+        </>
+      }
       titleId="wallet-history"
       action={
-        <label className="flex items-center gap-3 text-qb-caption text-qb-ink-body">
-          <span className="shrink-0">{t('orders.wallet.filter_label')}</span>
-          <Select
-            value={account}
-            onChange={(event) => setAccount(event.target.value as WalletAccount | '')}
-            className="h-10 min-w-44 text-qb-caption"
-          >
-            <option value="">{t('orders.wallet.filter.all')}</option>
-            <option value="wallet">{t('orders.wallet.filter.wallet')}</option>
-            <option value="commission_receivable">{t('orders.wallet.filter.commission_receivable')}</option>
-          </Select>
-        </label>
+        <>
+          {headerAction}
+          <div className={cn('flex items-center gap-3 text-qb-caption text-qb-ink-body', headerAction && 'w-full qb-desktop:w-auto')}>
+            <span id="wallet-history-filter" className="shrink-0">
+              {t('orders.wallet.filter_label')}
+            </span>
+            <FieldSelect
+              label={t('orders.wallet.filter_label')}
+              aria-labelledby="wallet-history-filter"
+              value={account}
+              options={[
+                { value: '', label: t('orders.wallet.filter.all') },
+                ...ACCOUNTS.map((value) => ({ value, label: t(`orders.wallet.filter.${value}`) })),
+              ]}
+              onChange={(next) => setAccount(ACCOUNTS.find((value) => value === next) ?? '')}
+              className="h-10 w-auto min-w-44 text-qb-caption"
+            />
+          </div>
+        </>
       }
     >
       {query.isPending ? (
@@ -96,8 +115,8 @@ function StatementRow({ entry }: { entry: WalletEntry }) {
   return (
     <tr className={tc.row}>
       <td className={tc.td}>
-        <p className="font-semibold text-qb-ink-title">{t(`orders.wallet.type.${entry.type}`, entry.description)}</p>
-        <p className="mt-0.5 text-qb-micro font-normal text-qb-ink-subtle qb-desktop:text-qb-caption">
+        <p className={tc.itemTitle}>{t(`orders.wallet.type.${entry.type}`, entry.description)}</p>
+        <p className={tc.itemMeta}>
           {reference?.type === 'order' ? (
             <Link
               href={`/account/orders/${encodeURIComponent(reference.id)}`}
@@ -122,7 +141,7 @@ function StatementRow({ entry }: { entry: WalletEntry }) {
           {signedAmount(entry)}
         </span>
       </td>
-      <td className={cn(tc.td, tc.amount, 'hidden font-medium text-qb-ink-secondary qb-desktop:table-cell')}>
+      <td className={cn(tc.td, tc.amount, 'hidden font-medium qb-tablet:text-qb-ink-secondary qb-desktop:table-cell')}>
         {formatMoney(entry.balance_after, entry.currency)}
       </td>
     </tr>

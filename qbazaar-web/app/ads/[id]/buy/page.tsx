@@ -20,7 +20,7 @@ export default async function BuyNowPage({ params }: PageProps) {
   const ad = await loadDealAd(id);
 
   return (
-    <DealPageShell ad={ad} current={t('orders.deal.buy_title')}>
+    <DealPageShell ad={ad} current={t('orders.deal.buy_title')} summaryAboveOnPhone>
       <BuyNowForm ad={ad} />
     </DealPageShell>
   );

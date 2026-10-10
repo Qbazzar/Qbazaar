@@ -19,7 +19,7 @@ import { LIMITS, validateQuantity, validateText } from '@/lib/orders/validation'
 import { useCreatePurchaseRequestMutation } from '@/lib/queries/purchase-requests';
 import { cn } from '@/lib/utils';
 
-import { DealActions, DealPanel, HowItWorks, InfoHint, dealButton } from './DealFormParts';
+import { DealActions, DealPanel, HowItWorks, InfoHint, dealButton, dealLabel } from './DealFormParts';
 import { focusFirstInvalid } from './focus-invalid';
 import { FormError, NoteField } from './NoteField';
 
@@ -51,7 +51,7 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
   if (blocker) {
     return (
       <DealPanel title={t('orders.deal.buy_title')} titleId="buy-now-title">
-        <Notice tone={blocker === 'own_ad' ? 'info' : 'neutral'} role="status">
+        <Notice tone={blocker === 'own_ad' ? 'brand' : 'neutral'} role="status">
           {t(`orders.deal.${blocker}`)}
         </Notice>
         <Link href={adHref} className={cn(buttonVariants({ variant: 'outline' }), dealButton, 'self-start')}>
@@ -90,8 +90,10 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
     <DealPanel title={t('orders.deal.buy_title')} titleId="buy-now-title">
       <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div>
-          <p className="text-qb-body text-qb-ink-body">{t('orders.deal.contact_details')}</p>
-          <p className="mt-2 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-caption text-qb-brand-on-soft">
+          <p className="text-qb-caption font-medium text-qb-ink-body qb-tablet:text-qb-body qb-tablet:font-semibold qb-desktop:font-normal">
+            {t('orders.deal.contact_details')}
+          </p>
+          <p className="mt-2 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-caption text-qb-brand-on-soft qb-tablet:font-medium qb-desktop:font-normal">
             {t('orders.deal.contact_chat')}
           </p>
         </div>
@@ -102,6 +104,7 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
             hint={t('orders.deal.quantity_available', { count: available })}
             error={errors.quantity}
             required
+            className={dealLabel.buy}
           >
             {(control) => (
               <Input
@@ -123,6 +126,7 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
           max={LIMITS.noteMax}
           error={errors.note}
           placeholder={t('orders.deal.message_placeholder')}
+          className={dealLabel.buy}
         />
         <InfoHint>{t('orders.deal.buy_hint')}</InfoHint>
 
@@ -133,11 +137,11 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
 
         <FormError>{errors.form}</FormError>
         <DealActions
+          page="buy"
           submitLabel={t('orders.deal.send_request')}
           busy={create.isPending || gateStatus === 'loading'}
           cancelLabel={t('common.cancel')}
           cancelHref={adHref}
-          outlinedCancel
         />
       </form>
     </DealPanel>

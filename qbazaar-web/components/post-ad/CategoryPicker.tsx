@@ -14,6 +14,8 @@ import { t } from '@/lib/i18n/messages';
 import { findPath, isLeaf } from '@/lib/post-ad/tree';
 import { cn } from '@/lib/utils';
 
+import '@/styles/design-tokens-sell.css';
+
 export interface CategoryPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -105,7 +107,7 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
             <Icon icon={ArrowLeft} size="lg" flipInRtl />
           </button>
         ) : null}
-        <Dialog.Title className="min-w-0 flex-1 truncate text-qb-h3 font-medium tracking-normal text-qb-ink-body">
+        <Dialog.Title className="min-w-0 flex-1 truncate text-qb-h3 font-medium tracking-normal text-(--color-qb-ink-heading)">
           <span className={cn(phoneParent && 'max-qb-tablet:hidden')}>{t('post_ad.picker.title')}</span>
           {phoneParent ? <span className="qb-tablet:hidden">{localized(phoneParent.name)}</span> : null}
         </Dialog.Title>

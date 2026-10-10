@@ -7,6 +7,8 @@ import { Textarea } from '@/components/design-system/Input';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
 
+import '@/styles/design-tokens-sell.css';
+
 export interface NoteFieldProps {
   label: ReactNode;
   value: string;
@@ -35,7 +37,10 @@ export function NoteField({ label, value, onChange, max, error, placeholder, hin
           label
         ) : (
           <>
-            {label} <span className="text-qb-ink-subtle">{t('orders.common.optional')}</span>
+            {label}{' '}
+            <span className="text-qb-micro font-medium text-(--color-qb-ink-optional) qb-tablet:text-qb-caption qb-tablet:font-normal">
+              {t('orders.common.optional')}
+            </span>
           </>
         )
       }
