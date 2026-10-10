@@ -48,11 +48,10 @@ export function CompanyHeader({ profile, locale, actions, secondaryActions }: Co
             decorative
             className="-mt-[50px] size-[76px] border-4 border-qb-surface bg-qb-surface text-[26px] text-qb-ink-logo shadow-qb-logo qb-tablet:row-span-2 qb-tablet:-mt-16 qb-tablet:size-24"
           />
-          <h1 className="flex min-w-0 items-center gap-2.5 text-[clamp(24px,3vw,30px)] font-semibold tracking-normal text-qb-ink qb-tablet:col-start-2 qb-tablet:self-end">
-            <span dir="auto" className="min-w-0 break-words">
-              {name}
-            </span>
-            {isVerifiedSeller(profile) ? <VerifiedMark className="size-[22px]" /> : null}
+          {/* Only the name wraps, never before the inline badge, so a long name keeps it after its last word. */}
+          <h1 className="min-w-0 text-[clamp(24px,3vw,30px)] font-semibold tracking-normal break-words whitespace-nowrap text-qb-ink qb-tablet:col-start-2 qb-tablet:self-end">
+            <bdi className="whitespace-normal">{name}</bdi>
+            {isVerifiedSeller(profile) ? <VerifiedMark className="ms-2.5 inline-block size-[22px] align-[-2px]" /> : null}
           </h1>
           <p className="basis-full text-[13.5px] text-qb-icon-muted qb-tablet:col-start-2 qb-tablet:row-start-2 qb-tablet:mt-[5px] qb-tablet:self-start qb-tablet:text-qb-h5">
             {formatNumber(profile.ads_count, locale)}{' '}
