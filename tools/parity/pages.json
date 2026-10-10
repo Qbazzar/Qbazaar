@@ -1,0 +1,51 @@
+{
+  "ids": {
+    "ad": "01m4edcmd846zpsr94e2jet5ma",
+    "privateSeller": "01m4ecc3jmtf34yvyky9barj1z",
+    "businessSeller": "01m4ecc3jafmmk99mz9q5qc13f"
+  },
+  "pages": [
+    { "id": "index", "reference": "index.html", "route": "/" },
+    { "id": "all-categories", "reference": "all-categories.html", "route": "/categories" },
+    { "id": "parent-category", "reference": "parent-category.html", "route": "/c/vehicles" },
+    { "id": "category", "reference": "category.html", "route": "/c/cars", "aliases": ["/search", "/ads"] },
+    { "id": "product", "reference": "product.html", "route": "/ads/{ad}" },
+    { "id": "seller", "reference": "seller.html", "route": "/u/{privateSeller}", "aliases": ["/p/"] },
+    { "id": "seller-individual", "reference": "seller-individual.html", "route": "/u/{privateSeller}" },
+    { "id": "seller-organization", "reference": "seller-organization.html", "route": "/u/{businessSeller}" },
+    { "id": "companies", "reference": "companies.html", "route": "/companies" },
+    { "id": "add-ads", "reference": "add-ads.html", "route": "/post-ad", "login": true },
+    { "id": "account", "reference": "account.html", "route": "/account/profile", "login": true },
+    { "id": "my-ads", "reference": "my-ads.html", "route": "/account/ads", "login": true },
+    { "id": "wallet", "reference": "wallet.html", "route": "/account/wallet", "login": true },
+    { "id": "messages", "reference": "messages.html", "route": "/account/messages", "login": true },
+    { "id": "notifications", "reference": "notifications.html", "route": "/account/notifications", "login": true },
+    { "id": "wishlist", "reference": "wishlist.html", "route": "/account/favorites", "login": true },
+    { "id": "saved-search", "reference": "saved-search.html", "route": "/account/saved-searches", "login": true },
+    { "id": "sales-overview", "reference": "sales-overview.html", "route": "/account/orders", "login": true },
+    { "id": "payment-method", "reference": "payment-method.html", "route": "/account/wallet/bank-accounts", "login": true },
+    { "id": "buy-now", "reference": "buy-now.html", "route": "/ads/{ad}/buy", "login": true },
+    { "id": "offer", "reference": "offer.html", "route": "/ads/{ad}/offer", "login": true },
+    { "id": "enter-number", "reference": "enter-number.html", "route": "/account/verification", "login": true },
+    { "id": "verify-identity", "reference": "verify-identity.html", "route": "/account/verification", "login": true },
+    { "id": "login", "reference": "login.html", "route": "/login" },
+    { "id": "signup", "reference": "signup.html", "route": "/register" },
+    { "id": "signup-verify", "reference": "signup-verify.html", "route": "/verify-otp" },
+    { "id": "enter-code", "reference": "enter-code.html", "route": "/verify-otp" },
+    { "id": "forgot-password", "reference": "forgot-password.html", "route": "/forgot-password" },
+    { "id": "new-password", "reference": "new-password.html", "route": "/reset-password?email=reviewer%40example.com&token=preview" },
+    { "id": "send-code", "reference": "send-code.html", "route": "/verify-email" }
+  ],
+  "referenceOnly": [
+    { "reference": "users.html", "note": "Followers / following list: no Next.js route yet (FE-16.6)" },
+    { "reference": "premium.html", "note": "Premium subscription: not planned in M3" },
+    { "reference": "financing.html", "note": "Flexible financing: not planned in M3, prototype-only page" },
+    { "reference": "checkout.html", "note": "Needs an order id (/checkout/[orderId]); creating an order writes data, so it is checked only against a local target" },
+    { "reference": "preview.html", "note": "Step 2 of the /post-ad wizard; covered by the post-ad-wizard scenario" },
+    { "reference": "publish.html", "note": "Step 3 of the /post-ad wizard; covered by the post-ad-wizard scenario" },
+    { "reference": "auth.html", "note": "Legacy page that redirects to login.html" },
+    { "reference": "account.html#billing", "note": "Billing Info panel: no Next.js route yet (FE-16.8)" },
+    { "reference": "account.html#marketplace", "note": "Marketplace Info panel: no Next.js route yet (FE-16.4)" },
+    { "reference": "account.html#edit-email", "note": "Edit Email / Edit Number panels: no Next.js route yet (FE-16.4)" }
+  ]
+}
