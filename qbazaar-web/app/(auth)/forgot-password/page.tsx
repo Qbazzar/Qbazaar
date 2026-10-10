@@ -9,7 +9,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: t('auth.forgot_password.title', 'نسيت كلمة المرور'),
-    description: t('auth.forgot_password.subtitle', 'أرسل رابط إعادة تعيين كلمة المرور إلى بريدك.'),
+    // The subtitle's line break only shapes the card.
+    description: t('auth.forgot_password.subtitle', 'أرسل رابط إعادة تعيين كلمة المرور إلى بريدك.').replace(/\n/g, ' '),
   };
 }
 

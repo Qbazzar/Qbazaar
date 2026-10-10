@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+vi.mock('@/components/design-system/design-toast', () => ({ showDesignToast: vi.fn() }));
 vi.mock('@/lib/api/account', () => ({ revokeSession: vi.fn() }));
 
 import { revokeSession } from '@/lib/api/account';

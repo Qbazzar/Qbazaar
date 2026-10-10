@@ -15,7 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
-import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { Input, Select, Textarea } from '@/components/design-system/Input';
 import { fieldErrorText } from '@/components/auth/FieldError';
@@ -30,19 +30,19 @@ import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import type { AccountProfile, Language } from '@/lib/api/types';
 import { useAuthStore } from '@/store/auth';
-import { ModalActions } from './ModalActions';
+import { AccountDialogActions, accountCancelClass, accountInputClass, accountSaveClass } from './AccountDialog';
 
 export type ProfileField = keyof ProfileInput;
 
 export interface ProfileFormProps {
   initial: AccountProfile;
-  /** Field to focus when the form opens from its "Edit" row. */
-  focusField?: ProfileField;
+  /** The fields this dialog edits; the others are sent back unchanged. */
+  fields: readonly ProfileField[];
   onSaved?: () => void;
   onCancel?: () => void;
 }
 
-export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileFormProps) {
+export function ProfileForm({ initial, fields, onSaved, onCancel }: ProfileFormProps) {
   const queryClient = useQueryClient();
   const setUser = useAuthStore((s) => s.setUser);
   const currentUser = useAuthStore((s) => s.user);
@@ -66,9 +66,10 @@ export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileF
     });
   }, [initial.full_name, initial.language, initial.bio, form]);
 
+  const [firstField] = fields;
   useEffect(() => {
-    if (focusField) form.setFocus(focusField);
-  }, [focusField, form]);
+    if (firstField) form.setFocus(firstField);
+  }, [firstField, form]);
 
   const mutation = useMutation({
     mutationFn: updateAccountProfile,
@@ -82,7 +83,7 @@ export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileF
         });
       }
       queryClient.setQueryData(['account', 'profile'], updated);
-      toast.success(t('account.profile.success'));
+      showDesignToast(t('account.profile.success'));
       onSaved?.();
     },
   });
@@ -103,61 +104,63 @@ export function ProfileForm({ initial, focusField, onSaved, onCancel }: ProfileF
   const submitting = form.formState.isSubmitting || mutation.isPending;
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6 text-start">
-      <Field label={t('account.profile.full_name_label')} required error={fieldErrorText(errors.full_name?.message)}>
-        {(control) => (
-          <Input
-            {...control}
-            type="text"
-            autoComplete="name"
-            placeholder={t('account.profile.full_name_placeholder')}
-            {...form.register('full_name')}
-          />
-        )}
-      </Field>
-
-      <Field label={t('account.profile.language_label')} error={fieldErrorText(errors.language?.message)}>
-        {(control) => (
-          <Select {...control} {...form.register('language')}>
-            <option value="ar">{t('account.profile.language_ar')}</option>
-            <option value="en">{t('account.profile.language_en')}</option>
-          </Select>
-        )}
-      </Field>
-
-      <Field
-        label={t('account.profile.bio_label')}
-        hint={t('account.profile.bio_hint')}
-        error={fieldErrorText(errors.bio?.message)}
-      >
-        {(control) => (
-          <Textarea
-            {...control}
-            rows={4}
-            maxLength={280}
-            placeholder={t('account.profile.bio_placeholder')}
-            {...form.register('bio')}
-          />
-        )}
-      </Field>
-
-      <ModalActions>
-        <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
-          {submitting ? (
-            <>
-              <Loader2 className="animate-spin" aria-hidden="true" />
-              {t('account.profile.submitting')}
-            </>
-          ) : (
-            t('common.save')
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-[18px] text-start">
+      {fields.includes('full_name') ? (
+        <Field label={t('account.profile.full_name_label')} error={fieldErrorText(errors.full_name?.message)}>
+          {(control) => (
+            <Input
+              {...control}
+              type="text"
+              autoComplete="name"
+              className={cn(accountInputClass, 'py-[15px] text-qb-body')}
+              placeholder={t('account.profile.full_name_placeholder')}
+              {...form.register('full_name')}
+            />
           )}
-        </Button>
+        </Field>
+      ) : null}
+
+      {fields.includes('language') ? (
+        <Field label={t('account.profile.language_label')} error={fieldErrorText(errors.language?.message)}>
+          {(control) => (
+            <Select {...control} className={cn(accountInputClass, 'pe-11')} {...form.register('language')}>
+              <option value="ar">{t('account.profile.language_ar')}</option>
+              <option value="en">{t('account.profile.language_en')}</option>
+            </Select>
+          )}
+        </Field>
+      ) : null}
+
+      {fields.includes('bio') ? (
+        <Field
+          label={t('account.profile.bio_label')}
+          hint={t('account.profile.bio_hint')}
+          error={fieldErrorText(errors.bio?.message)}
+        >
+          {(control) => (
+            <Textarea
+              {...control}
+              rows={4}
+              maxLength={280}
+              className={accountInputClass}
+              placeholder={t('account.profile.bio_placeholder')}
+              {...form.register('bio')}
+            />
+          )}
+        </Field>
+      ) : null}
+
+      <AccountDialogActions className="mt-2">
+        <button type="submit" disabled={submitting} className={cn(accountSaveClass, submitting && 'cursor-progress')}>
+          {submitting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+          {t('common.save')}
+        </button>
         {onCancel ? (
-          <Button type="button" variant="muted" size="sm" onClick={onCancel} disabled={submitting}>
+          <button type="button" onClick={onCancel} disabled={submitting} className={accountCancelClass}>
             {t('common.cancel')}
-          </Button>
+          </button>
         ) : null}
-      </ModalActions>
+      </AccountDialogActions>
     </form>
   );
 }

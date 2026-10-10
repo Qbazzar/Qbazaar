@@ -57,7 +57,19 @@ export function MessageBubble({
         </>
       }
     >
-      {message.body}
+      {message.type === 'image' && message.media ? (
+        <a href={message.media.original_url} target="_blank" rel="noopener noreferrer" className="block">
+          {/* Signed, short-lived URL from the API: plain img, so the optimiser never caches it. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={message.media.url}
+            alt={t('messaging.photo_alt')}
+            loading="lazy"
+            className="h-[150px] w-[200px] rounded-[14px] border border-qb-line object-cover"
+          />
+        </a>
+      ) : null}
+      {message.type === 'image' && !message.body ? null : message.body}
     </ChatBubble>
   );
 }

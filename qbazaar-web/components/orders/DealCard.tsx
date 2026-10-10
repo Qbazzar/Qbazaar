@@ -91,8 +91,8 @@ export function DealCard({
           </div>
           <div className="min-w-0 flex-1">
             {ad ? (
-              <p dir="auto" className="truncate text-start text-qb-body font-medium text-qb-ink">
-                {ad.title}
+              <p className="truncate text-qb-body font-medium text-qb-ink">
+                <bdi>{ad.title}</bdi>
               </p>
             ) : null}
             <p className="mt-1 text-qb-caption font-semibold text-qb-brand">{price}</p>

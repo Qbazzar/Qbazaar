@@ -1,19 +1,23 @@
 'use client';
 
 /**
- * FE-2.6 — Privacy settings, laid out as the Data Protection rows of 397:10175.
+ * FE-2.6 — Privacy settings: the Data Protection switches of account.html,
+ * then a row to the blocked users and the data export.
  *
  * 4 switches backed by `GET / PUT /account/privacy-settings`. Each toggle
  * optimistically flips the cached value, fires the PUT, and rolls back on
  * error. We use TanStack Query's mutation `onMutate / onError / onSuccess`
  * lifecycle so the network failure path is centralised.
  */
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { Switch } from '@/components/design-system/Switch';
+import { showDesignToast } from '@/components/design-system/design-toast';
+import { ExportDataRow } from '@/components/account/ExportDataRow';
 import { PanelState } from '@/components/account/PanelState';
-import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
+import { SettingsList, SettingsPanel, SettingsRow, settingsActionClass } from '@/components/account/SettingsPanel';
+import { SettingsToggleList } from '@/components/account/SettingsToggleList';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import {
   getPrivacySettings,
@@ -94,14 +98,14 @@ export default function AccountPrivacyPage() {
       }
     },
     onSuccess: () => {
-      toast.success(t('account.privacy.save_success'));
+      showDesignToast(t('account.privacy.save_success'));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 
-  const handleToggle = (key: keyof PrivacySettings, value: boolean) => {
+  const handleToggle = (key: string, value: boolean) => {
     mutation.mutate({ ...settings, [key]: value });
   };
 
@@ -110,25 +114,29 @@ export default function AccountPrivacyPage() {
       {isLoading || error ? (
         <PanelState loading={isLoading} />
       ) : (
-        <SettingsList>
-          {FIELDS.map((field) => (
-            <SettingsRow
-              key={field.key}
-              value={<span id={`privacy-${field.key}`}>{t(field.titleKey)}</span>}
-              description={<span id={`privacy-${field.key}-desc`}>{t(field.descriptionKey)}</span>}
-              action={
-                <Switch
-                  checked={settings[field.key]}
-                  onCheckedChange={(value: boolean) => handleToggle(field.key, value)}
-                  disabled={mutation.isPending}
-                  aria-labelledby={`privacy-${field.key}`}
-                  aria-describedby={`privacy-${field.key}-desc`}
-                />
-              }
-            />
-          ))}
-        </SettingsList>
+        <SettingsToggleList
+          items={FIELDS.map((field) => ({
+            key: field.key,
+            title: t(field.titleKey),
+            description: t(field.descriptionKey),
+            checked: settings[field.key],
+          }))}
+          onChange={handleToggle}
+          disabled={mutation.isPending}
+        />
       )}
+      <SettingsList>
+        <SettingsRow
+          label={t('account.nav.blocked_users')}
+          value={t('account.privacy.blocked_value')}
+          action={
+            <Link href="/account/blocked-users" className={settingsActionClass}>
+              {t('account.security.sessions_manage')}
+            </Link>
+          }
+        />
+        <ExportDataRow />
+      </SettingsList>
     </SettingsPanel>
   );
 }

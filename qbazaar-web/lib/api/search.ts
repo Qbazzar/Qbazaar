@@ -158,3 +158,15 @@ export async function deleteSavedSearch(id: string): Promise<void> {
     throw toApiClientError(err);
   }
 }
+
+/** Turns the alerts of one saved search on or off (`PATCH`, the name stays). */
+export async function setSavedSearchAlerts(id: string, alertsEnabled: boolean): Promise<SavedSearch> {
+  try {
+    const { data } = await api.patch<SuccessEnvelope<SavedSearch>>(`${SAVED_BASE}/${encodeURIComponent(id)}`, {
+      alerts_enabled: alertsEnabled,
+    });
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}

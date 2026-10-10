@@ -46,22 +46,22 @@
     "login": {
       "welcome_prefix": "Welcome to",
       "welcome_brand": "QBAZAAR",
-      "tagline": "Discover, buy, and sell with ease. Connect with a diverse community and explore thousands of products all in one place.",
+      "tagline": "Discover, buy, and sell with ease. Connect with a diverse community and\nexplore thousands of products all in one place.",
       "title": "Welcome back",
       "subtitle": "Sign in to your QBazaar account.",
-      "identifier_label": "Email or phone",
-      "identifier_placeholder": "you@example.com or +97455123456",
+      "identifier_label": "Email",
+      "identifier_placeholder": "example@gmail.com",
       "password_label": "Password",
-      "password_placeholder": "••••••••",
-      "remember_me": "Keep me signed in",
-      "forgot": "Forgot password?",
-      "submit": "Sign in",
+      "password_placeholder": "********",
+      "forgot": "Forgot Password?",
+      "submit": "Login",
       "submitting": "Signing you in…",
-      "no_account": "Don't have an account?",
-      "go_to_register": "Create one",
+      "no_account": "You didn't have an account?",
+      "go_to_register": "Signup",
       "success": "Signed in",
       "deactivated_notice": "Your account is deactivated. Sign in to reactivate it.",
-      "deleted_notice": "Your account is scheduled for deletion. Sign in within 30 days to cancel."
+      "deleted_notice": "Your account is scheduled for deletion. Sign in within 30 days to cancel.",
+      "remember": "Remember me"
     },
     "register": {
       "heading": "Create an account",
@@ -74,85 +74,84 @@
       "full_name_label": "Full name",
       "full_name_placeholder": "Sara Al-Mansoori",
       "email_label": "Email",
-      "email_placeholder": "you@example.com",
-      "phone_label": "Phone number",
-      "phone_placeholder": "5512 4488",
+      "email_placeholder": "example@gmail.com",
       "password_label": "Password",
-      "password_placeholder": "••••••••",
-      "password_hint": "At least 8 characters with uppercase, lowercase, number and symbol.",
+      "password_placeholder": "********",
       "account_type_label": "Account type",
       "account_type_private": "Private",
-      "account_type_business": "Business",
-      "terms_prefix": "By creating an account you agree to the",
-      "terms_link": "Terms of Service",
-      "terms_and": "and",
-      "privacy_link": "Privacy Policy",
+      "account_type_business": "Commercial",
+      "terms_prefix": "Our",
+      "terms_link": "Terms of Use",
+      "terms_and": "apply. Information on processing can be found in our",
+      "privacy_link": "privacy policy",
       "submit": "Create account",
       "submitting": "Creating your account…",
-      "have_account": "Already have an account?",
-      "go_to_login": "Sign in",
-      "success": "Account created. Phone verification lands in the next wave."
-    },
-    "password_strength": {
-      "label": "Password strength",
-      "empty": "—",
-      "weak": "Weak",
-      "fair": "Fair",
-      "good": "Good",
-      "strong": "Strong",
-      "rules": {
-        "length": "At least 8 characters",
-        "uppercase": "Uppercase letter (A-Z)",
-        "lowercase": "Lowercase letter (a-z)",
-        "number": "Number (0-9)",
-        "symbol": "Symbol (!@#…)"
-      }
+      "have_account": "You already have an account?",
+      "go_to_login": "Login",
+      "success": "Account created",
+      "terms_suffix": "."
     },
     "phone": {
-      "country_prefix": "🇶🇦 +974"
+      "country_label": "Code Country",
+      "number_label": "Phone number",
+      "number_placeholder": "5551 2345",
+      "note": "You will then receive a text message containing a verification code on the number provided.",
+      "countries": {
+        "qa": "Qatar",
+        "jo": "Jordan",
+        "om": "Oman",
+        "de": "Germany",
+        "ps": "Palestine"
+      }
     },
     "verify_otp": {
       "heading": "Verify Your Identity",
       "enter_below": "Enter the code below to continue.",
       "no_code": "You haven't received any code?",
       "title": "Verify your phone",
-      "subtitle": "We sent a 6-digit code to",
+      "subtitle": "We've sent a verification code to",
       "code_label": "Verification code",
       "code_aria_box": "Code digit {index}",
-      "submit": "Verify code",
+      "submit": "Verify",
       "submitting": "Verifying…",
-      "resend_question": "Didn't get the code?",
       "resend_now": "Resend",
-      "resend_in": "You can resend in {seconds}s",
-      "expires_in": "Code expires in {seconds}s",
-      "missing_phone_title": "Incomplete link",
-      "missing_phone_body": "We couldn't find the phone number to verify. Please go back and sign up or sign in again.",
       "back_to_login": "Back to sign in",
       "success_title": "Phone verified",
-      "success_body": "Your phone is now verified — continue exploring QBazaar.",
       "continue": "Continue",
       "sent_again": "A fresh code is on its way",
-      "send_failed": "We couldn't send the code, please try again"
+      "send_failed": "We couldn't send the code, please try again",
+      "intro": "For your security, we need to confirm that this phone number belongs\nto you before continuing.",
+      "send": "Send",
+      "resend_wait": "({seconds}s)",
+      "change_in_settings": "This isn't the number on your account. To use it, change your phone number in Account Settings first."
     },
     "forgot_password": {
-      "title": "Forgot password?",
-      "subtitle": "Enter your email and we'll send you a reset link.",
+      "title": "Reset Password",
+      "subtitle": "Please enter your email address. You will then receive an\nemail with further instructions.",
       "email_label": "Email",
-      "email_placeholder": "you@example.com",
-      "submit": "Send reset link",
+      "email_placeholder": "example@gmail.com",
+      "submit": "Send",
       "submitting": "Sending…",
       "success_title": "Check your email",
-      "success_body": "If that email exists in our system, we've sent you a link to reset your password. Don't forget to check the spam folder.",
-      "back_to_login": "Back to sign in"
+      "success_sent_to": "We've sent a verification link to",
+      "success_click_link": "Click the link in the email to continue.",
+      "tips_title": "Didn't get it?",
+      "tips": {
+        "spam": "Check your spam or junk folder — it may have been filtered automatically.",
+        "address": "Make sure the email address is correct before resending.",
+        "delay": "It can take up to a few minutes to arrive depending on your provider."
+      },
+      "resend": "Re-Send",
+      "resent": "We sent the link again"
     },
     "reset_password": {
-      "title": "Set a new password",
-      "subtitle": "Choose a strong password for your account.",
-      "password_label": "New password",
-      "password_placeholder": "••••••••",
-      "password_confirmation_label": "Confirm password",
-      "password_confirmation_placeholder": "••••••••",
-      "submit": "Save new password",
+      "title": "Change Password",
+      "subtitle": "Enter your current password, then choose a new password to\nsecure your account.",
+      "password_label": "New Password",
+      "password_placeholder": "********",
+      "password_confirmation_label": "Confirm Password",
+      "password_confirmation_placeholder": "********",
+      "submit": "Change Password",
       "submitting": "Saving…",
       "success_toast": "Password updated",
       "missing_params_title": "Invalid link",
@@ -208,7 +207,8 @@
       "RATE_LIMIT_EXCEEDED": "Too many attempts, try again later",
       "TURNSTILE_001": "The security check failed, please try again",
       "network": "Could not reach the server",
-      "unknown": "An unexpected error occurred"
+      "unknown": "An unexpected error occurred",
+      "AUTH_012": "This verification has expired. Please sign in again."
     },
     "phone_gate": {
       "title": "Verify your phone to continue",
@@ -226,6 +226,14 @@
       "resume": "Continue where you left off",
       "verified_title": "Your phone is verified",
       "send_limited": "You requested too many codes. Use the last code you received or try again in a minute."
+    },
+    "social": {
+      "continue_with": "Continue with {provider}",
+      "divider": "or continue with",
+      "unavailable": "Signing in with {provider} isn't available yet. Use your email and password."
+    },
+    "device_check": {
+      "subtitle": "We've sent a verification code to {phone}. Enter the code below\nto continue."
     }
   },
   "account": {
@@ -251,13 +259,28 @@
       },
       "published_on": "Published on: {date}",
       "empty_body": "Post an ad and it will show up here with its status and stats.",
-      "delete_label": "Delete {title}"
+      "delete_label": "Delete {title}",
+      "online": {
+        "one": "You have {count} ad online",
+        "other": "You have {count} ads online"
+      },
+      "reserve": "Reserve",
+      "reserved": "Reserved",
+      "reserved_success": "Ad reserved",
+      "unreserved_success": "Reservation removed",
+      "followers": {
+        "one": "{count} Follower",
+        "other": "{count} Followers"
+      },
+      "following": {
+        "one": "{count} Following",
+        "other": "{count} Following"
+      },
+      "sales_title": "Overview of your sales",
+      "sales_body": "Your earnings via our payment system"
     },
     "nav": {
-      "overview": "My account",
       "settings": "Settings",
-      "back_to_settings": "Back to settings",
-      "activity": "My activity",
       "profile_settings": "Profile Settings",
       "wallet": "Wallet",
       "account_settings": "Account Settings",
@@ -281,45 +304,24 @@
       "notifications": "Notifications",
       "support": "Support",
       "sign_out": "Sign out",
-      "sign_out_confirm": "Signed out"
-    },
-    "dashboard": {
-      "greeting": "Welcome back, {name}",
-      "subtitle": "A quick snapshot of your QBazaar activity.",
-      "stats": {
-        "unread_messages": "Unread messages",
-        "favorites": "Saved ads",
-        "saved_searches": "Saved searches",
-        "my_ads": "My ads",
-        "drafts": "Drafts",
-        "conversations": "Conversations",
-        "unread_notifications": "Unread notifications"
-      },
-      "quick_actions": {
-        "title": "Quick actions",
-        "post_ad": "Post ad",
-        "my_ads": "My ads",
-        "messages": "Messages",
-        "settings": "Settings"
-      },
-      "recent_activity": {
-        "title": "Recent activity",
-        "coming_soon": "Coming soon — this is where your latest activity will appear."
-      }
+      "sign_out_confirm": "Signed out",
+      "email_message": "Email Message",
+      "marketplace_info": "Marketplace Info",
+      "delete_account": "Delete Account",
+      "log_out": "Log Out"
     },
     "profile": {
       "settings_title": "Profile Settings",
-      "settings_subtitle": "Add information about yourself",
+      "settings_subtitle": "Add Information about yourself",
       "personal_info": "Personal Information",
       "bio_empty": "No bio added yet.",
-      "edit_title": "Edit profile",
       "active_since": "Active since {date}",
       "private_seller": "Private Seller",
       "business_seller": "Business Seller",
       "title": "Profile",
       "subtitle": "Update the information visitors see on your public profile.",
-      "full_name_label": "Full name",
-      "full_name_placeholder": "Sara Al-Mansoori",
+      "full_name_label": "Full Name",
+      "full_name_placeholder": "full name",
       "language_label": "Interface language",
       "language_ar": "Arabic",
       "language_en": "English",
@@ -328,7 +330,8 @@
       "bio_hint": "Up to 280 characters.",
       "submit": "Save changes",
       "submitting": "Saving…",
-      "success": "Profile updated"
+      "success": "Profile updated",
+      "name_dialog_title": "Change Profile Name"
     },
     "security": {
       "settings_subtitle": "Edit your account settings and change your password here.",
@@ -337,16 +340,22 @@
       "email": "Email",
       "password": "Password",
       "verify": "Verify",
-      "edit_password": "Edit Password",
+      "edit_password": "Change Password",
       "title": "Security",
       "subtitle": "Change your password regularly to keep your account safe.",
-      "current_password_label": "Current password",
-      "new_password_label": "New password",
-      "password_confirmation_label": "Confirm new password",
+      "current_password_label": "Current Password",
+      "new_password_label": "New Password",
+      "password_confirmation_label": "Confirm New Password",
       "submit": "Update password",
       "submitting": "Updating…",
-      "success": "Password updated",
-      "sign_out_notice": "This will sign you out from other devices."
+      "success": "Password updated. Your other devices were signed out.",
+      "activity_label": "Your Activity",
+      "activity_value": {
+        "one": "You currently have {count} ad published online.",
+        "other": "You currently have {count} ads published online."
+      },
+      "sessions_value": "The devices signed in to your account",
+      "sessions_manage": "Manage"
     },
     "sessions": {
       "confirm_title": "Sign out this device?",
@@ -401,7 +410,8 @@
         "indexed_by_search_desc": "Allow search engines to index your public profile."
       },
       "save_success": "Privacy settings updated",
-      "save_failed": "Couldn't save settings — we restored the previous value"
+      "save_failed": "Couldn't save settings — we restored the previous value",
+      "blocked_value": "People you blocked can't message you or see your ads"
     },
     "blocked_users": {
       "title": "Blocked users",
@@ -414,8 +424,6 @@
       "empty_body": "You haven't blocked anyone yet."
     },
     "data": {
-      "title": "Data & account",
-      "subtitle": "Export your data or close your account.",
       "export": {
         "title": "Export my data",
         "body": "Download a copy of your QBazaar data — profile, ads, messages, and activity history. We'll prepare the archive and email you a secure download link.",
@@ -436,30 +444,22 @@
         "reason_placeholder": "Tell us why you're leaving (optional, up to 280 characters).",
         "confirm": "Yes, deactivate",
         "confirming": "Deactivating…",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "instead": "Need a break instead?"
       },
       "delete": {
-        "reason_question": "Why are you leaving?",
-        "reasons": {
-          "not_using": "I don't use this website",
-          "other_account": "I have another account",
-          "problems": "The website has some problems",
-          "privacy": "Privacy concerns",
-          "prefer_not": "Prefer not to tell",
-          "something_else": "Something else"
-        },
-        "title": "Delete my account",
-        "body": "Schedules your account for permanent deletion in 30 days. After that we erase your profile, ads, and messages. Sign in again within the window to cancel.",
-        "submit": "Delete account",
+        "title": "Delete Account",
+        "body": "Deleting your account is permanent. All your ads, messages, saved searches, and payment methods will be removed and cannot be recovered.",
+        "submit": "Delete My Account",
         "dialog_title": "Delete your account?",
         "dialog_body": "Your account will be scheduled for deletion in 30 days. Sign in again within that window to cancel.",
         "password_label": "Password",
-        "reason_label": "Reason (optional)",
-        "reason_placeholder": "Tell us why you're leaving (optional, up to 280 characters).",
         "confirm": "Yes, delete",
         "confirming": "Scheduling deletion…",
         "cancel": "Cancel",
-        "scheduled_toast": "Account scheduled for deletion in 30 days. Sign in again to cancel."
+        "scheduled_toast": "Account scheduled for deletion in 30 days. Sign in again to cancel.",
+        "understand": "I understand this action cannot be undone.",
+        "understand_required": "Tick the box to confirm you understand."
       }
     },
     "avatar": {
@@ -498,10 +498,17 @@
       "USER_007": "Please confirm your password to delete your account",
       "USER_008": "An export is already being prepared — check your email",
       "USER_009": "That file doesn't look like a supported image",
-      "USER_010": "The image is too large (max 5 MB)"
+      "USER_010": "The image is too large (max 5 MB)",
+      "required": "This field is required",
+      "address_name": "Enter a name of at least 2 characters",
+      "address_too_long": "This is too long",
+      "postal_code": "Use letters, numbers and dashes only",
+      "ADDRESS_001": "This address no longer exists",
+      "ADDRESS_002": "You can save up to 10 addresses",
+      "ACCOUNT_001": "The security code is wrong or has expired",
+      "ACCOUNT_002": "This link was already used or has expired"
     },
     "saved_searches": {
-      "saved_ago": "• Saved {when}",
       "view_results": "View Result",
       "delete_label": "Delete saved search {name}",
       "price_range": "QAR {min} – {max}",
@@ -515,16 +522,121 @@
         "price": "Price",
         "sort": "Sort"
       },
-      "title": "Saved searches",
+      "title": "Saved Search",
       "subtitle": "Save your favourite filters and rerun them in one click.",
       "empty_title": "No saved searches yet",
-      "empty_body": "Save a search from the results page and it'll show up here.",
+      "empty_body": "Save your frequent searches to easily access them and get notified when new matching items are posted.",
       "run": "Run search",
       "delete": "Delete",
       "delete_confirm_title": "Delete this saved search?",
       "delete_confirm_body": "You won't be able to restore it after deleting.",
       "delete_success": "Saved search deleted",
-      "created_at": "Saved {date}"
+      "created_at": "Saved {date}",
+      "updated_ago": "Updated {when}",
+      "menu_label": "More actions for {name}",
+      "alerts_on": "Notification on",
+      "alerts_off": "Notification off",
+      "browse_ads": "Browse Ads",
+      "clear_all": "Clear all",
+      "clear_confirm_title": "Clear all saved searches?",
+      "clear_confirm_body": "Every saved search will be deleted. You won't be able to restore them.",
+      "cleared": "All saved searches deleted",
+      "cleanup_title": "Clean up inactive items",
+      "cleanup_body": "Remove the saved searches whose notifications are off in one click.",
+      "cleanup": "Clean up",
+      "cleanup_none": "Nothing to clean up: every saved search still has its notifications on.",
+      "cleaned": {
+        "one": "{count} inactive saved search deleted",
+        "other": "{count} inactive saved searches deleted"
+      }
+    },
+    "address": {
+      "row_label": "Delivery Address",
+      "none": "No delivery address added yet",
+      "add_title": "Add Address",
+      "edit_title": "Edit Address",
+      "full_name": "Full Name",
+      "full_name_placeholder": "full name",
+      "supplement": "Address Supplement",
+      "supplement_placeholder": "Address Supplement",
+      "street": "Street",
+      "street_placeholder": "ex: Albasha street",
+      "house_number": "House no.",
+      "house_number_placeholder": "ex: 23",
+      "postal_code": "Postal Code",
+      "postal_code_placeholder": "XXXXX",
+      "city": "City",
+      "city_placeholder": "ex: Doha",
+      "saved": "Address saved",
+      "deleted": "Address deleted",
+      "edit_one": "Edit {address}",
+      "delete_one": "Delete {address}"
+    },
+    "contact": {
+      "email_title": "Edit Email Address",
+      "phone_title": "Edit Phone Number",
+      "two_messages": "To change your email, you will receive two messages",
+      "first_message": "First email: sent to your current email with a security code (for your security and information).",
+      "second_message": "Second email: sent to your new email. Please open it and click the link to confirm your account.",
+      "registered_email": "Registered Email",
+      "new_email": "New Email",
+      "same_email": "This is already your email",
+      "same_phone": "This is already your phone number",
+      "reauth_sent": "Enter the 6-digit security code we sent to {email}.",
+      "sms_sent": "Enter the 6-digit code we texted to {phone}.",
+      "sms_note": "You will then receive a text message containing a verification code on this phone number.",
+      "confirm_phone": "Confirm phone number",
+      "email_link_sent": "Almost done: open the link we sent to {email} to confirm it.",
+      "phone_changed": "Phone number updated and verified",
+      "result": {
+        "success": {
+          "title": "Email changed",
+          "body": "Your account now uses your new email address."
+        },
+        "ACCOUNT_002": {
+          "title": "Link no longer valid",
+          "body": "This confirmation link was already used or has expired. Start the change again from Account Settings."
+        },
+        "AUTH_007": {
+          "title": "Email already in use",
+          "body": "Another account registered this email in the meantime. Choose a different one."
+        },
+        "back": "Back to Account Settings"
+      },
+      "phone_placeholder": "+974 (157) XXXX XXXX"
+    },
+    "email_messages": {
+      "subtitle": "Manage your email notifications and preferences",
+      "saved": "Email preferences saved",
+      "language_label": "Email language",
+      "topics": {
+        "user_messages": {
+          "title": "Messages",
+          "description": "When someone sends you a message"
+        },
+        "offers": {
+          "title": "Offers and requests",
+          "description": "Offers, purchase requests and the answers to them"
+        },
+        "listing_updates": {
+          "title": "Your ads",
+          "description": "Approvals, expiry reminders and other news about your ads"
+        },
+        "saved_search_alerts": {
+          "title": "Saved search alerts",
+          "description": "New ads that match your saved searches"
+        },
+        "newsletters": {
+          "title": "News and tips",
+          "description": "Product news, offers and selling tips from QBazaar"
+        }
+      }
+    },
+    "marketplace": {
+      "subtitle": "Your public seller information on the marketplace.",
+      "seller_type": "Seller Type",
+      "store_name": "Store Name",
+      "store_name_empty": "No store name added yet"
     }
   },
   "users": {
@@ -1402,18 +1514,17 @@
       }
     },
     "card": {
-      "purchase_title": "Purchase request",
-      "offer_title": "Offer",
-      "counter_title": "Counter-offer",
-      "note_buyer": "Message from the buyer",
-      "note_seller": "Message from the seller",
+      "purchase_title": "Purchase Request",
+      "offer_title": "Offer Request",
+      "counter_title": "Counter Offer",
+      "note_buyer": "Message from Buyer",
+      "note_seller": "Message from Seller",
       "quantity_line": "{count} × {price}",
       "listed": "Listed at {price}",
-      "accept_request": "Accept request",
-      "decline": "Decline",
-      "edit_request": "Edit request",
-      "cancel_request": "Cancel request",
-      "checkout": "Complete checkout",
+      "accept_request": "Accept Request",
+      "decline": "Reject",
+      "cancel_request": "Cancel",
+      "checkout": "Proceed to payment",
       "view_order": "View order",
       "view_orders": "View my orders",
       "accept": "Accept",
@@ -1425,29 +1536,21 @@
         "other": "Expires in {count} hours"
       },
       "outcome": {
-        "request_accepted_buyer": "Accepted. Complete the checkout to confirm your order.",
-        "request_accepted_seller": "Accepted. Waiting for the buyer to check out.",
-        "request_paid": "Sale completed: {total}",
-        "request_rejected": "The seller declined this request.",
-        "request_cancelled": "The buyer cancelled this request.",
-        "request_cancelled_self": "You cancelled this request.",
-        "request_closed": "Closed: the item was sold or is no longer available.",
+        "request_accepted_seller": "Request Accepted, Waiting for buyer's payment",
+        "request_paid": "Payment Successful",
+        "request_rejected": "This request was rejected",
+        "request_cancelled": "This request is no longer active",
+        "request_cancelled_self": "This request is no longer active",
+        "request_closed": "This request is no longer active",
         "offer_accepted": "Offer accepted. An order was placed.",
         "offer_countered": "Answered with a counter-offer.",
-        "offer_rejected": "Offer rejected.",
-        "offer_withdrawn": "Offer withdrawn.",
-        "offer_expired": "This offer has expired.",
+        "offer_rejected": "This request was rejected",
+        "offer_withdrawn": "This request is no longer active",
+        "offer_expired": "This request is no longer active",
         "request_accepted": "Accepted. An order was placed.",
         "request_checked_out_buyer": "Order confirmed. Pay the seller in cash at handover.",
         "request_checked_out_seller": "The buyer checked out. Hand over the item, then confirm it in the order.",
         "request_order_cancelled": "The order was cancelled."
-      },
-      "edit_dialog": {
-        "title": "Edit your request",
-        "description": "Change the quantity or your message. The price is always the ad's price.",
-        "quantity": "Quantity",
-        "message": "Message",
-        "save": "Save changes"
       },
       "counter_dialog": {
         "title": "Make a counter-offer",
@@ -1482,7 +1585,6 @@
         "request_accepted": "Request accepted. The order is placed.",
         "request_declined": "Request declined.",
         "request_cancelled": "Request cancelled.",
-        "request_updated": "Request updated.",
         "offer_accepted": "Offer accepted. The order is placed.",
         "offer_rejected": "Offer rejected.",
         "offer_withdrawn": "Offer withdrawn.",
@@ -1906,15 +2008,17 @@
     "safety_notice": "With “Safe Pay”, you don’t need to share your email, phone number, or bank details with anyone.",
     "title": "My inbox",
     "empty": {
-      "list": "Start a conversation by reaching out to a seller",
       "view": "Pick a conversation to see its messages.",
-      "preview": "No messages yet"
+      "preview": "No messages yet",
+      "inbox_short": "No conversations yet.",
+      "no_messages_title": "No Messages Yet",
+      "no_messages_body": "All your chats with buyers and sellers will appear here once you start interacting"
     },
     "back": "Back",
     "start_chat": "Message seller",
     "own_ad_badge": "This is your ad",
     "send": "Send",
-    "placeholder": "Type a message…",
+    "placeholder": "Type your message..",
     "typing": "Typing…",
     "read_indicator": "Read",
     "unread_count": "{count} unread",
@@ -1967,31 +2071,70 @@
         "amount_required": "Enter a valid amount greater than zero",
         "note_max": "Note is too long"
       }
+    },
+    "attach_photo": "Attach photo",
+    "photo_too_large": "The photo is too large (max 5 MB)",
+    "photo_alt": "Photo",
+    "group_label": "Message",
+    "search_placeholder": "Search",
+    "search_label": "Search conversations by name",
+    "search_empty_title": "No conversations found",
+    "search_empty_body": "Try a different name.",
+    "select_mode": "Select conversations",
+    "select_one": "Select the conversation with {name}",
+    "menu": {
+      "label": "Chat settings",
+      "title": "Setting",
+      "report": "Report",
+      "block": "Block",
+      "block_title": "Block User?",
+      "block_body": "Are you sure you want to block this user? They will no longer be able to contact you.",
+      "blocked": "{name} has been blocked successfully"
+    },
+    "delete": {
+      "selected": "Delete the selected conversations",
+      "title": "Delete this conversation?",
+      "body": "The selected conversations will be removed from your inbox.",
+      "confirm": "Delete",
+      "done": "Removed from your inbox"
+    },
+    "report": {
+      "title": "Report",
+      "subtitle": "Select a problem to report",
+      "submit": "Submit Report",
+      "sent": "Your report has been sent successfully",
+      "reasons": {
+        "inappropriate_content": "Inappropriate Content",
+        "harassment": "Harassment or Bullying",
+        "privacy": "Privacy Violations",
+        "spam": "Spam and Unsolicited Messages",
+        "impersonation": "Impersonation",
+        "terms": "Violation of Terms of Service",
+        "security": "Cybersecurity Concerns",
+        "hate_speech": "Hate Speech or Discrimination",
+        "not_listed": "The Problem Isn't Listed Here"
+      }
     }
   },
   "notifications": {
     "open_unread": "Unread: {title}",
-    "delete_label": "Delete notification: {title}",
-    "delete_success": "Notification deleted",
     "empty_body": "Updates about your ads, messages and saved searches will show up here.",
     "title": "Notifications",
     "header_label": "Notifications",
     "tabs": {
       "all": "All",
-      "unread": "Unread"
+      "unread": "Unread",
+      "price": "Price Change",
+      "save": "Save Search"
     },
     "empty": {
       "all": "No notifications yet",
-      "unread": "You're all caught up"
+      "title": "No notifications yet!",
+      "filter_body": "You have no notifications in this filter right now."
     },
     "mark_all_read": "Mark all as read",
     "view_all": "View all notifications",
     "delete": "Delete",
-    "delete_confirm": {
-      "title": "Delete this notification?",
-      "body": "This action can't be undone.",
-      "confirm": "Delete"
-    },
     "relative": {
       "just_now": "just now",
       "minutes_ago": "{n}m ago",
@@ -2007,7 +2150,16 @@
       "enabled": "Browser notifications are on",
       "denied": "Notifications are blocked in your browser settings",
       "error": "Couldn't enable browser notifications, please try again"
-    }
+    },
+    "page_title": "Notification",
+    "filters_label": "Filter notifications",
+    "select_all": "Select All",
+    "select_one": "Select notification: {title}",
+    "read_all": "Read All",
+    "delete_selected": "Delete",
+    "bulk_read": "Marked as read",
+    "bulk_deleted": "Notifications deleted",
+    "bulk_failed": "Some notifications couldn't be updated, please try again"
   },
   "reports": {
     "title": "Report",

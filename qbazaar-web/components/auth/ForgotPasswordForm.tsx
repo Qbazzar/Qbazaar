@@ -1,13 +1,13 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import Link from 'next/link';
+import { useRef, useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2, Mail, MailCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/design-system/Button';
+import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
@@ -18,17 +18,21 @@ import {
 } from '@/lib/validation/auth';
 import { ApiClientError, forgotPassword } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
-import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
+import { authInputClass, authLinkClass, authSubmitClass } from './AuthFooter';
 import { AuthHeading } from './AuthHeading';
 import { fieldErrorText } from './FieldError';
 import { Turnstile, type TurnstileHandle } from './Turnstile';
 
+const RESEND_TIPS = ['spam', 'address', 'delay'] as const;
+
+/**
+ * forgot-password.html, then send-code.html ("Check your email") once the
+ * link is on its way. The API answers the same whether or not the email has
+ * an account, so the second card always shows.
+ */
 export function ForgotPasswordForm() {
-  /**
-   * Anti-enumeration: we always show the success card on a 2xx response, even
-   * if the email isn't on file. The backend already returns a generic 202.
-   */
-  const [submitted, setSubmitted] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
   const turnstile = useRef<TurnstileHandle>(null);
 
   const form = useForm<ForgotPasswordInput>({
@@ -37,71 +41,119 @@ export function ForgotPasswordForm() {
     mode: 'onBlur',
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const send = async (values: ForgotPasswordInput) => {
     try {
       await forgotPassword(values, await turnstile.current?.getToken());
-      setSubmitted(true);
+      return true;
     } catch (err) {
       handleSubmitError(err, form);
+      return false;
     } finally {
       turnstile.current?.reset();
     }
-  });
+  };
 
-  if (submitted) {
-    return (
-      <div role="status" className="flex flex-col items-center gap-8">
-        <AuthHeading
-          icon={<MailCheck />}
-          title={t('auth.forgot_password.success_title')}
-          subtitle={t('auth.forgot_password.success_body')}
-        />
-        <Link href="/login" className={cn(buttonVariants({ fullWidth: true }), authSubmitClass, 'max-w-[420px]')}>
-          {t('auth.forgot_password.back_to_login')}
-        </Link>
-      </div>
-    );
-  }
+  // handleSubmit runs inside the event, so the Turnstile ref is never read while rendering.
+  const onSubmit = (event: FormEvent<HTMLFormElement>) =>
+    form.handleSubmit(async (values) => {
+      if (await send(values)) setSentTo(values.email);
+    })(event);
+
+  const resend = async () => {
+    if (!sentTo) return;
+    setResending(true);
+    if (await send({ email: sentTo })) showDesignToast(t('auth.forgot_password.resent'));
+    setResending(false);
+  };
 
   const emailError = form.formState.errors.email?.message;
   const submitting = form.formState.isSubmitting;
 
   return (
     <>
-      <AuthHeading icon={<Mail />} title={t('auth.forgot_password.title')} subtitle={t('auth.forgot_password.subtitle')} />
-      <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
-        <Field label={t('auth.forgot_password.email_label')} required error={fieldErrorText(emailError)}>
-          {(control) => (
-            <Input
-              {...control}
-              type="email"
-              autoComplete="email"
-              dir="ltr"
-              placeholder={t('auth.forgot_password.email_placeholder')}
-              {...form.register('email')}
-            />
-          )}
-        </Field>
+      {sentTo ? (
+        <div role="status">
+          <AuthHeading
+            align="start"
+            title={t('auth.forgot_password.success_title')}
+            subtitle={
+              <>
+                {t('auth.forgot_password.success_sent_to')}{' '}
+                {/* Back to the form, for the "make sure the address is correct" tip. */}
+                <button
+                  type="button"
+                  onClick={() => setSentTo(null)}
+                  className={cn(authLinkClass, 'cursor-pointer text-qb-body')}
+                  dir="ltr"
+                >
+                  {sentTo}
+                </button>
+                .
+                <br />
+                {t('auth.forgot_password.success_click_link')}
+              </>
+            }
+          />
+          <p className="mt-[26px] text-qb-body font-medium text-qb-auth-muted">{t('auth.forgot_password.tips_title')}</p>
+          <ul className="ms-0.5 mt-[18px] list-disc text-qb-body leading-[1.6] text-qb-auth-muted">
+            {RESEND_TIPS.map((tip) => (
+              <li key={tip} className="ms-5 mt-3">
+                {t(`auth.forgot_password.tips.${tip}`)}
+              </li>
+            ))}
+          </ul>
+          <Button
+            fullWidth
+            onClick={resend}
+            disabled={resending}
+            className={cn(authSubmitClass, 'mt-[26px]', resending && 'cursor-progress')}
+          >
+            {resending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {t('auth.forgot_password.resend')}
+          </Button>
+        </div>
+      ) : (
+        <>
+          <AuthHeading title={t('auth.forgot_password.title')} subtitle={t('auth.forgot_password.subtitle')} />
+          <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col">
+            <Field
+              label={t('auth.forgot_password.email_label')}
+              required
+              error={fieldErrorText(emailError)}
+              className="mt-[26px]"
+            >
+              {(control) => (
+                <Input
+                  {...control}
+                  type="email"
+                  autoComplete="email"
+                  dir="ltr"
+                  className={cn(authInputClass, 'rtl:placeholder:text-right')}
+                  placeholder={t('auth.forgot_password.email_placeholder')}
+                  {...form.register('email')}
+                />
+              )}
+            </Field>
 
-        <Turnstile ref={turnstile} />
-
-        <Button type="submit" fullWidth disabled={submitting} className={cn(authSubmitClass, submitting && 'cursor-progress')}>
-          {submitting ? (
-            <>
-              <Loader2 className="animate-spin" aria-hidden="true" />
-              {t('auth.forgot_password.submitting')}
-            </>
-          ) : (
-            t('auth.forgot_password.submit')
-          )}
-        </Button>
-
-        <AuthFooter>
-          <Link href="/login" className={authLinkClass}>
-            {t('auth.forgot_password.back_to_login')}
-          </Link>
-        </AuthFooter>
-      </form>
+            <Button
+              type="submit"
+              fullWidth
+              disabled={submitting}
+              className={cn(authSubmitClass, 'mt-[26px]', submitting && 'cursor-progress')}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="animate-spin" aria-hidden="true" />
+                  {t('auth.forgot_password.submitting')}
+                </>
+              ) : (
+                t('auth.forgot_password.submit')
+              )}
+            </Button>
+          </form>
+        </>
+      )}
+      <Turnstile ref={turnstile} />
     </>
   );
 }

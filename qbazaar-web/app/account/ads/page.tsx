@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * `/account/ads` — owner's ads list (518:20536), organised by status tab.
+ * `/account/ads` — owner's ads list (acctShowDashboard, 518:20536), organised by status tab.
  *
  * Each tab issues a separate `useMyAdsQuery` so the cache can stay scoped
  * per-status. The status tabs have no frame on this page, so they use the
@@ -11,19 +11,22 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
-import { Megaphone, Plus } from 'lucide-react';
+import { Megaphone } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
-import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
-import { AccountPage, pillTabClass } from '@/components/account/AccountPage';
+import { TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
+import { AccountPage } from '@/components/account/AccountPage';
 import { MyAdsRow } from '@/components/account/MyAdsRow';
 import { PanelState } from '@/components/account/PanelState';
+import { PillTab } from '@/components/account/PillTab';
 import { ProfileSummary } from '@/components/account/ProfileSummary';
 import { useSlugLabels } from '@/components/account/useSlugLabels';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountSummaryQuery } from '@/lib/queries/account';
 import { useMyAdsQuery } from '@/lib/queries/ads';
+import { usePublicProfileQuery } from '@/lib/queries/users';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
 import type { AdStatus } from '@/lib/api/types';
@@ -35,43 +38,42 @@ const TABS: TabKey[] = ['all', 'active', 'draft', 'sold', 'expired'];
 export default function MyAdsPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<TabKey>('all');
-  // Same query as the "All" tab, so the header count costs no extra request.
-  const { data: allAds } = useMyAdsQuery({});
+  const { data: summary } = useAccountSummaryQuery();
+  const { data: publicProfile } = usePublicProfileQuery(user?.id ?? '');
 
   return (
-    <AccountPage
-      title={t('account.nav.my_ads')}
-      actions={
-        <Link href="/post-ad" className={buttonVariants({ size: 'sm' })}>
-          <Plus aria-hidden="true" />
-          {t('ads.actions.post_ad', 'نشر إعلان جديد')}
-        </Link>
-      }
-    >
-      {user ? (
-        <ProfileSummary
-          name={user.full_name}
-          avatarUrl={user.avatar_url}
-          accountType={user.account_type}
-          joinedAt={user.created_at}
-          subtitle={allAds ? tPlural('account.my_ads.total', allAds.meta.total) : undefined}
-        />
-      ) : null}
+    <AccountPage title={t('account.nav.my_ads')} variant="account">
+      <div className="flex flex-col gap-5">
+        {user ? (
+          <ProfileSummary
+            name={user.full_name}
+            avatarUrl={user.avatar_url}
+            accountType={user.account_type}
+            joinedAt={user.created_at}
+            subtitle={summary ? tPlural('account.my_ads.online', summary.ads_by_status.active ?? 0) : undefined}
+            follows={
+              publicProfile
+                ? { followers: publicProfile.followers_count, following: publicProfile.following_count }
+                : undefined
+            }
+          />
+        ) : null}
 
-      <h2 className="mt-8 text-qb-h3 leading-none font-semibold tracking-normal text-qb-ink qb-desktop:text-qb-h2">
-        {t('account.nav.my_ads')}
-      </h2>
+        <h2 className="mt-2 text-qb-h3 leading-normal font-semibold tracking-normal text-qb-ink">
+          {t('account.nav.my_ads')}
+        </h2>
+      </div>
 
-      <Tabs value={tab} onValueChange={(value) => setTab(value as TabKey)} className="mt-6">
-        <TabList aria-label={t('account.my_ads.tabs_label')} scrollOnPhones>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as TabKey)} className="mt-5">
+        <TabList aria-label={t('account.my_ads.tabs_label')} scrollOnPhones className="gap-4">
           {TABS.map((key) => (
-            <Tab key={key} value={key} className={pillTabClass}>
+            <PillTab key={key} value={key}>
               {t(`ads.my.tabs.${key}`, key)}
-            </Tab>
+            </PillTab>
           ))}
         </TabList>
         {TABS.map((key) => (
-          <TabPanel key={key} value={key}>
+          <TabPanel key={key} value={key} className="mt-5">
             <MyAdsTab status={key === 'all' ? undefined : key} />
           </TabPanel>
         ))}
@@ -104,7 +106,7 @@ function MyAdsTab({ status }: { status?: AdStatus }) {
   }
 
   return (
-    <ul className="flex flex-col gap-4 qb-tablet:gap-6 qb-desktop:gap-7">
+    <ul className="flex flex-col gap-5">
       {data.data.map((ad) => (
         <li key={ad.id}>
           <MyAdsRow ad={ad} category={labels.category(ad.category_slug)} />

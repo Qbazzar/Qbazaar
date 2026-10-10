@@ -5,28 +5,26 @@ import { cn } from '@/lib/utils';
 export interface AuthHeadingProps {
   title: ReactNode;
   subtitle?: ReactNode;
-  /** Icon shown in the white tile above the title (verify screens, 736:66642). */
-  icon?: ReactNode;
+  /** `start` for the cards whose copy reads as a paragraph ("Check your email"). */
+  align?: 'center' | 'start';
   className?: string;
 }
 
-/** Centred title + muted subtitle at the top of every auth card. */
-export function AuthHeading({ title, subtitle, icon, className }: AuthHeadingProps) {
+/**
+ * Title + muted subtitle at the top of every auth card (`.qb-card h1` + `.qb-sub`).
+ * A line break in the subtitle copy stands for the reference's `<br>`.
+ */
+export function AuthHeading({ title, subtitle, align = 'center', className }: AuthHeadingProps) {
   return (
-    <div className={cn('text-center', className)}>
-      {icon ? (
-        <div
-          aria-hidden="true"
-          className="mx-auto mb-4 flex size-[72px] items-center justify-center rounded-qb-2xl border border-qb-line bg-qb-surface text-qb-brand shadow-qb-brand qb-tablet:size-[92px] [&_svg]:size-7"
-        >
-          {icon}
-        </div>
-      ) : null}
-      <h1 className="text-qb-h3 leading-tight font-semibold tracking-normal text-qb-ink qb-tablet:text-[32px] qb-desktop:text-qb-h2">
-        {title}
-      </h1>
+    <div className={className}>
+      <h1 className="text-center text-qb-h2 leading-[1.3] font-semibold tracking-normal text-qb-ink">{title}</h1>
       {subtitle ? (
-        <p className="mx-auto mt-3 max-w-[584px] text-qb-caption leading-relaxed text-qb-ink-subtle qb-tablet:mt-4 qb-tablet:text-qb-body">
+        <p
+          className={cn(
+            'mt-2.5 text-qb-body leading-[1.55] whitespace-pre-line text-qb-auth-muted',
+            align === 'center' ? 'text-center' : 'mt-3.5 text-start',
+          )}
+        >
           {subtitle}
         </p>
       ) : null}

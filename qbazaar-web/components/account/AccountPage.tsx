@@ -7,33 +7,41 @@ import { cn } from '@/lib/utils';
 
 export interface AccountPageProps {
   title: string;
-  /** Controls on the end side of the title ("Mark all as read", "Clear"). */
+  /** Controls on the end side of the title ("Clear all"). */
   actions?: ReactNode;
   children: ReactNode;
-  /** Overrides the title size, e.g. the 44 px of the wishlist and saved searches (376:8322, 381:8815). */
+  /** My Ads opens like the settings screen: no breadcrumb and the 40 px title. */
+  variant?: 'page' | 'account';
+  /** Overrides the title size, e.g. the 44 px of the wishlist (376:8322). */
   titleClassName?: string;
   className?: string;
 }
 
-/** Width, gutters and top spacing of the full-width account pages, under the breadcrumb band. */
+/** The clamp(28–40 px) title of the saved searches and the settings screen. */
+export const compactTitleClass = 'text-[clamp(28px,4vw,40px)]';
+
+/** Width, gutters and vertical padding of the full-width account pages (`clamp(20px, 4vw, 40px)`). */
 export const accountPageClass = cn(
-  'mx-auto w-full max-w-[1440px] pt-9 pb-16 font-qb text-qb-ink qb-tablet:pt-[72px] qb-desktop:pt-[65px] qb-desktop:pb-24',
+  'mx-auto w-full max-w-[1440px] py-[clamp(20px,4vw,40px)] font-qb text-qb-ink',
   pageGutter,
 );
 
 /**
- * Page shell of My Ads, the wishlist, saved searches and notifications
- * (518:20536, 376:8322): breadcrumb, then the 48 px title (32 on tablets,
- * 28 without the breadcrumb on phones), then the content.
+ * Page shell of notifications, saved searches and the saved lists in the
+ * app template: breadcrumb, the clamp(30–48 px) title, then the content.
  */
-export function AccountPage({ title, actions, children, titleClassName, className }: AccountPageProps) {
+export function AccountPage({ title, actions, children, variant = 'page', titleClassName, className }: AccountPageProps) {
+  const isAccount = variant === 'account';
   return (
     <div className={cn(accountPageClass, className)}>
-      <Breadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, { label: title }]} className="hidden qb-tablet:block" />
-      <div className="flex flex-wrap items-center justify-between gap-4 qb-tablet:mt-[73px] qb-desktop:mt-[65px]">
+      {isAccount ? null : (
+        <Breadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, { label: title }]} className="mb-3.5" />
+      )}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1
           className={cn(
-            'text-qb-h2 leading-none font-semibold tracking-normal text-qb-ink qb-tablet:text-[32px] qb-desktop:text-qb-h1',
+            'leading-normal font-semibold tracking-normal text-qb-ink',
+            isAccount ? compactTitleClass : 'text-[clamp(30px,5vw,48px)]',
             titleClassName,
           )}
         >
@@ -41,10 +49,7 @@ export function AccountPage({ title, actions, children, titleClassName, classNam
         </h1>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
-      <div className="mt-[46px] qb-tablet:mt-12 qb-desktop:mt-16">{children}</div>
+      {children}
     </div>
   );
 }
-
-/** Type of the notifications pill tabs (16 px on phones, 20 px from tablets), which My Ads and the tickets reuse. */
-export const pillTabClass = 'text-qb-body qb-tablet:text-qb-h5';

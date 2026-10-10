@@ -1,27 +1,28 @@
 'use client';
 
 /**
- * One saved search (381:8815): search tile, name, when it was saved, one chip
- * per kept filter, then "View Result" (route restoration) and delete with a
- * confirmation.
+ * One saved search of saved-search.html (381:8815): tile, name, "Updated …",
+ * one chip per kept filter and the "⋯" menu (delete), then under a line the
+ * "Notification on / off" switch and "View Result".
  */
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Menu } from '@base-ui/react/menu';
 import { toast } from 'sonner';
-import { Loader2, Search, Trash2 } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 
-import { Button, buttonVariants } from '@/components/design-system/Button';
-import { Icon } from '@/components/design-system/Icon';
+import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Modal } from '@/components/design-system/Modal';
 import { formatRelativeTime } from '@/components/messaging/relative-time';
-import { useDeleteSavedSearchMutation } from '@/lib/queries/search';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { useDeleteSavedSearchMutation, useSavedSearchAlertsMutation } from '@/lib/queries/search';
+import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
-import { ApiClientError } from '@/lib/api/auth';
 import type { SavedSearch } from '@/lib/api/types';
 
 import { ModalActions } from './ModalActions';
-import { savedRowButtonClass } from './SavedAdRow';
+import { apiErrorMessage } from './api-error-message';
 import { savedSearchChips, savedSearchHref } from './saved-search-params';
 import type { SlugLabels } from './useSlugLabels';
 
@@ -34,6 +35,7 @@ interface Props {
 export function SavedSearchCard({ search, labels }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteMutation = useDeleteSavedSearchMutation();
+  const alerts = useSavedSearchAlertsMutation();
 
   const href = useMemo(() => savedSearchHref(search.query_params), [search]);
   const chips = useMemo(() => savedSearchChips(search.query_params, labels), [search, labels]);
@@ -41,70 +43,109 @@ export function SavedSearchCard({ search, labels }: Props) {
   const onDelete = () => {
     deleteMutation.mutate(search.id, {
       onSuccess: () => {
-        toast.success(
-          t('account.saved_searches.delete_success', 'تم حذف البحث المحفوظ'),
-        );
+        showDesignToast(t('account.saved_searches.delete_success', 'تم حذف البحث المحفوظ'));
         setConfirmOpen(false);
       },
-      onError: (err) => {
-        if (err instanceof ApiClientError) {
-          toast.error(
-            translateMaybeKey(`search.errors.${err.code.toLowerCase()}`) ||
-              translateMaybeKey('search.errors.delete_failed') ||
-              err.message,
-          );
-        } else {
-          toast.error(t('search.errors.delete_failed'));
-        }
-      },
+      onError: (err) => toast.error(apiErrorMessage(err)),
     });
   };
 
+  const toggleAlerts = () =>
+    alerts.mutate(
+      { id: search.id, alertsEnabled: !search.alerts_enabled },
+      { onError: (err) => toast.error(apiErrorMessage(err)) },
+    );
+
   return (
-    <article className="rounded-qb-2xl border border-qb-line bg-qb-surface p-4 font-qb shadow-qb-card qb-tablet:p-6">
-      <div className="flex items-start gap-3.5">
+    <article className="rounded-qb-xl border border-qb-line bg-qb-surface p-5 font-qb">
+      <div className="flex items-start gap-4">
         <span
           aria-hidden="true"
-          className="flex size-12 shrink-0 items-center justify-center rounded-qb-xl border border-qb-line bg-qb-surface text-qb-ink-body shadow-qb-card qb-tablet:size-[60px]"
+          className="flex size-[72px] shrink-0 items-center justify-center rounded-qb-lg bg-qb-fill text-qb-ink-subtle"
         >
-          <Icon icon={Search} size="lg" />
+          <Search className="size-7" strokeWidth={1.6} />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-qb-body font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5">
-            <bdi>{search.name}</bdi>
-          </h2>
-          <p className="mt-2 text-qb-label font-medium text-qb-breadcrumb qb-tablet:text-qb-caption">
-            {t('account.saved_searches.saved_ago', { when: formatRelativeTime(search.created_at) })}
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-qb-body-lg font-semibold tracking-normal break-words text-qb-ink">
+                <bdi>{search.name}</bdi>
+              </h2>
+              <p className="mt-[5px] text-qb-label text-qb-ink-subtle">
+                {t('account.saved_searches.updated_ago', { when: formatRelativeTime(search.updated_at ?? search.created_at) })}
+              </p>
+            </div>
+            <Menu.Root>
+              <Menu.Trigger
+                aria-label={t('account.saved_searches.menu_label', { name: search.name })}
+                className={cn(
+                  'flex h-7 shrink-0 cursor-pointer items-start rounded-qb-xs px-1 text-[22px] leading-none text-qb-ink-subtle hover:text-qb-brand',
+                  focusRing,
+                )}
+              >
+                <span aria-hidden="true">⋯</span>
+              </Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner side="bottom" align="end" sideOffset={6} className="z-50">
+                  <Menu.Popup className="min-w-40 rounded-[14px] border border-qb-line bg-qb-surface p-2 font-qb shadow-qb-popover outline-none">
+                    <Menu.Item
+                      onClick={() => setConfirmOpen(true)}
+                      className="flex cursor-pointer items-center rounded-[9px] px-3 py-2 text-qb-caption font-medium text-qb-danger outline-none data-highlighted:bg-qb-danger-soft"
+                    >
+                      {t('account.saved_searches.delete', 'حذف')}
+                    </Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </div>
+
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {chips.length > 0 ? (
+              chips.map((chip) => (
+                <li key={chip.label} className="rounded-qb-xs bg-qb-fill px-[11px] py-[5px] text-qb-micro text-qb-ink-faint">
+                  {chip.label}: {chip.value}
+                </li>
+              ))
+            ) : (
+              <li className="rounded-qb-xs bg-qb-fill px-[11px] py-[5px] text-qb-micro text-qb-ink-faint">
+                {t('search.title_all', 'كل الإعلانات')}
+              </li>
+            )}
+          </ul>
         </div>
-        <button
-          type="button"
-          onClick={() => setConfirmOpen(true)}
-          aria-label={t('account.saved_searches.delete_label', { name: search.name })}
-          className={savedRowButtonClass}
-        >
-          <Trash2 aria-hidden="true" />
-        </button>
       </div>
 
-      <ul className="mt-4 flex flex-wrap gap-2.5 qb-tablet:mt-5 qb-tablet:gap-[15px]">
-        {chips.length > 0 ? (
-          chips.map((chip) => (
-            <li
-              key={chip.label}
-              className="inline-flex min-h-[33px] items-center gap-1 rounded-qb-sm bg-qb-fill px-2.5 text-qb-label qb-tablet:text-qb-caption"
-            >
-              <span className="text-qb-ink-subtle">{chip.label}:</span>
-              <span className="font-medium text-qb-ink-title">{chip.value}</span>
-            </li>
-          ))
-        ) : (
-          <li className="text-qb-label text-qb-ink-subtle">{t('search.title_all', 'كل الإعلانات')}</li>
-        )}
-      </ul>
-
-      <div className="mt-4 flex items-center justify-end border-t border-qb-line pt-4 qb-tablet:mt-[17px] qb-tablet:pt-[17px]">
-        <Link href={href} className={cn(buttonVariants({ size: 'sm' }), 'h-10 rounded-qb-sm px-4')}>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-qb-line pt-4">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={search.alerts_enabled}
+          onClick={toggleAlerts}
+          disabled={alerts.isPending}
+          className={cn(
+            'flex cursor-pointer items-center gap-2 rounded-qb-sm px-3 py-[7px] text-qb-caption font-medium disabled:cursor-progress',
+            search.alerts_enabled ? 'bg-qb-acct-alert-on-soft text-qb-success' : 'bg-qb-fill text-qb-ink-subtle',
+            focusRing,
+          )}
+        >
+          <span aria-hidden="true" className="relative h-[17px] w-[30px] shrink-0 rounded-[9px] bg-current">
+            <span
+              className={cn(
+                'absolute top-0.5 size-[13px] rounded-full bg-qb-surface transition-[inset-inline-start] duration-200 motion-reduce:transition-none',
+                search.alerts_enabled ? 'start-[15px]' : 'start-0.5',
+              )}
+            />
+          </span>
+          {t(search.alerts_enabled ? 'account.saved_searches.alerts_on' : 'account.saved_searches.alerts_off')}
+        </button>
+        <Link
+          href={href}
+          className={cn(
+            'rounded-qb-md bg-qb-brand px-6 py-2.5 text-qb-caption font-semibold text-qb-on-brand hover:bg-qb-brand-hover',
+            focusRing,
+          )}
+        >
           {t('account.saved_searches.view_results')}
         </Link>
       </div>

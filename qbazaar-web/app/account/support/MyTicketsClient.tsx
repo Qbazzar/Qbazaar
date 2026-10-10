@@ -14,8 +14,9 @@ import { LifeBuoy, Plus } from 'lucide-react';
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
-import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
-import { AccountPage, pillTabClass } from '@/components/account/AccountPage';
+import { TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
+import { AccountPage } from '@/components/account/AccountPage';
+import { PillTab } from '@/components/account/PillTab';
 import { PanelState } from '@/components/account/PanelState';
 import { Pager } from '@/components/account/Pager';
 import { TicketRow } from '@/components/support/TicketRow';
@@ -49,15 +50,15 @@ export function MyTicketsClient() {
       }
     >
       <Tabs value={tab} onValueChange={(value) => handleTabChange(value as TicketTab)}>
-        <TabList aria-label={t('support.my_tickets', 'تذاكر الدعم')} scrollOnPhones>
+        <TabList aria-label={t('support.my_tickets', 'تذاكر الدعم')} scrollOnPhones className="gap-4">
           {TABS.map((key) => (
-            <Tab key={key} value={key} className={pillTabClass}>
+            <PillTab key={key} value={key}>
               {t(`support.tabs.${key}`, key)}
-            </Tab>
+            </PillTab>
           ))}
         </TabList>
         {TABS.map((key) => (
-          <TabPanel key={key} value={key} className="mt-6 qb-tablet:mt-10">
+          <TabPanel key={key} value={key} className="mt-[26px]">
             <TicketsList status={key === 'all' ? undefined : key} page={page} onPageChange={setPage} />
           </TabPanel>
         ))}

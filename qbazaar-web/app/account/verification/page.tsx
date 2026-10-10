@@ -18,6 +18,7 @@ import { BadgeCheck, Briefcase, Loader2, Mail, Phone } from 'lucide-react';
 
 import { Badge } from '@/components/design-system/Badge';
 import { Button, buttonVariants } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { PanelState } from '@/components/account/PanelState';
 import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
 import { VerifiedBadge } from '@/components/account/VerifiedBadge';
@@ -97,7 +98,7 @@ function VerificationContent() {
     setSendingEmail(true);
     try {
       await sendEmailVerification();
-      toast.success(t('account.verification.email_sent'));
+      showDesignToast(t('account.verification.email_sent'));
     } catch (err) {
       if (err instanceof ApiClientError) {
         toast.error(

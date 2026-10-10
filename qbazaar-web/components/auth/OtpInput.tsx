@@ -191,14 +191,14 @@ export function OtpInput({
       role="group"
       aria-label={ariaLabel ?? t('auth.verify_otp.code_label')}
       aria-describedby={ariaDescribedBy}
-      className={cn('flex w-full items-center justify-center gap-2 font-qb qb-tablet:gap-3 qb-desktop:gap-3.5', className)}
+      className={cn('flex w-full items-center justify-center gap-2 font-qb qb-tablet:gap-5', className)}
       // OTP digits read left-to-right regardless of page direction.
       dir="ltr"
     >
       {digits.map((digit, index) => (
         <span
           key={`${groupId}-${index}`}
-          className="relative flex h-[52px] w-full max-w-12 min-w-0 flex-1 qb-tablet:h-16 qb-tablet:max-w-[74px] qb-desktop:h-[57px] qb-desktop:max-w-[93px]"
+          className="relative flex h-[54px] w-[15%] min-w-0 qb-tablet:h-[68px] qb-tablet:w-[86px]"
         >
           <input
             ref={(el) => {
@@ -221,18 +221,17 @@ export function OtpInput({
             aria-invalid={ariaInvalid}
             data-otp-box={index}
             className={cn(
-              'peer size-full min-w-0 rounded-qb-md border border-qb-line bg-qb-surface text-center text-qb-h5 font-medium text-qb-ink outline-none transition-colors',
-              'qb-tablet:rounded-qb-lg qb-tablet:text-qb-h3 qb-desktop:text-qb-h5',
-              'focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
+              'peer size-full min-w-0 rounded-qb-lg border border-qb-line bg-qb-surface text-center text-qb-h5 font-medium text-qb-ink outline-none transition-colors',
+              'focus:border-qb-brand',
               'disabled:pointer-events-none disabled:opacity-50',
-              'aria-invalid:border-qb-danger aria-invalid:ring-2 aria-invalid:ring-qb-danger/20',
+              'aria-invalid:border-qb-danger',
             )}
           />
           {/* The faint "0" of the design's empty boxes; a placeholder would be read out as if a digit were filled in. */}
           {digit ? null : (
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 flex items-center justify-center text-qb-h5 font-medium text-qb-line peer-disabled:opacity-50 qb-tablet:text-qb-h3 qb-desktop:text-qb-h5"
+              className="pointer-events-none absolute inset-0 flex items-center justify-center text-qb-h5 font-medium text-qb-line peer-disabled:opacity-50"
             >
               0
             </span>

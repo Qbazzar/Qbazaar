@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Loader2, UserX } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
@@ -42,7 +43,7 @@ export default function BlockedUsersPage() {
   const mutation = useMutation({
     mutationFn: (userId: string) => unblockUser(userId),
     onSuccess: () => {
-      toast.success(t('account.blocked_users.unblock_success'));
+      showDesignToast(t('account.blocked_users.unblock_success'));
       queryClient.invalidateQueries({ queryKey: ['account', 'blocked-users'] });
     },
     onError: (err) => {

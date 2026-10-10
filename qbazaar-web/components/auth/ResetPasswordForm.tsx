@@ -5,9 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { KeyRound, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -18,11 +19,10 @@ import {
 import { ApiClientError, login, resetPassword } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import { AuthErrorCode } from '@/lib/api/types';
-import { AuthFooter, authLinkClass, authSubmitClass } from './AuthFooter';
+import { authButtonClass, authSubmitClass } from './AuthFooter';
 import { AuthHeading } from './AuthHeading';
 import { fieldErrorText } from './FieldError';
 import { PasswordInput } from './PasswordInput';
-import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -52,19 +52,24 @@ export function ResetPasswordForm() {
       // instead of on the login page, where browser autofill would re-submit
       // their OLD saved password (the #1 "I reset but can't log in" cause).
       try {
-        const data = await login({
+        const result = await login({
           identifier: values.email,
           password: values.password,
         });
+        showDesignToast(t('auth.reset_password.success_toast'));
+        // A sign-in held at the new-device check finishes on the login page.
+        if (result.status !== 'signed_in') {
+          router.replace('/login');
+          return;
+        }
         setAuth({
-          user: data.user,
-          accessToken: data.tokens.access_token,
+          user: result.data.user,
+          accessToken: result.data.tokens.access_token,
         });
-        toast.success(t('auth.reset_password.success_toast'));
         router.replace('/account');
       } catch {
         // Reset succeeded but auto-login didn't — fall back to manual login.
-        toast.success(t('auth.reset_password.success_toast'));
+        showDesignToast(t('auth.reset_password.success_toast'));
         router.replace('/login');
       }
     } catch (err) {
@@ -74,19 +79,18 @@ export function ResetPasswordForm() {
 
   if (!linkValid) {
     return (
-      <div className="flex flex-col items-center gap-8">
+      <div className="text-center">
         <AuthHeading
-          icon={<KeyRound />}
           title={t('auth.reset_password.missing_params_title')}
           subtitle={t('auth.reset_password.missing_params_body')}
         />
-        <div className="flex w-full max-w-[420px] flex-col gap-3">
+        <div className="mx-auto mt-[34px] flex w-full max-w-[420px] flex-col gap-3">
           <Link href="/forgot-password" className={cn(buttonVariants({ fullWidth: true }), authSubmitClass)}>
             {t('auth.reset_password.go_to_forgot')}
           </Link>
           <Link
             href="/login"
-            className={cn(buttonVariants({ variant: 'outline', fullWidth: true }), authSubmitClass)}
+            className={cn(buttonVariants({ variant: 'outline', fullWidth: true }), authButtonClass)}
           >
             {t('auth.reset_password.back_to_login')}
           </Link>
@@ -97,39 +101,32 @@ export function ResetPasswordForm() {
 
   const errors = form.formState.errors;
   const submitting = form.formState.isSubmitting;
-  const passwordValue = form.watch('password');
 
   return (
     <>
       <AuthHeading
-        icon={<KeyRound />}
         title={t('auth.reset_password.title')}
-        subtitle={
-          <>
-            {t('auth.reset_password.subtitle')}{' '}
-            <span className="font-semibold text-qb-ink-body" dir="ltr">
-              {email}
-            </span>
-          </>
-        }
+        subtitle={t('auth.reset_password.subtitle')}
       />
-      <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-6">
+      <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col">
         {/* email + token are query-driven; we still register them so RHF posts
             the full ResetPasswordRequest shape and validates them via Zod. */}
         <input type="hidden" {...form.register('email')} />
         <input type="hidden" {...form.register('token')} />
 
-        <Field label={t('auth.reset_password.password_label')} required error={fieldErrorText(errors.password?.message)}>
+        <Field
+          label={t('auth.reset_password.password_label')}
+          required
+          error={fieldErrorText(errors.password?.message)}
+          className="mt-[22px]"
+        >
           {(control) => (
-            <div className="flex flex-col gap-3">
-              <PasswordInput
-                {...control}
-                autoComplete="new-password"
-                placeholder={t('auth.reset_password.password_placeholder')}
-                {...form.register('password')}
-              />
-              <PasswordStrengthIndicator password={passwordValue ?? ''} />
-            </div>
+            <PasswordInput
+              {...control}
+              autoComplete="new-password"
+              placeholder={t('auth.reset_password.password_placeholder')}
+              {...form.register('password')}
+            />
           )}
         </Field>
 
@@ -137,6 +134,7 @@ export function ResetPasswordForm() {
           label={t('auth.reset_password.password_confirmation_label')}
           required
           error={fieldErrorText(errors.password_confirmation?.message)}
+          className="mt-[18px]"
         >
           {(control) => (
             <PasswordInput
@@ -148,7 +146,12 @@ export function ResetPasswordForm() {
           )}
         </Field>
 
-        <Button type="submit" fullWidth disabled={submitting} className={cn(authSubmitClass, submitting && 'cursor-progress')}>
+        <Button
+          type="submit"
+          fullWidth
+          disabled={submitting}
+          className={cn(authSubmitClass, 'mt-[26px]', submitting && 'cursor-progress')}
+        >
           {submitting ? (
             <>
               <Loader2 className="animate-spin" aria-hidden="true" />
@@ -158,12 +161,6 @@ export function ResetPasswordForm() {
             t('auth.reset_password.submit')
           )}
         </Button>
-
-        <AuthFooter>
-          <Link href="/login" className={authLinkClass}>
-            {t('auth.reset_password.back_to_login')}
-          </Link>
-        </AuthFooter>
       </form>
     </>
   );

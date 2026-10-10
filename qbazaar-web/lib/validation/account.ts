@@ -98,3 +98,27 @@ export type DeactivateInput = z.infer<typeof deactivateSchema>;
 
 export const deleteAccountSchema = z.object(accountLifecycleShape);
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
+
+// ── Delivery address ───────────────────────────────────────────────────────
+// Same limits as the API's address rules (ValidatesAddressFields).
+const optionalText = (max: number, message: string) =>
+  z
+    .string()
+    .trim()
+    .max(max, message)
+    .transform((value) => (value.length === 0 ? null : value));
+
+export const addressSchema = z.object({
+  full_name: z.string().trim().min(2, 'account.errors.address_name').max(80, 'auth.errors.full_name_max'),
+  supplement: optionalText(120, 'account.errors.address_too_long'),
+  street: z.string().trim().min(1, 'account.errors.required').max(120, 'account.errors.address_too_long'),
+  house_number: z.string().trim().min(1, 'account.errors.required').max(20, 'account.errors.address_too_long'),
+  postal_code: optionalText(20, 'account.errors.address_too_long').refine(
+    (value) => value === null || /^[A-Za-z0-9_-]+$/.test(value),
+    'account.errors.postal_code',
+  ),
+  city: z.string().trim().min(1, 'account.errors.required').max(80, 'account.errors.address_too_long'),
+});
+
+export type AddressFormValues = z.input<typeof addressSchema>;
+export type AddressInput = z.output<typeof addressSchema>;

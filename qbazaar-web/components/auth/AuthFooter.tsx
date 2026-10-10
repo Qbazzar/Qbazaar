@@ -3,20 +3,25 @@ import type { ReactNode } from 'react';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { cn } from '@/lib/utils';
 
-/** Underlined brand link inside auth copy ("Signup", "Login", "Resend"). */
+/** Underlined brand link inside auth copy ("Signup", "Login", "Edit"): `a.qb-link`. */
 export const authLinkClass = cn(
-  'rounded-qb-xs font-semibold text-qb-brand underline underline-offset-2 hover:text-qb-brand-hover',
+  'rounded-qb-xs font-medium text-qb-brand underline hover:text-qb-brand-hover',
   focusRing,
 );
 
-/** Submit button height per breakpoint: 52, 60 and 48 px in 779:40299, 779:39974 and 736:65208. */
-export const authSubmitClass =
-  'h-[52px] qb-tablet:h-[60px] qb-tablet:rounded-qb-lg qb-tablet:text-qb-body-lg qb-desktop:h-12 qb-desktop:rounded-qb-md qb-desktop:text-qb-body';
+/** Geometry of `.qb-btn` in auth.css: 56 px high, r12, 600 16 px. */
+export const authButtonClass = 'h-14 rounded-qb-lg text-qb-body font-semibold';
 
-/** "You didn't have an account? Signup" line at the bottom of an auth card. */
+/** The orange `.qb-btn`, a shade darker on hover. */
+export const authSubmitClass = cn(authButtonClass, 'hover:bg-qb-auth-btn-hover');
+
+/** `.qb-field input:focus` only turns the border orange; the design system's ring stays off. */
+export const authInputClass = 'focus-visible:ring-0 aria-invalid:focus-visible:ring-0';
+
+/** "You didn't have an account? Signup" line at the bottom of an auth card (`.qb-foot`). */
 export function AuthFooter({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <p className={cn('mt-2 text-center text-qb-caption text-qb-ink-subtle qb-tablet:text-qb-body', className)}>
+    <p className={cn('mt-[22px] text-center text-qb-body-sm text-qb-auth-foot', className)}>
       {children}
     </p>
   );

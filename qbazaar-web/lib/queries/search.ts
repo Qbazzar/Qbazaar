@@ -23,6 +23,7 @@ import {
   getSuggestions,
   listSavedSearches,
   runSearch,
+  setSavedSearchAlerts,
   type CreateSavedSearchPayload,
 } from '@/lib/api/search';
 import type { ApiClientError } from '@/lib/api/auth';
@@ -110,6 +111,53 @@ export function useDeleteSavedSearchMutation(): UseMutationResult<
     mutationFn: deleteSavedSearch,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: searchKeys.saved() });
+    },
+  });
+}
+
+/**
+ * "Clear all" and "Clean up". The API has no bulk call and an account keeps
+ * at most ten saved searches, so the ids go out in parallel. Resolves with
+ * how many requests failed.
+ */
+export function useDeleteSavedSearchesMutation(): UseMutationResult<number, ApiClientError, readonly string[]> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids) => {
+      const results = await Promise.allSettled(ids.map((id) => deleteSavedSearch(id)));
+      return results.filter((result) => result.status === 'rejected').length;
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: searchKeys.saved() });
+    },
+  });
+}
+
+/** "Notification on / off" of a saved search: flips at once and rolls back if the request fails. */
+export function useSavedSearchAlertsMutation(): UseMutationResult<
+  SavedSearch,
+  ApiClientError,
+  { id: string; alertsEnabled: boolean },
+  { previous?: SavedSearch[] }
+> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, alertsEnabled }) => setSavedSearchAlerts(id, alertsEnabled),
+    onMutate: async ({ id, alertsEnabled }) => {
+      await qc.cancelQueries({ queryKey: searchKeys.saved() });
+      const previous = qc.getQueryData<SavedSearch[]>(searchKeys.saved());
+      qc.setQueryData<SavedSearch[]>(searchKeys.saved(), (rows) =>
+        rows?.map((row) => (row.id === id ? { ...row, alerts_enabled: alertsEnabled } : row)),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(searchKeys.saved(), context.previous);
+    },
+    onSuccess: (saved) => {
+      qc.setQueryData<SavedSearch[]>(searchKeys.saved(), (rows) =>
+        rows?.map((row) => (row.id === saved.id ? saved : row)),
+      );
     },
   });
 }
