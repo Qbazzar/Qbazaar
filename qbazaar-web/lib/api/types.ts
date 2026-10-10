@@ -586,6 +586,8 @@ export interface Ad {
   custom_fields: Record<string, unknown>;
   views_count: number;
   favorites_count: number;
+  /** Whether the signed-in caller saved the ad; false for guests. */
+  is_favorited?: boolean;
   published_at: string | null;
   expires_at: string | null;
   created_at: string;
