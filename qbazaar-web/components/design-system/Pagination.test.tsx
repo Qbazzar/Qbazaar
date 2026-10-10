@@ -46,6 +46,25 @@ describe('Pagination', () => {
     expect(screen.getByRole('link', { name: 'Next page' })).toBeInTheDocument();
   });
 
+  it('draws category.html pager by default: 40 px cells, the current page orange inside the grey border', () => {
+    render(<Pagination page={2} totalPages={4} getHref={getHref} />);
+    const current = screen.getByRole('link', { name: 'Page 2' });
+
+    expect(current).toHaveClass('h-10', 'min-w-10', 'text-qb-body-sm', 'border-qb-line');
+    expect(current.closest('ul')).toHaveClass('gap-2');
+  });
+
+  it('draws companies.html pager at the large size: 44 px cells 12 px apart, an orange border on the current page', () => {
+    render(<Pagination page={2} totalPages={4} getHref={getHref} size="lg" />);
+    const current = screen.getByRole('link', { name: 'Page 2' });
+
+    expect(current).toHaveClass('h-11', 'min-w-11', 'text-qb-body', 'font-medium', 'bg-qb-brand', 'border-qb-brand');
+    expect(current).not.toHaveClass('border-qb-line');
+    expect(screen.getByRole('link', { name: 'Page 3' })).toHaveClass('border-qb-line', 'text-qb-ink-body');
+    expect(screen.getByRole('link', { name: 'Next page' })).toHaveClass('text-qb-ink-muted');
+    expect(current.closest('ul')).toHaveClass('gap-3');
+  });
+
   it('clamps an out-of-range page', () => {
     render(<Pagination page={99} totalPages={4} getHref={getHref} />);
 

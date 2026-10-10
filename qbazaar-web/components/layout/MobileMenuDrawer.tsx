@@ -152,7 +152,7 @@ function SignOutRow() {
   return (
     <button type="button" onClick={signOut} disabled={pending} className={cn(row, focusRing, 'cursor-pointer text-qb-brand hover:bg-qb-hover')}>
       <Icon icon={LogOut} flipInRtl className="size-[21px]" />
-      <span className="flex-1 text-start">{t('account.nav.sign_out', 'تسجيل الخروج')}</span>
+      <span className="flex-1 text-start">{t('layout.menu.log_out', 'تسجيل الخروج')}</span>
       <RowChevron />
     </button>
   );

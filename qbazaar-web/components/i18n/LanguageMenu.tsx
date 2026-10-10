@@ -34,7 +34,7 @@ const VARIANTS = {
     title: 'px-6 pt-6 pb-4 text-qb-h5 leading-[30px]',
     list: 'pt-2',
     row: 'gap-2 px-6 py-2 text-qb-body font-medium text-qb-ink-secondary',
-    radio: (selected: boolean) => cn('size-[15px] border', selected ? 'border-qb-brand bg-qb-brand bg-clip-content p-[2px]' : 'border-qb-radio'),
+    radio: (selected: boolean) => cn('size-[15px] border', selected ? 'border-qb-brand bg-qb-brand bg-clip-content p-[2px]' : 'border-qb-radio-ring'),
   },
   phone: {
     root: '',

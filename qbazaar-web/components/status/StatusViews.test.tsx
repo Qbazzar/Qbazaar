@@ -28,7 +28,7 @@ describe('NotFoundView', () => {
     );
     const crumbs = screen.getByRole('navigation', { name: 'Breadcrumb' });
 
-    expect(crumbs).toHaveTextContent('HomeHelp centerPage not found');
+    expect(crumbs).toHaveTextContent('Home>Help center>Page not found');
     expect(screen.getByRole('heading', { level: 2, name: "We couldn't find this topic" })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Back to home' })).toBeNull();
   });

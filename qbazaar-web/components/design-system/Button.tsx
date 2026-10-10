@@ -24,10 +24,13 @@ export const buttonVariants = cva(
         ghost: 'font-medium text-qb-ink-muted hover:bg-qb-fill',
         danger: 'border border-qb-line bg-qb-surface text-qb-danger hover:bg-qb-danger-soft',
       },
+      // Line height 1.15 as every .qb-btn of the reference, so a padding-sized
+      // button (h-auto with py) keeps the reference height. A className that
+      // changes the text size replaces it and has to restate it.
       size: {
-        sm: 'h-10 rounded-qb-md px-[18px] text-qb-caption [&_svg]:size-4',
-        md: 'h-12 rounded-qb-md px-6 text-qb-body [&_svg]:size-5',
-        lg: 'h-14 rounded-qb-lg px-8 text-qb-body [&_svg]:size-5',
+        sm:'h-10 rounded-qb-md px-[18px] text-qb-caption leading-[1.15] [&_svg]:size-4',
+        md: 'h-12 rounded-qb-md px-6 text-qb-body leading-[1.15] [&_svg]:size-5',
+        lg: 'h-14 rounded-qb-lg px-8 text-qb-body leading-[1.15] [&_svg]:size-5',
         icon: 'size-10 rounded-qb-md [&_svg]:size-5',
       },
       fullWidth: { true: 'w-full' },

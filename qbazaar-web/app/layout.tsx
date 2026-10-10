@@ -69,7 +69,7 @@ export default async function RootLayout({
               </SiteFooterGate>
               <ImpersonationBanner />
             </Providers>
-            <Toaster richColors closeButton position="top-center" />
+            <Toaster />
           </ThemeProvider>
         </LocaleProvider>
       </body>
