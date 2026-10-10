@@ -94,7 +94,7 @@ export function ShareAdDialog({ open, onOpenChange, title, url }: ShareAdDialogP
           type="button"
           onClick={copy}
           className={cn(
-            'shrink-0 cursor-pointer rounded-qb-sm bg-qb-brand px-[18px] py-[9px] text-qb-caption font-semibold text-qb-on-brand transition-colors hover:bg-qb-brand-hover',
+            'shrink-0 cursor-pointer rounded-qb-sm bg-qb-brand px-[18px] py-[9px] text-qb-caption leading-[1.15] font-semibold text-qb-on-brand transition-colors hover:bg-qb-brand-hover',
             focusRing,
           )}
         >

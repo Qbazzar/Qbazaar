@@ -92,7 +92,7 @@ function WishlistEmpty() {
       <Link
         href="/"
         className={cn(
-          'mt-2 rounded-qb-lg bg-qb-brand px-8 py-3.5 text-qb-body-sm font-semibold text-qb-on-brand transition-colors hover:bg-qb-brand-hover',
+          'mt-2 rounded-qb-lg bg-qb-brand px-8 py-3.5 text-qb-body-sm leading-[1.15] font-semibold text-qb-on-brand transition-colors hover:bg-qb-brand-hover',
           focusRing,
         )}
       >

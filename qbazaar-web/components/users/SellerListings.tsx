@@ -12,13 +12,13 @@ import { Loader2Icon, PackageOpen } from 'lucide-react';
 import { ListingCard } from '@/components/ads/ListingCard';
 import { cardVariants } from '@/components/design-system/Card';
 import { EmptyState } from '@/components/design-system/EmptyState';
-import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { t } from '@/lib/i18n/messages';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { useUserAdsQuery } from '@/lib/queries/users';
 import { cn } from '@/lib/utils';
 
+import { loadMoreButton } from './load-more';
 import { SellerAdRow } from './SellerAdRow';
 
 interface SellerListingsProps {
@@ -40,6 +40,9 @@ const placeholderClassName = {
 
 // Rows sit under the "Active Listings" heading; the company grid has none above it.
 const headingLevel = { rows: 'h3', grid: 'h2' } as const;
+
+// The design capitalises the button differently on the two pages: "Loading more Ads" / "Loading More Ads".
+const loadMoreLabel = { rows: 'users.profile.load_more_rows', grid: 'users.profile.load_more' } as const;
 
 export function SellerListings({ userId, sellerName, layout }: SellerListingsProps) {
   const { data, isPending, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = useUserAdsQuery(userId);
@@ -118,13 +121,10 @@ export function SellerListings({ userId, sellerName, layout }: SellerListingsPro
             onClick={loadMore}
             aria-disabled={isFetchingNextPage || undefined}
             aria-busy={isFetchingNextPage || undefined}
-            className={cn(
-              'inline-flex cursor-pointer items-center gap-2 rounded-qb-lg border border-transparent bg-qb-brand-soft px-[30px] py-3.5 font-qb text-qb-body-sm font-semibold text-qb-brand transition-colors hover:border-qb-brand',
-              focusRing,
-            )}
+            className={loadMoreButton}
           >
             {isFetchingNextPage ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : null}
-            {t('users.profile.load_more')}
+            {t(loadMoreLabel[layout])}
           </button>
         </div>
       ) : null}

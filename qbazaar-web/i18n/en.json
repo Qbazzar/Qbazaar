@@ -558,6 +558,7 @@
         "other": "{count} Ads Available"
       },
       "load_more": "Loading More Ads",
+      "load_more_rows": "Loading more Ads",
       "message": "Message",
       "ads_label": {
         "one": "Ad",
