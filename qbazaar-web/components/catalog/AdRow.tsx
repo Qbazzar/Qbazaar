@@ -2,12 +2,11 @@
 
 import type { Ref } from 'react';
 
-import { AdSummaryCard } from '@/components/ads/AdSummaryCard';
 import { cn } from '@/lib/utils';
 import type { AdSummary } from '@/lib/api/types';
 
+import { CatalogAdCard } from './CatalogAdCard';
 import { catalogBleed } from './layout';
-import { ResponsiveListCard } from './ResponsiveListCard';
 
 interface AdRowProps {
   ads: AdSummary[];
@@ -38,8 +37,16 @@ export function AdRow({ ads, label, desktop, desktopLimit = ads.length, ref }: A
       )}
     >
       {ads.map((ad, index) => (
-        <li key={ad.id} className={cn('w-[250px] shrink-0 snap-start qb-tablet:w-[310px] qb-desktop:w-auto', index >= desktopLimit && 'qb-desktop:hidden')}>
-          {desktop === 'grid' ? <AdSummaryCard ad={ad} className="h-full" /> : <ResponsiveListCard ad={ad} />}
+        <li key={ad.id} className={cn('w-[260px] shrink-0 snap-start qb-tablet:w-[310px] qb-desktop:w-auto', index >= desktopLimit && 'qb-desktop:hidden')}>
+          {desktop === 'grid' ? (
+            <CatalogAdCard ad={ad} layout="tile" />
+          ) : (
+            // The row becomes a column of list cards on desktop (655:55973); CSS shows one of the two.
+            <>
+              <CatalogAdCard ad={ad} layout="tile" className="qb-desktop:hidden" />
+              <CatalogAdCard ad={ad} layout="row" className="hidden qb-desktop:flex" />
+            </>
+          )}
         </li>
       ))}
     </ul>

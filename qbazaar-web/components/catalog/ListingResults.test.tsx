@@ -45,14 +45,14 @@ describe('ListingResults', () => {
     });
   });
 
-  it('renders one list card per ad in the list view: stacked on phones, flat on tablets, padded on desktop', () => {
+  it('renders one list card per ad in the list view, its photo wrapping above the text when narrow', () => {
     render(<ListingResults ads={ads} view="list" isLoading={false} empty={null} label="Cars" />);
     const list = screen.getByRole('list', { name: 'Cars' });
     const links = screen.getAllByRole('link', { name: 'Ad 1' });
 
     expect(list.children).toHaveLength(2);
     expect(links).toHaveLength(1);
-    expect(links[0].closest('article')).toHaveClass('qb-tablet:flex-row');
+    expect(links[0].closest('article')).toHaveClass('flex-wrap');
     expect(list).toHaveClass('flex-col');
     expect(screen.getAllByText('A short summary')).toHaveLength(1);
   });
@@ -61,7 +61,7 @@ describe('ListingResults', () => {
     render(<ListingResults ads={ads} view="grid" isLoading={false} empty={null} label="Cars" />);
     const [rowCard, gridCard] = screen.getAllByRole('link', { name: 'Ad 1' }).map((link) => link.closest('article'));
 
-    expect(rowCard).toHaveClass('qb-desktop:hidden', 'qb-tablet:flex-row');
+    expect(rowCard).toHaveClass('qb-desktop:hidden', 'flex-wrap');
     expect(gridCard).toHaveClass('hidden', 'qb-desktop:flex');
     expect(screen.getByRole('list', { name: 'Cars' })).toHaveClass('qb-desktop:grid-cols-3');
   });

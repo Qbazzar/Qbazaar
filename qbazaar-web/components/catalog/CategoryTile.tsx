@@ -23,10 +23,15 @@ const tileBase = cn(
   focusRing,
 );
 
+/**
+ * The peach icon square. Without an icon from the API it stays empty, as the
+ * sub-category squares of parent-category.html do, rather than repeating one
+ * stand-in icon on every tile.
+ */
 function IconBox({ icon, className }: { icon: string | null; className?: string }) {
   return (
     <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center rounded-qb-md bg-qb-brand-soft text-qb-brand', className)}>
-      <DynamicIcon name={icon} strokeWidth={1.5} className="size-5 qb-tablet:size-6" />
+      {icon ? <DynamicIcon name={icon} strokeWidth={1.5} className="size-5 qb-tablet:size-6" /> : null}
     </span>
   );
 }
