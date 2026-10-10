@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/api/favorites', () => ({
@@ -10,11 +10,13 @@ vi.mock('@/lib/api/favorites', () => ({
   removeFavorite: vi.fn(),
 }));
 
-import { listFavoriteIds, removeFavorite, toggleFavorite } from '@/lib/api/favorites';
+import { listFavoriteIds, listFavorites, removeFavorite, toggleFavorite } from '@/lib/api/favorites';
+import { useAuthStore } from '@/store/auth';
 import { useFavoritesStore } from '@/store/favorites';
+import type { User } from '@/lib/api/types';
 
 import { adKeys } from './ads';
-import { useClearFavoritesMutation, useSyncAdFavorite, useToggleFavoriteMutation } from './favorites';
+import { useClearFavoritesMutation, useFavoritesQuery, useSyncAdFavorite, useToggleFavoriteMutation } from './favorites';
 
 function newClient() {
   return new QueryClient({ defaultOptions: { mutations: { retry: false } } });
@@ -33,6 +35,17 @@ function wrapper({ children }: { children: ReactNode }) {
 beforeEach(() => {
   vi.clearAllMocks();
   useFavoritesStore.getState().setIds(['a', 'b']);
+});
+
+describe('useFavoritesQuery', () => {
+  it('adds the ids of page 1 without dropping hearts already known', async () => {
+    useAuthStore.setState({ user: { id: 'u' } as User, accessToken: 't' });
+    vi.mocked(listFavorites).mockResolvedValue({ data: [{ id: 'c' }] } as never);
+    renderHook(() => useFavoritesQuery({ page: 1 }), { wrapper });
+
+    await waitFor(() => expect(useFavoritesStore.getState().ids.has('c')).toBe(true));
+    expect([...useFavoritesStore.getState().ids].sort()).toEqual(['a', 'b', 'c']);
+  });
 });
 
 describe('useClearFavoritesMutation', () => {

@@ -84,6 +84,7 @@ export function AdGallery({ images, alt, favorite, className }: AdGalleryProps) 
                   sizes={slideSizes}
                   preload={index === 0}
                   fetchPriority={index === 0 ? 'high' : undefined}
+                  loading={index === 1 ? 'eager' : undefined}
                   className="object-cover"
                 />
               </div>

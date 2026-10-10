@@ -41,6 +41,19 @@ describe('ShareAdButton', () => {
     await expect(navigator.clipboard.readText()).resolves.toBe(window.location.href);
   });
 
+  it('says so when the browser has no clipboard', async () => {
+    const user = userEvent.setup();
+    render(<ShareAdButton title="BMW M3" />);
+    await user.click(screen.getByRole('button', { name: 'Share Ad' }));
+    const button = await screen.findByRole('button', { name: 'Copy' });
+    vi.spyOn(navigator, 'clipboard', 'get').mockReturnValue(undefined as unknown as Clipboard);
+
+    await user.click(button);
+
+    expect(toast.error).toHaveBeenCalled();
+    vi.restoreAllMocks();
+  });
+
   it('closes on Escape', async () => {
     render(<ShareAdButton title="BMW M3" />);
 

@@ -13,6 +13,8 @@ import { create } from 'zustand';
 
 export interface FavoritesState {
   ids: Set<string>;
+  /** Ads whose saved state the store has been told (by the server or a toggle), either way. */
+  known: Set<string>;
   /** Replace the set wholesale (e.g. when the favorites list reloads). */
   setIds: (ids: Iterable<string>) => void;
   /** Merge ids into the existing set (used as pages of favorites load). */
@@ -24,30 +26,39 @@ export interface FavoritesState {
   clear: () => void;
 }
 
+function withKnown(known: Set<string>, ids: Iterable<string>): Set<string> {
+  const next = new Set(known);
+  for (const id of ids) next.add(id);
+  return next;
+}
+
 export const useFavoritesStore = create<FavoritesState>((set) => ({
   ids: new Set<string>(),
-  setIds: (ids) => set({ ids: new Set(ids) }),
+  known: new Set<string>(),
+  setIds: (ids) => {
+    const next = new Set(ids);
+    set((state) => ({ ids: next, known: withKnown(state.known, next) }));
+  },
   mergeIds: (ids) =>
     set((state) => {
-      const next = new Set(state.ids);
-      for (const id of ids) next.add(id);
-      return { ids: next };
+      const list = [...ids];
+      return { ids: withKnown(state.ids, list), known: withKnown(state.known, list) };
     }),
   toggleLocal: (id) =>
     set((state) => {
       const next = new Set(state.ids);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      return { ids: next };
+      return { ids: next, known: withKnown(state.known, [id]) };
     }),
   setOne: (id, favorited) =>
     set((state) => {
       const next = new Set(state.ids);
       if (favorited) next.add(id);
       else next.delete(id);
-      return { ids: next };
+      return { ids: next, known: withKnown(state.known, [id]) };
     }),
-  clear: () => set({ ids: new Set<string>() }),
+  clear: () => set({ ids: new Set<string>(), known: new Set<string>() }),
 }));
 
 /**

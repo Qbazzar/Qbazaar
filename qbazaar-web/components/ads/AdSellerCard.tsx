@@ -86,7 +86,9 @@ function SellerSummary({ seller, locale }: { seller: PublicUser; locale: Locale 
           </InfoRow>
         ) : null}
         <InfoRow icon={Tag}>{tPlural('ads.detail.seller_ads', seller.ads_count, locale)}</InfoRow>
-        <InfoRow icon={CalendarDays}>{t('ads.detail.active_since', { date: formatDottedDate(seller.joined_at) })}</InfoRow>
+        {seller.joined_at ? (
+          <InfoRow icon={CalendarDays}>{t('ads.detail.active_since', { date: formatDottedDate(seller.joined_at) })}</InfoRow>
+        ) : null}
       </ul>
     </>
   );

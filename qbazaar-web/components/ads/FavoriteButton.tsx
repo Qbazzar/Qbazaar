@@ -6,13 +6,13 @@
  *
  * - Live state comes from `useFavoritesStore` so every instance of this button
  *   on the page stays in sync after a single optimistic toggle.
- * - Unauthenticated clicks redirect to `/login?next={current}` instead of
+ * - Unauthenticated clicks redirect to `/login?from={current}` instead of
  *   firing the mutation — the heart only fills for signed-in users.
  * - The mutation is optimistic at the store level; the success path simply
  *   reconciles with the server, and the error path rolls back.
  */
 import { useMemo } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { HeartIcon } from 'lucide-react';
 
@@ -22,6 +22,7 @@ import { useAuthStore } from '@/store/auth';
 import { ApiClientError } from '@/lib/api/auth';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { currentLocationPath } from '@/lib/navigation/safe-return-to';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -54,12 +55,13 @@ export function FavoriteButton({
   adTitle,
 }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
 
   const storeHasId = useFavoritesStore((s) => s.ids.has(adId));
-  // Until the store has been hydrated (no entry yet), we fall back to the
-  // server-provided `initialFavorited` so the heart doesn't flicker.
-  const favorited = storeHasId || initialFavorited;
+  const storeKnown = useFavoritesStore((s) => s.known.has(adId));
+  // Until the store has heard about this ad, the server-provided
+  // `initialFavorited` keeps the heart from flickering. Once it has, the store
+  // wins, so an unsave on the wishlist shows at once and a rollback is visible.
+  const favorited = storeKnown ? storeHasId : initialFavorited;
 
   const isAuthenticated = useAuthStore((s) => Boolean(s.user && s.accessToken));
   const isHydrated = useAuthStore((s) => s.isHydrated);
@@ -82,8 +84,7 @@ export function FavoriteButton({
       // just because the access token hasn't rehydrated yet.
       if (isHydrated && !isAuthenticated) {
         toast.info(t('favorites.sign_in_required'));
-        const next = encodeURIComponent(pathname || '/');
-        router.push(`/login?next=${next}`);
+        router.push(`/login?from=${encodeURIComponent(currentLocationPath())}`);
         return;
       }
 
@@ -101,7 +102,7 @@ export function FavoriteButton({
         },
       });
     };
-  }, [adId, isAuthenticated, isHydrated, pathname, router, toggleMutation]);
+  }, [adId, isAuthenticated, isHydrated, router, toggleMutation]);
 
   return (
     <button

@@ -55,6 +55,13 @@ describe('AdGallery', () => {
     expect(screen.getByRole('img', { name: 'BMW M3 — 1' })).toBeInTheDocument();
   });
 
+  it('loads the second photo eagerly so the first arrow click is instant', () => {
+    render(<AdGallery images={[media(1), media(2), media(3)]} alt="BMW M3" />);
+
+    expect(screen.getByRole('img', { name: 'BMW M3 — 2' })).toHaveAttribute('loading', 'eager');
+    expect(screen.getByRole('img', { name: 'BMW M3 — 3' })).not.toHaveAttribute('loading', 'eager');
+  });
+
   it('cycles with both arrows: "Previous" on the first photo goes to the last one', async () => {
     render(<AdGallery images={[media(1), media(2)]} alt="BMW M3" />);
     const previous = screen.getByRole('button', { name: 'Previous' });

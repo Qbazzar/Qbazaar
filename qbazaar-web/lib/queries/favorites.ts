@@ -58,7 +58,6 @@ export function useFavoritesQuery(
 ): UseQueryResult<PaginatedResponse<FavoritedAdSummary>, ApiClientError> {
   const isAuthenticated = useAuthStore((s) => Boolean(s.user && s.accessToken));
   const mergeIds = useFavoritesStore((s) => s.mergeIds);
-  const setIds = useFavoritesStore((s) => s.setIds);
 
   const result = useQuery<
     PaginatedResponse<FavoritedAdSummary>,
@@ -72,13 +71,13 @@ export function useFavoritesQuery(
   });
 
   // Sync server truth into the local store so AdCard hearts stay accurate.
-  // Page 1 = reset; subsequent pages = merge so we don't drop already-known ids.
+  // Always merge: a page holds only part of the saved set, so replacing would
+  // drop the hearts further down. Removals reach the store through the toggle.
   useEffect(() => {
     if (!result.data) return;
     const ids = result.data.data.map((ad) => ad.id);
-    if ((params.page ?? 1) <= 1) setIds(ids);
-    else mergeIds(ids);
-  }, [result.data, params.page, mergeIds, setIds]);
+    mergeIds(ids);
+  }, [result.data, mergeIds]);
 
   return result;
 }
@@ -140,7 +139,7 @@ const CLEAR_BATCH_SIZE = 4;
  */
 export function useClearFavoritesMutation(): UseMutationResult<void, ApiClientError, void> {
   const qc = useQueryClient();
-  const clearLocal = useFavoritesStore((s) => s.clear);
+  const setIds = useFavoritesStore((s) => s.setIds);
 
   return useMutation<void, ApiClientError, void>({
     mutationFn: async () => {
@@ -150,7 +149,8 @@ export function useClearFavoritesMutation(): UseMutationResult<void, ApiClientEr
       }
     },
     onSuccess: () => {
-      clearLocal();
+      // Keeps the ads marked as known, so a wishlist card empties its heart at once.
+      setIds([]);
       qc.setQueriesData<Ad>({ queryKey: adKeys.details() }, (ad) => (ad ? { ...ad, is_favorited: false } : ad));
     },
     onSettled: () => {

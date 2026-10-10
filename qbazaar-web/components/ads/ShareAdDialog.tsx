@@ -54,8 +54,12 @@ interface ShareAdDialogProps {
 /** "Share this ad" (product.html): four channel buttons, then the link with "Copy". */
 export function ShareAdDialog({ open, onOpenChange, title, url }: ShareAdDialogProps) {
   const copy = () => {
-    void navigator.clipboard
-      ?.writeText(url)
+    if (!navigator.clipboard) {
+      toast.error(t('common.error'));
+      return;
+    }
+    navigator.clipboard
+      .writeText(url)
       .then(() => toast.success(t('ads.share.copied')))
       .catch(() => toast.error(t('common.error')));
   };
