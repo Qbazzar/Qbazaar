@@ -14,12 +14,14 @@ export interface TableCardProps {
   titleId: string;
   /** Control on the end side of the title, e.g. a filter or a button. */
   action?: ReactNode;
+  /** Pads the content in line with the title and divides it like the tables, for a form. */
+  padded?: boolean;
   children: ReactNode;
   className?: string;
 }
 
-/** The "Transaction History" card (502:21437) that holds a table or a list. */
-export function TableCard({ title, titleId, action, children, className }: TableCardProps) {
+/** The "Transaction History" card (502:21437) that holds a table, a list or, `padded`, a form. */
+export function TableCard({ title, titleId, action, padded = false, children, className }: TableCardProps) {
   return (
     <section aria-labelledby={titleId} className={cn(panelClass, className)}>
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-4 qb-tablet:px-[18px] qb-desktop:px-8 qb-desktop:pt-8 qb-desktop:pb-6">
@@ -31,7 +33,7 @@ export function TableCard({ title, titleId, action, children, className }: Table
         </h2>
         {action}
       </div>
-      {children}
+      {padded ? <div className="border-t border-qb-line p-5 qb-tablet:px-[18px] qb-desktop:p-8">{children}</div> : children}
     </section>
   );
 }

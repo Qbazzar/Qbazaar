@@ -11,7 +11,6 @@ import { Notice } from '@/components/design-system/Notice';
 import { RadioCard } from '@/components/design-system/RadioCard';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { AmountField } from '@/components/orders/AmountField';
-import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
 import { FormError } from '@/components/orders/NoteField';
 import { PageState } from '@/components/orders/PageState';
@@ -112,7 +111,8 @@ function WithdrawalForm({ wallet, accounts }: { wallet: Wallet; accounts: BankAc
   };
 
   return (
-    <CheckoutPanel title={t('orders.withdrawal.available', { amount: formatMoney(withdrawable, wallet.currency) })} titleId="withdraw-form">
+    // The same card and heading as "Your withdrawals" under it.
+    <TableCard padded title={t('orders.withdrawal.available', { amount: formatMoney(withdrawable, wallet.currency) })} titleId="withdraw-form">
       {isPositiveAmount(wallet.commission_debt) ? (
         <p className="mb-4 text-qb-caption text-qb-ink-secondary">
           {t('orders.withdrawal.debt_note', { debt: formatMoney(wallet.commission_debt, wallet.currency) })}
@@ -123,7 +123,7 @@ function WithdrawalForm({ wallet, accounts }: { wallet: Wallet; accounts: BankAc
           {t('orders.withdrawal.nothing')}
         </Notice>
       ) : accounts.length === 0 ? (
-        <Notice tone="info" role="status">
+        <Notice tone="brand" role="status">
           <p>{t('orders.withdrawal.no_accounts')}</p>
           <Link href="/account/wallet/bank-accounts" className={cn(buttonVariants({ size: 'sm' }), 'mt-3 rounded-qb-sm')}>
             {t('orders.withdrawal.add_account')}
@@ -192,7 +192,7 @@ function WithdrawalForm({ wallet, accounts }: { wallet: Wallet; accounts: BankAc
           </Button>
         </form>
       )}
-    </CheckoutPanel>
+    </TableCard>
   );
 }
 
