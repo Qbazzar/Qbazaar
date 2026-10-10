@@ -26,10 +26,10 @@ function renderButton() {
   return render(<ReportButton target_type="ad" target_id="ad-1" label="Report Ad" />, { wrapper });
 }
 
-async function reportAsSpam() {
+async function reportAsFraud() {
   await userEvent.click(screen.getByRole('button', { name: 'Report Ad' }));
-  await userEvent.click(await screen.findByRole('radio', { name: 'Spam' }));
-  await userEvent.click(screen.getByRole('button', { name: 'Submit report' }));
+  await userEvent.click(await screen.findByRole('radio', { name: 'Fraud or scam' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Submit Report' }));
 }
 
 function refusal(code: string, status = 422) {
@@ -54,11 +54,36 @@ describe('ReportButton', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('opens "Report this ad" with the five reasons of the reference', async () => {
+    renderButton();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Report Ad' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Report this ad' })).toBeInTheDocument();
+    expect(screen.getAllByRole('radio').map((radio) => radio.closest('label')?.textContent)).toEqual([
+      'Fraud or scam',
+      'Prohibited item',
+      'Wrong category',
+      'Duplicate listing',
+      'Offensive content',
+    ]);
+  });
+
+  it('closes on Cancel without sending', async () => {
+    renderButton();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Report Ad' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(submitReport).not.toHaveBeenCalled();
+  });
+
   it('asks for a reason before sending', async () => {
     renderButton();
 
     await userEvent.click(screen.getByRole('button', { name: 'Report Ad' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Submit report' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Submit Report' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Pick a reason');
     expect(submitReport).not.toHaveBeenCalled();
@@ -68,10 +93,10 @@ describe('ReportButton', () => {
     vi.mocked(submitReport).mockResolvedValue({ id: 'r1' } as Report);
     renderButton();
 
-    await reportAsSpam();
+    await reportAsFraud();
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Report submitted'));
-    expect(submitReport).toHaveBeenCalledWith({ target_type: 'ad', target_id: 'ad-1', category: 'spam', description: undefined });
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Report submitted. Thank you.'));
+    expect(submitReport).toHaveBeenCalledWith({ target_type: 'ad', target_id: 'ad-1', category: 'fraud', description: undefined });
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(screen.getByRole('button', { name: 'Reported!' })).toHaveAttribute('aria-disabled', 'true');
   });
@@ -80,7 +105,7 @@ describe('ReportButton', () => {
     vi.mocked(submitReport).mockRejectedValue(refusal('REPORT_002', 429));
     renderButton();
 
-    await reportAsSpam();
+    await reportAsFraud();
 
     await waitFor(() => expect(toast.warning).toHaveBeenCalledWith('Already reported'));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -91,7 +116,7 @@ describe('ReportButton', () => {
     vi.mocked(submitReport).mockRejectedValue(refusal('REPORT_001'));
     renderButton();
 
-    await reportAsSpam();
+    await reportAsFraud();
 
     await waitFor(() => expect(toast.info).toHaveBeenCalledWith("You can't report yourself"));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -102,7 +127,7 @@ describe('ReportButton', () => {
     vi.mocked(submitReport).mockRejectedValue(refusal('REPORT_003'));
     renderButton();
 
-    await reportAsSpam();
+    await reportAsFraud();
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("This item can't be reported"));
     expect(screen.getByRole('dialog')).toBeInTheDocument();

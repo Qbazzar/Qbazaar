@@ -1,7 +1,6 @@
 import { Clock, Globe, Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 
-import { cardVariants } from '@/components/design-system/Card';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { intlLocale } from '@/lib/i18n/format';
@@ -41,13 +40,13 @@ interface CompanyInfoListProps {
   locale: Locale;
 }
 
-/** Phone, email, website, address and opening hours, each with its icon tile. */
+/** Phone, email, website, address and opening hours, each after its 18 px grey line icon. */
 export function CompanyInfoList({ business, locale }: CompanyInfoListProps) {
   const website = business.website ? safeWebsiteHref(business.website) : null;
   const hours = groupOpeningHours(business.opening_hours ?? [], intlLocale(locale));
 
   return (
-    <ul className="flex flex-col gap-3.5 text-qb-caption text-qb-ink-body">
+    <ul className="flex flex-col gap-4 text-qb-body-sm text-qb-ink-body">
       {business.contact_phone ? (
         <InfoItem icon={Phone} label={t('users.profile.contact.phone')}>
           <a href={`tel:${business.contact_phone}`} dir="ltr" className={linkClass}>
@@ -100,24 +99,22 @@ export function CompanyInfoList({ business, locale }: CompanyInfoListProps) {
 
 function InfoItem({ icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
   return (
-    <li className="flex items-center gap-2.5">
-      <span className="flex size-[35px] shrink-0 items-center justify-center rounded-qb-md bg-qb-fill text-qb-ink-subtle">
-        <Icon icon={icon} size="sm" label={label} />
-      </span>
+    <li className="flex items-center gap-3">
+      <Icon icon={icon} label={label} strokeWidth={1.6} className="size-[18px] text-qb-ink-subtle" />
       <span className="min-w-0">{children}</span>
     </li>
   );
 }
 
-/** The "Info" panel of the company page's sidebar. */
+/** "Info" in 18 px / 600, 18 px above the rows. */
+export const companyInfoTitle = 'mb-[18px] text-qb-body-lg font-semibold tracking-normal text-qb-ink';
+
+/** The "Info" panel of the company page's desktop sidebar: a flat white r16 card. */
 export function CompanyInfoCard({ business, locale, className }: CompanyInfoListProps & { className?: string }) {
   const titleId = useId();
   return (
-    <section
-      aria-labelledby={titleId}
-      className={cn(cardVariants({ large: true, elevated: true, padding: 'none' }), 'px-[25px] pt-[30px] pb-6', className)}
-    >
-      <h2 id={titleId} className="mb-5 text-qb-body-lg font-semibold tracking-normal text-qb-ink">
+    <section aria-labelledby={titleId} className={cn('rounded-qb-xl border border-qb-line bg-qb-surface p-6 font-qb', className)}>
+      <h2 id={titleId} className={companyInfoTitle}>
         {t('users.profile.info')}
       </h2>
       <CompanyInfoList business={business} locale={locale} />
