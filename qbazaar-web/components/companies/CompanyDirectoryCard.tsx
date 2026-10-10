@@ -38,7 +38,7 @@ interface CompanyDirectoryCardProps {
 /**
  * A company of the directory as companies.html draws it: a flat r16 card
  * (24 / 22 px padding) with the 56 px r14 logo tile, the name in 16 px / 500,
- * a 13 px grey line and the peach ads-count chip. The name link covers the
+ * a 13 px / 500 grey line and the peach ads-count chip. The name link covers the
  * card, so the card is one tab stop; it lifts and shades under the pointer
  * like every reference card.
  */
@@ -66,8 +66,8 @@ export function CompanyDirectoryCard({ href, name, logoUrl, toneKey, meta, count
           {name}
         </Link>
       </h2>
-      <p className="mt-3 flex max-w-full items-center gap-1 text-qb-label text-qb-ink-subtle">
-        <Icon icon={Users} className="size-[13px]" strokeWidth={1.7} />
+      <p className="mt-3 flex max-w-full items-center gap-[5px] text-qb-label font-medium text-qb-ink-subtle">
+        <Icon icon={Users} className="size-3.5" strokeWidth={1.6} />
         <span className="truncate">{meta}</span>
       </p>
       <span className="mt-2.5 rounded-qb-sm bg-qb-brand-soft px-3.5 py-[5px] text-qb-label font-medium text-qb-brand">{count}</span>
