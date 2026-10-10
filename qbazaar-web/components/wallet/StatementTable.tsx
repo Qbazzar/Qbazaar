@@ -25,7 +25,11 @@ export function signedAmount(entry: Pick<WalletEntry, 'amount' | 'currency' | 'd
   return `${entry.direction === 'increase' ? '+' : '−'}${formatMoney(entry.amount, entry.currency)}`;
 }
 
-/** The ledger statement of the wallet and the commission account, newest first. */
+/**
+ * The ledger statement of the wallet and the commission account, newest
+ * first. `headerAction` sits at the end of the title row (563:31406,
+ * 613:31879); the account filter then takes its own row below 1001 px.
+ */
 export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
   const [account, setAccount] = useState<WalletAccount | ''>('');
   const query = useWalletEntriesQuery(account || undefined);
@@ -33,26 +37,34 @@ export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
 
   return (
     <TableCard
-      title={t('orders.wallet.history_title')}
+      title={
+        // Phones say "Transactions" (613:31879), which leaves room for Withdraw Funds beside it.
+        <>
+          <span className="max-qb-tablet:hidden">{t('orders.wallet.history_title')}</span>
+          <span className="qb-tablet:hidden">{t('orders.wallet.history_title_short')}</span>
+        </>
+      }
       titleId="wallet-history"
       action={
-        <div className="flex flex-wrap items-center gap-3 text-qb-caption text-qb-ink-body">
+        <>
           {headerAction}
-          <span id="wallet-history-filter" className="shrink-0">
-            {t('orders.wallet.filter_label')}
-          </span>
-          <FieldSelect
-            label={t('orders.wallet.filter_label')}
-            aria-labelledby="wallet-history-filter"
-            value={account}
-            options={[
-              { value: '', label: t('orders.wallet.filter.all') },
-              ...ACCOUNTS.map((value) => ({ value, label: t(`orders.wallet.filter.${value}`) })),
-            ]}
-            onChange={(next) => setAccount(ACCOUNTS.find((value) => value === next) ?? '')}
-            className="h-10 w-auto min-w-44 text-qb-caption"
-          />
-        </div>
+          <div className={cn('flex items-center gap-3 text-qb-caption text-qb-ink-body', headerAction && 'w-full qb-desktop:w-auto')}>
+            <span id="wallet-history-filter" className="shrink-0">
+              {t('orders.wallet.filter_label')}
+            </span>
+            <FieldSelect
+              label={t('orders.wallet.filter_label')}
+              aria-labelledby="wallet-history-filter"
+              value={account}
+              options={[
+                { value: '', label: t('orders.wallet.filter.all') },
+                ...ACCOUNTS.map((value) => ({ value, label: t(`orders.wallet.filter.${value}`) })),
+              ]}
+              onChange={(next) => setAccount(ACCOUNTS.find((value) => value === next) ?? '')}
+              className="h-10 w-auto min-w-44 text-qb-caption"
+            />
+          </div>
+        </>
       }
     >
       {query.isPending ? (

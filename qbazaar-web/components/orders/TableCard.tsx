@@ -10,7 +10,7 @@ import { panelClass } from './CheckoutPanel';
 import '@/styles/design-tokens-sell.css';
 
 export interface TableCardProps {
-  title: string;
+  title: ReactNode;
   titleId: string;
   /** Control on the end side of the title, e.g. a filter or a button. */
   action?: ReactNode;

@@ -17,8 +17,17 @@ import { cn } from '@/lib/utils';
 
 import { StatementTable } from './StatementTable';
 
+import '@/styles/design-tokens-sell.css';
+
 /** Share of the debt ceiling from which the wallet warns before orders are blocked. */
 const WARN_AT_PERCENT = BigInt(60);
+
+/**
+ * The tile labels are #999 (502:22401, 563:31406) and #A4ADBA on phones
+ * (613:31879). StatTile draws its label in ink-subtle, so the tiles remap
+ * that token until StatTile takes the design's colour itself.
+ */
+const walletTile = '[--color-qb-ink-subtle:var(--color-qb-ink-meta)] max-qb-tablet:[--color-qb-ink-subtle:var(--color-qb-breadcrumb)]';
 
 /** `/account/wallet`: balance, commission owed, what can be withdrawn and the statement (502:22401). */
 export function WalletView() {
@@ -33,7 +42,7 @@ export function WalletView() {
           <nav aria-label={t('orders.wallet.actions')} className="flex flex-wrap gap-2">
             <Link href="/account/wallet/bank-accounts" className={cn(buttonVariants({ variant: 'outline' }), headerButton)}>
               <CreditCard aria-hidden="true" />
-              <HeaderButtonLabel>{t('orders.wallet.payout_accounts')}</HeaderButtonLabel>
+              <HeaderButtonLabel>{t('orders.wallet.payment_method')}</HeaderButtonLabel>
             </Link>
             {/* Under 1001 px Withdraw Funds moves into the Transaction History card (563:31406, 613:31879). */}
             <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), headerButton, 'hidden qb-desktop:inline-flex')}>
@@ -56,12 +65,14 @@ export function WalletView() {
               label={t('orders.wallet.balance')}
               value={formatMoney(query.data.available_balance, query.data.currency)}
               icon={<WalletIcon />}
+              className={walletTile}
             />
             <StatTile
               label={t('orders.wallet.commission_owed')}
               value={formatMoney(query.data.commission_debt, query.data.currency)}
               icon={<Receipt />}
               tone="info"
+              className={walletTile}
               hint={
                 <>
                   {t('orders.wallet.ceiling_hint', { ceiling: formatMoney(query.data.debt_ceiling, query.data.currency) })}
@@ -78,7 +89,7 @@ export function WalletView() {
               value={formatMoney(query.data.withdrawable_balance, query.data.currency)}
               icon={<Landmark />}
               hint={t('orders.wallet.withdrawable_hint')}
-              className="col-span-2 qb-tablet:col-span-1"
+              className={cn(walletTile, 'col-span-2 qb-tablet:col-span-1')}
             />
           </div>
         </>

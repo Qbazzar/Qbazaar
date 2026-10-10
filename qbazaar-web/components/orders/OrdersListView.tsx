@@ -43,7 +43,7 @@ export function OrdersListView() {
         <>
           <Link href="/account/wallet/bank-accounts" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton)}>
             <CreditCard aria-hidden="true" />
-            <HeaderButtonLabel>{t('orders.wallet.payout_accounts')}</HeaderButtonLabel>
+            <HeaderButtonLabel>{t('orders.wallet.payment_method')}</HeaderButtonLabel>
           </Link>
           <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton, 'max-qb-tablet:hidden')}>
             <ArrowUpRight aria-hidden="true" />
