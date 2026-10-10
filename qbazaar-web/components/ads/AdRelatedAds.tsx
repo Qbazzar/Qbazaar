@@ -42,7 +42,8 @@ function RelatedAdsRow({ title, viewAll, ads, limit, isPending, isError }: Relat
 
   return (
     <section aria-labelledby={titleId} aria-busy={isPending || undefined} className="mt-10">
-      <SectionHeader id={titleId} title={title} action={viewAll} className="mb-[22px] items-center" />
+      {/* No gap, as in the reference: a phone keeps "Another Ads From Seller" on one line beside "View All". */}
+      <SectionHeader id={titleId} title={title} action={viewAll} className="mb-[22px] items-center gap-0" />
       {isPending ? (
         <div className={list}>
           <span className="sr-only">{t('common.loading')}</span>
