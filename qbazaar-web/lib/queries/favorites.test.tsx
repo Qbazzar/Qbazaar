@@ -10,13 +10,24 @@ vi.mock('@/lib/api/favorites', () => ({
   removeFavorite: vi.fn(),
 }));
 
-import { listFavoriteIds, removeFavorite } from '@/lib/api/favorites';
+import { listFavoriteIds, removeFavorite, toggleFavorite } from '@/lib/api/favorites';
 import { useFavoritesStore } from '@/store/favorites';
 
-import { useClearFavoritesMutation } from './favorites';
+import { adKeys } from './ads';
+import { useClearFavoritesMutation, useSyncAdFavorite, useToggleFavoriteMutation } from './favorites';
+
+function newClient() {
+  return new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+}
+
+function wrapperFor(client: QueryClient) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  };
+}
 
 function wrapper({ children }: { children: ReactNode }) {
-  return <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>{children}</QueryClientProvider>;
+  return <QueryClientProvider client={newClient()}>{children}</QueryClientProvider>;
 }
 
 beforeEach(() => {
@@ -45,5 +56,55 @@ describe('useClearFavoritesMutation', () => {
     await act(() => result.current.mutateAsync().catch(() => undefined));
 
     expect(useFavoritesStore.getState().ids.size).toBe(2);
+  });
+});
+
+describe('useSyncAdFavorite', () => {
+  it("lays the viewer's saved state over the hearts once it is known", () => {
+    useFavoritesStore.getState().setIds([]);
+    const { rerender } = renderHook(({ favorited }: { favorited?: boolean }) => useSyncAdFavorite('ad-1', favorited), {
+      initialProps: {},
+    });
+    expect(useFavoritesStore.getState().ids.has('ad-1')).toBe(false);
+
+    rerender({ favorited: true });
+    expect(useFavoritesStore.getState().ids.has('ad-1')).toBe(true);
+
+    rerender({ favorited: false });
+    expect(useFavoritesStore.getState().ids.has('ad-1')).toBe(false);
+  });
+
+  it("leaves the hearts alone while the copy is not the viewer's", () => {
+    renderHook(() => useSyncAdFavorite('a', undefined));
+
+    expect(useFavoritesStore.getState().ids.has('a')).toBe(true);
+  });
+});
+
+describe('useToggleFavoriteMutation', () => {
+  it('keeps a cached ad page in step with the toggle', async () => {
+    const client = newClient();
+    client.setQueryData(adKeys.detail('a'), { id: 'a', is_favorited: true });
+    vi.mocked(toggleFavorite).mockResolvedValue({ favorited: false, count: 0 });
+    const { result } = renderHook(() => useToggleFavoriteMutation(), { wrapper: wrapperFor(client) });
+
+    await act(() => result.current.mutateAsync('a'));
+
+    expect(client.getQueryData(adKeys.detail('a'))).toEqual({ id: 'a', is_favorited: false });
+    expect(useFavoritesStore.getState().ids.has('a')).toBe(false);
+  });
+});
+
+describe('useClearFavoritesMutation and cached ad pages', () => {
+  it('marks every cached ad page as not saved', async () => {
+    const client = newClient();
+    client.setQueryData(adKeys.detail('a'), { id: 'a', is_favorited: true });
+    vi.mocked(listFavoriteIds).mockResolvedValue(['a']);
+    vi.mocked(removeFavorite).mockResolvedValue();
+    const { result } = renderHook(() => useClearFavoritesMutation(), { wrapper: wrapperFor(client) });
+
+    await act(() => result.current.mutateAsync());
+
+    expect(client.getQueryData(adKeys.detail('a'))).toEqual({ id: 'a', is_favorited: false });
   });
 });

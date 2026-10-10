@@ -23,12 +23,15 @@ import {
 } from '@/lib/api/favorites';
 import type { ApiClientError } from '@/lib/api/auth';
 import type {
+  Ad,
   FavoriteToggleResponse,
   FavoritedAdSummary,
   PaginatedResponse,
 } from '@/lib/api/types';
 import { useFavoritesStore } from '@/store/favorites';
 import { useAuthStore } from '@/store/auth';
+
+import { adKeys } from './ads';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -118,6 +121,8 @@ export function useToggleFavoriteMutation(): UseMutationResult<
     onSuccess: (response, adId) => {
       // Reconcile in case the server disagrees with our optimistic flip.
       setOne(adId, response.favorited);
+      // A cached ad page lays its own flag over the store when it mounts again.
+      qc.setQueryData<Ad>(adKeys.detail(adId), (ad) => (ad ? { ...ad, is_favorited: response.favorited } : ad));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: favoritesKeys.lists() });
@@ -144,9 +149,27 @@ export function useClearFavoritesMutation(): UseMutationResult<void, ApiClientEr
         await Promise.all(ids.slice(start, start + CLEAR_BATCH_SIZE).map(removeFavorite));
       }
     },
-    onSuccess: () => clearLocal(),
+    onSuccess: () => {
+      clearLocal();
+      qc.setQueriesData<Ad>({ queryKey: adKeys.details() }, (ad) => (ad ? { ...ad, is_favorited: false } : ad));
+    },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: favoritesKeys.all });
     },
   });
+}
+
+/**
+ * Lays an ad's saved state, as the API returned it for the viewer, over the
+ * hearts' store: a saved ad then shows its filled heart however the page was
+ * reached (a refresh, a shared link), not only after the wishlist loaded.
+ * `favorited` stays undefined while the copy at hand is not the viewer's own
+ * (the anonymous server render).
+ */
+export function useSyncAdFavorite(adId: string | undefined, favorited: boolean | undefined): void {
+  const setOne = useFavoritesStore((s) => s.setOne);
+
+  useEffect(() => {
+    if (adId && favorited !== undefined) setOne(adId, favorited);
+  }, [adId, favorited, setOne]);
 }

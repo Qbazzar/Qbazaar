@@ -13,6 +13,7 @@ import { buttonVariants } from '@/components/design-system/Button';
 import { ErrorView } from '@/components/status/ErrorView';
 import { NotFoundView } from '@/components/status/NotFoundView';
 import { useAdQuery } from '@/lib/queries/ads';
+import { useSyncAdFavorite } from '@/lib/queries/favorites';
 import { useTrackAdViewMutation } from '@/lib/queries/recently-viewed';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -25,8 +26,10 @@ interface AdDetailClientProps {
 
 export function AdDetailClient({ id, initialAd }: AdDetailClientProps) {
   const locale = getLocale();
-  const { data, isPending, error, refetch, isFetching } = useAdQuery(id, initialAd);
+  const { data, dataUpdatedAt, isPending, error, refetch, isFetching } = useAdQuery(id, initialAd);
   const trackView = useTrackAdViewMutation();
+  // The server's copy is anonymous and counts as never fetched (updated at 0); the refetch carries the viewer's saved state.
+  useSyncAdFavorite(data?.id, dataUpdatedAt > 0 ? data?.is_favorited : undefined);
 
   useEffect(() => {
     if (!id) return;
