@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Menu } from '@base-ui/react/menu';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -31,6 +31,7 @@ const itemClass =
  */
 export function ChatSettingsMenu({ peer }: ChatSettingsMenuProps) {
   const queryClient = useQueryClient();
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
 
@@ -49,6 +50,7 @@ export function ChatSettingsMenu({ peer }: ChatSettingsMenuProps) {
     <>
       <Menu.Root>
         <Menu.Trigger
+          ref={triggerRef}
           aria-label={t('messaging.menu.label')}
           className={cn(
             'flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-qb-line text-qb-ink-subtle hover:text-qb-ink',
@@ -83,7 +85,7 @@ export function ChatSettingsMenu({ peer }: ChatSettingsMenuProps) {
         </Menu.Portal>
       </Menu.Root>
 
-      <ChatReportSheet open={reportOpen} onOpenChange={setReportOpen} peerId={peer.id} />
+      <ChatReportSheet open={reportOpen} onOpenChange={setReportOpen} peerId={peer.id} finalFocus={triggerRef} />
       <ChatConfirmDialog
         variant="block"
         open={blockOpen}
@@ -93,6 +95,7 @@ export function ChatSettingsMenu({ peer }: ChatSettingsMenuProps) {
         confirmLabel={t('messaging.menu.block')}
         onConfirm={() => block.mutate()}
         pending={block.isPending}
+        finalFocus={triggerRef}
       />
     </>
   );

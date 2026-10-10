@@ -56,6 +56,7 @@ export const userKeys = {
 export function usePublicProfileQuery(
   id: string,
   initialData?: PublicUserProfile,
+  options?: { staleTime?: number },
 ): UseQueryResult<PublicUserProfile, ApiClientError> {
   const viewerId = useAuthStore((s) => (s.user && s.accessToken ? s.user.id : null));
   const isHydrated = useAuthStore((s) => s.isHydrated);
@@ -63,10 +64,10 @@ export function usePublicProfileQuery(
   return useQuery({
     queryKey: userKeys.profile(id, viewerId),
     queryFn: () => getPublicProfile(id),
-    enabled: isHydrated,
+    enabled: isHydrated && id !== '',
     initialData,
     initialDataUpdatedAt: 0,
-    staleTime: MINUTE,
+    staleTime: options?.staleTime ?? MINUTE,
     retry: (failureCount, err) => {
       // A 404 means the user doesn't exist; retrying won't change that.
       if (err instanceof ApiClientError && err.status === 404) return false;

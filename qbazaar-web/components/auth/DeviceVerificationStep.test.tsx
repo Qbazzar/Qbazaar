@@ -16,7 +16,7 @@ vi.mock('@/lib/api/auth', async (importOriginal) => ({
 
 import { toast } from 'sonner';
 
-import { ApiClientError, verifyNewDevice } from '@/lib/api/auth';
+import { ApiClientError, login, verifyNewDevice } from '@/lib/api/auth';
 import { t } from '@/lib/i18n/messages';
 import { useAuthStore } from '@/store/auth';
 
@@ -72,5 +72,34 @@ describe('DeviceVerificationStep', () => {
 
     await waitFor(() => expect(onRestart).toHaveBeenCalled());
     expect(toast.error).toHaveBeenCalledWith(t('auth.errors.AUTH_012'));
+  });
+
+  it('shows why a resend failed and keeps the user on the step', async () => {
+    vi.mocked(login).mockRejectedValue(
+      new ApiClientError({ status: 429, code: 'AUTH_006', messageKey: 'x', message: 'slow', details: { retry_after: 90 } as never }),
+    );
+    const onRestart = vi.fn();
+    const ready = { ...pending, challenge: { ...pending.challenge, can_resend_in: 0 } };
+    render(<DeviceVerificationStep pending={ready} onChallenge={vi.fn()} onRestart={onRestart} />);
+
+    fireEvent.click(screen.getByRole('button', { name: t('auth.verify_otp.resend_now') }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(t('auth.errors.AUTH_006')));
+    expect(screen.getByText(t('auth.errors.AUTH_006'))).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: new RegExp(t('auth.verify_otp.resend_now')) })).toBeDisabled();
+    expect(onRestart).not.toHaveBeenCalled();
+  });
+
+  it('starts over when the resend is refused because the password no longer works', async () => {
+    vi.mocked(login).mockRejectedValue(
+      new ApiClientError({ status: 401, code: 'AUTH_001', messageKey: 'x', message: 'bad' }),
+    );
+    const onRestart = vi.fn();
+    const ready = { ...pending, challenge: { ...pending.challenge, can_resend_in: 0 } };
+    render(<DeviceVerificationStep pending={ready} onChallenge={vi.fn()} onRestart={onRestart} />);
+
+    fireEvent.click(screen.getByRole('button', { name: t('auth.verify_otp.resend_now') }));
+
+    await waitFor(() => expect(onRestart).toHaveBeenCalled());
   });
 });

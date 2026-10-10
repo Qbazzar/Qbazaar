@@ -39,7 +39,9 @@ export default function MyAdsPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<TabKey>('all');
   const { data: summary } = useAccountSummaryQuery();
-  const { data: publicProfile } = usePublicProfileQuery(user?.id ?? '');
+  // Neither the auth user nor /account/summary carries the follower counts, so
+  // they come from the public profile; they change rarely, hence the long staleTime.
+  const { data: publicProfile } = usePublicProfileQuery(user?.id ?? '', undefined, { staleTime: 10 * 60 * 1000 });
 
   return (
     <AccountPage title={t('account.nav.my_ads')} variant="account">

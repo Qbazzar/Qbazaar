@@ -344,16 +344,16 @@ export interface PaginatedEnvelope<T> {
 
 export const UserErrorCode = {
   UserNotFound: 'USER_001',
-  PasswordIncorrect: 'USER_002',
-  AlreadyBlocked: 'USER_003',
-  CannotBlockSelf: 'USER_004',
-  PrivacyDenied: 'USER_005',
-  // Wave 2 — account-lifecycle codes
-  DeactivationPasswordRequired: 'USER_006',
-  DeletionPasswordRequired: 'USER_007',
-  DataExportPending: 'USER_008',
-  AvatarInvalidImage: 'USER_009',
-  AvatarTooLarge: 'USER_010',
+  BlockAdminForbidden: 'USER_002',
+  BlockSelfForbidden: 'USER_003',
+  /** Wrong current password on `PUT /account/password`. */
+  PasswordCurrentRequired: 'USER_004',
+  /**
+   * Wrong password on `POST /account/deactivate` and
+   * `DELETE /account/delete-request` (the API names it
+   * USER_DEACTIVATION_PASSWORD_REQUIRED and uses it for both).
+   */
+  DeactivationPasswordRequired: 'USER_005',
 } as const;
 
 export type UserErrorCodeValue =

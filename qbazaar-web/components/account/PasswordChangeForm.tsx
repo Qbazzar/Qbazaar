@@ -15,8 +15,8 @@ import { Loader2 } from 'lucide-react';
 
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
-import { Input } from '@/components/design-system/Input';
 import { fieldErrorText } from '@/components/auth/FieldError';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import {
@@ -72,13 +72,13 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
   const passwordField = (name: keyof ChangePasswordInput, labelKey: string, autoComplete: string) => (
     <Field label={t(labelKey)} error={fieldErrorText(errors[name]?.message)}>
       {(control) => (
-        <Input
+        <PasswordInput
           {...control}
-          type="password"
-          dir="ltr"
+          required
+          aria-required="true"
           autoComplete={autoComplete}
           placeholder="*******"
-          className={cn(accountInputClass, 'rtl:placeholder:text-right')}
+          className={cn(accountInputClass, 'pe-12')}
           {...form.register(name)}
         />
       )}
@@ -134,8 +134,8 @@ function handleSubmitError(
       }
       if (mapped) return;
     }
-    if (err.code === UserErrorCode.PasswordIncorrect) {
-      const msg = t('account.errors.USER_002');
+    if (err.code === UserErrorCode.PasswordCurrentRequired) {
+      const msg = t('account.errors.USER_004');
       form.setError('current_password', { type: 'server', message: msg });
       toast.error(msg);
       return;

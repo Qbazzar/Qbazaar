@@ -30,6 +30,7 @@ import type { AdSummary } from '@/lib/api/types';
 
 import { AdPhoto } from './AdPhoto';
 import { AdStatusBadge } from './AdStatusBadge';
+import { apiErrorMessage } from './api-error-message';
 import { ModalActions } from './ModalActions';
 import { formatLongDate } from './format';
 
@@ -56,10 +57,7 @@ export function MyAdsRow({ ad, category }: Props) {
       await deleteMutation.mutateAsync(ad.id);
       showDesignToast(t('ads.actions.delete_success', 'تم حذف الإعلان'));
     } catch (err) {
-      toast.error(
-        (err as { message?: string })?.message ??
-          t('ads.errors.delete_failed', 'تعذّر حذف الإعلان'),
-      );
+      toast.error(apiErrorMessage(err));
     } finally {
       setConfirmDelete(false);
     }
@@ -70,7 +68,7 @@ export function MyAdsRow({ ad, category }: Props) {
       await markSoldMutation.mutateAsync(ad.id);
       showDesignToast(t('ads.actions.mark_sold_success', 'تم تعليم الإعلان كمباع'));
     } catch (err) {
-      toast.error((err as { message?: string })?.message ?? t('common.error'));
+      toast.error(apiErrorMessage(err));
     }
   };
 
@@ -79,7 +77,7 @@ export function MyAdsRow({ ad, category }: Props) {
       await reserveMutation.mutateAsync({ id: ad.id, reserved: !reserved });
       showDesignToast(t(reserved ? 'account.my_ads.unreserved_success' : 'account.my_ads.reserved_success'));
     } catch (err) {
-      toast.error((err as { message?: string })?.message ?? t('common.error'));
+      toast.error(apiErrorMessage(err));
     }
   };
 
@@ -88,7 +86,7 @@ export function MyAdsRow({ ad, category }: Props) {
       await renewMutation.mutateAsync(ad.id);
       showDesignToast(t('ads.actions.renew_success', 'تم تجديد الإعلان'));
     } catch (err) {
-      toast.error((err as { message?: string })?.message ?? t('common.error'));
+      toast.error(apiErrorMessage(err));
     }
   };
 

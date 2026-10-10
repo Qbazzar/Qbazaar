@@ -11,6 +11,7 @@
  * sticky notice (`?deactivated=1` or `?deleted=1`).
  */
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,7 +27,8 @@ import { Modal } from '@/components/design-system/Modal';
 import { fieldErrorText } from '@/components/auth/FieldError';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { ModalActions } from '@/components/account/ModalActions';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { apiErrorLink, apiErrorMessage, type ErrorLink } from '@/components/account/api-error-message';
+import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { deactivateAccount, requestAccountDeletion } from '@/lib/api/account';
 import { ApiClientError } from '@/lib/api/auth';
@@ -176,11 +178,14 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
     defaultValues: { password: '', reason: '' },
   });
 
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
+
   const onSubmit = form.handleSubmit(async (values) => {
+    setRefusal(null);
     try {
       await onConfirm(withReason ? values : { password: values.password, reason });
     } catch (err) {
-      handleLifecycleError(err, form, flow);
+      handleLifecycleError(err, form, setRefusal);
     }
   });
 
@@ -193,7 +198,10 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
       open={open}
       onOpenChange={(next) => {
         if (!next && submitting) return;
-        if (!next) form.reset({ password: '', reason: '' });
+        if (!next) {
+          form.reset({ password: '', reason: '' });
+          setRefusal(null);
+        }
         onOpenChange(next);
       }}
       title={title}
@@ -229,6 +237,8 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
           </Field>
         ) : null}
 
+        {refusal ? <RefusalNotice refusal={refusal} /> : null}
+
         <ModalActions className="mt-1">
           <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
             {submitting ? (
@@ -249,51 +259,66 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
   );
 }
 
+interface Refusal {
+  message: string;
+  link: ErrorLink | null;
+}
+
+/** Why the API refused the request (money owed, order open, …) and where to sort it out. */
+function RefusalNotice({ refusal }: { refusal: Refusal }) {
+  return (
+    <div role="alert" className="flex flex-col gap-2 text-qb-caption text-qb-danger">
+      <p>{refusal.message}</p>
+      {refusal.link ? (
+        <Link href={refusal.link.href} className={cn('w-fit rounded-qb-xs font-medium text-qb-brand underline', focusRing)}>
+          {refusal.link.label}
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+function isWrongPassword(err: ApiClientError): boolean {
+  return err.code === UserErrorCode.DeactivationPasswordRequired;
+}
+
+function mapFieldErrors(err: ApiClientError, form: ReturnType<typeof useForm<LifecycleInput>>): boolean {
+  const known: string[] = ['password', 'reason'];
+  let mapped = false;
+  for (const [field, messages] of Object.entries(err.details ?? {})) {
+    if (known.includes(field) && messages?.length) {
+      form.setError(field as keyof LifecycleInput, { type: 'server', message: messages[0] });
+      mapped = true;
+    }
+  }
+  return mapped;
+}
+
+/**
+ * Both `DELETE /account/delete-request` and `POST /account/deactivate` answer
+ * a wrong password with USER_005; the ACCOUNT_003..006 refusals of deletion
+ * show inline with a link to the page that clears them.
+ */
 function handleLifecycleError(
   err: unknown,
   form: ReturnType<typeof useForm<LifecycleInput>>,
-  flow: LifecycleFlow,
+  setRefusal: (refusal: Refusal) => void,
 ) {
-  if (err instanceof ApiClientError) {
-    if (err.code === AuthErrorCode.ValidationFailed && err.details) {
-      const known: (keyof LifecycleInput)[] = ['password', 'reason'];
-      let mapped = false;
-      for (const [field, messages] of Object.entries(err.details)) {
-        if ((known as string[]).includes(field) && messages?.length) {
-          form.setError(field as keyof LifecycleInput, {
-            type: 'server',
-            message: messages[0],
-          });
-          mapped = true;
-        }
-      }
-      if (mapped) return;
-    }
-
-    if (err.code === UserErrorCode.PasswordIncorrect) {
-      const msg = t('account.errors.USER_002');
-      form.setError('password', { type: 'server', message: msg });
-      toast.error(msg);
-      return;
-    }
-
-    const passwordMissingCode =
-      flow === 'deactivate'
-        ? UserErrorCode.DeactivationPasswordRequired
-        : UserErrorCode.DeletionPasswordRequired;
-    if (err.code === passwordMissingCode) {
-      const msg = t(`account.errors.${err.code}`);
-      form.setError('password', { type: 'server', message: msg });
-      toast.error(msg);
-      return;
-    }
-
-    const fallback =
-      translateMaybeKey(`account.errors.${err.code}`) ||
-      translateMaybeKey(`auth.errors.${err.code}`) ||
-      err.message;
-    toast.error(fallback);
+  if (!(err instanceof ApiClientError)) {
+    toast.error(t('auth.errors.unknown'));
     return;
   }
-  toast.error(t('auth.errors.unknown'));
+  if (err.code === AuthErrorCode.ValidationFailed && mapFieldErrors(err, form)) return;
+  if (isWrongPassword(err)) {
+    const msg = apiErrorMessage(err);
+    form.setError('password', { type: 'server', message: msg });
+    toast.error(msg);
+    return;
+  }
+  const link = apiErrorLink(err);
+  if (link) {
+    setRefusal({ message: apiErrorMessage(err), link });
+    return;
+  }
+  toast.error(apiErrorMessage(err));
 }

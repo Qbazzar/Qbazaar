@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
 import { Loader2, Trash2 } from 'lucide-react';
 
@@ -20,6 +20,8 @@ interface ChatConfirmDialogProps {
   confirmLabel: string;
   onConfirm: () => void;
   pending?: boolean;
+  /** Where focus goes on close; a dialog opened from a menu item has no trigger of its own. */
+  finalFocus?: RefObject<HTMLElement | null>;
 }
 
 const VARIANTS: Record<
@@ -66,6 +68,7 @@ export function ChatConfirmDialog({
   confirmLabel,
   onConfirm,
   pending = false,
+  finalFocus,
 }: ChatConfirmDialogProps) {
   const look = VARIANTS[variant];
   const buttonClass = cn(
@@ -104,6 +107,7 @@ export function ChatConfirmDialog({
           )}
         />
         <Dialog.Popup
+          finalFocus={finalFocus}
           className={cn(
             'fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 bg-qb-surface text-center font-qb',
             'transition-[opacity,scale] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-reduce:transition-none',

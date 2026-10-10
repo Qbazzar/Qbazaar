@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
 import { Loader2 } from 'lucide-react';
 
@@ -31,6 +31,8 @@ interface ChatReportSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   peerId: string;
+  /** Where focus goes on close; a sheet opened from a menu item has no trigger of its own. */
+  finalFocus?: RefObject<HTMLElement | null>;
 }
 
 /**
@@ -39,7 +41,7 @@ interface ChatReportSheetProps {
  * picked) and a pill "Submit Report". A centred card from 601 px, a bottom
  * sheet on phones; Escape or a click on the dimmed page closes it.
  */
-export function ChatReportSheet({ open, onOpenChange, peerId }: ChatReportSheetProps) {
+export function ChatReportSheet({ open, onOpenChange, peerId, finalFocus }: ChatReportSheetProps) {
   const mutation = useSubmitReportMutation();
   const [reasonKey, setReasonKey] = useState(REASONS[0].key);
 
@@ -76,6 +78,7 @@ export function ChatReportSheet({ open, onOpenChange, peerId }: ChatReportSheetP
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-qb-chat-overlay transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />
         <Dialog.Popup
+          finalFocus={finalFocus}
           className={cn(
             'fixed inset-x-0 bottom-0 z-50 max-h-[86vh] overflow-y-auto rounded-t-qb-2xl bg-qb-surface px-5 pt-6 pb-7 text-start font-qb',
             'qb-tablet:inset-x-auto qb-tablet:top-1/2 qb-tablet:bottom-auto qb-tablet:left-1/2 qb-tablet:w-[min(430px,94vw)] qb-tablet:-translate-x-1/2 qb-tablet:-translate-y-1/2 qb-tablet:rounded-[20px] qb-tablet:px-[22px] qb-tablet:py-6',

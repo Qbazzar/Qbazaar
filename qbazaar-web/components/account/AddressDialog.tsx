@@ -7,6 +7,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 
+import { Button } from '@/components/design-system/Button';
+import { Modal } from '@/components/design-system/Modal';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
@@ -20,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { apiErrorMessage } from './api-error-message';
 import { addressSchema, type AddressFormValues, type AddressInput } from '@/lib/validation/account';
 
+import { ModalActions } from './ModalActions';
 import {
   AccountDialog,
   AccountDialogActions,
@@ -98,9 +101,11 @@ function AddressList({
   onAdd: () => void;
 }) {
   const queryClient = useQueryClient();
+  const [pendingDelete, setPendingDelete] = useState<SavedAddress | null>(null);
   const remove = useMutation({
     mutationFn: deleteAddress,
     onSuccess: () => {
+      setPendingDelete(null);
       void queryClient.invalidateQueries({ queryKey: ADDRESSES_QUERY_KEY });
       showDesignToast(t('account.address.deleted'));
     },
@@ -132,8 +137,7 @@ function AddressList({
               </button>
               <button
                 type="button"
-                onClick={() => remove.mutate(address.id)}
-                disabled={remove.isPending}
+                onClick={() => setPendingDelete(address)}
                 aria-label={t('account.address.delete_one', { address: addressSummary(address) })}
                 className={cn(squareButton, 'text-qb-acct-danger')}
               >
@@ -153,6 +157,25 @@ function AddressList({
           {t('account.address.add_title')}
         </button>
       </div>
+
+      <Modal
+        open={pendingDelete !== null}
+        onOpenChange={(next) => {
+          if (!next && !remove.isPending) setPendingDelete(null);
+        }}
+        title={t('account.address.delete_confirm_title')}
+        description={t('account.address.delete_confirm_body')}
+      >
+        <ModalActions className="mt-2">
+          <Button size="sm" disabled={remove.isPending} onClick={() => pendingDelete && remove.mutate(pendingDelete.id)}>
+            {remove.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {t('common.delete')}
+          </Button>
+          <Button variant="muted" size="sm" disabled={remove.isPending} onClick={() => setPendingDelete(null)}>
+            {t('common.cancel')}
+          </Button>
+        </ModalActions>
+      </Modal>
     </>
   );
 }

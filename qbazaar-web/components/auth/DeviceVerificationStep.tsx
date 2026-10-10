@@ -42,6 +42,15 @@ function maskedPhone(sentTo: string): string {
   return `+974 ••• ••${lastTwo}`;
 }
 
+const DEFAULT_RETRY_SECONDS = 60;
+
+/** Seconds the API asks to wait (`details.retry_after`), else a minute. */
+function retryAfterSeconds(err: ApiClientError): number {
+  const raw = (err.details as Record<string, unknown> | null)?.retry_after;
+  const value = Number(Array.isArray(raw) ? raw[0] : raw);
+  return Number.isFinite(value) && value > 0 ? Math.ceil(value) : DEFAULT_RETRY_SECONDS;
+}
+
 /**
  * verify-identity.html after a login: six boxes for the code the API texted
  * to the account's phone, the red "Resend" line and "Verify". "Resend" signs
@@ -88,6 +97,26 @@ export function DeviceVerificationStep({ pending, onChallenge, onRestart }: Devi
     }
   };
 
+  /** Shows why the new code wasn't sent and never leaves the user without a way forward. */
+  const handleResendError = (err: unknown) => {
+    const message =
+      err instanceof ApiClientError
+        ? translateMaybeKey(`auth.errors.${err.code}`) || err.message
+        : t('auth.verify_otp.send_failed');
+    setCodeError(message);
+    toast.error(message);
+    if (!(err instanceof ApiClientError)) return;
+    if (err.code === AuthErrorCode.InvalidCredentials || err.code === AuthErrorCode.AccountSuspended) {
+      onRestart();
+      return;
+    }
+    if (err.code === AuthErrorCode.AuthRateLimited || err.code === AuthErrorCode.RateLimited) {
+      const at = Date.now();
+      setResendAt(at + retryAfterSeconds(err) * 1000);
+      setNow(at);
+    }
+  };
+
   const resend = async () => {
     setResending(true);
     try {
@@ -104,11 +133,7 @@ export function DeviceVerificationStep({ pending, onChallenge, onRestart }: Devi
       onChallenge({ ...pending, challenge: result.challenge });
       showDesignToast(t('auth.verify_otp.sent_again'));
     } catch (err) {
-      toast.error(
-        err instanceof ApiClientError
-          ? translateMaybeKey(`auth.errors.${err.code}`) || err.message
-          : t('auth.verify_otp.send_failed'),
-      );
+      handleResendError(err);
     } finally {
       setResending(false);
     }
