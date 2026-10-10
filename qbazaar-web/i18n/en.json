@@ -617,6 +617,7 @@
       "follow_back": "Follow back",
       "followed": "You now follow {name}",
       "unfollowed": "Unfollowed {name}",
+      "message_named": "Message {name}",
       "load_more": "Load more",
       "empty": {
         "following": {

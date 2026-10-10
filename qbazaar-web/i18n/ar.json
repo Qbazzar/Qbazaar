@@ -641,6 +641,7 @@
       "follow_back": "تابِع بالمثل",
       "followed": "أنت الآن تتابع {name}",
       "unfollowed": "ألغيت متابعة {name}",
+      "message_named": "راسل {name}",
       "load_more": "تحميل المزيد",
       "empty": {
         "following": {

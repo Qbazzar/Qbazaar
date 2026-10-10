@@ -8,12 +8,12 @@
  * its own empty state.
  */
 import Link from 'next/link';
-import { Check, Loader2Icon, UserPlus } from 'lucide-react';
+import { Check, Loader2Icon, MessageCircle, UserPlus } from 'lucide-react';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { Avatar } from '@/components/design-system/Avatar';
-import { Breadcrumb } from '@/components/design-system/Breadcrumb';
+import { TextBreadcrumb } from '@/components/design-system/TextBreadcrumb';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +27,8 @@ import { tPlural } from '@/lib/i18n/plural';
 import { followKeys, useFollowListQuery, useSetListedFollowState } from '@/lib/queries/follows';
 import { useFollowMutation, usePublicProfileQuery, userKeys } from '@/lib/queries/users';
 import { cn } from '@/lib/utils';
+
+import { loadMoreButton } from './load-more';
 
 const TABS: readonly { kind: FollowListKind; href: string }[] = [
   { kind: 'following', href: '/account/following' },
@@ -42,7 +44,7 @@ export function ConnectionsView({ kind }: { kind: FollowListKind }) {
 
   return (
     <div className="mx-auto w-full max-w-[1080px] px-qb-gutter py-[clamp(20px,4vw,40px)] font-qb text-qb-ink">
-      <Breadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, { label: t('users.connections.title') }]} className="mb-3.5" />
+      <TextBreadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, { label: t('users.connections.title') }]} className="mb-3.5" />
       <h1 className="mb-[22px] text-[clamp(26px,3.5vw,34px)] font-semibold tracking-normal text-qb-ink">{t('users.connections.title')}</h1>
 
       <nav aria-label={t('users.connections.title')} className="mb-7 flex border-b border-qb-line">
@@ -55,7 +57,7 @@ export function ConnectionsView({ kind }: { kind: FollowListKind }) {
               href={tab.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                '-mb-px flex-1 border-b-[3px] p-[15px] text-center text-qb-body transition-colors',
+                '-mb-px flex-1 border-b-[3px] p-[15px] text-center text-qb-body leading-[1.15] transition-colors',
                 active ? 'border-qb-brand font-semibold text-qb-brand' : 'border-transparent font-medium text-qb-ink-secondary hover:text-qb-brand',
                 focusRing,
               )}
@@ -95,10 +97,7 @@ export function ConnectionsView({ kind }: { kind: FollowListKind }) {
                 type="button"
                 onClick={() => void list.fetchNextPage()}
                 aria-busy={list.isFetchingNextPage || undefined}
-                className={cn(
-                  'inline-flex cursor-pointer items-center gap-2 rounded-qb-lg bg-qb-brand-soft px-[30px] py-3.5 text-qb-body-sm font-semibold text-qb-brand',
-                  focusRing,
-                )}
+                className={loadMoreButton}
               >
                 {list.isFetchingNextPage ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : null}
                 {t('users.connections.load_more')}
@@ -111,7 +110,7 @@ export function ConnectionsView({ kind }: { kind: FollowListKind }) {
   );
 }
 
-/** One account: 46 px peach avatar, name and followers line, and the follow toggle. */
+/** One account: 46 px peach avatar, name and followers line, the 34 px message button and the follow toggle. */
 function ConnectionCard({ row, kind }: { row: FollowListUser; kind: FollowListKind }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -142,16 +141,35 @@ function ConnectionCard({ row, kind }: { row: FollowListUser; kind: FollowListKi
   const following = row.is_following;
 
   return (
-    <article className="flex h-full flex-col rounded-qb-xl border border-qb-line bg-qb-surface p-[18px] transition-shadow hover:shadow-qb-hover">
-      <Link href={`/u/${row.id}`} className={cn('mb-4 flex min-w-0 items-start gap-3 rounded-qb-md', focusRing)}>
-        <Avatar name={row.full_name} src={row.avatar_url} tone="brand" decorative className="size-[46px] text-qb-body-sm font-medium text-qb-ink-title" />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-qb-body font-medium text-qb-ink-title">
-            <bdi>{row.full_name}</bdi>
+    <article
+      className={cn(
+        'flex h-full flex-col rounded-qb-xl border border-qb-line bg-qb-surface p-[18px]',
+        'transition-[box-shadow,translate] duration-200 hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+      )}
+    >
+      <div className="mb-4 flex items-start gap-3">
+        <Link href={`/u/${row.id}`} className={cn('flex min-w-0 flex-1 items-start gap-3 rounded-qb-md', focusRing)}>
+          <Avatar name={row.full_name} src={row.avatar_url} tone="brand" decorative className="size-[46px] text-qb-body-sm font-medium text-qb-ink-title" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-qb-body font-medium text-qb-ink-title">
+              <bdi>{row.full_name}</bdi>
+            </span>
+            <span className="mt-[3px] block text-qb-label text-qb-ink-subtle">{tPlural('companies.followers', row.followers_count, locale)}</span>
           </span>
-          <span className="mt-[3px] block text-qb-label text-qb-ink-subtle">{tPlural('companies.followers', row.followers_count, locale)}</span>
-        </span>
-      </Link>
+        </Link>
+        {/* As in users.html, it opens the messages page. */}
+        <Link
+          href="/account/messages"
+          aria-label={t('users.connections.message_named', { name: row.full_name })}
+          title={t('users.profile.message')}
+          className={cn(
+            'flex size-[34px] shrink-0 items-center justify-center rounded-[9px] border border-qb-line bg-qb-page text-qb-ink-subtle transition-[filter] hover:brightness-[0.96]',
+            focusRing,
+          )}
+        >
+          <Icon icon={MessageCircle} className="size-4" strokeWidth={1.7} />
+        </Link>
+      </div>
       <button
         type="button"
         onClick={toggle}
@@ -181,7 +199,7 @@ function ConnectionsEmpty({ kind }: { kind: FollowListKind }) {
       <p className="mx-auto mb-[26px] max-w-[420px] text-qb-body-sm leading-[1.6] text-qb-ink-note">{t(`users.connections.empty.${kind}.body`)}</p>
       <Link
         href="/categories"
-        className={cn('inline-flex rounded-qb-md bg-qb-brand px-[30px] py-[13px] text-qb-body-sm font-semibold text-qb-on-brand hover:bg-qb-brand-hover', focusRing)}
+        className={cn('inline-flex rounded-qb-md bg-qb-brand px-[30px] py-[13px] text-qb-body-sm leading-[1.15] font-semibold text-qb-on-brand hover:bg-qb-brand-hover', focusRing)}
       >
         {t(`users.connections.empty.${kind}.cta`)}
       </Link>

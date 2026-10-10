@@ -82,6 +82,13 @@ describe('ConnectionsView', () => {
     expect(await screen.findByRole('button', { name: /Following Mariah Karim/ })).toBeInTheDocument();
   });
 
+  it('opens the messages page from the message button', async () => {
+    vi.mocked(listFollows).mockResolvedValue(page([mariah]));
+    renderView('following');
+
+    expect(await screen.findByRole('link', { name: 'Message Mariah Karim' })).toHaveAttribute('href', '/account/messages');
+  });
+
   it('has its own empty state per tab', async () => {
     vi.mocked(listFollows).mockResolvedValue(page([]));
     renderView('followers');
