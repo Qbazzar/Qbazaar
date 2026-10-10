@@ -1,0 +1,5641 @@
+{
+ "group": "catalog",
+ "pages": [
+  {
+   "file": "all-categories.html",
+   "screen": "catalog",
+   "title": "Q Bazaar — All Categories",
+   "root": "[data-screen-label=\"All Categories\"]",
+   "figma": {
+    "390": "Category - See All 621:27193",
+    "744": "Category - See All 536:32620",
+    "1440": "Category View All 185:6576"
+   },
+   "layout": {
+    "390": "Card grid 1 column (358px), gap 22px; search bar keeps one row.",
+    "744": "Card grid forced to 3 columns, gap 14px (responsive.css); burger header.",
+    "1440": "Header block (crumbs, h1, stats) → centred \"Discover Categories\" + search bar (max-width 820) → 4-col card grid (24 cards) → decorative pagination (3 active)."
+   },
+   "figmaFlowsFromFrames": 17
+  },
+  {
+   "file": "parent-category.html",
+   "screen": "catParent",
+   "title": "Q Bazaar — Category",
+   "root": "[data-screen-label=\"Parent Category\"]",
+   "figma": {
+    "390": "category-page 623:28688 (+ advanced-filters-modal 618:26974)",
+    "744": "Category Page 539:35503",
+    "1440": "Category 18:912"
+   },
+   "layout": {
+    "390": "Crumbs + pills hidden; phone action row (Filter / ♡ / ⌕, all inert); each listing section is a horizontal scroll-snap row (cards 72% wide); categories row is a non-scrollable clipped flex row (quirk).",
+    "744": "Sidebar becomes an off-screen bottom sheet with no trigger; content full width; listing grids 2 cols; categories grid 2 cols.",
+    "1440": "Crumbs, h1 + pills row; two columns: filter sidebar (max 360px) + content (Cars, Motorcycles & Scooters, Categories grid + Show All, Motorhomes & Caravans, Car Parts & Tires)."
+   },
+   "figmaFlowsFromFrames": 54
+  },
+  {
+   "file": "category.html",
+   "screen": "category",
+   "title": "Q Bazaar — Category Listings",
+   "root": "[data-screen-label=\"Category\"]",
+   "figma": {
+    "390": "Sub Category 623:30012",
+    "744": "Sub Category 544:38513",
+    "1440": "Sub Category - H 69:467 (list) / Sub Category - V 81:1629 (grid)"
+   },
+   "layout": {
+    "390": "Crumbs + pills hidden; toolbar Filter pill + Newest + ♡/⌕ circles; list cards stack photo above text; badge shows price, price line hidden.",
+    "744": "Toolbar: injected Filter pill + Newest (toggles hidden → list view only); sidebar is a bottom sheet opened by the Filter pill; list cards without badge.",
+    "1440": "Crumbs, h1 + pills; sidebar + results column: toolbar (Newest, list/grid toggles), 5 list cards (or 3-col grid), working pagination (active 1)."
+   },
+   "figmaFlowsFromFrames": 174,
+   "figmaStateFrames": {
+    "Filliter Options 244:3508 (T, Flow 2 start)": "figma.filterGroup.accordion + figma.filterRadio.states",
+    "Filiter 250:4405 (D)": "figma.filter.appliedChips",
+    "Filliter Filled & Drop Down 264:4818 (D)": "figma.filter.fieldsAndDropdowns",
+    "Search Result 492:20208 (D) / 655:54431 (T) / 654:50760 (P)": "figma.searchResult",
+    "Search Not Found 655:55973 (D) / 655:55238 (T) / 654:51147 (P) / 608:26579 (P)": "figma.searchNotFound (+ figma.bttnLoad.states, figma.checkboxMessage.hover)"
+   }
+  },
+  {
+   "file": "saved-search.html",
+   "screen": "savedSearch",
+   "title": "Q Bazaar — Saved Searches",
+   "root": "[data-screen-label=\"Saved Search\"]",
+   "figma": {
+    "390": "Saved Search 600:25864 / Saved Search - Empaty Page 600:25765",
+    "744": "Saved Search - Empty State 504:25797 / 512:18005",
+    "1440": "Saved Seach - Fill State 381:8815 / Saved Search - Empty State 381:8657"
+   },
+   "layout": {
+    "390": "Same structure; burger header.",
+    "744": "Same structure, full width; card footers and banner wrap.",
+    "1440": "Crumbs, h1 + \"Clear all\"; 2 saved-search cards (thumb, title, meta, ⋯, spec chips, notification toggle + View Result) + clean-up banner. Empty state: centred card with icon, title, text, Browse Ads."
+   },
+   "figmaFlowsFromFrames": 39
+  }
+ ],
+ "elements": [
+  {
+   "page": "all-categories.html",
+   "id": "ac.page",
+   "component": "Page wrapper (entrance animation)",
+   "refSelector": "[data-screen-label=\"All Categories\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 253)",
+    "assets/styles.css:233 @keyframes qbFade"
+   ],
+   "notes": "Screen root div[data-screen-label=\"All Categories\"]; plays qbFade .3s ease once on load (opacity 0→1, translateY(8px)→none)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.crumbs",
+   "component": "Breadcrumb row",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"203\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 255)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500"
+   ],
+   "notes": "Inline 14px rgb(158,158,158) is overridden by typo.css to 20px rgb(164,173,186); gap 8px; margin-bottom 14px. Visible at all widths on this page."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.crumb.home",
+   "component": "Breadcrumb \"Home\" link",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"204\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text turns rgb(243,128,87) (.qb-nav:hover, !important), colour transition .18s ease"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to index.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 256)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}",
+    "assets/polish.css:16-20 .qb-btn,.qb-card,.qb-nav transition (bg/color .18s, box-shadow .2s, transform .2s, border-color .18s, filter .18s, ease)"
+   ]
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.crumb.sep",
+   "component": "Breadcrumb separator \"›\"",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"205\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 256)"
+   ],
+   "notes": "Glyph \"›\" (U+203A), inherits 20px rgb(164,173,186)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.crumb.current",
+   "component": "Breadcrumb current \"Category\"",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"206\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 256)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500"
+   ],
+   "notes": "Current page \"Category\": rgb(33,33,33) weight 500 (typo.css)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.h1",
+   "component": "Page title \"Categories\"",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"207\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 258)"
+   ],
+   "notes": "font-size clamp(28px,4vw,40px): 40px @1440, 29.76px @744, 28px @390; weight 600; rgb(33,33,33)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.subtitle",
+   "component": "Stats line \"68 Categories · +1,240 Ads Today\"",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"208\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 259)"
+   ],
+   "notes": "15px rgb(158,158,158), margin-top 10px; \"68 Categories · +1,240 Ads Today\"."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.subtitle.green",
+   "component": "Stats green delta \"+1,240\"",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"209\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 259)"
+   ],
+   "notes": "Green delta rgb(27,173,7)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.discover.h2",
+   "component": "Section title \"Discover Categories\"",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"212\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 263)"
+   ],
+   "notes": "Centered block max-width 820px; clamp(28px,4vw,40px) 600."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.discover.h2.accent",
+   "component": "Section title orange word \"Categories\"",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"213\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 263)"
+   ],
+   "notes": "Orange word rgb(243,128,87)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.discover.p",
+   "component": "Section lead paragraph",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"214\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 264)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important"
+   ],
+   "notes": "Inline rgb(117,117,117) → rgb(158,150,150) via typo.css; font-size clamp(15px,2vw,18px)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.search.form",
+   "component": "Category search bar (form)",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"215\"]",
+   "kind": "other",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "submit (Search button or Enter in the input)",
+     "expected": "preventDefault, then navigates to category.html (query text is ignored)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 265)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3181)"
+   ],
+   "notes": "White bar, border 1px rgb(237,237,237), radius 14px, shadow 0 4px 40px rgba(161,161,161,.12), padding 6px 6px 6px 18px, gap 12px; never wraps (also at 390)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.search.icon",
+   "component": "Search bar magnifier icon",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"216\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 266)"
+   ],
+   "notes": "20px magnifier, stroke rgb(189,189,189), stroke-width 1.7."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.search.input",
+   "component": "Search categories input",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"219\"]",
+   "kind": "input",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "focus",
+     "expected": "no visible focus ring (inline outline:none), no border change"
+    },
+    {
+     "action": "type",
+     "expected": "text is kept locally; not used by search"
+    },
+    {
+     "action": "Enter",
+     "expected": "submits the form → category.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 267)"
+   ],
+   "notes": "Placeholder \"Search categories...\"; Poppins 16px rgb(33,33,33); transparent background, no border."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.search.btn",
+   "component": "Search submit button",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"220\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "background rgb(243,128,87) → rgb(233,108,63), .18s ease"
+    },
+    {
+     "action": "click",
+     "expected": "submits form → category.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 268)",
+    "assets/polish.css:23-27 orange buttons :hover background rgb(233,108,63)!important; filter:none",
+    "assets/polish.css:16-20 .qb-btn,.qb-card,.qb-nav transition (bg/color .18s, box-shadow .2s, transform .2s, border-color .18s, filter .18s, ease)"
+   ]
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.grid",
+   "component": "Category directory grid",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"221\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 271)",
+    "assets/responsive.css:85-90 all-categories tablet 3-up grid"
+   ],
+   "notes": "repeat(auto-fill,minmax(280px,1fr)) gap 22px: 4 columns @1440; tablet override repeat(3,1fr) gap 14px @744; 1 column @390 (no phone override)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.card",
+   "component": "Category directory card (24x)",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"223\"]",
+   "kind": "card",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "card lifts translateY(-3px) and gains box-shadow 0 4px 40px rgba(161,161,161,.25); transform/box-shadow .2s ease; no descendant colour change"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to parent-category.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 273)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2666-2678)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/polish.css:96-98 .qb-card:hover{box-shadow:0 4px 40px rgba(161,161,161,.25)} (inline box-shadow wins over it)",
+    "assets/polish.css:16-20 .qb-btn,.qb-card,.qb-nav transition (bg/color .18s, box-shadow .2s, transform .2s, border-color .18s, filter .18s, ease)"
+   ],
+   "notes": "24 cards; names repeat (Cars & Vehicles, Real Estate, Electronics, Home & Garden, Jobs, Pets, Services, Leisure & Hobbies, …, Camping & Trips, Watches & Jewelry, Cameras & Lenses); each shows \"1,2M Ads\". Native <button> (Tab-focusable)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.card.icon",
+   "component": "Category card icon tile",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"224\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 274)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3400-3428)"
+   ],
+   "notes": "44x44 tile radius 12px, bg rgb(255,240,234), icon colour rgb(243,128,87), 24px line icon stroke 1.6."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.card.name",
+   "component": "Category card name",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"226\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 276)"
+   ],
+   "notes": "17px weight 500 rgb(33,33,33), margin-bottom 6px."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.card.ads",
+   "component": "Category card ads count",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"227\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 277)"
+   ],
+   "notes": "14px rgb(158,158,158)."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.pager",
+   "component": "Pagination row",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"228\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 282)"
+   ],
+   "notes": "Centered, gap 10px, margin-top 40px, wraps. Items: « ‹ 1 2 3 4 5 › » with \"3\" active."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.pager.arrow",
+   "component": "Pagination item \"«\" (inactive arrow)",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"230\"]",
+   "kind": "pagination",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96) (.qb-btn:hover), .18s"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 284)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2679-2681)",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}"
+   ],
+   "notes": "44x44 min, padding 0 6px, radius 12px, border 1px rgb(237,237,237), white, 16px rgb(75,75,75). Static span — pagination on this page is decorative."
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.pager.num",
+   "component": "Pagination item \"1\" (inactive number)",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"230\"]",
+   "kind": "pagination",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast. Active page stays \"3\"."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 284)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2679-2681)",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}"
+   ]
+  },
+  {
+   "page": "all-categories.html",
+   "id": "ac.pager.active",
+   "component": "Pagination item \"3\" (active/selected)",
+   "refSelector": "[data-screen-label=\"All Categories\"] [data-dc-tpl=\"230\"]",
+   "kind": "pagination",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "background → rgb(233,108,63) (orange-button hover rule), filter none"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 284)",
+    "assets/polish.css:23-27 orange buttons :hover background rgb(233,108,63)!important; filter:none"
+   ]
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.page",
+   "component": "Page wrapper (entrance animation)",
+   "refSelector": "[data-screen-label=\"Parent Category\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 293)",
+    "assets/styles.css:233 @keyframes qbFade"
+   ],
+   "notes": "Screen root; qbFade .3s ease on load; padding clamp(20px,4vw,40px) clamp(16px,4vw,40px)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.crumbs",
+   "component": "Breadcrumb row (hidden on phone)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"233\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 294)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500",
+    "assets/mobilemenu.js:684-725 catParentCompact (phone action row, hides crumbs + pills <=600)"
+   ],
+   "notes": "Visible @1440/@744 (20px rgb(164,173,186)); display:none at <=600px (catParentCompact CSS)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.crumb.home",
+   "component": "Breadcrumb \"Home\" link",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"234\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text → rgb(243,128,87)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to index.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 295)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ]
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.crumb.current",
+   "component": "Breadcrumb current \"Category\"",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"236\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 295)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500"
+   ],
+   "notes": "Text \"Category\" (not \"Car & Vehicles\"); rgb(33,33,33) 500."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.h1",
+   "component": "Page title \"Car & Vehicles\"",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"239\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 299)"
+   ],
+   "notes": "clamp(30px,5vw,44px): 44 / 37.2 / 30px; weight 600."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.subtitle",
+   "component": "Stats line \"876,340 Ads • 12 Sub Category • +2361 Today\"",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"240\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 300)"
+   ],
+   "notes": "15px rgb(158,158,158), margin-top 8px."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.subtitle.green",
+   "component": "Stats green delta \"+2361\"",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"241\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 300)"
+   ],
+   "notes": "rgb(27,173,7)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.mrow",
+   "component": "Phone action row (Filter + heart/search circles)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"242\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/mobilemenu.js:684-725 catParentCompact (phone action row, hides crumbs + pills <=600)"
+   ],
+   "notes": "Injected by mobilemenu.js (rendered by the engine). display:none above 600px; at <=600px: flex row, gap 10px, full width: [Filter ≡] [spacer] [♡ circle] [⌕ circle]."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.mrow.filter",
+   "component": "Phone \"Filter\" button (qb-cp-row)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"243\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click @390",
+     "expected": "REFERENCE DEFECT: nothing happens — the button is not a .qb-filter-btn and has a child svg, so the delegated sheet opener ignores it; the filter sheet does NOT open (verified)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:684-725 catParentCompact (phone action row, hides crumbs + pills <=600)",
+    "assets/mobilemenu.js:287-343 openSheet/closeSheet/setupSheet (backdrop, Show Results, delegated Filter click, Escape)"
+   ],
+   "notes": "White, border 1px rgb(237,237,237), radius 12px, padding 11px 16px, Poppins 500 14px #212121, filter-lines icon 16px stroke #212121. Phone only."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.mrow.fav",
+   "component": "Phone heart circle button",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"247\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click @390",
+     "expected": "REFERENCE DEFECT: nothing happens (the click listener that forwards to \"Add to Favorite\" is lost when the engine re-renders the injected row; the forwarded target is inert anyway)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:684-725 catParentCompact (phone action row, hides crumbs + pills <=600)"
+   ],
+   "notes": "44x44 circle, white, border 1px rgb(237,237,237), heart icon 19px stroke #212121."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.mrow.search",
+   "component": "Phone search circle button",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"250\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click @390",
+     "expected": "REFERENCE DEFECT: nothing happens (verified) — intended to forward to \"Save Search\" (→ saved-search.html) but the listener is lost on engine render."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:684-725 catParentCompact (phone action row, hides crumbs + pills <=600)"
+   ],
+   "notes": "44x44 circle, magnifier 19px stroke #212121."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.pills",
+   "component": "Action pills row (Add to Favorite / Save Search)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"254\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 302)",
+    "assets/mobilemenu.js:684-725 catParentCompact (phone action row, hides crumbs + pills <=600)"
+   ],
+   "notes": "Flex gap 12px, wraps; class qb-cp-hide → display:none at <=600px."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.pill.fav",
+   "component": "\"Add to Favorite\" pill button",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"255\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lifts translateY(-3px) + filter brightness(0.96); box-shadow unchanged (inline shadow wins)"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 303)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}",
+    "assets/typo.css:44 action pills 15px+rgba(161,161,161,.1) shadow → 20px"
+   ],
+   "notes": "White pill, border 1px rgb(237,237,237), radius 12px, padding 12px 20px, shadow 0 4px 30px rgba(161,161,161,.1), Poppins 20px (typo.css), heart icon 18px stroke rgb(243,128,87)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.pill.save",
+   "component": "\"Save Search\" pill button",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"258\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to saved-search.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 305)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}",
+    "assets/typo.css:44 action pills 15px+rgba(161,161,161,.1) shadow → 20px"
+   ],
+   "notes": "Same pill style; magnifier icon 18px stroke rgb(75,75,75)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside",
+   "component": "Filter sidebar (desktop) / filter bottom sheet (<=1000px)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"263\"]",
+   "kind": "modal/sheet",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "@1440",
+     "expected": "static sidebar, nothing interactive inside works (decorative filters)"
+    },
+    {
+     "action": "@744",
+     "expected": "turned into a fixed bottom sheet hidden off-screen (translateY(106%)); NO visible trigger exists on this page at 744 (no injected Filter pill because the page has no \"Newest\" control; the phone row is hidden) → the filters are unreachable"
+    },
+    {
+     "action": "@390",
+     "expected": "same hidden sheet; the phone \"Filter\" button does not open it (reference defect)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 311)",
+    "assets/mobilemenu.js:107-124 bottom-sheet CSS (body.qb-sheet-ready aside[style*=\"min-width: 260px\"])",
+    "assets/mobilemenu.js:287-343 openSheet/closeSheet/setupSheet (backdrop, Show Results, delegated Filter click, Escape)"
+   ],
+   "notes": "Desktop: flex 1 1 280px, max-width 360px, min-width 260px, white, border 1px rgb(237,237,237), radius 16px, padding 24px, shadow 0 4px 30px rgba(161,161,161,.1)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.title",
+   "component": "Filter heading \"Filter\" (becomes pill with funnel at <=1000px)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"265\"]",
+   "kind": "other",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "no handler (inert)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 313)",
+    "assets/typo.css:78-81 aside 22px/600 → 24px/500",
+    "assets/mobilemenu.js:347-357 markFilterBtn (turns the aside \"Filter\" heading into a qb-filter-btn pill at <=1000px)",
+    "assets/polish.css:30 .qb-filter-btn:hover{background:rgb(250,250,250)!important}"
+   ],
+   "notes": "@1440: \"Filter\" 24px weight 500 (typo.css). At <=1000px it is converted to a qb-filter-btn pill: funnel icon 15px + \"Filter\", inline-flex, gap 8px, padding 10px 18px, border 1px rgb(237,237,237), radius 10px, white, rgb(51,51,51), shadow 0 2px 8px rgba(0,0,0,.05), still 24px/500; hover bg rgb(250,250,250). Clicking it (inside the open sheet) keeps the sheet open."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.reset",
+   "component": "\"Reset All\" link",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"266\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no change (not .qb-nav)"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 314)",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ],
+   "notes": "14px rgb(243,128,87), weight 400 (typo.js), cursor pointer."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.priceLabel",
+   "component": "Filter group label \"Price\"",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"267\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 316)"
+   ],
+   "notes": "16px weight 500, margin-bottom 12px."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.track",
+   "component": "Price range track (static)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"268\"]",
+   "kind": "slider",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 317)"
+   ],
+   "notes": "Static track: height 5px, bg rgb(255,235,226), radius 5px, margin 16px 0 12px. Not draggable."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.fill",
+   "component": "Price range selected fill",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"269\"]",
+   "kind": "slider",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 318)"
+   ],
+   "notes": "Selected range left 3% → right 28%, height 5px, bg rgb(243,128,87), radius 5px."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.thumb",
+   "component": "Price range thumb (2x, static)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"270\"]",
+   "kind": "slider",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 319)",
+    "assets/polish.css:33-41 shadow normalisation (0 2px 8px rgba(0,0,0,.08) and 0 1px 4px rgba(0,0,0,.15) → 0 4px 25px rgba(188,188,188,.10))"
+   ],
+   "notes": "Two 16x16 circles at left 3% and 72%, border 3px rgb(243,128,87), white, translate(-50%,-50%); shadow normalised to 0 4px 25px rgba(188,188,188,.10). Not draggable."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.priceVals",
+   "component": "Price range values \"$100\" / \"$1000\"",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"273\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 322)"
+   ],
+   "notes": "\"$100\" at left 0, \"$1000\" at left 72% translateX(-50%); 14px weight 500 rgb(33,33,33)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.group",
+   "component": "Filter group block (5x, border-top divider)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"276\"]",
+   "kind": "accordion",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 324)"
+   ],
+   "notes": "5 groups: Offer, Seller, Shipping & Delivery, Courier Services, Cites Services (sic). border-top 1px rgb(237,237,237), padding 18px 0. No collapse behaviour."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.groupHead",
+   "component": "Filter group heading with \"−\" glyph",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"277\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "Nothing happens: no collapse/expand, the options stay visible. (Figma add/minus swaps in 244:3508 are not implemented; HTML wins.)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 325)"
+   ],
+   "notes": "16px weight 500, flex space-between, margin-bottom 14px."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.groupMinus",
+   "component": "Filter group \"−\" glyph (static, no collapse)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"278\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "Nothing happens: the group stays expanded and the glyph stays '−'. (Figma 244:3508 would swap to a collapsed head with '+'; HTML wins.)"
+    },
+    {
+     "action": "hover",
+     "expected": "No change (cursor auto, colour rgb(158,158,158))."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 325)"
+   ],
+   "notes": "\"−\" 20px rgb(158,158,158); click does nothing."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.option",
+   "component": "Filter option row (radio label, 14x)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"280\"]",
+   "kind": "checkbox/radio",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no change"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast. The radio never becomes checked (no checked state exists in the reference)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 327)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2683-2689)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ],
+   "notes": "Label flex gap 10px, margin-bottom 12px, 15px, colour rgb(158,150,150) (typo.css override of rgb(117,117,117)), cursor pointer. Option texts include counts, e.g. \"Available (7,592,369)\"."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.radio",
+   "component": "Filter option radio circle",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"281\"]",
+   "kind": "checkbox/radio",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "No change: border stays 1.5px rgb(203,203,203). (Figma Radio Bttn [245:4549] hover → border rgb(99,99,99); HTML wins.)"
+    },
+    {
+     "action": "click",
+     "expected": "Nothing is selected: no orange ring or dot (Figma 'Choose' = border rgb(243,128,87) + 13px rgb(243,128,87) dot is not implemented)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 328)"
+   ],
+   "notes": "18x18 circle, border 1.5px rgb(203,203,203), transparent fill; never filled."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.optionCity",
+   "component": "Filter option text, city names (typo.js weight 500)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] aside label .sc-interp",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 328)",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ],
+   "notes": "City option texts (Doha, Al Rayyan, Al Wakrah, Al Daayen, Umm Salal, Al Shahaniya) get font-weight 500 !important from typo.js; other option texts stay 400."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.aside.apply",
+   "component": "\"Apply Filter\" button",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"282\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96) (background is peach, not the orange-hover token)"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 332)",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ],
+   "notes": "Full width, margin-top 14px, bg rgb(244,158,126), #fff, radius 12px, padding 14px, Poppins 16px weight 500 (typo.js)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.section.h2",
+   "component": "Section title (Cars / Motorcycles & Scooters / Categories / Motorhomes & Caravans / Car Parts & Tires)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"286\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 338)"
+   ],
+   "notes": "22px weight 600 rgb(33,33,33); sections: Cars, Motorcycles & Scooters, Categories, Motorhomes & Caravans, Car Parts & Tires."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.viewAll",
+   "component": "\"View All →\" section link (4x)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"287\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no visible change (already rgb(243,128,87); .qb-nav:hover sets the same colour)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to category.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 339)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ],
+   "notes": "4 links (\"View All →\"), 14px weight 500 orange."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.listGrid",
+   "component": "Section listing grid (desktop grid / phone swipe row)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"288\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 341)",
+    "assets/responsive.css:239-281 parent category phone swipe rows / qb-catgrid"
+   ],
+   "notes": "@1440 grid repeat(auto-fill,minmax(220px,1fr)) gap 18px → 4 cols (3 cards); @744 2 cols; @390 horizontal swipe row: display flex, nowrap, overflow-x auto, scroll-snap-type x mandatory, gap 12px, padding-bottom 6px, scrollbar hidden."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.card",
+   "component": "Listing card (12x across 4 sections)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"290\"]",
+   "kind": "card",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift translateY(-3px) + box-shadow 0 4px 40px rgba(161,161,161,.25), .2s ease; no descendant colour change"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to product.html"
+    },
+    {
+     "action": "@390 swipe",
+     "expected": "cards are flex 0 0 72% with scroll-snap-align start; row scrolls horizontally"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 343)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2554-2562)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2596-2615)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/polish.css:96-98 .qb-card:hover{box-shadow:0 4px 40px rgba(161,161,161,.25)} (inline box-shadow wins over it)"
+   ],
+   "notes": "12 cards (3 per section). White, border 1px rgb(237,237,237), radius 16px, overflow hidden."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.card.photo",
+   "component": "Listing card photo",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"291\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 344)",
+    "assets/photos.js (placeholder photos only)"
+   ],
+   "notes": "Height 140px; photo background (photos.js) with hatched .qb-ph fallback; caption hidden."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.card.price",
+   "component": "Listing card price badge (top-left)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"293\"]",
+   "kind": "chip/pill",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 346)"
+   ],
+   "notes": "Top-left 12px/12px, orange bg rgb(243,128,87), #fff 12px weight 500, padding 4px 10px, radius 8px; shows the price (e.g. \"QAR 285,000\")."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.card.fav",
+   "component": "Listing card favourite heart (toggle)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"294\"]",
+   "kind": "toggle/switch",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no change of its own (the parent card lifts)"
+    },
+    {
+     "action": "click",
+     "expected": "toggles favourite: heart svg fill none ↔ rgb(243,128,87); stopPropagation so the card does NOT navigate; state is per page-load only"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 347)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2549-2552)",
+    "assets/polish.css:33-41 shadow normalisation (0 2px 8px rgba(0,0,0,.08) and 0 1px 4px rgba(0,0,0,.15) → 0 4px 25px rgba(188,188,188,.10))"
+   ],
+   "notes": "30x30 white circle top-right 12px, heart 15px stroke rgb(117,117,117) 1.5; shadow normalised to 0 4px 25px rgba(188,188,188,.10)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.card.title",
+   "component": "Listing card title (2-line clamp)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"298\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 352)",
+    "assets/typo.css:21-26 .qb-card [font-weight:600][font-size:14/15/16px] → 500, rgb(51,51,51)"
+   ],
+   "notes": "15px weight 500 rgb(51,51,51) (typo.css), line-height 1.35, 2-line clamp."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.card.tag",
+   "component": "Listing card spec tag chip",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"301\"]",
+   "kind": "chip/pill",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 355)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important"
+   ],
+   "notes": "bg rgb(245,245,245), 12px rgb(158,150,150), padding 4px 10px, radius 6px."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.card.meta",
+   "component": "Listing card location/time meta row",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"302\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 358)"
+   ],
+   "notes": "border-top 1px rgb(237,237,237), padding-top 10px, 13px rgb(158,158,158), 13px pin icon."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.catgrid",
+   "component": "Sub-category grid (qb-catgrid)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"330\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 395)",
+    "assets/mobilemenu.js:627-639 tagCatGrid",
+    "assets/responsive.css:239-281 parent category phone swipe rows / qb-catgrid"
+   ],
+   "notes": "@1440 4 cols gap 16px; @744 2 cols; @390 REFERENCE QUIRK: CSS specificity makes it a single flex row (cards flex 0 0 72%, gap 12px) with overflow:hidden !important → only ~1.4 cards visible, not scrollable."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.subcat",
+   "component": "Sub-category card (6x)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"332\"]",
+   "kind": "card",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + shadow 0 4px 40px rgba(161,161,161,.25) + filter brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to category.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 397)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2616-2619)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}"
+   ],
+   "notes": "6 cards: Cars, Bicycles & Accessories, Car Parts & Tires, Boats & Watercrafts, Motorhomes & Caravans, Motorcycle Parts & Acc. White, border 1px rgb(237,237,237), radius 14px, padding 16px, gap 14px."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.subcat.icon",
+   "component": "Sub-category card icon tile (empty peach square)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"333\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 398)"
+   ],
+   "notes": "Empty 44x44 tile, radius 10px, bg rgb(255,240,234)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.subcat.name",
+   "component": "Sub-category card name",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"335\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 400)",
+    "assets/typo.css:21-26 .qb-card [font-weight:600][font-size:14/15/16px] → 500, rgb(51,51,51)"
+   ],
+   "notes": "15px weight 500 rgb(51,51,51), single-line ellipsis."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.subcat.ads",
+   "component": "Sub-category card ads count",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"336\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 401)"
+   ],
+   "notes": "13px rgb(158,158,158), margin-top 2px."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.showAll",
+   "component": "\"Show All\" button (sub-categories)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] [data-dc-tpl=\"338\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 407)",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}"
+   ],
+   "notes": "bg rgb(244,158,126), #fff, radius 10px, padding 11px 30px, Poppins 500 14px; centered, margin-top 18px."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.page",
+   "component": "Page wrapper (entrance animation)",
+   "refSelector": "[data-screen-label=\"Category\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "arrive from a search (index hero search / all-categories search form)",
+     "expected": "The normal Category screen renders: crumbs Home › Car & Vehicles › Cars, h1 'Cars', 5 list cards, pagination with page 1 active. No query text, result count or empty state. (Figma Search Result / Search Not Found frames; HTML wins.)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 473)",
+    "assets/styles.css:233 @keyframes qbFade"
+   ],
+   "notes": "Screen root; qbFade .3s ease on load."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.crumbs",
+   "component": "Breadcrumb row (hidden on phone)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"373\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 474)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "Home › Car & Vehicles › Cars. 20px rgb(164,173,186); hidden at <=600px."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.crumb.home",
+   "component": "Breadcrumb \"Home\" link",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"374\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text → rgb(243,128,87)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to index.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 475)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.crumb.parent",
+   "component": "Breadcrumb \"Car & Vehicles\" link",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"376\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text → rgb(243,128,87)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to parent-category.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 475)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.crumb.current",
+   "component": "Breadcrumb current \"Cars\"",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"378\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 475)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500"
+   ],
+   "notes": "\"Cars\" rgb(33,33,33) weight 500."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.h1",
+   "component": "Page title \"Cars\"",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"381\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 479)"
+   ],
+   "notes": "clamp(30px,5vw,44px) 600."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.subtitle",
+   "component": "Stats line \"8,429 Ads • +2K Today\"",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"382\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 480)"
+   ],
+   "notes": "\"8,429 Ads • +2K Today\", 15px rgb(158,158,158)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.subtitle.green",
+   "component": "Stats green delta \"+2K\"",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"383\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 480)"
+   ],
+   "notes": "rgb(27,173,7)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.pills",
+   "component": "Action pills row (hidden on phone)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"384\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 482)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "Hidden at <=600px (qb-cp-hide)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.pill.fav",
+   "component": "\"Add to Favorite\" pill button",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"385\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 483)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}",
+    "assets/typo.css:44 action pills 15px+rgba(161,161,161,.1) shadow → 20px"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.pill.save",
+   "component": "\"Save Search\" pill button",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"388\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to saved-search.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 485)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}",
+    "assets/typo.css:44 action pills 15px+rgba(161,161,161,.1) shadow → 20px"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside",
+   "component": "Filter sidebar (desktop) / filter bottom sheet (<=1000px)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"393\"]",
+   "kind": "modal/sheet",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "@1440",
+     "expected": "static sidebar (decorative filters)"
+    },
+    {
+     "action": "@744/@390",
+     "expected": "fixed bottom sheet, closed = translateY(106%) off-screen; opened by the injected Filter pill (see ca.filterTrigger)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 491)",
+    "assets/mobilemenu.js:107-124 bottom-sheet CSS (body.qb-sheet-ready aside[style*=\"min-width: 260px\"])"
+   ],
+   "notes": "Same visual as pc.aside."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.title",
+   "component": "Filter heading \"Filter\" (becomes pill with funnel at <=1000px)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"395\"]",
+   "kind": "other",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "no handler (inert)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 493)",
+    "assets/typo.css:78-81 aside 22px/600 → 24px/500",
+    "assets/mobilemenu.js:347-357 markFilterBtn (turns the aside \"Filter\" heading into a qb-filter-btn pill at <=1000px)",
+    "assets/polish.css:30 .qb-filter-btn:hover{background:rgb(250,250,250)!important}"
+   ],
+   "notes": "Same as pc.aside.title."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.reset",
+   "component": "\"Reset All\" link",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"396\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 494)",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.priceLabel",
+   "component": "Filter group label \"Price\"",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"397\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 496)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.track",
+   "component": "Price range track (static)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"398\"]",
+   "kind": "slider",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 497)"
+   ],
+   "notes": "Static, not draggable."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.fill",
+   "component": "Price range selected fill",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"399\"]",
+   "kind": "slider",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 498)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.thumb",
+   "component": "Price range thumb (2x, static)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"400\"]",
+   "kind": "slider",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 499)",
+    "assets/polish.css:33-41 shadow normalisation (0 2px 8px rgba(0,0,0,.08) and 0 1px 4px rgba(0,0,0,.15) → 0 4px 25px rgba(188,188,188,.10))"
+   ],
+   "notes": "Not draggable."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.priceVals",
+   "component": "Price range values \"$100\" / \"$1000\"",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"403\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 502)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.group",
+   "component": "Filter group block (5x)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"406\"]",
+   "kind": "accordion",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 504)"
+   ],
+   "notes": "No collapse behaviour."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.groupHead",
+   "component": "Filter group heading with \"−\" glyph",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"407\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "Nothing happens: no collapse/expand, the options stay visible. (Figma add/minus swaps in 244:3508 are not implemented; HTML wins.)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 505)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.groupMinus",
+   "component": "Filter group \"−\" glyph (static)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"408\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "Nothing happens: the group stays expanded and the glyph stays '−'. (Figma 244:3508 would swap to a collapsed head with '+'; HTML wins.)"
+    },
+    {
+     "action": "hover",
+     "expected": "No change (cursor auto, colour rgb(158,158,158))."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 505)"
+   ],
+   "notes": "Click does nothing (verified)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.option",
+   "component": "Filter option row (radio label, 14x)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"410\"]",
+   "kind": "checkbox/radio",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast. Radio stays unchecked (verified)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 507)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.radio",
+   "component": "Filter option radio circle",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"411\"]",
+   "kind": "checkbox/radio",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "No change: border stays 1.5px rgb(203,203,203). (Figma Radio Bttn [245:4549] hover → border rgb(99,99,99); HTML wins.)"
+    },
+    {
+     "action": "click",
+     "expected": "Nothing is selected: no orange ring or dot (Figma 'Choose' = border rgb(243,128,87) + 13px rgb(243,128,87) dot is not implemented)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 508)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.optionCity",
+   "component": "Filter option text, city names (typo.js weight 500)",
+   "refSelector": "[data-screen-label=\"Category\"] aside label .sc-interp",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 508)",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.aside.apply",
+   "component": "\"Apply Filter\" button",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"412\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 512)",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.toolbar",
+   "component": "Results toolbar (sort + view toggle)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"414\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 516)",
+    "assets/mobilemenu.js:361-381 ensureFilterTrigger (inserts button.qb-filter-btn.qb-filter-inject before \"Newest\" at <=1000px)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "Flex space-between, gap 12px, wraps. @1440: [Newest ▾] … [list][grid]. @744: [Filter pill][Newest ▾] (toggles hidden). @390: [Filter pill][Newest ▾][♡][⌕] (circles pushed right with margin-left:auto)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.filterTrigger",
+   "component": "Injected \"Filter\" pill (opens bottom sheet, <=1000px only)",
+   "refSelector": "[data-screen-label=\"Category\"] .qb-filter-inject",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "background → rgb(250,250,250)"
+    },
+    {
+     "action": "click",
+     "expected": "adds body.qb-sheet-open → filter sheet slides up (transform translateY(106%)→0, .34s cubic-bezier(.4,0,.2,1)); backdrop fades in (.25s); \"Show Results\" bar appears fixed at the bottom; page scroll locked (body overflow hidden)"
+    },
+    {
+     "action": "close",
+     "expected": "Escape key, click on the backdrop, or \"Show Results\" → body.qb-sheet-open removed, sheet slides down"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:361-381 ensureFilterTrigger (inserts button.qb-filter-btn.qb-filter-inject before \"Newest\" at <=1000px)",
+    "assets/mobilemenu.js:287-343 openSheet/closeSheet/setupSheet (backdrop, Show Results, delegated Filter click, Escape)",
+    "assets/polish.css:30 .qb-filter-btn:hover{background:rgb(250,250,250)!important}"
+   ],
+   "notes": "Only at <=1000px. Button, Arial 13.33px (no font set!) weight 600, rgb(51,51,51), funnel icon 15px stroke 1.8, padding 10px 18px, border 1px rgb(237,237,237), radius 10px, white, shadow 0 2px 8px rgba(0,0,0,.05)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.sort",
+   "component": "Sort control \"Newest\" (static, no menu)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"415\"]",
+   "kind": "dropdown/select",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no change"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast. No dropdown/menu exists."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 517)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "\"Newest\" + chevron 18px; border 1px rgb(237,237,237), white, radius 12px, padding 11px 16px, rgb(75,75,75), cursor pointer; font-size 20px at >=1001px (catListView CSS), 15px at <=1000px."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.viewToggle",
+   "component": "View toggle group (desktop only)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"418\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 520)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "Flex gap 8px; display:none at <=1000px (both toggles hidden)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.view.list",
+   "component": "List-view toggle (selected by default)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"419\"]",
+   "kind": "tab",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no visible change while selected"
+    },
+    {
+     "action": "click",
+     "expected": "shows the list view (5 horizontal cards); no animation"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 521)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3173-3180)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "44x44, radius 12px, list icon 20px stroke 1.7. Unselected: icon rgb(201,201,201)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.view.grid",
+   "component": "Grid-view toggle (unselected by default)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"422\"]",
+   "kind": "tab",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "switches to the grid view (3 cols @1440, minmax(240px,1fr) gap 18px); grid icon turns rgb(33,33,33), list icon rgb(201,201,201); no animation"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 524)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3173-3180)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "Unselected by default: white, border rgb(237,237,237), icon rgb(201,201,201)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.view.list.off",
+   "component": "List-view toggle (unselected, after Grid chosen)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"419\"]",
+   "kind": "tab",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "back to list view"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 521)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.view.grid.on",
+   "component": "Grid-view toggle (selected)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"422\"]",
+   "kind": "tab",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no visible change"
+    },
+    {
+     "action": "click",
+     "expected": "stays in grid view"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 524)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.circles",
+   "component": "Phone heart/search circles (qb-cat-circles)",
+   "refSelector": "[data-screen-label=\"Category\"] .qb-cat-circles",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "Injected span.qb-cat-circles; display:none above 600px; at <=600px flex, gap 10px, margin-left auto."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.circle.fav",
+   "component": "Phone heart circle button",
+   "refSelector": "[data-screen-label=\"Category\"] .qb-cat-circles [data-cc=\"fav\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click @390",
+     "expected": "forwards a click to the hidden \"Add to Favorite\" pill → nothing happens (inert)"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "44x44 circle, white, border 1px rgb(237,237,237), heart 19px stroke #212121."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.circle.search",
+   "component": "Phone search circle button",
+   "refSelector": "[data-screen-label=\"Category\"] .qb-cat-circles [data-cc=\"search\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click @390",
+     "expected": "forwards to \"Save Search\" → navigates to saved-search.html (verified)"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "44x44 circle, magnifier 19px stroke #212121."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.card",
+   "component": "List-view result card (5x)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"452\"]",
+   "kind": "card",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + shadow 0 4px 40px rgba(161,161,161,.25), .2s ease; no descendant colour change"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to product.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 557)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2579-2585)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/polish.css:96-98 .qb-card:hover{box-shadow:0 4px 40px rgba(161,161,161,.25)} (inline box-shadow wins over it)"
+   ],
+   "notes": "5 cards: BMW 320d Touring M-Sport, Mercedes-Benz C300 AMG Line, Audi A4 S Line, Lexus IS 300 F Sport, Volkswagen Golf R. White, border 1px rgb(237,237,237), radius 16px, padding 16px, gap 18px, flex-wrap (photo stacks above text at 390)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.photo",
+   "component": "List card photo",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"453\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 558)"
+   ],
+   "notes": "flex 1 1 200px, min-width 180px, min-height 150px, radius 12px."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.badge",
+   "component": "List card badge (\"Tod Ad\" desktop / price on phone / hidden on tablet)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"455\"]",
+   "kind": "chip/pill",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 560)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "@1440 \"Tod Ad\" orange badge; @744 hidden (display:none); @390 shows the price (\"QAR 287,000\") instead."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.fav",
+   "component": "List card favourite heart (toggle)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"456\"]",
+   "kind": "toggle/switch",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "toggles heart fill none ↔ rgb(243,128,87) without navigating (verified)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 561)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2549-2552)",
+    "assets/polish.css:33-41 shadow normalisation (0 2px 8px rgba(0,0,0,.08) and 0 1px 4px rgba(0,0,0,.15) → 0 4px 25px rgba(188,188,188,.10))"
+   ],
+   "notes": "30x30 white circle, heart 16px stroke rgb(117,117,117)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.title",
+   "component": "List card title",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"461\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 567)"
+   ],
+   "notes": "22px weight 600 rgb(33,33,33) (not matched by the .qb-card title rule)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.price",
+   "component": "List card price (right of title)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"462\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 568)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "22px 600, nowrap. Hidden at <=600px (inner text span gets .qb-price-dup display:none) because the badge shows the price."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.desc",
+   "component": "List card description",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"463\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 570)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important"
+   ],
+   "notes": "15px line-height 1.5, rgb(158,150,150)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.tag",
+   "component": "List card spec tag chip",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"466\"]",
+   "kind": "chip/pill",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 573)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important"
+   ],
+   "notes": "bg rgb(245,245,245), 13px rgb(158,150,150), padding 5px 12px, radius 6px."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.list.meta",
+   "component": "List card location/time meta row",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"467\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 576)"
+   ],
+   "notes": "border-top 1px rgb(237,237,237), margin-top 16px, padding-top 12px, 14px rgb(158,158,158), 15px pin icon."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid",
+   "component": "Grid-view results container",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"429\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 530)"
+   ],
+   "notes": "Only reachable at >=1001px (toggles hidden below). repeat(auto-fill,minmax(240px,1fr)) gap 18px → 3 cols @1440."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.card",
+   "component": "Grid-view result card (5x)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"431\"]",
+   "kind": "card",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + shadow 0 4px 40px rgba(161,161,161,.25)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to product.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 532)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/polish.css:96-98 .qb-card:hover{box-shadow:0 4px 40px rgba(161,161,161,.25)} (inline box-shadow wins over it)"
+   ],
+   "notes": "White, border 1px rgb(237,237,237), radius 16px, overflow hidden; photo 150px."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.photo",
+   "component": "Grid card photo",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"432\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 533)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.badge",
+   "component": "Grid card price badge (price replaces \"Tod Ad\")",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"434\"]",
+   "kind": "chip/pill",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 535)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "Shows the price (e.g. \"QAR 287,000\") instead of \"Tod Ad\"."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.fav",
+   "component": "Grid card favourite heart (toggle)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"435\"]",
+   "kind": "toggle/switch",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "toggles heart fill without navigating"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 536)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2549-2552)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.title",
+   "component": "Grid card title",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"440\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 541)",
+    "assets/typo.css:21-26 .qb-card [font-weight:600][font-size:14/15/16px] → 500, rgb(51,51,51)"
+   ],
+   "notes": "16px weight 500 rgb(51,51,51) (typo.css), line-height 1.3."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.priceDup",
+   "component": "Grid card price line (hidden duplicate)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"441\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 542)",
+    "assets/mobilemenu.js:730-812 catListView (toggle colours, badge/price swap, hides toggles <=1000, phone circles)"
+   ],
+   "notes": "Orange price line is hidden: its text span gets .qb-price-dup (display:none); the div collapses to 0 height but keeps margin-bottom 8px."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.desc",
+   "component": "Grid card description (2-line clamp)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"442\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 543)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important"
+   ],
+   "notes": "13px line-height 1.5, 2-line clamp, rgb(158,150,150)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.tag",
+   "component": "Grid card spec tag chip",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"445\"]",
+   "kind": "chip/pill",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 546)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.grid.meta",
+   "component": "Grid card meta row",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"446\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 549)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.pager",
+   "component": "Pagination row",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"471\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 583)"
+   ],
+   "notes": "Centered, gap 8px, margin-top 12px, wraps."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.pager.arrow",
+   "component": "Pagination item \"«\" (first)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"473\"]",
+   "kind": "pagination",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96)"
+    },
+    {
+     "action": "click \"«\"",
+     "expected": "active page → 1"
+    },
+    {
+     "action": "click \"‹\"",
+     "expected": "active page → max(1, current-1)"
+    },
+    {
+     "action": "click \"›\"",
+     "expected": "active page → min(5, current+1)"
+    },
+    {
+     "action": "click \"»\"",
+     "expected": "active page → 5"
+    },
+    {
+     "action": "after any click",
+     "expected": "calls window.scrollTo({top:0,behavior:\"smooth\"}) but this is a NO-OP in the reference because the document scrolls inside <body> (html/body overflow-x:hidden) — the page does not move (verified). Results list does not change."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 585)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2690-2700)",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}"
+   ],
+   "notes": "40x40 min, padding 0 6px, radius 10px, border 1px rgb(237,237,237), white, 15px rgb(75,75,75)."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.pager.active",
+   "component": "Pagination item \"1\" (active by default)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"473\"]",
+   "kind": "pagination",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "background → rgb(233,108,63)"
+    },
+    {
+     "action": "click",
+     "expected": "no change (already active)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 585)",
+    "assets/polish.css:23-27 orange buttons :hover background rgb(233,108,63)!important; filter:none"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.pager.num",
+   "component": "Pagination item \"2\" (inactive number)",
+   "refSelector": "[data-screen-label=\"Category\"] [data-dc-tpl=\"473\"]",
+   "kind": "pagination",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "becomes the active page (orange); previous active returns to white; no scroll, no content change (verified sequence 3→›4→»5→‹4→«1)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 585)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2690-2700)"
+   ]
+  },
+  {
+   "page": "category.html",
+   "id": "ca.sheet.back",
+   "component": "Filter sheet backdrop (qb-sheet-back)",
+   "refSelector": ".qb-sheet-back",
+   "kind": "modal/sheet",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "opacity 0 → 1 over .25s, pointer-events auto"
+    },
+    {
+     "action": "click",
+     "expected": "closes the sheet (body.qb-sheet-open removed)"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:115-117",
+    "assets/mobilemenu.js:287-343 openSheet/closeSheet/setupSheet (backdrop, Show Results, delegated Filter click, Escape)"
+   ],
+   "notes": "Fixed inset 0, rgba(20,20,20,.45), z-index 99991."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.sheet.apply",
+   "component": "Filter sheet \"Show Results\" bar (qb-sheet-apply)",
+   "refSelector": ".qb-sheet-apply",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "closes the sheet (no filtering happens)"
+    },
+    {
+     "action": "hover",
+     "expected": "no change"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:118-120",
+    "assets/mobilemenu.js:287-343 openSheet/closeSheet/setupSheet (backdrop, Show Results, delegated Filter click, Escape)"
+   ],
+   "notes": "\"Show Results\": fixed bottom 0, left/right 0, z 99994, padding 16px, bg rgb(243,128,87), #fff, Poppins 600 15px, full width, no radius; visible only while open."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.sheet.aside",
+   "component": "Filter bottom sheet (open)",
+   "refSelector": "[data-screen-label=\"Category\"] aside",
+   "kind": "modal/sheet",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "transform translateY(0); padding-bottom 80px (clears the Show Results bar); internal scroll overflow-y auto, max-height 86vh"
+    },
+    {
+     "action": "Escape",
+     "expected": "closes"
+    },
+    {
+     "action": "inner controls",
+     "expected": "radios / Reset All / Apply Filter remain inert"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:107-124 bottom-sheet CSS (body.qb-sheet-ready aside[style*=\"min-width: 260px\"])"
+   ],
+   "notes": "Fixed left/right/bottom 0, width 100%, radius 22px 22px 0 0, shadow 0 -10px 44px rgba(0,0,0,.22), z-index 99992."
+  },
+  {
+   "page": "category.html",
+   "id": "ca.sheet.title",
+   "component": "Sheet heading \"Filter\" pill (qb-filter-btn)",
+   "refSelector": "[data-screen-label=\"Category\"] aside span.qb-filter-btn",
+   "kind": "other",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "background rgb(250,250,250)"
+    },
+    {
+     "action": "click",
+     "expected": "calls openSheet again → sheet stays open"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:347-357 markFilterBtn (turns the aside \"Filter\" heading into a qb-filter-btn pill at <=1000px)",
+    "assets/typo.css:78-81 aside 22px/600 → 24px/500",
+    "assets/polish.css:30 .qb-filter-btn:hover{background:rgb(250,250,250)!important}"
+   ]
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.sheet.back",
+   "component": "Filter sheet backdrop (qb-sheet-back)",
+   "refSelector": ".qb-sheet-back",
+   "kind": "modal/sheet",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "opacity 0 → 1 over .25s, pointer-events auto"
+    },
+    {
+     "action": "click",
+     "expected": "closes the sheet (body.qb-sheet-open removed)"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:115-117",
+    "assets/mobilemenu.js:287-343 openSheet/closeSheet/setupSheet (backdrop, Show Results, delegated Filter click, Escape)"
+   ],
+   "notes": "Fixed inset 0, rgba(20,20,20,.45), z-index 99991. On parent-category the sheet can only be opened programmatically (no working trigger)."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.sheet.apply",
+   "component": "Filter sheet \"Show Results\" bar (qb-sheet-apply)",
+   "refSelector": ".qb-sheet-apply",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "closes the sheet (no filtering happens)"
+    },
+    {
+     "action": "hover",
+     "expected": "no change"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:118-120",
+    "assets/mobilemenu.js:287-343 openSheet/closeSheet/setupSheet (backdrop, Show Results, delegated Filter click, Escape)"
+   ],
+   "notes": "\"Show Results\": fixed bottom 0, left/right 0, z 99994, padding 16px, bg rgb(243,128,87), #fff, Poppins 600 15px, full width, no radius; visible only while open."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.sheet.aside",
+   "component": "Filter bottom sheet (open)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] aside",
+   "kind": "modal/sheet",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "transform translateY(0); padding-bottom 80px (clears the Show Results bar); internal scroll overflow-y auto, max-height 86vh"
+    },
+    {
+     "action": "Escape",
+     "expected": "closes"
+    },
+    {
+     "action": "inner controls",
+     "expected": "radios / Reset All / Apply Filter remain inert"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:107-124 bottom-sheet CSS (body.qb-sheet-ready aside[style*=\"min-width: 260px\"])"
+   ],
+   "notes": "Fixed left/right/bottom 0, width 100%, radius 22px 22px 0 0, shadow 0 -10px 44px rgba(0,0,0,.22), z-index 99992."
+  },
+  {
+   "page": "parent-category.html",
+   "id": "pc.sheet.title",
+   "component": "Sheet heading \"Filter\" pill (qb-filter-btn)",
+   "refSelector": "[data-screen-label=\"Parent Category\"] aside span.qb-filter-btn",
+   "kind": "other",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "background rgb(250,250,250)"
+    },
+    {
+     "action": "click",
+     "expected": "calls openSheet again → sheet stays open"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:347-357 markFilterBtn (turns the aside \"Filter\" heading into a qb-filter-btn pill at <=1000px)",
+    "assets/typo.css:78-81 aside 22px/600 → 24px/500",
+    "assets/polish.css:30 .qb-filter-btn:hover{background:rgb(250,250,250)!important}"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.page",
+   "component": "Page wrapper (entrance animation)",
+   "refSelector": "[data-screen-label=\"Saved Search\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1397)",
+    "assets/styles.css:233 @keyframes qbFade"
+   ],
+   "notes": "Screen root; qbFade .3s ease."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.crumbs",
+   "component": "Breadcrumb row",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1309\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1398)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500"
+   ],
+   "notes": "Home > Saved Search (separator is \">\" not \"›\"). Visible at all widths."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.crumb.home",
+   "component": "Breadcrumb \"Home\" link",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1310\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text → rgb(243,128,87)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to index.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1399)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.crumb.sep",
+   "component": "Breadcrumb separator \">\"",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1311\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1399)"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.crumb.current",
+   "component": "Breadcrumb current \"Saved Search\"",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1312\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1399)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.h1",
+   "component": "Page title \"Saved Search\"",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1314\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1402)"
+   ],
+   "notes": "clamp(28px,4vw,40px) 600."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.toggle",
+   "component": "\"Clear all\" / \"Show saved searches\" text toggle",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1315\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text rgb(158,158,158) → rgb(243,128,87)"
+    },
+    {
+     "action": "click",
+     "expected": "switches to the empty state; label becomes \"Show saved searches\""
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1403)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3278-3280)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ],
+   "notes": "\"Clear all\", 14px rgb(158,158,158), right-aligned in the title row (space-between)."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.list",
+   "component": "Saved-search list column",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1326\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1414)"
+   ],
+   "notes": "Column gap 18px: 2 cards + clean-up banner."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.card",
+   "component": "Saved-search card (2x)",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1328\"]",
+   "kind": "card",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + shadow 0 4px 40px rgba(161,161,161,.25) (it is a .qb-card) even though the card itself has no click action"
+    },
+    {
+     "action": "click (card body)",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1416)",
+    "assets/styles.css:238-239 .qb-card{transition}/.qb-card:hover{transform:translateY(-3px)}",
+    "assets/polish.css:96-98 .qb-card:hover{box-shadow:0 4px 40px rgba(161,161,161,.25)} (inline box-shadow wins over it)"
+   ],
+   "notes": "2 cards: \"BMW 320d Touring M-Sport\" (Updated 3 mins ago), \"BMW 330e Touring M-Sport\" (Updated 3 days ago). White, border 1px rgb(237,237,237), radius 16px, padding 20px, cursor default."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.card.thumb",
+   "component": "Saved-search thumbnail 72x72",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1330\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1418)"
+   ],
+   "notes": "72x72 radius 12px photo."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.card.title",
+   "component": "Saved-search title",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1335\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1422)"
+   ],
+   "notes": "18px weight 600 rgb(33,33,33)."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.card.meta",
+   "component": "Saved-search meta \"QB Matching Ads • Updated …\"",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1336\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1423)"
+   ],
+   "notes": "\"QB Matching Ads • Updated …\", 13px rgb(158,158,158), margin-top 5px."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.card.more",
+   "component": "Saved-search \"⋯\" more button (inert)",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1337\"]",
+   "kind": "menu",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "glyph rgb(158,158,158) → rgb(243,128,87)"
+    },
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast. No menu opens."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1425)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ],
+   "notes": "\"⋯\" 22px, line-height 1."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.card.spec",
+   "component": "Saved-search spec chip (7 per card)",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1340\"]",
+   "kind": "chip/pill",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1429)",
+    "assets/typo.css:11 [style*=\"color: rgb(117, 117, 117)\"] → rgb(158,150,150)!important"
+   ],
+   "notes": "7 chips per card (Brand, Model, Price, Year, Fuel Type, Transmission, Location): bg rgb(245,245,245), 12px rgb(158,150,150), padding 5px 11px, radius 6px, gap 8px."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.card.footer",
+   "component": "Saved-search card footer row",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1341\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1434)"
+   ],
+   "notes": "border-top 1px rgb(237,237,237), margin-top 16px, padding-top 16px, space-between, wraps."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.notif.on",
+   "component": "Notification toggle pill (ON state, default)",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1342\"]",
+   "kind": "toggle/switch",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "toggles this card only: ON → OFF (label \"Notification off\", knob jumps left 15px→2px, colours change instantly, no transition)"
+    },
+    {
+     "action": "hover",
+     "expected": "no change"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1435)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2956-2969)"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.notif.track",
+   "component": "Notification toggle track",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1343\"]",
+   "kind": "toggle/switch",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1436)"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.notif.knob",
+   "component": "Notification toggle knob",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1344\"]",
+   "kind": "toggle/switch",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1436)"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.notif.off",
+   "component": "Notification toggle pill (OFF state)",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1342\"]",
+   "kind": "toggle/switch",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "back to ON"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1435)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2956-2969)",
+    "assets/typo.css:33-41 breadcrumbs 20px rgb(164,173,186); current crumb rgb(33,33,33) 500"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.notif.knobOff",
+   "component": "Notification toggle knob (OFF)",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1344\"]",
+   "kind": "toggle/switch",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1436)"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.viewResult",
+   "component": "\"View Result\" button",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1345\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "bg → rgb(233,108,63)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to category.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1438)",
+    "assets/polish.css:23-27 orange buttons :hover background rgb(233,108,63)!important; filter:none"
+   ],
+   "notes": "Orange, radius 10px, padding 10px 24px, Poppins 600 14px."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.cleanup",
+   "component": "Clean-up banner",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1346\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1442)"
+   ],
+   "notes": "bg rgb(255,247,243), border 1px rgb(250,220,206), radius 16px, padding 18px 22px, space-between, wraps."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.cleanup.text",
+   "component": "Clean-up banner text \"Clean up inactive items\"",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1347\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1443)"
+   ],
+   "notes": "Info icon 20px stroke orange + \"Clean up inactive items\" 15px rgb(75,75,75)."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.cleanup.sub",
+   "component": "Clean-up banner sub-text",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1351\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1443)"
+   ],
+   "notes": "\"— Remove items that have been sold or are no longer available in one click.\" 13px rgb(158,158,158)."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.cleanup.btn",
+   "component": "\"Clean up\" button",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1352\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "bg → rgb(233,108,63)"
+    },
+    {
+     "action": "click",
+     "expected": "switches to the empty state (same as \"Clear all\")"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1444)",
+    "assets/polish.css:23-27 orange buttons :hover background rgb(233,108,63)!important; filter:none"
+   ],
+   "notes": "Orange, radius 10px, padding 10px 24px, 600 14px, nowrap."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.toggle.empty",
+   "component": "\"Show saved searches\" text toggle (empty state)",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1315\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text → rgb(243,128,87)"
+    },
+    {
+     "action": "click",
+     "expected": "restores the filled list; label \"Clear all\"; notification toggles keep their state"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1403)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3278-3280)"
+   ]
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.empty.card",
+   "component": "Empty state card",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1317\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1406)"
+   ],
+   "notes": "White, border 1px rgb(237,237,237), radius 20px, padding 70px 24px, centered column gap 16px."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.empty.icon",
+   "component": "Empty state icon circle",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1318\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1407)"
+   ],
+   "notes": "88px circle bg rgb(255,240,234) with 38px magnifier stroke orange."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.empty.h2",
+   "component": "Empty state title \"No saved searches yet\"",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1322\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1408)"
+   ],
+   "notes": "\"No saved searches yet\" 22px 600."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.empty.p",
+   "component": "Empty state body text",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1323\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1409)"
+   ],
+   "notes": "15px rgb(158,158,158), max-width 420px, line-height 1.6."
+  },
+  {
+   "page": "saved-search.html",
+   "id": "ss.empty.btn",
+   "component": "\"Browse Ads\" button",
+   "refSelector": "[data-screen-label=\"Saved Search\"] [data-dc-tpl=\"1324\"]",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "bg → rgb(233,108,63)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to category.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 1410)",
+    "assets/polish.css:23-27 orange buttons :hover background rgb(233,108,63)!important; filter:none"
+   ],
+   "notes": "\"Browse Ads\": orange, radius 12px, padding 14px 32px, 600 15px, margin-top 8px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.header",
+   "component": "Sticky site header",
+   "refSelector": "header",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 14)"
+   ],
+   "notes": "position sticky top 0 (sticks inside the <body> scroller), z 50, white, shadow 0 4px 30px rgba(161,161,161,.2); inner max-width 1440, padding 18px clamp(16px,4vw,40px), height 88px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.logo",
+   "component": "Header logo (home link)",
+   "refSelector": "header > div > div:first-child",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "navigates to index.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 16)"
+   ],
+   "notes": "assets/logo.svg at height 52px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.addAds",
+   "component": "Header \"Add Ads\" button",
+   "refSelector": "header .qb-hcluster > button.qb-btn:first-child",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "bg rgb(243,128,87) → rgb(233,108,63)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to add-ads.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 21)",
+    "assets/polish.css:23-27 orange buttons :hover background rgb(233,108,63)!important; filter:none"
+   ],
+   "notes": "Hidden <=760px (cluster hidden). Orange, radius 10px, padding 10px 18px, Poppins 600 15px, pin-plus icon 20px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.divider",
+   "component": "Header vertical divider",
+   "refSelector": "header .qb-hcluster > div[style*=\"width: 1px\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 24)"
+   ],
+   "notes": "1x30 rgb(237,237,237)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.lang",
+   "component": "Header language (globe) button",
+   "refSelector": "header button[title=\"Language\"]",
+   "kind": "dropdown/select",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "mouseenter on wrapper",
+     "expected": "opens the language panel immediately (qbFade .18s ease); globe icon turns orange while open"
+    },
+    {
+     "action": "mouseleave",
+     "expected": "closes immediately (no delay)"
+    },
+    {
+     "action": "click",
+     "expected": "no click handler (hover-only)"
+    },
+    {
+     "action": "keyboard",
+     "expected": "no keyboard opening; Escape not handled"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 25)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3046-3047)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ],
+   "notes": "Globe 23px stroke 1.6, colour rgb(75,75,75); hover orange."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.lang.panel",
+   "component": "Language dropdown panel",
+   "refSelector": "header button[title=\"Language\"] + div",
+   "kind": "menu",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 30)",
+    "assets/styles.css:233 @keyframes qbFade"
+   ],
+   "notes": "Absolute top 100% right 0, margin-top 10px, width 250px, white, border 1px rgb(237,237,237), radius 14px, shadow 0 16px 44px rgba(0,0,0,.14), padding 8px, z 120. 9 options: English, Arabic, India, Urdu, Malayalam, Bengali, Tagalog, Persian (Farsi), Tamil (emoji flags)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.lang.title",
+   "component": "Language panel title",
+   "refSelector": "header button[title=\"Language\"] + div > div:first-child",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 31)"
+   ],
+   "notes": "\"Choose your language\" 16px 600, padding 10px 12px 12px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.lang.opt.on",
+   "component": "Language option (selected \"English\")",
+   "refSelector": "header button[title=\"Language\"] + div > div.qb-btn",
+   "kind": "checkbox/radio",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "selects the language and closes the panel"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 33)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3059-3062)"
+   ]
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.lang.opt.off",
+   "component": "Language option (unselected)",
+   "refSelector": "header button[title=\"Language\"] + div > div.qb-btn",
+   "kind": "checkbox/radio",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "becomes selected (bg rgb(255,240,234), orange ring+dot), panel closes; selection persists until reload (verified with Arabic)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 33)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3059-3062)"
+   ],
+   "notes": "Row flex gap 12px, padding 10px 12px, radius 9px; flag 18px; name 15px rgb(51,51,51); ring 18px border 2px rgb(203,203,203)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.wishlist",
+   "component": "Header wishlist icon",
+   "refSelector": "header button[title=\"Wishlist\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "icon → rgb(243,128,87) + brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to wishlist.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 42)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}",
+    "assets/styles.css:242-243 .qb-btn:hover{filter:brightness(.96)}"
+   ]
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.notif",
+   "component": "Header notifications icon (+ orange dot)",
+   "refSelector": "header button[title=\"Notifications\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "icon → orange + brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to notifications.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 45)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ],
+   "notes": "Orange 8px dot top-right with 1.5px white border."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.messages",
+   "component": "Header messages icon",
+   "refSelector": "header button[title=\"Messages\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "icon → orange + brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to messages.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 49)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ]
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.guest.login",
+   "component": "Guest header \"Login\" button (shown while localStorage.qbAuth !== \"1\")",
+   "refSelector": "header .qb-guest-btns a[href=\"login.html\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "navigates to login.html"
+    },
+    {
+     "action": "hover",
+     "expected": "no change (inline colour beats a:hover)"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:415-441 guestHeader"
+   ],
+   "notes": "Shown only while localStorage.qbAuth !== \"1\" (fresh visit). 600 14px rgb(51,51,51), padding 10px 18px, border 1px rgb(237,237,237), radius 10px, white."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.guest.signup",
+   "component": "Guest header \"Sign Up\" button",
+   "refSelector": "header .qb-guest-btns a[href=\"signup.html\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "navigates to signup.html"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:415-441 guestHeader"
+   ],
+   "notes": "600 14px #fff on rgb(243,128,87), padding 10px 18px, radius 10px. Removed once qbAuth = \"1\"."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.avatar",
+   "component": "Header avatar \"FA\" button",
+   "refSelector": "header button[title=\"Account\"]",
+   "kind": "menu",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "mouseenter",
+     "expected": "opens the account menu (qbFade .18s)"
+    },
+    {
+     "action": "mouseleave",
+     "expected": "closes after a 160ms delay (re-entering cancels)"
+    },
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to account.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 53)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3048-3050)"
+   ],
+   "notes": "40px circle bg rgb(244,244,244), \"FA\" Poppins 600 14px rgb(75,75,75). Visible in both guest and signed-in modes."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.avatar.panel",
+   "component": "Avatar dropdown panel",
+   "refSelector": "header button[title=\"Account\"] + div",
+   "kind": "menu",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 55)"
+   ],
+   "notes": "Absolute top 100% right 0, margin-top 12px, width 270px, radius 16px, border 1px rgb(237,237,237), shadow 0 16px 44px rgba(0,0,0,.14), padding 8px, z 120."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.avatar.profile",
+   "component": "Avatar panel profile row",
+   "refSelector": "header button[title=\"Account\"] + div > div.qb-btn",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to account.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 56)"
+   ],
+   "notes": "FA 42px circle + \"Farah M. Alzinati\" 15px 600 + \"farahelzinati@gmail.com\" 13px rgb(158,158,158); border-bottom 1px rgb(237,237,237)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.avatar.item",
+   "component": "Avatar menu item (Save Search … Account Settings)",
+   "refSelector": "header button[title=\"Account\"] + div > div.qb-btn",
+   "kind": "menu",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "brightness(0.96)"
+    },
+    {
+     "action": "click",
+     "expected": "closes menu and navigates: Save Search→saved-search.html, My Ads→my-ads.html, Sales Overview→sales-overview.html, Followers→users.html, Account Settings→account.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 64)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3051-3058)"
+   ],
+   "notes": "15px rgb(75,75,75), 20px icons, padding 11px 12px, radius 10px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.avatar.logout",
+   "component": "Avatar menu \"Log Out\" (orange)",
+   "refSelector": "header button[title=\"Account\"] + div > div.qb-btn",
+   "kind": "menu",
+   "interactive": true,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "navigates to auth.html which redirects to login.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3057)",
+    "auth.html (meta refresh → login.html)"
+   ],
+   "notes": "Orange rgb(243,128,87) text+icon."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.burger",
+   "component": "Mobile hamburger (opens drawer)",
+   "refSelector": "#qb-burger",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "opens the drawer (html.qb-menu-open)"
+    },
+    {
+     "action": "hover",
+     "expected": "no change"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:32-37,179-184",
+    "assets/mobilemenu.js:83"
+   ],
+   "notes": "<=760px only. Fixed top 14px right 16px, 44x44, radius 12px, border 1px rgb(237,237,237), white, shadow 0 2px 10px rgba(0,0,0,.06); three 20x2 bars #212121 (6px apart); bars do not animate into an X."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.mbell",
+   "component": "Mobile bell link",
+   "refSelector": "#qb-mbell",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "icon → rgb(211,102,76) (a:hover)"
+    },
+    {
+     "action": "click",
+     "expected": "navigates to notifications.html"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:38-41,186-188",
+    "assets/styles.css:230 a:hover"
+   ],
+   "notes": "Fixed top 14 right 68, 44x44 same tile style, bell 21px, 7px orange dot."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.mglobe",
+   "component": "Mobile globe (language popover)",
+   "refSelector": "#qb-mglobe",
+   "kind": "dropdown/select",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "toggles the language popover (stopPropagation)"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:42-44,190-205"
+   ],
+   "notes": "Fixed top 14 right 120, 44x44 tile, globe 21px #212121."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.langpop",
+   "component": "Mobile language popover",
+   "refSelector": ".qb-langpop",
+   "kind": "menu",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "display block (no animation)"
+    },
+    {
+     "action": "close",
+     "expected": "choosing an option, clicking anywhere else in the document, or clicking the globe again; Escape not handled"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:47-58,195-205"
+   ],
+   "notes": "Fixed top 64 right 16, width 262, radius 16, shadow 0 16px 40px rgba(0,0,0,.18), z 99993. Separate state from the desktop language panel."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.langpop.title",
+   "component": "Mobile language popover title",
+   "refSelector": ".qb-langpop h4",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/mobilemenu.js:50-51"
+   ],
+   "notes": "600 16px #212121, padding 12px 18px 10px, border-bottom 1px rgb(243,243,243)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.langpop.opt.on",
+   "component": "Mobile language option (selected)",
+   "refSelector": ".qb-langpop button.on",
+   "kind": "checkbox/radio",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "bg rgb(250,250,250)"
+    },
+    {
+     "action": "click",
+     "expected": "stays selected, popover closes"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:52-58"
+   ]
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.langpop.opt.off",
+   "component": "Mobile language option (unselected)",
+   "refSelector": ".qb-langpop button[data-lang=\"Arabic\"]",
+   "kind": "checkbox/radio",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "bg rgb(250,250,250)"
+    },
+    {
+     "action": "click",
+     "expected": "becomes selected (radio border 5px orange), others cleared, popover closes"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:52-58,200-204"
+   ],
+   "notes": "Row: 2-letter code 500 10px #9e9e9e + name 400 15px #212121 + radio 18px border 1.5px rgb(203,203,203)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.drawer",
+   "component": "Mobile navigation drawer (open)",
+   "refSelector": ".qb-mdrawer",
+   "kind": "drawer",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "slides in from the left: translateX(-102%) → 0"
+    },
+    {
+     "action": "close",
+     "expected": "× button or backdrop click; Escape does NOT close (verified)"
+    },
+    {
+     "action": ">=761px",
+     "expected": "forced closed"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:61-84,174-232"
+   ],
+   "notes": "Fixed left, full height, width 86vw max 340px, white, shadow 0 0 40px rgba(0,0,0,.2), z 99992."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.drawer.back",
+   "component": "Drawer backdrop",
+   "refSelector": ".qb-mdrawer-back",
+   "kind": "drawer",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "closes the drawer"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:60,65,207-208"
+   ],
+   "notes": "rgba(20,20,20,.45), z 99991."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.drawer.x",
+   "component": "Drawer close (×) button",
+   "refSelector": ".qb-mdrawer-x",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "closes the drawer"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:68,228"
+   ],
+   "notes": "34px circle, border 1px rgb(237,237,237), white, × 16px #555."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.drawer.hd",
+   "component": "Drawer \"MENU\" label",
+   "refSelector": ".qb-mdrawer-hd",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/mobilemenu.js:69"
+   ],
+   "notes": "\"MENU\": 600 12px, letter-spacing .08em, uppercase, #aaa, padding 14px 20px 6px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.drawer.link",
+   "component": "Drawer nav link (inactive)",
+   "refSelector": ".qb-mnav a",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "bg rgb(250,250,250)"
+    },
+    {
+     "action": "click",
+     "expected": "plain <a> navigation (Home→index.html, Categories→all-categories.html, Favorites→wishlist.html, Messages→messages.html, Notifications→notifications.html, Saved Search→saved-search.html, My Ads→my-ads.html, Sales Overview→sales-overview.html, Account Settings→account.html, Wallet→wallet.html)"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:21-28,70-79,210-216"
+   ],
+   "notes": "Flex gap 14px, padding 13px 14px, radius 12px, #333 500 15px, 21px icon, chevron \"›\" #A19F9F."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.drawer.logout",
+   "component": "Drawer \"Log Out\" link (orange)",
+   "refSelector": ".qb-mnav a.logout",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "removes localStorage.qbAuth then navigates to login.html"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:79,443-446"
+   ],
+   "notes": "Orange text."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.drawer.add",
+   "component": "Drawer footer \"Add Ads\" button",
+   "refSelector": ".qb-mdrawer-ft a",
+   "kind": "button",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "navigates to add-ads.html"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:80-82,222-224"
+   ],
+   "notes": "Full-width orange, padding 14px, radius 12px, 600 15px #fff, plus icon 16px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.drawer.active",
+   "component": "Drawer nav link (active = current page; e.g. \"Saved Search\" on saved-search.html, \"Categories\" on all-categories.html; none on category/parent-category)",
+   "refSelector": ".qb-mnav a.is-active",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no change"
+    },
+    {
+     "action": "click",
+     "expected": "reloads the same page"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:77-78,211-213"
+   ]
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer",
+   "component": "Site footer",
+   "refSelector": "footer",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2455)",
+    "assets/typo.css:29 footer{font-weight:500}",
+    "assets/responsive.css:45-54",
+    "assets/mobilemenu.js:85-101"
+   ],
+   "notes": "bg rgb(249,249,249), border-top 1px rgb(237,237,237); inner padding 48px clamp(16px,4vw,40px) 28px (20px sides at <=1000px). At <=1000px brand block stacks above the accordion columns."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.tagline",
+   "component": "Footer tagline paragraph",
+   "refSelector": "footer p",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2462)"
+   ],
+   "notes": "16px rgb(97,97,97) line-height 1.5, weight 500 (inherited)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.social.on",
+   "component": "Footer social icon (filled orange, Instagram)",
+   "refSelector": "footer [style*=\"width: 38px\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2465)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 2994-3000)"
+   ],
+   "notes": "38px circle, Instagram glyph; filled orange bg #fff icon; shadow 0 2px 12px rgba(161,161,161,.18); cursor pointer."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.social.off",
+   "component": "Footer social icon (white, Facebook/X/LinkedIn)",
+   "refSelector": "footer [style*=\"width: 38px\"]",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "Click does nothing (no handler in the reference): no navigation, no state change, no toast."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2465)"
+   ],
+   "notes": "White bg, orange icon (Facebook, X, LinkedIn)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.colTitle",
+   "component": "Footer column title (accordion header <=1000px)",
+   "refSelector": "footer h3",
+   "kind": "accordion",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click @1440",
+     "expected": "nothing"
+    },
+    {
+     "action": "click @<=1000",
+     "expected": "toggles the column open/closed (class qb-open)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2472)",
+    "assets/typo.css:30",
+    "assets/mobilemenu.js:89-93,249-269"
+   ],
+   "notes": "@1440 24px 600 rgb(33,33,33) (typo.css). @<=1000 accordion header: flex space-between, padding 16px 2px, 16px 600, chevron ::after 8x8 border-right/bottom 2px #aaa rotate(45deg); column separators 1px rgba(0,0,0,.09)."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.link",
+   "component": "Footer link",
+   "refSelector": "footer span.qb-nav",
+   "kind": "link",
+   "interactive": true,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "rgb(97,97,97) → rgb(243,128,87)"
+    },
+    {
+     "action": "click",
+     "expected": "About Us→seller.html; PRO Packages/PRO Info Point→premium.html; Popular Searches→all-categories.html; every other link→index.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2475)",
+    "assets/app.js:4 (__QB_TEMPLATE <script> line 3001-3018)",
+    "assets/styles.css:237 .qb-nav:hover{color:rgb(243,128,87)!important}"
+   ],
+   "notes": "15px rgb(97,97,97) weight 500, column gap 16px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.links",
+   "component": "Footer accordion link list (collapsed)",
+   "refSelector": "footer .qb-flinks",
+   "kind": "accordion",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/mobilemenu.js:94-95"
+   ]
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.colTitle.open",
+   "component": "Footer accordion header (open)",
+   "refSelector": "footer .qb-facc.qb-open > h3",
+   "kind": "accordion",
+   "interactive": true,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "collapses again"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:93"
+   ]
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.links.open",
+   "component": "Footer accordion link list (open)",
+   "refSelector": "footer .qb-facc.qb-open > .qb-flinks",
+   "kind": "accordion",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/mobilemenu.js:95"
+   ]
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.bar",
+   "component": "Footer bottom bar",
+   "refSelector": "footer [style*=\"border-top: 1px solid rgb(212, 212, 212)\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2482)",
+    "assets/mobilemenu.js:99-100"
+   ],
+   "notes": "border-top 1px rgb(212,212,212), margin-top 36px, padding-top 20px; space-between at 1440; column centered gap 12px at <=1000px."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.brand",
+   "component": "Footer \"Q BAZAAR\" wordmark (Acme)",
+   "refSelector": "footer [style*=\"font-family: Acme\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2483)",
+    "assets/typo.js:13-30,64-74 exact-string weights (Reset All 400, Apply Filter 500, city names 500, Q BAZAAR 400)"
+   ],
+   "notes": "\"Q BAZAAR\" Acme 16px rgb(243,128,87) weight 400."
+  },
+  {
+   "page": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "id": "chrome.footer.copy",
+   "component": "Footer copyright line",
+   "refSelector": "footer [style*=\"border-top: 1px solid rgb(212, 212, 212)\"] > span:last-child",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE line 2484)"
+   ],
+   "notes": "© icon 18px + \"Q BAZZAR Inc. All rights revered\" (sic) 600 14px orange."
+  }
+ ],
+ "flows": [
+  {
+   "pages": [
+    "all-categories.html"
+   ],
+   "element": "ac.crumb.home",
+   "trigger": "click",
+   "to": "index.html"
+  },
+  {
+   "pages": [
+    "all-categories.html"
+   ],
+   "element": "ac.search.form",
+   "trigger": "submit",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "all-categories.html"
+   ],
+   "element": "ac.search.input",
+   "trigger": "enter",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "all-categories.html"
+   ],
+   "element": "ac.search.btn",
+   "trigger": "click",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "all-categories.html"
+   ],
+   "element": "ac.card",
+   "trigger": "click",
+   "to": "parent-category.html"
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.crumb.home",
+   "trigger": "click",
+   "to": "index.html"
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.pill.fav",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.pill.save",
+   "trigger": "click",
+   "to": "saved-search.html"
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.viewAll",
+   "trigger": "click",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.card",
+   "trigger": "click",
+   "to": "product.html"
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.card.fav",
+   "trigger": "hover",
+   "to": null
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.subcat",
+   "trigger": "click",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.crumb.home",
+   "trigger": "click",
+   "to": "index.html"
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.crumb.parent",
+   "trigger": "click",
+   "to": "parent-category.html"
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.pill.fav",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.pill.save",
+   "trigger": "click",
+   "to": "saved-search.html"
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.sort",
+   "trigger": "hover",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.view.list",
+   "trigger": "click",
+   "to": "state catView=\"list\""
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.view.grid",
+   "trigger": "click",
+   "to": "state catView=\"grid\""
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.circle.search",
+   "trigger": "click",
+   "to": "saved-search.html"
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.list.card",
+   "trigger": "click",
+   "to": "product.html"
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.grid.card",
+   "trigger": "click",
+   "to": "product.html"
+  },
+  {
+   "pages": [
+    "saved-search.html"
+   ],
+   "element": "ss.crumb.home",
+   "trigger": "click",
+   "to": "index.html"
+  },
+  {
+   "pages": [
+    "saved-search.html"
+   ],
+   "element": "ss.viewResult",
+   "trigger": "click",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "saved-search.html"
+   ],
+   "element": "ss.empty.btn",
+   "trigger": "click",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.logo",
+   "trigger": "click",
+   "to": "index.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.addAds",
+   "trigger": "click",
+   "to": "add-ads.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.lang",
+   "trigger": "hover",
+   "to": "language panel"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.wishlist",
+   "trigger": "click",
+   "to": "wishlist.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.notif",
+   "trigger": "click",
+   "to": "notifications.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.messages",
+   "trigger": "click",
+   "to": "messages.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.guest.login",
+   "trigger": "click",
+   "to": "login.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.guest.signup",
+   "trigger": "click",
+   "to": "signup.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.avatar",
+   "trigger": "click",
+   "to": "account.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.avatar.profile",
+   "trigger": "click",
+   "to": "account.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.avatar.item",
+   "trigger": "click",
+   "to": "saved-search.html | my-ads.html | sales-overview.html | users.html | account.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.avatar.logout",
+   "trigger": "click",
+   "to": "auth.html → login.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.burger",
+   "trigger": "click",
+   "to": "drawer"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.mbell",
+   "trigger": "click",
+   "to": "notifications.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.mglobe",
+   "trigger": "click",
+   "to": "language popover"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "see behaviour"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.drawer.logout",
+   "trigger": "click",
+   "to": "login.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.drawer.add",
+   "trigger": "click",
+   "to": "add-ads.html"
+  },
+  {
+   "pages": [
+    "all-categories.html",
+    "parent-category.html",
+    "category.html",
+    "saved-search.html"
+   ],
+   "element": "chrome.footer.link",
+   "trigger": "click",
+   "to": "seller.html | premium.html | all-categories.html | index.html"
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.aside.groupMinus",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.aside.groupHead",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.aside.radio",
+   "trigger": "hover",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.aside.title",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.aside.reset",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.aside",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.aside",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.page",
+   "trigger": "state",
+   "to": "category.html default listing"
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.page",
+   "trigger": "state",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.pager",
+   "trigger": "hover",
+   "to": null
+  },
+  {
+   "pages": [
+    "category.html"
+   ],
+   "element": "ca.page",
+   "trigger": "hover",
+   "to": null
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.aside.groupMinus",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.aside.groupHead",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.aside.radio",
+   "trigger": "hover",
+   "to": null
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.aside.title",
+   "trigger": "click",
+   "to": null
+  },
+  {
+   "pages": [
+    "parent-category.html"
+   ],
+   "element": "pc.aside.reset",
+   "trigger": "click",
+   "to": null
+  }
+ ]
+}

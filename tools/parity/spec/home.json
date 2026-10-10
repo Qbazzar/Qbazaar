@@ -1,0 +1,3361 @@
+{
+ "group": "home",
+ "pages": [
+  "index.html",
+  "site-chrome: header (desktop >=761px)",
+  "site-chrome: mobile header + drawer + language picker (<=760px)",
+  "site-chrome: footer (+ accordion <=1000px)",
+  "site-chrome: toast",
+  "site-wide: @media print baseline (all engine pages)"
+ ],
+ "elements": [
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.page.scroller",
+   "component": "Page scroll container (<body>)",
+   "refSelector": "body",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "scroll the page",
+     "expected": "<body> is the scrolling element, not the window: html,body{height:100%} (styles.css:50) + html,body{overflow-x:hidden} (responsive.css:10) make body overflow-y:auto. window.scrollY stays 0; document.body.scrollTop changes (measured: setting body.scrollTop=1500 scrolled, scrollY=0)."
+    },
+    {
+     "action": "anything that calls window.scrollTo (go() on the same page)",
+     "expected": "no visible scroll: e.g. clicking the logo while scrolled down on index.html leaves body.scrollTop at 1500 (measured)."
+    },
+    {
+     "action": "scrollbar look",
+     "expected": "::-webkit-scrollbar 10px; thumb rgb(225,225,223) radius 8px (styles.css:231-232)."
+    }
+   ],
+   "source": [
+    "assets/styles.css:50",
+    "assets/responsive.css:10-11",
+    "assets/styles.css:231-232"
+   ],
+   "notes": [
+    "Page background rgb(249,249,249) (root div + body). Default text rgb(33,33,33) Poppins 16px.",
+    "Document width never exceeds the viewport (overflow-x hidden): measured docWidth 1440/744/390."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.screen",
+   "component": "Home screen wrapper (entrance animation)",
+   "refSelector": "[data-screen-label=\"Home\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "load index.html",
+     "expected": "whole main content fades/slides in over 300ms (qbFade). Header and footer are outside the wrapper and do not animate."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L77",
+    "assets/styles.css:233 (@keyframes qbFade)"
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header",
+   "component": "Site header bar (sticky)",
+   "refSelector": "header",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "scroll the page",
+     "expected": "header stays pinned at top:0 (position:sticky inside the body scroller, z-index 50); measured header top = 0 after body.scrollTop=1500."
+    },
+    {
+     "action": "viewport <= 760px",
+     "expected": "right-hand icon cluster (.qb-hcluster) is hidden (mobilemenu.js:83) and replaced by three fixed 44x44 buttons (globe, bell, burger) injected on <body>; the logo stays at left (x=30 at 744, x=16 at 390)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L14-71",
+    "assets/mobilemenu.js:83",
+    "assets/mobilemenu.js:239-246 (tagCluster)"
+   ],
+   "notes": [
+    "Header height 88px at every width. Inner row max-width 1440px, padding 18px clamp(16px,4vw,40px) (40px at 1440, 29.76px at 744, 16px at 390), flex space-between, gap 16px, wrap.",
+    "Shadow 0 4px 30px rgba(161,161,161,.2)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.logo",
+   "component": "Header logo (home link)",
+   "refSelector": "header > div > div:first-child",
+   "kind": "link",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "cursor:pointer; no visual change."
+    },
+    {
+     "action": "click on index.html",
+     "expected": "go(\"home\"): same file, so no navigation; setState({screen:\"home\"}) + window.scrollTo({top:0,behavior:\"smooth\"}) which does NOT scroll (body is the scroller). Measured: body.scrollTop stays 1500."
+    },
+    {
+     "action": "click on any other engine page",
+     "expected": "navigates to index.html."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L16-18",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3167",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2508-2523 go(): screen -> file map; same file => setState + window.scrollTo (no-op because <body> is the scroller)"
+   ],
+   "notes": [
+    "Logo image assets/logo.svg, height 52px (width auto 138.7px).",
+    "Not keyboard reachable (div with onclick)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.addAds",
+   "component": "Header \"Add Ads\" primary button",
+   "refSelector": "header .qb-hcluster > button.qb-btn:first-child",
+   "kind": "button",
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "hover": "Button 729:46413 ON_HOVER -> 426:10739",
+    "click": "729:46413 ON_CLICK -> Add Ads - Pickup Only [D] 323:10693"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "background rgb(233,108,63) (polish.css:23-27, !important); text/icon stay white; no shadow, no transform."
+    },
+    {
+     "action": "click",
+     "expected": "go(\"addads\") -> add-ads.html"
+    },
+    {
+     "action": "viewport <= 760px",
+     "expected": "hidden together with the whole cluster; the drawer footer button replaces it."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L21-23",
+    "assets/polish.css:16-27",
+    "assets/styles.css:242-243",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3170"
+   ],
+   "notes": [
+    "Icon: 20px location-pin-with-plus SVG, stroke currentColor 1.7. Label \"Add Ads\" Poppins 600 15px white. Padding 10px 18px, radius 10px, gap 7px."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.divider",
+   "component": "Header vertical divider",
+   "refSelector": "header .qb-hcluster > div[style*=\"width: 1px\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L24"
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.language",
+   "component": "Header language (globe) button + hover popover",
+   "refSelector": "header button[title=\"Language\"]",
+   "kind": "dropdown/select",
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "mouseenter globe",
+     "expected": "langOpen=true: popover renders immediately (with qbFade .18s), icon colour rgb(243,128,87)."
+    },
+    {
+     "action": "mouseleave wrapper",
+     "expected": "langOpen=false immediately (no delay): popover unmounts, icon back to rgb(75,75,75)."
+    },
+    {
+     "action": "move pointer from the globe down to the popover",
+     "expected": "MEASURED: popover closes while crossing the 10px gap (margin-top:10px is not part of the hover box) when the pointer moves in steps; it only survives a direct jump into the popover. Options are therefore hard to reach with a mouse."
+    },
+    {
+     "action": "click globe",
+     "expected": "nothing extra (button has no onclick)."
+    },
+    {
+     "action": "keyboard focus + Enter",
+     "expected": "nothing opens (hover-only)."
+    },
+    {
+     "action": "Escape",
+     "expected": "no handler."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L25-41",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3046-3047",
+    "assets/styles.css:237 (.qb-nav:hover)",
+    "assets/polish.css:16-20"
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.language.popover",
+   "component": "Language popover (desktop)",
+   "refSelector": "header button[title=\"Language\"] + div",
+   "kind": "menu",
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "absolute panel under the globe: top 100% + margin-top 10px, right-aligned (right:0), width 250px, white, 1px rgb(237,237,237) border, radius 14px, shadow 0 16px 44px rgba(0,0,0,.14), padding 8px, z-index 120. Title \"Choose your language\" 600 16px, padding 10px 12px 12px. Then 9 option rows (see chrome.header.language.option)."
+    },
+    {
+     "action": "close",
+     "expected": "mouseleave of the wrapper (instant), or choosing an option. No X, no Escape, no outside-click handler."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L29-40",
+    "assets/styles.css:233"
+   ],
+   "notes": [
+    "Options in order: English 🇬🇧, Arabic 🇸🇦, India 🇮🇳, Urdu 🇵🇰, Malayalam 🇮🇳, Bengali 🇧🇩, Tagalog 🇵🇭, Persian (Farsi) 🇮🇷, Tamil 🇮🇳 (emoji flags)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.language.option",
+   "component": "Language option row (radio)",
+   "refSelector": "header button[title=\"Language\"] + div > div.qb-btn",
+   "kind": "checkbox/radio",
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "click an option",
+     "expected": "state lang = option; popover closes (langOpen false). Measured after choosing Arabic: reopening shows Arabic with bg rgb(255,240,234), orange 2px ring and 9px orange dot; English back to transparent + rgb(203,203,203) ring."
+    },
+    {
+     "action": "effect on page",
+     "expected": "none besides the radio state: no text/direction change, no navigation, not persisted across pages."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L32-38",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3059-3062"
+   ],
+   "notes": [
+    "Row: flex, gap 12px, padding 10px 12px, radius 9px, cursor pointer. Flag 18px emoji in 22px box; name 15px rgb(51,51,51); radio 18px circle 2px border rgb(203,203,203) (selected rgb(243,128,87)) with 9px rgb(243,128,87) inner dot.",
+    "Flag glyphs: see chrome.header.language.flag and icons/index.json glyphIcons flag-*-emoji."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.language.flag",
+   "component": "Header language popover flag icon (emoji regional-indicator pair)",
+   "refSelector": "header button[title=\"Language\"] + div > div.qb-btn > span:first-child",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "frame": "Profile Settings 728:45875 > Language 728:45934 (text nodes 728:45939 English, 728:45937 Arabic, 728:45945 India, 728:45948 Urdu, 728:45950 Malayalam, 728:45953 Bengali, 728:45956 Tagalog, 728:45959 Persian (Farsi), 728:45962 Tamil)",
+    "difference": "Figma writes the flag inside the Poppins 16px label text (\"🇬🇧 English\") and uses 🇶🇦 (Qatar) for Arabic. The HTML puts the flag in its own 18px span and uses 🇸🇦 (Saudi Arabia). HTML wins."
+   },
+   "behaviour": [
+    {
+     "action": "open the language popover (hover the header globe, >=761px)",
+     "expected": "9 rows, each starting with an 18px emoji flag in a 22x18 centred box: 🇬🇧 English, 🇸🇦 Arabic, 🇮🇳 India, 🇵🇰 Urdu, 🇮🇳 Malayalam, 🇧🇩 Bengali, 🇵🇭 Tagalog, 🇮🇷 Persian (Farsi), 🇮🇳 Tamil. That makes 7 distinct flags; India's is used 3 times. The rows are 38px apart (y134, 172, ..., 438 at 1440 when the popover is open)."
+    },
+    {
+     "action": "choose a language",
+     "expected": "the flags do not change; only the chosen row tint and radio change. The header globe stays a globe icon, not a flag. No page text changes."
+    },
+    {
+     "action": "viewport <=760px",
+     "expected": "not rendered: the mobile picker (mobilemenu.js:191-197) shows 10px grey text codes GB/QA/IN/PK/IN/BD/PH/IR/IN instead of emoji flags (QA for Arabic there)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L34 (<span style=\"font-size:18px; line-height:1; width:22px; text-align:center;\">{{ lg.flag }}</span>)",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3059-3062 (langOpts [name, flag] pairs)"
+   ],
+   "notes": [
+    "Gap fill 2026-10-10: the flag glyphs were missing from icons/index.json, which now indexes them as glyphIcons flag-*-emoji.",
+    "Screenshot of the Windows rendering: work-home/gapfill-langpop.png."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.wishlist",
+   "component": "Header Wishlist (heart) icon button",
+   "refSelector": "header button[title=\"Wishlist\"]",
+   "kind": "button",
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "hover": "Fav/Nof/Mess 729:46410 ON_HOVER -> 426:10619",
+    "click": "729:46410 -> Wishlist - Fill State [D] 376:8322"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "icon stroke turns rgb(243,128,87) (.qb-nav:hover !important, styles.css:237) and filter brightness(0.96) (.qb-btn:hover, styles.css:243). No background."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to wishlist.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L42-44",
+    "assets/styles.css:237",
+    "assets/styles.css:242-243",
+    "assets/polish.css:16-20",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3168-3169"
+   ],
+   "notes": [
+    "23px line icon, stroke currentColor 1.6, padding 2px, transparent background, box 27x27."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.notifications",
+   "component": "Header Notifications (bell) icon button",
+   "refSelector": "header button[title=\"Notifications\"]",
+   "kind": "button",
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "hover": "Fav/Nof/Mess 729:46411 MOUSE_LEAVE -> 426:10619",
+    "click": "729:46411 -> Notification [D] 455:14636"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "icon stroke turns rgb(243,128,87) (.qb-nav:hover !important, styles.css:237) and filter brightness(0.96) (.qb-btn:hover, styles.css:243). No background."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to notifications.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L45-48",
+    "assets/styles.css:237",
+    "assets/styles.css:242-243",
+    "assets/polish.css:16-20",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3168-3169"
+   ],
+   "notes": [
+    "23px line icon, stroke currentColor 1.6, padding 2px, transparent background, box 27x27.",
+    "Has an unread dot: see chrome.header.notifications.badge."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.notifications.badge",
+   "component": "Notification unread dot",
+   "refSelector": "header button[title=\"Notifications\"] > span",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L47"
+   ],
+   "notes": [
+    "8x8 circle rgb(243,128,87) with 1.5px white border, absolute top:0 right:0 of the bell button. Static (always shown)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.messages",
+   "component": "Header Messages (chat bubble) icon button",
+   "refSelector": "header button[title=\"Messages\"]",
+   "kind": "button",
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "hover": "Fav/Nof/Mess 729:46412 MOUSE_LEAVE -> 426:10619",
+    "click": "729:46412 -> Message - Filled State [D] 364:13443"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "icon stroke turns rgb(243,128,87) (.qb-nav:hover !important, styles.css:237) and filter brightness(0.96) (.qb-btn:hover, styles.css:243). No background."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to messages.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L49-51",
+    "assets/styles.css:237",
+    "assets/styles.css:242-243",
+    "assets/polish.css:16-20",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3168-3169"
+   ],
+   "notes": [
+    "23px line icon, stroke currentColor 1.6, padding 2px, transparent background, box 27x27."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.guest.login",
+   "component": "Guest header \"Login\" button",
+   "refSelector": ".qb-guest-btns a[href=\"login.html\"]",
+   "kind": "link",
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "click": "741:39368 Button -> Login [D] 736:65208 (Home Page - Before Log/Sign 741:38067)"
+   },
+   "behaviour": [
+    {
+     "action": "page load without localStorage.qbAuth",
+     "expected": "guestHeader() inserts span.qb-guest-btns (Login + Sign Up, gap 10px, margin-left 4px) before the avatar. The FA avatar stays visible too (both shown)."
+    },
+    {
+     "action": "hover",
+     "expected": "no change (inline colour beats a:hover)."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to login.html (plain href)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:415-441 (guestHeader)"
+   ],
+   "notes": [
+    "White pill: 600 14px Poppins rgb(51,51,51), padding 10px 18px, 1px rgb(237,237,237) border, radius 10px."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.guest.signup",
+   "component": "Guest header \"Sign Up\" button",
+   "refSelector": ".qb-guest-btns a[href=\"signup.html\"]",
+   "kind": "link",
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "click": "741:39331 Button -> Signup [D] 741:36327"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "no change (measured)."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to signup.html."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:435-440"
+   ],
+   "notes": [
+    "Orange pill: 600 14px white on rgb(243,128,87), padding 10px 18px, radius 10px, no border (41px tall vs Login 43px)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.avatar",
+   "component": "Header avatar button (FA) + hover menu",
+   "refSelector": "header button[title=\"Account\"]",
+   "kind": "button",
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "hover": "Avatar 729:46414 ON_HOVER -> 427:10795",
+    "click": "729:46414 -> Profile Settings [D] 393:8828"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96); menu opens immediately."
+    },
+    {
+     "action": "mouseleave",
+     "expected": "menu closes after 160ms (measured: still open at 60ms, closed at 360ms). Moving into the menu across the 12px gap keeps it open (measured)."
+    },
+    {
+     "action": "click",
+     "expected": "go(\"account\") -> account.html"
+    },
+    {
+     "action": "localStorage.qbAvatar set (cropper.js)",
+     "expected": "the saved photo is painted as background-image cover and the \"FA\" text turns transparent."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L52-68",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3048-3050",
+    "assets/cropper.js:144-181 (applyAvatars)"
+   ],
+   "notes": [
+    "40x40 circle rgb(244,244,244), \"FA\" Poppins 600 14px rgb(75,75,75)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.avatar.menu",
+   "component": "Avatar dropdown menu",
+   "refSelector": "header button[title=\"Account\"] + div",
+   "kind": "menu",
+   "viewports": [
+    1440
+   ],
+   "figma": {
+    "hover": "Avatar ON_HOVER -> 427:10795; Home Page - Settings 358:8533"
+   },
+   "behaviour": [
+    {
+     "action": "open (hover avatar)",
+     "expected": "absolute panel: top 100% + margin-top 12px, right 0, width 270px, white, 1px rgb(237,237,237) border, radius 16px, shadow 0 16px 44px rgba(0,0,0,.14), padding 8px, z-index 120."
+    },
+    {
+     "action": "profile row (FA circle 42px + \"Farah M. Alzinati\" 600 15px + email 13px rgb(158,158,158), bottom border 1px rgb(237,237,237))",
+     "expected": "click -> account.html"
+    },
+    {
+     "action": "close",
+     "expected": "mouseleave of wrapper (160ms delay) or choosing an item (sets avatarOpen false then navigates). No Escape/outside-click handler."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L54-67",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3051-3058"
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.avatar.menu.item",
+   "component": "Avatar menu item (Save Search, My Ads, Sales Overview, Followers, Account Settings)",
+   "refSelector": "header button[title=\"Account\"] + div > div.qb-btn:not(:first-child):not(:last-child)",
+   "kind": "menu",
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "click Save Search",
+     "expected": "saved-search.html (measured)"
+    },
+    {
+     "action": "click My Ads",
+     "expected": "my-ads.html (measured)"
+    },
+    {
+     "action": "click Sales Overview",
+     "expected": "sales-overview.html (measured)"
+    },
+    {
+     "action": "click Followers",
+     "expected": "users.html (measured)"
+    },
+    {
+     "action": "click Account Settings",
+     "expected": "account.html (measured)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L63-65",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3051-3058"
+   ],
+   "notes": [
+    "Row: flex gap 12px, padding 11px 12px, radius 10px, 15px Poppins 400 rgb(75,75,75), 20px line icon (stroke 1.7)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.header.avatar.menu.logout",
+   "component": "Avatar menu \"Log Out\"",
+   "refSelector": "header button[title=\"Account\"] + div > div.qb-btn:last-child",
+   "kind": "menu",
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "go(\"auth\") -> auth.html, which immediately redirects (meta refresh + location.replace) to login.html. Does NOT clear localStorage.qbAuth (only the drawer Log Out link does)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3057",
+    "auth.html:6-8"
+   ],
+   "notes": [
+    "Text and icon rgb(243,128,87)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.mobile.globe",
+   "component": "Mobile header language button (globe)",
+   "refSelector": "#qb-mglobe",
+   "kind": "button",
+   "viewports": [
+    744,
+    390
+   ],
+   "figma": {
+    "click": "SearchIcon 647:39007 -> Language [T] 736:54497; Language [P] 741:39398"
+   },
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "toggles .qb-langpop.open (stopPropagation). Second click closes (measured)."
+    },
+    {
+     "action": "viewport >= 761",
+     "expected": "display:none."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:42-44",
+    "assets/mobilemenu.js:59",
+    "assets/mobilemenu.js:190-199"
+   ],
+   "notes": [
+    "position fixed top 14px right 120px, 44x44, radius 12px, 1px rgb(237,237,237) border, white, shadow 0 2px 10px rgba(0,0,0,.06), z-index 99990, icon 21px stroke 1.7 #212121."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.mobile.langPopover",
+   "component": "Mobile language picker popover",
+   "refSelector": ".qb-langpop",
+   "kind": "menu",
+   "viewports": [
+    744,
+    390
+   ],
+   "figma": {
+    "frame": "Language [P] 741:39398 / [T] 736:54497"
+   },
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "fixed panel top 64px right 16px, 262px wide, white, 1px rgb(237,237,237), radius 16px, shadow 0 16px 40px rgba(0,0,0,.18), padding 6px 0 8px, z-index 99993. Title h4 \"Choose your language\" 600 16px #212121, padding 12px 18px 10px, bottom border 1px rgb(243,243,243)."
+    },
+    {
+     "action": "click outside",
+     "expected": "closes (document click listener) - measured."
+    },
+    {
+     "action": "click globe again",
+     "expected": "closes - measured."
+    },
+    {
+     "action": "press Escape",
+     "expected": "does NOT close (no key handler) - measured."
+    },
+    {
+     "action": "open the burger while it is open",
+     "expected": "the burger click bubbles to document -> popover closes; drawer opens (measured)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:45-58",
+    "assets/mobilemenu.js:195-205",
+    "assets/polish.css:48"
+   ],
+   "notes": [
+    "Options (code + name): GB English (selected by default), QA Arabic, IN India, PK Urdu, IN Malayalam, BD Bengali, PH Tagalog, IR Persian (Farsi), IN Tamil. Selection is not shared with the desktop popover and is not persisted."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.mobile.langOption",
+   "component": "Mobile language option row (radio right)",
+   "refSelector": ".qb-langpop button[data-lang]",
+   "kind": "checkbox/radio",
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "moves .on to the clicked row (radio fills orange), popover closes. Measured: Arabic on after click."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:52-58",
+    "assets/mobilemenu.js:196-204"
+   ],
+   "notes": [
+    "Row: flex gap 10px, padding 11px 18px, 400 15px #212121, code 500 10px rgb(158,158,158) letter-spacing .04em min-width 20px, radio 18px circle 1.5px rgb(203,203,203) pushed right (margin-left:auto)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.mobile.bell",
+   "component": "Mobile header notifications button (bell)",
+   "refSelector": "#qb-mbell",
+   "kind": "link",
+   "viewports": [
+    744,
+    390
+   ],
+   "figma": {
+    "click": "Fav/Nof/Mess 736:54478 -> Notification [T] 548:45200"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "icon colour #212121 -> rgb(211,102,76) via the global a:hover rule (styles.css:230) - measured."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to notifications.html (href)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:38-41",
+    "assets/mobilemenu.js:186-188",
+    "assets/styles.css:230"
+   ],
+   "notes": [
+    "fixed top 14px right 68px, 44x44, radius 12px, border 1px rgb(237,237,237), white, shadow 0 2px 10px rgba(0,0,0,.06). Dot 7px rgb(243,128,87) at top 11px right 12px."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.mobile.burger",
+   "component": "Mobile menu (hamburger) button",
+   "refSelector": "#qb-burger",
+   "kind": "button",
+   "viewports": [
+    744,
+    390
+   ],
+   "figma": {
+    "click": "menu 647:39010 -> Menu [T] 648:39022; Menu [P] 648:47458"
+   },
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "adds html.qb-menu-open: drawer slides in, backdrop fades in (see chrome.drawer)."
+    },
+    {
+     "action": "while drawer open",
+     "expected": "burger sits under the backdrop (z 99990 < 99991), dimmed."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:32-37",
+    "assets/mobilemenu.js:83",
+    "assets/mobilemenu.js:181-184"
+   ],
+   "notes": [
+    "fixed top 14px right 16px, 44x44, radius 12px, border 1px rgb(237,237,237), white, shadow 0 2px 10px rgba(0,0,0,.06), z-index 99990. Three 20x2 #212121 bars 6px apart, radius 2px."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.drawer.backdrop",
+   "component": "Drawer backdrop",
+   "refSelector": ".qb-mdrawer-back",
+   "kind": "other",
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click backdrop",
+     "expected": "closes the drawer (measured)."
+    },
+    {
+     "action": "closed",
+     "expected": "opacity 0 and pointer-events none (always in DOM, full-viewport fixed, z-index 99991)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:60",
+    "assets/mobilemenu.js:65",
+    "assets/mobilemenu.js:207-208"
+   ],
+   "notes": [
+    "Colour rgba(20,20,20,.45). At >=761px forced invisible even if the class is set (mobilemenu.js:84)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.drawer",
+   "component": "Mobile navigation drawer",
+   "refSelector": "nav.qb-mdrawer",
+   "kind": "drawer",
+   "viewports": [
+    744,
+    390
+   ],
+   "figma": {
+    "frame": "Menu [T] 648:39022 / Menu [P] 648:47458; guest variants Menu - Not Register 741:45470 / 741:46578"
+   },
+   "behaviour": [
+    {
+     "action": "open (burger)",
+     "expected": "drawer slides from x=-102% to 0 in 280ms cubic-bezier(.4,0,.2,1); backdrop fades to 1 in 250ms."
+    },
+    {
+     "action": "close with X",
+     "expected": "slides back out (measured)."
+    },
+    {
+     "action": "close with backdrop click",
+     "expected": "closes (measured)."
+    },
+    {
+     "action": "press Escape",
+     "expected": "does NOT close (no key handler) - measured."
+    },
+    {
+     "action": "page scroll while open",
+     "expected": "not locked (body keeps overflow-y auto)."
+    },
+    {
+     "action": "resize to >=761px while open",
+     "expected": "drawer forced off-screen and backdrop hidden by CSS (mobilemenu.js:84)."
+    },
+    {
+     "action": "structure",
+     "expected": "top bar (header logo copied as 30px-high img + 34px round X) / \"MENU\" label / scrollable link list (11 links) / footer with full-width orange \"Add Ads\" button."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:60-84",
+    "assets/mobilemenu.js:174-237"
+   ],
+   "notes": [
+    "Drawer: fixed left 0, top 0, bottom 0, z-index 99992, width 86vw max 340px (335.4px at 390, 340px at 744), white, shadow 0 0 40px rgba(0,0,0,.2), font Poppins.",
+    "Top: flex space-between, padding 18px 20px, bottom border 1px rgb(240,240,240).",
+    "Heading \"MENU\": 600 12px, letter-spacing .08em, uppercase, #aaa, padding 14px 20px 6px.",
+    "Footer: padding 14px 20px 22px, top border 1px rgb(240,240,240).",
+    "Even at 1440 the drawer exists off-screen and its links are reachable with Tab (measured tab order reaches the drawer X and links)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.drawer.close",
+   "component": "Drawer close (X) button",
+   "refSelector": ".qb-mdrawer-x",
+   "kind": "button",
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "removes html.qb-menu-open; drawer slides out (280ms)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:68",
+    "assets/mobilemenu.js:222",
+    "assets/mobilemenu.js:228",
+    "assets/polish.css:48"
+   ],
+   "notes": [
+    "34px circle, 1px rgb(237,237,237) border, white, \"×\" 16px #555, Poppins."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.drawer.link.active",
+   "component": "Drawer link - current page (Home on index.html)",
+   "refSelector": ".qb-mnav a.is-active",
+   "kind": "link",
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "render",
+     "expected": "the link whose href equals the current file gets .is-active: bg rgb(243,128,87), text/icon white, chevron rgba(255,255,255,.8). On index.html that is \"Home\"."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to index.html (reload)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:71-78",
+    "assets/mobilemenu.js:210-217"
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.drawer.link",
+   "component": "Drawer navigation link",
+   "refSelector": ".qb-mnav a:not(.is-active):not(.logout)",
+   "kind": "link",
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click Categories",
+     "expected": "all-categories.html (measured)"
+    },
+    {
+     "action": "click Favorites",
+     "expected": "wishlist.html"
+    },
+    {
+     "action": "click Messages",
+     "expected": "messages.html"
+    },
+    {
+     "action": "click Notifications",
+     "expected": "notifications.html"
+    },
+    {
+     "action": "click Saved Search",
+     "expected": "saved-search.html"
+    },
+    {
+     "action": "click My Ads",
+     "expected": "my-ads.html"
+    },
+    {
+     "action": "click Sales Overview",
+     "expected": "sales-overview.html"
+    },
+    {
+     "action": "click Account Settings",
+     "expected": "account.html"
+    },
+    {
+     "action": "click Wallet",
+     "expected": "wallet.html"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:21-28 (ITEMS)",
+    "assets/mobilemenu.js:71-76",
+    "assets/mobilemenu.js:210-217"
+   ],
+   "notes": [
+    "Link: flex gap 14px, padding 13px 14px, radius 12px, 500 15px Poppins #333, margin-bottom 2px; icon 21px (Figma vuesax glyphs, currentColor); label flex 1; chevron \"›\" #A19F9F.",
+    "Order: Home, Categories, Favorites, Messages, Notifications, Saved Search, My Ads, Sales Overview, Account Settings, Wallet, Log Out."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.drawer.link.logout",
+   "component": "Drawer \"Log Out\" link",
+   "refSelector": ".qb-mnav a.logout",
+   "kind": "link",
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "capture listener removes localStorage.qbAuth, then navigates to login.html (measured: qbAuth null afterwards)."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:79",
+    "assets/mobilemenu.js:443-446"
+   ],
+   "notes": [
+    "Text + icon rgb(243,128,87)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.drawer.addAds",
+   "component": "Drawer footer \"Add Ads\" button",
+   "refSelector": ".qb-mdrawer-ft a",
+   "kind": "button",
+   "viewports": [
+    744,
+    390
+   ],
+   "figma": {
+    "click": "Menu [T] Button 648:40477 -> Add Ads - Pickup Only 323:10693"
+   },
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "navigates to add-ads.html"
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:80-82",
+    "assets/mobilemenu.js:225-227"
+   ],
+   "notes": [
+    "Full width, padding 14px, radius 12px, bg rgb(243,128,87), 600 15px white, \"+\" 16px icon (stroke 2.2) with margin-right 6px."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer",
+   "component": "Site footer",
+   "refSelector": "footer",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": ">1000px",
+     "expected": "brand block (logo, tagline, socials; flex 1 1 300px, max-width 360px) left, 4 link columns right (gap clamp(28px,5vw,64px))."
+    },
+    {
+     "action": "<=1000px",
+     "expected": "stacks: brand block on top, columns become full-width accordions (chrome.footer.accordion); inner padding 48px 20px 28px, max-width 100%; bottom bar centred and stacked."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2455-2487",
+    "assets/typo.css:29-30",
+    "assets/responsive.css:45-54",
+    "assets/mobilemenu.js:85-101"
+   ],
+   "notes": [
+    "Background rgb(249,249,249), top border 1px rgb(237,237,237). typo.css sets footer font-weight 500."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.logo",
+   "component": "Footer logo",
+   "refSelector": "footer img",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "nothing (measured: stays on index.html)"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2459-2461"
+   ],
+   "notes": [
+    "logo.svg 46px high."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.tagline",
+   "component": "Footer tagline",
+   "refSelector": "footer p",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2462",
+    "assets/typo.css:29"
+   ],
+   "notes": [
+    "\"Connecting brands with audiences through strategic messaging and engagement\" 16px/1.5 rgb(97,97,97), weight 500 (footer rule)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.social.primary",
+   "component": "Footer social icon - Instagram (filled orange)",
+   "refSelector": "footer p + div > span:nth-child(1)",
+   "kind": "button",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "cursor pointer only."
+    },
+    {
+     "action": "click",
+     "expected": "nothing (no handler) - measured."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2465",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2994-3000"
+   ],
+   "notes": [
+    "38px circle bg rgb(243,128,87), icon #fff 18px, shadow 0 2px 12px rgba(161,161,161,.18)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.social",
+   "component": "Footer social icons - Facebook, Twitter/X, LinkedIn (white)",
+   "refSelector": "footer p + div > span:nth-child(n+2)",
+   "kind": "button",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "cursor pointer only (measured no change)."
+    },
+    {
+     "action": "click",
+     "expected": "nothing (no handler) - measured."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2465",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2994-3000"
+   ],
+   "notes": [
+    "38px circle white, icon rgb(243,128,87) 18px filled glyphs, shadow 0 2px 12px rgba(161,161,161,.18); gap 12px between icons."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.columnTitle",
+   "component": "Footer column title (desktop)",
+   "refSelector": "footer h3",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2472",
+    "assets/typo.css:30"
+   ],
+   "notes": [
+    "Titles: Classifieds, Information, Businesses, General. 600 24px rgb(33,33,33) (22px inline overridden to 24px by typo.css), margin-bottom 20px."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.accordion",
+   "component": "Footer link column accordion",
+   "refSelector": "footer .qb-facc",
+   "kind": "accordion",
+   "viewports": [
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "click a column title",
+     "expected": "opens: links area max-height 0 -> 640px (0.28s ease) with padding-bottom 14px; chevron rotates 45deg -> -135deg (points up) in 0.2s."
+    },
+    {
+     "action": "click another title",
+     "expected": "it opens too; the first stays open (independent, measured [true,true,false,false])."
+    },
+    {
+     "action": "click an open title",
+     "expected": "closes (max-height 0)."
+    },
+    {
+     "action": "keyboard",
+     "expected": "not reachable (h3 without tabindex)."
+    },
+    {
+     "action": "viewport > 1000px",
+     "expected": "no accordion: titles static 24px, links always visible."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:85-95",
+    "assets/mobilemenu.js:248-269"
+   ],
+   "notes": [
+    "Column: full width, bottom border 1px rgba(0,0,0,.09) (first one also top border). Header: flex space-between, 600 16px, padding 16px 2px. Chevron: 8x8 box with 2px #aaa right+bottom borders rotated 45deg, margin 0 6px 5px 0 (open: rotate(-135deg), margin 5px 6px 0 0).",
+    "All 4 columns start closed.",
+    "Chevron icon: see chrome.footer.accordion.chevron and icons/index.json \"footer-accordion-chevron\" (css-drawn)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.accordion.chevron",
+   "component": "Footer accordion chevron (CSS-drawn ::after)",
+   "refSelector": "footer .qb-facc > h3",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    744,
+    390
+   ],
+   "figma": {
+    "match": "n/a",
+    "note": "HTML-only mobile enhancement. Figma footers (e.g. Quick Links 18:861, 741:38662) are static columns with no chevron."
+   },
+   "behaviour": [
+    {
+     "action": "load at <=1000px",
+     "expected": "every footer column title (Classifieds, Information, Businesses, General) ends with a grey 2px chevron pointing DOWN, 6px from the right edge, nudged up by margin-bottom 5px."
+    },
+    {
+     "action": "click a column title",
+     "expected": "the chevron turns to point UP (rotate(-135deg), transform .2s ease); its margin flips to 5px 6px 0 0; the links slide open (see chrome.footer.accordion)."
+    },
+    {
+     "action": "click the title again",
+     "expected": "it rotates back to point down (.2s) and the column closes."
+    },
+    {
+     "action": "viewport >1000px",
+     "expected": "no chevron (content none); titles are static 24px headings."
+    }
+   ],
+   "source": [
+    "assets/mobilemenu.js:91-93 (footer .qb-facc > h3::after and .qb-open variant)",
+    "assets/mobilemenu.js:85 (@media (max-width:1000px) wrapper)",
+    "assets/mobilemenu.js:249-269 (footerAcc: tags .qb-facc and toggles .qb-open)"
+   ],
+   "notes": [
+    "Gap fill 2026-10-10: this chevron is now indexed in icons/index.json as css-drawn, like the hamburger \"menu\".",
+    "Colour #aaa = rgb(170,170,170), not the text colour."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.link",
+   "component": "Footer link",
+   "refSelector": "footer span.qb-nav",
+   "kind": "link",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text turns rgb(243,128,87) (.qb-nav:hover !important); no underline."
+    },
+    {
+     "action": "click \"About Us\"",
+     "expected": "seller.html (measured)"
+    },
+    {
+     "action": "click \"PRO Info Point\" or \"PRO Packages\"",
+     "expected": "premium.html (measured)"
+    },
+    {
+     "action": "click \"Popular Searches\"",
+     "expected": "all-categories.html (measured)"
+    },
+    {
+     "action": "click any other link (19 links)",
+     "expected": "go(\"home\"): on index.html nothing happens (no navigation, no scroll - measured scrollTop unchanged); on other pages -> index.html"
+    },
+    {
+     "action": "<=1000px",
+     "expected": "links live inside the collapsed accordion; visible only after opening the column."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2474-2476",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3001-3016",
+    "assets/styles.css:237",
+    "assets/typo.css:29"
+   ],
+   "notes": [
+    "15px weight 500 rgb(97,97,97), cursor pointer, gap 16px between links.",
+    "Columns: Classifieds [About Us, Careers, Press, Classifieds Magazine, Connect, Mobile Apps]; Information [Help, Safety Tips, Report a Vulnerability, Youth Protection, Accessibility Statement, Privacy Policy, Privacy Settings, Terms of Use, Legal Notice]; Businesses [Real Estate Classifieds, PRO Info Point, PRO Packages, Advertise with Us]; General [Popular Searches, View Overview, Company Pages Overview, Vehicle Appraisal]."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.bottomBar",
+   "component": "Footer bottom bar",
+   "refSelector": "footer [style*=\"border-top: 1px solid rgb(212, 212, 212)\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2482-2485",
+    "assets/mobilemenu.js:99-100"
+   ],
+   "notes": [
+    "Top border 1px rgb(212,212,212), margin-top 36px, padding-top 20px; row space-between at >1000px, centred column (gap 12px) at <=1000px."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.brand",
+   "component": "Footer \"Q BAZAAR\" wordmark",
+   "refSelector": "footer [style*=\"font-family: Acme\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2483",
+    "assets/typo.js:15"
+   ],
+   "notes": [
+    "Acme 16px rgb(243,128,87), weight 400 (typo.js)."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.footer.copyright",
+   "component": "Footer copyright",
+   "refSelector": "footer [style*=\"border-top: 1px solid rgb(212, 212, 212)\"] > span:last-child",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2484"
+   ],
+   "notes": [
+    "\"Q BAZZAR Inc. All rights revered\" (typos are in the reference) 600 14px rgb(243,128,87) with an 18px copyright-circle icon, gap 8px."
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; not the standalone auth pages)",
+   "id": "chrome.toast",
+   "component": "Toast notification (engine showToast)",
+   "refSelector": "[style*=\"position: fixed\"][style*=\"bottom: 28px\"]",
+   "kind": "toast",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "on index.html",
+     "expected": "no home interaction triggers a toast (favourite toggle, language, dropdowns are silent). Listed because it is site-wide chrome rendered by the shared template."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L2448-2452",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2543-2547",
+    "assets/polish.css:57-85"
+   ]
+  },
+  {
+   "page": "site-wide (every engine page: index.html and the other 26 engine-rendered pages; styles.css is not loaded by the 11 standalone pages, but engine.js injects the same rule wherever it runs)",
+   "id": "chrome.print",
+   "component": "Print stylesheet (@media print baseline)",
+   "refSelector": "*, *::before, *::after",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "print (or emulate print media) while something is fading in",
+     "expected": "MEASURED: the language popover mid-qbFade (opacity 0, translateY(8px) on screen) is printed fully visible: opacity 1, transform identity. Every element reports animation-duration 0.001s, animation-delay -99s, fill-mode both, iteration-count 1, play-state running."
+    },
+    {
+     "action": "print transitions",
+     "expected": "MEASURED: transition-duration 0s on every element (e.g. .qb-btn from \"0.18s, 0.18s, 0.2s, 0.2s, 0.18s, 0.18s\"; slider arrows from .15s; dots from .2s). transition-delay keeps its value."
+    },
+    {
+     "action": "print colours",
+     "expected": "print-color-adjust exact on every element and pseudo-element (from economy), so backgrounds, the orange buttons and the peach tints print as on screen."
+    },
+    {
+     "action": "backdrop-filter",
+     "expected": "forced none; no reference element uses backdrop-filter, so nothing visible changes."
+    },
+    {
+     "action": "page layout",
+     "expected": "@page margin 0.5cm; figure and table avoid page breaks inside them."
+    },
+    {
+     "action": "print the whole page",
+     "expected": "MEASURED REFERENCE QUIRK: only ONE page prints (PDF at 1440x900 and at A4: 1 page each). The rule's #dc-root/.sc-host height:auto loses to the later same-specificity #dc-root,#dc-root>.sc-host{height:100%} (styles.css:50 and engine FULL_PAGE_CSS), and <body> stays the 100%-height overflow-y:auto scroller (body 900px, content 3262px). So the print shows the first viewport's worth of content and clips the rest."
+    }
+   ],
+   "source": [
+    "assets/styles.css:34-45 (@media print)",
+    "assets/engine.js:119-130 (same rule inside BASE_CSS, injected at engine.js:1643-1644)",
+    "assets/styles.css:50 + assets/engine.js:132 (height:100% rules that win over the print height:auto)",
+    "assets/styles.css:5,233-234 (keyframes it neutralises)"
+   ],
+   "notes": [
+    "Comment in the source: \"Mirrors PRINT_BASELINE_CSS in apps/web deck-stage-export.ts\", a runtime baseline, not a design decision. It is specified so the build matches print output, including the single-page clip."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.section",
+   "component": "Hero section",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(1)",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L79-102"
+   ],
+   "notes": [
+    "Padding clamp(36px,6vw,58px) clamp(16px,4vw,40px) 30px; content column max-width 1000px centred, gap 14px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.title",
+   "component": "Hero title \"Find Anything Near You\"",
+   "refSelector": "h1",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L81",
+    "assets/responsive.css:347-350"
+   ],
+   "notes": [
+    "600, line-height 1.05, black; font-size clamp(30px,5vw,48px) = 48px@1440, 37.2px@744; forced 24px@390 (single line). \"Near\" in rgb(243,128,87)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.subtitle",
+   "component": "Hero subtitle",
+   "refSelector": "h1 + p",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L82",
+    "assets/typo.css:13",
+    "assets/responsive.css:350"
+   ],
+   "notes": [
+    "\"Buy and sell locally — cars, apartments, electronics, furniture & more. Trusted by millions.\" 400, clamp(16px,2.2vw,24px) (24px@1440, 16.37px@744, 14px@390), rgb(117,117,117) kept by typo.css:13 (the global muted override does not apply here), max-width 760px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.form",
+   "component": "Hero search bar (form)",
+   "refSelector": "form[style*=\"max-width: 1000px\"]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "layout 1440",
+     "expected": "one row: Search field (flex 2 1 200px) | 1px separator | Choose Category | sep | Location | sep | Distance | orange Search button. Child widths 301/210/180/170/109."
+    },
+    {
+     "action": "layout 744 (601-1000)",
+     "expected": "one pill row, no wrapping (responsive.css:64-67), padding 6px 6px 6px 10px; widths 178/143/117/108/109; select labels 14px."
+    },
+    {
+     "action": "layout 390 (<=600)",
+     "expected": "only the Search field remains (all other children display:none); padding 6px 6px 6px 4px; height 61px."
+    },
+    {
+     "action": "submit (Enter in the input or click Search)",
+     "expected": "onsubmit doSearch: preventDefault, go(\"category\") -> category.html. The typed text and chosen category/distance are NOT carried over (measured: category.html)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L84-101",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3181",
+    "assets/responsive.css:62-67",
+    "assets/responsive.css:152-155"
+   ],
+   "notes": [
+    "Background rgba(255,255,255,.97), border 1px rgb(237,237,237), radius 16px, shadow 0 4px 40px rgba(161,161,161,.15), padding 8px, margin-top 28px.",
+    "Separators: 1px rgb(237,237,237), margin 8px 0 (36px tall)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.search",
+   "component": "Hero search text input",
+   "refSelector": "form[style*=\"max-width: 1000px\"] input[placeholder=\"Search\"]",
+   "kind": "input",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "type",
+     "expected": "plain text, 16px Poppins rgb(33,33,33), no suggestions/autocomplete UI."
+    },
+    {
+     "action": "Enter",
+     "expected": "submits the form -> category.html (measured)."
+    },
+    {
+     "action": "click elsewhere in the label",
+     "expected": "label wraps the input, so clicking the icon/padding focuses the input."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L85-88"
+   ],
+   "notes": [
+    "Placeholder \"Search\" in the browser default placeholder colour (computed rgb(117,117,117) on the ::placeholder, darker than the select labels rgb(189,189,189)).",
+    "Search icon 22px circle+handle, stroke rgb(189,189,189) 1.7; label gap 10px, padding 10px 14px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.category",
+   "component": "Hero \"Choose Category\" select trigger",
+   "refSelector": "[data-qbsel=\"cat\"]",
+   "kind": "dropdown/select",
+   "viewports": [
+    1440,
+    744
+   ],
+   "figma": {
+    "click": "vuesax/linear/arrow-down 489:15333 -> Home Page - Category Option [D] 489:16010",
+    "frameT": "Home Page - Category [T] 655:51605"
+   },
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "opens home.hero.category.panel (portaled to <body>) 14px below the field, left-aligned with it; adds .qb-ddopen. (The engine onclick toggleCatMenu also flips an unrelated catMenuOpen state that renders nothing on home.)"
+    },
+    {
+     "action": "click again",
+     "expected": "closes (toggle) - measured."
+    },
+    {
+     "action": "click Distance while open",
+     "expected": "only one panel at a time: category closes, distance opens (measured)."
+    },
+    {
+     "action": "outside click / Escape",
+     "expected": "closes (measured)."
+    },
+    {
+     "action": "choose an option",
+     "expected": "label text becomes the option (\"Cars\", \"Real Estate\", \"All Categories\"...) in rgb(51,51,51); panel closes. Label survives later re-renders (measured). No navigation, nothing filters."
+    },
+    {
+     "action": "keyboard",
+     "expected": "not focusable; no arrow-key navigation."
+    },
+    {
+     "action": "<=600px",
+     "expected": "field hidden (only search input shown); .qb-ddpanel forced display:none."
+    },
+    {
+     "action": "load index.html?qbdd=cat",
+     "expected": "the panel opens by itself after ~1.2s without .qb-ddopen, so the chevron is not rotated and the first click re-opens instead of closing (see home.hero.qbddHook)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L90-92",
+    "assets/selects.js:55-68",
+    "assets/selects.js:203-218",
+    "assets/typo.js:21",
+    "assets/typo.css:114-118",
+    "assets/selects.js:223-235 (?qbdd hook)"
+   ],
+   "notes": [
+    "Label \"Choose Category\" rgb(189,189,189); font-size 20px at >=1001px and 14px at 601-1000px via .qb-hlabel (typo.js tags it, typo.css sizes it), white-space nowrap.",
+    "MEASURED QUIRK: the trigger chevron svg is squeezed to 0px width at 1440 and 744 (svg max-width:100% from responsive.css:11 in a nowrap flex row), so the arrow is invisible on this field; the Distance chevron is visible."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.category.panel",
+   "component": "Category cascade dropdown panel",
+   "refSelector": "body > .qb-ddpanel",
+   "kind": "dropdown/select",
+   "viewports": [
+    1440,
+    744
+   ],
+   "figma": {
+    "frame": "Home Page - Category Option 489:16010"
+   },
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "absolute div appended to <body>: left = field left, top = field bottom + 14px, min-width max(190px, field width) (241px at 1440 because content is wider), white, radius 16px, shadow 0 18px 44px rgba(0,0,0,.14), padding 6px 0, z-index 9999, Poppins."
+    },
+    {
+     "action": "content",
+     "expected": "head \"All Categories\" (600 16px rgb(87,85,85), padding 14px 20px 10px, bottom border 1px rgb(243,243,243)) then 10 rows: Cars & Vehicles ›, Services, Tickets & Events, Family Kids & Baby, Leisure Hobby & Community, Home & Garden, Pets, Real Estate, Jobs, Electronics."
+    },
+    {
+     "action": "click head",
+     "expected": "label becomes \"All Categories\"; closes (measured)."
+    },
+    {
+     "action": "page scroll while open",
+     "expected": "MEASURED: the panel does not follow the field (body scroller + absolute in <body>): after scrolling 200px the gap grows 14 -> 214px."
+    },
+    {
+     "action": "reopen after a choice",
+     "expected": "no row is pre-highlighted (no persisted selection)."
+    }
+   ],
+   "source": [
+    "assets/selects.js:18-32",
+    "assets/selects.js:45-54",
+    "assets/selects.js:86-123"
+   ],
+   "notes": [
+    "Static labels: \"Family, Kids & Baby\", \"Leisure, Hobby & Community\" (with commas)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.category.option",
+   "component": "Category dropdown option row",
+   "refSelector": ".qb-ddpanel > .qb-dditem",
+   "kind": "menu",
+   "viewports": [
+    1440,
+    744
+   ],
+   "behaviour": [
+    {
+     "action": "hover \"Cars & Vehicles\"",
+     "expected": "gets .on and opens home.hero.category.submenu beside the panel."
+    },
+    {
+     "action": "hover any other row",
+     "expected": "closes the submenu and clears .on (measured)."
+    },
+    {
+     "action": "click a row",
+     "expected": "label = row text, colour rgb(51,51,51); panel closes; no navigation (measured \"Real Estate\")."
+    }
+   ],
+   "source": [
+    "assets/selects.js:23-26",
+    "assets/selects.js:93-122"
+   ],
+   "notes": [
+    "Row: flex space-between, gap 12px, padding 11px 20px, 400 14px/1.3 Poppins rgb(120,120,120), nowrap; chevron \"›\" 15px rgb(160,160,160)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.category.submenu",
+   "component": "Category flyout submenu (Cars & Vehicles)",
+   "refSelector": ".qb-ddpanel > .qb-ddsub",
+   "kind": "menu",
+   "viewports": [
+    1440,
+    744
+   ],
+   "figma": {
+    "frame": "Home Page - Category Option 489:16010 (second column)"
+   },
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "absolute inside the panel: left = panel width + 14px gap, top = parent row offsetTop + 2px, min-width 260px, same card look (white, radius 16px, shadow 0 18px 44px rgba(0,0,0,.14), padding 6px 0)."
+    },
+    {
+     "action": "move pointer horizontally into it",
+     "expected": "stays open (measured); rows hover bg rgb(240,240,240)."
+    },
+    {
+     "action": "items",
+     "expected": "Cars, Bicycles & Accessories, Car Parts & Tiers, Boats & Marine Accessories, Motorcycles & Scooters, Motorcycle Parts & Accessories."
+    },
+    {
+     "action": "click an item",
+     "expected": "label = item text (e.g. \"Cars\"), rgb(51,51,51), panel closes (measured)."
+    }
+   ],
+   "source": [
+    "assets/selects.js:27-29",
+    "assets/selects.js:98-113"
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.location",
+   "component": "Hero \"Location\" field (inert)",
+   "refSelector": "form[style*=\"max-width: 1000px\"] > div:nth-child(5)",
+   "kind": "other",
+   "viewports": [
+    1440,
+    744
+   ],
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "nothing opens; it only closes any open hero dropdown (document click -> closeAll). Measured: no navigation, 0 panels."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L94-95"
+   ],
+   "notes": [
+    "Pin icon 20px + \"Location\" 16px rgb(189,189,189) (NOT 20px: it is not a [data-qbsel] field, so no .qb-hlabel); cursor pointer; gap 8px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.distance",
+   "component": "Hero \"Distance\" select trigger",
+   "refSelector": "[data-qbsel=\"dist\"]",
+   "kind": "dropdown/select",
+   "viewports": [
+    1440,
+    744
+   ],
+   "figma": {
+    "click": "vuesax/linear/arrow-down 489:15345 -> Home Page - Distance Option [D] 492:17733; chosen state 492:18987",
+    "frameT": "Home Page - Distance [T] 655:52556"
+   },
+   "behaviour": [
+    {
+     "action": "click",
+     "expected": "opens home.hero.distance.panel (toggle; one panel at a time; outside click / Escape close)."
+    },
+    {
+     "action": "choose",
+     "expected": "label = option text in rgb(51,51,51) (measured \"+20 km\"); panel closes; nothing else changes."
+    },
+    {
+     "action": "load index.html?qbdd=dist",
+     "expected": "the panel opens by itself after ~1.2s without .qb-ddopen, so the chevron is not rotated and the first click re-opens instead of closing (see home.hero.qbddHook)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L97-99",
+    "assets/selects.js:55-68",
+    "assets/selects.js:125-134",
+    "assets/typo.js:23",
+    "assets/selects.js:223-235 (?qbdd hook)"
+   ],
+   "notes": [
+    "\"Distance\" rgb(189,189,189), 20px at 1440 / 14px at 744 (.qb-hlabel); chevron 20px visible (11px squeezed at 744)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.distance.panel",
+   "component": "Distance dropdown list",
+   "refSelector": "body > .qb-ddpanel",
+   "kind": "dropdown/select",
+   "viewports": [
+    1440,
+    744
+   ],
+   "figma": {
+    "frame": "Home Page - Distance Option 492:17733"
+   },
+   "behaviour": [
+    {
+     "action": "open",
+     "expected": "panel 190px wide (min-width max(190, field width)), left aligned with the field, 14px below, no head row; 9 rows: All Qatar, +5 km, +10 km, +20 km, +30 km, +50 km, +100 km, +150 km, +200 km."
+    },
+    {
+     "action": "reopen after choosing",
+     "expected": "\"All Qatar\" is highlighted again, not the chosen value (measured)."
+    }
+   ],
+   "source": [
+    "assets/selects.js:15",
+    "assets/selects.js:125-134"
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.qbddHook",
+   "component": "Hero dropdown URL hook (?qbdd=cat|dist)",
+   "refSelector": "form[style*=\"max-width: 1000px\"] > [data-qbsel]",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "load index.html?qbdd=cat",
+     "expected": "about 1.2s after selects.js runs (measured ~1.1s after the load event), the Category panel opens exactly as a click would build it: portaled body > .qb-ddpanel with head \"All Categories\" and 10 rows. At 1440 it is 241x460 @ x531 y383 (left = field left, top = field bottom + 14px, min-width 210.375px = field width). At 744 it is 241x460 @ x220 y337."
+    },
+    {
+     "action": "(same load) submenu",
+     "expected": "the hook then dispatches a bubbling synthetic mouseenter on the \"Cars & Vehicles\" row. That row gets .on (bg rgb(240,240,240), text rgb(60,60,60)) and its submenu opens with top = row offsetTop + 2 = 54px: 260x253 @ x786 y437 at 1440 (x475 y391 at 744), first item \"Cars\"."
+    },
+    {
+     "action": "load index.html?qbdd=dist",
+     "expected": "after the same delay the Distance panel opens: 190x374 @ x923 y383 at 1440, 9 rows, no head, \"All Qatar\" highlighted (.on)."
+    },
+    {
+     "action": "look at the field while hook-opened",
+     "expected": "MEASURED QUIRK: the hook calls openCategory/openDistance directly and never adds .qb-ddopen. The field is not marked open and its chevron stays unrotated (transform none)."
+    },
+    {
+     "action": "first click on the Category field after ?qbdd=cat",
+     "expected": "MEASURED QUIRK: it does not close. The delegated handler sees \"not open\", removes the hook panel (closeAll) and opens a fresh panel with .qb-ddopen: no submenu and no highlighted row. Only the SECOND click closes it."
+    },
+    {
+     "action": "Escape / outside click / choose an option",
+     "expected": "same as a normal panel: Escape closes (measured 0 panels left), an outside click closes, and choosing sets the field label (see home.hero.category / home.hero.distance)."
+    },
+    {
+     "action": "load with ?qbdd=... at <=600px (390)",
+     "expected": "the panel (and for cat the submenu, with Cars & Vehicles .on) is created but nothing shows: .qb-ddpanel is display:none !important at <=600px and the fields are display:none. The panel is placed at left 0px / top 14px from the zero-size field rect (measured)."
+    },
+    {
+     "action": "any other value (?qbdd=zzz) or no parameter",
+     "expected": "nothing happens (regex /[?&]qbdd=(cat|dist)/; measured)."
+    },
+    {
+     "action": "other engine pages with ?qbdd",
+     "expected": "nothing: selects.js loads on all 26 engine pages, but only the home hero form matches form[style*=\"max-width: 1000px\"]."
+    }
+   ],
+   "source": [
+    "assets/selects.js:223-235 (debug hook: ?qbdd=cat|dist)",
+    "assets/selects.js:86-134 (openCategory / openDistance)",
+    "assets/selects.js:108-113 (row mouseenter: .on + submenu top)",
+    "assets/selects.js:32 (@media max-width:600px panel display:none)"
+   ],
+   "notes": [
+    "The source comment calls it a \"debug hook ... (screenshot tooling)\". No UI links to it, but the reference reacts to it, so it is specified for parity."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.hero.submit",
+   "component": "Hero \"Search\" submit button",
+   "refSelector": "form[style*=\"max-width: 1000px\"] > button[type=\"submit\"]",
+   "kind": "button",
+   "viewports": [
+    1440,
+    744
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "background rgb(233,108,63)."
+    },
+    {
+     "action": "click",
+     "expected": "submits -> category.html (measured)."
+    },
+    {
+     "action": "<=600px",
+     "expected": "hidden."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L100",
+    "assets/polish.css:23-27",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3181"
+   ],
+   "notes": [
+    "600 16px white, padding 0 26px, margin 4px, radius 10px, min-height 44px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.categories.title",
+   "component": "Section title \"Browse Categories\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(2) h2",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L108",
+    "assets/polish.css:45"
+   ],
+   "notes": [
+    "600, inline clamp(22px,3vw,30px) rewritten to clamp(22px,3vw,28px) by polish.css:45 -> 28px@1440, 22.32px@744, 22px@390; colour inherited rgb(33,33,33)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.categories.subtitle",
+   "component": "Section subtitle \"Explore top items in your area\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(2) h2 + p",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L109"
+   ],
+   "notes": [
+    "15px rgb(158,158,158), margin-top 6px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.recommended.title",
+   "component": "Section title \"Recommended for you\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(3) h2",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L132",
+    "assets/polish.css:45"
+   ],
+   "notes": [
+    "600, inline clamp(22px,3vw,30px) rewritten to clamp(22px,3vw,28px) by polish.css:45 -> 28px@1440, 22.32px@744, 22px@390; colour inherited rgb(33,33,33)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.recommended.subtitle",
+   "component": "Section subtitle \"Fresh deals posted in the last 24 hours\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(3) h2 + p",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L133"
+   ],
+   "notes": [
+    "15px rgb(158,158,158), margin-top 6px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.companies.title",
+   "component": "Section title \"Featured Companies\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(4) h2",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L175",
+    "assets/polish.css:45"
+   ],
+   "notes": [
+    "600, inline clamp(22px,3vw,30px) rewritten to clamp(22px,3vw,28px) by polish.css:45 -> 28px@1440, 22.32px@744, 22px@390; colour inherited rgb(33,33,33)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.companies.subtitle",
+   "component": "Section subtitle \"Find trusted businesses near you.\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(4) h2 + p",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L176"
+   ],
+   "notes": [
+    "15px rgb(158,158,158), margin-top 6px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.best.title",
+   "component": "Section title \"Best Selling\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(5) h2",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L199",
+    "assets/polish.css:45"
+   ],
+   "notes": [
+    "600, inline clamp(22px,3vw,30px) rewritten to clamp(22px,3vw,28px) by polish.css:45 -> 28px@1440, 22.32px@744, 22px@390; colour inherited rgb(33,33,33)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.best.subtitle",
+   "component": "Section subtitle \"Trending items people love.\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(5) h2 + p",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L200"
+   ],
+   "notes": [
+    "15px rgb(158,158,158), margin-top 6px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.categories.viewAll",
+   "component": "\"View All\" link (Browse Categories)",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(2) a",
+   "kind": "link",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "click": "Frame 2 9:2171 -> Category View All [D] 185:6576"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text + arrow rgb(243,128,87) -> rgb(211,102,76) (global a:hover, styles.css:230); no underline."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to all-categories.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L111-113",
+    "assets/styles.css:229-230",
+    "assets/typo.js:14"
+   ],
+   "notes": [
+    "\"View All\" 16px weight 400 (typo.js) in rgb(243,128,87) + 18px arrow (stroke 1.8), gap 8px, nowrap, aligned to the bottom of the header row."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.companies.viewAll",
+   "component": "\"View All\" link (Featured Companies)",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(4) a",
+   "kind": "link",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "click": "Frame 12 9:1489 -> Companies See All [D] 179:4492"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "text + arrow rgb(243,128,87) -> rgb(211,102,76) (global a:hover, styles.css:230); no underline."
+    },
+    {
+     "action": "click",
+     "expected": "navigates to companies.html"
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L178-180",
+    "assets/styles.css:229-230",
+    "assets/typo.js:14"
+   ],
+   "notes": [
+    "\"View All\" 16px weight 400 (typo.js) in rgb(243,128,87) + 18px arrow (stroke 1.8), gap 8px, nowrap, aligned to the bottom of the header row."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.categories.grid",
+   "component": "Category cards grid",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(2) > div:nth-child(2)",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L115",
+    "assets/responsive.css:70-77",
+    "assets/responsive.css:162-163"
+   ],
+   "notes": [
+    "1440: repeat(auto-fill,minmax(300px,1fr)) gap 20px -> 4 columns of 325px (2 rows). 744: 4 columns gap 14px (160.6px). 390: 2 columns gap 12px (173px)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.categories.card",
+   "component": "Category card",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(2) button.qb-card",
+   "kind": "card",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Component 27 205:6186 ON_HOVER -> Component 26 205:6156 (HTML only lifts + shadows)",
+    "click": "205:6186 -> Category [D] 18:912"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "transform translateY(-3px); box-shadow none -> 0 4px 40px rgba(161,161,161,.25) (polish.css:96-98 overrides styles.css:239 shadow; transform from styles.css:239)."
+    },
+    {
+     "action": "click / Enter (native button)",
+     "expected": "go(\"catParent\") -> parent-category.html (measured mouse, Enter and touch tap)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L116-124",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2623-2632",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3400-3433 svg() icons",
+    "assets/styles.css:238-239",
+    "assets/polish.css:96-98"
+   ],
+   "notes": [
+    "8 cards: Cars & Vehicles (cars), Real Estate (home), Electronics (bolt), Home & Garden (sofa), Jobs (case), Pets (paw), Services (tools), Leisure & Hobbies (game); each \"1,2M Ads\".",
+    "Card: white, 1px rgb(237,237,237), radius 16px, padding 22px, column gap 22px, left aligned. Icon tile 48px radius 12px bg rgb(255,240,234), 24px icon rgb(243,128,87) stroke 1.6. Name 500 18px rgb(33,33,33) margin-bottom 6px; count 14px rgb(158,158,158).",
+    "Name wraps to two lines at 744/390 (\"Cars & / Vehicles\")."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.recommended.slider",
+   "component": "Recommended for you carousel track",
+   "refSelector": "#recTrack",
+   "kind": "slider",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "arrows": "Arrow ON_HOVER -> 288:9635"
+   },
+   "behaviour": [
+    {
+     "action": "drag with mouse/pen",
+     "expected": "pointerdown adds .qb-drag (cursor grabbing, children pointer-events none); pointermove scrolls 1:1; pointerup (window) removes it. Measured: drag 300px left -> scrollLeft 300."
+    },
+    {
+     "action": "click a card with a MOUSE (desktop)",
+     "expected": "MEASURED REFERENCE QUIRK: nothing happens. pointerdown makes the children pointer-events:none, so mouseup/click land on the track itself; the card onclick (product.html) and the heart toggle never fire. Programmatic .click() does navigate to product.html."
+    },
+    {
+     "action": "tap a card on touch (744/390)",
+     "expected": "navigates to product.html (measured with touch)."
+    },
+    {
+     "action": "wheel / trackpad / touch swipe",
+     "expected": "native horizontal scroll (overflow-x auto, scrollbar hidden)."
+    },
+    {
+     "action": "scroll",
+     "expected": "arrows and dots update on rAF (see prev/next/dots)."
+    },
+    {
+     "action": "layout",
+     "expected": "grid auto-flow column, columns clamp(258px,23vw,300px) (300px@1440, 258px@744/390), gap 20px, padding-bottom 6px. 8 cards. scrollWidth/clientWidth: 2540/1360@1440, 2204/685@744, 2204/358@390."
+    },
+    {
+     "action": "window resize",
+     "expected": "update() runs synchronously on every window \"resize\" event (its own listener, not rAF-throttled; slider.js:94). (1) scrollable = scrollWidth - clientWidth > 4 shows or hides both arrows and the dots row (display \"\" / none). (2) prev.disabled = scrollLeft <= 2 and next.disabled = scrollLeft >= scrollWidth - clientWidth - 2, where disabled = opacity 0 + pointer-events none, faded over .15s. (3) Dots = max(1, ceil((scrollWidth-4)/clientWidth)); when the count changes the row is emptied and rebuilt with new buttons. (4) The active dot = last when at the end, else round(scrollLeft/clientWidth). MEASURED, both tracks, resizing a live page 1440 -> 744 -> 390 -> 1440: columns 300 -> 258 -> 258 -> 300px; scrollWidth/clientWidth 2540/1360 -> 2204/685 -> 2204/358 -> 2540/1360; dots 2 -> 4 -> 7 -> 2; arrows stay shown, prev disabled at scrollLeft 0, next enabled."
+    },
+    {
+     "action": "window resize wider than the content",
+     "expected": "MEASURED at 2800px: the track stays 1360px wide (section max-width) and 2540px of content, so it is still scrollable with 2 dots. On home the \"hide arrows and dots\" branch is never reached by resizing (8 cards always overflow)."
+    },
+    {
+     "action": "window resize while scrolled",
+     "expected": "MEASURED: #recTrack at its end at 1440 (scrollLeft 1180, next disabled, dot 2/2 active), then resized to 744: scrollLeft stays 1180 (max is now 1519), so next is re-enabled (opacity 1), prev stays enabled, the row rebuilds to 4 dots and dot 3 (index round(1180/685)=2) is active. If a resize lowers the max scroll, the clamp also fires a scroll event, so the rAF update runs as well."
+    },
+    {
+     "action": "window resize: stale listeners",
+     "expected": "each enhance() adds a window resize listener that is never removed. The engine re-render replaced the first track, so its old arrow pair and dots row stay in the host. Their update() runs against the detached track (scrollWidth = clientWidth = 0) and keeps them display:none with 1 dot. MEASURED: 4 arrow buttons per host (2 hidden) and 1 hidden 1-dot row."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L137",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2525-2536 drag (componentDidMount)",
+    "assets/slider.js:40-97",
+    "assets/styles.css:247-250",
+    "assets/slider.js:94 (window resize -> update)",
+    "assets/slider.js:67-88 (pageCount / update)"
+   ],
+   "notes": [
+    "Scrollbar hidden (scrollbar-width none / ::-webkit-scrollbar display none)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.recommended.card",
+   "component": "Recommended for you listing card",
+   "refSelector": "#recTrack > .qb-card",
+   "kind": "card",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Component 8 -> Card 190:14450 (T/P frames)"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + shadow (measured), cursor pointer."
+    },
+    {
+     "action": "click",
+     "expected": "intended go(\"product\") -> product.html; with a mouse on desktop the click is swallowed by the slider drag handler (see slider entry); touch tap works."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L139-159",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2554-2562",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3185",
+    "assets/typo.css:11 (tag colour)",
+    "assets/photos.js (photos only)"
+   ],
+   "notes": [
+    "Card: white, 1px rgb(237,237,237), radius 16px, overflow hidden; 300x331 at 1440, 258x363 at 744/390.",
+    "Media .qb-ph 170px tall, placeholder rgb(237,237,237) with 135deg hairline stripes, replaced by a cover photo (photos.js); caption .qb-cap hidden once a photo is applied.",
+    "Price badge: absolute top 12px left 12px, bg rgb(243,128,87), white 500 13px, padding 5px 12px, radius 8px.",
+    "Title h3 500 16px/1.3, min-height 42px, margin 0 0 12px. Tags: chips bg rgb(245,245,245), 12px, colour rgb(158,150,150) (typo.css:11 rewrites inline rgb(117,117,117)), padding 4px 10px, radius 6px, gap 6px. Meta row: top border 1px rgb(237,237,237), padding-top 12px, 13px rgb(158,158,158), 15px pin icon, gap 6px.",
+    "Items: BMW M3 Competition xDrive 2022 — 48,000 km, Full History | Brembo Gran Turismo Brake Kit for BMW/Audi | Michelin Pilot Sport 4S Tires (Set of 4) | Philips Xenon Standard D3S Bulb (Pair) | Porsche 911 Carrera S 2020 — 18,500 km | Mercedes-AMG S 63 E Performance L | Volkswagen Golf 8 R 4Motion Edition | Range Rover Velar R-Dynamic 2021."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.recommended.favourite",
+   "component": "Recommended for you card favourite (heart) toggle",
+   "refSelector": "#recTrack > .qb-card .qb-ph > span:nth-child(3)",
+   "kind": "toggle/switch",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Fav Bttn ON_HOVER -> 288:11832 (HTML: no hover style)"
+   },
+   "behaviour": [
+    {
+     "action": "click (programmatic / touch tap)",
+     "expected": "toggleFav: stopPropagation (card does not navigate), heart fill none <-> rgb(243,128,87). Measured: tap at 390/744 fills; programmatic click fills, second click clears. No toast, not persisted, not synced with the wishlist page."
+    },
+    {
+     "action": "click with a mouse on desktop",
+     "expected": "MEASURED QUIRK: no toggle (slider drag handler makes it pointer-events:none on pointerdown; click goes to the track)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L143-145",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2549-2552",
+    "assets/polish.css:33-35 (shadow token)"
+   ],
+   "notes": [
+    "32px white circle, absolute top 12px right 12px; shadow inline 0 2px 8px rgba(0,0,0,.08) rewritten by polish.css to 0 4px 25px rgba(188,188,188,.10); heart 17px stroke rgb(117,117,117) 1.5."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.recommended.prev",
+   "component": "Recommended for you previous arrow",
+   "refSelector": "#recTrack ~ .qb-slide-prev:not([style*=\"display: none\"])",
+   "kind": "button",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Arrow ON_HOVER -> Arrow 288:9635"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "fills rgb(243,128,87) with white arrow (from white with orange arrow + 1px orange border)."
+    },
+    {
+     "action": "click",
+     "expected": "scrolls back by the same step (measured 1180 -> 24)."
+    },
+    {
+     "action": "window resize",
+     "expected": "disabled is re-evaluated against the new scroll range (prev: scrollLeft <= 2; next: scrollLeft >= scrollWidth - clientWidth - 2) and the arrow is hidden (display:none) when the track no longer overflows by >4px. MEASURED: next re-enabled after resizing 1440 -> 744 while #recTrack sat at its end."
+    }
+   ],
+   "source": [
+    "assets/slider.js:5-12",
+    "assets/slider.js:47-58",
+    "assets/slider.js:69-74",
+    "assets/responsive.css:292-296 (36px/left:0 rule is overridden by slider.js injected CSS; measured 42px everywhere)",
+    "assets/slider.js:94 (window resize -> update)"
+   ],
+   "notes": [
+    "42px circle, white, 1px #F38057 border, arrow #F38057 19px (stroke 1.8), shadow 0 6px 18px rgba(0,0,0,.14), absolute top 78px with translateY(-50%), left -8px, z-index 6.",
+    "Reference DOM contains a duplicated hidden pair (slider enhance ran twice; old pair display:none)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.recommended.next",
+   "component": "Recommended for you next arrow",
+   "refSelector": "#recTrack ~ .qb-slide-next:not([style*=\"display: none\"])",
+   "kind": "button",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Arrow ON_HOVER -> Arrow 288:9635"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "fills rgb(243,128,87) with white arrow (from white with orange arrow + 1px orange border)."
+    },
+    {
+     "action": "click",
+     "expected": "smooth-scrolls by max(card+gap, 85% of track): 1156px at 1440 (measured 0 -> 1156, second click clamps at 1180 and the button disappears)."
+    },
+    {
+     "action": "window resize",
+     "expected": "disabled is re-evaluated against the new scroll range (prev: scrollLeft <= 2; next: scrollLeft >= scrollWidth - clientWidth - 2) and the arrow is hidden (display:none) when the track no longer overflows by >4px. MEASURED: next re-enabled after resizing 1440 -> 744 while #recTrack sat at its end."
+    }
+   ],
+   "source": [
+    "assets/slider.js:5-12",
+    "assets/slider.js:47-58",
+    "assets/slider.js:69-74",
+    "assets/responsive.css:292-296 (36px/left:0 rule is overridden by slider.js injected CSS; measured 42px everywhere)",
+    "assets/slider.js:94 (window resize -> update)"
+   ],
+   "notes": [
+    "42px circle, white, 1px #F38057 border, arrow #F38057 19px (stroke 1.8), shadow 0 6px 18px rgba(0,0,0,.14), absolute top 78px with translateY(-50%), right -8px, z-index 6.",
+    "Reference DOM contains a duplicated hidden pair (slider enhance ran twice; old pair display:none)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.recommended.dots",
+   "component": "Recommended for you pagination dots",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(3) .qb-slide-dots:not([style*=\"display: none\"])",
+   "kind": "pagination",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "count",
+     "expected": "pages = ceil((scrollWidth-4)/clientWidth): 2 dots at 1440, 4 at 744, 7 at 390 (measured)."
+    },
+    {
+     "action": "click dot i",
+     "expected": "track.scrollTo(i*clientWidth, smooth); measured last dot -> scrollLeft 1180 (end) and it becomes active."
+    },
+    {
+     "action": "scroll",
+     "expected": "active dot grows from 9px circle to 40px pill (width .2s) and turns rgb(243,128,87); inactive rgb(249,199,178)."
+    },
+    {
+     "action": "window resize",
+     "expected": "the row recounts on resize: ceil((scrollWidth-4)/clientWidth). MEASURED on a live page: 2 dots at 1440 -> 4 at 744 -> 7 at 390 -> 2 back at 1440. When the count changes, all dots are removed and recreated and the active one is recomputed; when the track stops overflowing, the row is hidden (display:none)."
+    }
+   ],
+   "source": [
+    "assets/slider.js:13-16",
+    "assets/slider.js:60-88",
+    "assets/app.js:4 (__QB_TEMPLATE) template L163-168 (original static dots row, hidden by slider.js)",
+    "assets/slider.js:94 (window resize -> update)"
+   ],
+   "notes": [
+    "Row: flex centred, gap 7px, margin-top 18px. Dot 9px circle; active 40x9 radius 12px. The template's static dots (46px active pill) are display:none."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.best.slider",
+   "component": "Best Selling carousel track",
+   "refSelector": "#bestTrack",
+   "kind": "slider",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "arrows": "Arrow ON_HOVER -> 288:9635"
+   },
+   "behaviour": [
+    {
+     "action": "drag with mouse/pen",
+     "expected": "pointerdown adds .qb-drag (cursor grabbing, children pointer-events none); pointermove scrolls 1:1; pointerup (window) removes it. Measured: drag 300px left -> scrollLeft 300."
+    },
+    {
+     "action": "click a card with a MOUSE (desktop)",
+     "expected": "MEASURED REFERENCE QUIRK: nothing happens. pointerdown makes the children pointer-events:none, so mouseup/click land on the track itself; the card onclick (product.html) and the heart toggle never fire. Programmatic .click() does navigate to product.html."
+    },
+    {
+     "action": "tap a card on touch (744/390)",
+     "expected": "navigates to product.html (measured with touch)."
+    },
+    {
+     "action": "wheel / trackpad / touch swipe",
+     "expected": "native horizontal scroll (overflow-x auto, scrollbar hidden)."
+    },
+    {
+     "action": "scroll",
+     "expected": "arrows and dots update on rAF (see prev/next/dots)."
+    },
+    {
+     "action": "layout",
+     "expected": "grid auto-flow column, columns clamp(258px,23vw,300px) (300px@1440, 258px@744/390), gap 20px, padding-bottom 6px. 8 cards. scrollWidth/clientWidth: 2540/1360@1440, 2204/685@744, 2204/358@390."
+    },
+    {
+     "action": "window resize",
+     "expected": "update() runs synchronously on every window \"resize\" event (its own listener, not rAF-throttled; slider.js:94). (1) scrollable = scrollWidth - clientWidth > 4 shows or hides both arrows and the dots row (display \"\" / none). (2) prev.disabled = scrollLeft <= 2 and next.disabled = scrollLeft >= scrollWidth - clientWidth - 2, where disabled = opacity 0 + pointer-events none, faded over .15s. (3) Dots = max(1, ceil((scrollWidth-4)/clientWidth)); when the count changes the row is emptied and rebuilt with new buttons. (4) The active dot = last when at the end, else round(scrollLeft/clientWidth). MEASURED, both tracks, resizing a live page 1440 -> 744 -> 390 -> 1440: columns 300 -> 258 -> 258 -> 300px; scrollWidth/clientWidth 2540/1360 -> 2204/685 -> 2204/358 -> 2540/1360; dots 2 -> 4 -> 7 -> 2; arrows stay shown, prev disabled at scrollLeft 0, next enabled."
+    },
+    {
+     "action": "window resize wider than the content",
+     "expected": "MEASURED at 2800px: the track stays 1360px wide (section max-width) and 2540px of content, so it is still scrollable with 2 dots. On home the \"hide arrows and dots\" branch is never reached by resizing (8 cards always overflow)."
+    },
+    {
+     "action": "window resize: stale listeners",
+     "expected": "each enhance() adds a window resize listener that is never removed. The engine re-render replaced the first track, so its old arrow pair and dots row stay in the host. Their update() runs against the detached track (scrollWidth = clientWidth = 0) and keeps them display:none with 1 dot. MEASURED: 4 arrow buttons per host (2 hidden) and 1 hidden 1-dot row."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L204",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2525-2536 drag (componentDidMount)",
+    "assets/slider.js:40-97",
+    "assets/styles.css:247-250",
+    "assets/slider.js:94 (window resize -> update)",
+    "assets/slider.js:67-88 (pageCount / update)"
+   ],
+   "notes": [
+    "Scrollbar hidden (scrollbar-width none / ::-webkit-scrollbar display none)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.best.card",
+   "component": "Best Selling listing card",
+   "refSelector": "#bestTrack > .qb-card",
+   "kind": "card",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Component 8 -> Card 190:14450 (T/P frames)"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "lift -3px + shadow (measured), cursor pointer."
+    },
+    {
+     "action": "click",
+     "expected": "intended go(\"product\") -> product.html; with a mouse on desktop the click is swallowed by the slider drag handler (see slider entry); touch tap works."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L206-226",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2554-2562",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L3186",
+    "assets/typo.css:11 (tag colour)",
+    "assets/photos.js (photos only)"
+   ],
+   "notes": [
+    "Card: white, 1px rgb(237,237,237), radius 16px, overflow hidden; 300x331 at 1440, 258x363 at 744/390.",
+    "Media .qb-ph 170px tall, placeholder rgb(237,237,237) with 135deg hairline stripes, replaced by a cover photo (photos.js); caption .qb-cap hidden once a photo is applied.",
+    "Price badge: absolute top 12px left 12px, bg rgb(243,128,87), white 500 13px, padding 5px 12px, radius 8px.",
+    "Title h3 500 16px/1.3, min-height 42px, margin 0 0 12px. Tags: chips bg rgb(245,245,245), 12px, colour rgb(158,150,150) (typo.css:11 rewrites inline rgb(117,117,117)), padding 4px 10px, radius 6px, gap 6px. Meta row: top border 1px rgb(237,237,237), padding-top 12px, 13px rgb(158,158,158), 15px pin icon, gap 6px.",
+    "Items: BMW M3 Competition xDrive 2022 — 48,000 km, Full History | Toyota Corolla GR Sport Hybrid E-CVT | Mercedes-AMG S 63 E Performance L AMG Edition | VW T6.1 California Ocean 2021 — 22,000 km | Audi A4 40 TFSI S-Line 2021 | Lexus IS 300 F Sport | Toyota Corolla GR Sport Hybrid | Mercedes-Benz C 43 AMG 4Matic."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.best.favourite",
+   "component": "Best Selling card favourite (heart) toggle",
+   "refSelector": "#bestTrack > .qb-card .qb-ph > span:nth-child(3)",
+   "kind": "toggle/switch",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Fav Bttn ON_HOVER -> 288:11832 (HTML: no hover style)"
+   },
+   "behaviour": [
+    {
+     "action": "click (programmatic / touch tap)",
+     "expected": "toggleFav: stopPropagation (card does not navigate), heart fill none <-> rgb(243,128,87). Measured: tap at 390/744 fills; programmatic click fills, second click clears. No toast, not persisted, not synced with the wishlist page."
+    },
+    {
+     "action": "click with a mouse on desktop",
+     "expected": "MEASURED QUIRK: no toggle (slider drag handler makes it pointer-events:none on pointerdown; click goes to the track)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L210-212",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2549-2552",
+    "assets/polish.css:33-35 (shadow token)"
+   ],
+   "notes": [
+    "32px white circle, absolute top 12px right 12px; shadow inline 0 2px 8px rgba(0,0,0,.08) rewritten by polish.css to 0 4px 25px rgba(188,188,188,.10); heart 17px stroke rgb(117,117,117) 1.5."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.best.prev",
+   "component": "Best Selling previous arrow",
+   "refSelector": "#bestTrack ~ .qb-slide-prev:not([style*=\"display: none\"])",
+   "kind": "button",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Arrow ON_HOVER -> Arrow 288:9635"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "fills rgb(243,128,87) with white arrow (from white with orange arrow + 1px orange border)."
+    },
+    {
+     "action": "click",
+     "expected": "scrolls back by the same step (measured 1180 -> 24)."
+    },
+    {
+     "action": "window resize",
+     "expected": "disabled is re-evaluated against the new scroll range (prev: scrollLeft <= 2; next: scrollLeft >= scrollWidth - clientWidth - 2) and the arrow is hidden (display:none) when the track no longer overflows by >4px. MEASURED: next re-enabled after resizing 1440 -> 744 while #recTrack sat at its end."
+    }
+   ],
+   "source": [
+    "assets/slider.js:5-12",
+    "assets/slider.js:47-58",
+    "assets/slider.js:69-74",
+    "assets/responsive.css:292-296 (36px/left:0 rule is overridden by slider.js injected CSS; measured 42px everywhere)",
+    "assets/slider.js:94 (window resize -> update)"
+   ],
+   "notes": [
+    "42px circle, white, 1px #F38057 border, arrow #F38057 19px (stroke 1.8), shadow 0 6px 18px rgba(0,0,0,.14), absolute top 78px with translateY(-50%), left -8px, z-index 6.",
+    "Reference DOM contains a duplicated hidden pair (slider enhance ran twice; old pair display:none)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.best.next",
+   "component": "Best Selling next arrow",
+   "refSelector": "#bestTrack ~ .qb-slide-next:not([style*=\"display: none\"])",
+   "kind": "button",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Arrow ON_HOVER -> Arrow 288:9635"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "fills rgb(243,128,87) with white arrow (from white with orange arrow + 1px orange border)."
+    },
+    {
+     "action": "click",
+     "expected": "smooth-scrolls by max(card+gap, 85% of track): 1156px at 1440 (measured 0 -> 1156, second click clamps at 1180 and the button disappears)."
+    },
+    {
+     "action": "window resize",
+     "expected": "disabled is re-evaluated against the new scroll range (prev: scrollLeft <= 2; next: scrollLeft >= scrollWidth - clientWidth - 2) and the arrow is hidden (display:none) when the track no longer overflows by >4px. MEASURED: next re-enabled after resizing 1440 -> 744 while #recTrack sat at its end."
+    }
+   ],
+   "source": [
+    "assets/slider.js:5-12",
+    "assets/slider.js:47-58",
+    "assets/slider.js:69-74",
+    "assets/responsive.css:292-296 (36px/left:0 rule is overridden by slider.js injected CSS; measured 42px everywhere)",
+    "assets/slider.js:94 (window resize -> update)"
+   ],
+   "notes": [
+    "42px circle, white, 1px #F38057 border, arrow #F38057 19px (stroke 1.8), shadow 0 6px 18px rgba(0,0,0,.14), absolute top 78px with translateY(-50%), right -8px, z-index 6.",
+    "Reference DOM contains a duplicated hidden pair (slider enhance ran twice; old pair display:none)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.best.dots",
+   "component": "Best Selling pagination dots",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(5) .qb-slide-dots:not([style*=\"display: none\"])",
+   "kind": "pagination",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "count",
+     "expected": "pages = ceil((scrollWidth-4)/clientWidth): 2 dots at 1440, 4 at 744, 7 at 390 (measured)."
+    },
+    {
+     "action": "click dot i",
+     "expected": "track.scrollTo(i*clientWidth, smooth); measured last dot -> scrollLeft 1180 (end) and it becomes active."
+    },
+    {
+     "action": "scroll",
+     "expected": "active dot grows from 9px circle to 40px pill (width .2s) and turns rgb(243,128,87); inactive rgb(249,199,178)."
+    },
+    {
+     "action": "window resize",
+     "expected": "the row recounts on resize: ceil((scrollWidth-4)/clientWidth). MEASURED on a live page: 2 dots at 1440 -> 4 at 744 -> 7 at 390 -> 2 back at 1440. When the count changes, all dots are removed and recreated and the active one is recomputed; when the track stops overflowing, the row is hidden (display:none)."
+    }
+   ],
+   "source": [
+    "assets/slider.js:13-16",
+    "assets/slider.js:60-88",
+    "assets/app.js:4 (__QB_TEMPLATE) template L230-235 (original static dots row, hidden by slider.js)",
+    "assets/slider.js:94 (window resize -> update)"
+   ],
+   "notes": [
+    "Row: flex centred, gap 7px, margin-top 18px. Dot 9px circle; active 40x9 radius 12px. The template's static dots (46px active pill) are display:none."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.companies.grid",
+   "component": "Featured companies grid",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(4) > div:nth-child(2)",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L182",
+    "assets/responsive.css:80-83"
+   ],
+   "notes": [
+    "1440: auto-fill minmax(220px,1fr) gap 20px -> 5 x 256px. 744: 3 columns gap 14px. 390: 1 column (358px), cards stacked."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.companies.card",
+   "component": "Featured company card",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(4) .qb-card",
+   "kind": "card",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "figma": {
+    "hover": "Component 25 205:5853 ON_HOVER -> Component 24 205:5826 (HTML: lift + shadow only)",
+    "click": "205:5853 -> Seller Page - Organization - ADS [D] 145:1063"
+   },
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "translateY(-3px) + shadow; descendants unchanged."
+    },
+    {
+     "action": "click",
+     "expected": "go(\"sellerOrg\") -> seller-organization.html (measured)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L183-191",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2634-2645"
+   ],
+   "notes": [
+    "Card: white, 1px rgb(237,237,237), radius 16px, padding 22px, centred column gap 10px, 207px tall.",
+    "Logo tile 56px radius 14px 600 18px initials; per card colours: AG green rgb(27,173,7) on rgb(232,255,236) \"AutoNow GmbH\" Al Khor; AG blue rgb(43,111,219) on rgb(235,238,255) Madinat ash Shamal; AG cyan rgb(20,150,190) on rgb(228,247,255) Ain Khaled; AG red rgb(220,70,70) on rgb(255,235,235) Old Al Hitmi; MT orange rgb(243,128,87) on rgb(255,240,234) \"Metro Trading\" Al Wakrah.",
+    "Name 500 16px; location 13px rgb(158,158,158) with 14px pin; chip \"12,4M Ads\" 500 13px rgb(243,128,87) on rgb(255,240,234), padding 5px 14px, radius 8px."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.places.title",
+   "component": "Section title \"Find Places Around Your Location\"",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(6) h2",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L240",
+    "assets/mobilemenu.js:520-537 (locationWord)",
+    "assets/polish.css:1 (Story Script import)"
+   ],
+   "notes": [
+    "Poppins 600 clamp(32px,5vw,56px) rgb(35,31,32), line-height 1, two lines (\"Find Places\" / \"Around Your Location\"), centred, margin-bottom 36px.",
+    "\"Location\": inline Dancing Script italic 700 orange; mobilemenu.js swaps it to Story Script 400 64px normal rgb(243,128,87) ONLY when its computed size is >=36px -> applied at 1440 and 744, NOT at 390 (stays Dancing Script 700 32px, measured). Story Script loads from Google Fonts (offline renders fall back)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.places.cloud",
+   "component": "Places pill cloud container",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(6) .qb-places",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L241",
+    "assets/responsive.css:25-43"
+   ],
+   "notes": [
+    ">1000px: relative box max-width 1400px, height 200px, pills absolutely placed (left %, top px, translateX(-50%) rotate). <=1000px: flex wrap centred, gap 12px, padding 6px 0, height auto; pills static with rotate(-7deg)/(5deg, margin-top 8px)/(-3deg, margin-top 3px) by nth-child(3n+1/3n+2/3n)."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.places.pill",
+   "component": "Place pill (city chip)",
+   "refSelector": ".qb-places > span.qb-btn",
+   "kind": "chip/pill",
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "behaviour": [
+    {
+     "action": "hover",
+     "expected": "filter brightness(0.96), cursor pointer."
+    },
+    {
+     "action": "click",
+     "expected": "go(\"category\") -> category.html (measured)."
+    }
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L242-244",
+    "assets/app.js:4 (__QB_TEMPLATE <script data-dc-script>) L2647-2664",
+    "assets/typo.js:9-11",
+    "assets/typo.js:30",
+    "assets/responsive.css:36-43"
+   ],
+   "notes": [
+    "White pill, 1px rgb(237,237,237), radius 32px, padding 10px 20px, 20px black, shadow 0 4px 20px rgba(161,161,161,.10), nowrap.",
+    "Weight: 500 for cities in typo.js CITIES; \"Old Al Hitmi\" and \"Ain Khaled\" are missing from that list and stay 600 (measured).",
+    "16 pills (left/top/rot at 1440): Al Rayyan 5% 66px -16deg; Lusail 15% 22px -9deg; Doha 12% 104px -5deg; Umm Salal 26% 14px -4deg; Al Khor 21% 78px -12deg; Al Shamal 31% 92px -13deg; Al Daayen 39% 24px 9deg; Al Shahaniya 43% 104px -3deg; Umm Salal Ali 51% 18px -2deg; Al Wukair 57% 104px 0deg; Wiesbaden 66% 22px 11deg; Qatifan Islands 78% 26px -5deg; Al Khisah 68% 104px 2deg; Old Al Hitmi 81% 104px -2deg; Al Gharrafa 91% 20px 13deg; Ain Khaled 94% 104px -2deg."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.places.bar",
+   "component": "Orange band under the places cloud",
+   "refSelector": "[data-screen-label=\"Home\"] > section:nth-of-type(6) > div:last-child",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440,
+    744,
+    390
+   ],
+   "source": [
+    "assets/app.js:4 (__QB_TEMPLATE) template L246"
+   ],
+   "notes": [
+    "22px tall rgb(243,128,87), margin-top 34px, spans the section content width (inside the section padding), directly above the footer."
+   ]
+  },
+  {
+   "page": "index.html",
+   "id": "home.keyboard",
+   "component": "Keyboard Tab order (from the hero downwards)",
+   "refSelector": "body",
+   "kind": "other",
+   "interactive": false,
+   "viewports": [
+    1440
+   ],
+   "behaviour": [
+    {
+     "action": "Tab repeatedly after clicking the hero",
+     "expected": "search input -> Search button -> 8 category cards -> recommended track (focusable scroller) -> next arrow -> 2 dots -> best-selling track -> next arrow -> 2 dots -> off-screen drawer X -> drawer links (Home, Categories, Favorites, ...). Header buttons come before the hero. Not reachable: logo, Choose Category, Location, Distance, View All links, listing/company cards, hearts, place pills, footer links, socials, accordion headers."
+    }
+   ],
+   "source": [
+    "measured with Playwright Tab presses"
+   ],
+   "notes": [
+    "input \"Search\"",
+    "button.qb-btn \"Search\"",
+    "button.qb-card \"Cars & Vehicles \"",
+    "button.qb-card \"Real Estate \"",
+    "button.qb-card \"Electronics \"",
+    "button.qb-card \"Home & Garden \"",
+    "button.qb-card \"Jobs 1,2M Ad\"",
+    "button.qb-card \"Pets 1,2M Ad\"",
+    "button.qb-card \"Services 1,2\"",
+    "button.qb-card \"Leisure & Hobbies \"",
+    "div.qb-slider \"car photo QA\"",
+    "button.qb-slide-btn",
+    "button.qb-slide-dot",
+    "button.qb-slide-dot",
+    "div.qb-slider \"car photo QA\"",
+    "button.qb-slide-btn",
+    "button.qb-slide-dot",
+    "button.qb-slide-dot",
+    "button.qb-mdrawer-x \"×\"",
+    "a.is-active \"Home›\"",
+    "a \"Categories›\"",
+    "a \"Favorites›\""
+   ]
+  }
+ ],
+ "flows": [
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.logo",
+   "trigger": "click",
+   "to": "index.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.addAds",
+   "trigger": "click",
+   "to": "add-ads.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.language",
+   "trigger": "hover",
+   "to": "chrome.header.language.popover (in-page)"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.wishlist",
+   "trigger": "click",
+   "to": "wishlist.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.notifications",
+   "trigger": "click",
+   "to": "notifications.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.messages",
+   "trigger": "click",
+   "to": "messages.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.guest.login",
+   "trigger": "click",
+   "to": "login.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.guest.signup",
+   "trigger": "click",
+   "to": "signup.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.avatar",
+   "trigger": "click",
+   "to": "account.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.avatar.menu",
+   "trigger": "click",
+   "to": "account.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.avatar.menu.item",
+   "trigger": "click",
+   "to": "saved-search.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.avatar.menu.item",
+   "trigger": "click",
+   "to": "my-ads.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.avatar.menu.item",
+   "trigger": "click",
+   "to": "sales-overview.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.avatar.menu.item",
+   "trigger": "click",
+   "to": "users.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.avatar.menu.item",
+   "trigger": "click",
+   "to": "account.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.header.avatar.menu.logout",
+   "trigger": "click",
+   "to": "auth.html -> login.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.mobile.globe",
+   "trigger": "click",
+   "to": "chrome.mobile.langPopover (in-page)"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.mobile.bell",
+   "trigger": "click",
+   "to": "notifications.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.mobile.burger",
+   "trigger": "click",
+   "to": "chrome.drawer (in-page)"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link.active",
+   "trigger": "click",
+   "to": "index.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "all-categories.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "wishlist.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "messages.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "notifications.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "saved-search.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "my-ads.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "sales-overview.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "account.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link",
+   "trigger": "click",
+   "to": "wallet.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.link.logout",
+   "trigger": "click",
+   "to": "login.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.drawer.addAds",
+   "trigger": "click",
+   "to": "add-ads.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.footer.link",
+   "trigger": "click",
+   "to": "seller.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.footer.link",
+   "trigger": "click",
+   "to": "premium.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.footer.link",
+   "trigger": "click",
+   "to": "premium.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.footer.link",
+   "trigger": "click",
+   "to": "all-categories.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.footer.link",
+   "trigger": "click",
+   "to": "index.html (no-op on home)"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.hero.form",
+   "trigger": "submit",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.hero.search",
+   "trigger": "enter",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.hero.category",
+   "trigger": "click",
+   "to": "home.hero.category.panel (in-page)"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.hero.distance",
+   "trigger": "click",
+   "to": "home.hero.distance.panel (in-page)"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.hero.submit",
+   "trigger": "click",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.categories.viewAll",
+   "trigger": "click",
+   "to": "all-categories.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.companies.viewAll",
+   "trigger": "click",
+   "to": "companies.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.categories.card",
+   "trigger": "click",
+   "to": "parent-category.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.recommended.card",
+   "trigger": "click/tap",
+   "to": "product.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.best.card",
+   "trigger": "click/tap",
+   "to": "product.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.companies.card",
+   "trigger": "click",
+   "to": "seller-organization.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.places.pill",
+   "trigger": "click",
+   "to": "category.html"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "chrome.mobile.burger",
+   "trigger": "menu",
+   "to": "drawer (guest variant)"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "figma-only",
+   "trigger": "home",
+   "to": "in-page dropdown states"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.hero.qbddHook",
+   "trigger": "page",
+   "to": "home.hero.category.panel + home.hero.category.submenu (Cars & Vehicles), in-page"
+  },
+  {
+   "pages": [
+    "index.html"
+   ],
+   "element": "home.hero.qbddHook",
+   "trigger": "page",
+   "to": "home.hero.distance.panel (in-page)"
+  }
+ ]
+}
