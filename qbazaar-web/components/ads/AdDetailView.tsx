@@ -21,24 +21,21 @@ import { AdSellerAds, AdSimilarAds } from '@/components/ads/AdRelatedAds';
 import { AdSellerCard } from '@/components/ads/AdSellerCard';
 import { AdSpecs } from '@/components/ads/AdSpecs';
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
-import { Breadcrumb, type BreadcrumbItem } from '@/components/design-system/Breadcrumb';
+import type { BreadcrumbItem } from '@/components/design-system/Breadcrumb';
+import { TextBreadcrumb } from '@/components/design-system/TextBreadcrumb';
 import { useAuth } from '@/hooks/useAuth';
 import { localized, type Locale } from '@/lib/i18n/locale';
-import { isolate } from '@/lib/orders/text';
 import { t } from '@/lib/i18n/messages';
 import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { findCategoryPath } from '@/store/categories';
 import type { Ad, Category, CategoryNode } from '@/lib/api/types';
 
-const CRUMB_TITLE_LENGTH = 24;
+const CRUMB_TITLE_LENGTH = 18;
 
-/**
- * The design ends the breadcrumb with the first words of the title, isolated
- * so an English title keeps its order in Arabic ("24/7 plumber", not "plumber 24/7").
- */
+/** The design ends the breadcrumb with the title's first 18 characters and ".." ("BMW M3 Competition.."). */
 function crumbTitle(title: string): string {
   const characters = Array.from(title);
-  return isolate(characters.length > CRUMB_TITLE_LENGTH ? `${characters.slice(0, CRUMB_TITLE_LENGTH).join('').trimEnd()}…` : title);
+  return characters.length > CRUMB_TITLE_LENGTH ? `${characters.slice(0, CRUMB_TITLE_LENGTH).join('').trimEnd()}..` : title;
 }
 
 /** Home > Car & Vehicles > Cars > title: the whole category chain once the tree is known. */
@@ -68,7 +65,7 @@ export function AdDetailView({ ad, locale }: AdDetailViewProps) {
   return (
     <main className="bg-qb-page pb-16 font-qb text-qb-ink">
       <div className="mx-auto max-w-[1440px] px-qb-gutter pt-[clamp(20px,4vw,40px)]">
-        <Breadcrumb items={adCrumbs(ad, tree, locale)} className="mb-[18px] hidden qb-tablet:block" />
+        <TextBreadcrumb items={adCrumbs(ad, tree, locale)} className="mb-[18px] hidden qb-tablet:block" />
 
         <div className="flex flex-col gap-6 qb-tablet:flex-row qb-tablet:items-start">
           <div className="flex min-w-0 flex-col gap-6 qb-tablet:flex-1 qb-desktop:flex-[2_1_560px]">

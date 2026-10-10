@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { MessageCircle, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Breadcrumb } from '@/components/design-system/Breadcrumb';
+import { TextBreadcrumb } from '@/components/design-system/TextBreadcrumb';
 import { Badge } from '@/components/design-system/Badge';
 import { Button } from '@/components/design-system/Button';
 import { ReportButton } from '@/components/reports/ReportButton';
@@ -130,7 +130,7 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
   return (
     <main className="bg-qb-page pb-16 font-qb text-qb-ink">
       <div className="mx-auto max-w-[1440px] px-qb-gutter pt-[clamp(20px,4vw,40px)]">
-        <Breadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, { label: name }]} className="mb-[22px]" />
+        <TextBreadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, { label: name }]} className="mb-[22px]" />
         <div className="flex flex-col gap-6 qb-desktop:flex-row qb-desktop:items-start">
           <SellerProfileCard
             profile={profile}
