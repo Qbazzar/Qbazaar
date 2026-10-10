@@ -683,13 +683,7 @@
       "discover_text": "Browse through different categories and quickly find what you need in one place.",
       "search_label": "Search categories",
       "search_placeholder": "Search categories…",
-      "search_submit": "Search",
-      "matches": {
-        "one": "{count} category",
-        "other": "{count} categories"
-      },
-      "no_matches_title": "No matching categories",
-      "no_matches": "We couldn’t find a category called “{query}”."
+      "search_submit": "Search"
     },
     "view": {
       "label": "View",
@@ -718,7 +712,7 @@
       },
       "apply": "Apply Filter",
       "reset_all": "Reset All",
-      "any": "Any",
+      "all_type": "All Type",
       "category": "Category",
       "price": "Price",
       "price_min_label": "Minimum price (QAR)",

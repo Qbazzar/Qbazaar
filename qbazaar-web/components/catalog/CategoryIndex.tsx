@@ -1,11 +1,10 @@
 'use client';
 
-import { useMemo, useRef, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
-import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Input } from '@/components/design-system/Input';
 import { Pagination } from '@/components/design-system/Pagination';
@@ -14,7 +13,6 @@ import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
 import { useMainCategoriesQuery } from '@/lib/queries/categories';
-import type { Category } from '@/lib/api/types';
 
 import { CatalogStats, todayStat } from './CatalogHeader';
 import { CategoryCard } from './CategoryTile';
@@ -26,13 +24,10 @@ const PAGE_SIZE = 24;
 const grid =
   '[display:grid] grid-cols-2 gap-x-2 gap-y-3.5 qb-tablet:grid-cols-3 qb-tablet:gap-x-2.5 qb-tablet:gap-y-6 qb-desktop:grid-cols-4 qb-desktop:gap-x-4 qb-desktop:px-10';
 
-/** Categories whose name matches the query in either language. */
-export function filterCategories(categories: Category[], query: string): Category[] {
-  const needle = query.trim().toLocaleLowerCase();
-  if (!needle) return categories;
-  return categories.filter((category) =>
-    [category.name.ar, category.name.en].some((name) => name.toLocaleLowerCase().includes(needle)),
-  );
+/** The listing a search of this page opens, as the reference's `doSearch` opens the category listing. */
+export function listingSearchHref(query: string): string {
+  const keyword = query.trim();
+  return keyword ? `/search?${new URLSearchParams({ q: keyword })}` : '/search';
 }
 
 /** "10 Categories • +3 Ads Today" under the page title. */
@@ -53,9 +48,10 @@ export function CategoryIndexStats() {
 }
 
 /**
- * Search box, category cards and pagination of `/categories`. The page comes
- * from the server, so this needs no Suspense boundary and hydrates together
- * with the counters above it, which share its query.
+ * Search box, category cards and pagination of `/categories`. Searching opens
+ * the ad listing for the words (all-categories.html). The page comes from the
+ * server, so this needs no Suspense boundary and hydrates together with the
+ * counters above it, which share its query.
  */
 export function CategoryIndex({ page: requestedPage }: { page: number }) {
   const locale = getLocale();
@@ -63,23 +59,17 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
   const pathname = usePathname();
   const { data, isLoading, isError, refetch } = useMainCategoriesQuery();
   const [query, setQuery] = useState('');
-  const resultsRef = useRef<HTMLDivElement>(null);
 
-  const matches = useMemo(() => filterCategories(data ?? [], query), [data, query]);
-  const totalPages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+  const categories = data ?? [];
+  const totalPages = Math.max(1, Math.ceil(categories.length / PAGE_SIZE));
   const page = Math.min(requestedPage, totalPages);
-  const visible = matches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const visible = categories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const pageHref = (target: number) => (target > 1 ? `${pathname}?page=${target}` : pathname);
 
-  const changeQuery = (next: string) => {
-    setQuery(next);
-    if (page > 1) router.replace(pathname, { scroll: false });
-  };
-
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    resultsRef.current?.focus();
+    router.push(listingSearchHref(query));
   };
 
   return (
@@ -99,7 +89,7 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
           id="category-search"
           type="search"
           value={query}
-          onChange={(event) => changeQuery(event.target.value)}
+          onChange={(event) => setQuery(event.target.value)}
           placeholder={t('catalog.index.search_placeholder', 'ابحث في الأقسام…')}
           autoComplete="off"
           className="h-11 rounded-[14px] ps-11 pe-4 text-qb-caption shadow-qb-card qb-tablet:h-14 qb-tablet:rounded-qb-xl qb-tablet:ps-14 qb-tablet:pe-32 qb-tablet:text-qb-body qb-desktop:text-qb-h5 [&::-webkit-search-cancel-button]:appearance-none"
@@ -108,10 +98,6 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
           {t('catalog.index.search_submit', 'بحث')}
         </Button>
       </form>
-
-      <p aria-live="polite" className="sr-only">
-        {data && query ? tPlural('catalog.index.matches', matches.length) : ''}
-      </p>
 
       {isLoading ? (
         <div aria-busy="true" className={grid}>
@@ -122,30 +108,21 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
       ) : isError || !data ? (
         <LoadError headingLevel="h3" title={t('common.error', 'حدث خطأ، حاول مرة أخرى')} onRetry={() => refetch()} />
       ) : (
-        <div ref={resultsRef} tabIndex={-1} className="outline-none">
-          {visible.length ? (
-            <ul className={grid}>
-              {visible.map((category) => (
-                <li key={category.id}>
-                  <CategoryCard
-                    href={`/c/${category.slug}`}
-                    name={localized(category.name, locale)}
-                    icon={category.icon}
-                    count={tPlural('catalog.ads_count', category.ads_count)}
-                  />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <EmptyState
-              headingLevel="h3"
-              icon={<Icon icon={Search} size="lg" />}
-              title={t('catalog.index.no_matches_title', 'لا توجد أقسام مطابقة')}
-              description={t('catalog.index.no_matches', { query: query.trim() }, 'لم نجد قسماً باسم «{query}».')}
-            />
-          )}
+        <>
+          <ul className={grid}>
+            {visible.map((category) => (
+              <li key={category.id}>
+                <CategoryCard
+                  href={`/c/${category.slug}`}
+                  name={localized(category.name, locale)}
+                  icon={category.icon}
+                  count={tPlural('catalog.ads_count', category.ads_count)}
+                />
+              </li>
+            ))}
+          </ul>
           <Pagination page={page} totalPages={totalPages} getHref={pageHref} className="mt-6 qb-desktop:mt-8" />
-        </div>
+        </>
       )}
     </div>
   );

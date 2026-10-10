@@ -731,17 +731,7 @@
       "discover_text": "تصفّح الأقسام المختلفة واعثر بسرعة على ما تحتاجه في مكان واحد.",
       "search_label": "ابحث في الأقسام",
       "search_placeholder": "ابحث في الأقسام…",
-      "search_submit": "بحث",
-      "matches": {
-        "zero": "لا توجد أقسام",
-        "one": "قسم واحد",
-        "two": "قسمان",
-        "few": "{count} أقسام",
-        "many": "{count} قسمًا",
-        "other": "{count} قسم"
-      },
-      "no_matches_title": "لا توجد أقسام مطابقة",
-      "no_matches": "لم نجد قسماً باسم «{query}»."
+      "search_submit": "بحث"
     },
     "view": {
       "label": "طريقة العرض",
@@ -774,7 +764,7 @@
       },
       "apply": "تطبيق الفلتر",
       "reset_all": "إعادة ضبط الكل",
-      "any": "الكل",
+      "all_type": "كل الأنواع",
       "category": "القسم",
       "price": "السعر",
       "price_min_label": "أقل سعر (ر.ق)",

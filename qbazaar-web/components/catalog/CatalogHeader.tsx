@@ -5,6 +5,8 @@ import { formatNumber } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
 
+import { breadcrumbHover } from './layout';
+
 export interface CatalogStat {
   value: string;
   label: string;
@@ -59,7 +61,7 @@ export interface CatalogHeaderProps {
 export function CatalogHeader({ title, breadcrumb, stats, actions, titleRef, className }: CatalogHeaderProps) {
   return (
     <header className={cn('font-qb', className)}>
-      {breadcrumb?.length ? <Breadcrumb items={breadcrumb} className="mb-[73px] hidden qb-tablet:block qb-desktop:mb-[49px]" /> : null}
+      {breadcrumb?.length ? <Breadcrumb items={breadcrumb} className={cn('mb-[73px] hidden qb-tablet:block qb-desktop:mb-[49px]', breadcrumbHover)} /> : null}
       <div className="flex items-center justify-between gap-6">
         <div className="min-w-0">
           <h1
