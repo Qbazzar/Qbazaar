@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Loader2, Search } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Modal } from '@/components/design-system/Modal';
 import { formatRelativeTime } from '@/components/messaging/relative-time';
@@ -42,7 +43,7 @@ export function SavedSearchCard({ search, labels }: Props) {
   const onDelete = () => {
     deleteMutation.mutate(search.id, {
       onSuccess: () => {
-        toast.success(t('account.saved_searches.delete_success', 'تم حذف البحث المحفوظ'));
+        showDesignToast(t('account.saved_searches.delete_success', 'تم حذف البحث المحفوظ'));
         setConfirmOpen(false);
       },
       onError: (err) => toast.error(apiErrorMessage(err)),

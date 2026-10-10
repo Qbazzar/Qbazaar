@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('@/components/design-system/design-toast', () => ({ showDesignToast: vi.fn() }));
 vi.mock('@/lib/echo/client', () => ({ getEcho: vi.fn().mockResolvedValue(null) }));
 vi.mock('@/lib/api/orders', () => ({ getOrder: vi.fn() }));
 vi.mock('@/lib/api/purchase-requests', () => ({
@@ -15,6 +16,7 @@ vi.mock('@/lib/api/purchase-requests', () => ({
 
 import { toast } from 'sonner';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { ApiClientError } from '@/lib/api/auth';
 import { getOrder } from '@/lib/api/orders';
 import { acceptPurchaseRequest, cancelPurchaseRequest, rejectPurchaseRequest } from '@/lib/api/purchase-requests';
@@ -49,7 +51,7 @@ describe('PurchaseRequestCard', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Accept and place order' }));
 
     await waitFor(() => expect(acceptPurchaseRequest).toHaveBeenCalledWith('pr-1', expect.any(String)));
-    expect(toast.success).toHaveBeenCalledWith('Request accepted. The order is placed.');
+    expect(showDesignToast).toHaveBeenCalledWith('Request accepted. The order is placed.');
   });
 
   it('declines straight away and reports API refusals', async () => {
@@ -92,6 +94,21 @@ describe('PurchaseRequestCard', () => {
     expect(getOrder).toHaveBeenCalledWith('order-9');
   });
 
+  it('lets the seller of an accepted request wait for the payment without a button', async () => {
+    vi.mocked(getOrder).mockResolvedValue(buildOrder({ id: 'order-9', status: 'created' }));
+    renderWithClient(
+      <PurchaseRequestCard
+        request={buildPurchaseRequest({ status: 'accepted', order_id: 'order-9', viewer_role: 'seller' })}
+        role="seller"
+        ad={ad}
+        align="start"
+      />,
+    );
+
+    expect(await screen.findByText("Request Accepted, Waiting for buyer's payment")).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
   it('stops offering the checkout once the buyer has checked out', async () => {
     vi.mocked(getOrder).mockResolvedValue(buildOrder({ id: 'order-9', status: 'awaiting_handover' }));
     renderWithClient(
@@ -118,6 +135,7 @@ describe('PurchaseRequestCard', () => {
 
     expect(screen.getByText(line)).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('shows the unit price when more than one is requested', () => {

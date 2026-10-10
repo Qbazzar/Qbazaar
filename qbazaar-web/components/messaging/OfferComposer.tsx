@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { Handshake, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { Input, Textarea } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
@@ -73,7 +74,7 @@ export function OfferComposer({ conversationId }: Props) {
       },
       {
         onSuccess: () => {
-          toast.success(
+          showDesignToast(
             t('messaging.offer.success_toast', 'تم إرسال العرض بنجاح'),
           );
           handleClose(false);

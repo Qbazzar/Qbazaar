@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { MessageSquareX, Search, SquareCheckBig, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { PanelState } from '@/components/account/PanelState';
 import { apiErrorMessage } from '@/components/account/api-error-message';
@@ -75,7 +76,7 @@ export function ConversationsList({ activeConversationId, onSelect }: Props) {
   const confirmHide = () =>
     hide.mutate(selectedIds, {
       onSuccess: () => {
-        toast.success(t('messaging.delete.done', { count: selectedIds.length }));
+        showDesignToast(t('messaging.delete.done', { count: selectedIds.length }));
         setConfirmOpen(false);
         setSelecting(false);
         setSelected(new Set());

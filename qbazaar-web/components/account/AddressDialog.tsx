@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Input } from '@/components/design-system/Input';
@@ -101,7 +102,7 @@ function AddressList({
     mutationFn: deleteAddress,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ADDRESSES_QUERY_KEY });
-      toast.success(t('account.address.deleted'));
+      showDesignToast(t('account.address.deleted'));
     },
     onError: (err) => toast.error(apiErrorMessage(err)),
   });
@@ -185,7 +186,7 @@ function AddressForm({
     mutationFn: (values: AddressInput) => (address ? updateAddress(address.id, values) : createAddress(values)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ADDRESSES_QUERY_KEY });
-      toast.success(t('account.address.saved'));
+      showDesignToast(t('account.address.saved'));
       onDone();
     },
   });

@@ -7,7 +7,6 @@
  */
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 import {
@@ -22,6 +21,7 @@ import { PROFILE_QUERY_KEY } from '@/components/account/ProfileSettingsPanel';
 import { ProfileForm } from '@/components/account/ProfileForm';
 import { SettingsList, SettingsPanel, SettingsRow, settingsActionClass } from '@/components/account/SettingsPanel';
 import { apiErrorMessage } from '@/components/account/api-error-message';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { useAuth } from '@/hooks/useAuth';
@@ -60,7 +60,14 @@ export default function AccountMarketplacePage() {
         <SettingsList>
           <SettingsRow
             label={t('account.marketplace.seller_type')}
-            value={t(isBusiness ? 'account.profile.business_seller' : 'account.profile.private_seller')}
+            value={
+              isBusiness ? (
+                t('account.profile.business_seller')
+              ) : (
+                // typo.js sets "Private Seller" in Montserrat 500 10 px wherever it appears.
+                <span className="block font-qb-label text-qb-tiny font-medium">{t('account.profile.private_seller')}</span>
+              )
+            }
           />
           {isBusiness ? (
             <SettingsRow
@@ -106,7 +113,7 @@ function StoreNameForm({ business, onDone }: { business: BusinessProfile; onDone
     mutationFn: (businessName: string | null) => updateBusinessProfile({ business_name: businessName }),
     onSuccess: (saved) => {
       queryClient.setQueryData(BUSINESS_QUERY_KEY, saved);
-      toast.success(t('account.profile.success'));
+      showDesignToast(t('account.profile.success'));
       onDone();
     },
     onError: (err) => setError(apiErrorMessage(err)),

@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { FieldError } from '@/components/auth/FieldError';
@@ -66,7 +67,7 @@ export function EditEmailDialog({ open, onOpenChange }: ContactDialogProps) {
 
   const confirm = async (code: string) => {
     await requestEmailChange({ email: email.trim().toLowerCase(), reauth_code: code });
-    toast.success(t('account.contact.email_link_sent', { email: email.trim() }));
+    showDesignToast(t('account.contact.email_link_sent', { email: email.trim() }));
     close(false);
   };
 
@@ -164,7 +165,7 @@ export function EditPhoneDialog({ open, onOpenChange }: ContactDialogProps) {
     const profile = await confirmPhoneChange(code);
     if (user) setUser({ ...user, phone: profile.phone, phone_verified: profile.phone_verified });
     void queryClient.invalidateQueries({ queryKey: ['account'] });
-    toast.success(t('account.contact.phone_changed'));
+    showDesignToast(t('account.contact.phone_changed'));
     close(false);
   };
 
@@ -187,6 +188,8 @@ export function EditPhoneDialog({ open, onOpenChange }: ContactDialogProps) {
             }}
             error={error ?? undefined}
             hideNote
+            withChevron
+            placeholder={t('account.contact.phone_placeholder')}
           />
           <p className="mt-3.5 text-qb-caption text-qb-ink-faint">{t('account.contact.sms_note')}</p>
           <div className="mt-[26px] flex justify-end">

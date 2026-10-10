@@ -11,6 +11,7 @@ import { parseAsStringEnum, useQueryState } from 'nuqs';
 import { toast } from 'sonner';
 import { Bell, Check, Loader2, Trash2 } from 'lucide-react';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
 import { AccountEmptyState } from '@/components/account/AccountEmptyState';
@@ -103,7 +104,7 @@ function NotificationsList({
         onSuccess: (failed) => {
           setSelected(new Set());
           if (failed > 0) toast.error(t('notifications.bulk_failed'));
-          else toast.success(t(action === 'read' ? 'notifications.bulk_read' : 'notifications.bulk_deleted', { count: ids.length }));
+          else showDesignToast(t(action === 'read' ? 'notifications.bulk_read' : 'notifications.bulk_deleted', { count: ids.length }));
         },
       },
     );

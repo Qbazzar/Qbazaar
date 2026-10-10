@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import type { DealCardAd, DealRole, OrderStatus, PurchaseRequest } from '@/lib/api/commerce-types';
 import { payloadField, useDealEvents } from '@/lib/echo/useDealEvents';
 import { useIdempotencyKey } from '@/hooks/useIdempotencyKey';
@@ -97,7 +98,7 @@ export function PurchaseRequestCard({ request, role, ad, align }: PurchaseReques
       await action();
       onSuccess?.();
       setDialog(null);
-      toast.success(success);
+      showDesignToast(success);
     } catch (error) {
       if (!isHandledGlobally(error)) toast.error(dealErrorMessage(error));
     }
@@ -131,10 +132,10 @@ export function PurchaseRequestCard({ request, role, ad, align }: PurchaseReques
         </Button>
       );
     }
+    // A paid, rejected or closed request shows its state line alone (721:41875, 721:42157).
     const orderId = request.order_id;
-    if (!orderId || (request.status !== 'accepted' && request.status !== 'paid')) return null;
-    const orderHref = `/account/orders/${encodeURIComponent(orderId)}`;
-    if (request.status === 'accepted' && role === 'buyer' && orderStatus === 'created') {
+    if (!orderId || request.status !== 'accepted') return null;
+    if (orderStatus === 'created' && role === 'buyer') {
       // 721:42157: one full-width "Proceed to payment".
       return (
         <Link href={`/checkout/${encodeURIComponent(orderId)}`} className={cn(buttonVariants({ size: 'sm' }), cardButton)}>
@@ -142,8 +143,13 @@ export function PurchaseRequestCard({ request, role, ad, align }: PurchaseReques
         </Link>
       );
     }
+    // 721:41875: the seller only waits for the payment.
+    if (orderStatus === 'created') return null;
     return (
-      <Link href={orderHref} className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), cardButton)}>
+      <Link
+        href={`/account/orders/${encodeURIComponent(orderId)}`}
+        className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), cardButton)}
+      >
         {t('orders.card.view_order')}
       </Link>
     );

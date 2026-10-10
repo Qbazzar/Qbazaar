@@ -6,8 +6,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Ban, CircleAlert } from 'lucide-react';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
-import { ReportDialog } from '@/components/reports/ReportDialog';
 import { apiErrorMessage } from '@/components/account/api-error-message';
 import { blockUser } from '@/lib/api/users';
 import { messagingKeys } from '@/lib/queries/messaging';
@@ -15,9 +15,7 @@ import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
 import { ChatConfirmDialog } from './ChatConfirmDialog';
-
-/** Below the reference's 601 px tablet breakpoint the report form is a bottom sheet. */
-const PHONE_QUERY = '(max-width: 600px)';
+import { ChatReportSheet } from './ChatReportSheet';
 
 interface ChatSettingsMenuProps {
   peer: { id: string; full_name: string };
@@ -28,19 +26,18 @@ const itemClass =
 
 /**
  * The "⋯" of the chat header (chat.js, 604:33852): a "Setting" menu with
- * "Report" (the report form) and "Block" (the "Block User?" confirmation).
+ * "Report" (the report sheet) and "Block" (the "Block User?" confirmation).
  * Arrow keys move through it; Escape or a click outside closes it.
  */
 export function ChatSettingsMenu({ peer }: ChatSettingsMenuProps) {
   const queryClient = useQueryClient();
   const [reportOpen, setReportOpen] = useState(false);
-  const [asSheet, setAsSheet] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
 
   const block = useMutation({
     mutationFn: () => blockUser(peer.id),
     onSuccess: () => {
-      toast.success(t('messaging.menu.blocked', { name: peer.full_name.split(' ')[0] }));
+      showDesignToast(t('messaging.menu.blocked', { name: peer.full_name.split(' ')[0] }));
       queryClient.invalidateQueries({ queryKey: ['account', 'blocked-users'] });
       queryClient.invalidateQueries({ queryKey: messagingKeys.lists() });
       setBlockOpen(false);
@@ -71,10 +68,7 @@ export function ChatSettingsMenu({ peer }: ChatSettingsMenuProps) {
                 </Menu.GroupLabel>
                 <Menu.Item
                   className={cn(itemClass, 'text-qb-ink')}
-                  onClick={() => {
-                    setAsSheet(window.matchMedia(PHONE_QUERY).matches);
-                    setReportOpen(true);
-                  }}
+                  onClick={() => setReportOpen(true)}
                 >
                   {t('messaging.menu.report')}
                   <CircleAlert aria-hidden="true" className="text-qb-brand" strokeWidth={1.8} />
@@ -89,14 +83,7 @@ export function ChatSettingsMenu({ peer }: ChatSettingsMenuProps) {
         </Menu.Portal>
       </Menu.Root>
 
-      <ReportDialog
-        open={reportOpen}
-        onOpenChange={setReportOpen}
-        asSheet={asSheet}
-        target_type="user"
-        target_id={peer.id}
-        onReported={() => setReportOpen(false)}
-      />
+      <ChatReportSheet open={reportOpen} onOpenChange={setReportOpen} peerId={peer.id} />
       <ChatConfirmDialog
         variant="block"
         open={blockOpen}

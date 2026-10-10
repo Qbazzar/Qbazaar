@@ -10,21 +10,17 @@
 import { useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { parseAsString, useQueryState } from 'nuqs';
-import { MessagesSquare } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { pageGutter } from '@/components/design-system/page-gutter';
 import { ConversationsList } from '@/components/messaging/ConversationsList';
 import { ConversationView } from '@/components/messaging/ConversationView';
-import { useConversationsQuery } from '@/lib/queries/messaging';
 import { useMessagingStore } from '@/store/messaging';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 
 /** Inbox and chat side by side from the desktop layout (`qb-desktop`). */
 const TWO_PANES_QUERY = '(min-width: 1001px)';
-/** The inbox's page size: the first page doubles as the "is the inbox empty" check. */
-const INBOX_PAGE_SIZE = 20;
 
 export function MessagesClient() {
   const [activeId, setActiveId] = useQueryState(
@@ -74,9 +70,6 @@ export function MessagesClient() {
   }, [activeId, setActiveId]);
 
   const hasActive = Boolean(activeId);
-  // Same key as the inbox's first page, so this costs no extra request.
-  const { data: firstPage } = useConversationsQuery({ page: 1, per_page: INBOX_PAGE_SIZE });
-  const inboxEmpty = firstPage?.data.length === 0;
 
   return (
     <div className={cn('mx-auto max-w-[1440px] py-[clamp(16px,3vw,28px)] font-qb', pageGutter)}>
@@ -105,7 +98,7 @@ export function MessagesClient() {
           {hasActive ? (
             <ConversationView conversationId={activeId} onBack={handleBack} />
           ) : (
-            <EmptyChatPane inboxEmpty={inboxEmpty} />
+            <EmptyChatPane />
           )}
         </section>
       </div>
@@ -113,33 +106,53 @@ export function MessagesClient() {
   );
 }
 
-/** Right pane before a chat is open (370:18776): "No Messages Yet" while the inbox is empty. */
-function EmptyChatPane({ inboxEmpty }: { inboxEmpty: boolean }) {
+/** The "Iconly Light Chat" glyph of 370:18776. */
+function ChatBubbleIcon({ className }: { className?: string }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className={className}>
+      <path
+        d="M12 2.6c5.2 0 9.4 4.03 9.4 9s-4.2 9-9.4 9c-1.05 0-2.08-.16-3.05-.48-.35-.11-.72-.08-1.05.08l-2.4 1.2c-.63.31-1.37-.13-1.37-.83l-.02-2.1a1.2 1.2 0 0 0-.4-.9A8.9 8.9 0 0 1 2.6 11.6c0-4.97 4.2-9 9.4-9Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7.9 12.7a1.05 1.05 0 1 0 0-2.1 1.05 1.05 0 0 0 0 2.1Zm4.1 0a1.05 1.05 0 1 0 0-2.1 1.05 1.05 0 0 0 0 2.1Zm4.1 0a1.05 1.05 0 1 0 0-2.1 1.05 1.05 0 0 0 0 2.1Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Right pane while no chat is open (370:18776, also with conversations
+ * listed): the tilted icon tile, "No Messages Yet" and "Browse Ads".
+ */
+function EmptyChatPane() {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-6 text-center font-qb">
       <span
         aria-hidden="true"
-        className="flex size-24 items-center justify-center rounded-full bg-qb-brand-soft text-qb-brand"
+        className="flex size-[93px] -rotate-[2.34deg] items-center justify-center rounded-qb-2xl border border-qb-line bg-qb-chat-empty-tile text-qb-chat-empty-icon shadow-qb-chat-empty-tile"
       >
-        <MessagesSquare className="size-10" strokeWidth={1.6} />
+        <ChatBubbleIcon className="size-10 rotate-[0.69deg]" />
       </span>
-      <h2 className="text-qb-h3 font-semibold tracking-normal text-qb-ink">
-        {t(inboxEmpty ? 'messaging.empty.no_messages_title' : 'messaging.empty.pick_title')}
+      <h2 className="mt-[26px] text-[22px] leading-[1.5] font-medium tracking-normal text-qb-ink-muted">
+        {t('messaging.empty.no_messages_title')}
       </h2>
-      <p className="max-w-[420px] text-qb-body leading-[1.6] text-qb-ink-subtle">
-        {t(inboxEmpty ? 'messaging.empty.no_messages_body' : 'messaging.empty.view')}
+      <p className="mt-[5px] max-w-[806px] text-qb-h5 leading-[1.5] text-qb-ink-disabled">
+        {t('messaging.empty.no_messages_body')}
       </p>
-      {inboxEmpty ? (
-        <Link
-          href="/ads"
-          className={cn(
-            'mt-2 rounded-qb-lg bg-qb-brand px-8 py-3.5 text-qb-body-sm font-semibold text-qb-on-brand hover:bg-qb-brand-hover',
-            focusRing,
-          )}
-        >
-          {t('account.saved_searches.browse_ads')}
-        </Link>
-      ) : null}
+      <Link
+        href="/ads"
+        className={cn(
+          'mt-4 flex h-10 w-[157px] items-center justify-center rounded-qb-sm bg-qb-brand text-qb-caption font-semibold text-qb-chat-empty-cta hover:bg-qb-brand-hover',
+          focusRing,
+        )}
+      >
+        {t('account.saved_searches.browse_ads')}
+      </Link>
     </div>
   );
 }

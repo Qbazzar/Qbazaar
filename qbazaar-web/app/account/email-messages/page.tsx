@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { AccountDialog } from '@/components/account/AccountDialog';
 import { PanelState } from '@/components/account/PanelState';
 import { PROFILE_QUERY_KEY } from '@/components/account/ProfileSettingsPanel';
@@ -50,7 +51,7 @@ export default function AccountEmailMessagesPage() {
     },
     onSuccess: (saved) => {
       queryClient.setQueryData(QUERY_KEY, saved);
-      toast.success(t('account.email_messages.saved'));
+      showDesignToast(t('account.email_messages.saved'));
     },
   });
 

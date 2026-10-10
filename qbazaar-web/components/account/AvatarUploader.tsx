@@ -30,6 +30,7 @@ import Cropper, { type Area } from 'react-easy-crop';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Modal } from '@/components/design-system/Modal';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -177,7 +178,7 @@ export function AvatarUploader({
         avatar_thumb_url: data.avatar_thumb_url,
         avatar_medium_url: data.avatar_medium_url,
       });
-      toast.success(t('account.avatar.uploaded'));
+      showDesignToast(t('account.avatar.uploaded'));
       onUploaded?.(data);
       closeCropModal();
     },

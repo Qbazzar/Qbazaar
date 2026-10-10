@@ -2,7 +2,7 @@
 
 /**
  * FE-2.6 — Privacy settings: the Data Protection switches of account.html,
- * then a row to the blocked users.
+ * then a row to the blocked users and the data export.
  *
  * 4 switches backed by `GET / PUT /account/privacy-settings`. Each toggle
  * optimistically flips the cached value, fires the PUT, and rolls back on
@@ -13,6 +13,8 @@ import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
+import { ExportDataRow } from '@/components/account/ExportDataRow';
 import { PanelState } from '@/components/account/PanelState';
 import { SettingsList, SettingsPanel, SettingsRow, settingsActionClass } from '@/components/account/SettingsPanel';
 import { SettingsToggleList } from '@/components/account/SettingsToggleList';
@@ -96,7 +98,7 @@ export default function AccountPrivacyPage() {
       }
     },
     onSuccess: () => {
-      toast.success(t('account.privacy.save_success'));
+      showDesignToast(t('account.privacy.save_success'));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -133,6 +135,7 @@ export default function AccountPrivacyPage() {
             </Link>
           }
         />
+        <ExportDataRow />
       </SettingsList>
     </SettingsPanel>
   );

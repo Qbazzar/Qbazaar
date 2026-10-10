@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { Input, Select, Textarea } from '@/components/design-system/Input';
 import { fieldErrorText } from '@/components/auth/FieldError';
@@ -82,7 +83,7 @@ export function ProfileForm({ initial, fields, onSaved, onCancel }: ProfileFormP
         });
       }
       queryClient.setQueryData(['account', 'profile'], updated);
-      toast.success(t('account.profile.success'));
+      showDesignToast(t('account.profile.success'));
       onSaved?.();
     },
   });

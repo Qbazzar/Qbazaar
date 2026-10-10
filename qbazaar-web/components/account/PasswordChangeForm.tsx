@@ -13,6 +13,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { fieldErrorText } from '@/components/auth/FieldError';
@@ -47,7 +48,7 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
   const mutation = useMutation({
     mutationFn: changePassword,
     onSuccess: () => {
-      toast.success(t('account.security.success'));
+      showDesignToast(t('account.security.success'));
       form.reset({
         current_password: '',
         new_password: '',

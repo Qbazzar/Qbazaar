@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { CircleAlert, Loader2, Search } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Modal } from '@/components/design-system/Modal';
 import { AccountEmptyState } from '@/components/account/AccountEmptyState';
@@ -117,7 +118,7 @@ function ClearAllDialog({
       onSuccess: (failed) => {
         onOpenChange(false);
         if (failed > 0) toast.error(t('search.errors.delete_failed'));
-        else toast.success(t('account.saved_searches.cleared'));
+        else showDesignToast(t('account.saved_searches.cleared'));
       },
     });
 
@@ -156,7 +157,7 @@ function CleanUpBanner({ searches }: { searches: readonly SavedSearch[] }) {
     remove.mutate(inactiveIds, {
       onSuccess: (failed) => {
         if (failed > 0) toast.error(t('search.errors.delete_failed'));
-        else toast.success(tPlural('account.saved_searches.cleaned', inactiveIds.length));
+        else showDesignToast(tPlural('account.saved_searches.cleaned', inactiveIds.length));
       },
     });
   };

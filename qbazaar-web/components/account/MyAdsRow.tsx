@@ -12,6 +12,7 @@ import { Bookmark, Clock, Eye, Heart, Loader2, Pencil, RefreshCw, Tag, Trash2 } 
 import { toast } from 'sonner';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Modal } from '@/components/design-system/Modal';
 import {
@@ -53,7 +54,7 @@ export function MyAdsRow({ ad, category }: Props) {
   const onDelete = async () => {
     try {
       await deleteMutation.mutateAsync(ad.id);
-      toast.success(t('ads.actions.delete_success', 'تم حذف الإعلان'));
+      showDesignToast(t('ads.actions.delete_success', 'تم حذف الإعلان'));
     } catch (err) {
       toast.error(
         (err as { message?: string })?.message ??
@@ -67,7 +68,7 @@ export function MyAdsRow({ ad, category }: Props) {
   const onMarkSold = async () => {
     try {
       await markSoldMutation.mutateAsync(ad.id);
-      toast.success(t('ads.actions.mark_sold_success', 'تم تعليم الإعلان كمباع'));
+      showDesignToast(t('ads.actions.mark_sold_success', 'تم تعليم الإعلان كمباع'));
     } catch (err) {
       toast.error((err as { message?: string })?.message ?? t('common.error'));
     }
@@ -76,7 +77,7 @@ export function MyAdsRow({ ad, category }: Props) {
   const onReserve = async () => {
     try {
       await reserveMutation.mutateAsync({ id: ad.id, reserved: !reserved });
-      toast.success(t(reserved ? 'account.my_ads.unreserved_success' : 'account.my_ads.reserved_success'));
+      showDesignToast(t(reserved ? 'account.my_ads.unreserved_success' : 'account.my_ads.reserved_success'));
     } catch (err) {
       toast.error((err as { message?: string })?.message ?? t('common.error'));
     }
@@ -85,7 +86,7 @@ export function MyAdsRow({ ad, category }: Props) {
   const onRenew = async () => {
     try {
       await renewMutation.mutateAsync(ad.id);
-      toast.success(t('ads.actions.renew_success', 'تم تجديد الإعلان'));
+      showDesignToast(t('ads.actions.renew_success', 'تم تجديد الإعلان'));
     } catch (err) {
       toast.error((err as { message?: string })?.message ?? t('common.error'));
     }
