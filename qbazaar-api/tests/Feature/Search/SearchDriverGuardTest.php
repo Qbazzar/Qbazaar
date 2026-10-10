@@ -23,11 +23,11 @@ beforeEach(function (): void {
     ]);
 });
 
-it('returns an empty page instead of failing when search runs on a non-meilisearch driver', function (): void {
+it('answers from the database instead of failing when search runs on a non-meilisearch driver', function (): void {
     getJson('/api/v1/search?q=mountain', ['Accept' => 'application/json'])
         ->assertOk()
-        ->assertJsonPath('data', [])
-        ->assertJsonPath('meta.total', 0);
+        ->assertJsonPath('data.0.title', 'Mountain bike for sale')
+        ->assertJsonPath('meta.total', 1);
 });
 
 it('returns no suggestions instead of failing when search runs on a non-meilisearch driver', function (): void {

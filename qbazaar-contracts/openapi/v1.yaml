@@ -2077,7 +2077,9 @@ paths:
         `qbazaar.catalog.category_page_cache_seconds` (2 minutes, served stale
         up to 10 while it refreshes), so new listings can take that long to
         appear; a taxonomy change drops it at once. With a Bearer token,
-        `is_favorited` on the cards reflects the caller's favourites.
+        `is_favorited` on the cards reflects the caller's favourites, and the
+        page's own `is_favorited` says whether the caller favourited the
+        category itself (always false for guests; never cached).
       operationId: categoriesShow
       security: [{}, {bearerAuth: []}]
       parameters:
@@ -2226,6 +2228,15 @@ paths:
         filter set for `qbazaar.ads.feed_total_cache_seconds` (60 seconds), so
         it can trail the listings by that long; the page items are always live.
 
+        The catalog filters (`q`, `condition`, `price_type`, `ad_type`,
+        `shipping`, `seller_type`, `buy_now`, `custom_fields`) mean exactly what
+        they mean on `/search`; both endpoints run the same search service. All
+        filters are AND-combined and ignored when `ids` is sent.
+
+        `meta.facets` carries the count of ads per filter value for the current
+        result set (see `AdFacets`). Counts are cached per filter set for
+        `qbazaar.search.facets_cache_seconds` (60 seconds).
+
         An optional Bearer token sets `is_favorited` on each ad; guests get false.
       operationId: adsIndex
       security: [{}, {bearerAuth: []}]
@@ -2234,10 +2245,18 @@ paths:
           in: query
           description: Comma-separated ad ids (`ids=a,b,c`); `ids[]=a&ids[]=b` also works. Duplicates are dropped.
           schema: { type: string, example: '01HM3XQV0AAAAAAAAAAAAAAAAA,01HM3XQV0BBBBBBBBBBBBBBBBB' }
+        - { name: q, in: query, schema: { type: string, maxLength: 200 }, description: 'Keyword. Every word must appear in the title or description. Ranked by relevance on the search engine, matched with LIKE on the database fallback.' }
         - { name: category_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the category and all its descendants. }
         - { name: location_id, in: query, schema: { $ref: '#/components/schemas/ULID' }, description: Matches the location and all places under it. }
         - { name: price_min, in: query, schema: { type: number, minimum: 0 } }
         - { name: price_max, in: query, schema: { type: number, minimum: 0 }, description: Must not be below `price_min`. }
+        - { name: condition, in: query, schema: { $ref: '#/components/schemas/Condition' } }
+        - { name: price_type, in: query, schema: { $ref: '#/components/schemas/PriceType' } }
+        - { $ref: '#/components/parameters/FilterAdType' }
+        - { $ref: '#/components/parameters/FilterShipping' }
+        - { $ref: '#/components/parameters/FilterSellerType' }
+        - { $ref: '#/components/parameters/FilterBuyNow' }
+        - { $ref: '#/components/parameters/FilterCustomFields' }
         - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed], default: latest } }
         - { name: page, in: query, description: "At most `qbazaar.ads.feed_max_page` (250); deeper pages are a 422, narrow the filters or use search instead.", schema: { type: integer, minimum: 1, maximum: 250, default: 1 } }
       responses:
@@ -2271,6 +2290,12 @@ paths:
                       total: 1
                       last_page: 1
                       has_more: false
+                      facets:
+                        ad_type: { offering: 1 }
+                        shipping: { pickup_only: 1 }
+                        seller_type: { private: 1 }
+                        buy_now: { 'true': 1 }
+                        condition: { used: 1 }
     post:
       tags: [Ads]
       summary: Create a draft ad
@@ -2772,6 +2797,11 @@ paths:
         first. An ad is placed at its own pin, or at its location's centre when
         it has none; ads with neither never match a radius.
 
+        `meta.facets` carries the count of ads per filter value for the current
+        result set (see `AdFacets`); the top-level `facets` block of earlier
+        versions is unchanged. On a driver without Meilisearch the same filters
+        and counts come from the database (no `lat`/`lng`/`radius_km`).
+
         An optional Bearer token sets `is_favorited` on each ad; guests get false.
 
         Results are read back from the database, so an ad deleted or no longer
@@ -2793,8 +2823,11 @@ paths:
         - { name: price_max, in: query, schema: { type: number, minimum: 0 } }
         - { name: condition, in: query, schema: { $ref: '#/components/schemas/Condition' } }
         - { name: price_type, in: query, schema: { $ref: '#/components/schemas/PriceType' } }
-        - { name: ad_type, in: query, schema: { $ref: '#/components/schemas/AdType' } }
-        - { name: shipping, in: query, schema: { $ref: '#/components/schemas/AdShipping' } }
+        - { $ref: '#/components/parameters/FilterAdType' }
+        - { $ref: '#/components/parameters/FilterShipping' }
+        - { $ref: '#/components/parameters/FilterSellerType' }
+        - { $ref: '#/components/parameters/FilterBuyNow' }
+        - { $ref: '#/components/parameters/FilterCustomFields' }
         - { name: sort, in: query, schema: { type: string, enum: [latest, oldest, price_asc, price_desc, most_viewed, distance], default: latest }, description: '`distance` requires `lat` and `lng`.' }
         - { name: lat, in: query, schema: { type: number, minimum: -90, maximum: 90 }, description: 'Required with `lng`, `radius_km` or `sort=distance`.' }
         - { name: lng, in: query, schema: { type: number, minimum: -180, maximum: 180 }, description: 'Required with `lat`, `radius_km` or `sort=distance`.' }
@@ -2830,6 +2863,13 @@ paths:
                       last_page: 1
                       per_page: 20
                       total: 1
+                      has_more: false
+                      facets:
+                        ad_type: { offering: 1 }
+                        shipping: { pickup_only: 1 }
+                        seller_type: { private: 1 }
+                        buy_now: { 'true': 1 }
+                        condition: { used: 1 }
                     facets:
                       categories: { sports: 1 }
                       locations: { doha: 1 }
@@ -3100,6 +3140,74 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedFavoritedAdSummaryEnvelope'
         '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/account/favorite-categories:
+    get:
+      tags: [Favorites]
+      summary: List the caller's favourite categories, newest first
+      description: Not paginated; capped at `qbazaar.favorites.max_categories_per_user` (100). Categories hidden since they were favourited are left out.
+      operationId: favoriteCategoriesIndex
+      responses:
+        '200':
+          description: Favourite categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteCategoriesEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/account/favorite-categories/{category}:
+    put:
+      tags: [Favorites]
+      summary: Favourite a category (idempotent)
+      description: |
+        The "Add to Favorite" pill of a category page. `{category}` is the
+        category slug. Repeating the call is a no-op. Only visible (active,
+        under active ancestors) categories can be added.
+      operationId: favoriteCategoriesAdd
+      parameters:
+        - { name: category, in: path, required: true, schema: { type: string, maxLength: 120 } }
+      responses:
+        '200':
+          description: Favourited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteCategoryStateEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: Unknown or hidden category (CAT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: FAV_002, the caller is at `qbazaar.favorites.max_categories_per_user`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    delete:
+      tags: [Favorites]
+      summary: Remove a category from the favourites (idempotent)
+      description: Removing a category that is not favourited succeeds with `favorited=false`. Works for hidden categories too, so they can always leave the list.
+      operationId: favoriteCategoriesRemove
+      parameters:
+        - { name: category, in: path, required: true, schema: { type: string, maxLength: 120 } }
+      responses:
+        '200':
+          description: Not favourited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavoriteCategoryStateEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: Unknown category (CAT_001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
 
   /api/v1/ads/{id}/view:
     post:
@@ -6399,8 +6507,11 @@ components:
 
     CategoryPage:
       type: object
-      required: [category, parent, sub_category_count, sections]
+      required: [category, parent, sub_category_count, sections, is_favorited]
       properties:
+        is_favorited:
+          type: boolean
+          description: Whether the caller favourited this category (`PUT /account/favorite-categories/{slug}`); false for guests.
         category: { $ref: '#/components/schemas/Category' }
         parent:
           oneOf:
@@ -6825,7 +6936,7 @@ components:
             data:
               type: array
               items: { $ref: '#/components/schemas/AdSummary' }
-            meta: { $ref: '#/components/schemas/PaginationMeta' }
+            meta: { $ref: '#/components/schemas/PaginationMetaWithFacets' }
 
     SimilarAdsResponse:
       description: Up to 12 active ads in the same category as the source.
@@ -6848,6 +6959,74 @@ components:
               items: { $ref: '#/components/schemas/AdSummary' }
 
     # ───── Search (Sprint 6) ─────
+    FavoriteCategory:
+      type: object
+      required: [id, slug, name, icon, favorited_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        slug: { type: string }
+        name:
+          type: object
+          required: [ar, en]
+          properties: { ar: { type: string }, en: { type: string } }
+        icon: { type: [string, 'null'] }
+        favorited_at: { type: string, format: date-time }
+
+    FavoriteCategoriesEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: array
+              items: { $ref: '#/components/schemas/FavoriteCategory' }
+
+    FavoriteCategoryStateEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [favorited]
+              properties:
+                favorited: { type: boolean }
+
+    FacetCounts:
+      type: object
+      description: Count of matching ads per value; values with no match are absent.
+      additionalProperties: { type: integer, minimum: 0 }
+
+    AdFacets:
+      type: object
+      description: |
+        Counts per filter value for the current result set: every active
+        filter is applied, so the counts add up to `meta.total`. The client
+        re-renders the panel from each response.
+        `buy_now` uses the keys `"true"` and `"false"`.
+        `custom_fields` is present only when `category_id`/`category_slug` is
+        sent and the category defines select filters (at most 5 are counted);
+        its keys are the filter keys of `GET /categories/{slug}/filters`.
+      required: [ad_type, shipping, seller_type, buy_now, condition]
+      properties:
+        ad_type: { $ref: '#/components/schemas/FacetCounts' }
+        shipping: { $ref: '#/components/schemas/FacetCounts' }
+        seller_type: { $ref: '#/components/schemas/FacetCounts' }
+        buy_now: { $ref: '#/components/schemas/FacetCounts' }
+        condition: { $ref: '#/components/schemas/FacetCounts' }
+        custom_fields:
+          type: object
+          additionalProperties: { $ref: '#/components/schemas/FacetCounts' }
+
+    PaginationMetaWithFacets:
+      allOf:
+        - $ref: '#/components/schemas/PaginationMeta'
+        - type: object
+          description: '`facets` is absent on the `ids` lookup of `GET /ads`.'
+          properties:
+            last_page: { type: integer, example: 8 }
+            facets: { $ref: '#/components/schemas/AdFacets' }
+
     SearchFacets:
       type: object
       description: Aggregated counts returned alongside search results.
@@ -6883,7 +7062,7 @@ components:
             data:
               type: array
               items: { $ref: '#/components/schemas/AdSummary' }
-            meta: { $ref: '#/components/schemas/PaginationMeta' }
+            meta: { $ref: '#/components/schemas/PaginationMetaWithFacets' }
             facets: { $ref: '#/components/schemas/SearchFacets' }
 
     SavedSearch:
@@ -8484,6 +8663,44 @@ components:
               $ref: '#/components/schemas/SupportReply'
 
   parameters:
+    FilterAdType:
+      name: ad_type
+      in: query
+      description: '`offering` or `wanted` ("Looking for").'
+      schema: { $ref: '#/components/schemas/AdType' }
+    FilterShipping:
+      name: shipping
+      in: query
+      description: |
+        `delivery` keeps ads whose seller delivers, `pickup_only` the rest.
+        Delivery and courier are one concept (the ad's `shipping`), so there
+        is no separate courier filter.
+      schema: { $ref: '#/components/schemas/AdShipping' }
+    FilterSellerType:
+      name: seller_type
+      in: query
+      description: Seller account type, `private` or `business`.
+      schema: { type: string, enum: [private, business] }
+    FilterBuyNow:
+      name: buy_now
+      in: query
+      description: |
+        `true` keeps only ads a buyer can send a purchase request for (Buy
+        Now): an offering with a positive price (fixed or negotiable) and
+        stock left. `false` or absent applies no filter.
+      schema: { type: boolean }
+    FilterCustomFields:
+      name: custom_fields
+      in: query
+      style: deepObject
+      explode: true
+      description: |
+        Category-specific filters: `custom_fields[make]=Toyota` for equality,
+        `custom_fields[year][min]=2015&custom_fields[year][max]=2020` for a
+        range. Keys are `[a-z0-9_]` only; at most 10 filters.
+      schema:
+        type: object
+        additionalProperties: true
     IdempotencyKey:
       name: X-Idempotency-Key
       in: header

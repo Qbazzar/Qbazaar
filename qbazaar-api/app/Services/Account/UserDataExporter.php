@@ -109,6 +109,10 @@ class UserDataExporter
             DB::table('favorites')->where('user_id', $user->id)->select(['id', 'ad_id', 'created_at']),
         );
 
+        yield 'favorite_categories' => $this->rows(
+            DB::table('user_favorite_categories')->where('user_id', $user->id)->select(['id', 'category_id', 'created_at']),
+        );
+
         yield 'saved_searches' => $this->rows(
             DB::table('saved_searches')->where('user_id', $user->id)
                 ->select(['id', 'name', 'query_params', 'alerts_enabled', 'category_id', 'location_id', 'condition', 'price_type', 'price_min', 'price_max', 'created_at']),

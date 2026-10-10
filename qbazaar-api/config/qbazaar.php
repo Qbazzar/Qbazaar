@@ -186,6 +186,10 @@ return [
         // GET /ads?ids= — favourites synced from another device, recently viewed on the web.
         'ids_lookup_max' => 50,
         'geo_max_radius_km' => 200,
+        // Facet counts of GET /ads and /search on the database fallback are shared per filter set for this long.
+        'facets_cache_seconds' => 60,
+        // Select filters of the chosen category that also get value counts.
+        'facet_custom_fields_max' => 5,
         // View counters change on every visit, so they reach the index in batches instead of per view.
         'views_sync_minutes' => 15,
     ],
@@ -242,6 +246,7 @@ return [
     */
     'favorites' => [
         'max_per_user' => 1000,
+        'max_categories_per_user' => 100,
     ],
 
     // Fan-out alerts (price drops, new ads from followed sellers, saved

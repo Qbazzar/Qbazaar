@@ -6,8 +6,10 @@ namespace App\Http\Requests\Api\V1\Ads;
 
 use App\Data\Catalog\AdFeedFilters;
 use App\Enums\AdSort;
+use App\Http\Requests\Api\V1\Search\Concerns\ValidatesCatalogFilters;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 /**
@@ -18,6 +20,8 @@ use Illuminate\Validation\Rule;
  */
 class ListAdsRequest extends FormRequest
 {
+    use ValidatesCatalogFilters;
+
     public function authorize(): bool
     {
         return true;
@@ -25,6 +29,8 @@ class ListAdsRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $this->normaliseBuyNow();
+
         $ids = $this->query('ids');
 
         if (is_string($ids)) {
@@ -50,6 +56,7 @@ class ListAdsRequest extends FormRequest
     public function rules(): array
     {
         return [
+            ...$this->catalogFilterRules(),
             'ids' => ['nullable', 'array', 'max:' . (int) config('qbazaar.search.ids_lookup_max')],
             'ids.*' => ['string', 'ulid'],
             'category_id' => ['nullable', 'ulid'],
@@ -87,23 +94,18 @@ class ListAdsRequest extends FormRequest
         return $ids;
     }
 
-    public function filters(): AdFeedFilters
+    /**
+     * The validated filters, sort and page, for the shared search service.
+     *
+     * @return array<string, mixed>
+     */
+    public function searchParams(): array
     {
-        $sort = $this->validated('sort');
-
-        return new AdFeedFilters(
-            categoryId: $this->stringOrNull('category_id'),
-            locationId: $this->stringOrNull('location_id'),
-            priceMin: is_numeric($min = $this->validated('price_min')) ? (float) $min : null,
-            priceMax: is_numeric($max = $this->validated('price_max')) ? (float) $max : null,
-            sort: is_string($sort) ? AdSort::from($sort) : AdSort::LATEST,
-        );
+        return Arr::except($this->validated(), ['ids']);
     }
 
-    private function stringOrNull(string $key): ?string
+    public function filters(): AdFeedFilters
     {
-        $value = $this->validated($key);
-
-        return is_string($value) && $value !== '' ? $value : null;
+        return AdFeedFilters::fromParams($this->searchParams());
     }
 }

@@ -77,7 +77,7 @@ it('filters the public feed on the stored flag instead of joining users', functi
  */
 function countQueries(array $queries): array
 {
-    return array_values(array_filter($queries, fn (string $sql): bool => Str::contains($sql, 'count(', ignoreCase: true)));
+    return array_values(array_filter($queries, fn (string $sql): bool => Str::contains($sql, 'count(', ignoreCase: true) && ! Str::contains($sql, 'total_ads')));
 }
 
 it('takes the feed total from the warmed catalog counters', function (string $filter): void {

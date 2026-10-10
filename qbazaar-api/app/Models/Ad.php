@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Data\Moderation\ModerationResult;
+use App\Enums\AccountType;
 use App\Enums\AdShipping;
 use App\Enums\AdStatus;
 use App\Enums\AdType;
@@ -52,6 +53,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property Condition|null $condition
  * @property AdType $ad_type
  * @property AdShipping $shipping
+ * @property AccountType $seller_type
  * @property string|null $shipping_fee
  * @property int $quantity
  * @property string|null $postal_code
@@ -90,7 +92,7 @@ class Ad extends Model implements HasMedia
      */
     private const SEARCHABLE_COLUMNS = [
         'title', 'description', 'category_id', 'location_id', 'user_id', 'latitude', 'longitude',
-        'price', 'price_type', 'condition', 'ad_type', 'shipping', 'postal_code', 'status',
+        'price', 'price_type', 'condition', 'ad_type', 'shipping', 'quantity', 'seller_type', 'postal_code', 'status',
         'reserved_at', 'published_at', 'views_count', 'custom_fields', 'deleted_at', 'promotion_rank',
     ];
 
@@ -169,15 +171,22 @@ class Ad extends Model implements HasMedia
             'featured' => 'boolean',
             'promotion_rank' => 'integer',
             'seller_active' => 'boolean',
+            'seller_type' => AccountType::class,
         ];
     }
 
     protected static function booted(): void
     {
-        // Mirrors the seller's status at creation; SellerListingsVisibilityService
-        // keeps it in step afterwards.
+        // Mirrors the seller's status and account type at creation;
+        // SellerListingsVisibilityService keeps them in step afterwards.
         static::creating(function (Ad $ad): void {
-            $ad->seller_active ??= User::query()->whereKey($ad->user_id)->value('status') === UserStatus::ACTIVE;
+            if ($ad->seller_active !== null && $ad->seller_type !== null) {
+                return;
+            }
+
+            $seller = User::query()->whereKey($ad->user_id)->first(['id', 'status', 'account_type']);
+            $ad->seller_active ??= $seller?->status === UserStatus::ACTIVE;
+            $ad->seller_type ??= $seller?->account_type ?? AccountType::PRIVATE_INDIVIDUAL;
         });
     }
 
@@ -334,6 +343,21 @@ class Ad extends Model implements HasMedia
         return $quantity >= 1 && $quantity <= $this->quantity;
     }
 
+    /**
+     * Whether a buyer may send a purchase request ("Buy Now"): an offering
+     * with a positive price and stock left. Mirrors the rule of
+     * PurchaseRequestTransitionService::assertAdIsPurchasable (minus the
+     * live state of the ad) and the SQL twin in AdListingFilters.
+     */
+    public function acceptsBuyNow(): bool
+    {
+        return $this->ad_type === AdType::OFFERING
+            && ! $this->price_type->requiresNullPrice()
+            && $this->price !== null
+            && (float) $this->price > 0
+            && $this->quantity >= 1;
+    }
+
     public function isReserved(): bool
     {
         return $this->reserved_at !== null;
@@ -428,6 +452,8 @@ class Ad extends Model implements HasMedia
             'condition' => $this->condition?->value,
             'ad_type' => $this->ad_type->value,
             'shipping' => $this->shipping->value,
+            'seller_type' => $this->seller_type->value,
+            'buy_now' => $this->acceptsBuyNow(),
             'postal_code' => $this->postal_code,
             'status' => $this->status->value,
             'is_reserved' => $this->isReserved(),

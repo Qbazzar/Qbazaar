@@ -7,6 +7,7 @@ namespace App\Observers;
 use App\Events\Users\UserStatusChanged;
 use App\Models\User;
 use App\Observers\Concerns\ResolvesActivityCauser;
+use App\Services\Users\SellerListingsVisibilityService;
 use BackedEnum;
 
 /**
@@ -64,6 +65,10 @@ class UserObserver
                     'requested_at' => $user->deletion_requested_at->toIso8601String(),
                 ])
                 ->log('User requested account deletion');
+        }
+
+        if ($user->wasChanged('account_type')) {
+            app(SellerListingsVisibilityService::class)->accountTypeChanged($user);
         }
 
         if ($user->wasChanged('status')) {

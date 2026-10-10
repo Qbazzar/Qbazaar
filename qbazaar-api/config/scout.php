@@ -168,6 +168,8 @@ return [
                     'condition',
                     'ad_type',
                     'shipping',
+                    'seller_type',
+                    'buy_now',
                     // Category fields are admin-defined at runtime, so the
                     // parent stays filterable rather than a fixed key list.
                     'custom_fields',
@@ -187,6 +189,12 @@ return [
                     'title',
                 ],
                 'proximityPrecision' => 'byAttribute',
+                // Facet counts feed the filter panels: biggest counts first, and
+                // enough values per facet for a select field with many options.
+                'faceting' => [
+                    'maxValuesPerFacet' => 100,
+                    'sortFacetValuesBy' => ['*' => 'count'],
+                ],
                 'searchableAttributes' => [
                     'title',
                     'description',
