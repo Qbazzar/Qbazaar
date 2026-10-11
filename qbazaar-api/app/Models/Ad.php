@@ -186,7 +186,7 @@ class Ad extends Model implements HasMedia
 
             $seller = User::query()->whereKey($ad->user_id)->first(['id', 'status', 'account_type']);
             $ad->seller_active ??= $seller?->status === UserStatus::ACTIVE;
-            $ad->seller_type ??= $seller?->account_type ?? AccountType::PRIVATE_INDIVIDUAL;
+            $ad->seller_type ??= $seller instanceof User ? $seller->account_type : AccountType::PRIVATE_INDIVIDUAL;
         });
     }
 

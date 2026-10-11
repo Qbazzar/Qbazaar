@@ -9,6 +9,7 @@ use App\Data\Catalog\AdFeedFilters;
 use App\Models\Ad;
 use App\Services\Catalog\CategorySchema;
 use GuzzleHttp\Exception\ConnectException as GuzzleConnectException;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator as PaginatorContract;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Meilisearch\Exceptions\CommunicationException;
@@ -31,7 +32,7 @@ use Meilisearch\Exceptions\CommunicationException;
  * Every result carries `facets` (the older `/search` block) and `meta_facets`
  * (the `meta.facets` block of both endpoints).
  *
- * @phpstan-type SearchResult array{paginator: LengthAwarePaginator<int, Ad>, facets: array<string, mixed>, meta_facets: array<string, mixed>}
+ * @phpstan-type SearchResult array{paginator: PaginatorContract<int, Ad>, facets: array<string, mixed>, meta_facets: array<string, mixed>}
  */
 class AdSearchService
 {

@@ -7,8 +7,8 @@ namespace App\Http\Resources\Api\V1\Ads;
 use App\Models\Ad;
 use App\Models\User;
 use App\Services\Ads\ViewerFavorites;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * The `{success, data, meta}` envelope of a filtered ad list, shared by
@@ -38,10 +38,10 @@ class AdSearchPage
 
         return [
             'success' => true,
-            'data' => array_map(
+            'data' => array_values(array_map(
                 fn (Ad $ad): array => (new AdSummaryResource($ad))->toArray($request),
                 $paginator->items(),
-            ),
+            )),
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
