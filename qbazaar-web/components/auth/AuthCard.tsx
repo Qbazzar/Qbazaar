@@ -2,13 +2,13 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-/** White r24 card of the auth screens: 358, 584 and 716 px wide at 390, 744 and 1440. */
+/** White `.qb-card` of the auth screens: up to 715 px wide, r20 (r16 on phones), no border. */
 export function AuthCard({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
       className={cn(
-        'h-fit w-full max-w-[584px] rounded-qb-2xl border border-qb-line bg-qb-surface p-[25px] font-qb text-qb-ink shadow-qb-card',
-        'qb-tablet:p-12 qb-desktop:max-w-[716px] qb-desktop:px-11 qb-desktop:py-8',
+        'h-fit w-full max-w-[715px] rounded-qb-xl bg-qb-surface px-5 py-[30px] font-qb text-qb-ink shadow-qb-auth-card',
+        'qb-tablet:rounded-[20px] qb-tablet:px-[45px] qb-tablet:pt-11 qb-tablet:pb-10',
         className,
       )}
     >

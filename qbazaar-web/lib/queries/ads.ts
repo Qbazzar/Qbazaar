@@ -29,6 +29,7 @@ import {
   markSold,
   publishAd,
   renewAd,
+  setAdReserved,
   updateAd,
   type ListAdsParams,
   type MyAdsParams,
@@ -224,6 +225,21 @@ export function useMarkSoldMutation(): UseMutationResult<
     onSuccess: (ad) => {
       qc.setQueryData(adKeys.detail(ad.id), ad);
       qc.invalidateQueries({ queryKey: adKeys.lists() });
+      qc.invalidateQueries({ queryKey: adKeys.myLists() });
+    },
+  });
+}
+
+export function useReserveAdMutation(): UseMutationResult<
+  Ad,
+  ApiClientError,
+  { id: string; reserved: boolean }
+> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reserved }) => setAdReserved(id, reserved),
+    onSuccess: (ad) => {
+      qc.setQueryData(adKeys.detail(ad.id), ad);
       qc.invalidateQueries({ queryKey: adKeys.myLists() });
     },
   });

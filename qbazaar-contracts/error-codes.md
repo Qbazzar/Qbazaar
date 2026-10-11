@@ -52,8 +52,8 @@ requested locale.
 | `USER_001` | User not found | 404 |
 | `USER_002` | Cannot block an admin / super admin | 403 |
 | `USER_003` | Cannot block yourself | 422 |
-| `USER_004` | Password change requires current password | 422 |
-| `USER_005` | Account deactivation requires password confirmation | 422 |
+| `USER_004` | Password change: the current password is wrong or missing | 422 |
+| `USER_005` | Account deactivation or deletion: the password confirmation is wrong or missing | 422 |
 
 ## Social (follows, business profiles)
 

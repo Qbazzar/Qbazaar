@@ -7,7 +7,7 @@ import type { AdStatus } from '@/lib/api/types';
 
 type Tone = NonNullable<VariantProps<typeof badgeVariants>['tone']>;
 
-/** Draft red, live green, in review blue, as the Draft / Publish / Reversed chips of 518:20536. */
+/** Draft red, live green, in review blue, as the Draft / Publish / Reversed chips of my-ads (stBg / stFg). */
 const STATUS_TONES: Record<AdStatus, Tone> = {
   draft: 'danger',
   pending: 'info',
@@ -18,13 +18,23 @@ const STATUS_TONES: Record<AdStatus, Tone> = {
   blocked: 'danger',
 };
 
-/** Outlined 14 px status chip of 518:20536 (in the label face, `font="label"`), shared with the support ticket rows. */
-export const statusChipClass = 'border border-current text-qb-caption';
+/** Soft 13 px status chip of my-ads (Montserrat 500, 5×14 padding, r8), shared with the support ticket rows. */
+export const statusChipClass = 'rounded-qb-sm px-3.5 py-[5px] text-qb-label';
 
-export function AdStatusBadge({ status, className }: { status: AdStatus; className?: string }) {
+/** A live ad the seller holds for a buyer shows the blue "Reserved" chip instead of "Active". */
+export function AdStatusBadge({
+  status,
+  reserved = false,
+  className,
+}: {
+  status: AdStatus;
+  reserved?: boolean;
+  className?: string;
+}) {
+  const isReserved = reserved && status === 'active';
   return (
-    <Badge tone={STATUS_TONES[status]} font="label" className={cn(statusChipClass, className)}>
-      {t(`ads.status.${status}`)}
+    <Badge tone={isReserved ? 'info' : STATUS_TONES[status]} font="label" className={cn(statusChipClass, className)}>
+      {isReserved ? t('account.my_ads.reserved') : t(`ads.status.${status}`)}
     </Badge>
   );
 }
