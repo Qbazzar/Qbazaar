@@ -168,3 +168,14 @@ it('answers the facet counts with a fixed number of queries', function (): void 
     expect($facetQueries('/api/v1/ads'))->toBe(1)
         ->and($facetQueries('/api/v1/search'))->toBe(1);
 });
+
+it('wraps the reserved condition column in the facet aggregate', function (): void {
+    // MariaDB rejects a bare `condition` (a reserved word); SQLite accepts it, so assert the SQL itself.
+    DB::enableQueryLog();
+    getJson('/api/v1/ads')->assertOk();
+    $aggregate = collect(DB::getQueryLog())->pluck('query')->first(fn (string $sql): bool => str_contains($sql, 'buy_now__true'));
+
+    expect($aggregate)->not->toBeNull()
+        ->and($aggregate)->toContain(DB::connection()->getQueryGrammar()->wrap('condition') . ' = ?')
+        ->and($aggregate)->not->toMatch('/WHEN condition =/');
+});

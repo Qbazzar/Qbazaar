@@ -286,15 +286,18 @@ class AdFacetCounter
             'COALESCE(SUM(CASE WHEN ' . AdListingFilters::buyNowSql() . ' THEN 1 ELSE 0 END), 0) AS buy_now__true',
         ];
         $bindings = [];
+        $query = $this->base($filters)->toBase();
+        // `condition` is a reserved word in MySQL/MariaDB, so raw column names are wrapped by the grammar.
+        $grammar = $query->getGrammar();
 
         foreach (self::ENUM_FACETS as $column => $enum) {
             foreach ($enum::cases() as $case) {
-                $columns[] = sprintf('COALESCE(SUM(CASE WHEN %s = ? THEN 1 ELSE 0 END), 0) AS %s__%s', $column, $column, $case->value);
+                $columns[] = sprintf('COALESCE(SUM(CASE WHEN %s = ? THEN 1 ELSE 0 END), 0) AS %s__%s', $grammar->wrap($column), $column, $case->value);
                 $bindings[] = $case->value;
             }
         }
 
-        $row = $this->base($filters)->toBase()->selectRaw(implode(', ', $columns), $bindings)->first();
+        $row = $query->selectRaw(implode(', ', $columns), $bindings)->first();
         $counts = (array) $row;
         $total = (int) ($counts['total_ads'] ?? 0);
         $buyNow = (int) ($counts['buy_now__true'] ?? 0);
