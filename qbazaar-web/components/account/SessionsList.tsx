@@ -15,6 +15,7 @@ import { Loader2, MonitorSmartphone } from 'lucide-react';
 
 import { Badge } from '@/components/design-system/Badge';
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Modal } from '@/components/design-system/Modal';
@@ -40,7 +41,7 @@ export function SessionsList({ sessions }: SessionsListProps) {
   const mutation = useMutation({
     mutationFn: (id: string) => revokeSession(id),
     onSuccess: () => {
-      toast.success(t('account.sessions.revoke_success'));
+      showDesignToast(t('account.sessions.revoke_success'));
       setConfirming(null);
       queryClient.invalidateQueries({ queryKey: ['account', 'sessions'] });
     },

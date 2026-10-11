@@ -34,8 +34,10 @@ import {
   getConversation,
   getMessages,
   getUnreadCount,
+  hideConversations,
   listConversations,
   markRead,
+  sendImageMessage,
   sendMessage,
   startConversation,
   type GetMessagesResponse,
@@ -309,5 +311,33 @@ export function appendIncomingMessageToCache(
       data: [message, ...pages[0].data],
     };
     return { ...prev, pages };
+  });
+}
+
+/** Hides the selected conversations, then refetches the inbox. */
+export function useHideConversationsMutation(): UseMutationResult<void, ApiClientError, readonly string[]> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids) => hideConversations(ids),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: messagingKeys.lists() });
+      qc.invalidateQueries({ queryKey: messagingKeys.unread() });
+    },
+  });
+}
+
+/** Sends a photo to the open conversation and refetches its messages. */
+export function useSendImageMessageMutation(): UseMutationResult<
+  Message,
+  ApiClientError,
+  { conversationId: string; image: File }
+> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ conversationId, image }) => sendImageMessage(conversationId, image),
+    onSuccess: (message) => {
+      appendIncomingMessageToCache(qc, message);
+      qc.invalidateQueries({ queryKey: messagingKeys.lists() });
+    },
   });
 }
