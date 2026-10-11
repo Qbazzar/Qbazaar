@@ -12,6 +12,8 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     Cache::flush();
+    // The footer placeholder pages are migrated in; these tests count pages.
+    Page::query()->delete();
 });
 
 /**
