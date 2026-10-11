@@ -20,6 +20,7 @@ import { intlLocale } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
+import { isPlaceholderBody } from '@/lib/cms-placeholder';
 import { pageMetadata } from '@/lib/page-metadata';
 
 interface PageProps {
@@ -42,6 +43,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: localized(page.title),
     description: localized(page.meta_description) || undefined,
     path: `/p/${slug}`,
+    // An unwritten page stays out of search until the owner edits it.
+    robots: isPlaceholderBody(page.body) ? { index: false, follow: true } : undefined,
   });
 }
 
