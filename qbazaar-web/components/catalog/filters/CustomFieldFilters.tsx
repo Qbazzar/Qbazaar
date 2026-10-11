@@ -1,23 +1,26 @@
 'use client';
 
-import { Field } from '@/components/design-system/Field';
-import { Input, Select } from '@/components/design-system/Input';
+import { useId } from 'react';
+
+import { Input } from '@/components/design-system/Input';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
+import { cn } from '@/lib/utils';
 import type { CategoryField, CategoryFieldOption, CustomFieldsFilter } from '@/lib/api/types';
 
 import { parseNonNegative } from './filter-values';
 import { RangeFields } from './RangeFields';
+import { SelectField } from './SelectField';
 
 interface CustomFieldFiltersProps {
   fields: CategoryField[];
   value: CustomFieldsFilter;
   onChange: (next: CustomFieldsFilter) => void;
+  /** The bottom sheet labels its fields smaller (618:26974). */
+  compact?: boolean;
 }
 
 type FieldValue = CustomFieldsFilter[string];
-
-const control = 'h-11 rounded-qb-lg text-qb-caption';
 
 /** The fields search can filter on: selects match a value, numbers a range, text an exact value. */
 export function filterableFields(fields: CategoryField[] | null | undefined): CategoryField[] {
@@ -31,10 +34,13 @@ function selectOptions(field: CategoryField): CategoryFieldOption[] {
 
 /**
  * Category-specific filters built from the selected category's `custom_fields`
- * schema ("Property Type: All Type", 264:4818).
+ * schema: designed selects ("Property Type: All Type", 264:4818), number
+ * ranges and exact text values.
  */
-export function CustomFieldFilters({ fields, value, onChange }: CustomFieldFiltersProps) {
+export function CustomFieldFilters({ fields, value, onChange, compact = false }: CustomFieldFiltersProps) {
+  const id = useId();
   const locale = getLocale();
+  const labelClass = cn('block font-qb text-qb-ink-body', compact ? 'text-qb-caption font-medium' : 'text-qb-body');
 
   const setField = (key: string, next: FieldValue | undefined) => {
     const draft: CustomFieldsFilter = { ...value };
@@ -48,84 +54,59 @@ export function CustomFieldFilters({ fields, value, onChange }: CustomFieldFilte
       {filterableFields(fields).map((field) => {
         const label = localized(field.label, locale);
         const current = value[field.key];
+        const labelId = `${id}-${field.key}`;
 
         if (field.type === 'select') {
           return (
-            <Field key={field.key} label={label}>
-              {(props) => (
-                <Select
-                  {...props}
-                  value={typeof current === 'string' ? current : ''}
-                  onChange={(event) => setField(field.key, event.target.value || undefined)}
-                  className={control}
-                >
-                  <option value="">{t('catalog.filters.any', 'الكل')}</option>
-                  {selectOptions(field).map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </Field>
+            <div key={field.key} className="flex flex-col gap-2">
+              <span id={labelId} className={labelClass}>
+                {label}
+              </span>
+              <SelectField
+                labelledBy={labelId}
+                options={selectOptions(field)}
+                value={typeof current === 'string' ? current : null}
+                onChange={(next) => setField(field.key, next)}
+                placeholder={t('catalog.filters.all_type', 'كل الأنواع')}
+              />
+            </div>
           );
         }
 
         if (field.type === 'number') {
           const range = current && typeof current === 'object' ? current : {};
           return (
-            <NumberRange
-              key={field.key}
-              label={label}
-              min={range.min ?? null}
-              max={range.max ?? null}
-              onChange={(min, max) =>
-                setField(field.key, min === null && max === null ? undefined : { ...(min !== null && { min }), ...(max !== null && { max }) })
-              }
-            />
+            <fieldset key={field.key}>
+              <legend className={cn(labelClass, 'mb-2')}>{label}</legend>
+              <RangeFields
+                min={range.min ?? null}
+                max={range.max ?? null}
+                parse={parseNonNegative}
+                onChange={(min, max) =>
+                  setField(field.key, min === null && max === null ? undefined : { ...(min !== null && { min }), ...(max !== null && { max }) })
+                }
+                minLabel={t('catalog.filters.range_min', { label }, '{label}: من')}
+                maxLabel={t('catalog.filters.range_max', { label }, '{label}: إلى')}
+                errorMessage={t('catalog.filters.range_error', 'لا يمكن أن يكون الحد الأعلى أقل من الحد الأدنى.')}
+              />
+            </fieldset>
           );
         }
 
         return (
-          <Field key={field.key} label={label}>
-            {(props) => (
-              <Input
-                {...props}
-                value={typeof current === 'string' ? current : ''}
-                onChange={(event) => setField(field.key, event.target.value || undefined)}
-                className={control}
-              />
-            )}
-          </Field>
+          <div key={field.key} className="flex flex-col gap-2">
+            <label htmlFor={labelId} className={labelClass}>
+              {label}
+            </label>
+            <Input
+              id={labelId}
+              value={typeof current === 'string' ? current : ''}
+              onChange={(event) => setField(field.key, event.target.value || undefined)}
+              className="h-11 rounded-qb-lg text-qb-caption"
+            />
+          </div>
         );
       })}
     </div>
-  );
-}
-
-function NumberRange({
-  label,
-  min,
-  max,
-  onChange,
-}: {
-  label: string;
-  min: number | null;
-  max: number | null;
-  onChange: (min: number | null, max: number | null) => void;
-}) {
-  return (
-    <fieldset>
-      <legend className="mb-2 font-qb text-qb-body text-qb-ink-body">{label}</legend>
-      <RangeFields
-        min={min}
-        max={max}
-        parse={parseNonNegative}
-        onChange={onChange}
-        minLabel={t('catalog.filters.range_min', { label }, '{label}: من')}
-        maxLabel={t('catalog.filters.range_max', { label }, '{label}: إلى')}
-        errorMessage={t('catalog.filters.range_error', 'لا يمكن أن يكون الحد الأعلى أقل من الحد الأدنى.')}
-      />
-    </fieldset>
   );
 }
