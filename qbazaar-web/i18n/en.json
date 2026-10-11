@@ -504,6 +504,8 @@
       "ACCOUNT_004": "You have an order in progress. Finish or cancel it before deleting your account.",
       "ACCOUNT_005": "Your wallet still holds {amount} {currency}. Withdraw it before deleting your account.",
       "ACCOUNT_006": "You have a withdrawal or settlement waiting for review. Try again once it is processed.",
+      "FAV_002": "You have reached the limit of favorite categories. Remove one to add another.",
+      "CAT_001": "This category is no longer available.",
       "link_wallet": "Open my wallet",
       "link_order": "Open the order"
     },
@@ -875,6 +877,13 @@
         "delivery": "Shipping Available",
         "pickup_only": "Local Pickup Only"
       },
+      "seller": "Seller",
+      "seller_options": {
+        "private": "Private",
+        "business": "Dealer"
+      },
+      "direct_purchase": "Direct Purchase",
+      "buy_now_option": "Buy Now",
       "details": "Details",
       "range_min": "{label} from",
       "range_max": "{label} to",
@@ -901,7 +910,12 @@
       "price_asc": "Low Price",
       "price_desc": "High Price"
     },
-    "save_search": "Save Search"
+    "save_search": "Save Search",
+    "favorite_category": {
+      "add": "Add to Favorite",
+      "added": "Favorited",
+      "remove": "Remove category from favorites"
+    }
   },
   "locations": {
     "all": "All Qatar",

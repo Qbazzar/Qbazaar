@@ -10,6 +10,7 @@ import { isAxiosError } from 'axios';
 import { api } from './client';
 import { ApiClientError } from './auth';
 import type {
+  CustomFieldsFilter,
   ErrorEnvelope,
   SavedSearch,
   SearchQueryParams,
@@ -84,8 +85,8 @@ export async function runSearch(
  * parses back into a nested array — instead of relying on axios's object
  * serialisation.
  */
-function flattenSearchParams(
-  params: Partial<SearchQueryParams>,
+export function flattenSearchParams(
+  params: Record<string, unknown> & { custom_fields?: CustomFieldsFilter },
 ): Record<string, unknown> {
   const { custom_fields, ...rest } = params;
   const out: Record<string, unknown> = { ...rest };

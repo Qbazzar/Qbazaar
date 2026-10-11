@@ -66,7 +66,7 @@ export function FilterSheet({ triggerClassName, onApply, onReset, ...props }: Fi
   const locale = getLocale();
   const [open, setOpen] = useState(false);
   const focusing = useFocusingHandlers({ onApply, onReset });
-  const active = countActiveFilters(props.values);
+  const active = countActiveFilters(props.values, { keyword: props.keywordIsFilter });
 
   return (
     <Sheet

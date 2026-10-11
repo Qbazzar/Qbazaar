@@ -100,4 +100,48 @@ describe('AdsListing', () => {
 
     expect(await screen.findByRole('link', { name: 'Last page' })).toHaveAttribute('href', '/ads?page=250');
   });
+
+  it('sends the catalog filters of the URL, and only those that are set', async () => {
+    navigation.search = 'q=sedan&ad_type=wanted&seller_type=business&shipping=delivery&condition=used&buy_now=true&cf=%7B%22year%22%3A%7B%22min%22%3A2015%7D%7D';
+    renderListing();
+
+    await waitFor(() =>
+      expect(listAds).toHaveBeenCalledWith({
+        q: 'sedan',
+        ad_type: 'wanted',
+        seller_type: 'business',
+        shipping: 'delivery',
+        condition: 'used',
+        buy_now: true,
+        custom_fields: { year: { min: 2015 } },
+        page: 1,
+      }),
+    );
+  });
+
+  it('counts the filter options from meta.facets of the response', async () => {
+    vi.mocked(listAds).mockResolvedValue({
+      data: [],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 20,
+        total: 9,
+        facets: { ad_type: { offering: 8, wanted: 1 }, shipping: {}, seller_type: { private: 5, business: 4 }, buy_now: { true: 2 }, condition: {} },
+      },
+    } as unknown as PaginatedResponse<AdSummary>);
+    renderListing();
+
+    expect((await screen.findAllByRole('radio', { name: 'Dealer (4)' })).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('checkbox', { name: 'Buy Now (2)' }).length).toBeGreaterThan(0);
+    // A timed-out count arrives as {}: no number, never 0.
+    expect(screen.getAllByRole('radio', { name: 'Shipping Available' }).length).toBeGreaterThan(0);
+  });
+
+  it('offers the search words on a category page as a filter that "Reset All" clears', async () => {
+    navigation.search = 'q=sedan';
+    renderListing();
+
+    expect((await screen.findAllByRole('button', { name: 'Remove “sedan”' })).length).toBeGreaterThan(0);
+  });
 });

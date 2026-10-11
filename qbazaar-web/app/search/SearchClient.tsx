@@ -8,7 +8,7 @@
  */
 import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { parseAsFloat, parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
+import { parseAsBoolean, parseAsFloat, parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
 import { SearchX } from 'lucide-react';
 
 import { EmptyState } from '@/components/design-system/EmptyState';
@@ -18,7 +18,7 @@ import { CatalogHeader, CatalogStats } from '@/components/catalog/CatalogHeader'
 import { CatalogLayout } from '@/components/catalog/CatalogLayout';
 import { FilterSheet, FilterSidebar } from '@/components/catalog/filters/CatalogFilters';
 import type { FilterGroupKey } from '@/components/catalog/filters/FilterPanel';
-import { AD_TYPES, CONDITIONS, SHIPPING_OPTIONS, countActiveFilters, type FilterValues } from '@/components/catalog/filters/filter-values';
+import { AD_TYPES, CONDITIONS, SELLER_TYPES, SHIPPING_OPTIONS, countActiveFilters, type FilterValues } from '@/components/catalog/filters/filter-values';
 import { SORT_MODES, VIEW_MODES } from '@/components/catalog/listing-query';
 import { ListingResults } from '@/components/catalog/ListingResults';
 import { ListingToolbar } from '@/components/catalog/ListingToolbar';
@@ -47,7 +47,7 @@ const NO_GEO = { lat: null, lng: null, radius_km: null };
  * (Price, Offer, Shipping & Delivery, Cities), then the filters only the
  * search API has.
  */
-const GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'shipping', 'location', 'category', 'condition', 'customFields'];
+const GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'sellerType', 'shipping', 'location', 'category', 'condition', 'buyNow', 'customFields'];
 
 export function SearchClient() {
   const locale = getLocale();
@@ -66,6 +66,8 @@ export function SearchClient() {
       condition: parseAsStringEnum([...CONDITIONS]),
       ad_type: parseAsStringEnum([...AD_TYPES]),
       shipping: parseAsStringEnum([...SHIPPING_OPTIONS]),
+      seller_type: parseAsStringEnum([...SELLER_TYPES]),
+      buy_now: parseAsBoolean,
       sort: parseAsStringEnum([...SORT_MODES]).withDefault('latest'),
       page: parseAsInteger.withDefault(1),
       // Category custom-field filters, JSON-encoded so the dynamic keys ride a single URL param.
@@ -98,6 +100,8 @@ export function SearchClient() {
     if (urlState.condition) params.condition = urlState.condition;
     if (urlState.ad_type) params.ad_type = urlState.ad_type;
     if (urlState.shipping) params.shipping = urlState.shipping;
+    if (urlState.seller_type) params.seller_type = urlState.seller_type;
+    if (urlState.buy_now) params.buy_now = true;
     if (Object.keys(customFields).length > 0) params.custom_fields = customFields;
     return params;
   }, [urlState, customFields, geo]);
@@ -113,6 +117,8 @@ export function SearchClient() {
     condition: urlState.condition,
     adType: urlState.ad_type,
     shipping: urlState.shipping,
+    sellerType: urlState.seller_type,
+    buyNow: urlState.buy_now === true,
     customFields,
   };
 
@@ -130,14 +136,16 @@ export function SearchClient() {
       condition: next.condition,
       ad_type: next.adType,
       shipping: next.shipping,
+      seller_type: next.sellerType,
+      buy_now: next.buyNow || null,
       cf: Object.keys(next.customFields).length > 0 ? JSON.stringify(next.customFields) : null,
       page: 1,
     });
   };
   const resetFilters = () =>
-    setUrlState({ ...NO_GEO, category_slug: null, location_slug: null, price_min: null, price_max: null, condition: null, ad_type: null, shipping: null, cf: null, page: 1 });
+    setUrlState({ ...NO_GEO, category_slug: null, location_slug: null, price_min: null, price_max: null, condition: null, ad_type: null, shipping: null, seller_type: null, buy_now: null, cf: null, page: 1 });
 
-  const panel = { groups: GROUPS, values: filters, onApply: applyFilters, onReset: resetFilters, categories: categoryTree, locations: locationTree, facets: data?.facets };
+  const panel = { groups: GROUPS, values: filters, onApply: applyFilters, onReset: resetFilters, categories: categoryTree, locations: locationTree, facets: data?.facets, adFacets: data?.meta.facets };
 
   const categoryName = selectedCategory ? localized(selectedCategory.name, locale) : null;
   const title = urlState.q || categoryName || t('search.title_all', 'كل الإعلانات');

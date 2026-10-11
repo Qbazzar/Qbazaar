@@ -1,4 +1,4 @@
-import type { AdCondition, AdShipping, AdType, CustomFieldsFilter } from '@/lib/api/types';
+import type { AdCondition, AdShipping, AdType, CustomFieldsFilter, SellerType } from '@/lib/api/types';
 
 /** Every filter a catalog page can offer; each page shows the ones its endpoint supports. */
 export interface FilterValues {
@@ -11,6 +11,9 @@ export interface FilterValues {
   condition: AdCondition | null;
   adType: AdType | null;
   shipping: AdShipping | null;
+  sellerType: SellerType | null;
+  /** Only ads a buyer can send a purchase request for. */
+  buyNow: boolean;
   customFields: CustomFieldsFilter;
 }
 
@@ -23,12 +26,15 @@ export const EMPTY_FILTERS: FilterValues = {
   condition: null,
   adType: null,
   shipping: null,
+  sellerType: null,
+  buyNow: false,
   customFields: {},
 };
 
 export const CONDITIONS: readonly AdCondition[] = ['new', 'like_new', 'used'];
 export const AD_TYPES: readonly AdType[] = ['offering', 'wanted'];
 export const SHIPPING_OPTIONS: readonly AdShipping[] = ['delivery', 'pickup_only'];
+export const SELLER_TYPES: readonly SellerType[] = ['private', 'business'];
 
 /** A non-negative number from a query or input value, or null when there is none. */
 export function parseNonNegative(raw: string | null | undefined): number | null {
@@ -74,6 +80,8 @@ export function filtersEqual(a: FilterValues, b: FilterValues): boolean {
     a.condition === b.condition &&
     a.adType === b.adType &&
     a.shipping === b.shipping &&
+    a.sellerType === b.sellerType &&
+    a.buyNow === b.buyNow &&
     sameCustomFields(a.customFields, b.customFields)
   );
 }
@@ -91,9 +99,15 @@ export function normalizeFilters(values: FilterValues): FilterValues {
   return { ...values, keyword: values.keyword.trim(), customFields };
 }
 
-/** How many filters are set (the search words are not one); a price range counts once. */
-export function countActiveFilters(values: FilterValues): number {
-  const singles = [values.category, values.location, values.condition, values.adType, values.shipping];
+interface CountOptions {
+  /** The search words count as a filter where the page is a category rather than a search. */
+  keyword?: boolean;
+}
+
+/** How many filters are set (the search words are not one, unless asked); a price range counts once. */
+export function countActiveFilters(values: FilterValues, { keyword = false }: CountOptions = {}): number {
+  const singles = [values.category, values.location, values.condition, values.adType, values.shipping, values.sellerType];
   const price = values.priceMin !== null || values.priceMax !== null ? 1 : 0;
-  return singles.filter(Boolean).length + price + Object.keys(values.customFields).length;
+  const words = keyword && values.keyword.trim() ? 1 : 0;
+  return singles.filter(Boolean).length + price + words + Number(values.buyNow) + Object.keys(values.customFields).length;
 }

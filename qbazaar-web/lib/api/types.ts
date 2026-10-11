@@ -491,6 +491,22 @@ export interface CategoryPage {
   parent: Category | null;
   sub_category_count: number;
   sections: CategorySection[];
+  /** Whether the caller favourited this category; false for guests. */
+  is_favorited: boolean;
+}
+
+/** One row of `GET /account/favorite-categories`. */
+export interface FavoriteCategory {
+  id: string;
+  slug: string;
+  name: LocalizedString;
+  icon: string | null;
+  favorited_at: string;
+}
+
+/** The state `PUT` / `DELETE /account/favorite-categories/{slug}` answers with. */
+export interface FavoriteCategoryState {
+  favorited: boolean;
 }
 
 export type LocationType = 'city' | 'district' | 'area';
@@ -522,6 +538,8 @@ export type AdCondition = 'new' | 'like_new' | 'used';
 /** `offering` sells an item, `wanted` looks for one ("Looking for"). */
 export type AdType = 'offering' | 'wanted';
 export type AdShipping = 'pickup_only' | 'delivery';
+/** Seller account type: a person or a business ("Dealer" in the design). */
+export type SellerType = 'private' | 'business';
 export type AdStatus =
   | 'draft'
   | 'pending'
@@ -708,6 +726,8 @@ export interface PaginatedResponse<T> {
     last_page: number;
     per_page: number;
     total: number;
+    /** Counts per filter value of `GET /ads` and `GET /search`; absent on the `ids` lookup. */
+    facets?: AdFacets;
   };
   links: {
     first: string | null;
@@ -742,6 +762,9 @@ export interface SearchQueryParams extends Record<string, unknown> {
   price_type?: PriceType;
   ad_type?: AdType;
   shipping?: AdShipping;
+  seller_type?: SellerType;
+  /** Only `true` filters: ads a buyer can send a purchase request for. */
+  buy_now?: boolean;
   sort?: SortMode;
   /** Distance search: the point and the radius (1-200 km) around it; the API needs all three. */
   lat?: number;
@@ -757,6 +780,24 @@ export type CustomFieldsFilter = Record<
   string,
   string | { min?: number; max?: number }
 >;
+
+/** Count of matching ads per value; a value with no match is absent. */
+export type FacetCounts = Record<string, number>;
+
+/**
+ * `meta.facets`: the ads per filter value of the current result set, with
+ * every active filter applied, so a chosen value shows only itself. A count
+ * that timed out arrives as `{}`: show no number then, never 0. `buy_now` is
+ * keyed `"true"` / `"false"`; `custom_fields` only when a category is given.
+ */
+export interface AdFacets {
+  ad_type: FacetCounts;
+  shipping: FacetCounts;
+  seller_type: FacetCounts;
+  buy_now: FacetCounts;
+  condition: FacetCounts;
+  custom_fields?: Record<string, FacetCounts>;
+}
 
 /**
  * Aggregated counts returned alongside the result page so the UI can render

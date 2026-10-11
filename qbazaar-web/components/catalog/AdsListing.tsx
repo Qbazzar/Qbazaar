@@ -23,8 +23,10 @@ import type { CategoryNode, SearchQueryParams } from '@/lib/api/types';
 
 import { CatalogHeader, CatalogStats, todayStat, type CatalogStat } from './CatalogHeader';
 import { CatalogLayout } from './CatalogLayout';
+import { CategoryActions } from './CategoryActions';
 import { FilterSheet, FilterSidebar } from './filters/CatalogFilters';
 import type { FilterGroupKey } from './filters/FilterPanel';
+import { catalogFilterParams } from './filters/filter-params';
 import { countActiveFilters, EMPTY_FILTERS, type FilterValues } from './filters/filter-values';
 import { FEED_MAX_PAGE, listingSearch, parseListingQuery } from './listing-query';
 import { ListingResults } from './ListingResults';
@@ -54,9 +56,12 @@ function slugFilter(slug: string | null, found: boolean, lookup: { isPending: bo
   return lookup.isPending ? 'pending' : 'unknown';
 }
 
+/** The filter groups `GET /ads` supports, in the order of the design's filter card (category.html). */
+const CATEGORY_GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'sellerType', 'shipping', 'location', 'condition', 'buyNow', 'customFields'];
+
 /**
- * Plain listing on `GET /ads` (no search engine): price and place filters,
- * sort, grid/list and pagination, all kept in the URL (69:467, 81:1629).
+ * Plain listing on `GET /ads`: the catalog filters (price, place, offer, seller,
+ * shipping, condition, Buy Now, the category's own fields), sort, grid/list and pagination, all kept in the URL (69:467, 81:1629).
  */
 export function AdsListing({ category, heading }: AdsListingProps) {
   const locale = getLocale();
@@ -66,7 +71,8 @@ export function AdsListing({ category, heading }: AdsListingProps) {
   const query = parseListingQuery(searchParams);
   // A category page has its category fixed; a stray ?category= must not show up as a filter.
   const filters = category ? { ...query.filters, category: null } : query.filters;
-  const hasFilters = countActiveFilters(filters) > 0;
+  const hasFilters = countActiveFilters(filters, { keyword: true }) > 0;
+  const catalogParams = catalogFilterParams(filters);
 
   const treeQuery = useCategoryTreeQuery();
   const locationsQuery = useQatarLocationsQuery();
@@ -82,6 +88,7 @@ export function AdsListing({ category, heading }: AdsListingProps) {
       location_id: place?.id,
       price_min: filters.priceMin ?? undefined,
       price_max: filters.priceMax ?? undefined,
+      ...catalogParams,
       sort: query.sort === 'latest' ? undefined : query.sort,
       page: query.page,
     },
@@ -102,14 +109,25 @@ export function AdsListing({ category, heading }: AdsListingProps) {
     if (locationsQuery.isError) locationsQuery.refetch();
   };
 
-  const groups: FilterGroupKey[] = category ? ['price', 'location'] : ['category', 'price', 'location'];
-  const panel = { groups, values: filters, onApply: applyFilters, onReset: resetFilters, categories: treeQuery.data, locations: locationsQuery.data };
+  const groups: FilterGroupKey[] = category ? CATEGORY_GROUPS : ['category', ...CATEGORY_GROUPS];
+  const panel = {
+    groups,
+    values: filters,
+    onApply: applyFilters,
+    onReset: resetFilters,
+    categories: treeQuery.data,
+    locations: locationsQuery.data,
+    adFacets: adsQuery.data?.meta.facets,
+    categorySlug: category?.slug,
+    keywordIsFilter: true,
+  };
 
   const saveParams: SearchQueryParams = {
     category_slug: category?.slug ?? filters.category ?? undefined,
     location_slug: filters.location ?? undefined,
     price_min: filters.priceMin ?? undefined,
     price_max: filters.priceMax ?? undefined,
+    ...catalogParams,
     sort: query.sort,
   };
 
@@ -128,6 +146,9 @@ export function AdsListing({ category, heading }: AdsListingProps) {
   }
 
   const { title, breadcrumb } = heading(selected);
+  // Only a category page can be favourited; `/ads` has none fixed.
+  const actions = (variant: 'header' | 'toolbar') =>
+    category ? <CategoryActions slug={category.slug} saveParams={saveParams} variant={variant} /> : <SaveSearchButton params={saveParams} variant={variant} />;
 
   const emptyState = (
     <EmptyState
@@ -174,7 +195,7 @@ export function AdsListing({ category, heading }: AdsListingProps) {
           title={title}
           breadcrumb={breadcrumb}
           stats={<CatalogStats items={stats} />}
-          actions={<SaveSearchButton params={saveParams} />}
+          actions={actions('header')}
         />
       }
       sidebar={<FilterSidebar {...panel} />}
@@ -183,7 +204,7 @@ export function AdsListing({ category, heading }: AdsListingProps) {
           filters={<FilterSheet {...panel} />}
           sort={{ value: query.sort, onChange: (sort) => navigate(listingSearch(searchParams, { sort })) }}
           view={{ value: query.view, onChange: (view) => navigate(listingSearch(searchParams, { view }), true) }}
-          actions={<SaveSearchButton params={saveParams} variant="toolbar" />}
+          actions={actions('toolbar')}
         />
       }
     >

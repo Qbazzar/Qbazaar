@@ -16,6 +16,8 @@ export interface ActiveFilter {
 }
 
 interface Sources {
+  /** Show the search words as a chip too (a category page, where they are a filter). */
+  keyword?: boolean;
   categories?: CategoryNode[];
   locations?: Location[];
   locale: Locale;
@@ -31,10 +33,13 @@ function range(min: number | undefined | null, max: number | undefined | null, f
  * The applied filters as removable chips ("DHL ×" in 250:4405), named in the
  * page language. A filter whose name is not loaded yet shows its raw value.
  */
-export function activeFilters(values: FilterValues, { categories, locations, locale }: Sources): ActiveFilter[] {
+export function activeFilters(values: FilterValues, { keyword = false, categories, locations, locale }: Sources): ActiveFilter[] {
   const chips: ActiveFilter[] = [];
   const category = values.category ? findCategoryBySlug(categories, values.category) : null;
 
+  if (keyword && values.keyword.trim()) {
+    chips.push({ key: 'keyword', label: `“${values.keyword.trim()}”`, without: { ...values, keyword: '' } });
+  }
   if (values.category) {
     chips.push({
       key: 'category',
@@ -61,6 +66,12 @@ export function activeFilters(values: FilterValues, { categories, locations, loc
   }
   if (values.shipping) {
     chips.push({ key: 'shipping', label: t(`catalog.filters.shipping_options.${values.shipping}`), without: { ...values, shipping: null } });
+  }
+  if (values.sellerType) {
+    chips.push({ key: 'sellerType', label: t(`catalog.filters.seller_options.${values.sellerType}`), without: { ...values, sellerType: null } });
+  }
+  if (values.buyNow) {
+    chips.push({ key: 'buyNow', label: t('catalog.filters.buy_now_option', 'اشترِ الآن'), without: { ...values, buyNow: false } });
   }
 
   for (const [key, value] of Object.entries(values.customFields)) {

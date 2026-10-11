@@ -68,6 +68,18 @@ describe('countActiveFilters', () => {
       countActiveFilters({ ...EMPTY_FILTERS, location: 'doha', priceMin: 10, priceMax: 90, customFields: { make: 'BMW' } }),
     ).toBe(3);
   });
+
+  it('counts the seller and Buy Now, and the keyword only where it is a filter', () => {
+    const values = { ...EMPTY_FILTERS, keyword: 'sedan', sellerType: 'private' as const, buyNow: true };
+
+    expect(countActiveFilters(values)).toBe(2);
+    expect(countActiveFilters(values, { keyword: true })).toBe(3);
+  });
+
+  it('tells filters apart by seller and Buy Now', () => {
+    expect(filtersEqual(EMPTY_FILTERS, { ...EMPTY_FILTERS, buyNow: true })).toBe(false);
+    expect(filtersEqual(EMPTY_FILTERS, { ...EMPTY_FILTERS, sellerType: 'business' })).toBe(false);
+  });
 });
 
 describe('normalizeFilters', () => {
