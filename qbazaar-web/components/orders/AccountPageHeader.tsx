@@ -2,8 +2,6 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import '@/styles/design-tokens-sell.css';
-
 export interface AccountPageHeaderProps {
   title: string;
   description?: string;

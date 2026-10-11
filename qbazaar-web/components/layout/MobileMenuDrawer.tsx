@@ -43,12 +43,12 @@ function navItems(signedIn: boolean): NavItem[] {
   const browsing: NavItem[] = [
     { href: '/', label: t('layout.menu.home', 'الرئيسية'), icon: House },
     { href: '/categories', label: t('layout.menu.categories', 'الأقسام'), icon: LayoutGrid },
-    { href: '/account/favorites', label: t('account.nav.favorites', 'المحفوظات'), icon: Heart },
+    { href: '/account/favorites', label: t('layout.menu.favorites', 'المفضلة'), icon: Heart },
     { href: '/account/messages', label: t('account.nav.messages', 'الرسائل'), icon: MessageCircle },
   ];
   const savedSearches: NavItem = {
     href: '/account/saved-searches',
-    label: t('account.nav.saved_searches', 'عمليات البحث المحفوظة'),
+    label: t('layout.menu.saved_search', 'البحث المحفوظ'),
     icon: Search,
   };
   if (!signedIn) return [...browsing, savedSearches];
@@ -87,7 +87,7 @@ export function MobileMenuDrawer({ open, onOpenChange, signedIn }: MobileMenuDra
       heading={<SiteLogo width={80} height={30} />}
     >
       <nav aria-label={t('layout.menu.title', 'القائمة')} className="flex flex-1 flex-col">
-        <p aria-hidden="true" className="px-5 pt-3.5 pb-1.5 text-qb-micro font-semibold text-qb-ink-subtle uppercase ltr:tracking-[0.08em]">
+        <p aria-hidden="true" className="px-5 pt-3.5 pb-1.5 text-qb-micro font-semibold text-qb-ink-caption uppercase ltr:tracking-[0.08em]">
           {t('layout.menu.title', 'القائمة')}
         </p>
         <ul className="flex-1 px-3 pt-1.5 pb-3">
@@ -152,7 +152,7 @@ function SignOutRow() {
   return (
     <button type="button" onClick={signOut} disabled={pending} className={cn(row, focusRing, 'cursor-pointer text-qb-brand hover:bg-qb-hover')}>
       <Icon icon={LogOut} flipInRtl className="size-[21px]" />
-      <span className="flex-1 text-start">{t('account.nav.sign_out', 'تسجيل الخروج')}</span>
+      <span className="flex-1 text-start">{t('layout.menu.log_out', 'تسجيل الخروج')}</span>
       <RowChevron />
     </button>
   );

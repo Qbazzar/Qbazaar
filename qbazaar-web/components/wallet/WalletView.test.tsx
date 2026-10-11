@@ -54,13 +54,12 @@ describe('WalletView', () => {
     expect(links.filter((link) => link.className.includes('qb-desktop:hidden'))).toHaveLength(1);
   });
 
-  it('greys the tile labels and leaves the hints their own colour', async () => {
+  it('keeps the hint in its own colour, apart from the label', async () => {
     vi.mocked(getWallet).mockResolvedValue(buildWallet());
     renderWithClient(<WalletView />);
 
     const label = await screen.findByText('Commission owed');
-    expect(label).toHaveClass('text-(--color-qb-ink-meta)', 'max-qb-tablet:text-qb-breadcrumb');
-    expect(label.parentElement?.className).not.toContain('--color-qb-ink-subtle');
+    expect(label).not.toHaveClass('text-qb-ink-subtle');
     expect(screen.getByText('Your balance minus the commission you owe.')).toHaveClass('text-qb-ink-subtle');
   });
 

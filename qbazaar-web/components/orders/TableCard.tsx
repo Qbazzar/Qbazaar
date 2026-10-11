@@ -7,8 +7,6 @@ import { cn } from '@/lib/utils';
 
 import { panelClass } from './CheckoutPanel';
 
-import '@/styles/design-tokens-sell.css';
-
 export interface TableCardProps {
   title: ReactNode;
   titleId: string;

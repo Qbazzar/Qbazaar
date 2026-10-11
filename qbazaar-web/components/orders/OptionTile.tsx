@@ -3,8 +3,6 @@ import type { InputHTMLAttributes, ReactNode } from 'react';
 import { RadioDot } from '@/components/design-system/RadioDot';
 import { cn } from '@/lib/utils';
 
-import '@/styles/design-tokens-sell.css';
-
 export interface OptionTileProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'children'> {
   label: ReactNode;
   /** Read out with the label but not shown: the tiles of the reference are one line. */

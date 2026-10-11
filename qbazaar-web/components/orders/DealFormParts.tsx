@@ -8,8 +8,6 @@ import { cn } from '@/lib/utils';
 
 import { panelClass, panelPadding } from './CheckoutPanel';
 
-import '@/styles/design-tokens-sell.css';
-
 /**
  * Shape of the form buttons of the deal pages: 44 px with 14 px text on
  * phones and desktop (659:58417), 48 px with 16 px text on tablets (709:32483).

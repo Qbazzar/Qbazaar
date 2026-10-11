@@ -34,8 +34,6 @@ import { usePromotionOffersQuery, usePurchasePromotionMutation } from '@/lib/que
 import { useWalletQuery } from '@/lib/queries/wallet';
 import { cn } from '@/lib/utils';
 
-import '@/styles/design-tokens-sell.css';
-
 const TRANSFER_REFERENCE = /^[A-Za-z0-9][A-Za-z0-9 /._-]*$/;
 
 /**

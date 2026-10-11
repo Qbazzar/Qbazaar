@@ -1,7 +1,5 @@
 import { cn } from '@/lib/utils';
 
-import '@/styles/design-tokens-sell.css';
-
 /**
  * The 20 px radio mark of the checkout and promotion rows (CheckBox 367:15366):
  * a ring that fills brand orange around a white dot once the input is checked.

@@ -9,8 +9,6 @@ import { cn } from '@/lib/utils';
 
 import { panelClass } from './CheckoutPanel';
 
-import '@/styles/design-tokens-sell.css';
-
 export interface SummaryLine {
   label: string;
   /** Exact decimal string, or already formatted text such as "Free". */

@@ -14,8 +14,6 @@ import { t } from '@/lib/i18n/messages';
 import { findPath, isLeaf } from '@/lib/post-ad/tree';
 import { cn } from '@/lib/utils';
 
-import '@/styles/design-tokens-sell.css';
-
 export interface CategoryPickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

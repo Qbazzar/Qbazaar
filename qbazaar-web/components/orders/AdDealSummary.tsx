@@ -14,8 +14,6 @@ import { cn } from '@/lib/utils';
 
 import { panelClass } from './CheckoutPanel';
 
-import '@/styles/design-tokens-sell.css';
-
 function joinedYear(iso: string | undefined): string | null {
   const year = iso ? new Date(iso).getFullYear() : Number.NaN;
   return Number.isNaN(year) ? null : String(year);

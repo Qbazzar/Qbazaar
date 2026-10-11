@@ -3,8 +3,6 @@ import { toast } from 'sonner';
 
 import { Icon } from '@/components/design-system/Icon';
 
-import '@/styles/design-tokens-sell.css';
-
 /**
  * The mint "saved" toast of 324:13009 and 638:36172. Styled per toast because
  * the shared Toaster draws sonner's own look, which also turns dark with the

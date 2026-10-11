@@ -27,8 +27,6 @@ import type { PostAdAction } from './usePostAdActions';
 import { VIEW_HEADING_ID } from './view-heading';
 import { YourAdPanel } from './YourAdPanel';
 
-import '@/styles/design-tokens-sell.css';
-
 export interface AdPreviewViewProps {
   variant: 'preview' | 'publish';
   seller: SellerSummary;

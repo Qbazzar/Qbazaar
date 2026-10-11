@@ -17,8 +17,6 @@ import { cn } from '@/lib/utils';
 
 import { buttonLeading } from './FormParts';
 
-import '@/styles/design-tokens-sell.css';
-
 export interface SellerSummary {
   name: string;
   avatarUrl: string | null;

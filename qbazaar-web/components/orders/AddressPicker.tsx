@@ -17,8 +17,6 @@ import { CheckoutPanel } from './CheckoutPanel';
 import { FormError } from './NoteField';
 import { OptionTile } from './OptionTile';
 
-import '@/styles/design-tokens-sell.css';
-
 export type AddressChoice = { kind: 'saved'; id: string } | { kind: 'new' };
 
 export interface ShippingAddressPanelProps {

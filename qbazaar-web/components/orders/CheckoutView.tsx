@@ -25,8 +25,6 @@ import { useAdQuery } from '@/lib/queries/ads';
 import { useCheckoutQuery, useSaveAddressMutation, useSubmitCheckoutMutation } from '@/lib/queries/orders';
 import { cn } from '@/lib/utils';
 
-import '@/styles/design-tokens-sell.css';
-
 import { pageFrame } from './AccountPageFrame';
 import { ShippingAddressPanel, type AddressChoice } from './AddressPicker';
 import { CheckoutPanel } from './CheckoutPanel';

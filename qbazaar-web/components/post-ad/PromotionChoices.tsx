@@ -14,8 +14,6 @@ import { usePostAdStore } from '@/store/post-ad';
 import { FormSection } from './FormParts';
 import { focusWithinRow, promotionRow } from './promotion-row';
 
-import '@/styles/design-tokens-sell.css';
-
 /** The admin-priced catalogue with the seller's ticks; no offers while it loads or when it fails. */
 export function usePromotionChoices() {
   const { data } = usePromotionOffersQuery();

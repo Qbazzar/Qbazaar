@@ -10,7 +10,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bell, Globe, Heart, MapPinPlus, MessageCircle, type LucideIcon } from 'lucide-react';
 
-import { Avatar, initialsOf } from '@/components/design-system/Avatar';
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
@@ -25,6 +24,7 @@ import { useUnreadCountQuery } from '@/lib/queries/messaging';
 import { useUnreadNotificationsCountQuery } from '@/lib/queries/notifications';
 import { cn } from '@/lib/utils';
 
+import { AccountMenu } from './AccountMenu';
 import { MAIN_CONTENT_ID } from './main-content';
 import { MobileMenu, mobileIconButton } from './MobileMenu';
 import { hasOwnChrome } from './own-chrome';
@@ -82,7 +82,7 @@ export function SiteHeader() {
           <LanguageMenu className={headerIcon}>
             <Icon icon={Globe} className="size-[23px]" />
           </LanguageMenu>
-          <HeaderIconLink href="/account/favorites" icon={Heart} label={t('account.nav.favorites', 'المحفوظات')} />
+          <HeaderIconLink href="/account/favorites" icon={Heart} label={t('layout.menu.favorites', 'المفضلة')} />
           <HeaderIconLink
             href="/account/notifications"
             icon={Bell}
@@ -91,14 +91,14 @@ export function SiteHeader() {
           />
           <HeaderIconLink href="/account/messages" icon={MessageCircle} label={t('account.nav.messages', 'الرسائل')} unread={unread.messages} />
           {signedIn ? (
-            <AccountLink name={user?.full_name || user?.email || 'Q'} />
+            <AccountMenu name={user?.full_name || user?.email || 'Q'} email={user?.email} />
           ) : (
             <GuestButtons />
           )}
         </div>
 
         <div className="relative flex items-center gap-2 self-start pt-3.5 min-[761px]:hidden">
-          <LanguageMenu className={mobileIconButton} anchor="container">
+          <LanguageMenu className={mobileIconButton} variant="phone">
             <Icon icon={Globe} />
           </LanguageMenu>
           <HeaderIconLink
@@ -142,20 +142,6 @@ function HeaderIconLink({ href, icon, label, unread = 0, variant = 'desktop' }: 
     <Link href={href} aria-label={name} className={style.link}>
       <Icon icon={icon} className={style.icon} />
       {unread > 0 ? <span aria-hidden="true" className={cn('absolute rounded-full bg-qb-brand', style.dot)} /> : null}
-    </Link>
-  );
-}
-
-/** The avatar opens the account; its name starts with the initials it shows. */
-function AccountLink({ name }: { name: string }) {
-  const initials = initialsOf(name);
-  return (
-    <Link
-      href="/account"
-      aria-label={t('layout.header.account_named', { initials }, `${initials}، حسابي`)}
-      className={cn('rounded-full', focusRing)}
-    >
-      <Avatar name={name} decorative />
     </Link>
   );
 }

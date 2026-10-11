@@ -43,8 +43,6 @@ import {
 } from './FormParts';
 import { PhotoUploader } from './PhotoUploader';
 
-import '@/styles/design-tokens-sell.css';
-
 /** Store access shared by the sections: values, errors and an edit that clears the field's error. */
 function useFormField() {
   const values = usePostAdStore((state) => state.values);
