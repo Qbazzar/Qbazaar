@@ -126,4 +126,54 @@ describe('SearchClient', () => {
     expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).not.toHaveProperty('radius_km');
     expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).not.toHaveProperty('lat');
   });
+
+  it('sends the seller and Buy Now of the URL and clears them with "Reset filters"', async () => {
+    vi.mocked(useSearchQuery).mockReturnValue(results(0));
+    const user = userEvent.setup();
+    renderAt('?seller_type=business&buy_now=true');
+
+    expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).toEqual({ sort: 'latest', seller_type: 'business', buy_now: true, page: 1, per_page: 24 });
+    await user.click(screen.getByRole('button', { name: 'Reset filters' }));
+
+    const params = vi.mocked(useSearchQuery).mock.lastCall?.[0];
+    expect(params).not.toHaveProperty('seller_type');
+    expect(params).not.toHaveProperty('buy_now');
+  });
+
+  it('ignores a seller type the API does not know and a Buy Now that is not true', () => {
+    vi.mocked(useSearchQuery).mockReturnValue(results(12));
+    renderAt('?seller_type=shop&buy_now=false');
+
+    expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).toEqual({ sort: 'latest', page: 1, per_page: 24 });
+  });
+
+  it('does not send a reversed price range, which the API would refuse', () => {
+    vi.mocked(useSearchQuery).mockReturnValue(results(12));
+    renderAt('?price_min=900&price_max=100');
+
+    expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).toEqual({ sort: 'latest', page: 1, per_page: 24 });
+  });
+
+  it('gives the panel no counts while the previous result set is still on screen', () => {
+    vi.mocked(useSearchQuery).mockReturnValue({
+      ...(results(12) as object),
+      isPlaceholderData: true,
+      data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 24, total: 12, facets: { ad_type: { offering: 3 }, shipping: {}, seller_type: { private: 4 }, buy_now: {}, condition: {} } }, facets: null },
+    } as never);
+    renderAt('?q=car');
+
+    expect(screen.getAllByRole('radio', { name: 'Private' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('radio', { name: 'Private (4)' })).not.toBeInTheDocument();
+  });
+
+  it('shows the counts once the response of the current filters arrives', () => {
+    vi.mocked(useSearchQuery).mockReturnValue({
+      ...(results(12) as object),
+      isPlaceholderData: false,
+      data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 24, total: 12, facets: { ad_type: {}, shipping: {}, seller_type: { private: 4 }, buy_now: {}, condition: {} } }, facets: null },
+    } as never);
+    renderAt('?q=car');
+
+    expect(screen.getAllByRole('radio', { name: 'Private (4)' }).length).toBeGreaterThan(0);
+  });
 });

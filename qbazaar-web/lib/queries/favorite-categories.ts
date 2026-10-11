@@ -11,6 +11,8 @@ import { listFavoriteCategories, setFavoriteCategory } from '@/lib/api/favorites
 import type { ApiClientError } from '@/lib/api/auth';
 import type { CategoryPage, FavoriteCategory, FavoriteCategoryState } from '@/lib/api/types';
 
+import { useAuthStore } from '@/store/auth';
+
 import { categoryKeys } from './categories';
 
 const MINUTE = 60 * 1000;
@@ -42,19 +44,21 @@ interface SetContext {
 /** Flips `is_favorited` on the cached category page at once and puts it back if the request fails. */
 export function useSetFavoriteCategoryMutation(): UseMutationResult<FavoriteCategoryState, ApiClientError, SetVariables, SetContext> {
   const qc = useQueryClient();
+  const viewer = useAuthStore((s) => s.user?.id ?? 'guest');
+  const pageKey = (slug: string) => categoryKeys.page(slug, viewer);
   const writeFlag = (slug: string, favorited: boolean) =>
-    qc.setQueryData<CategoryPage>(categoryKeys.page(slug), (page) => (page ? { ...page, is_favorited: favorited } : page));
+    qc.setQueryData<CategoryPage>(pageKey(slug), (page) => (page ? { ...page, is_favorited: favorited } : page));
 
   return useMutation({
     mutationFn: ({ slug, favorited }) => setFavoriteCategory(slug, favorited),
     onMutate: async ({ slug, favorited }) => {
-      await qc.cancelQueries({ queryKey: categoryKeys.page(slug) });
-      const previous = qc.getQueryData<CategoryPage>(categoryKeys.page(slug));
+      await qc.cancelQueries({ queryKey: pageKey(slug) });
+      const previous = qc.getQueryData<CategoryPage>(pageKey(slug));
       writeFlag(slug, favorited);
       return { previous };
     },
     onError: (_error, { slug }, context) => {
-      if (context?.previous) qc.setQueryData(categoryKeys.page(slug), context.previous);
+      if (context?.previous) qc.setQueryData(pageKey(slug), context.previous);
     },
     onSuccess: (state, { slug }) => {
       writeFlag(slug, state.favorited);

@@ -64,7 +64,7 @@ describe('FavoriteCategoryButton', () => {
     vi.mocked(getCategoryPage).mockResolvedValue(categoryPage(true));
     renderButton();
 
-    expect(await screen.findByRole('button', { name: 'Remove category from favorites' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Favorited, remove category from favorites' })).toBeEnabled();
     expect(screen.getByText('Favorited')).toBeInTheDocument();
   });
 
@@ -80,7 +80,7 @@ describe('FavoriteCategoryButton', () => {
     expect(setFavoriteCategory).toHaveBeenCalledWith('cars', true);
     expect(await screen.findByText('Favorited')).toBeInTheDocument();
     finish({ favorited: true });
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Remove category from favorites' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Favorited, remove category from favorites' })).toBeEnabled());
   });
 
   it('rolls back and says why when the cap is reached (FAV_002)', async () => {
@@ -112,5 +112,39 @@ describe('FavoriteCategoryButton', () => {
     renderButton();
 
     expect(screen.getByRole('button', { name: 'Add to Favorite' })).toBeDisabled();
+  });
+
+  it('removes with DELETE when it is already a favourite', async () => {
+    auth({ isAuthenticated: true });
+    vi.mocked(getCategoryPage).mockResolvedValue(categoryPage(true));
+    vi.mocked(setFavoriteCategory).mockResolvedValue({ favorited: false });
+    const user = renderButton();
+
+    await user.click(await screen.findByRole('button', { name: 'Favorited, remove category from favorites' }));
+
+    expect(setFavoriteCategory).toHaveBeenCalledWith('cars', false);
+    expect(await screen.findByRole('button', { name: 'Add to Favorite' })).toBeEnabled();
+  });
+
+  it('names the pill with the text it shows (WCAG 2.5.3)', async () => {
+    auth({ isAuthenticated: true });
+    vi.mocked(getCategoryPage).mockResolvedValue(categoryPage(true));
+    renderButton();
+
+    const pill = await screen.findByRole('button', { name: /^Favorited/ });
+    expect(pill).toHaveTextContent('Favorited');
+  });
+
+  it('tries the category again when its first load failed, instead of staying dead', async () => {
+    auth({ isAuthenticated: true });
+    vi.mocked(getCategoryPage).mockRejectedValueOnce(new Error('offline')).mockResolvedValue(categoryPage(true));
+    const user = renderButton();
+
+    const pill = await screen.findByRole('button', { name: 'Add to Favorite' });
+    await waitFor(() => expect(pill).toBeEnabled());
+    await user.click(pill);
+
+    expect(setFavoriteCategory).not.toHaveBeenCalled();
+    expect(await screen.findByRole('button', { name: /^Favorited/ })).toBeEnabled();
   });
 });

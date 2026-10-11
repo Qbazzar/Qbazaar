@@ -49,6 +49,11 @@ export function parsePrice(raw: string | null | undefined): number | null {
   return value === null ? null : Math.floor(value);
 }
 
+/** The price bounds as they can be sent: a reversed pair (a hand-typed URL) is no filter, as the API would answer 422. */
+export function sanePriceRange(min: number | null, max: number | null): { priceMin: number | null; priceMax: number | null } {
+  return isRangeInvalid(min, max) ? { priceMin: null, priceMax: null } : { priceMin: min, priceMax: max };
+}
+
 /** True when both bounds are set and the maximum is below the minimum. */
 export function isRangeInvalid(min: number | null | undefined, max: number | null | undefined): boolean {
   return min != null && max != null && max < min;

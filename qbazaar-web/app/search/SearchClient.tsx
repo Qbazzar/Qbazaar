@@ -18,7 +18,8 @@ import { CatalogHeader, CatalogStats } from '@/components/catalog/CatalogHeader'
 import { CatalogLayout } from '@/components/catalog/CatalogLayout';
 import { FilterSheet, FilterSidebar } from '@/components/catalog/filters/CatalogFilters';
 import type { FilterGroupKey } from '@/components/catalog/filters/FilterPanel';
-import { AD_TYPES, CONDITIONS, SELLER_TYPES, SHIPPING_OPTIONS, countActiveFilters, type FilterValues } from '@/components/catalog/filters/filter-values';
+import { filterableFields } from '@/components/catalog/filters/CustomFieldFilters';
+import { AD_TYPES, CONDITIONS, SELLER_TYPES, SHIPPING_OPTIONS, countActiveFilters, sanePriceRange, type FilterValues } from '@/components/catalog/filters/filter-values';
 import { SORT_MODES, VIEW_MODES } from '@/components/catalog/listing-query';
 import { ListingResults } from '@/components/catalog/ListingResults';
 import { ListingToolbar } from '@/components/catalog/ListingToolbar';
@@ -27,7 +28,7 @@ import { useRequestResultsFocus } from '@/components/catalog/results-focus';
 import { ResultsHeading } from '@/components/catalog/ResultsHeading';
 import { SaveSearchButton } from '@/components/search/SaveSearchButton';
 import { SearchNotFound } from '@/components/search/SearchNotFound';
-import { decodeCustomFields, readGeoFilter } from '@/components/search/search-params';
+import { decodeCustomFields, pruneCustomFields, readGeoFilter } from '@/components/search/search-params';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -44,10 +45,10 @@ const NO_GEO = { lat: null, lng: null, radius_km: null };
 
 /**
  * After the keyword, the groups in the order of category.html's filter card
- * (Price, Offer, Shipping & Delivery, Cities), then the filters only the
- * search API has.
+ * (Price, Offer, Seller, Direct Purchase, Shipping & Delivery, Cities), then
+ * the filters only the search API has.
  */
-const GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'sellerType', 'shipping', 'location', 'category', 'condition', 'buyNow', 'customFields'];
+const GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'sellerType', 'buyNow', 'shipping', 'location', 'category', 'condition', 'customFields'];
 
 export function SearchClient() {
   const locale = getLocale();
@@ -82,7 +83,15 @@ export function SearchClient() {
   const { data: categoryTree } = useCategoryTreeQuery();
   const { data: locationTree } = useQatarLocationsQuery();
   const selectedCategory = urlState.category_slug ? findCategoryBySlug(categoryTree, urlState.category_slug) : null;
-  const customFields = useMemo(() => decodeCustomFields(urlState.cf), [urlState.cf]);
+  const decodedFields = useMemo(() => decodeCustomFields(urlState.cf), [urlState.cf]);
+  // Only the fields of the chosen category apply (a stale `cf` key would be a 422); no category, no fields.
+  const fieldKeys = useMemo(
+    () => (urlState.category_slug ? (selectedCategory ? filterableFields(selectedCategory.custom_fields).map((field) => field.key) : null) : []),
+    [urlState.category_slug, selectedCategory],
+  );
+  const customFields = useMemo(() => pruneCustomFields(decodedFields, fieldKeys), [decodedFields, fieldKeys]);
+  // A reversed price pair would be a 422: it is no filter.
+  const { priceMin, priceMax } = sanePriceRange(urlState.price_min, urlState.price_max);
 
   // The set filters only, by slug: the API resolves slugs itself, so the first
   // request does not wait for the trees and is not repeated once they load.
@@ -95,8 +104,8 @@ export function SearchClient() {
     // A place and a circle would intersect, so the circle replaces the place.
     if (urlState.location_slug && !geo) params.location_slug = urlState.location_slug;
     if (geo) Object.assign(params, geo);
-    if (urlState.price_min !== null) params.price_min = urlState.price_min;
-    if (urlState.price_max !== null) params.price_max = urlState.price_max;
+    if (priceMin !== null) params.price_min = priceMin;
+    if (priceMax !== null) params.price_max = priceMax;
     if (urlState.condition) params.condition = urlState.condition;
     if (urlState.ad_type) params.ad_type = urlState.ad_type;
     if (urlState.shipping) params.shipping = urlState.shipping;
@@ -104,16 +113,16 @@ export function SearchClient() {
     if (urlState.buy_now) params.buy_now = true;
     if (Object.keys(customFields).length > 0) params.custom_fields = customFields;
     return params;
-  }, [urlState, customFields, geo]);
+  }, [urlState, customFields, geo, priceMin, priceMax]);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useSearchQuery({ ...searchFilters, page: urlState.page, per_page: PER_PAGE });
+  const { data, isLoading, isFetching, isPlaceholderData, isError, error, refetch } = useSearchQuery({ ...searchFilters, page: urlState.page, per_page: PER_PAGE });
 
   const filters: FilterValues = {
     keyword: urlState.q,
     category: urlState.category_slug,
     location: urlState.location_slug,
-    priceMin: urlState.price_min,
-    priceMax: urlState.price_max,
+    priceMin,
+    priceMax,
     condition: urlState.condition,
     adType: urlState.ad_type,
     shipping: urlState.shipping,
@@ -145,7 +154,7 @@ export function SearchClient() {
   const resetFilters = () =>
     setUrlState({ ...NO_GEO, category_slug: null, location_slug: null, price_min: null, price_max: null, condition: null, ad_type: null, shipping: null, seller_type: null, buy_now: null, cf: null, page: 1 });
 
-  const panel = { groups: GROUPS, values: filters, onApply: applyFilters, onReset: resetFilters, categories: categoryTree, locations: locationTree, facets: data?.facets, adFacets: data?.meta.facets };
+  const panel = { groups: GROUPS, values: filters, onApply: applyFilters, onReset: resetFilters, categories: categoryTree, locations: locationTree, facets: data?.facets, adFacets: isPlaceholderData ? undefined : data?.meta.facets };
 
   const categoryName = selectedCategory ? localized(selectedCategory.name, locale) : null;
   const title = urlState.q || categoryName || t('search.title_all', 'كل الإعلانات');

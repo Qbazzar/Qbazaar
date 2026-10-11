@@ -2,7 +2,7 @@ import type { SortMode } from '@/lib/api/types';
 
 import { decodeCustomFields } from '@/components/search/search-params';
 
-import { AD_TYPES, CONDITIONS, EMPTY_FILTERS, SELLER_TYPES, SHIPPING_OPTIONS, countActiveFilters, parsePrice, type FilterValues } from './filters/filter-values';
+import { AD_TYPES, CONDITIONS, EMPTY_FILTERS, SELLER_TYPES, SHIPPING_OPTIONS, countActiveFilters, parsePrice, sanePriceRange, type FilterValues } from './filters/filter-values';
 
 export type ViewMode = 'list' | 'grid';
 
@@ -60,8 +60,7 @@ export function parseListingQuery(params: ParamReader): ListingQuery {
       customFields: decodeCustomFields(params.get('cf')),
       category: params.get('category') || null,
       location: params.get('location') || null,
-      priceMin: parsePrice(params.get('price_min')),
-      priceMax: parsePrice(params.get('price_max')),
+      ...sanePriceRange(parsePrice(params.get('price_min')), parsePrice(params.get('price_max'))),
     },
     sort: parseSort(params.get('sort')),
     view: parseView(params.get('view')),

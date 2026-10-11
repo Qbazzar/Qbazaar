@@ -914,7 +914,7 @@
     "favorite_category": {
       "add": "Add to Favorite",
       "added": "Favorited",
-      "remove": "Remove category from favorites"
+      "remove": "Favorited, remove category from favorites"
     }
   },
   "locations": {

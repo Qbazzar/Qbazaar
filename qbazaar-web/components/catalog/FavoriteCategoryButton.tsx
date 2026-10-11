@@ -37,11 +37,17 @@ export function FavoriteCategoryButton({ slug, variant = 'header', className }: 
   const mutation = useSetFavoriteCategoryMutation();
   const favorited = page.data?.is_favorited ?? false;
   const trigger = TRIGGER[variant];
-  const signedInAndLoading = isAuthenticated && !page.data;
+  // A failed load must not leave the pill dead: pressing it tries again.
+  const loadFailed = isAuthenticated && page.isError && !page.data;
+  const signedInAndLoading = isAuthenticated && page.isPending && page.fetchStatus !== 'idle';
 
   const toggle = () => {
     if (!isAuthenticated) {
       router.push(`/login?from=${encodeURIComponent(currentLocationPath())}`);
+      return;
+    }
+    if (loadFailed) {
+      void page.refetch();
       return;
     }
     mutation.mutate({ slug, favorited: !favorited }, { onError: (error) => toast.error(apiErrorMessage(error)) });
@@ -52,7 +58,8 @@ export function FavoriteCategoryButton({ slug, variant = 'header', className }: 
       type="button"
       onClick={toggle}
       disabled={!isHydrated || signedInAndLoading || mutation.isPending}
-      aria-label={favorited ? t('catalog.favorite_category.remove', 'إزالة القسم من المفضلة') : undefined}
+      // The name starts with the visible text (WCAG 2.5.3) and adds what pressing it does.
+      aria-label={favorited ? t('catalog.favorite_category.remove', 'في المفضلة، إزالة القسم من المفضلة') : undefined}
       className={cn(
         toolbarPill,
         'shrink-0 cursor-pointer font-qb transition-[background-color,box-shadow,translate] duration-200 motion-reduce:transition-none',

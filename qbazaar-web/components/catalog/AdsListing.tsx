@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
 import { Pagination } from '@/components/design-system/Pagination';
 import { SaveSearchButton } from '@/components/search/SaveSearchButton';
+import { pruneCustomFields } from '@/components/search/search-params';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -26,6 +27,7 @@ import { CatalogLayout } from './CatalogLayout';
 import { CategoryActions } from './CategoryActions';
 import { FilterSheet, FilterSidebar } from './filters/CatalogFilters';
 import type { FilterGroupKey } from './filters/FilterPanel';
+import { filterableFields } from './filters/CustomFieldFilters';
 import { catalogFilterParams } from './filters/filter-params';
 import { countActiveFilters, EMPTY_FILTERS, type FilterValues } from './filters/filter-values';
 import { FEED_MAX_PAGE, listingSearch, parseListingQuery } from './listing-query';
@@ -57,7 +59,7 @@ function slugFilter(slug: string | null, found: boolean, lookup: { isPending: bo
 }
 
 /** The filter groups `GET /ads` supports, in the order of the design's filter card (category.html). */
-const CATEGORY_GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'sellerType', 'shipping', 'location', 'condition', 'buyNow', 'customFields'];
+const CATEGORY_GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'sellerType', 'buyNow', 'shipping', 'location', 'condition', 'customFields'];
 
 /**
  * Plain listing on `GET /ads`: the catalog filters (price, place, offer, seller,
@@ -69,13 +71,18 @@ export function AdsListing({ category, heading }: AdsListingProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const query = parseListingQuery(searchParams);
+  const treeQuery = useCategoryTreeQuery();
+  const locationsQuery = useQatarLocationsQuery();
   // A category page has its category fixed; a stray ?category= must not show up as a filter.
-  const filters = category ? { ...query.filters, category: null } : query.filters;
+  const urlFilters = category ? { ...query.filters, category: null } : query.filters;
+  // Only the fields of the category apply: a stale or hand-made `cf` key would be a 422.
+  const fieldsSlug = category?.slug ?? urlFilters.category;
+  const fieldsNode = fieldsSlug ? findCategoryBySlug(treeQuery.data, fieldsSlug) : null;
+  const fieldKeys = fieldsSlug ? (fieldsNode ? filterableFields(fieldsNode.custom_fields).map((field) => field.key) : null) : [];
+  const filters = { ...urlFilters, customFields: pruneCustomFields(urlFilters.customFields, fieldKeys) };
   const hasFilters = countActiveFilters(filters, { keyword: true }) > 0;
   const catalogParams = catalogFilterParams(filters);
 
-  const treeQuery = useCategoryTreeQuery();
-  const locationsQuery = useQatarLocationsQuery();
   const selected = filters.category ? findCategoryBySlug(treeQuery.data, filters.category) : null;
   const place = filters.location ? findLocationBySlug(locationsQuery.data, filters.location) : null;
   // The feed waits for every slug to resolve: without its id it would come back unfiltered.
@@ -117,7 +124,8 @@ export function AdsListing({ category, heading }: AdsListingProps) {
     onReset: resetFilters,
     categories: treeQuery.data,
     locations: locationsQuery.data,
-    adFacets: adsQuery.data?.meta.facets,
+    // The previous result set's counts would sit under the new filters while it loads.
+    adFacets: adsQuery.isPlaceholderData ? undefined : adsQuery.data?.meta.facets,
     categorySlug: category?.slug,
     keywordIsFilter: true,
   };
