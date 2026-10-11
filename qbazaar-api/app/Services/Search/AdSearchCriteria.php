@@ -46,10 +46,15 @@ class AdSearchCriteria
             $clauses[] = sprintf('price_type = "%s"', $this->quote($params['price_type']));
         }
 
-        foreach (['ad_type', 'shipping'] as $field) {
+        foreach (['ad_type', 'shipping', 'seller_type'] as $field) {
             if ($this->filled($params, $field)) {
                 $clauses[] = sprintf('%s = "%s"', $field, $this->quote($params[$field]));
             }
+        }
+
+        // Only `true` narrows; `false` is the same as not asking.
+        if (filter_var($params['buy_now'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            $clauses[] = 'buy_now = true';
         }
 
         if (is_numeric($params['price_min'] ?? null)) {

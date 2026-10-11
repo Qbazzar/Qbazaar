@@ -52,6 +52,24 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache || true
 
+# Best effort: a Meilisearch hiccup must not fail a release whose database is
+# already migrated (the API answers an empty search page, never a 500, until the
+# settings are synced). These run AFTER config:cache on purpose: the artisan
+# commands read the cached config, which until now was the previous release's,
+# and would push its old index settings.
+log "Meilisearch index settings"
+php artisan scout:sync-index-settings --no-interaction || echo "WARN: scout:sync-index-settings failed; run it by hand (deploy/DEPLOY-CHECKLIST.md section 5)"
+
+# One-off, left by the migration that added ads.seller_type; removed once it ran.
+if [[ -f storage/app/.sync-seller-types ]]; then
+    log "Ad seller types (one-off)"
+    if php artisan ads:sync-seller-types --no-interaction; then
+        rm -f storage/app/.sync-seller-types
+    else
+        echo "WARN: ads:sync-seller-types failed; the marker stays, the next deploy retries (or run it by hand, it is idempotent)"
+    fi
+fi
+
 if [[ ! -L public/storage ]]; then
     log "Linking storage"
     php artisan storage:link
@@ -60,6 +78,18 @@ fi
 log "Restarting workers (horizon + reverb)"
 sudo systemctl restart qbazaar-horizon
 sudo systemctl restart qbazaar-reverb
+
+# One-off: a release that changes what ads put in the search index leaves
+# storage/app/.reindex-ads (a migration creates it). The import is queued, so it
+# runs after the workers above are back; the marker goes only when it was queued.
+if [[ -f storage/app/.reindex-ads ]]; then
+    log "Re-importing ads into the search index (one-off)"
+    if php artisan scout:import "App\Models\Ad" --no-interaction; then
+        rm -f storage/app/.reindex-ads
+    else
+        echo "WARN: scout:import failed; the marker stays, the next deploy retries (or run it by hand)"
+    fi
+fi
 
 # Leave maintenance mode BEFORE probing (the trap also runs `up`, but the probe
 # must hit a live app, not the 503 maintenance page).

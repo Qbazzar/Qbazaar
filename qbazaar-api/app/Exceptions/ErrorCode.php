@@ -82,6 +82,7 @@ enum ErrorCode: string
 
     // ── Favorites ───────────────────────────────────────────────────
     case FAV_LIMIT_REACHED = 'FAV_001';
+    case FAV_CATEGORY_LIMIT_REACHED = 'FAV_002';
 
     // ── Messaging (Sprint 8) ────────────────────────────────────────
     case MSG_BLOCKED = 'MSG_001';
@@ -232,6 +233,7 @@ enum ErrorCode: string
             self::SEARCH_INVALID_PARAMS,
             self::SEARCH_SAVED_LIMIT,
             self::FAV_LIMIT_REACHED,
+            self::FAV_CATEGORY_LIMIT_REACHED,
             self::REVIEW_ALREADY_EXISTS,
             self::REVIEW_OWN_AD,
             self::TICKET_INVALID_TRANSITION,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Catalog;
 
+use App\Services\Search\AdFacetCounter;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -34,6 +35,7 @@ class CatalogCache
         private readonly CategorySchema $schema,
         private readonly CategoryPageCache $categoryPages,
         private readonly HomeFeedCache $homeFeed,
+        private readonly AdFacetCounter $facets,
     ) {}
 
     /**
@@ -52,6 +54,7 @@ class CatalogCache
         Cache::forget(self::MAIN_CATEGORIES_KEY);
         Cache::forget(self::LOCATION_TREE_KEY);
         $this->homeFeed->flush();
+        $this->facets->flush();
 
         $this->featuredAdsChanged();
     }
@@ -64,6 +67,7 @@ class CatalogCache
     public function sellerVisibilityChanged(): void
     {
         $this->homeFeed->flush();
+        $this->facets->flush();
 
         $this->featuredAdsChanged();
     }

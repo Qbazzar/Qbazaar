@@ -16,11 +16,13 @@ use App\Http\Requests\Api\V1\Ads\ListAdsRequest;
 use App\Http\Requests\Api\V1\Ads\ListOwnAdsRequest;
 use App\Http\Requests\Api\V1\Ads\UpdateAdRequest;
 use App\Http\Resources\Api\V1\Ads\AdResource;
+use App\Http\Resources\Api\V1\Ads\AdSearchPage;
 use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
 use App\Models\Ad;
 use App\Models\User;
 use App\Services\Ads\AdDetailCache;
 use App\Services\Ads\ViewerFavorites;
+use App\Services\Search\AdSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -42,16 +44,23 @@ class AdController extends Controller
     /**
      * GET /api/v1/ads — public feed of active ads, latest first.
      *
-     * Filters (`category_id`, `location_id` with descendants, price range) are
-     * AND-combined. `ids` switches to a lookup that keeps the given order.
+     * Filters (`category_id`, `location_id` with descendants, price range, `q`,
+     * condition, price type, ad type, shipping, seller type, `buy_now`, custom
+     * fields) are AND-combined and shared with `/search`; `meta.facets` counts
+     * the result per filter value. `ids` switches to a lookup that keeps the
+     * given order.
      *
      * @unauthenticated
      */
-    public function index(ListAdsRequest $request, ListPublicAdsAction $listAds, ViewerFavorites $favorites): AnonymousResourceCollection
+    public function index(ListAdsRequest $request, ListPublicAdsAction $listAds, ViewerFavorites $favorites, AdSearchService $search, AdSearchPage $page): JsonResponse|AnonymousResourceCollection
     {
         $ids = $request->ids();
 
-        $paginator = $ids !== null ? $listAds->byIds($ids) : $listAds->feed($request->filters());
+        if ($ids === null) {
+            return response()->json($page->render($request, $search->browse($request->searchParams())));
+        }
+
+        $paginator = $listAds->byIds($ids);
         $favorites->mark($this->viewer($request), $paginator->items());
 
         return AdSummaryResource::collection($paginator);

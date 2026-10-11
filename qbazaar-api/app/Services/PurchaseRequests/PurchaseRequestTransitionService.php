@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\PurchaseRequests;
 
-use App\Enums\AdType;
 use App\Enums\PurchaseRequestStatus;
 use App\Events\PurchaseRequests\PurchaseRequestCancelled;
 use App\Exceptions\DomainException;
@@ -12,7 +11,6 @@ use App\Exceptions\ErrorCode;
 use App\Models\Ad;
 use App\Models\Order;
 use App\Models\PurchaseRequest;
-use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -68,9 +66,7 @@ class PurchaseRequestTransitionService
      */
     public function assertAdIsPurchasable(Ad $ad): void
     {
-        $hasPrice = $ad->price !== null && Money::isPositive($ad->price) && ! $ad->price_type->requiresNullPrice();
-
-        if ($ad->trashed() || ! $ad->isPubliclyListed() || $ad->ad_type !== AdType::OFFERING || ! $hasPrice) {
+        if ($ad->trashed() || ! $ad->isPubliclyListed() || ! $ad->hasBuyNowPrice()) {
             throw new DomainException(ErrorCode::PURCHASE_REQUEST_AD_NOT_AVAILABLE);
         }
 
