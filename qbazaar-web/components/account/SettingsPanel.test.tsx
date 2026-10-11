@@ -14,7 +14,7 @@ describe('SettingsPanel', () => {
       </SettingsPanel>,
     );
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Account Settings' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Account Settings' })).toBeInTheDocument();
     expect(screen.getByText('Edit your account settings.')).toBeInTheDocument();
 
     const rows = screen.getAllByRole('listitem');
@@ -23,14 +23,14 @@ describe('SettingsPanel', () => {
     expect(rows[1]).toHaveTextContent('Show phone numberVisitors see it on your ads.');
   });
 
-  it('groups rows in one box on phones and splits them into boxes from tablets up', () => {
+  it('draws each row as its own white r16 card, 20 px apart, at every width', () => {
     render(
       <SettingsList>
         <SettingsRow value="Password" />
       </SettingsList>,
     );
 
-    expect(screen.getByRole('list')).toHaveClass('divide-y', 'qb-tablet:divide-y-0');
-    expect(screen.getByRole('listitem')).toHaveClass('qb-tablet:border', 'qb-tablet:rounded-qb-xl');
+    expect(screen.getByRole('list')).toHaveClass('gap-5');
+    expect(screen.getByRole('listitem')).toHaveClass('border', 'rounded-qb-xl', 'bg-qb-surface');
   });
 });

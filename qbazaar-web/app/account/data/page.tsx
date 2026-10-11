@@ -1,44 +1,36 @@
 'use client';
 
 /**
- * FE-2.7 — Data & account (Delete Account, 401:10866 / 438:18762).
+ * The "Delete Account" panel of account.html (Figma 401:10866 / 438:18762):
+ * the warning, the "I understand" box, then "Delete My Account", which asks
+ * for the password the API requires (`DELETE /account/delete-request`).
+ * Under it, deactivating (`POST /account/deactivate`) stays available as the
+ * gentler option. "Export my data" lives in Data Protection.
  *
- *   1. Export my data           POST  /account/data-export-request
- *   2. Deactivate my account    POST  /account/deactivate
- *   3. Delete my account        DELETE /account/delete-request
- *
- * Steps 2 & 3 both require the current password (so a hijacked session
- * can't kill an account) and accept an optional reason; the delete reason is
- * picked from the design's list. After success we sign the user out +
- * redirect to `/login` with a sticky notice (`?deactivated=1` or
- * `?deleted=1`) so the login page can explain what happened next.
- *
- * The export action keeps the user on this page — the actual file is
- * delivered out-of-band over email.
+ * After either request the user is signed out and sent to `/login` with a
+ * sticky notice (`?deactivated=1` or `?deleted=1`).
  */
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
+import { focusRing } from '@/components/design-system/focus-ring';
 import { Textarea } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
 import { fieldErrorText } from '@/components/auth/FieldError';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { ModalActions } from '@/components/account/ModalActions';
-import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
-import { t, translateMaybeKey } from '@/lib/i18n/messages';
+import { apiErrorLink, apiErrorMessage, type ErrorLink } from '@/components/account/api-error-message';
+import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
-import {
-  deactivateAccount,
-  requestAccountDeletion,
-  requestDataExport,
-} from '@/lib/api/account';
+import { deactivateAccount, requestAccountDeletion } from '@/lib/api/account';
 import { ApiClientError } from '@/lib/api/auth';
 import { AuthErrorCode, UserErrorCode } from '@/lib/api/types';
 import {
@@ -52,102 +44,98 @@ import { useAuth } from '@/hooks/useAuth';
 type LifecycleInput = DeactivateInput | DeleteAccountInput;
 type LifecycleFlow = 'deactivate' | 'delete';
 
-const DELETE_REASONS = ['not_using', 'other_account', 'problems', 'privacy', 'prefer_not', 'something_else'] as const;
-type DeleteReason = (typeof DELETE_REASONS)[number];
-
 export default function AccountDataPage() {
   return (
-    <SettingsPanel title={t('account.data.title')} description={t('account.data.subtitle')}>
-      <SettingsList>
-        <ExportDataRow />
-        <DeactivateAccountRow />
-      </SettingsList>
-      <DeleteAccountSection />
-    </SettingsPanel>
+    <div className="flex flex-col gap-5 font-qb">
+      <DeleteAccountCard />
+      <DeactivateAccountLine />
+    </div>
   );
 }
 
-// ── 1. Export ─────────────────────────────────────────────────────────────
-
-function ExportDataRow() {
-  const [queued, setQueued] = useState(false);
-
-  const mutation = useMutation({
-    mutationFn: requestDataExport,
-    onSuccess: () => setQueued(true),
-    onError: (err) => {
-      if (err instanceof ApiClientError) {
-        toast.error(
-          translateMaybeKey(`account.errors.${err.code}`) ||
-            translateMaybeKey(`auth.errors.${err.code}`) ||
-            err.message,
-        );
-        return;
-      }
-      toast.error(t('auth.errors.unknown'));
-    },
-  });
+function DeleteAccountCard() {
+  const router = useRouter();
+  const { logout } = useAuth();
+  const [understood, setUnderstood] = useState(false);
+  const [confirmMissing, setConfirmMissing] = useState(false);
+  const [open, setOpen] = useState(false);
 
   return (
-    <SettingsRow
-      value={t('account.data.export.title')}
-      description={
-        queued ? (
-          <span role="status">
-            <span className="block font-semibold text-qb-success">{t('account.data.export.queued_title')}</span>
-            {t('account.data.export.queued_body')}
-          </span>
-        ) : (
-          t('account.data.export.body')
-        )
-      }
-      action={
-        queued ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setQueued(false);
-              mutation.reset();
-            }}
-          >
-            {t('account.data.export.request_again')}
-          </Button>
-        ) : (
-          <Button variant="outline" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-            {mutation.isPending ? (
-              <>
-                <Loader2 className="animate-spin" aria-hidden="true" />
-                {t('account.data.export.submitting')}
-              </>
-            ) : (
-              t('account.data.export.submit')
-            )}
-          </Button>
-        )
-      }
-    />
+    <section
+      aria-labelledby="delete-account-title"
+      className="rounded-qb-xl border border-qb-acct-delete-line bg-qb-surface p-7"
+    >
+      <h2 id="delete-account-title" className="mb-3 text-qb-h5 font-semibold tracking-normal text-qb-acct-danger">
+        {t('account.data.delete.title')}
+      </h2>
+      <p className="mb-5 text-qb-body-sm leading-[1.6] text-qb-ink-faint">{t('account.data.delete.body')}</p>
+      <label className="mb-5 flex w-fit cursor-pointer items-center gap-2.5 text-qb-body-sm text-qb-ink-body">
+        <input
+          type="checkbox"
+          checked={understood}
+          onChange={(event) => {
+            setUnderstood(event.target.checked);
+            setConfirmMissing(false);
+          }}
+          aria-invalid={confirmMissing || undefined}
+          aria-describedby={confirmMissing ? 'delete-account-confirm-error' : undefined}
+          className={cn('ms-1 size-[18px] shrink-0 cursor-pointer accent-qb-acct-danger', focusRing)}
+        />
+        {t('account.data.delete.understand')}
+      </label>
+      {confirmMissing ? (
+        <p id="delete-account-confirm-error" role="alert" className="-mt-3 mb-5 text-qb-caption text-qb-danger">
+          {t('account.data.delete.understand_required')}
+        </p>
+      ) : null}
+      {/* Never disabled, as in the reference: without the tick it asks for it instead. */}
+      <button
+        type="button"
+        onClick={() => (understood ? setOpen(true) : setConfirmMissing(true))}
+        className={cn(
+          'cursor-pointer rounded-qb-md bg-qb-acct-danger px-8 py-[13px] text-[13.3333px] leading-[1.15] font-semibold text-qb-on-brand hover:brightness-[0.96]',
+          focusRing,
+        )}
+      >
+        {t('account.data.delete.submit')}
+      </button>
+
+      <LifecycleDialog
+        flow="delete"
+        open={open}
+        onOpenChange={setOpen}
+        title={t('account.data.delete.dialog_title')}
+        description={t('account.data.delete.dialog_body')}
+        reason={null}
+        onConfirm={async (values) => {
+          await requestAccountDeletion({ password: values.password, reason: values.reason ?? null });
+          showDesignToast(t('account.data.delete.scheduled_toast'));
+          await logout();
+          router.replace('/login?deleted=1');
+        }}
+      />
+    </section>
   );
 }
 
-// ── 2. Deactivate ─────────────────────────────────────────────────────────
-
-function DeactivateAccountRow() {
+/** Deactivating hides the account until the next sign-in; nothing is deleted. */
+function DeactivateAccountLine() {
   const router = useRouter();
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <SettingsRow
-        value={t('account.data.deactivate.title')}
-        description={t('account.data.deactivate.body')}
-        action={
-          <Button variant="danger" size="sm" onClick={() => setOpen(true)}>
-            {t('account.data.deactivate.submit')}
-          </Button>
-        }
-      />
+      <p className="text-qb-caption text-qb-ink-subtle">
+        {t('account.data.deactivate.instead')}{' '}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={cn('cursor-pointer rounded-qb-xs font-medium text-qb-brand underline', focusRing)}
+        >
+          {t('account.data.deactivate.submit')}
+        </button>
+      </p>
       <LifecycleDialog
         flow="deactivate"
         open={open}
@@ -164,91 +152,6 @@ function DeactivateAccountRow() {
         }}
       />
     </>
-  );
-}
-
-// ── 3. Delete ─────────────────────────────────────────────────────────────
-
-function DeleteAccountSection() {
-  const router = useRouter();
-  const { logout } = useAuth();
-  const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState<DeleteReason | null>(null);
-  const [otherReason, setOtherReason] = useState('');
-
-  const reasonText =
-    reason === null || reason === 'prefer_not'
-      ? null
-      : reason === 'something_else'
-        ? otherReason.trim() || null
-        : t(`account.data.delete.reasons.${reason}`);
-
-  return (
-    <section aria-labelledby="delete-account-title" className="mt-10 qb-desktop:mt-12">
-      <h2 id="delete-account-title" className="text-qb-body-lg font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5">
-        {t('account.data.delete.title')}
-      </h2>
-      <p className="mt-2 text-qb-caption text-qb-ink-subtle">{t('account.data.delete.body')}</p>
-
-      <fieldset className="mt-6">
-        <legend className="text-qb-body font-medium text-qb-ink-body">{t('account.data.delete.reason_question')}</legend>
-        <div className="mt-4 flex flex-col gap-3 qb-desktop:gap-4">
-          {DELETE_REASONS.map((key) => (
-            <label
-              key={key}
-              className={cn(
-                'flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-qb-lg border border-qb-line bg-qb-surface px-4 text-qb-caption font-semibold text-qb-ink-title transition-colors qb-tablet:px-6 qb-desktop:min-h-[72px] qb-desktop:text-qb-body',
-                'has-[:checked]:border-qb-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
-              )}
-            >
-              {t(`account.data.delete.reasons.${key}`)}
-              <input
-                type="radio"
-                name="delete-reason"
-                value={key}
-                checked={reason === key}
-                onChange={() => setReason(key)}
-                className="size-[19px] shrink-0 accent-qb-brand"
-              />
-            </label>
-          ))}
-        </div>
-        {reason === 'something_else' ? (
-          <Field label={t('account.data.delete.reason_label')} className="mt-4">
-            {(control) => (
-              <Textarea
-                {...control}
-                rows={3}
-                maxLength={280}
-                value={otherReason}
-                onChange={(event) => setOtherReason(event.target.value)}
-                placeholder={t('account.data.delete.reason_placeholder')}
-              />
-            )}
-          </Field>
-        ) : null}
-      </fieldset>
-
-      <Button fullWidth onClick={() => setOpen(true)} className="mt-8 h-14 rounded-qb-xl qb-desktop:mt-[44px]">
-        <Trash2 aria-hidden="true" />
-        {t('account.data.delete.submit')}
-      </Button>
-
-      <LifecycleDialog
-        flow="delete"
-        open={open}
-        onOpenChange={setOpen}
-        title={t('account.data.delete.dialog_title')}
-        description={t('account.data.delete.dialog_body')}
-        reason={reasonText}
-        onConfirm={async (values) => {
-          await requestAccountDeletion({ password: values.password, reason: values.reason ?? null });
-          toast.success(t('account.data.delete.scheduled_toast'));
-          await logout();
-          router.replace('/login?deleted=1');
-        }}
-      />
-    </section>
   );
 }
 
@@ -275,11 +178,14 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
     defaultValues: { password: '', reason: '' },
   });
 
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
+
   const onSubmit = form.handleSubmit(async (values) => {
+    setRefusal(null);
     try {
       await onConfirm(withReason ? values : { password: values.password, reason });
     } catch (err) {
-      handleLifecycleError(err, form, flow);
+      handleLifecycleError(err, form, setRefusal);
     }
   });
 
@@ -292,7 +198,10 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
       open={open}
       onOpenChange={(next) => {
         if (!next && submitting) return;
-        if (!next) form.reset({ password: '', reason: '' });
+        if (!next) {
+          form.reset({ password: '', reason: '' });
+          setRefusal(null);
+        }
         onOpenChange(next);
       }}
       title={title}
@@ -328,6 +237,8 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
           </Field>
         ) : null}
 
+        {refusal ? <RefusalNotice refusal={refusal} /> : null}
+
         <ModalActions className="mt-1">
           <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
             {submitting ? (
@@ -348,51 +259,66 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
   );
 }
 
+interface Refusal {
+  message: string;
+  link: ErrorLink | null;
+}
+
+/** Why the API refused the request (money owed, order open, …) and where to sort it out. */
+function RefusalNotice({ refusal }: { refusal: Refusal }) {
+  return (
+    <div role="alert" className="flex flex-col gap-2 text-qb-caption text-qb-danger">
+      <p>{refusal.message}</p>
+      {refusal.link ? (
+        <Link href={refusal.link.href} className={cn('w-fit rounded-qb-xs font-medium text-qb-brand underline', focusRing)}>
+          {refusal.link.label}
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+function isWrongPassword(err: ApiClientError): boolean {
+  return err.code === UserErrorCode.DeactivationPasswordRequired;
+}
+
+function mapFieldErrors(err: ApiClientError, form: ReturnType<typeof useForm<LifecycleInput>>): boolean {
+  const known: string[] = ['password', 'reason'];
+  let mapped = false;
+  for (const [field, messages] of Object.entries(err.details ?? {})) {
+    if (known.includes(field) && messages?.length) {
+      form.setError(field as keyof LifecycleInput, { type: 'server', message: messages[0] });
+      mapped = true;
+    }
+  }
+  return mapped;
+}
+
+/**
+ * Both `DELETE /account/delete-request` and `POST /account/deactivate` answer
+ * a wrong password with USER_005; the ACCOUNT_003..006 refusals of deletion
+ * show inline with a link to the page that clears them.
+ */
 function handleLifecycleError(
   err: unknown,
   form: ReturnType<typeof useForm<LifecycleInput>>,
-  flow: LifecycleFlow,
+  setRefusal: (refusal: Refusal) => void,
 ) {
-  if (err instanceof ApiClientError) {
-    if (err.code === AuthErrorCode.ValidationFailed && err.details) {
-      const known: (keyof LifecycleInput)[] = ['password', 'reason'];
-      let mapped = false;
-      for (const [field, messages] of Object.entries(err.details)) {
-        if ((known as string[]).includes(field) && messages?.length) {
-          form.setError(field as keyof LifecycleInput, {
-            type: 'server',
-            message: messages[0],
-          });
-          mapped = true;
-        }
-      }
-      if (mapped) return;
-    }
-
-    if (err.code === UserErrorCode.PasswordIncorrect) {
-      const msg = t('account.errors.USER_002');
-      form.setError('password', { type: 'server', message: msg });
-      toast.error(msg);
-      return;
-    }
-
-    const passwordMissingCode =
-      flow === 'deactivate'
-        ? UserErrorCode.DeactivationPasswordRequired
-        : UserErrorCode.DeletionPasswordRequired;
-    if (err.code === passwordMissingCode) {
-      const msg = t(`account.errors.${err.code}`);
-      form.setError('password', { type: 'server', message: msg });
-      toast.error(msg);
-      return;
-    }
-
-    const fallback =
-      translateMaybeKey(`account.errors.${err.code}`) ||
-      translateMaybeKey(`auth.errors.${err.code}`) ||
-      err.message;
-    toast.error(fallback);
+  if (!(err instanceof ApiClientError)) {
+    toast.error(t('auth.errors.unknown'));
     return;
   }
-  toast.error(t('auth.errors.unknown'));
+  if (err.code === AuthErrorCode.ValidationFailed && mapFieldErrors(err, form)) return;
+  if (isWrongPassword(err)) {
+    const msg = apiErrorMessage(err);
+    form.setError('password', { type: 'server', message: msg });
+    toast.error(msg);
+    return;
+  }
+  const link = apiErrorLink(err);
+  if (link) {
+    setRefusal({ message: apiErrorMessage(err), link });
+    return;
+  }
+  toast.error(apiErrorMessage(err));
 }
