@@ -192,6 +192,11 @@ return [
         'limit' => [
             'reached' => 'You have reached the maximum number of favourites. Remove some to add new ones.',
         ],
+        'category' => [
+            'limit' => [
+                'reached' => 'You have reached the maximum number of favourite categories. Remove some to add new ones.',
+            ],
+        ],
     ],
 
     'offer' => [

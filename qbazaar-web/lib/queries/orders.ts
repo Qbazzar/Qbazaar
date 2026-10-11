@@ -12,7 +12,7 @@ import {
 } from '@tanstack/react-query';
 
 import type { ApiClientError } from '@/lib/api/auth';
-import type { Checkout, CheckoutPayload, DealRole, Order, OrderStatus } from '@/lib/api/commerce-types';
+import type { Checkout, CheckoutAddressInput, CheckoutPayload, DealRole, Order, OrderStatus, SavedAddress } from '@/lib/api/commerce-types';
 import {
   cancelOrder,
   confirmHandover,
@@ -20,6 +20,7 @@ import {
   getOrder,
   listOrders,
   reportOrderProblem,
+  saveAddress,
   submitCheckout,
 } from '@/lib/api/orders';
 import { useIsAuthenticated } from '@/hooks/useIsAuthenticated';
@@ -37,14 +38,14 @@ export const orderKeys = {
   checkout: (id: string) => [...orderKeys.all, 'checkout', id] as const,
 };
 
-export function useOrdersQuery(role: DealRole, status?: OrderStatus) {
-  const enabled = useIsAuthenticated();
+export function useOrdersQuery(role: DealRole, status?: OrderStatus, options: { enabled?: boolean } = {}) {
+  const signedIn = useIsAuthenticated();
   return useInfiniteQuery({
     queryKey: orderKeys.list(role, status),
     queryFn: ({ pageParam }) => listOrders({ role, status, cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => (last.meta.has_more ? last.meta.next_cursor : undefined),
-    enabled,
+    enabled: signedIn && (options.enabled ?? true),
     staleTime: 15 * SECOND,
   });
 }
@@ -86,6 +87,19 @@ export function useSubmitCheckoutMutation(orderId: string) {
   return useMutation<Order, ApiClientError, WithKey & { payload: CheckoutPayload }>({
     mutationFn: ({ payload, idempotencyKey }) => submitCheckout(orderId, payload, idempotencyKey),
     onSuccess: (order) => settleOrder(qc, order),
+  });
+}
+
+/** Saves a typed delivery address to the account and adds it to this checkout's saved addresses at once. */
+export function useSaveAddressMutation(orderId: string) {
+  const qc = useQueryClient();
+  return useMutation<SavedAddress, ApiClientError, CheckoutAddressInput>({
+    mutationFn: (address) => saveAddress(address),
+    onSuccess: (address) => {
+      qc.setQueryData<Checkout>(orderKeys.checkout(orderId), (checkout) =>
+        checkout ? { ...checkout, saved_addresses: [...checkout.saved_addresses, address] } : checkout,
+      );
+    },
   });
 }
 

@@ -19,6 +19,8 @@ use Tests\Concerns\CreatesAds;
 uses(RefreshDatabase::class, CreatesAds::class);
 
 beforeEach(function (): void {
+    // Facets are counted on every request, so the query counts compared below are exact.
+    config(['qbazaar.search.facets_cache_seconds' => 0]);
     Storage::fake('public');
     $this->seedReferenceData();
 });

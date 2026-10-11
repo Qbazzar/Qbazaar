@@ -43,7 +43,10 @@ describe('LanguageMenu', () => {
     renderMenu();
 
     await user.click(screen.getByRole('button', { name: 'Language' }));
-    await user.click(screen.getByRole('button', { name: 'العربية' }));
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'العربية' })).toHaveFocus();
+    await user.keyboard('{Enter}');
 
     expect(switchLocale).toHaveBeenCalledWith('ar');
   });
@@ -60,6 +63,35 @@ describe('LanguageMenu', () => {
 
     expect(screen.queryByRole('group')).toBeNull();
     expect(trigger).toHaveFocus();
+  });
+
+  it('opens the desktop panel while the mouse rests on the globe and keeps it open on a click', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+    const trigger = screen.getByRole('button', { name: 'Language' });
+
+    await user.hover(trigger);
+    expect(screen.getByRole('group', { name: 'Choose your language' })).toBeInTheDocument();
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    await user.unhover(trigger);
+    expect(screen.queryByRole('group')).toBeNull();
+  });
+
+  it('leaves the phone popup to clicks', async () => {
+    const user = userEvent.setup();
+    render(
+      <LanguageMenu className="globe" variant="phone">
+        globe
+      </LanguageMenu>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Language' });
+
+    await user.hover(trigger);
+    expect(screen.queryByRole('group')).toBeNull();
+    await user.click(trigger);
+    expect(screen.getByRole('group', { name: 'Choose your language' })).toBeInTheDocument();
   });
 
   it('closes when the focus or a click goes elsewhere', async () => {

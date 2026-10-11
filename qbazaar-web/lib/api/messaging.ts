@@ -172,3 +172,29 @@ export async function getUnreadCount(): Promise<UnreadCountResponse> {
     throw toApiClientError(err);
   }
 }
+
+/** Hides conversations from the caller's inbox only; a new message brings one back. */
+export async function hideConversations(ids: readonly string[]): Promise<void> {
+  try {
+    await api.delete(CONVERSATIONS_BASE, { data: { ids } });
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** Sends a photo (multipart `type=image`), with an optional caption. */
+export async function sendImageMessage(conversationId: string, image: File, caption?: string): Promise<Message> {
+  const form = new FormData();
+  form.append('type', 'image');
+  form.append('image', image);
+  if (caption) form.append('body', caption);
+  try {
+    const { data } = await api.post<SuccessEnvelope<Message>>(
+      `${CONVERSATIONS_BASE}/${encodeURIComponent(conversationId)}/messages`,
+      form,
+    );
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}

@@ -1,0 +1,47 @@
+/* Exact reference colours of the product, seller, companies and wishlist
+   pages that design-tokens.css has no token for yet (D:/Doc/q-bazaar
+   product.html, seller-*.html, companies.html, wishlist.html, users.html).
+   Same rules as design-tokens.css: the design's values, never darkened. */
+
+@theme {
+  /* Share dialog channels */
+  --color-qb-whatsapp: #25b764;
+  --color-qb-facebook: #2b59c9;
+  --color-qb-x: #141414;
+
+  /* Empty radio ring of the report dialog */
+  --color-qb-radio: #cbcbcb;
+
+  /* "Features & Extras": tick circle and label */
+  --color-qb-tick: #00c35b;
+  --color-qb-ink-feature: #999999;
+
+  /* Seller profile card: labels, the avatar tile and the highlight chips */
+  --color-qb-ink-label: #909090;
+  --color-qb-avatar: #fcfcfc;
+  --color-qb-brand-faint: #fff3ef;
+
+  /* Grey text of the Following / Followers empty state */
+  --color-qb-ink-note: #8c8c8c;
+
+  /* Company page: the grey band behind the cover and the logo initials */
+  --color-qb-band: #e0e0e0;
+  --color-qb-ink-logo: #787878;
+
+  /* Companies directory: the logo tiles' tints the status tokens don't cover */
+  --color-qb-tile-blue-soft: #ebeeff;
+  --color-qb-tile-cyan: #17a2d6;
+  --color-qb-tile-cyan-soft: #e0f6ff;
+  --color-qb-tile-red: #e83f3f;
+  --color-qb-tile-red-soft: #ffe8e8;
+
+  /* Centred dialogs of the reference (share, report) */
+  --shadow-qb-modal: 0 20px 60px 0 rgb(0 0 0 / 0.3);
+
+  /* The company logo lifted over its card, and the cards that slide up as bottom sheets */
+  --shadow-qb-logo: 0 4px 25px 0 rgb(188 188 188 / 0.3);
+  --shadow-qb-sheet: 0 -10px 44px 0 rgb(0 0 0 / 0.22);
+
+  /* The white search bar of the companies directory */
+  --shadow-qb-search: 0 4px 40px 0 rgb(161 161 161 / 0.14);
+}

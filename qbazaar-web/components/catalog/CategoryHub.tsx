@@ -129,7 +129,7 @@ function HubSkeleton() {
           <div className="mb-[26px] h-7 w-48 animate-pulse rounded-qb-sm bg-qb-line motion-reduce:animate-none qb-tablet:mb-[38px]" />
           <div className="flex gap-3 overflow-hidden qb-desktop:[display:grid] qb-desktop:grid-cols-3 qb-desktop:gap-[17px]">
             {Array.from({ length: DESKTOP_CARDS }, (_, index) => (
-              <div key={index} className={cn(card, 'h-[270px] w-[250px] shrink-0 qb-tablet:w-[310px] qb-desktop:w-auto')} />
+              <div key={index} className={cn(card, 'h-[288px] w-[260px] shrink-0 qb-tablet:w-[310px] qb-desktop:w-auto')} />
             ))}
           </div>
         </div>

@@ -22,6 +22,7 @@ import { formatAdPrice } from '@/components/account/format';
 import { cn } from '@/lib/utils';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
+import { ChatSettingsMenu } from './ChatSettingsMenu';
 import {
   appendIncomingMessageToCache,
   useConversationQuery,
@@ -126,7 +127,7 @@ export function ConversationView({ conversationId, onBack }: Props) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex items-center gap-3 border-b border-qb-line px-[17px] py-4 qb-tablet:gap-4 qb-tablet:px-8 qb-tablet:py-6">
+      <header className="flex items-center gap-3 border-b border-qb-line px-4 py-[18px] qb-desktop:px-7 qb-desktop:py-[22px]">
         <Button
           variant="ghost"
           size="icon"
@@ -139,31 +140,23 @@ export function ConversationView({ conversationId, onBack }: Props) {
 
         <Link
           href={`/ads/${conversation.ad.id}`}
-          className={cn('flex min-w-0 flex-1 items-center gap-3 rounded-qb-md qb-tablet:gap-4', focusRing)}
+          className={cn('flex min-w-0 flex-1 items-center gap-3 rounded-qb-md', focusRing)}
         >
           <AdPhoto
             image={conversation.ad.primary_image}
-            sizes="67px"
+            sizes="44px"
             compact
-            className="size-10 rounded-full qb-tablet:size-[61px] qb-desktop:size-[67px]"
+            className="size-11 rounded-qb-lg qb-desktop:hidden"
           />
           <span className="min-w-0">
-            <span className="block truncate text-qb-body font-semibold text-qb-ink qb-tablet:text-qb-h5 qb-tablet:font-medium qb-desktop:text-qb-h3">
+            <span className="block truncate text-qb-body-lg font-semibold text-qb-ink qb-desktop:text-qb-h3">
               <bdi>{conversation.ad.title}</bdi>
             </span>
-            <span className="mt-1 flex min-w-0 items-center gap-2 text-qb-micro qb-tablet:mt-2 qb-tablet:text-qb-caption qb-desktop:text-qb-body">
-              <span className="shrink-0 font-semibold text-qb-brand">
-                {formatAdPrice(conversation.ad)}
-              </span>
-              <span aria-hidden="true" className="text-qb-ink-disabled">
-                •
-              </span>
-              <span className="truncate text-qb-ink-subtle">
-                <bdi>{conversation.other_participant.full_name}</bdi>
-              </span>
-            </span>
+            <span className="mt-1 block font-semibold text-qb-brand">{formatAdPrice(conversation.ad)}</span>
           </span>
         </Link>
+
+        <ChatSettingsMenu peer={conversation.other_participant} />
       </header>
 
       <MessageList conversationId={conversationId} />

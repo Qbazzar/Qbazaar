@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Events\Users\UserStatusChanged;
+use App\Jobs\Search\SyncSellerAccountTypeJob;
 use App\Models\User;
 use App\Observers\Concerns\ResolvesActivityCauser;
 use BackedEnum;
@@ -64,6 +65,10 @@ class UserObserver
                     'requested_at' => $user->deletion_requested_at->toIso8601String(),
                 ])
                 ->log('User requested account deletion');
+        }
+
+        if ($user->wasChanged('account_type')) {
+            SyncSellerAccountTypeJob::dispatch($user->id);
         }
 
         if ($user->wasChanged('status')) {

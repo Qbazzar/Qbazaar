@@ -19,6 +19,7 @@ use App\Services\Catalog\CategoryAdCounts;
 use App\Services\Catalog\CategoryPageCache;
 use App\Services\Catalog\CategorySchema;
 use App\Services\Catalog\CategoryTree;
+use App\Services\Catalog\FavoriteCategories;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -85,15 +86,22 @@ class CategoryController extends Controller
      *
      * The page is the same for every visitor of a language and comes from
      * {@see CategoryPageCache}; the viewer's favourite flags are laid over
-     * the cached cards.
+     * the cached cards, and `is_favorited` says whether the viewer favourited
+     * the category itself.
      *
      * @unauthenticated
      *
      * @throws DomainException
      */
-    public function show(Request $request, string $slug, CategoryPageCache $pages, ViewerFavorites $favorites): JsonResponse
+    public function show(Request $request, string $slug, CategoryPageCache $pages, ViewerFavorites $favorites, FavoriteCategories $favoriteCategories): JsonResponse
     {
-        return response()->json($this->withFavorites($pages->get($slug), $this->viewer($request), $favorites));
+        $viewer = $this->viewer($request);
+        $page = $this->withFavorites($pages->get($slug), $viewer, $favorites);
+
+        // Per viewer, so it is laid over the shared page instead of being cached with it.
+        $page['is_favorited'] = $favoriteCategories->isFavorited($viewer, (string) $page['category']['id']);
+
+        return response()->json($page);
     }
 
     /**

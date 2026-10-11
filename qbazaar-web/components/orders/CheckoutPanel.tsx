@@ -14,6 +14,11 @@ export interface CheckoutPanelProps {
   titleId: string;
   /** Control on the end side of the heading, e.g. a "Change" link. */
   action?: ReactNode;
+  /**
+   * The list card of payment-method.html: a 24 px semibold title and a
+   * divider from edge to edge; `flush` also lets the content reach the edges.
+   */
+  layout?: 'section' | 'list' | 'flush';
   children: ReactNode;
   className?: string;
 }
@@ -22,7 +27,20 @@ export interface CheckoutPanelProps {
  * White r24 card with a divided heading, as the checkout sections (682:32513).
  * Radio groups inside label themselves with `aria-labelledby={titleId}`.
  */
-export function CheckoutPanel({ title, titleId, action, children, className }: CheckoutPanelProps) {
+export function CheckoutPanel({ title, titleId, action, layout = 'section', children, className }: CheckoutPanelProps) {
+  if (layout !== 'section') {
+    return (
+      <section aria-labelledby={titleId} className={cn(panelClass, className)}>
+        <div className="flex items-center justify-between gap-4 border-b border-qb-line px-4 py-4 qb-tablet:px-6 qb-desktop:px-8 qb-desktop:py-6">
+          <h2 id={titleId} className="font-qb text-qb-body-lg font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5 qb-desktop:text-qb-h3">
+            {title}
+          </h2>
+          {action}
+        </div>
+        <div className={layout === 'list' ? panelPadding : undefined}>{children}</div>
+      </section>
+    );
+  }
   return (
     <section aria-labelledby={titleId} className={cn(panelClass, panelPadding, className)}>
       <div className="flex items-center justify-between gap-4 border-b border-qb-line pb-4 qb-desktop:pb-6">

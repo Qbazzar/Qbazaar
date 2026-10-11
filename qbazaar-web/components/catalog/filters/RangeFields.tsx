@@ -20,7 +20,9 @@ interface RangeFieldsProps {
   step?: number;
 }
 
-const field = 'h-11 rounded-qb-lg text-qb-caption';
+/** Plain fields without the number spinners (264:4818, 618:26974). */
+const field =
+  'h-11 rounded-qb-lg text-qb-caption [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
 
 /** Min – max number inputs of a filter; a reversed range is flagged and announced. */
 export function RangeFields({ min, max, parse, onChange, minLabel, maxLabel, errorMessage, step }: RangeFieldsProps) {

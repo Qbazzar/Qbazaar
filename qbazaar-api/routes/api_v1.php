@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Auth\SocialSignInController;
 use App\Http\Controllers\Api\V1\Cms\PageController;
 use App\Http\Controllers\Api\V1\Companies\CompanyController;
+use App\Http\Controllers\Api\V1\Favorites\FavoriteCategoryController;
 use App\Http\Controllers\Api\V1\Favorites\FavoriteController;
 use App\Http\Controllers\Api\V1\Help\HelpController;
 use App\Http\Controllers\Api\V1\Home\HomeController;
@@ -464,6 +465,9 @@ Route::prefix('account/saved-searches')
 //     DELETE /ads/{id}/favorite           — idempotent remove
 //     GET    /account/favorites           — paginated list of caller's favourites
 //     GET    /account/favorites/ids       — every favourited ad id (capped)
+//     GET    /account/favorite-categories — the caller's favourite categories
+//     PUT    /account/favorite-categories/{category}    — idempotent add (slug)
+//     DELETE /account/favorite-categories/{category}    — idempotent remove
 //     GET    /account/recently-viewed     — paginated history (auth-only)
 //     DELETE /account/recently-viewed     — clear caller's history
 //   Public-ish:
@@ -483,6 +487,15 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
 
     Route::get('/account/favorites/ids', [FavoriteController::class, 'ids'])
         ->name('api.v1.account.favorites.ids');
+
+    Route::get('/account/favorite-categories', [FavoriteCategoryController::class, 'index'])
+        ->name('api.v1.account.favorite-categories.index');
+
+    Route::put('/account/favorite-categories/{category}', [FavoriteCategoryController::class, 'add'])
+        ->name('api.v1.account.favorite-categories.add');
+
+    Route::delete('/account/favorite-categories/{category}', [FavoriteCategoryController::class, 'remove'])
+        ->name('api.v1.account.favorite-categories.remove');
 
     Route::get('/account/recently-viewed', [RecentViewController::class, 'index'])
         ->name('api.v1.account.recently-viewed.index');

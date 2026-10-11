@@ -11,6 +11,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import {
   REFRESH_COOKIE_NAME,
   getUpstreamApiUrl,
+  isSessionOnly,
   readRefreshCookie,
   refreshCookieOptions,
 } from '@/lib/api/refresh-cookie';
@@ -92,6 +93,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     },
   });
 
-  res.cookies.set(REFRESH_COOKIE_NAME, tokens.refresh_token, refreshCookieOptions());
+  res.cookies.set(
+    REFRESH_COOKIE_NAME,
+    tokens.refresh_token,
+    refreshCookieOptions(isSessionOnly(req) ? 'session' : undefined),
+  );
   return res;
 }

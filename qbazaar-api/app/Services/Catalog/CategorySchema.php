@@ -58,6 +58,37 @@ class CategorySchema
         return $schema;
     }
 
+    /**
+     * Keys of the category's select filters, the ones whose options get ad
+     * counts next to them. Looked up by id because search filters by id.
+     *
+     * @return list<string>
+     */
+    public function selectFilterKeys(string $categoryId): array
+    {
+        $key = sprintf('categories.schema.%s.select-keys.%s', $this->generation(), $categoryId);
+
+        /** @var list<string> */
+        return Cache::remember($key, self::TTL_SECONDS, function () use ($categoryId): array {
+            $filters = Category::query()->whereKey($categoryId)->value('custom_filters');
+            $keys = [];
+
+            foreach (is_array($filters) ? $filters : [] as $filter) {
+                if (! is_array($filter)) {
+                    continue;
+                }
+
+                $name = $filter['key'] ?? null;
+
+                if (($filter['type'] ?? 'select') === 'select' && is_string($name) && preg_match('/^[a-z0-9_]+$/i', $name) === 1) {
+                    $keys[] = $name;
+                }
+            }
+
+            return array_slice($keys, 0, (int) config('qbazaar.search.facet_custom_fields_max'));
+        });
+    }
+
     public function flush(): void
     {
         Cache::forever(self::GENERATION_KEY, Str::random(12));

@@ -4,20 +4,37 @@ declare(strict_types=1);
 
 namespace App\Services\Search;
 
+use App\Actions\Ads\ListPublicAdsAction;
+use App\Data\Catalog\AdFeedFilters;
 use App\Models\Ad;
+use App\Services\Catalog\CategorySchema;
 use GuzzleHttp\Exception\ConnectException as GuzzleConnectException;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator as PaginatorContract;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
+use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Exceptions\CommunicationException;
-use stdClass;
+use Throwable;
 
 /**
- * Encapsulates Meilisearch interaction for ad search.
+ * The one place that answers "which ads match these filters, and how many
+ * match each filter value", for both `GET /search` and `GET /ads`.
  *
  * Controllers stay declarative — they hand validated input to this service
- * and forward the result envelope. All Meilisearch-specific bits (filter
- * string composition, facet distribution, ranking rule overrides) live
- * here so the engine can be swapped without touching HTTP code.
+ * and forward the result. Two engines sit behind it:
+ *  - Meilisearch, which returns the page of ids, the total and the facet
+ *    distribution in one request;
+ *  - the database, through the public feed query ({@see ListPublicAdsAction})
+ *    and {@see AdFacetCounter}, when the Scout driver is not Meilisearch.
+ *
+ * `/ads` is a plain browse: it stays on the database, which has warmed
+ * counters and indexes for it, and only goes to the engine for what the
+ * database does badly (keywords, custom-field filters).
+ *
+ * Every result carries `facets` (the older `/search` block) and `meta_facets`
+ * (the `meta.facets` block of both endpoints).
+ *
+ * @phpstan-type SearchResult array{paginator: PaginatorContract<int, Ad>, facets: array<string, mixed>, meta_facets: array<string, mixed>}
  */
 class AdSearchService
 {
@@ -27,61 +44,200 @@ class AdSearchService
     /** @var int */
     public const MAX_PER_PAGE = 50;
 
-    private const FACETS = ['category_slug', 'location_slug', 'condition', 'price_type'];
+    /** Attributes counted for every request; `/search` also counts places and price types. */
+    private const array TAXONOMY_FACETS = ['category_slug', 'location_slug'];
 
-    public function __construct(private readonly AdSearchCriteria $criteria) {}
+    public function __construct(
+        private readonly AdSearchCriteria $criteria,
+        private readonly ListPublicAdsAction $feed,
+        private readonly AdFacetCounter $counter,
+        private readonly AdFacetShaper $shaper,
+        private readonly CategorySchema $schema,
+    ) {}
 
     /**
-     * Run a paginated search + facet aggregation.
+     * Run a paginated search + facet aggregation (`GET /search`).
      *
      * @param array<string, mixed> $params Validated SearchRequest payload.
-     * @return array{paginator: LengthAwarePaginator<int, Ad>, facets: array<string, mixed>}
+     * @return SearchResult
      */
     public function search(array $params): array
     {
         $perPage = $this->resolvePerPage($params['per_page'] ?? null);
+
+        return $this->run($params, $perPage, $this->usesMeilisearch(), true);
+    }
+
+    /**
+     * The public feed with the same filters and facets (`GET /ads`).
+     *
+     * @param array<string, mixed> $params Validated ListAdsRequest payload.
+     * @return SearchResult
+     */
+    public function browse(array $params): array
+    {
+        $needsEngine = trim((string) ($params['q'] ?? '')) !== '' || ! empty($params['custom_fields']);
+
+        return $this->run($params, self::DEFAULT_PER_PAGE, $needsEngine && $this->usesMeilisearch(), false);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return SearchResult
+     */
+    private function run(array $params, int $perPage, bool $viaEngine, bool $taxonomy): array
+    {
         $page = is_numeric($params['page'] ?? null) ? max(1, (int) $params['page']) : 1;
+        $categoryId = $params['category_id'] ?? null;
+        $customKeys = is_string($categoryId) && $categoryId !== '' ? $this->schema->selectFilterKeys($categoryId) : [];
 
-        $query = isset($params['q']) && is_string($params['q']) ? trim($params['q']) : '';
-
-        $sort = $this->criteria->sort($params);
-        $filter = $this->criteria->filter($params);
-
-        if (! $this->usesMeilisearch()) {
-            return $this->emptyResult($perPage, $page);
+        if (! $viaEngine) {
+            return $this->keywordAllowedOnDatabase($params)
+                ? $this->viaDatabase($params, $perPage, $page, $customKeys, $taxonomy)
+                : $this->withoutKeywordEngine($perPage, $page, $customKeys);
         }
+
+        return $this->viaEngine($params, $perPage, $page, $customKeys, $taxonomy);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @param list<string> $customKeys
+     * @return SearchResult
+     */
+    private function viaDatabase(array $params, int $perPage, int $page, array $customKeys, bool $taxonomy): array
+    {
+        $filters = AdFeedFilters::fromParams($params);
+        $distribution = $this->counter->count($filters, $customKeys, $taxonomy);
+
+        return [
+            'paginator' => $this->feed->feed($filters, $perPage, $page),
+            'facets' => $this->shaper->legacy($distribution),
+            'meta_facets' => $this->shaper->meta($distribution, $customKeys),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @param list<string> $customKeys
+     * @return SearchResult
+     */
+    private function viaEngine(array $params, int $perPage, int $page, array $customKeys, bool $taxonomy): array
+    {
+        $query = isset($params['q']) && is_string($params['q']) ? trim($params['q']) : '';
 
         try {
             $raw = $this->rawSearch($query, [
-                'filter' => $filter,
-                'sort' => $sort,
+                'filter' => $this->criteria->filter($params),
+                'sort' => $this->criteria->sort($params),
                 'hitsPerPage' => $perPage,
                 'page' => $page,
-                'facets' => self::FACETS,
+                'facets' => $this->facetAttributes($customKeys, $taxonomy),
                 'attributesToRetrieve' => ['id'],
                 'attributesToHighlight' => [],
             ]);
 
-            return [
-                'paginator' => new LengthAwarePaginator(
-                    items: $this->hydrate($raw),
-                    total: is_int($raw['totalHits'] ?? null) ? $raw['totalHits'] : 0,
-                    perPage: $perPage,
-                    currentPage: $page,
-                ),
-                'facets' => $this->extractFacets($raw),
-            ];
-        } catch (CommunicationException|GuzzleConnectException $e) {
-            // Meilisearch unreachable — surface an empty result set instead
-            // of a 500 so the UI degrades to "no matches" rather than a
-            // hard error. Logged at warning so ops still gets paged in prod.
-            Log::warning('Search engine unavailable, returning empty result set', [
-                'error' => $e->getMessage(),
-                'query' => $query,
-            ]);
+            return $this->engineResult($raw, $perPage, $page, $customKeys);
+        } catch (CommunicationException|GuzzleConnectException|ApiException $e) {
+            // Meilisearch unreachable, or it refused the request — surface an
+            // empty result set instead of a 500 so the UI degrades to "no
+            // matches" rather than a hard error.
+            // The database is deliberately not used instead: a keyword scan
+            // there during an outage would take the primary down with it.
+            $this->logEngineFailure($e, $query);
 
-            return $this->emptyResult($perPage, $page);
+            return $this->engineResult([], $perPage, $page, $customKeys);
         }
+    }
+
+    /**
+     * A filter the index does not know yet (settings not synced after a
+     * deploy) is a known, transient state and stays a warning. Anything else
+     * the engine refuses (a bad key, a missing index, a malformed filter
+     * string) is a configuration or code fault and must not pass as a quiet
+     * empty page, so it is logged as an error with the engine's own code.
+     */
+    private function logEngineFailure(Throwable $e, string $query): void
+    {
+        $code = $e instanceof ApiException ? $e->errorCode : null;
+        $context = [
+            'error' => $e->getMessage(),
+            'meili_code' => $code,
+            'query_hash' => $query === '' ? null : substr(sha1(mb_strtolower($query)), 0, 12),
+        ];
+
+        if ($e instanceof ApiException && $code !== 'invalid_search_filter') {
+            Log::error('Search engine refused the request, returning empty result set', $context);
+
+            return;
+        }
+
+        Log::warning('Search engine unavailable, returning empty result set', $context);
+    }
+
+    /**
+     * LIKE keyword matching scans the listed ads, so it only runs where the
+     * data is small (local, testing) or when ops switched it on explicitly.
+     *
+     * @param array<string, mixed> $params
+     */
+    private function keywordAllowedOnDatabase(array $params): bool
+    {
+        if (trim((string) ($params['q'] ?? '')) === '') {
+            return true;
+        }
+
+        return app()->environment(['local', 'testing']) || (bool) config('qbazaar.search.db_keyword_fallback');
+    }
+
+    /**
+     * @param list<string> $customKeys
+     * @return SearchResult
+     */
+    private function withoutKeywordEngine(int $perPage, int $page, array $customKeys): array
+    {
+        Log::warning('Keyword search needs the meilisearch Scout driver, returning no results', [
+            'driver' => config('scout.driver'),
+        ]);
+
+        return $this->engineResult([], $perPage, $page, $customKeys);
+    }
+
+    /**
+     * @param array<string, mixed> $raw
+     * @param list<string> $customKeys
+     * @return SearchResult
+     */
+    private function engineResult(array $raw, int $perPage, int $page, array $customKeys): array
+    {
+        /** @var array<string, array<string, int>> $distribution */
+        $distribution = is_array($raw['facetDistribution'] ?? null) ? $raw['facetDistribution'] : [];
+
+        return [
+            'paginator' => new LengthAwarePaginator(
+                items: $this->hydrate($raw),
+                total: is_int($raw['totalHits'] ?? null) ? $raw['totalHits'] : 0,
+                perPage: $perPage,
+                currentPage: $page,
+            ),
+            'facets' => $this->shaper->legacy($distribution),
+            'meta_facets' => $this->shaper->meta($distribution, $customKeys),
+        ];
+    }
+
+    /**
+     * @param list<string> $customKeys
+     * @return list<string>
+     */
+    private function facetAttributes(array $customKeys, bool $taxonomy): array
+    {
+        $attributes = $taxonomy ? [...self::TAXONOMY_FACETS, 'condition', 'price_type'] : ['condition'];
+
+        return [
+            ...$attributes,
+            'ad_type', 'shipping', 'seller_type', 'buy_now',
+            ...array_map(static fn (string $key): string => 'custom_fields.' . $key, $customKeys),
+        ];
     }
 
     /**
@@ -150,34 +306,11 @@ class AdSearchService
     /**
      * The search callbacks speak the Meilisearch SDK; any other Scout engine
      * hands them an Eloquent builder instead and they would throw a TypeError.
+     * Those installs answer from the database instead.
      */
     private function usesMeilisearch(): bool
     {
-        if (config('scout.driver') === 'meilisearch') {
-            return true;
-        }
-
-        Log::warning('Ad search requires the meilisearch Scout driver, returning no results', [
-            'driver' => config('scout.driver'),
-        ]);
-
-        return false;
-    }
-
-    /**
-     * @return array{paginator: LengthAwarePaginator<int, Ad>, facets: array<string, mixed>}
-     */
-    private function emptyResult(int $perPage, int $page): array
-    {
-        return [
-            'paginator' => new LengthAwarePaginator(
-                items: [],
-                total: 0,
-                perPage: $perPage,
-                currentPage: $page,
-            ),
-            'facets' => $this->extractFacets([]),
-        ];
+        return config('scout.driver') === 'meilisearch';
     }
 
     /**
@@ -214,44 +347,5 @@ class AdSearchService
         $ads = Ad::query()->whereKey($ids)->publiclyListed()->with(['category', 'location', 'primaryImage'])->get()->keyBy('id');
 
         return array_values(array_filter(array_map(fn (string $id): ?Ad => $ads->get($id), $ids)));
-    }
-
-    /**
-     * Shape the raw Meilisearch `facetDistribution` block into the public
-     * `facets` envelope. Also derives a small set of price buckets so the
-     * UI can render a histogram filter without a second round-trip.
-     *
-     * @param array<string, mixed> $raw
-     * @return array<string, mixed>
-     */
-    private function extractFacets(array $raw): array
-    {
-        /** @var array<string, array<string, int>> $distribution */
-        $distribution = is_array($raw['facetDistribution'] ?? null) ? $raw['facetDistribution'] : [];
-
-        return [
-            'categories' => $distribution['category_slug'] ?? new stdClass,
-            'locations' => $distribution['location_slug'] ?? new stdClass,
-            'conditions' => $distribution['condition'] ?? new stdClass,
-            'price_types' => $distribution['price_type'] ?? new stdClass,
-            'price_buckets' => $this->derivePriceBuckets(),
-        ];
-    }
-
-    /**
-     * Static bucket scheme — keeps the UI simple. Real per-result histograms
-     * land in a follow-up once we have query volume to size them on.
-     *
-     * @return list<array{label: string, min: float|null, max: float|null}>
-     */
-    private function derivePriceBuckets(): array
-    {
-        return [
-            ['label' => '0-100', 'min' => 0.0, 'max' => 100.0],
-            ['label' => '100-500', 'min' => 100.0, 'max' => 500.0],
-            ['label' => '500-1000', 'min' => 500.0, 'max' => 1000.0],
-            ['label' => '1000-5000', 'min' => 1000.0, 'max' => 5000.0],
-            ['label' => '5000+', 'min' => 5000.0, 'max' => null],
-        ];
     }
 }

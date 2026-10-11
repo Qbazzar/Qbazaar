@@ -19,7 +19,7 @@ const FOOTER_PAGE_SLUGS = [
 
 function runFooterPagesMigration(string $direction = 'up'): void
 {
-    $migration = require database_path('migrations/2026_10_10_100000_add_footer_cms_pages.php');
+    $migration = require database_path('migrations/2026_10_11_090000_add_footer_cms_pages.php');
 
     $migration->{$direction}();
 }

@@ -8,9 +8,8 @@ use App\Data\Catalog\AdFeedFilters;
 use App\Enums\AdSort;
 use App\Models\Ad;
 use App\Services\Catalog\CategoryAdCounts;
-use App\Services\Catalog\CategoryHierarchy;
 use App\Services\Catalog\LocationAdCounts;
-use App\Services\Catalog\LocationHierarchy;
+use App\Services\Search\AdListingFilters;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator as Paginator;
@@ -27,8 +26,7 @@ class ListPublicAdsAction
     private const RELATIONS = ['category', 'location', 'primaryImage'];
 
     public function __construct(
-        private readonly CategoryHierarchy $categories,
-        private readonly LocationHierarchy $locations,
+        private readonly AdListingFilters $listingFilters,
         private readonly CategoryAdCounts $categoryCounts,
         private readonly LocationAdCounts $locationCounts,
     ) {}
@@ -36,22 +34,15 @@ class ListPublicAdsAction
     /**
      * @return LengthAwarePaginator<int, Ad>
      */
-    public function feed(AdFeedFilters $filters): LengthAwarePaginator
+    public function feed(AdFeedFilters $filters, int $perPage = self::PER_PAGE, ?int $page = null): LengthAwarePaginator
     {
-        $query = Ad::query()
-            ->publiclyListed()
-            ->with(self::RELATIONS)
-            ->when($filters->categoryId !== null, fn (Builder $q) => $q->whereIn('category_id', $this->categories->descendantsOf((string) $filters->categoryId)))
-            ->when($filters->locationId !== null, fn (Builder $q) => $q->whereIn('location_id', $this->locations->descendantsOf((string) $filters->locationId)))
-            // Ads without a numeric price (free/contact) drop out of a bounded range, as expected when filtering by budget.
-            ->when($filters->priceMin !== null, fn (Builder $q) => $q->where('price', '>=', $filters->priceMin))
-            ->when($filters->priceMax !== null, fn (Builder $q) => $q->where('price', '<=', $filters->priceMax));
+        $query = $this->listingFilters->apply(Ad::query()->publiclyListed()->with(self::RELATIONS), $filters);
 
         $total = fn (): int => $this->total($query, $filters);
 
         $this->applySort($query, $filters->sort);
 
-        return $query->paginate(self::PER_PAGE, total: $total)->withQueryString();
+        return $query->paginate($perPage, page: $page, total: $total)->withQueryString();
     }
 
     /**
@@ -92,7 +83,7 @@ class ListPublicAdsAction
      */
     private function total(Builder $query, AdFeedFilters $filters): int
     {
-        if ($filters->priceMin === null && $filters->priceMax === null) {
+        if ($filters->priceMin === null && $filters->priceMax === null && ! $filters->hasDetailFilters()) {
             $warmed = match (true) {
                 $filters->categoryId === null && $filters->locationId === null => array_sum(array_column($this->categoryCounts->all(), 'own_count')),
                 $filters->locationId === null => $this->categoryCounts->for((string) $filters->categoryId)['ads_count'],
@@ -116,9 +107,7 @@ class ListPublicAdsAction
     private function countedTotal(Builder $query, AdFeedFilters $filters): int
     {
         $fresh = (int) config('qbazaar.ads.feed_total_cache_seconds');
-        $key = 'ads.feed.total.v1.' . sha1(implode('|', [
-            $filters->categoryId, $filters->locationId, $filters->priceMin, $filters->priceMax,
-        ]));
+        $key = 'ads.feed.total.v2.' . $filters->fingerprint();
 
         $count = fn (): int => $query->toBase()->getCountForPagination();
         $shared = (int) Cache::flexible($key, [$fresh, $fresh * 5], $count);

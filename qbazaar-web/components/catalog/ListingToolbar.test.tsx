@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -9,13 +9,37 @@ import { ListingToolbar } from './ListingToolbar';
 describe('ListingToolbar', () => {
   beforeEach(() => setClientLocale('en'));
 
-  it('changes the sort from a labelled select', async () => {
+  it('opens the designed sort menu in the reference order and picks a row', async () => {
     const onChange = vi.fn();
+    const user = userEvent.setup();
     render(<ListingToolbar sort={{ value: 'latest', onChange }} />);
+    const trigger = screen.getByRole('combobox', { name: 'Sort' });
 
-    await userEvent.setup().selectOptions(screen.getByLabelText('Sort'), 'price_asc');
+    expect(trigger).toHaveTextContent('Newest');
+    await user.click(trigger);
+    const menu = await screen.findByRole('listbox');
+
+    expect(within(menu).getAllByRole('option').map((option) => option.textContent)).toEqual(['Newest', 'Oldest', 'High Price', 'Low Price']);
+    expect(within(menu).getByRole('option', { name: 'Newest' })).toHaveAttribute('aria-selected', 'true');
+    await user.click(within(menu).getByRole('option', { name: 'Low Price' }));
 
     expect(onChange).toHaveBeenCalledWith('price_asc');
+  });
+
+  it('closes the sort menu on Escape without changing the sort', async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<ListingToolbar sort={{ value: 'price_desc', onChange }} />);
+    const trigger = screen.getByRole('combobox', { name: 'Sort' });
+
+    expect(trigger).toHaveTextContent('High Price');
+    await user.click(trigger);
+    await screen.findByRole('listbox');
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull());
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('toggles between the grid and list views', async () => {

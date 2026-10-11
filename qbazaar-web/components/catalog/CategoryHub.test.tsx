@@ -79,6 +79,8 @@ describe('CategoryHub', () => {
     const more = screen.getByRole('button', { name: 'View More' });
 
     expect(screen.getAllByRole('link', { name: /^Sub/ })).toHaveLength(6);
+    // Without an icon from the API the peach square stays empty, as in parent-category.html.
+    expect(screen.getByRole('link', { name: /^Sub 0/ }).querySelector('svg')).toBeNull();
     expect(more).toHaveAttribute('aria-expanded', 'false');
 
     await userEvent.setup().click(more);

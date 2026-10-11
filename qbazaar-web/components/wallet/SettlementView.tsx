@@ -11,7 +11,6 @@ import { Notice } from '@/components/design-system/Notice';
 import { RadioCard } from '@/components/design-system/RadioCard';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { AmountField } from '@/components/orders/AmountField';
-import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
 import { FormError } from '@/components/orders/NoteField';
 import { PageState } from '@/components/orders/PageState';
@@ -157,9 +156,10 @@ function SettlementForm({ wallet, pendingTransfer }: { wallet: Wallet; pendingTr
   };
 
   return (
-    <CheckoutPanel title={t('orders.settlement.owed', { amount: formatMoney(owed, wallet.currency) })} titleId="settle-form">
+    // The same card and heading as "Your commission payments" under it.
+    <TableCard padded title={t('orders.settlement.owed', { amount: formatMoney(owed, wallet.currency) })} titleId="settle-form">
       {pendingTransfer ? (
-        <Notice tone="info" role="status" className="mb-4">
+        <Notice tone="brand" role="status" className="mb-4">
           {t('orders.settlement.pending_exists', { amount: formatMoney(pendingTransfer.amount, pendingTransfer.currency) })}
         </Notice>
       ) : null}
@@ -265,7 +265,7 @@ function SettlementForm({ wallet, pendingTransfer }: { wallet: Wallet; pendingTr
           </>
         )}
       </form>
-    </CheckoutPanel>
+    </TableCard>
   );
 }
 

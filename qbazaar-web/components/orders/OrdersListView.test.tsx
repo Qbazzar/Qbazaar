@@ -61,7 +61,8 @@ describe('OrdersListView', () => {
     await userEvent.click(await screen.findByRole('tab', { name: 'Sales' }));
     await waitFor(() => expect(listOrders).toHaveBeenCalledWith({ role: 'seller', status: undefined, cursor: null }));
 
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Status' }), 'completed');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Status' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Completed' }));
     await waitFor(() => expect(listOrders).toHaveBeenCalledWith({ role: 'seller', status: 'completed', cursor: null }));
   });
 

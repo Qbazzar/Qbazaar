@@ -95,4 +95,35 @@ describe('SearchClient', () => {
     expect(screen.queryByRole('button', { name: 'Reset filters' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'No results found' })).toHaveFocus();
   });
+
+  it('sends the distance filter and leaves the place out, since the circle replaces it', () => {
+    vi.mocked(useSearchQuery).mockReturnValue(results(12));
+    renderAt('?location_slug=doha&lat=25.2854&lng=51.531&radius_km=10');
+
+    const params = vi.mocked(useSearchQuery).mock.lastCall?.[0];
+    expect(params).toEqual({ sort: 'latest', lat: 25.2854, lng: 51.531, radius_km: 10, page: 1, per_page: 24 });
+  });
+
+  it.each([
+    ['a point outside the bounds', '?lat=80&lng=51.5&radius_km=10'],
+    ['a radius over the API maximum', '?lat=25.3&lng=51.5&radius_km=500'],
+    ['a radius without its point', '?radius_km=10'],
+  ])('ignores the distance filter with %s and keeps the place', (_name, search) => {
+    vi.mocked(useSearchQuery).mockReturnValue(results(12));
+    renderAt(`${search}&location_slug=doha`);
+
+    expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).toEqual({ sort: 'latest', location_slug: 'doha', page: 1, per_page: 24 });
+  });
+
+  it('clears the distance filter with "Reset filters"', async () => {
+    vi.mocked(useSearchQuery).mockReturnValue(results(0));
+    const user = userEvent.setup();
+    renderAt('?lat=25.3&lng=51.5&radius_km=10');
+    expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).toMatchObject({ radius_km: 10 });
+
+    await user.click(screen.getByRole('button', { name: 'Reset filters' }));
+
+    expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).not.toHaveProperty('radius_km');
+    expect(vi.mocked(useSearchQuery).mock.lastCall?.[0]).not.toHaveProperty('lat');
+  });
 });

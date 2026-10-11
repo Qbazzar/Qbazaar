@@ -30,8 +30,10 @@ describe('account navigation', () => {
     }
   });
 
-  it('names the section a path belongs to, the hub otherwise', () => {
+  it('names the section a path belongs to; the hub opens on Profile Settings', () => {
     expect(settingsSectionFor('/account/privacy').labelKey).toBe('account.nav.data_protection');
-    expect(settingsSectionFor('/account').labelKey).toBe('account.nav.overview');
+    expect(settingsSectionFor('/account/blocked-users').labelKey).toBe('account.nav.data_protection');
+    expect(settingsSectionFor('/account/sessions').labelKey).toBe('account.nav.account_settings');
+    expect(settingsSectionFor('/account').labelKey).toBe('account.nav.profile_settings');
   });
 });

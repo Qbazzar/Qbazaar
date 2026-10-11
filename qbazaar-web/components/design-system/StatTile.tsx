@@ -43,7 +43,8 @@ export function StatTile({ label, value, icon, tone = 'brand', hint, className }
       >
         {icon}
       </span>
-      <p className="mt-2.5 text-qb-micro text-qb-ink-subtle qb-desktop:mt-2 qb-desktop:text-qb-body">{label}</p>
+      {/* #999, and #a4adba on phones (502:22401, 563:31406, 613:31879) */}
+      <p className="mt-2.5 text-qb-micro text-qb-breadcrumb qb-tablet:text-qb-ink-meta qb-desktop:mt-2 qb-desktop:text-qb-body">{label}</p>
       <p className="mt-0.5 text-qb-body-lg font-semibold break-words text-qb-ink-title qb-tablet:text-qb-body qb-desktop:mt-1 qb-desktop:text-qb-h2">
         {value}
       </p>

@@ -39,6 +39,10 @@ vi.mock('@/lib/api/ad-images', async (importOriginal) => ({
   reorderAdImages: vi.fn(),
   deleteMedia: vi.fn(),
 }));
+vi.mock('@/lib/api/promotions', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/api/promotions')>()),
+  listPromotionOffers: vi.fn(),
+}));
 vi.mock('@/lib/images/prepare-photo', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/images/prepare-photo')>()),
   preparePhoto: vi.fn(async () => ({ blob: new Blob(['jpeg'], { type: 'image/jpeg' }), width: 2048, height: 1536 })),
@@ -50,6 +54,7 @@ import { uploadAdImages } from '@/lib/api/ad-images';
 import { createAd, deleteAd, publishAd, updateAd } from '@/lib/api/ads';
 import { getCategoryTree } from '@/lib/api/categories';
 import { getQatarLocations } from '@/lib/api/locations';
+import { listPromotionOffers } from '@/lib/api/promotions';
 import type { AccountSummary, Ad, CategoryNode, Location, Media, User } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
 import { usePostAdStore } from '@/store/post-ad';
@@ -136,7 +141,11 @@ async function fillRequiredFields() {
     target: { value: 'One owner, full service history, no accidents.' },
   });
   fireEvent.change(screen.getByRole('textbox', { name: t('post_ad.price.price') }), { target: { value: '١٨٥٠٠٠' } });
-  fireEvent.change(screen.getByLabelText(t('post_ad.location.area')), { target: { value: 'west-bay' } });
+  fireEvent.click(screen.getByRole('combobox', { name: t('post_ad.location.area') }));
+  const doha = screen.getByRole('treeitem', { name: 'الدوحة' }).firstElementChild!;
+  fireEvent.pointerDown(doha, { pointerType: 'touch' });
+  fireEvent.click(doha);
+  fireEvent.click(screen.getByRole('treeitem', { name: 'الخليج الغربي' }));
 }
 
 beforeEach(() => {
@@ -146,12 +155,16 @@ beforeEach(() => {
   vi.mocked(getQatarLocations).mockResolvedValue(CITIES);
   vi.mocked(getAccountSummary).mockResolvedValue({ ads_by_status: { active: 3 } } as AccountSummary);
   vi.mocked(uploadAdImages).mockResolvedValue([MEDIA]);
+  vi.mocked(listPromotionOffers).mockResolvedValue([
+    { type: 'highlight', price: '15.00', currency: 'QAR', duration_days: 7 },
+    { type: 'push_up', price: '10.00', currency: 'QAR', duration_days: 3 },
+  ]);
 });
 
 describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('gives every element of the form its own id, so labels and focus find the right control', async () => {
     renderFlow();
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
     expect(screen.getByRole('textbox', { name: t('post_ad.price.price') })).toHaveAttribute('id', 'post-ad-price');
 
     fireEvent.click(screen.getByRole('button', { name: new RegExp(t('post_ad.basic.category_select')) }));
@@ -179,7 +192,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     vi.mocked(publishAd).mockResolvedValue(ad({ status: 'pending' }));
     renderFlow();
     await screen.findByRole('heading', { name: t('post_ad.basic.title') });
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     await fillRequiredFields();
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.save_draft') }));
@@ -193,8 +206,17 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.images')), { target: { files: [file] } });
     await waitFor(() => expect(uploadAdImages).toHaveBeenCalledWith('ad-1', [expect.any(Blob)], expect.objectContaining({ onProgress: expect.any(Function) })));
 
+    // Highlight starts ticked, as on add-ads.html; the seller swaps it for Push up.
+    const highlight = await screen.findByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.highlight')}`) });
+    expect(highlight).toBeChecked();
+    fireEvent.click(highlight);
+    fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.push_up')}`) }));
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.add_ads') }));
     const confirm = await screen.findByRole('button', { name: t('post_ad.actions.confirm_publish') });
+    // The promotion ticked on the form stays ticked in the publish step's table.
+    const featured = screen.getByRole('group', { name: t('post_ad.promote.featured') });
+    expect(within(featured).getByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.push_up')}`) })).toBeChecked();
+    expect(within(featured).getByRole('checkbox', { name: new RegExp(`^${t('orders.promotion.types.highlight')}`) })).not.toBeChecked();
     // Nothing changed since the draft was saved, so there was nothing to send.
     expect(updateAd).not.toHaveBeenCalled();
 
@@ -207,12 +229,16 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
 
     expect(await screen.findByRole('heading', { name: t('post_ad.review.title') })).toBeInTheDocument();
     expect(publishAd).toHaveBeenCalledWith('ad-1', { acceptedTerms: true, idempotencyKey: expect.any(String) });
+    // An ad in review can't be promoted yet, so the chosen promotion points to Promotions.
+    expect(screen.getByRole('heading', { name: t('post_ad.review.promotions_title') })).toBeInTheDocument();
+    expect(screen.getByText(t('post_ad.review.promotions_pending'))).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: t('post_ad.review.go_promotions') })).toHaveAttribute('href', '/account/promotions');
   });
 
   it('opens the preview from a saved draft and goes back to editing', async () => {
     vi.mocked(createAd).mockResolvedValue(ad());
     renderFlow();
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
     await fillRequiredFields();
 
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.preview') }));
@@ -226,7 +252,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('previews a live ad without saving it, since saving can send it back to review', async () => {
     const live = ad({ status: 'active', images: [MEDIA] });
     renderFlow(live);
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.ad_title')), { target: { value: 'Toyota Land Cruiser 2021 GXR' } });
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.preview') }));
@@ -241,7 +267,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     const live = ad({ status: 'active', images: [MEDIA], custom_fields: null as unknown as Ad['custom_fields'] });
     vi.mocked(updateAd).mockResolvedValue({ ...live, price: 179000 });
     renderFlow(live);
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     expect(screen.queryByRole('button', { name: t('post_ad.actions.save_draft') })).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole('textbox', { name: t('post_ad.price.price') }), { target: { value: '179000' } });
@@ -256,7 +282,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
     const live = ad({ status: 'active', images: [MEDIA] });
     vi.mocked(updateAd).mockResolvedValue({ ...live, title: 'Toyota Land Cruiser 2021 GXR', status: 'pending' });
     renderFlow(live);
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.ad_title')), { target: { value: 'Toyota Land Cruiser 2021 GXR' } });
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.save_changes') }));
@@ -269,7 +295,7 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('holds the new photos of a live ad until Save Changes', async () => {
     const live = ad({ status: 'active', images: [MEDIA] });
     renderFlow(live);
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     const file = new File([new Uint8Array(2000)], 'car.jpg', { type: 'image/jpeg' });
     fireEvent.change(screen.getByLabelText(t('post_ad.basic.images')), { target: { files: [file] } });
@@ -288,11 +314,14 @@ describe('PostAdFlow', { timeout: FLOW_TIMEOUT }, () => {
   it('deletes the draft from the publish step', async () => {
     vi.mocked(deleteAd).mockResolvedValue(undefined);
     renderFlow(ad({ images: [MEDIA] }));
-    await screen.findByRole('option', { name: 'الخليج الغربي' });
+    await screen.findByRole('combobox', { name: t('post_ad.location.area') });
 
     fireEvent.click(screen.getByRole('button', { name: t('post_ad.actions.add_ads') }));
     await screen.findByRole('heading', { name: t('post_ad.your_ad.title') });
-    fireEvent.click(screen.getByRole('button', { name: t('common.delete') }));
+    // The text row from the tablet up and the phone's icon button; CSS shows one of them.
+    const deleteButtons = screen.getAllByRole('button', { name: t('common.delete') });
+    expect(deleteButtons).toHaveLength(2);
+    fireEvent.click(deleteButtons[1]);
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: t('common.delete') }));
 

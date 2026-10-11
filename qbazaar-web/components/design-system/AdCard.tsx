@@ -5,6 +5,7 @@ import { MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { Badge, Chip } from './Badge';
+import { cardHover } from './card-hover';
 import { Icon } from './Icon';
 
 export interface AdCardProps {
@@ -64,7 +65,7 @@ export function AdCard(props: AdCardProps) {
     <article
       className={cn(
         'relative flex flex-col overflow-hidden rounded-qb-xl border border-qb-line bg-qb-surface font-qb',
-        'transition-[box-shadow,translate] duration-200 hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+        cardHover,
         'has-[a:focus-visible]:outline-solid has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-qb-brand-active',
         isList && 'qb-tablet:flex-row qb-tablet:rounded-qb-2xl qb-desktop:gap-[18px] qb-desktop:rounded-qb-xl qb-desktop:p-4',
         className,
@@ -81,7 +82,8 @@ export function AdCard(props: AdCardProps) {
       </div>
       {favorite ? (
         <div className={cn('pointer-events-none absolute z-10', FAVORITE_AREA[layout])}>
-          <div className="pointer-events-auto absolute end-3 top-3">{favorite}</div>
+          {/* Tailwind 4 leaves buttons with the default cursor; the design's heart shows the pointer. */}
+          <div className="pointer-events-auto absolute end-3 top-3 [&>button:enabled]:cursor-pointer">{favorite}</div>
         </div>
       ) : null}
     </article>

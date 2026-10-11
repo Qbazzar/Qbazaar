@@ -59,6 +59,8 @@ function cleanParams<T extends Record<string, unknown>>(params: T): Partial<T> {
 export interface ListNotificationsParams extends Record<string, unknown> {
   /** When truthy the backend filters to unread rows only. */
   unread?: boolean | 1;
+  /** One category (`ad.price_changed`) or a group of them (`search`). */
+  category?: string;
   page?: number;
   per_page?: number;
 }

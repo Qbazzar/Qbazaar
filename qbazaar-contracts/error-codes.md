@@ -52,8 +52,8 @@ requested locale.
 | `USER_001` | User not found | 404 |
 | `USER_002` | Cannot block an admin / super admin | 403 |
 | `USER_003` | Cannot block yourself | 422 |
-| `USER_004` | Password change requires current password | 422 |
-| `USER_005` | Account deactivation requires password confirmation | 422 |
+| `USER_004` | Password change: the current password is wrong or missing | 422 |
+| `USER_005` | Account deactivation or deletion: the password confirmation is wrong or missing | 422 |
 
 ## Social (follows, business profiles)
 
@@ -110,6 +110,9 @@ requested locale.
 | Code | Meaning | HTTP |
 |------|---------|------|
 | `FAV_001` | Favourites limit per user reached (`qbazaar.favorites.max_per_user`) | 422 |
+| `FAV_002` | Favourite-categories limit per user reached (`qbazaar.favorites.max_categories_per_user`) | 422 |
+
+An unknown or hidden category on `PUT /account/favorite-categories/{category}` answers `CAT_001` (404).
 
 ## Messaging (Sprint 8)
 

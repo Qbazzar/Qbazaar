@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\V1\Search;
 
-use App\Enums\AdShipping;
 use App\Enums\AdSort;
-use App\Enums\AdType;
-use App\Enums\Condition;
-use App\Enums\PriceType;
+use App\Http\Requests\Api\V1\Search\Concerns\ValidatesCatalogFilters;
 use App\Models\Category;
 use App\Models\Location;
 use Illuminate\Contracts\Validation\Validator;
@@ -34,6 +31,9 @@ use Illuminate\Validation\Rule;
  * @queryParam price_type string Optional `fixed|negotiable|free|contact`.
  * @queryParam ad_type string Optional `offering|wanted`.
  * @queryParam shipping string Optional `pickup_only|delivery`.
+ * @queryParam seller_type string Optional `private|business`.
+ * @queryParam buy_now boolean `true` keeps only ads that accept Buy Now purchase requests.
+ * @queryParam custom_fields object Category filters: `custom_fields[make]=Toyota`, `custom_fields[year][min]=2015`.
  * @queryParam sort string `latest|oldest|price_asc|price_desc|most_viewed|distance`. Defaults to `latest`.
  * @queryParam lat number Reference latitude for radius filtering / distance sort.
  * @queryParam lng number Reference longitude for radius filtering / distance sort.
@@ -43,6 +43,8 @@ use Illuminate\Validation\Rule;
  */
 class SearchRequest extends FormRequest
 {
+    use ValidatesCatalogFilters;
+
     public function authorize(): bool
     {
         return true;
@@ -57,6 +59,8 @@ class SearchRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $this->normaliseBuyNow();
+
         $resolved = [];
 
         if (($categorySlug = $this->query('category_slug')) !== null && is_string($categorySlug) && $categorySlug !== '') {
@@ -86,7 +90,7 @@ class SearchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => ['nullable', 'string', 'max:200'],
+            ...$this->catalogFilterRules(),
             'category_id' => ['nullable', 'ulid'],
             'category_slug' => ['nullable', 'string', 'max:120'],
             'location_id' => ['nullable', 'ulid'],
@@ -97,19 +101,6 @@ class SearchRequest extends FormRequest
             // stay valid. A plain `gte:price_min` rule fails when price_min is
             // absent, which silently broke the budget filter.
             'price_max' => ['nullable', 'numeric', 'min:0'],
-            'condition' => ['nullable', Rule::in([
-                Condition::NEW->value,
-                Condition::LIKE_NEW->value,
-                Condition::USED->value,
-            ])],
-            'price_type' => ['nullable', Rule::in([
-                PriceType::FIXED->value,
-                PriceType::NEGOTIABLE->value,
-                PriceType::FREE->value,
-                PriceType::CONTACT->value,
-            ])],
-            'ad_type' => ['nullable', Rule::enum(AdType::class)],
-            'shipping' => ['nullable', Rule::enum(AdShipping::class)],
             'sort' => ['nullable', Rule::enum(AdSort::class)],
             // Distance search: a point plus an optional radius; sort=distance needs the point.
             'lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:lng,radius_km', 'required_if:sort,distance'],
@@ -117,10 +108,6 @@ class SearchRequest extends FormRequest
             'radius_km' => ['nullable', 'numeric', 'min:0.1', 'max:' . (int) config('qbazaar.search.geo_max_radius_km')],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
-            // Category-specific filters: custom_fields[make]=Toyota or
-            // custom_fields[year][min]=2015. Keys/values are sanitised in the
-            // search service, so we only assert the outer shape here.
-            'custom_fields' => ['nullable', 'array'],
         ];
     }
 

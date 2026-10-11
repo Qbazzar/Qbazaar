@@ -8,6 +8,7 @@ import { usePostAdStore } from '@/store/post-ad';
 
 import { BasicInfoSection, DetailsSection, LocationSection, PriceSection } from './AdFormSections';
 import { ProfileCard, type ProfileAction, type SellerSummary } from './ProfileCard';
+import { HighlightSection } from './PromotionChoices';
 import { TipsCard } from './TipsCard';
 import type { PostAdAction } from './usePostAdActions';
 import { VIEW_HEADING_ID } from './view-heading';
@@ -68,6 +69,7 @@ export function AdFormView({ title, seller, tree, cities, fields, canPublish, ru
           {categoryChosen ? <DetailsSection fields={fields} /> : null}
           <PriceSection />
           <LocationSection cities={cities} />
+          {canPublish ? <HighlightSection /> : null}
         </div>
         <aside
           aria-label={t('post_ad.profile.aside_label')}
