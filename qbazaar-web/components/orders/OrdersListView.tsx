@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
-import { Package, ShoppingBag, Wallet } from 'lucide-react';
+import { ArrowUpRight, CreditCard, Package, ShoppingBag } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
-import { Select } from '@/components/design-system/Input';
+import { FieldSelect } from '@/components/design-system/FieldSelect';
 import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
 import type { DealRole, Order, OrderStatus } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
@@ -20,7 +20,7 @@ import { useOrdersQuery } from '@/lib/queries/orders';
 import { cn } from '@/lib/utils';
 
 import { AccountPageFrame } from './AccountPageFrame';
-import { HeaderButtonLabel, headerButton } from './AccountPageHeader';
+import { HeaderButtonLabel, pageHeaderButton } from './AccountPageHeader';
 import { panelClass } from './CheckoutPanel';
 import { orderNumber } from './order-number';
 import { PageState } from './PageState';
@@ -40,10 +40,16 @@ export function OrdersListView() {
       breadcrumb={[{ label: t('orders.list.title') }]}
       title={t('orders.list.title')}
       actions={
-        <Link href="/account/wallet" className={cn(buttonVariants({ variant: 'outline' }), headerButton)}>
-          <Wallet aria-hidden="true" />
-          <HeaderButtonLabel>{t('orders.list.wallet')}</HeaderButtonLabel>
-        </Link>
+        <>
+          <Link href="/account/wallet/bank-accounts" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton)}>
+            <CreditCard aria-hidden="true" />
+            <HeaderButtonLabel>{t('orders.wallet.payment_method')}</HeaderButtonLabel>
+          </Link>
+          <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton, 'max-qb-tablet:hidden')}>
+            <ArrowUpRight aria-hidden="true" />
+            <HeaderButtonLabel>{t('orders.wallet.withdraw')}</HeaderButtonLabel>
+          </Link>
+        </>
       }
     >
       <Tabs value={role} onValueChange={(value) => void setRole(value as DealRole)}>
@@ -52,21 +58,22 @@ export function OrdersListView() {
             <Tab value="buyer">{t('orders.list.purchases')}</Tab>
             <Tab value="seller">{t('orders.list.sales')}</Tab>
           </TabList>
-          <label className="flex items-center gap-3 text-qb-caption text-qb-ink-body">
-            <span className="shrink-0">{t('orders.list.status_filter')}</span>
-            <Select
+          <div className="flex items-center gap-3 text-qb-caption text-qb-ink-body">
+            <span id="orders-status-filter" className="shrink-0">
+              {t('orders.list.status_filter')}
+            </span>
+            <FieldSelect
+              label={t('orders.list.status_filter')}
+              aria-labelledby="orders-status-filter"
               value={status ?? ''}
-              onChange={(event) => void setStatus((event.target.value || null) as OrderStatus | null)}
-              className="h-11 min-w-48 text-qb-caption"
-            >
-              <option value="">{t('orders.list.all_statuses')}</option>
-              {STATUSES.map((value) => (
-                <option key={value} value={value}>
-                  {t(`orders.status.order.${value}`)}
-                </option>
-              ))}
-            </Select>
-          </label>
+              options={[
+                { value: '', label: t('orders.list.all_statuses') },
+                ...STATUSES.map((value) => ({ value, label: t(`orders.status.order.${value}`) })),
+              ]}
+              onChange={(next) => void setStatus(STATUSES.find((value) => value === next) ?? null)}
+              className="h-11 w-auto min-w-48 text-qb-caption"
+            />
+          </div>
         </div>
         {ROLES.map((value) => (
           <TabPanel key={value} value={value}>
@@ -135,11 +142,11 @@ function OrderRow({ order }: { order: Order }) {
             <Link
               href={`/account/orders/${encodeURIComponent(order.id)}`}
               aria-label={`${isolate(order.ad.title)}, ${t('orders.list.open', { number })}`}
-              className={cn('line-clamp-2 rounded-qb-xs font-semibold text-qb-ink-title hover:underline', focusRing)}
+              className={cn('line-clamp-2 rounded-qb-xs hover:underline', tc.itemTitle, focusRing)}
             >
               <bdi>{order.ad.title}</bdi>
             </Link>
-            <p className="mt-0.5 text-qb-micro font-normal text-qb-ink-subtle qb-desktop:text-qb-body">
+            <p className={tc.itemMeta}>
               {t('orders.common.order_number', { number })}
               {order.quantity > 1 ? ` · × ${order.quantity}` : null}
               <span className="qb-tablet:hidden"> · {date}</span>

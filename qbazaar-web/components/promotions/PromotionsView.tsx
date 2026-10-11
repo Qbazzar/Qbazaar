@@ -9,7 +9,6 @@ import { Pager } from '@/components/account/Pager';
 import { buttonVariants } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
-import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { PageState } from '@/components/orders/PageState';
 import { StatusPill } from '@/components/orders/StatusPill';
 import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
@@ -47,26 +46,29 @@ function PromotableAds() {
   const query = useMyAdsQuery({ status: 'active', page });
   const ads = (query.data?.data ?? []) as SummaryWithPromotion[];
 
+  // The same card heading as "Your promotions" below it (502:22401).
   return (
-    <CheckoutPanel title={t('orders.promotion.pick_title')} titleId="promote-pick">
-      <p className="-mt-1 mb-4 text-qb-caption text-qb-ink-subtle">{t('orders.promotion.pick_body')}</p>
-      {query.isPending ? (
-        <PageState kind="loading" />
-      ) : query.isError ? (
-        <PageState kind="error" onRetry={() => query.refetch()} />
-      ) : ads.length === 0 ? (
-        <p className="text-qb-body text-qb-ink-secondary">{t('orders.promotion.no_live_ads')}</p>
-      ) : (
-        <>
-          <ul className="flex flex-col" aria-busy={query.isPlaceholderData}>
-            {ads.map((ad) => (
-              <PromotableAd key={ad.id} ad={ad} />
-            ))}
-          </ul>
-          <Pager page={page} lastPage={query.data.meta.last_page} onChange={setPage} />
-        </>
-      )}
-    </CheckoutPanel>
+    <TableCard title={t('orders.promotion.pick_title')} titleId="promote-pick">
+      <div className="px-5 pb-5 qb-tablet:px-[18px] qb-desktop:px-8 qb-desktop:pb-8">
+        <p className="-mt-1 mb-4 text-qb-caption text-qb-ink-subtle">{t('orders.promotion.pick_body')}</p>
+        {query.isPending ? (
+          <PageState kind="loading" />
+        ) : query.isError ? (
+          <PageState kind="error" onRetry={() => query.refetch()} />
+        ) : ads.length === 0 ? (
+          <p className="text-qb-body text-qb-ink-secondary">{t('orders.promotion.no_live_ads')}</p>
+        ) : (
+          <>
+            <ul className="flex flex-col" aria-busy={query.isPlaceholderData}>
+              {ads.map((ad) => (
+                <PromotableAd key={ad.id} ad={ad} />
+              ))}
+            </ul>
+            <Pager page={page} lastPage={query.data.meta.last_page} onChange={setPage} />
+          </>
+        )}
+      </div>
+    </TableCard>
   );
 }
 

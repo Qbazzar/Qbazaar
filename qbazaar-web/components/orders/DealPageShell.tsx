@@ -12,10 +12,21 @@ import { AdDealSummary } from './AdDealSummary';
 
 /**
  * Page frame of Buy Now and Make an Offer: the trail down to the ad, the
- * form, and the item card beside it. Phones move the card above the form;
- * the form stays first in the reading order everywhere.
+ * form, and the item card beside it. On phones Buy Now moves the card above
+ * the form (buynow.js, 709:33450) while the offer page keeps it under the
+ * form (709:33285); the form stays first in the reading order everywhere.
  */
-export function DealPageShell({ ad, current, children }: { ad: DealAd; current: string; children: ReactNode }) {
+export function DealPageShell({
+  ad,
+  current,
+  summaryAboveOnPhone = false,
+  children,
+}: {
+  ad: DealAd;
+  current: string;
+  summaryAboveOnPhone?: boolean;
+  children: ReactNode;
+}) {
   const crumbs = [{ label: t('home.breadcrumb'), href: '/' }];
   if (ad.category?.slug) {
     crumbs.push({ label: localized(ad.category.name) || ad.category.slug, href: `/c/${encodeURIComponent(ad.category.slug)}` });
@@ -31,7 +42,7 @@ export function DealPageShell({ ad, current, children }: { ad: DealAd; current: 
         />
         <div className="flex flex-col gap-6 qb-tablet:mt-5 qb-tablet:flex-row qb-tablet:items-start qb-desktop:mt-[62px] qb-desktop:gap-[33px]">
           <div className="min-w-0 flex-1">{children}</div>
-          <aside className="order-first qb-tablet:order-none qb-tablet:w-[258px] qb-tablet:shrink-0 qb-desktop:w-[421px]">
+          <aside className={cn('qb-tablet:w-[258px] qb-tablet:shrink-0 qb-desktop:w-[421px]', summaryAboveOnPhone && 'order-first qb-tablet:order-none')}>
             <AdDealSummary ad={ad} />
           </aside>
         </div>

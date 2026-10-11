@@ -5,7 +5,7 @@
  * idempotency key so a retried click never runs twice.
  */
 import { api } from './client';
-import type { Checkout, CheckoutPayload, CursorPage, DealRole, Order, OrderStatus } from './commerce-types';
+import type { Checkout, CheckoutAddressInput, CheckoutPayload, CursorPage, DealRole, Order, OrderStatus, SavedAddress } from './commerce-types';
 import { idempotent, query, unwrap, unwrapBody } from './request';
 import type { SuccessEnvelope } from './types';
 
@@ -29,6 +29,11 @@ export function getOrder(id: string): Promise<Order> {
 
 export function getCheckout(orderId: string): Promise<Checkout> {
   return unwrap(api.get<SuccessEnvelope<Checkout>>(`${ORDERS}/${encodeURIComponent(orderId)}/checkout`));
+}
+
+/** `POST /account/addresses`: keeps a typed delivery address on the account (at most 10, `ADDRESS_002`). */
+export function saveAddress(address: CheckoutAddressInput): Promise<SavedAddress> {
+  return unwrap(api.post<SuccessEnvelope<SavedAddress>>('/api/v1/account/addresses', address));
 }
 
 export function submitCheckout(orderId: string, payload: CheckoutPayload, idempotencyKey: string): Promise<Order> {

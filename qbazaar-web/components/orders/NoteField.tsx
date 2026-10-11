@@ -35,7 +35,10 @@ export function NoteField({ label, value, onChange, max, error, placeholder, hin
           label
         ) : (
           <>
-            {label} <span className="text-qb-ink-subtle">{t('orders.common.optional')}</span>
+            {label}{' '}
+            <span className="text-qb-micro font-medium text-(--color-qb-ink-optional) qb-tablet:text-qb-caption qb-tablet:font-normal">
+              {t('orders.common.optional')}
+            </span>
           </>
         )
       }

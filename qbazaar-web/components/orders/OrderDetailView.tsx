@@ -97,7 +97,7 @@ function OrderDetail({ order }: { order: Order }) {
           <CheckoutPanel title={t('orders.detail.progress')} titleId="order-progress">
             <div className="flex flex-col gap-6">
               <OrderTimeline order={order} />
-              <Notice tone={order.status === 'disputed' ? 'danger' : 'info'} icon={<Info aria-hidden="true" />} role="status">
+              <Notice tone={order.status === 'disputed' ? 'danger' : 'brand'} icon={<Info aria-hidden="true" />} role="status">
                 {t(`orders.detail.next.${nextStepKey(order)}`, {
                   date: order.report_problem_until ? formatDateTime(order.report_problem_until) : '',
                 })}
