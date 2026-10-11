@@ -89,7 +89,7 @@ describe('SaveSearchButton', () => {
   });
 
   it('shows a search the visitor saved before as "Saved", whatever its sort', () => {
-    signIn(true, [{ id: 's1', name: 'Cars', query_params: { category_slug: 'cars', sort: 'latest' }, created_at: '' }]);
+    signIn(true, [{ id: 's1', name: 'Cars', query_params: { category_slug: 'cars', sort: 'latest' }, alerts_enabled: false, created_at: '', updated_at: '' }]);
     const { rerender } = render(<SaveSearchButton params={{ category_slug: 'cars', sort: 'price_asc' }} />);
 
     expect(screen.getByRole('link', { name: 'Saved, open your saved searches' })).toBeInTheDocument();
