@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import './catalog-tokens.css';
+
 import { focusRing } from '@/components/design-system/focus-ring';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
 import { cn } from '@/lib/utils';
@@ -14,15 +16,22 @@ interface CategoryTileProps {
   className?: string;
 }
 
+/** Raised white tile that lifts 3 px on hover (`.qb-card:hover` of the reference). */
 const tileBase = cn(
-  'flex rounded-qb-xl border border-qb-line bg-qb-surface font-qb shadow-qb-card transition-shadow duration-200 hover:shadow-qb-hover motion-reduce:transition-none',
+  'flex rounded-qb-xl border border-qb-line bg-qb-surface font-qb shadow-qb-card transition-[box-shadow,translate] duration-200',
+  'hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
   focusRing,
 );
 
+/**
+ * The peach icon square. Without an icon from the API it stays empty, as the
+ * sub-category squares of parent-category.html do, rather than repeating one
+ * stand-in icon on every tile.
+ */
 function IconBox({ icon, className }: { icon: string | null; className?: string }) {
   return (
     <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center rounded-qb-md bg-qb-brand-soft text-qb-brand', className)}>
-      <DynamicIcon name={icon} strokeWidth={1.5} className="size-5 qb-tablet:size-6" />
+      {icon ? <DynamicIcon name={icon} strokeWidth={1.5} className="size-5 qb-tablet:size-6" /> : null}
     </span>
   );
 }
@@ -33,7 +42,9 @@ export function CategoryCard({ href, name, count, icon, className }: CategoryTil
     <Link href={href} className={cn(tileBase, 'h-[120px] flex-col p-4 qb-tablet:h-[148px] qb-tablet:rounded-qb-2xl', className)}>
       <IconBox icon={icon} className="size-9 qb-tablet:size-[43px]" />
       <span className="mt-auto min-w-0">
-        <span className="block truncate text-qb-caption leading-none font-medium text-qb-ink qb-tablet:text-qb-body qb-desktop:text-qb-h5">{name}</span>{' '}
+        <span className="block truncate text-qb-caption leading-none font-medium text-(--color-qb-tile-name) qb-tablet:text-qb-body qb-tablet:text-qb-ink qb-desktop:text-qb-h5">
+          {name}
+        </span>{' '}
         <span className="mt-[11px] block text-qb-micro leading-none text-qb-ink-subtle qb-tablet:mt-3.5 qb-tablet:text-qb-caption qb-desktop:mt-4">
           {count}
         </span>
@@ -55,8 +66,8 @@ export function SubcategoryTile({ href, name, count, icon, className }: Category
     >
       <IconBox icon={icon} className="size-10 rounded-qb-sm qb-tablet:size-[47px] qb-tablet:rounded-qb-md" />
       <span className="min-w-0">
-        <span className="block truncate text-qb-micro leading-tight font-medium text-qb-ink-body qb-tablet:text-qb-body">{name}</span>{' '}
-        <span className="mt-1 block text-[11px] leading-tight text-qb-ink-subtle qb-tablet:mt-1.5 qb-tablet:text-qb-caption">{count}</span>
+        <span className="block truncate text-qb-micro leading-tight font-medium text-(--color-qb-tile-name) qb-tablet:text-qb-body">{name}</span>{' '}
+        <span className="mt-1 block text-[11px] leading-tight text-qb-icon-muted qb-tablet:mt-1.5 qb-tablet:text-qb-caption">{count}</span>
       </span>
     </Link>
   );

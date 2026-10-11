@@ -10,7 +10,7 @@ import { Icon } from '@/components/design-system/Icon';
 import { Input } from '@/components/design-system/Input';
 import { AdRow } from '@/components/catalog/AdRow';
 import { siteFrame } from '@/components/design-system/site-frame';
-import { catalogPageTop, headingFont } from '@/components/catalog/layout';
+import { breadcrumbHover, catalogPageTop, headingFont } from '@/components/catalog/layout';
 import { useResultsFocusTarget } from '@/components/catalog/results-focus';
 import { t } from '@/lib/i18n/messages';
 import { useFeaturedAdsQuery } from '@/lib/queries/ads';
@@ -25,6 +25,10 @@ interface SearchNotFoundProps {
   /** Clears the filters; omitted when none is set. */
   onReset?: () => void;
 }
+
+/** Title and line of the empty box: 16 / 14 px on phones, 20 / 16 px on tablets and 22 / 20 px on desktop (654:51147, 655:55238, 655:55973). */
+const notFoundText =
+  '[&_h2]:text-qb-body [&_p]:text-qb-caption qb-tablet:[&_h2]:text-qb-h5 qb-tablet:[&_p]:text-qb-body qb-desktop:[&_h2]:text-qb-h4 qb-desktop:[&_p]:text-qb-h5';
 
 /** Recommended ads shown at first on desktop, and added by each "Load More Ads". */
 const RECOMMENDED_STEP = 5;
@@ -49,7 +53,7 @@ export function SearchNotFound({ query, breadcrumb, searching, onSearch, onReset
   return (
     <main className={cn('bg-qb-page font-qb text-qb-ink', headingFont)}>
       <div className={cn(siteFrame, catalogPageTop)}>
-        <Breadcrumb items={breadcrumb} className="mb-[68px] hidden qb-tablet:block qb-desktop:mb-[83px]" />
+        <Breadcrumb items={breadcrumb} className={cn('mb-[68px] hidden qb-tablet:block qb-desktop:mb-[83px]', breadcrumbHover)} />
         <h1 ref={headingRef} tabIndex={-1} className="sr-only">
           {t('catalog.not_found.heading', 'لا توجد نتائج')}
         </h1>
@@ -77,7 +81,7 @@ export function SearchNotFound({ query, breadcrumb, searching, onSearch, onReset
             icon={<Icon icon={Search} size="lg" className="size-[42px]" />}
             title={t('catalog.not_found.title', 'لا توجد نتائج')}
             description={t('catalog.not_found.text', 'لم نعثر على أي شيء يطابق بحثك.')}
-            className="max-qb-tablet:[&_h2]:text-qb-body max-qb-tablet:[&_p]:text-qb-caption"
+            className={notFoundText}
             action={
               onReset ? (
                 <Button variant="secondary" size="sm" onClick={onReset}>
@@ -127,7 +131,7 @@ function RecommendedAds() {
     <section aria-labelledby={headingId} className="mt-9 qb-tablet:mt-[33px] qb-desktop:mt-8">
       <h2
         id={headingId}
-        className="mb-11 font-qb text-qb-body leading-none font-semibold tracking-normal text-qb-ink-title qb-tablet:mb-[38px] qb-tablet:text-qb-h2 qb-tablet:text-qb-ink qb-desktop:mb-[46px]"
+        className="mb-11 font-qb text-qb-body leading-none font-semibold tracking-normal text-qb-ink-title qb-tablet:mb-[38px] qb-tablet:text-qb-h2 qb-tablet:text-qb-black qb-desktop:mb-[46px]"
       >
         {label}
       </h2>
