@@ -8,13 +8,14 @@ use App\Enums\QueueName;
 use App\Services\Catalog\CategoryAdCounts;
 use App\Services\Catalog\HomeFeedCache;
 use App\Services\Catalog\LocationAdCounts;
+use App\Services\Search\AdFacetCounter;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
- * Rebuilds the category and place counters and the home feed, so requests
- * never pay for them. Scheduled every `qbazaar.catalog.warm_every_minutes`.
+ * Rebuilds the category and place counters, the home feed and the unfiltered
+ * facet counts of the ad lists, so requests never pay for them. Scheduled every `qbazaar.catalog.warm_every_minutes`.
  *
  * The counters go first because the home feed embeds both. Each rebuild
  * overwrites its entry in one write, so a retry or an overlapping run only
@@ -38,10 +39,11 @@ class WarmCatalogCacheJob implements ShouldBeUnique, ShouldQueue
         $this->onQueue(QueueName::LOW);
     }
 
-    public function handle(CategoryAdCounts $categoryCounts, LocationAdCounts $placeCounts, HomeFeedCache $homeFeed): void
+    public function handle(CategoryAdCounts $categoryCounts, LocationAdCounts $placeCounts, HomeFeedCache $homeFeed, AdFacetCounter $facets): void
     {
         $categoryCounts->refresh();
         $placeCounts->refresh();
         $homeFeed->refresh();
+        $facets->refreshUnfiltered();
     }
 }

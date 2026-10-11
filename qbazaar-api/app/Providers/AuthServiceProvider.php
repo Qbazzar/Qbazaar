@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\Ad;
+use App\Models\Category;
 use App\Models\Conversation;
 use App\Models\Offer;
 use App\Models\Order;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Policies\AccountPolicy;
 use App\Policies\AdPolicy;
 use App\Policies\BlockPolicy;
+use App\Policies\CategoryPolicy;
 use App\Policies\ConversationPolicy;
 use App\Policies\OfferPolicy;
 use App\Policies\OrderPolicy;
@@ -32,6 +34,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         Gate::policy(User::class, AccountPolicy::class);
         Gate::policy(Ad::class, AdPolicy::class);
+        Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Conversation::class, ConversationPolicy::class);
         Gate::policy(Offer::class, OfferPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);

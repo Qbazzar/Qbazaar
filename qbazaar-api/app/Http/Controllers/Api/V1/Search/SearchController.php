@@ -6,9 +6,7 @@ namespace App\Http\Controllers\Api\V1\Search;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Search\SearchRequest;
-use App\Http\Resources\Api\V1\Ads\AdSummaryResource;
-use App\Models\Ad;
-use App\Services\Ads\ViewerFavorites;
+use App\Http\Resources\Api\V1\Ads\AdSearchPage;
 use App\Services\Search\AdSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,38 +36,16 @@ class SearchController extends Controller
      *
      * @unauthenticated
      */
-    public function index(SearchRequest $request, ViewerFavorites $favorites): JsonResponse
+    public function index(SearchRequest $request, AdSearchPage $page): JsonResponse
     {
         /** @var array<string, mixed> $params */
         $params = $request->validated();
 
         $result = $this->search->search($params);
 
-        $paginator = $result['paginator'];
-        $favorites->mark($this->viewer($request), $paginator->items());
-
-        // Map manually to plain arrays so the wrapper produces the desired
-        // envelope (data + meta), matching the precedent set by
-        // Reference\CategoryController and Ads\AdController.
-        $items = $paginator->getCollection()
-            ->map(fn (Ad $ad): array => (new AdSummaryResource($ad))->toArray($request))
-            ->all();
-
-        // Pre-shaped envelope — ApiResponseWrapper sees the `success` key and
-        // leaves the payload untouched, so the sibling `facets` block survives.
-        // (The default wrapper drops keys other than data + meta.)
-        return response()->json([
-            'success' => true,
-            'data' => $items,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'has_more' => $paginator->currentPage() < $paginator->lastPage(),
-            ],
-            'facets' => $result['facets'],
-        ]);
+        // The wrapper leaves a payload with a `success` key as is, so the
+        // sibling `facets` block survives (it would drop keys other than data + meta).
+        return response()->json([...$page->render($request, $result), 'facets' => $result['facets']]);
     }
 
     /**

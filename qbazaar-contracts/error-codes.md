@@ -110,6 +110,9 @@ requested locale.
 | Code | Meaning | HTTP |
 |------|---------|------|
 | `FAV_001` | Favourites limit per user reached (`qbazaar.favorites.max_per_user`) | 422 |
+| `FAV_002` | Favourite-categories limit per user reached (`qbazaar.favorites.max_categories_per_user`) | 422 |
+
+An unknown or hidden category on `PUT /account/favorite-categories/{category}` answers `CAT_001` (404).
 
 ## Messaging (Sprint 8)
 

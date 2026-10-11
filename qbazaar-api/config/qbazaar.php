@@ -186,6 +186,20 @@ return [
         // GET /ads?ids= — favourites synced from another device, recently viewed on the web.
         'ids_lookup_max' => 50,
         'geo_max_radius_km' => 200,
+        // Facet counts the database computes (GET /ads on its DB path, and /search
+        // without Meilisearch) are shared per filter set for this long; 0 counts on
+        // every request. The unfiltered counts come from the catalog warmer instead.
+        'facets_cache_seconds' => 60,
+        // A facet count that runs longer than this is stopped and answered empty.
+        'facet_timeout_seconds' => 2,
+        // The same limit for the catalog warmer, which runs on the low queue and may take longer.
+        'facet_warm_timeout_seconds' => 30,
+        // Keyword search on the database (LIKE) scans; production leaves it off and
+        // answers an empty page when Meilisearch is not the engine. Always on in
+        // local and testing.
+        'db_keyword_fallback' => (bool) env('SEARCH_DB_KEYWORD_FALLBACK', false),
+        // Select filters of the chosen category that also get value counts.
+        'facet_custom_fields_max' => 5,
         // View counters change on every visit, so they reach the index in batches instead of per view.
         'views_sync_minutes' => 15,
     ],
@@ -242,6 +256,7 @@ return [
     */
     'favorites' => [
         'max_per_user' => 1000,
+        'max_categories_per_user' => 100,
     ],
 
     // Fan-out alerts (price drops, new ads from followed sellers, saved

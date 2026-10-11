@@ -34,7 +34,7 @@ it('asks Meilisearch once for hits, total and facets', function (): void {
         ->withArgs(fn (string $query, array $options): bool => $query === 'bike'
             && $options['hitsPerPage'] === 2
             && $options['page'] === 1
-            && $options['facets'] === ['category_slug', 'location_slug', 'condition', 'price_type']
+            && $options['facets'] === ['category_slug', 'location_slug', 'condition', 'price_type', 'ad_type', 'shipping', 'seller_type', 'buy_now']
             && $options['attributesToRetrieve'] === ['id'])
         ->andReturn([
             'hits' => [['id' => $this->second->id], ['id' => 'deleted-since-indexing'], ['id' => $this->first->id]],

@@ -33,6 +33,23 @@ class SellerListingsVisibilityService
     {
         $this->markSellerActive($seller, true);
 
+        $this->reindexListed($seller);
+    }
+
+    /**
+     * The seller switched between a private and a business account: the copy
+     * on their ads (the seller-type filter and facet) follows, and the
+     * listed ads are re-sent to the search index.
+     */
+    public function accountTypeChanged(User $seller): void
+    {
+        Ad::withTrashed()->where('user_id', $seller->id)->toBase()->update(['seller_type' => $seller->account_type->value]);
+
+        $this->reindexListed($seller);
+    }
+
+    private function reindexListed(User $seller): void
+    {
         $this->activeAdsOf($seller)->with('user')->chunkById(
             (int) config('scout.chunk.searchable', 500),
             function (Collection $ads): void {
