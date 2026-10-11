@@ -8,6 +8,7 @@ import { siteFrame } from '@/components/design-system/site-frame';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
+import { FOOTER_COLUMNS } from './footer-links';
 import { SiteLogo } from './SiteLogo';
 
 /**
@@ -21,44 +22,10 @@ interface FooterColumn {
 }
 
 function footerColumns(): FooterColumn[] {
-  return [
-    {
-      title: t('layout.footer.col_classifieds', 'الإعلانات'),
-      links: [
-        { href: '/p/about', label: t('layout.footer.about', 'من نحن') },
-        { href: '/ads', label: t('layout.footer.browse', 'تصفّح الإعلانات') },
-        { href: '/post-ad', label: t('layout.header.add_ad', 'أضف إعلاناً') },
-        { href: '/categories', label: t('layout.footer.categories', 'كل الأقسام') },
-      ],
-    },
-    {
-      title: t('layout.footer.col_information', 'معلومات'),
-      links: [
-        { href: '/help', label: t('layout.footer.help', 'المساعدة') },
-        { href: '/support', label: t('layout.footer.support', 'الدعم الفني') },
-        { href: '/p/contact', label: t('layout.footer.contact', 'تواصل معنا') },
-        { href: '/p/privacy', label: t('layout.footer.privacy', 'سياسة الخصوصية') },
-        { href: '/p/terms', label: t('layout.footer.terms', 'شروط الاستخدام') },
-      ],
-    },
-    {
-      title: t('layout.footer.col_account', 'الحساب'),
-      links: [
-        { href: '/account', label: t('account.nav.title', 'حسابي') },
-        { href: '/account/ads', label: t('layout.menu.my_ads', 'إعلاناتي') },
-        { href: '/account/favorites', label: t('account.nav.favorites', 'المحفوظات') },
-        { href: '/account/messages', label: t('account.nav.messages', 'الرسائل') },
-      ],
-    },
-    {
-      title: t('layout.footer.col_discover', 'استكشف'),
-      links: [
-        { href: '/search', label: t('layout.footer.search', 'البحث') },
-        { href: '/categories', label: t('layout.menu.categories', 'الأقسام') },
-        { href: '/companies', label: t('layout.footer.companies', 'الشركات') },
-      ],
-    },
-  ];
+  return FOOTER_COLUMNS.map((column) => ({
+    title: t(`layout.footer.cols.${column.titleKey}`),
+    links: column.links.map((link) => ({ href: link.href, label: t(`layout.footer.links.${link.key}`) })),
+  }));
 }
 
 /**

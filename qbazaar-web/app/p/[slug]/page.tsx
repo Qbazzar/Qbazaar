@@ -7,36 +7,39 @@
  * missing or unpublished page renders the 404 page; any other API failure
  * reaches the error boundary instead of posing as a missing page.
  */
-import { cache } from 'react';
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { cache } from "react";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
-import { ContentPanel } from '@/components/cms/ContentPanel';
-import { MarkdownContent } from '@/components/cms/MarkdownContent';
-import { PageShell } from '@/components/design-system/PageShell';
-import { fetchPublicResource } from '@/lib/api/public-resource';
-import type { Page } from '@/lib/api/types';
-import { intlLocale } from '@/lib/i18n/format';
-import { getLocale, localized } from '@/lib/i18n/locale';
-import { t } from '@/lib/i18n/messages';
-import { resolveServerLocale } from '@/lib/i18n/server';
-import { pageMetadata } from '@/lib/page-metadata';
+import { ContentPanel } from "@/components/cms/ContentPanel";
+import { MarkdownContent } from "@/components/cms/MarkdownContent";
+import { PageShell } from "@/components/design-system/PageShell";
+import { fetchPublicResource } from "@/lib/api/public-resource";
+import type { Page } from "@/lib/api/types";
+import { intlLocale } from "@/lib/i18n/format";
+import { getLocale, localized } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/messages";
+import { resolveServerLocale } from "@/lib/i18n/server";
+import { isPlaceholderBody } from "@/lib/cms-placeholder";
+import { pageMetadata } from "@/lib/page-metadata";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
 /** Memoized per request, so the metadata and the page share one read. */
-const fetchPage = cache(
-  (slug: string): Promise<Page | null> => fetchPublicResource<Page>(`/api/v1/pages/${encodeURIComponent(slug)}`),
+const fetchPage = cache((slug: string): Promise<Page | null> =>
+  fetchPublicResource<Page>(`/api/v1/pages/${encodeURIComponent(slug)}`),
 );
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   await resolveServerLocale();
 
   const page = await fetchPage(slug);
-  if (!page) return { title: t('errors.not_found_title') };
+  if (!page) return { title: t("errors.not_found_title") };
 
   return pageMetadata({
     title: localized(page.title),
@@ -56,9 +59,14 @@ export default async function CmsPage({ params }: PageProps) {
 
   return (
     <PageShell
-      breadcrumb={[{ label: t('home.breadcrumb'), href: '/' }, { label: title }]}
+      breadcrumb={[
+        { label: t("home.breadcrumb"), href: "/" },
+        { label: title },
+      ]}
       title={title}
-      meta={page.published_at ? <LastUpdated iso={page.published_at} /> : undefined}
+      meta={
+        page.published_at ? <LastUpdated iso={page.published_at} /> : undefined
+      }
     >
       <ContentPanel>
         <MarkdownContent html={localized(page.body)} />
@@ -68,11 +76,14 @@ export default async function CmsPage({ params }: PageProps) {
 }
 
 function LastUpdated({ iso }: { iso: string }) {
-  const date = new Intl.DateTimeFormat(intlLocale(getLocale()), { dateStyle: 'long', timeZone: 'Asia/Qatar' }).format(new Date(iso));
+  const date = new Intl.DateTimeFormat(intlLocale(getLocale()), {
+    dateStyle: "long",
+    timeZone: "Asia/Qatar",
+  }).format(new Date(iso));
 
   return (
     <>
-      {t('cms.last_updated')}: <time dateTime={iso}>{date}</time>
+      {t("cms.last_updated")}: <time dateTime={iso}>{date}</time>
     </>
   );
 }
