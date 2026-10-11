@@ -7,7 +7,6 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/lib/api/wallet', () => ({ getWallet: vi.fn(), listWalletEntries: vi.fn() }));
 
-import { ACCOUNT_HUB_ITEM, ACTIVITY_NAV } from '@/components/account/account-nav';
 import { SettingsShell } from '@/components/account/SettingsShell';
 import { renderWithClient } from '@/components/orders/test-utils';
 import type { User } from '@/lib/api/types';
@@ -65,7 +64,7 @@ describe('WalletView', () => {
     expect(screen.getByText('Your balance minus the commission you owe.')).toHaveClass('text-qb-ink-subtle');
   });
 
-  it('keeps Orders and Promotions one step away: the wallet sidebar leads to the hub that lists them', async () => {
+  it('sits in the account settings menu as the current section', async () => {
     vi.mocked(getWallet).mockResolvedValue(buildWallet());
     renderWithClient(
       <SettingsShell>
@@ -74,10 +73,9 @@ describe('WalletView', () => {
     );
     await screen.findByText('Commission owed');
 
-    const sidebar = screen.getByRole('navigation', { name: 'Settings' });
-    expect(sidebar.querySelector(`a[href="${ACCOUNT_HUB_ITEM.href}"]`)).not.toBeNull();
-    const reachable = ACTIVITY_NAV.map((item) => item.href);
-    expect(reachable).toContain('/account/orders');
-    expect(reachable).toContain('/account/promotions');
+    const menu = screen.getByRole('navigation', { name: 'Settings' });
+    const wallet = menu.querySelector('a[href="/account/wallet"]');
+    expect(wallet).not.toBeNull();
+    expect(wallet).toHaveAttribute('aria-current', 'page');
   });
 });
