@@ -5,9 +5,12 @@ declare(strict_types=1);
 use App\Enums\AdType;
 use App\Models\Category;
 use App\Models\User;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Meilisearch\Client;
 use Meilisearch\Endpoints\Indexes;
+use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Exceptions\CommunicationException;
 
 use function Pest\Laravel\getJson;
@@ -95,4 +98,15 @@ it('declares the new attributes filterable and faceting limits', function (): vo
 
     expect($settings['filterableAttributes'])->toContain('seller_type', 'buy_now')
         ->and($settings['faceting']['maxValuesPerFacet'])->toBe(100);
+});
+
+it('answers an empty page, not a 500, when Meilisearch refuses a filter before the settings are synced', function (): void {
+    $body = (string) json_encode(['message' => 'Attribute `seller_type` is not filterable.', 'code' => 'invalid_search_filter', 'type' => 'invalid_request', 'link' => 'https://docs.meilisearch.com']);
+    $this->index->shouldReceive('rawSearch')->andThrow(new ApiException(new Response(400), json_decode($body, true)));
+    Log::spy();
+
+    getJson('/api/v1/search?seller_type=business&q=secret+words')->assertOk()->assertJsonPath('data', [])->assertJsonPath('meta.total', 0);
+
+    Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context): bool => $message === 'Search engine unavailable, returning empty result set'
+        && ! str_contains(json_encode($context), 'secret') && strlen((string) $context['query_hash']) === 12)->once();
 });

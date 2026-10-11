@@ -11,7 +11,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Account\SetFavoriteCategoryRequest;
 use App\Http\Resources\Api\V1\Account\FavoriteCategoryResource;
 use App\Models\Category;
-use App\Models\FavoriteCategory;
 use App\Models\User;
 use App\Services\Catalog\FavoriteCategories;
 use Illuminate\Http\JsonResponse;
@@ -33,11 +32,8 @@ class FavoriteCategoryController extends Controller
      */
     public function index(Request $request, FavoriteCategories $favorites): JsonResponse
     {
-        $items = $favorites->for($this->caller($request))
-            ->map(fn (FavoriteCategory $favorite): array => (new FavoriteCategoryResource($favorite))->toArray($request))
-            ->all();
-
-        return response()->json($items);
+        // resolve() gives the plain list; the response wrapper adds the envelope.
+        return response()->json(FavoriteCategoryResource::collection($favorites->for($this->caller($request)))->resolve($request));
     }
 
     /**

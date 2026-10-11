@@ -10,25 +10,48 @@ use App\Enums\AdShipping;
 use App\Enums\AdType;
 use App\Enums\Condition;
 use App\Enums\PriceType;
+use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
+use App\Services\Catalog\WarmedCache;
 use BackedEnum;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use PDO;
 
 /**
  * Facet counts straight from the database, for installs and tests where the
- * search engine is not Meilisearch. Same keys and meaning as the engine's
- * `facetDistribution`: the counts are those of the current result set.
+ * search engine is not Meilisearch, and for the plain `/ads` browse. Same
+ * keys and meaning as the engine's `facetDistribution`: the counts are those
+ * of the current result set.
  *
- * One aggregate query counts every enum facet at once; categories and places
- * (only asked for by `/search`) take one grouped query each, and every
- * custom-field facet one more on its JSON path. Results are shared per filter
- * set for a short while, like the page totals of the feed.
+ * Counting walks every matching row, so it is kept off the request path:
+ *  - the unfiltered counts come from the catalog warmer
+ *    ({@see WarmCatalogCacheJob}) and are never computed by a request unless
+ *    the cache is cold;
+ *  - narrowed sets are computed once per filter set (single-flight, so a
+ *    crowd on a cold key runs one query), shared for `facets_cache_seconds`,
+ *    and stopped by a statement timeout, answering empty counts instead of
+ *    holding the database.
+ *
+ * Price bounds are rounded outwards to {@see self::PRICE_STEP} before counting,
+ * so a slider drag shares one cache entry instead of making one per value.
  */
 class AdFacetCounter
 {
+    private const string VERSION_KEY = 'search.facets.version';
+
+    private const int PRICE_STEP = 50;
+
+    /** MariaDB / MySQL errors for a statement stopped by its time limit. */
+    private const array TIMEOUT_ERRORS = [1969, 3024];
+
     /** @var array<string, class-string<BackedEnum>> */
     private const array ENUM_FACETS = [
         'condition' => Condition::class,
@@ -38,7 +61,10 @@ class AdFacetCounter
         'seller_type' => AccountType::class,
     ];
 
-    public function __construct(private readonly AdListingFilters $listingFilters) {}
+    public function __construct(
+        private readonly AdListingFilters $listingFilters,
+        private readonly WarmedCache $cache,
+    ) {}
 
     /**
      * @param list<string> $customKeys
@@ -47,16 +73,95 @@ class AdFacetCounter
     public function count(AdFeedFilters $filters, array $customKeys, bool $taxonomy): array
     {
         $fresh = (int) config('qbazaar.search.facets_cache_seconds');
-        $compute = fn (): array => $this->compute($filters, $customKeys, $taxonomy);
 
         if ($fresh <= 0) {
-            return $compute();
+            return $this->compute($filters, $customKeys, $taxonomy);
         }
 
-        $key = 'search.facets.v1.' . sha1($filters->fingerprint() . '|' . implode(',', $customKeys) . '|' . (int) $taxonomy);
+        if ($this->isUnfiltered($filters, $customKeys)) {
+            return $this->cache->get($this->unfilteredKey(), $this->warmedTtl(), fn (): array => $this->computeUnfiltered());
+        }
 
-        /** @var array<string, array<string, int>> */
-        return Cache::flexible($key, [$fresh, $fresh * 5], $compute);
+        $rounded = $this->rounded($filters);
+        $key = 'search.facets.v2.' . $this->version() . '.' . sha1($rounded->fingerprint() . '|' . implode(',', $customKeys) . '|' . (int) $taxonomy);
+
+        return $this->cache->get($key, $fresh, fn (): array => $this->compute($rounded, $customKeys, $taxonomy));
+    }
+
+    /**
+     * Rebuilds the unfiltered counts; run by the catalog warmer.
+     */
+    public function refreshUnfiltered(): void
+    {
+        $this->cache->put($this->unfilteredKey(), $this->warmedTtl(), fn (): array => $this->computeUnfiltered());
+    }
+
+    /**
+     * Drops every cached count: they move to a new key version, so the old
+     * entries are simply never read again and age out.
+     */
+    public function flush(): void
+    {
+        Cache::forever(self::VERSION_KEY, (string) Str::ulid());
+    }
+
+    /**
+     * @param list<string> $customKeys
+     */
+    private function isUnfiltered(AdFeedFilters $filters, array $customKeys): bool
+    {
+        return $customKeys === []
+            && $filters->categoryId === null
+            && $filters->locationId === null
+            && $filters->priceMin === null
+            && $filters->priceMax === null
+            && ! $filters->hasDetailFilters();
+    }
+
+    /**
+     * @return array<string, array<string, int>>
+     */
+    private function computeUnfiltered(): array
+    {
+        return $this->compute(new AdFeedFilters, [], true);
+    }
+
+    private function unfilteredKey(): string
+    {
+        return 'search.facets.unfiltered.' . $this->version();
+    }
+
+    private function warmedTtl(): int
+    {
+        return (int) config('qbazaar.catalog.counts_cache_seconds');
+    }
+
+    private function version(): string
+    {
+        return (string) Cache::get(self::VERSION_KEY, '0');
+    }
+
+    private function rounded(AdFeedFilters $filters): AdFeedFilters
+    {
+        if ($filters->priceMin === null && $filters->priceMax === null) {
+            return $filters;
+        }
+
+        return new AdFeedFilters(
+            categoryId: $filters->categoryId,
+            locationId: $filters->locationId,
+            priceMin: $filters->priceMin !== null ? floor($filters->priceMin / self::PRICE_STEP) * self::PRICE_STEP : null,
+            priceMax: $filters->priceMax !== null ? ceil($filters->priceMax / self::PRICE_STEP) * self::PRICE_STEP : null,
+            sort: $filters->sort,
+            keyword: $filters->keyword,
+            condition: $filters->condition,
+            priceType: $filters->priceType,
+            adType: $filters->adType,
+            shipping: $filters->shipping,
+            sellerType: $filters->sellerType,
+            buyNow: $filters->buyNow,
+            customFields: $filters->customFields,
+        );
     }
 
     /**
@@ -64,6 +169,56 @@ class AdFacetCounter
      * @return array<string, array<string, int>>
      */
     private function compute(AdFeedFilters $filters, array $customKeys, bool $taxonomy): array
+    {
+        try {
+            return $this->withTimeout(fn (): array => $this->build($filters, $customKeys, $taxonomy));
+        } catch (QueryException $e) {
+            if (! in_array($e->errorInfo[1] ?? null, self::TIMEOUT_ERRORS, true)) {
+                throw $e;
+            }
+
+            Log::warning('Facet counts timed out, answering without counts', ['filters' => $filters->fingerprint()]);
+
+            return [];
+        }
+    }
+
+    /**
+     * Caps the statements of one computation with the server's time limit
+     * (MariaDB `max_statement_time`, MySQL `max_execution_time`) and lifts it
+     * again, because the connection outlives the request in queue workers.
+     *
+     * @template TValue
+     *
+     * @param Closure(): TValue $run
+     * @return TValue
+     */
+    private function withTimeout(Closure $run): mixed
+    {
+        $seconds = (int) config('qbazaar.search.facet_timeout_seconds');
+        $connection = DB::connection();
+
+        if ($seconds <= 0 || ! in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
+            return $run();
+        }
+
+        $isMaria = str_contains((string) $connection->getPdo()->getAttribute(PDO::ATTR_SERVER_VERSION), 'MariaDB');
+        [$variable, $limit] = $isMaria ? ['max_statement_time', $seconds] : ['max_execution_time', $seconds * 1000];
+
+        $connection->statement("SET SESSION {$variable} = {$limit}");
+
+        try {
+            return $run();
+        } finally {
+            $connection->statement("SET SESSION {$variable} = 0");
+        }
+    }
+
+    /**
+     * @param list<string> $customKeys
+     * @return array<string, array<string, int>>
+     */
+    private function build(AdFeedFilters $filters, array $customKeys, bool $taxonomy): array
     {
         $distribution = $this->enumFacets($filters);
 
@@ -94,7 +249,7 @@ class AdFacetCounter
     {
         $columns = [
             'COUNT(*) AS total_ads',
-            'COALESCE(SUM(CASE WHEN ' . AdListingFilters::BUY_NOW_SQL . ' THEN 1 ELSE 0 END), 0) AS buy_now__true',
+            'COALESCE(SUM(CASE WHEN ' . AdListingFilters::buyNowSql() . ' THEN 1 ELSE 0 END), 0) AS buy_now__true',
         ];
         $bindings = [];
 

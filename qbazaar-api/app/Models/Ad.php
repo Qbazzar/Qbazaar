@@ -17,6 +17,7 @@ use App\Enums\UserStatus;
 use App\Http\Resources\Api\V1\Media\MediaResource;
 use App\Services\Catalog\CategoryHierarchy;
 use App\Services\Catalog\LocationHierarchy;
+use App\Support\Money;
 use Database\Factories\AdFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -345,17 +346,26 @@ class Ad extends Model implements HasMedia
 
     /**
      * Whether a buyer may send a purchase request ("Buy Now"): an offering
-     * with a positive price and stock left. Mirrors the rule of
-     * PurchaseRequestTransitionService::assertAdIsPurchasable (minus the
-     * live state of the ad) and the SQL twin in AdListingFilters.
+     * with a positive price and stock left. The one rule behind the search
+     * index flag, the SQL twin in AdListingFilters and
+     * PurchaseRequestTransitionService::assertAdIsPurchasable (which adds the
+     * live state of the ad and its orders).
      */
     public function acceptsBuyNow(): bool
+    {
+        return $this->hasBuyNowPrice() && $this->quantity >= 1;
+    }
+
+    /**
+     * The price and type half of {@see acceptsBuyNow()}; stock is checked
+     * apart because running out of it has its own error.
+     */
+    public function hasBuyNowPrice(): bool
     {
         return $this->ad_type === AdType::OFFERING
             && ! $this->price_type->requiresNullPrice()
             && $this->price !== null
-            && (float) $this->price > 0
-            && $this->quantity >= 1;
+            && Money::isPositive($this->price);
     }
 
     public function isReserved(): bool

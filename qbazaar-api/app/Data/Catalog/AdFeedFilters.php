@@ -78,10 +78,21 @@ final readonly class AdFeedFilters
      */
     public function fingerprint(): string
     {
+        // Sorted, so the same filters in another query-string order share one key.
+        $fields = $this->customFields;
+        ksort($fields);
+        $fields = array_map(static function (mixed $value): mixed {
+            if (is_array($value)) {
+                ksort($value);
+            }
+
+            return $value;
+        }, $fields);
+
         return sha1((string) json_encode([
             $this->categoryId, $this->locationId, $this->priceMin, $this->priceMax, $this->keyword,
             $this->condition, $this->priceType, $this->adType, $this->shipping, $this->sellerType,
-            $this->buyNow, $this->customFields,
+            $this->buyNow, $fields,
         ]));
     }
 }

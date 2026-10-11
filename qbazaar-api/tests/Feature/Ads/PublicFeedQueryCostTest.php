@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\UserStatus;
 use App\Models\Ad;
+use App\Models\Category;
 use App\Models\User;
 use App\Services\Catalog\CategoryAdCounts;
 use App\Services\Catalog\LocationAdCounts;
@@ -18,6 +19,8 @@ use Tests\Concerns\CreatesAds;
 uses(RefreshDatabase::class, CreatesAds::class);
 
 beforeEach(function (): void {
+    // Every request counts its facets, so the query counts below are exact.
+    config(['qbazaar.search.facets_cache_seconds' => 0]);
     $this->seedReferenceData();
     $this->seller = User::factory()->create();
 });
@@ -77,11 +80,30 @@ it('filters the public feed on the stored flag instead of joining users', functi
  */
 function countQueries(array $queries): array
 {
-    return array_values(array_filter($queries, fn (string $sql): bool => Str::contains($sql, 'count(', ignoreCase: true) && ! Str::contains($sql, 'total_ads')));
+    return array_values(array_filter($queries, fn (string $sql): bool => Str::contains($sql, 'count(', ignoreCase: true) && ! isFacetQuery($sql)));
+}
+
+/**
+ * The one aggregate that counts every enum facet of the list (the only query
+ * of the facet block when no category facets are asked for).
+ *
+ * @param list<string> $queries
+ * @return list<string>
+ */
+function facetQueries(array $queries): array
+{
+    return array_values(array_filter($queries, 'isFacetQuery'));
+}
+
+function isFacetQuery(string $sql): bool
+{
+    return Str::contains($sql, 'buy_now__true');
 }
 
 it('takes the feed total from the warmed catalog counters', function (string $filter): void {
-    $ad = $this->makeAd($this->seller, ['status' => 'active', 'published_at' => now()]);
+    // A category without select filters, so no per-field facet queries join in.
+    $boats = Category::query()->where('slug', 'boats')->firstOrFail();
+    $ad = $this->makeAd($this->seller, ['status' => 'active', 'published_at' => now(), 'category_id' => $boats->id]);
     $query = match ($filter) {
         'none' => '',
         'category' => 'category_id=' . $ad->category_id,
@@ -92,7 +114,8 @@ it('takes the feed total from the warmed catalog counters', function (string $fi
 
     $queries = sqlDuring(fn () => getJson("/api/v1/ads?{$query}")->assertOk()->assertJsonPath('meta.total', 1));
 
-    expect(countQueries($queries))->toBe([]);
+    expect(countQueries($queries))->toBe([])
+        ->and(facetQueries($queries))->toHaveCount(1);
 })->with(['none', 'category', 'location']);
 
 it('counts other filter sets once and reuses the total for every page and sort', function (): void {
@@ -104,7 +127,8 @@ it('counts other filter sets once and reuses the total for every page and sort',
         ->assertOk()
         ->assertJsonPath('meta.total', 1));
 
-    expect(countQueries($queries))->toBe([]);
+    expect(countQueries($queries))->toBe([])
+        ->and(facetQueries($queries))->toHaveCount(1);
 });
 
 it('recounts a zero total so a first listing is never hidden behind an empty page', function (): void {

@@ -2234,8 +2234,17 @@ paths:
         filters are AND-combined and ignored when `ids` is sent.
 
         `meta.facets` carries the count of ads per filter value for the current
-        result set (see `AdFacets`). Counts are cached per filter set for
-        `qbazaar.search.facets_cache_seconds` (60 seconds).
+        result set (see `AdFacets`). Counts computed by the database are shared
+        per filter set for `qbazaar.search.facets_cache_seconds` (60 seconds),
+        with `price_min`/`price_max` rounded outwards to a multiple of 50 for
+        that count; the unfiltered counts come from the catalog warmer (up to
+        `qbazaar.catalog.counts_cache_seconds`, 15 minutes, old). A count that
+        runs past `qbazaar.search.facet_timeout_seconds` (2) is stopped and
+        every facet is answered as `{}`.
+
+        Keyword (`q`) search needs the search engine: where it is not
+        available the page is empty (the database keyword fallback is
+        local/testing only unless `qbazaar.search.db_keyword_fallback` is on).
 
         An optional Bearer token sets `is_favorited` on each ad; guests get false.
       operationId: adsIndex
@@ -8687,7 +8696,9 @@ components:
       description: |
         `true` keeps only ads a buyer can send a purchase request for (Buy
         Now): an offering with a positive price (fixed or negotiable) and
-        stock left. `false` or absent applies no filter.
+        stock left. `false` or absent applies no filter. The flag does not
+        look at orders, so a listed ad can still answer a purchase request with
+        `ORDER_AD_HAS_ACTIVE_ORDER` while another buyer's order is open.
       schema: { type: boolean }
     FilterCustomFields:
       name: custom_fields
@@ -8697,7 +8708,8 @@ components:
       description: |
         Category-specific filters: `custom_fields[make]=Toyota` for equality,
         `custom_fields[year][min]=2015&custom_fields[year][max]=2020` for a
-        range. Keys are `[a-z0-9_]` only; at most 10 filters.
+        range. Keys are `[a-z0-9_]` only; at most 10 filters; range bounds
+        must be numbers and `min` must not exceed `max` (422 otherwise).
       schema:
         type: object
         additionalProperties: true

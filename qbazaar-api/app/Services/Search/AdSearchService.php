@@ -12,6 +12,7 @@ use GuzzleHttp\Exception\ConnectException as GuzzleConnectException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator as PaginatorContract;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
+use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Exceptions\CommunicationException;
 
 /**
@@ -90,7 +91,9 @@ class AdSearchService
         $customKeys = is_string($categoryId) && $categoryId !== '' ? $this->schema->selectFilterKeys($categoryId) : [];
 
         if (! $viaEngine) {
-            return $this->viaDatabase($params, $perPage, $page, $customKeys, $taxonomy);
+            return $this->keywordAllowedOnDatabase($params)
+                ? $this->viaDatabase($params, $perPage, $page, $customKeys, $taxonomy)
+                : $this->withoutKeywordEngine($perPage, $page, $customKeys);
         }
 
         return $this->viaEngine($params, $perPage, $page, $customKeys, $taxonomy);
@@ -134,19 +137,49 @@ class AdSearchService
             ]);
 
             return $this->engineResult($raw, $perPage, $page, $customKeys);
-        } catch (CommunicationException|GuzzleConnectException $e) {
-            // Meilisearch unreachable — surface an empty result set instead
+        } catch (CommunicationException|GuzzleConnectException|ApiException $e) {
+            // Meilisearch unreachable, or it refused the request (an index whose
+            // settings were not synced yet rejects a new filter as
+            // invalid_search_filter) — surface an empty result set instead
             // of a 500 so the UI degrades to "no matches" rather than a
             // hard error. Logged at warning so ops still gets paged in prod.
             // The database is deliberately not used instead: a keyword scan
             // there during an outage would take the primary down with it.
             Log::warning('Search engine unavailable, returning empty result set', [
                 'error' => $e->getMessage(),
-                'query' => $query,
+                'query_hash' => $query === '' ? null : substr(sha1(mb_strtolower($query)), 0, 12),
             ]);
 
             return $this->engineResult([], $perPage, $page, $customKeys);
         }
+    }
+
+    /**
+     * LIKE keyword matching scans the listed ads, so it only runs where the
+     * data is small (local, testing) or when ops switched it on explicitly.
+     *
+     * @param array<string, mixed> $params
+     */
+    private function keywordAllowedOnDatabase(array $params): bool
+    {
+        if (trim((string) ($params['q'] ?? '')) === '') {
+            return true;
+        }
+
+        return app()->environment(['local', 'testing']) || (bool) config('qbazaar.search.db_keyword_fallback');
+    }
+
+    /**
+     * @param list<string> $customKeys
+     * @return SearchResult
+     */
+    private function withoutKeywordEngine(int $perPage, int $page, array $customKeys): array
+    {
+        Log::warning('Keyword search needs the meilisearch Scout driver, returning no results', [
+            'driver' => config('scout.driver'),
+        ]);
+
+        return $this->engineResult([], $perPage, $page, $customKeys);
     }
 
     /**

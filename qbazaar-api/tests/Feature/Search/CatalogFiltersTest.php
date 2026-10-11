@@ -135,6 +135,8 @@ it('rejects values outside the enums and oversized custom filters', function (st
     'condition' => 'condition=broken',
     'long keyword' => 'q=' . str_repeat('a', 201),
     'custom field array value' => 'custom_fields[make][nested][x]=1',
+    'range min above max' => 'custom_fields[year][min]=2020&custom_fields[year][max]=2010',
+    'range bound not a number' => 'custom_fields[year][min]=abc',
 ]);
 
 it('shares facet counts per filter set for a short while', function (): void {
@@ -147,18 +149,22 @@ it('shares facet counts per filter set for a short while', function (): void {
 });
 
 it('answers the facet counts with a fixed number of queries', function (): void {
-    getJson('/api/v1/ads')->assertOk();
+    $facetQueries = function (string $url): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        getJson($url)->assertOk();
+        DB::disableQueryLog();
 
-    DB::enableQueryLog();
-    getJson('/api/v1/ads')->assertOk();
-    $few = count(DB::getQueryLog());
-    DB::flushQueryLog();
+        return count(array_filter(DB::getQueryLog(), fn (array $q): bool => str_contains(strtolower($q['query']), 'buy_now__true')));
+    };
+
+    // The cache is off here (see beforeEach): one aggregate for every enum facet, however many ads.
+    expect($facetQueries('/api/v1/ads'))->toBe(1);
 
     foreach (range(1, 3) as $_) {
         $this->makeAd($this->private, ['status' => 'active', 'published_at' => now()]);
     }
-    DB::flushQueryLog();
-    getJson('/api/v1/ads')->assertOk();
 
-    expect(count(DB::getQueryLog()))->toBe($few);
+    expect($facetQueries('/api/v1/ads'))->toBe(1)
+        ->and($facetQueries('/api/v1/search'))->toBe(1);
 });

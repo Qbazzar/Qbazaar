@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Search;
 
 use App\Data\Catalog\AdFeedFilters;
+use App\Enums\AdType;
+use App\Enums\PriceType;
 use App\Models\Ad;
 use App\Services\Catalog\CategoryHierarchy;
 use App\Services\Catalog\LocationHierarchy;
@@ -22,7 +24,15 @@ class AdListingFilters
      * SQL twin of {@see Ad::acceptsBuyNow()} (the live state of the ad is
      * already covered by the publicly-listed scope).
      */
-    public const string BUY_NOW_SQL = "ad_type = 'offering' AND price > 0 AND price_type IN ('fixed', 'negotiable') AND quantity >= 1";
+    public static function buyNowSql(): string
+    {
+        $priced = array_map(
+            static fn (PriceType $type): string => "'" . $type->value . "'",
+            array_filter(PriceType::cases(), static fn (PriceType $type): bool => ! $type->requiresNullPrice()),
+        );
+
+        return sprintf("ad_type = '%s' AND price > 0 AND price_type IN (%s) AND quantity >= 1", AdType::OFFERING->value, implode(', ', $priced));
+    }
 
     /** Words of a keyword that are matched; more would only slow the scan. */
     private const int MAX_KEYWORD_WORDS = 6;
@@ -49,7 +59,7 @@ class AdListingFilters
             ->when($filters->adType !== null, fn (Builder $q) => $q->where('ad_type', $filters->adType))
             ->when($filters->shipping !== null, fn (Builder $q) => $q->where('shipping', $filters->shipping))
             ->when($filters->sellerType !== null, fn (Builder $q) => $q->where('seller_type', $filters->sellerType))
-            ->when($filters->buyNow, fn (Builder $q) => $q->whereRaw(self::BUY_NOW_SQL))
+            ->when($filters->buyNow, fn (Builder $q) => $q->whereRaw(self::buyNowSql()))
             ->tap(fn (Builder $q) => $this->keyword($q, $filters->keyword))
             ->tap(fn (Builder $q) => $this->customFields($q, $filters->customFields));
     }

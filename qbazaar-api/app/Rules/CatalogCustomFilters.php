@@ -9,9 +9,10 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 /**
  * Shape of the `custom_fields` filter of `/ads` and `/search`: a few
- * `key => text` equalities or `key => {min, max}` ranges. Keys and numbers
- * that do not parse are ignored by the filters themselves, so this only caps
- * how much a single request may ask for.
+ * `key => text` equalities or `key => {min, max}` ranges. Keys that do
+ * not parse are ignored by the filters themselves, so this only caps
+ * how much a single request may ask for, and that a range has numeric bounds
+ * with min not above max.
  */
 class CatalogCustomFilters implements ValidationRule
 {
@@ -42,8 +43,24 @@ class CatalogCustomFilters implements ValidationRule
             return mb_strlen($filter) <= self::MAX_VALUE_LENGTH;
         }
 
-        return is_array($filter)
-            && array_diff(array_keys($filter), ['min', 'max']) === []
-            && array_filter($filter, static fn (mixed $bound): bool => ! is_scalar($bound)) === [];
+        return is_array($filter) && $this->isValidRange($filter);
+    }
+
+    /**
+     * @param array<mixed> $range
+     */
+    private function isValidRange(array $range): bool
+    {
+        if (array_diff(array_keys($range), ['min', 'max']) !== []) {
+            return false;
+        }
+
+        foreach ($range as $bound) {
+            if (! is_numeric($bound)) {
+                return false;
+            }
+        }
+
+        return ! isset($range['min'], $range['max']) || (float) $range['min'] <= (float) $range['max'];
     }
 }

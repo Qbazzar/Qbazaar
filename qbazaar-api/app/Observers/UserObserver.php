@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Events\Users\UserStatusChanged;
+use App\Jobs\Search\SyncSellerAccountTypeJob;
 use App\Models\User;
 use App\Observers\Concerns\ResolvesActivityCauser;
-use App\Services\Users\SellerListingsVisibilityService;
 use BackedEnum;
 
 /**
@@ -68,7 +68,7 @@ class UserObserver
         }
 
         if ($user->wasChanged('account_type')) {
-            app(SellerListingsVisibilityService::class)->accountTypeChanged($user);
+            SyncSellerAccountTypeJob::dispatch($user->id);
         }
 
         if ($user->wasChanged('status')) {
