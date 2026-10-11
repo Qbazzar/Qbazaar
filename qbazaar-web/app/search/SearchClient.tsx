@@ -8,7 +8,7 @@
  */
 import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
+import { parseAsFloat, parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
 import { SearchX } from 'lucide-react';
 
 import { EmptyState } from '@/components/design-system/EmptyState';
@@ -27,7 +27,7 @@ import { useRequestResultsFocus } from '@/components/catalog/results-focus';
 import { ResultsHeading } from '@/components/catalog/ResultsHeading';
 import { SaveSearchButton } from '@/components/search/SaveSearchButton';
 import { SearchNotFound } from '@/components/search/SearchNotFound';
-import { decodeCustomFields } from '@/components/search/search-params';
+import { decodeCustomFields, readGeoFilter } from '@/components/search/search-params';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -40,8 +40,14 @@ import { findCategoryBySlug } from '@/store/categories';
 import type { SearchQueryParams } from '@/lib/api/types';
 
 const PER_PAGE = 24;
+const NO_GEO = { lat: null, lng: null, radius_km: null };
 
-const GROUPS: FilterGroupKey[] = ['keyword', 'category', 'price', 'location', 'condition', 'adType', 'shipping', 'customFields'];
+/**
+ * After the keyword, the groups in the order of category.html's filter card
+ * (Price, Offer, Shipping & Delivery, Cities), then the filters only the
+ * search API has.
+ */
+const GROUPS: FilterGroupKey[] = ['keyword', 'price', 'adType', 'shipping', 'location', 'category', 'condition', 'customFields'];
 
 export function SearchClient() {
   const locale = getLocale();
@@ -53,6 +59,10 @@ export function SearchClient() {
       location_slug: parseAsString,
       price_min: parseAsInteger,
       price_max: parseAsInteger,
+      // The home hero's "Distance" filter: a point and a radius around it.
+      lat: parseAsFloat,
+      lng: parseAsFloat,
+      radius_km: parseAsInteger,
       condition: parseAsStringEnum([...CONDITIONS]),
       ad_type: parseAsStringEnum([...AD_TYPES]),
       shipping: parseAsStringEnum([...SHIPPING_OPTIONS]),
@@ -75,11 +85,14 @@ export function SearchClient() {
   // The set filters only, by slug: the API resolves slugs itself, so the first
   // request does not wait for the trees and is not repeated once they load.
   // Saved searches keep these, without the page.
+  const geo = useMemo(() => readGeoFilter(urlState.lat, urlState.lng, urlState.radius_km), [urlState.lat, urlState.lng, urlState.radius_km]);
   const searchFilters: SearchQueryParams = useMemo(() => {
     const params: SearchQueryParams = { sort: urlState.sort };
     if (urlState.q) params.q = urlState.q;
     if (urlState.category_slug) params.category_slug = urlState.category_slug;
-    if (urlState.location_slug) params.location_slug = urlState.location_slug;
+    // A place and a circle would intersect, so the circle replaces the place.
+    if (urlState.location_slug && !geo) params.location_slug = urlState.location_slug;
+    if (geo) Object.assign(params, geo);
     if (urlState.price_min !== null) params.price_min = urlState.price_min;
     if (urlState.price_max !== null) params.price_max = urlState.price_max;
     if (urlState.condition) params.condition = urlState.condition;
@@ -87,7 +100,7 @@ export function SearchClient() {
     if (urlState.shipping) params.shipping = urlState.shipping;
     if (Object.keys(customFields).length > 0) params.custom_fields = customFields;
     return params;
-  }, [urlState, customFields]);
+  }, [urlState, customFields, geo]);
 
   const { data, isLoading, isFetching, isError, error, refetch } = useSearchQuery({ ...searchFilters, page: urlState.page, per_page: PER_PAGE });
 
@@ -104,11 +117,14 @@ export function SearchClient() {
   };
 
   const applyFilters = (next: FilterValues) => {
+    // Choosing a place by hand leaves the distance filter behind.
+    const placeChanged = next.location !== urlState.location_slug;
     // Back to page 1: the current page may not exist with the new filters.
     setUrlState({
       q: next.keyword || null,
       category_slug: next.category,
       location_slug: next.location,
+      ...(placeChanged ? NO_GEO : {}),
       price_min: next.priceMin,
       price_max: next.priceMax,
       condition: next.condition,
@@ -119,7 +135,7 @@ export function SearchClient() {
     });
   };
   const resetFilters = () =>
-    setUrlState({ category_slug: null, location_slug: null, price_min: null, price_max: null, condition: null, ad_type: null, shipping: null, cf: null, page: 1 });
+    setUrlState({ ...NO_GEO, category_slug: null, location_slug: null, price_min: null, price_max: null, condition: null, ad_type: null, shipping: null, cf: null, page: 1 });
 
   const panel = { groups: GROUPS, values: filters, onApply: applyFilters, onReset: resetFilters, categories: categoryTree, locations: locationTree, facets: data?.facets };
 
@@ -128,7 +144,7 @@ export function SearchClient() {
   const breadcrumb = [{ label: t('home.breadcrumb', 'الرئيسية'), href: '/' }, { label: title }];
   const total = data?.meta.total ?? 0;
   const lastPage = data?.meta.last_page ?? 1;
-  const hasFilters = countActiveFilters(filters) > 0;
+  const hasFilters = countActiveFilters(filters) > 0 || geo !== null;
 
   if (!isLoading && !isError && total === 0) {
     return (

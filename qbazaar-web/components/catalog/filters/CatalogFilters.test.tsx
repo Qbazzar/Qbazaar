@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setClientLocale } from '@/lib/i18n/locale';
+import type { Location } from '@/lib/api/types';
 
 import { ResultsFocusProvider } from '../results-focus';
 import { ResultsHeading } from '../ResultsHeading';
@@ -27,14 +28,14 @@ describe('FilterSidebar', () => {
       const [values, setValues] = useState(EMPTY_FILTERS);
       return (
         <ResultsFocusProvider>
-          <FilterSidebar groups={['price']} values={values} onApply={setValues} onReset={() => setValues(EMPTY_FILTERS)} />
+          <FilterSidebar groups={['condition']} values={values} onApply={setValues} onReset={() => setValues(EMPTY_FILTERS)} />
           <ResultsHeading loading={false} total={2} />
         </ResultsFocusProvider>
       );
     }
     render(<Page />);
 
-    await user.type(screen.getByLabelText('Minimum price (QAR)'), '100');
+    await user.click(screen.getByRole('radio', { name: 'Used' }));
     await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
 
     expect(screen.getByRole('heading', { level: 2, name: 'Results' })).toHaveFocus();
@@ -61,6 +62,35 @@ describe('FilterSheet', () => {
     await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
 
     expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, priceMax: 900 });
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+  });
+
+  it('chooses the city from the designed select inside the sheet', async () => {
+    const onApply = vi.fn();
+    const user = userEvent.setup();
+    const doha: Location = { id: 'doha', parent_id: null, slug: 'doha', name: { ar: 'الدوحة', en: 'Doha' }, type: 'city', lat: null, lng: null, children: [] };
+    render(<FilterSheet groups={['location']} values={EMPTY_FILTERS} locations={[doha]} onApply={onApply} onReset={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Advanced Filters' });
+    await user.click(screen.getByRole('combobox', { name: 'City / Region' }));
+    await user.click(await screen.findByRole('option', { name: 'Doha' }));
+
+    expect(dialog).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
+    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, location: 'doha' });
+  });
+
+  it('closes from a solid "Apply Filter" when the applied filters are unchanged', async () => {
+    const onApply = vi.fn();
+    const user = userEvent.setup();
+    render(<FilterSheet groups={['price']} values={{ ...EMPTY_FILTERS, priceMin: 10 }} onApply={onApply} onReset={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /^Filter/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Advanced Filters' });
+    await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
+
+    expect(onApply).not.toHaveBeenCalled();
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
   });
 });
