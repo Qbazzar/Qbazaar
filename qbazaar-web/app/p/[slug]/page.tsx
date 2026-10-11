@@ -28,7 +28,9 @@ interface PageProps {
 }
 
 /** Memoized per request, so the metadata and the page share one read. */
-const fetchPage = cache((slug: string): Promise<Page | null> => fetchPublicResource<Page>(`/api/v1/pages/${encodeURIComponent(slug)}`));
+const fetchPage = cache(
+  (slug: string): Promise<Page | null> => fetchPublicResource<Page>(`/api/v1/pages/${encodeURIComponent(slug)}`),
+);
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -41,6 +43,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: localized(page.title),
     description: localized(page.meta_description) || undefined,
     path: `/p/${slug}`,
+    // An unwritten page stays out of search until the owner edits it.
+    robots: isPlaceholderBody(page.body) ? { index: false, follow: true } : undefined,
   });
 }
 
@@ -67,10 +71,7 @@ export default async function CmsPage({ params }: PageProps) {
 }
 
 function LastUpdated({ iso }: { iso: string }) {
-  const date = new Intl.DateTimeFormat(intlLocale(getLocale()), {
-    dateStyle: 'long',
-    timeZone: 'Asia/Qatar',
-  }).format(new Date(iso));
+  const date = new Intl.DateTimeFormat(intlLocale(getLocale()), { dateStyle: 'long', timeZone: 'Asia/Qatar' }).format(new Date(iso));
 
   return (
     <>
