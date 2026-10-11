@@ -12,14 +12,15 @@ use App\Models\Location;
 use App\Models\User;
 use App\Services\Catalog\CategoryTree;
 use App\Services\Catalog\LocationAdCounts;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Everything the home screen shows, gathered in one pass.
  *
  * Until the admin can curate the sections (AD-17.1, AD-17.2) they run in
- * automatic mode: recommended = paid promotions first, then the most viewed
- * among recent ads; best selling = most favourited; featured sellers =
+ * automatic mode: recommended = paid promotions first, then the newest ads of
+ * the last 24 hours (topped up with the most viewed); best selling = most favourited; featured sellers =
  * business accounts with the most live ads.
  */
 class GetHomeFeedAction
@@ -44,25 +45,72 @@ class GetHomeFeedAction
     }
 
     /**
+     * Promoted ads, then the newest ads of the last day, then (only to fill
+     * the rail) the most viewed of the last month.
+     *
      * @return Collection<int, Ad>
      */
     private function recommended(): Collection
     {
         $limit = (int) config('qbazaar.home.recommended_limit');
-        $promoted = $this->promoted(min($limit, (int) config('qbazaar.promotions.home_promoted_limit')));
-        $windowDays = (int) config('qbazaar.home.recommended_window_days');
+        $rail = $this->promoted(min($limit, (int) config('qbazaar.promotions.home_promoted_limit')));
 
-        $popular = Ad::query()
-            ->publiclyListed()
-            ->where('published_at', '>=', now()->subDays($windowDays))
-            ->whereKeyNot($promoted->modelKeys())
+        $rail = $rail->concat($this->fresh($limit - $rail->count(), $rail->modelKeys()));
+
+        // Relations are loaded once for the whole rail, so the query count
+        // does not depend on which of the three groups happen to be empty.
+        return $rail->concat($this->mostViewed($limit - $rail->count(), $rail->modelKeys()))
+            ->load(self::AD_RELATIONS);
+    }
+
+    /**
+     * @param array<int, int|string> $exclude
+     * @return Collection<int, Ad>
+     */
+    private function fresh(int $limit, array $exclude): Collection
+    {
+        if ($limit < 1) {
+            return new Collection;
+        }
+
+        $since = now()->subHours((int) config('qbazaar.home.recommended_window_hours'));
+
+        return $this->railQuery($limit, $exclude)
+            ->where('published_at', '>=', $since)
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    /**
+     * @param array<int, int|string> $exclude
+     * @return Collection<int, Ad>
+     */
+    private function mostViewed(int $limit, array $exclude): Collection
+    {
+        if ($limit < 1) {
+            return new Collection;
+        }
+
+        $since = now()->subDays((int) config('qbazaar.home.recommended_window_days'));
+
+        return $this->railQuery($limit, $exclude)
+            ->where('published_at', '>=', $since)
             ->orderByDesc('views_count')
             ->orderByDesc('published_at')
-            ->limit($limit - $promoted->count())
-            ->with(self::AD_RELATIONS)
             ->get();
+    }
 
-        return $promoted->concat($popular);
+    /**
+     * @param array<int, int|string> $exclude
+     * @return Builder<Ad>
+     */
+    private function railQuery(int $limit, array $exclude): Builder
+    {
+        return Ad::query()
+            ->publiclyListed()
+            ->whereKeyNot($exclude)
+            ->limit($limit);
     }
 
     /**
@@ -83,7 +131,6 @@ class GetHomeFeedAction
             ->orderByDesc('promotion_rank')
             ->orderByDesc('published_at')
             ->limit($limit)
-            ->with(self::AD_RELATIONS)
             ->get();
     }
 

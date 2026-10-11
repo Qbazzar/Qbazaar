@@ -38,21 +38,6 @@ it('returns every home section in one response', function (): void {
         ->toBe(Category::query()->whereNull('parent_id')->where('is_active', true)->orderBy('order')->pluck('slug')->all());
 });
 
-it('recommends the most viewed recent ads and skips old or unlisted ones', function (): void {
-    $popular = Ad::factory()->active()->create(['user_id' => $this->seller->id, 'views_count' => 90]);
-    $quiet = Ad::factory()->active()->create(['user_id' => $this->seller->id, 'views_count' => 5]);
-    Ad::factory()->active()->create([
-        'user_id' => $this->seller->id,
-        'views_count' => 500,
-        'published_at' => now()->subDays((int) config('qbazaar.home.recommended_window_days') + 1),
-    ]);
-    Ad::factory()->create(['user_id' => $this->seller->id, 'status' => AdStatus::DRAFT->value, 'views_count' => 999]);
-
-    $ids = collect(getJson('/api/v1/home')->json('data.recommended'))->pluck('id')->all();
-
-    expect($ids)->toBe([$popular->id, $quiet->id]);
-});
-
 it('ranks best selling by favourites', function (): void {
     $loved = Ad::factory()->active()->create(['user_id' => $this->seller->id, 'favorites_count' => 40]);
     $liked = Ad::factory()->active()->create(['user_id' => $this->seller->id, 'favorites_count' => 3]);

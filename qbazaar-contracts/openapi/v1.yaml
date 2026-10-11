@@ -2107,10 +2107,13 @@ paths:
       description: |
         The payload is the same for every visitor of a language (card chips
         and field labels follow the request language). A scheduled job
-        rebuilds it every `qbazaar.catalog.warm_every_minutes` (2 minutes), so new or
-        changed listings and the place counts can be up to that old; a
-        taxonomy change drops it at once. With a Bearer token, `is_favorited`
-        on the ad cards reflects the caller's favourites.
+        rebuilds it every `qbazaar.catalog.warm_every_minutes` (2 minutes), and
+        an ad being published, approved, expired, sold or removed asks for a
+        rebuild within `qbazaar.home.refresh_debounce_seconds` (15 seconds), so
+        the `recommended` rail is never more than a couple of minutes behind;
+        the cache entry itself lives at most `qbazaar.home.cache_seconds`
+        (5 minutes). A taxonomy change drops it at once. With a Bearer token,
+        `is_favorited` on the ad cards reflects the caller's favourites.
       operationId: homeShow
       security: [{}, {bearerAuth: []}]
       responses:
@@ -4803,6 +4806,14 @@ paths:
         Returns the full payload (body + meta_description + published_at) for
         a published page. Returns CMS_PAGE_NOT_FOUND if the slug is unknown or
         the page is unpublished. Cached for 1 hour per slug. No auth required.
+
+        The site footer links to these slugs (placeholder content until the owner
+        edits them in /admin/pages). Classifieds: `careers`, `press`, `magazine`,
+        `connect`, `mobile-apps`. Information: `safety-tips`, `report-vulnerability`,
+        `youth-protection`, `accessibility`, `privacy-settings`, `legal-notice`
+        (plus the existing `terms`, `privacy`). Businesses: `real-estate-classifieds`,
+        `pro-info`, `pro-packages`, `advertise`. General: `popular-searches`,
+        `overview`, `vehicle-appraisal`.
       operationId: pagesShow
       security: []
       parameters:
@@ -4810,7 +4821,7 @@ paths:
           name: slug
           required: true
           schema: { type: string }
-          description: Page slug, e.g. `about`, `terms`, `privacy`, `safety`
+          description: Page slug, e.g. `about`, `terms`, `privacy`, `careers`, `safety-tips`
       responses:
         '200':
           description: Page payload
@@ -6464,7 +6475,13 @@ components:
           items: { $ref: '#/components/schemas/Category' }
         recommended:
           type: array
-          description: Most viewed ads published in the last 30 days (automatic until admin curation lands).
+          description: |
+            "Fresh deals posted in the last 24 hours" (automatic until admin curation lands),
+            in this order: active promoted ads first (strongest promotion first), then the
+            newest approved ads published within `qbazaar.home.recommended_window_hours`
+            (24), newest first. Only when that leaves the rail shorter than
+            `qbazaar.home.recommended_limit` (12) is it topped up with the most viewed
+            ads of the last 30 days. An ad appears once.
           items: { $ref: '#/components/schemas/AdSummary' }
         featured_sellers:
           type: array

@@ -28,6 +28,7 @@
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="HOME_FEED_REFRESH_DEBOUNCE_SECONDS" value="0"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="AD_VIEWS_BUFFER" value="database"/>
