@@ -3,62 +3,50 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 
-import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { focusRing } from '@/components/design-system/focus-ring';
-import { Icon } from '@/components/design-system/Icon';
 import { pageGutter } from '@/components/design-system/page-gutter';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-import { ACCOUNT_HUB_PATH, settingsSectionFor } from './account-nav';
+import { ACCOUNT_HUB_PATH } from './account-nav';
 import { SettingsSidebar } from './SettingsSidebar';
 
 /**
- * Settings shell of `account.html` (394:9270, 561:30374, 613:32391): a grey band
- * with the breadcrumb (the page title on phones), then the white "Settings"
- * sidebar next to the section panel. Phones drop the sidebar: the hub at
- * `/account` lists the sections and each section opens on its own screen.
+ * Settings screen of account.html: the "Settings" title on the grey page,
+ * the white menu card beside the open panel (210 px rail on tablets). Phones
+ * drop the menu: the hub at `/account` lists the sections, and each section
+ * opens on its own screen with a "‹ Settings" pill back to it.
  */
 export function SettingsShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? ACCOUNT_HUB_PATH;
-  const section = settingsSectionFor(pathname);
   const isHub = pathname === ACCOUNT_HUB_PATH;
 
   return (
-    <div className="bg-qb-page font-qb text-qb-ink">
-      <div
-        className={cn(
-          'mx-auto max-w-[1440px] pt-9 pb-[54px] qb-tablet:pt-[72px] qb-tablet:pb-[65px] qb-desktop:pt-[65px] qb-desktop:pb-[49px]',
-          pageGutter,
-        )}
-      >
-        <Breadcrumb
-          items={[{ label: t('home.breadcrumb'), href: '/' }, { label: t(section.labelKey) }]}
-          className="hidden qb-tablet:block"
-        />
-        <div className="flex items-center gap-2 qb-tablet:hidden">
+    <div className={cn('mx-auto max-w-[1440px] py-[clamp(20px,4vw,40px)] font-qb text-qb-ink', pageGutter)}>
+      <h1 className="mb-6 text-[clamp(28px,4vw,40px)] leading-normal font-semibold tracking-normal">
+        {t('account.nav.settings')}
+      </h1>
+      <div className="flex items-start gap-6 qb-desktop:flex-wrap">
+        <aside className="hidden shrink-0 rounded-qb-xl border border-qb-line bg-qb-surface p-4 qb-tablet:block qb-tablet:w-[210px] qb-desktop:w-auto qb-desktop:max-w-[320px] qb-desktop:min-w-[240px] qb-desktop:flex-[1_1_260px]">
+          <SettingsSidebar pathname={pathname} />
+        </aside>
+        <div className="flex min-w-0 flex-1 flex-col gap-5 qb-desktop:min-w-[300px] qb-desktop:flex-[3_1_460px]">
           {isHub ? null : (
             <Link
               href={ACCOUNT_HUB_PATH}
-              aria-label={t('account.nav.back_to_settings')}
-              className={cn('-ms-2 inline-flex size-10 items-center justify-center rounded-qb-md text-qb-ink hover:bg-qb-fill', focusRing)}
+              className={cn(
+                'mt-0.5 mb-1 inline-flex items-center gap-2 self-start rounded-qb-md border border-qb-line bg-qb-surface px-[15px] py-[9px] text-qb-label font-semibold text-qb-ink-title qb-tablet:hidden',
+                focusRing,
+              )}
             >
-              <Icon icon={ArrowLeft} size="lg" flipInRtl />
+              <span aria-hidden="true" className="inline-block rtl:-scale-x-100">
+                ‹
+              </span>
+              {t('account.nav.settings')}
             </Link>
           )}
-          <p className="text-qb-h2 leading-none font-semibold">{t('account.nav.settings')}</p>
-        </div>
-      </div>
-      <div className="bg-qb-surface">
-        <div className="mx-auto flex min-h-[640px] max-w-[1440px] qb-desktop:min-h-[777px]">
-          <aside className="hidden w-[202px] shrink-0 shadow-qb-soft qb-tablet:block qb-desktop:w-[283px]">
-            <SettingsSidebar pathname={pathname} />
-          </aside>
-          <div className="min-w-0 flex-1 border-t border-qb-line px-[17px] pt-[26px] pb-12 shadow-qb-soft qb-tablet:border-t-0 qb-tablet:px-6 qb-tablet:pt-8 qb-desktop:px-10">
-            {children}
-          </div>
+          {children}
         </div>
       </div>
     </div>

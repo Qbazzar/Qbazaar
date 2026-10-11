@@ -30,6 +30,7 @@ import Cropper, { type Area } from 'react-easy-crop';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { Button } from '@/components/design-system/Button';
+import { showDesignToast } from '@/components/design-system/design-toast';
 import { Modal } from '@/components/design-system/Modal';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -177,7 +178,7 @@ export function AvatarUploader({
         avatar_thumb_url: data.avatar_thumb_url,
         avatar_medium_url: data.avatar_medium_url,
       });
-      toast.success(t('account.avatar.uploaded'));
+      showDesignToast(t('account.avatar.uploaded'));
       onUploaded?.(data);
       closeCropModal();
     },
@@ -260,7 +261,7 @@ export function AvatarUploader({
   const uploading = mutation.isPending;
 
   return (
-    <div className={cn('flex flex-col items-center font-qb', className)}>
+    <div className={cn('flex flex-col items-center pt-4 pb-2 font-qb', className)}>
       <label
         onDragOver={(event) => {
           event.preventDefault();
@@ -269,7 +270,7 @@ export function AvatarUploader({
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
         className={cn(
-          'group flex cursor-pointer flex-col items-center gap-[18px] rounded-qb-lg p-2',
+          'group flex cursor-pointer flex-col items-center gap-3.5 rounded-qb-lg',
           'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
           uploading && 'pointer-events-none opacity-60',
         )}
@@ -290,7 +291,7 @@ export function AvatarUploader({
             src={currentAvatar}
             size="lg"
             className={cn(
-              'size-[95px] bg-qb-fill text-[36px] font-medium text-qb-ink',
+              'size-[110px] bg-qb-fill-strong text-[38px] font-semibold text-qb-ink-body',
               dragOver && 'ring-2 ring-qb-brand',
             )}
           />
@@ -301,11 +302,11 @@ export function AvatarUploader({
             {uploading ? <Loader2 className="size-6 animate-spin" /> : <Camera className="size-6" />}
           </span>
         </span>
-        <span className="text-qb-body font-medium text-qb-brand group-hover:underline">
+        <span className="text-qb-body-sm font-medium text-qb-brand group-hover:underline">
           {t('account.avatar.change_photo')}
         </span>
       </label>
-      <p id={hintId} className="mt-1 text-qb-label text-qb-ink-subtle">
+      <p id={hintId} className="sr-only">
         {t('account.avatar.supported')}
       </p>
 
