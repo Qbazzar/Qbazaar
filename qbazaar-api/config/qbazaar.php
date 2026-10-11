@@ -228,9 +228,19 @@ return [
     ],
 
     'home' => [
-        'cache_seconds' => 900,
+        // Safety net only: the warmer (every catalog.warm_every_minutes) and the
+        // ad listing events rebuild the feed. Kept short because "recommended"
+        // is a 24-hour freshness window.
+        'cache_seconds' => 300,
         'recommended_limit' => 12,
+        // Recommended = promoted ads, then the newest ads published within this many hours.
+        'recommended_window_hours' => 24,
+        // Top-up when the fresh ads do not fill the rail: most viewed within this many days.
         'recommended_window_days' => 30,
+        // An ad entering or leaving the listings rebuilds the feed after this
+        // many seconds; every event inside the window shares one rebuild.
+        // 0 turns the event-driven rebuild off (the warmer still runs).
+        'refresh_debounce_seconds' => (int) env('HOME_FEED_REFRESH_DEBOUNCE_SECONDS', 15),
         'best_selling_limit' => 12,
         'featured_sellers_limit' => 10,
     ],

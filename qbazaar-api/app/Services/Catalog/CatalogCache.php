@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Catalog;
 
+use App\Jobs\Catalog\WarmCatalogCacheJob;
 use App\Services\Search\AdFacetCounter;
 use Illuminate\Support\Facades\Cache;
 
@@ -12,8 +13,9 @@ use Illuminate\Support\Facades\Cache;
  * callers only report *what* changed.
  *
  * Ads entering or leaving the listings do not flush the home feed or the
- * counters: those are rebuilt on a schedule by WarmCatalogCacheJob, because
- * flushing them per ad event turned every busy minute into a rebuild storm.
+ * counters: those are rebuilt by WarmCatalogCacheJob (on a schedule, and
+ * debounced by {@see listingsChanged()}), because flushing them per ad event
+ * turned every busy minute into a rebuild storm.
  */
 class CatalogCache
 {
@@ -70,6 +72,23 @@ class CatalogCache
         $this->facets->flush();
 
         $this->featuredAdsChanged();
+    }
+
+    /**
+     * An ad entered or left the public listings (published, approved,
+     * expired, sold, removed). The home feed is rebuilt by the unique warm job
+     * after a short delay, so a burst of events costs one rebuild instead of
+     * dropping the cache per ad.
+     */
+    public function listingsChanged(): void
+    {
+        $debounce = (int) config('qbazaar.home.refresh_debounce_seconds');
+
+        if ($debounce < 1) {
+            return;
+        }
+
+        WarmCatalogCacheJob::dispatch()->delay(now()->addSeconds($debounce));
     }
 
     /**
