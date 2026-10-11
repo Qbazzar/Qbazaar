@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -142,7 +142,7 @@ export function SelectMenu({
     setOpen(false);
   };
 
-  const notePointer = (event: PointerEvent) => {
+  const notePointer = (event: ReactPointerEvent) => {
     touchPointer.current = event.pointerType !== 'mouse';
   };
 
