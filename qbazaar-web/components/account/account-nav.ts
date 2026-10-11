@@ -1,6 +1,7 @@
 import {
   CircleAlert,
   Mail,
+  Megaphone,
   Settings,
   ShieldCheck,
   Trash2,
@@ -17,6 +18,8 @@ export interface AccountNavItem {
   exact?: boolean;
   /** Other settings pages opened from this section's rows ("Active sessions" under Account Settings). */
   subPages?: readonly string[];
+  /** A row that only links out to a full-width page, so it never owns a section of the shell. */
+  link?: boolean;
 }
 
 export const ACCOUNT_HUB_PATH = '/account';
@@ -24,11 +27,13 @@ export const ACCOUNT_HUB_PATH = '/account';
 /**
  * The "Settings" menu of account.html (accountNavDefs): the sidebar from the
  * tablet layout up, the hub rows on phones. "Billing Info" has no API yet, so
- * it is left out.
+ * it is left out. "Promotions" is not in the design; it is a link row so the
+ * paid promotions list stays reachable.
  */
 export const SETTINGS_NAV: readonly AccountNavItem[] = [
   { href: '/account/profile', labelKey: 'account.nav.profile_settings', icon: User },
   { href: '/account/wallet', labelKey: 'account.nav.wallet', icon: Wallet, exact: true },
+  { href: '/account/promotions', labelKey: 'account.nav.promotions', icon: Megaphone, link: true },
   {
     href: '/account/security',
     labelKey: 'account.nav.account_settings',
@@ -55,6 +60,7 @@ export function isNavItemActive(pathname: string, href: string): boolean {
 }
 
 function isInSection(pathname: string, item: AccountNavItem): boolean {
+  if (item.link) return false;
   if (item.exact ? pathname === item.href : isNavItemActive(pathname, item.href)) return true;
   return item.subPages?.some((page) => isNavItemActive(pathname, page)) ?? false;
 }

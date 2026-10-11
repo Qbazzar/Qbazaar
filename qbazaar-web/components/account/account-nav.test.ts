@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isNavItemActive, isSettingsPath, settingsSectionFor } from './account-nav';
+import { SETTINGS_NAV, isNavItemActive, isSettingsPath, settingsSectionFor } from './account-nav';
 
 describe('account navigation', () => {
   it('puts the hub and the settings sections in the sidebar shell', () => {
@@ -13,6 +13,12 @@ describe('account navigation', () => {
     for (const path of ['/account/ads', '/account/ads/1/edit', '/account/orders/9', '/account/promotions', '/account/messages', '/account/support/7']) {
       expect(isSettingsPath(path)).toBe(false);
     }
+  });
+
+  it('lists Promotions between Wallet and Account Settings without putting its page in the shell', () => {
+    const hrefs = SETTINGS_NAV.map((item) => item.href);
+    expect(hrefs.indexOf('/account/promotions')).toBe(hrefs.indexOf('/account/wallet') + 1);
+    expect(settingsSectionFor('/account/promotions').labelKey).toBe('account.nav.profile_settings');
   });
 
   it('matches nested routes but keeps the hub exact', () => {

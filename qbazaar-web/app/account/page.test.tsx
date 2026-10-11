@@ -49,6 +49,7 @@ describe('AccountHubPage', () => {
     expect(within(hub).getAllByRole('link').map((link) => [link.textContent?.replace('›', '').trim(), link.getAttribute('href')])).toEqual([
       ['Profile Settings', '/account/profile'],
       ['Wallet', '/account/wallet'],
+      ['Promotions', '/account/promotions'],
       ['Account Settings', '/account/security'],
       ['Data Protection', '/account/privacy'],
       ['Email Message', '/account/email-messages'],
