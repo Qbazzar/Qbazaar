@@ -11,6 +11,8 @@ import { api } from './client';
 import { ApiClientError } from './auth';
 import type {
   ErrorEnvelope,
+  FavoriteCategory,
+  FavoriteCategoryState,
   FavoriteToggleResponse,
   FavoritedAdSummary,
   PaginatedResponse,
@@ -19,6 +21,7 @@ import type {
 
 const ADS_BASE = '/api/v1/ads';
 const ACCOUNT_BASE = '/api/v1/account/favorites';
+const CATEGORIES_BASE = '/api/v1/account/favorite-categories';
 
 function toApiClientError(err: unknown): ApiClientError {
   if (isAxiosError<ErrorEnvelope>(err) && err.response?.data?.error) {
@@ -108,6 +111,32 @@ export async function listFavoriteIds(): Promise<string[]> {
 export async function removeFavorite(adId: string): Promise<void> {
   try {
     await api.delete(`${ADS_BASE}/${encodeURIComponent(adId)}/favorite`);
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/** The caller's favourite categories, newest first (not paginated). */
+export async function listFavoriteCategories(): Promise<FavoriteCategory[]> {
+  try {
+    const { data } = await api.get<SuccessEnvelope<FavoriteCategory[]>>(CATEGORIES_BASE);
+    return data.data;
+  } catch (err) {
+    throw toApiClientError(err);
+  }
+}
+
+/**
+ * Favourites a category (`PUT`) or removes it (`DELETE`); both are idempotent.
+ * Errors: `FAV_002` at the cap, `CAT_001` for an unknown category.
+ */
+export async function setFavoriteCategory(slug: string, favorited: boolean): Promise<FavoriteCategoryState> {
+  const url = `${CATEGORIES_BASE}/${encodeURIComponent(slug)}`;
+  try {
+    const { data } = await (favorited
+      ? api.put<SuccessEnvelope<FavoriteCategoryState>>(url)
+      : api.delete<SuccessEnvelope<FavoriteCategoryState>>(url));
+    return data.data;
   } catch (err) {
     throw toApiClientError(err);
   }

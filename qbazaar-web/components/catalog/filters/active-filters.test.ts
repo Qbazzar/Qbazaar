@@ -64,4 +64,13 @@ describe('activeFilters', () => {
 
     expect(chips.at(-1)?.label).toBe('الوقود: بنزين');
   });
+
+  it('names the seller and Buy Now, and the keyword where it is a filter', () => {
+    const values = { ...EMPTY_FILTERS, keyword: 'sedan', sellerType: 'business' as const, buyNow: true };
+
+    expect(activeFilters(values, { locale: 'en' }).map((chip) => chip.label)).toEqual(['Dealer', 'Buy Now']);
+    const chips = activeFilters(values, { keyword: true, locale: 'en' });
+    expect(chips.map((chip) => chip.label)).toEqual(['“sedan”', 'Dealer', 'Buy Now']);
+    expect(chips[2].without).toMatchObject({ buyNow: false, sellerType: 'business' });
+  });
 });

@@ -6,11 +6,11 @@ import { Input } from '@/components/design-system/Input';
 import { getLocale, localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
-import type { CategoryField, CategoryFieldOption, CustomFieldsFilter } from '@/lib/api/types';
+import type { CategoryField, CategoryFieldOption, CustomFieldsFilter, FacetCounts } from '@/lib/api/types';
 
 import { parseNonNegative } from './filter-values';
 import { RangeFields } from './RangeFields';
-import { SelectField } from './SelectField';
+import { SelectField, type SelectOption } from './SelectField';
 
 interface CustomFieldFiltersProps {
   fields: CategoryField[];
@@ -18,6 +18,8 @@ interface CustomFieldFiltersProps {
   onChange: (next: CustomFieldsFilter) => void;
   /** The bottom sheet labels its fields smaller (618:26974). */
   compact?: boolean;
+  /** `meta.facets.custom_fields`: ads per option value, by field key. */
+  counts?: Record<string, FacetCounts> | null;
 }
 
 type FieldValue = CustomFieldsFilter[string];
@@ -28,8 +30,9 @@ export function filterableFields(fields: CategoryField[] | null | undefined): Ca
 }
 
 /** A select's options with their label in the page language; the raw values when a field has no `options_labeled`. */
-function selectOptions(field: CategoryField): CategoryFieldOption[] {
-  return field.options_labeled ?? (field.options ?? []).map((value) => ({ value, label: value }));
+function selectOptions(field: CategoryField, counts: FacetCounts | undefined): SelectOption[] {
+  const options: CategoryFieldOption[] = field.options_labeled ?? (field.options ?? []).map((value) => ({ value, label: value }));
+  return options.map((option) => ({ ...option, count: counts?.[option.value] }));
 }
 
 /**
@@ -37,7 +40,7 @@ function selectOptions(field: CategoryField): CategoryFieldOption[] {
  * schema: designed selects ("Property Type: All Type", 264:4818), number
  * ranges and exact text values.
  */
-export function CustomFieldFilters({ fields, value, onChange, compact = false }: CustomFieldFiltersProps) {
+export function CustomFieldFilters({ fields, value, onChange, compact = false, counts }: CustomFieldFiltersProps) {
   const id = useId();
   const locale = getLocale();
   const labelClass = cn('block font-qb text-qb-ink-body', compact ? 'text-qb-caption font-medium' : 'text-qb-body');
@@ -64,7 +67,7 @@ export function CustomFieldFilters({ fields, value, onChange, compact = false }:
               </span>
               <SelectField
                 labelledBy={labelId}
-                options={selectOptions(field)}
+                options={selectOptions(field, counts?.[field.key])}
                 value={typeof current === 'string' ? current : null}
                 onChange={(next) => setField(field.key, next)}
                 placeholder={t('catalog.filters.all_type', 'كل الأنواع')}

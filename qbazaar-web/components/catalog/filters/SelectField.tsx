@@ -7,6 +7,7 @@ import { ChevronDown, Search } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { formatNumber } from '@/lib/i18n/format';
 import { dirFor, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,8 @@ export interface SelectOption {
   label: string;
   /** What the search box matches, when not the whole label (a district's own name). */
   searchText?: string;
+  /** Matching ads, from the search facets; zero is not shown. */
+  count?: number;
 }
 
 interface SelectFieldProps {
@@ -105,7 +108,10 @@ export function SelectField({ labelledBy, options, searchOnlyOptions = [], value
               <Combobox.List className={cn('max-h-[166px] overflow-y-auto py-2.5 empty:hidden', selectScrollbar, selectFirstRowHint)}>
                 {(option: SelectOption) => (
                   <Combobox.Item key={option.value} value={option} className={selectRow}>
-                    {option.label}
+                    <span>
+                      {option.label}
+                      {option.count ? <span className="tabular-nums"> ({formatNumber(option.count, locale)})</span> : null}
+                    </span>
                   </Combobox.Item>
                 )}
               </Combobox.List>

@@ -10,12 +10,19 @@ import { isAxiosError } from 'axios';
 import type { Locale } from '@/lib/i18n/locale';
 import { api } from './client';
 import { ApiClientError } from './auth';
+import { flattenSearchParams } from './search';
 import type {
   Ad,
+  AdCondition,
+  AdShipping,
   AdSummary,
+  AdType,
   CreateAdRequest,
+  CustomFieldsFilter,
   ErrorEnvelope,
   PaginatedResponse,
+  PriceType,
+  SellerType,
   SuccessEnvelope,
   UpdateAdRequest,
 } from './types';
@@ -60,6 +67,15 @@ export interface ListAdsParams extends Record<string, unknown> {
   location_id?: string;
   price_min?: number;
   price_max?: number;
+  /** The catalog filters mean what they mean on `GET /search`. */
+  q?: string;
+  condition?: AdCondition;
+  price_type?: PriceType;
+  ad_type?: AdType;
+  shipping?: AdShipping;
+  seller_type?: SellerType;
+  buy_now?: boolean;
+  custom_fields?: CustomFieldsFilter;
   /** 'price_asc' | 'price_desc' | 'oldest' — default is newest-first. */
   sort?: string;
   page?: number;
@@ -88,7 +104,7 @@ export async function listAds(
 ): Promise<PaginatedResponse<AdSummary>> {
   try {
     const { data } = await api.get<PaginatedResponse<AdSummary>>(BASE, {
-      params: cleanParams(params),
+      params: flattenSearchParams(cleanParams(params)),
     });
     return data;
   } catch (err) {

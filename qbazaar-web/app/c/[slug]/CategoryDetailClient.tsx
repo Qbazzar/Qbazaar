@@ -13,6 +13,7 @@ import { AdsListing } from '@/components/catalog/AdsListing';
 import { CatalogHeader, CatalogStats, todayStat } from '@/components/catalog/CatalogHeader';
 import { CatalogLayout } from '@/components/catalog/CatalogLayout';
 import { CatalogPageSkeleton } from '@/components/catalog/CatalogPageSkeleton';
+import { CategoryActions } from '@/components/catalog/CategoryActions';
 import { CategoryHub } from '@/components/catalog/CategoryHub';
 import { FilterSheet, FilterSidebar } from '@/components/catalog/filters/CatalogFilters';
 import type { FilterGroupKey } from '@/components/catalog/filters/FilterPanel';
@@ -22,7 +23,6 @@ import { ListingToolbar } from '@/components/catalog/ListingToolbar';
 import { LoadError } from '@/components/catalog/LoadError';
 import { resolveCategoryPath, type ResolvedCategory } from '@/components/catalog/resolved-category';
 import { useResultsFocusTarget } from '@/components/catalog/results-focus';
-import { SaveSearchButton } from '@/components/search/SaveSearchButton';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -90,13 +90,15 @@ function CategoryOverview({ slug, title, breadcrumb, node }: OverviewProps) {
   const titleRef = useResultsFocusTarget<HTMLHeadingElement>({ onlyIfFocusLost: true });
 
   const applyFilters = (next: FilterValues) => router.push(`${pathname}${listingSearch(searchParams, { filters: next })}`, { scroll: false });
-  const groups: FilterGroupKey[] = ['price', 'location'];
+  // No counts here: the overview has no result set to count.
+  const groups: FilterGroupKey[] = ['keyword', 'price', 'adType', 'sellerType', 'shipping', 'location', 'condition', 'buyNow'];
   const panel = {
     groups,
     values: filters,
     onApply: applyFilters,
     onReset: () => applyFilters(EMPTY_FILTERS),
     locations,
+    keywordIsFilter: true,
   };
 
   const page = pageQuery.data;
@@ -120,11 +122,11 @@ function CategoryOverview({ slug, title, breadcrumb, node }: OverviewProps) {
           titleRef={titleRef}
           breadcrumb={breadcrumb}
           stats={<CatalogStats items={stats} />}
-          actions={<SaveSearchButton params={saveParams} />}
+          actions={<CategoryActions slug={slug} saveParams={saveParams} />}
         />
       }
       sidebar={<FilterSidebar {...panel} />}
-      toolbar={<ListingToolbar filters={<FilterSheet {...panel} />} actions={<SaveSearchButton params={saveParams} variant="toolbar" />} />}
+      toolbar={<ListingToolbar filters={<FilterSheet {...panel} />} actions={<CategoryActions slug={slug} saveParams={saveParams} variant="toolbar" />} />}
       toolbarBelowDesktopOnly
     >
       {pageQuery.isError ? (
