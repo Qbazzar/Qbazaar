@@ -2,7 +2,7 @@
 
 <div {{ $attributes }}>
     @if ($label)
-        <label for="{{ $for }}" @class(['mb-1.5 block text-sm font-semibold text-ink-700', 'sr-only' => $labelHidden])>
+        <label for="{{ $for }}" @class(['mb-1.5 block text-start text-sm font-semibold text-ink-700', 'sr-only' => $labelHidden])>
             {{ $label }}@if ($required)<span class="ms-0.5 text-red-700" aria-hidden="true">*</span>@endif
         </label>
     @endif
@@ -10,7 +10,7 @@
     {{ $slot }}
 
     @if ($hint)
-        <p id="{{ $for }}-hint" class="mt-1 text-xs text-ink-500">{{ $hint }}</p>
+        <p id="{{ $for }}-hint" class="mt-1 text-start text-xs text-ink-500">{{ $hint }}</p>
     @endif
 
     @if ($error)

@@ -28,7 +28,7 @@
             @if ($describedBy !== '') aria-describedby="{{ $describedBy }}" @endif
             @if ($error) aria-invalid="true" @endif
             {{ $attributes->except('class')->class([
-                'w-full rounded-xl border bg-cream-50 px-4 py-2.5 text-sm text-ink-900 outline-hidden transition focus:border-coral-600 focus:ring-2 focus:ring-coral-600/25',
+                'w-full min-w-0 rounded-xl border bg-cream-50 px-4 py-2.5 text-start text-sm text-ink-900 tabular-nums outline-hidden transition focus:border-coral-600 focus:ring-2 focus:ring-coral-600/25',
                 'border-red-600' => $error,
                 'border-ink-200' => ! $error,
                 $inputClass,
