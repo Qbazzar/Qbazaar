@@ -25,6 +25,12 @@ describe('Button', () => {
     expect(button).not.toHaveClass('font-semibold');
   });
 
+  it('sets the line height of the reference .qb-btn, so a padding-sized button keeps its height', () => {
+    render(<Button className="h-auto py-2.5">Add Ads</Button>);
+
+    expect(screen.getByRole('button')).toHaveClass('leading-[1.15]', 'h-auto');
+  });
+
   it('lets a caller class win over the variant', () => {
     render(<Button className="h-9">Login</Button>);
 

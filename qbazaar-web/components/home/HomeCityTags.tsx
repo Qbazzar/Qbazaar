@@ -177,7 +177,7 @@ export function HomeCityTags() {
           <Link
             href={`/search?location_slug=${encodeURIComponent(place.slug)}`}
             aria-label={t('home.cities.browse_aria', { city: place.label }, `تصفح الإعلانات في ${place.label}`)}
-            className={cn(pill, 'hover:border-qb-brand', focusRing)}
+            className={cn(pill, 'transition-[filter] duration-150 hover:brightness-[0.96] motion-reduce:transition-none', focusRing)}
           >
             {place.label}
           </Link>

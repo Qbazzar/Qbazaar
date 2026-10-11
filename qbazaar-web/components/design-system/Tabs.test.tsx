@@ -53,4 +53,10 @@ describe('Tabs', () => {
 
     expect(screen.getByRole('tab', { name: 'All' })).toHaveClass('rounded-qb-pill', 'data-active:bg-qb-brand');
   });
+
+  it('keeps the active tab orange under the pointer', () => {
+    render(<NotificationTabs />);
+
+    expect(screen.getByRole('tab', { name: 'All' })).toHaveClass('hover:bg-qb-hover', 'data-active:hover:bg-qb-brand');
+  });
 });

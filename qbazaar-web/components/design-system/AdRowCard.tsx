@@ -5,6 +5,7 @@ import { MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { Badge, Chip } from './Badge';
+import { cardHover } from './card-hover';
 import { Icon } from './Icon';
 
 export interface AdRowCardProps {
@@ -52,7 +53,7 @@ export function AdRowCard({
     <article
       className={cn(
         'relative flex flex-col overflow-hidden rounded-qb-2xl border border-qb-line bg-qb-surface font-qb shadow-qb-card qb-tablet:flex-row',
-        'transition-[box-shadow,translate] duration-200 hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+        cardHover,
         'has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-qb-brand-active',
         className,
       )}

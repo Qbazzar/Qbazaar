@@ -10,7 +10,7 @@ describe('StatTile', () => {
       <StatTile label="Wallet balance" value="QAR 450.00" icon={<Wallet />} tone="info" hint="Updated now" />,
     );
 
-    expect(screen.getByText('Wallet balance')).toBeInTheDocument();
+    expect(screen.getByText('Wallet balance')).toHaveClass('text-qb-breadcrumb', 'qb-tablet:text-qb-ink-meta');
     expect(screen.getByText('QAR 450.00')).toHaveClass('font-semibold');
     expect(screen.getByText('Updated now')).toBeInTheDocument();
     const iconTile = container.querySelector('[aria-hidden="true"]');
