@@ -21,53 +21,51 @@ const cms = (slug: string, key: string): FooterLinkDef => ({
 
 export const FOOTER_COLUMNS: FooterColumnDef[] = [
   {
-    titleKey: "classifieds",
+    titleKey: 'classifieds',
     links: [
-      cms("about", "about"),
-      cms("careers", "careers"),
-      cms("press", "press"),
-      cms("magazine", "magazine"),
-      cms("connect", "connect"),
-      cms("mobile-apps", "mobile_apps"),
+      cms('about', 'about'),
+      cms('careers', 'careers'),
+      cms('press', 'press'),
+      cms('magazine', 'magazine'),
+      cms('connect', 'connect'),
+      cms('mobile-apps', 'mobile_apps'),
     ],
   },
   {
-    titleKey: "information",
+    titleKey: 'information',
     links: [
-      { href: "/help", key: "help" },
-      cms("safety-tips", "safety_tips"),
-      cms("report-vulnerability", "report_vulnerability"),
-      cms("youth-protection", "youth_protection"),
-      cms("accessibility", "accessibility"),
-      cms("privacy", "privacy"),
-      cms("privacy-settings", "privacy_settings"),
-      cms("terms", "terms"),
-      cms("legal-notice", "legal_notice"),
+      { href: '/help', key: 'help' },
+      cms('safety-tips', 'safety_tips'),
+      cms('report-vulnerability', 'report_vulnerability'),
+      cms('youth-protection', 'youth_protection'),
+      cms('accessibility', 'accessibility'),
+      cms('privacy', 'privacy'),
+      cms('privacy-settings', 'privacy_settings'),
+      cms('terms', 'terms'),
+      cms('legal-notice', 'legal_notice'),
     ],
   },
   {
-    titleKey: "businesses",
+    titleKey: 'businesses',
     links: [
-      cms("real-estate-classifieds", "real_estate"),
-      cms("pro-info", "pro_info"),
-      cms("pro-packages", "pro_packages"),
-      cms("advertise", "advertise"),
+      cms('real-estate-classifieds', 'real_estate'),
+      cms('pro-info', 'pro_info'),
+      cms('pro-packages', 'pro_packages'),
+      cms('advertise', 'advertise'),
     ],
   },
   {
-    titleKey: "general",
+    titleKey: 'general',
     links: [
-      cms("popular-searches", "popular_searches"),
-      cms("overview", "overview"),
-      { href: "/companies", key: "company_pages" },
-      cms("vehicle-appraisal", "vehicle_appraisal"),
+      cms('popular-searches', 'popular_searches'),
+      cms('overview', 'overview'),
+      { href: '/companies', key: 'company_pages' },
+      cms('vehicle-appraisal', 'vehicle_appraisal'),
     ],
   },
 ];
 
 /** The single list of CMS slugs the footer may link to. */
 export const FOOTER_CMS_SLUGS: string[] = FOOTER_COLUMNS.flatMap((column) =>
-  column.links
-    .filter((link) => link.href.startsWith("/p/"))
-    .map((link) => link.href.slice("/p/".length)),
+  column.links.filter((link) => link.href.startsWith('/p/')).map((link) => link.href.slice('/p/'.length)),
 );
