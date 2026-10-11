@@ -14,6 +14,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Exceptions\CommunicationException;
+use Throwable;
 
 /**
  * The one place that answers "which ads match these filters, and how many
@@ -138,20 +139,40 @@ class AdSearchService
 
             return $this->engineResult($raw, $perPage, $page, $customKeys);
         } catch (CommunicationException|GuzzleConnectException|ApiException $e) {
-            // Meilisearch unreachable, or it refused the request (an index whose
-            // settings were not synced yet rejects a new filter as
-            // invalid_search_filter) — surface an empty result set instead
-            // of a 500 so the UI degrades to "no matches" rather than a
-            // hard error. Logged at warning so ops still gets paged in prod.
+            // Meilisearch unreachable, or it refused the request — surface an
+            // empty result set instead of a 500 so the UI degrades to "no
+            // matches" rather than a hard error.
             // The database is deliberately not used instead: a keyword scan
             // there during an outage would take the primary down with it.
-            Log::warning('Search engine unavailable, returning empty result set', [
-                'error' => $e->getMessage(),
-                'query_hash' => $query === '' ? null : substr(sha1(mb_strtolower($query)), 0, 12),
-            ]);
+            $this->logEngineFailure($e, $query);
 
             return $this->engineResult([], $perPage, $page, $customKeys);
         }
+    }
+
+    /**
+     * A filter the index does not know yet (settings not synced after a
+     * deploy) is a known, transient state and stays a warning. Anything else
+     * the engine refuses (a bad key, a missing index, a malformed filter
+     * string) is a configuration or code fault and must not pass as a quiet
+     * empty page, so it is logged as an error with the engine's own code.
+     */
+    private function logEngineFailure(Throwable $e, string $query): void
+    {
+        $code = $e instanceof ApiException ? $e->errorCode : null;
+        $context = [
+            'error' => $e->getMessage(),
+            'meili_code' => $code,
+            'query_hash' => $query === '' ? null : substr(sha1(mb_strtolower($query)), 0, 12),
+        ];
+
+        if ($e instanceof ApiException && $code !== 'invalid_search_filter') {
+            Log::error('Search engine refused the request, returning empty result set', $context);
+
+            return;
+        }
+
+        Log::warning('Search engine unavailable, returning empty result set', $context);
     }
 
     /**

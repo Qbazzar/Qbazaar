@@ -2240,7 +2240,8 @@ paths:
         that count; the unfiltered counts come from the catalog warmer (up to
         `qbazaar.catalog.counts_cache_seconds`, 15 minutes, old). A count that
         runs past `qbazaar.search.facet_timeout_seconds` (2) is stopped and
-        every facet is answered as `{}`.
+        every facet is answered as `{}` (that answer is never cached, so the next
+        request counts again).
 
         Keyword (`q`) search needs the search engine: where it is not
         available the page is empty (the database keyword fallback is

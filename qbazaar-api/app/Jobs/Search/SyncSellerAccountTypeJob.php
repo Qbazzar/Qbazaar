@@ -26,7 +26,7 @@ class SyncSellerAccountTypeJob implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [10, 60];
 
-    public int $timeout = 60;
+    public int $timeout = 120;
 
     public function __construct(public readonly string $userId)
     {

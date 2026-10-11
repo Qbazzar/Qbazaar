@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PDO;
+use Throwable;
 
 /**
  * Facet counts straight from the database, for installs and tests where the
@@ -72,20 +73,37 @@ class AdFacetCounter
      */
     public function count(AdFeedFilters $filters, array $customKeys, bool $taxonomy): array
     {
+        try {
+            return $this->cachedOrComputed($filters, $customKeys, $taxonomy);
+        } catch (FacetCountTimedOut) {
+            // Thrown out of the cache's build step, so nothing was stored: the next request counts again.
+            return [];
+        }
+    }
+
+    /**
+     * @param list<string> $customKeys
+     * @return array<string, array<string, int>>
+     *
+     * @throws FacetCountTimedOut
+     */
+    private function cachedOrComputed(AdFeedFilters $filters, array $customKeys, bool $taxonomy): array
+    {
         $fresh = (int) config('qbazaar.search.facets_cache_seconds');
+        $requestLimit = (int) config('qbazaar.search.facet_timeout_seconds');
 
         if ($fresh <= 0) {
-            return $this->compute($filters, $customKeys, $taxonomy);
+            return $this->compute($filters, $customKeys, $taxonomy, $requestLimit);
         }
 
         if ($this->isUnfiltered($filters, $customKeys)) {
-            return $this->cache->get($this->unfilteredKey(), $this->warmedTtl(), fn (): array => $this->computeUnfiltered());
+            return $this->cache->get($this->unfilteredKey(), $this->warmedTtl(), fn (): array => $this->computeUnfiltered($requestLimit));
         }
 
         $rounded = $this->rounded($filters);
         $key = 'search.facets.v2.' . $this->version() . '.' . sha1($rounded->fingerprint() . '|' . implode(',', $customKeys) . '|' . (int) $taxonomy);
 
-        return $this->cache->get($key, $fresh, fn (): array => $this->compute($rounded, $customKeys, $taxonomy));
+        return $this->cache->get($key, $fresh, fn (): array => $this->compute($rounded, $customKeys, $taxonomy, $requestLimit));
     }
 
     /**
@@ -93,7 +111,13 @@ class AdFacetCounter
      */
     public function refreshUnfiltered(): void
     {
-        $this->cache->put($this->unfilteredKey(), $this->warmedTtl(), fn (): array => $this->computeUnfiltered());
+        $limit = (int) config('qbazaar.search.facet_warm_timeout_seconds');
+
+        try {
+            $this->cache->put($this->unfilteredKey(), $this->warmedTtl(), fn (): array => $this->computeUnfiltered($limit));
+        } catch (FacetCountTimedOut) {
+            // The previous entry stays until it expires; requests never see an empty one.
+        }
     }
 
     /**
@@ -121,9 +145,9 @@ class AdFacetCounter
     /**
      * @return array<string, array<string, int>>
      */
-    private function computeUnfiltered(): array
+    private function computeUnfiltered(int $limitSeconds): array
     {
-        return $this->compute(new AdFeedFilters, [], true);
+        return $this->compute(new AdFeedFilters, [], true, $limitSeconds);
     }
 
     private function unfilteredKey(): string
@@ -167,35 +191,37 @@ class AdFacetCounter
     /**
      * @param list<string> $customKeys
      * @return array<string, array<string, int>>
+     *
+     * @throws FacetCountTimedOut
      */
-    private function compute(AdFeedFilters $filters, array $customKeys, bool $taxonomy): array
+    private function compute(AdFeedFilters $filters, array $customKeys, bool $taxonomy, int $limitSeconds): array
     {
         try {
-            return $this->withTimeout(fn (): array => $this->build($filters, $customKeys, $taxonomy));
+            return $this->withTimeout($limitSeconds, fn (): array => $this->build($filters, $customKeys, $taxonomy));
         } catch (QueryException $e) {
             if (! in_array($e->errorInfo[1] ?? null, self::TIMEOUT_ERRORS, true)) {
                 throw $e;
             }
 
-            Log::warning('Facet counts timed out, answering without counts', ['filters' => $filters->fingerprint()]);
+            Log::warning('Facet counts timed out, answering without counts', ['filters' => $filters->fingerprint(), 'limit_seconds' => $limitSeconds]);
 
-            return [];
+            throw new FacetCountTimedOut('Facet count exceeded ' . $limitSeconds . 's', previous: $e);
         }
     }
 
     /**
      * Caps the statements of one computation with the server's time limit
-     * (MariaDB `max_statement_time`, MySQL `max_execution_time`) and lifts it
-     * again, because the connection outlives the request in queue workers.
+     * (MariaDB `max_statement_time`, MySQL `max_execution_time`) and puts the
+     * session's previous limit back, because the connection outlives the
+     * request in queue workers.
      *
      * @template TValue
      *
      * @param Closure(): TValue $run
      * @return TValue
      */
-    private function withTimeout(Closure $run): mixed
+    private function withTimeout(int $seconds, Closure $run): mixed
     {
-        $seconds = (int) config('qbazaar.search.facet_timeout_seconds');
         $connection = DB::connection();
 
         if ($seconds <= 0 || ! in_array($connection->getDriverName(), ['mysql', 'mariadb'], true)) {
@@ -203,14 +229,22 @@ class AdFacetCounter
         }
 
         $isMaria = str_contains((string) $connection->getPdo()->getAttribute(PDO::ATTR_SERVER_VERSION), 'MariaDB');
-        [$variable, $limit] = $isMaria ? ['max_statement_time', $seconds] : ['max_execution_time', $seconds * 1000];
+        [$variable, $limit] = $isMaria ? ['max_statement_time', (string) $seconds] : ['max_execution_time', (string) ($seconds * 1000)];
+
+        $previous = $connection->selectOne("SELECT @@session.{$variable} AS value");
+        $restore = is_object($previous) && is_numeric($previous->value ?? null) ? (string) $previous->value : '0';
 
         $connection->statement("SET SESSION {$variable} = {$limit}");
 
         try {
             return $run();
         } finally {
-            $connection->statement("SET SESSION {$variable} = 0");
+            try {
+                $connection->statement("SET SESSION {$variable} = {$restore}");
+            } catch (Throwable $e) {
+                // Never mask the exception that is already on its way out.
+                Log::warning('Could not restore the statement time limit', ['error' => $e->getMessage()]);
+            }
         }
     }
 

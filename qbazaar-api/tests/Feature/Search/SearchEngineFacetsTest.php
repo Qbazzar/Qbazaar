@@ -110,3 +110,12 @@ it('answers an empty page, not a 500, when Meilisearch refuses a filter before t
     Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context): bool => $message === 'Search engine unavailable, returning empty result set'
         && ! str_contains(json_encode($context), 'secret') && strlen((string) $context['query_hash']) === 12)->once();
 });
+
+it('logs an error, not a warning, when Meilisearch refuses a request for any other reason', function (): void {
+    $this->index->shouldReceive('rawSearch')->andThrow(new ApiException(new Response(401), ['message' => 'The provided API key is invalid.', 'code' => 'invalid_api_key', 'type' => 'auth', 'link' => 'x']));
+    Log::spy();
+
+    getJson('/api/v1/search?q=bike')->assertOk()->assertJsonPath('data', []);
+
+    Log::shouldHaveReceived('error')->withArgs(fn (string $message, array $context): bool => $context['meili_code'] === 'invalid_api_key')->once();
+});

@@ -192,6 +192,8 @@ return [
         'facets_cache_seconds' => 60,
         // A facet count that runs longer than this is stopped and answered empty.
         'facet_timeout_seconds' => 2,
+        // The same limit for the catalog warmer, which runs on the low queue and may take longer.
+        'facet_warm_timeout_seconds' => 30,
         // Keyword search on the database (LIKE) scans; production leaves it off and
         // answers an empty page when Meilisearch is not the engine. Always on in
         // local and testing.

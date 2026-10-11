@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -15,12 +16,12 @@ use Illuminate\Support\Facades\Schema;
  * `seller_type` copies the seller's account type onto the ad, the way
  * `seller_active` copies the status, so the filter needs no join on users.
  * The column and the indexes are separate statements so a failed index build
- * can be retried alone. Business sellers' existing ads are filled in after
- * the deploy by `php artisan ads:sync-seller-types`, in batches, not by one
+ * can be retried alone. Business sellers' existing ads are filled in by
+ * `php artisan ads:sync-seller-types` (the deploy runs it), in batches, not by one
  * UPDATE over the whole table here.
  *
  * Documents in the search index lack the new fields until they are imported
- * again, so the migration leaves a marker that the deploy script consumes.
+ * again, so the migration leaves markers that the deploy script consumes.
  */
 return new class extends Migration
 {
@@ -46,7 +47,7 @@ return new class extends Migration
             $table->index(['status', 'seller_active', 'condition', 'published_at'], 'ads_listed_condition_idx');
         });
 
-        $this->requestSearchReimport();
+        $this->leaveDeployMarkers();
     }
 
     public function down(): void
@@ -63,12 +64,23 @@ return new class extends Migration
         });
     }
 
-    private function requestSearchReimport(): void
+    /**
+     * Two one-off steps for the deploy script: fill seller_type, and import the
+     * ads into the search index again. A marker that cannot be written must not
+     * pass silently, or the step would simply never run.
+     */
+    private function leaveDeployMarkers(): void
     {
         if (app()->runningUnitTests()) {
             return;
         }
 
-        @file_put_contents(storage_path('app/.reindex-ads'), "seller_type and buy_now added to the ads index\n");
+        foreach (['.sync-seller-types', '.reindex-ads'] as $marker) {
+            $path = storage_path('app/' . $marker);
+
+            if (file_put_contents($path, "catalog filters release\n") === false) {
+                Log::warning('Could not write the deploy marker; run the step by hand (deploy/DEPLOY-CHECKLIST.md section 5)', ['marker' => $path]);
+            }
+        }
     }
 };

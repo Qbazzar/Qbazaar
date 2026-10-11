@@ -45,21 +45,30 @@ NODE_OPTIONS="--max-old-space-size=1536" npm run build
 log "Migrations"
 php artisan migrate --force --no-interaction
 
-# Search index settings and seller types are best effort: a Meilisearch hiccup
-# must not fail a release whose database is already migrated. The API answers
-# an empty search page (never a 500) until the settings are synced.
-log "Meilisearch index settings"
-php artisan scout:sync-index-settings --no-interaction || echo "WARN: scout:sync-index-settings failed; run it by hand (deploy/DEPLOY-CHECKLIST.md section 5)"
-
-log "Ad seller types"
-php artisan ads:sync-seller-types --no-interaction || echo "WARN: ads:sync-seller-types failed; re-run it by hand (idempotent)"
-
 log "Rebuilding caches"
 php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache || true
+
+# Best effort: a Meilisearch hiccup must not fail a release whose database is
+# already migrated (the API answers an empty search page, never a 500, until the
+# settings are synced). These run AFTER config:cache on purpose: the artisan
+# commands read the cached config, which until now was the previous release's,
+# and would push its old index settings.
+log "Meilisearch index settings"
+php artisan scout:sync-index-settings --no-interaction || echo "WARN: scout:sync-index-settings failed; run it by hand (deploy/DEPLOY-CHECKLIST.md section 5)"
+
+# One-off, left by the migration that added ads.seller_type; removed once it ran.
+if [[ -f storage/app/.sync-seller-types ]]; then
+    log "Ad seller types (one-off)"
+    if php artisan ads:sync-seller-types --no-interaction; then
+        rm -f storage/app/.sync-seller-types
+    else
+        echo "WARN: ads:sync-seller-types failed; the marker stays, the next deploy retries (or run it by hand, it is idempotent)"
+    fi
+fi
 
 if [[ ! -L public/storage ]]; then
     log "Linking storage"

@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\User;
 use App\Services\Search\AdFacetCounter;
 use App\Services\Search\AdListingFilters;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -161,4 +162,46 @@ it('gives new ads the account type of their seller', function (): void {
     expect($this->makeAd($business, $this->listed)->seller_type->value)->toBe('business')
         ->and($this->makeAd($this->seller, $this->listed)->seller_type->value)->toBe('private')
         ->and(Ad::query()->count())->toBe(2);
+});
+
+function timingOutFilters(int $failures = 1): AdListingFilters
+{
+    $real = app(AdListingFilters::class);
+    $remaining = $failures;
+    $timeout = new QueryException('mysql', 'select 1', [], tap(new PDOException('max_statement_time exceeded'), fn (PDOException $e) => $e->errorInfo = ['70100', 1969, 'timeout']));
+
+    $filters = Mockery::mock(AdListingFilters::class);
+    $filters->shouldReceive('apply')->andReturnUsing(function (Builder $query, AdFeedFilters $feed) use ($real, &$remaining, $timeout) {
+        // The page query shares this class; only the facet count (which has no sort and no limit) may time out.
+        if ($remaining > 0 && $query->getQuery()->orders === null && $query->getQuery()->limit === null && $query->getEagerLoads() === []) {
+            $remaining--;
+
+            throw $timeout;
+        }
+
+        return $real->apply($query, $feed);
+    });
+
+    return $filters;
+}
+
+it('does not cache a timed-out count, so the next request counts again', function (): void {
+    $this->makeAd($this->seller, [...$this->listed, 'ad_type' => 'wanted']);
+    app()->instance(AdListingFilters::class, timingOutFilters());
+
+    $first = getJson('/api/v1/ads?ad_type=wanted')->assertOk();
+    $second = getJson('/api/v1/ads?ad_type=wanted')->assertOk();
+
+    expect($first->getContent())->toContain('"ad_type":{}')
+        ->and($second->json('meta.facets.ad_type'))->toBe(['wanted' => 1]);
+});
+
+it('keeps the previous unfiltered counts when the warmer times out', function (): void {
+    $this->makeAd($this->seller, [...$this->listed, 'ad_type' => 'wanted']);
+    expect(getJson('/api/v1/ads')->json('meta.facets.ad_type'))->toBe(['wanted' => 1]);
+
+    app()->instance(AdListingFilters::class, timingOutFilters());
+    app(AdFacetCounter::class)->refreshUnfiltered();
+
+    expect(getJson('/api/v1/ads')->json('meta.facets.ad_type'))->toBe(['wanted' => 1]);
 });
