@@ -27,8 +27,10 @@ function describeReferenceElement({ selector, drawerSelector, crumb }) {
   if (!el) return null;
   const landmark = el.closest('header, footer, aside, nav, main, [role=dialog]');
   const scope = landmark || document.body;
-  const text = norm(el.innerText).slice(0, 60);
-  const twins = [...scope.querySelectorAll('a, button, [role=button], [role=link], [role=tab], [role=menuitem]')].filter((n) => norm(n.innerText).slice(0, 60) === text);
+  // A trailing chevron ("Log Out ›") is an icon drawn as text, not part of the label.
+  const said = (n) => norm(n.innerText).replace(/\s*[›»→>]+$/, '').slice(0, 60);
+  const text = said(el);
+  const twins = [...scope.querySelectorAll('a, button, [role=button], [role=link], [role=tab], [role=menuitem]')].filter((n) => said(n) === text);
   // A breadcrumb is matched by its place in the trail: its labels are data (the category of the sample ad).
   const trail = crumb ? [...(el.closest('.qb-crumbs') || el.parentElement).children].filter((n) => !/^[>›/|]?$/.test(norm(n.innerText))) : [];
   return {
@@ -65,7 +67,8 @@ function findTargetElement({ text, label, landmark, occurrence, hrefExact, hrefP
     : landmark === 'body' ? document.body : document.querySelector(landmark) || document.body;
   const all = [...scope.querySelectorAll('a, button, [role=button], [role=link], [role=tab], [role=menuitem]')].filter(visible);
   const labelled = (n) => [n.getAttribute('aria-label'), n.getAttribute('title')].map(norm);
-  const sameText = all.filter((n) => (text && norm(n.innerText).slice(0, 60) === text) || (label && labelled(n).includes(label)));
+  const said = (n) => norm(n.innerText).replace(/\s*[›»→>]+$/, '').slice(0, 60);
+  const sameText = all.filter((n) => (text && said(n) === text) || (label && labelled(n).includes(label)));
   const href = (n) => n.getAttribute('href') || '';
   const goesThere = all.filter((n) => (hrefExact && href(n) === hrefExact) || (hrefPrefix && href(n).startsWith(hrefPrefix)));
   const found = sameText[Math.min(occurrence, sameText.length - 1)] || goesThere[0];

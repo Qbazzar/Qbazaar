@@ -130,7 +130,8 @@ function readUnit({ selector, descendants }) {
   const isToggle = (el) => el.tagName === 'INPUT' && ['checkbox', 'radio'].includes(el.type);
   const drawsValue = (el) => el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || (el.tagName === 'INPUT' && !TEXTLESS_INPUTS.includes(el.type));
   const hasOwnText = (el) => norm([...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' ')).length > 0 || drawsValue(el);
-  const nativeKind = (el) => (isToggle(el) ? 'toggle' : ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) ? 'control' : null);
+  // A label inside an unstyled native button inherits the browser's control font, so it counts as the control.
+  const nativeKind = (el) => (isToggle(el) ? 'toggle' : el.closest('button, input, select, textarea') ? 'control' : null);
 
   // A chip: the parent box drawn around a box-less inline wrapper that holds all of its text (a city pill around the
   // prototype's <span class="sc-interp">). The comparer reads box properties there when the reference text sits in a
