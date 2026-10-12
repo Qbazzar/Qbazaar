@@ -67,6 +67,12 @@ class DashboardStatsService
             );
         }
 
+        if (isset($payload['system'])) {
+            // From the 60-second health probe, not the 5-minute payload, so the
+            // attention list and the health card never disagree.
+            $payload['attention'][] = ['key' => 'failed_jobs', 'count' => $payload['system']['failed_jobs'], 'oldest' => null, 'amount' => null, 'href' => null];
+        }
+
         return $payload + ['sections' => $sections, 'period' => $period->value];
     }
 
@@ -76,7 +82,7 @@ class DashboardStatsService
      */
     private function build(array $sections, DashboardPeriod $period): array
     {
-        $now = CarbonImmutable::now();
+        $now = DashboardPeriod::now();
         $window = $period->window($now);
         $has = static fn (string $section): bool => in_array($section, $sections, true);
         $ads = $has(DashboardAccess::CONTENT) || $has(DashboardAccess::REVIEW) ? $this->ads->collect($window) : null;
@@ -157,7 +163,6 @@ class DashboardStatsService
             [DashboardAccess::FINANCE_QUEUES, 'pending_settlements', fn (): array => $this->queues->settlements()],
             [DashboardAccess::FINANCE_QUEUES, 'pending_withdrawals', fn (): array => $this->queues->withdrawals()],
             [DashboardAccess::FINANCE_QUEUES, 'disputes', fn (): array => $this->queues->disputes()],
-            [DashboardAccess::SYSTEM, 'failed_jobs', fn (): array => $this->queues->failedJobs()],
         ];
         foreach ($sources as [$section, $key, $load]) {
             if ($has($section)) {

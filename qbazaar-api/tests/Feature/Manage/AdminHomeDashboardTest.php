@@ -15,13 +15,16 @@ use App\Services\Admin\Dashboard\DashboardAccess;
 use App\Services\Admin\Dashboard\DashboardPeriod;
 use App\Services\Admin\Dashboard\DashboardStatsService;
 use App\Services\Admin\Dashboard\SchedulerHeartbeat;
+use App\Services\Admin\Dashboard\StorageProbe;
 use App\Support\Money;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 use function Pest\Laravel\actingAs;
@@ -172,17 +175,18 @@ it('compares a period with the one before it', function (): void {
     Carbon::setTestNow();
 });
 
-it('serves the second request from the cache', function (): void {
+it('serves the second request from the cache with no queries at all', function (): void {
     $admin = homeStaff('super_admin');
-    actingAs($admin)->get(route('admin.dashboard'))->assertOk();
+    $service = app(DashboardStatsService::class);
+    $service->forUser($admin, DashboardPeriod::WEEK);
 
     DB::flushQueryLog();
     DB::enableQueryLog();
-    app(DashboardStatsService::class)->forUser($admin, DashboardPeriod::WEEK);
-    $statQueries = collect(DB::getQueryLog())->pluck('query')->filter(fn (string $sql): bool => str_contains($sql, 'count(') || str_contains($sql, 'COUNT('));
+    $service->forUser($admin, DashboardPeriod::WEEK);
+    $queries = DB::getQueryLog();
     DB::disableQueryLog();
 
-    expect($statQueries)->toBeEmpty();
+    expect($queries)->toBeEmpty();
 });
 
 it('keeps a fixed number of queries however many rows there are', function (): void {
@@ -270,4 +274,149 @@ it('formats money without floats', function (): void {
     expect(Money::format('1234567.8'))->toBe('1,234,567.80')
         ->and(Money::format('0'))->toBe('0.00')
         ->and(Money::format('-1500.5'))->toBe('-1,500.50');
+});
+
+it('keeps the language of the admin who built the cache out of what the others read', function (): void {
+    Report::factory()->create();
+    SupportTicket::query()->create(['subject' => 'Help', 'category' => 'general', 'body' => 'x', 'status' => 'open', 'priority' => 'normal', 'email' => 'a@example.test']);
+    $admin = homeStaff('super_admin');
+
+    app()->setLocale('ar');
+    app(DashboardStatsService::class)->forUser($admin, DashboardPeriod::WEEK);
+
+    app()->setLocale('en');
+    actingAs($admin)->get(route('admin.dashboard'))
+        ->assertOk()
+        ->assertSee('Spam')
+        ->assertSee('Open')
+        ->assertDontSee('إعلان مزعج');
+
+    app()->setLocale('ar');
+    $this->get(route('admin.dashboard'))->assertSee('إعلان مزعج')->assertSee('مفتوحة');
+});
+
+it('does not hand a moderator the finance payload another role cached', function (): void {
+    Order::factory()->create(['ad_id' => $this->makeAd(User::factory()->create())->id, 'status' => OrderStatus::COMPLETED->value, 'completed_at' => now(), 'total' => '777.00']);
+    CommissionSettlement::query()->forceCreate(['user_id' => User::factory()->create()->id, 'method' => 'bank_transfer', 'status' => SettlementStatus::PENDING->value, 'amount' => '91.00']);
+
+    actingAs(homeStaff('super_admin'))->get(route('admin.dashboard', ['period' => '7d']))->assertOk()->assertSee('777.00');
+
+    actingAs(homeStaff('moderator'))->get(route('admin.dashboard', ['period' => '7d']))
+        ->assertOk()
+        ->assertDontSee('777.00')
+        ->assertDontSee('91.00')
+        ->assertDontSee(__('admin.home.tiles.orders_gmv'))
+        ->assertDontSee(__('admin.home.system.title'))
+        ->assertDontSee(route('admin.finance.settlements.index', [], false), false)
+        ->assertDontSee('/admin/finance/', false);
+});
+
+it('splits finance.view from finance.manage', function (): void {
+    Order::factory()->create(['ad_id' => $this->makeAd(User::factory()->create())->id, 'status' => OrderStatus::COMPLETED->value, 'completed_at' => now(), 'total' => '777.00']);
+    $viewer = homeStaff('support');
+    $viewer->givePermissionTo('finance.view');
+
+    $viewerStats = app(DashboardStatsService::class)->forUser($viewer, DashboardPeriod::WEEK);
+    expect(tile($viewerStats, 'orders_gmv')['value'])->toBe('777.00')
+        ->and(collect($viewerStats['attention'])->pluck('key')->all())->not->toContain('pending_settlements', 'pending_withdrawals', 'disputes');
+
+    $manager = homeStaff('support');
+    $manager->givePermissionTo('finance.view', 'finance.manage');
+    $managerStats = app(DashboardStatsService::class)->forUser($manager, DashboardPeriod::WEEK);
+    expect(collect($managerStats['attention'])->pluck('key')->all())->toContain('pending_settlements', 'pending_withdrawals', 'disputes')
+        ->and($managerStats)->not->toHaveKey('system');
+});
+
+it('gives no trend when the previous period is empty', function (): void {
+    $stats = app(DashboardStatsService::class)->forUser(homeStaff('super_admin'), DashboardPeriod::WEEK);
+
+    expect(tile($stats, 'users_new')['previous'])->toBe(0)
+        ->and(tile($stats, 'users_new')['change'])->toBeNull()
+        ->and(tile($stats, 'orders_gmv')['change'])->toBeNull();
+});
+
+it('cuts the windows and the daily series at Qatar midnight', function (): void {
+    // 21:30 UTC is 00:30 the next day in Qatar.
+    Carbon::setTestNow('2026-10-12 21:30:00');
+    User::query()->where('email', 'admin@qbazaar.qa')->update(['created_at' => '2026-10-01 10:00:00']);
+    User::factory()->create(['created_at' => '2026-10-12 20:59:00']);
+    User::factory()->create(['created_at' => '2026-10-12 21:01:00']);
+
+    $stats = app(DashboardStatsService::class)->forUser(homeStaff('super_admin'), DashboardPeriod::TODAY);
+    $days = collect($stats['series']['users'])->pluck('count', 'date');
+
+    // Today (13 Oct, Qatar) holds the 21:01 signup and the staff member; yesterday holds the 20:59 one.
+    expect(tile($stats, 'users_new')['value'])->toBe(2)
+        ->and($days['2026-10-13'])->toBe(2)
+        ->and($days['2026-10-12'])->toBe(1)
+        ->and(array_key_last($days->all()))->toBe('2026-10-13');
+
+    Carbon::setTestNow();
+});
+
+it('counts completed orders by completion date, like GMV', function (): void {
+    $ad = $this->makeAd(User::factory()->create());
+    Order::factory()->create(['ad_id' => $ad->id, 'status' => OrderStatus::COMPLETED->value, 'created_at' => now()->subDays(40), 'completed_at' => now()->subHour()]);
+
+    $stats = app(DashboardStatsService::class)->forUser(homeStaff('super_admin'), DashboardPeriod::WEEK);
+
+    expect(tile($stats, 'orders_completed')['value'])->toBe(1)->and(tile($stats, 'orders_total')['value'])->toBe(0);
+});
+
+it('shows failed jobs from the same probe in the health card and the attention list', function (): void {
+    DB::table('failed_jobs')->insert(['uuid' => (string) Str::uuid(), 'connection' => 'redis', 'queue' => 'default', 'payload' => '{}', 'exception' => 'x', 'failed_at' => now()]);
+
+    $stats = app(DashboardStatsService::class)->forUser(homeStaff('super_admin'), DashboardPeriod::WEEK);
+    $attention = collect($stats['attention'])->keyBy('key');
+
+    expect($stats['system']['failed_jobs'])->toBe(1)->and($attention['failed_jobs']['count'])->toBe(1);
+});
+
+it('reports every unreachable dependency instead of hanging or failing', function (): void {
+    config([
+        'scout.driver' => 'meilisearch',
+        'scout.meilisearch.host' => 'http://meili.test',
+        'queue.default' => 'redis',
+        'database.redis.health.host' => '127.0.0.1',
+        'database.redis.health.port' => 1,
+    ]);
+    Http::fake(fn () => throw new ConnectionException('timed out'));
+    app()->instance(StorageProbe::class, new class extends StorageProbe
+    {
+        public function check(string $disk): void
+        {
+            throw new RuntimeException('bucket unreachable');
+        }
+    });
+    Cache::put(SchedulerHeartbeat::CACHE_KEY, now()->subMinutes(10)->getTimestamp());
+
+    $system = app(DashboardStatsService::class)->forUser(homeStaff('super_admin'), DashboardPeriod::WEEK)['system'];
+
+    expect($system['search']['status'])->toBe('unavailable')
+        ->and($system['queues']['status'])->toBe('unavailable')
+        ->and($system['storage']['status'])->toBe('unavailable')
+        ->and($system['scheduler']['status'])->toBe('stale');
+});
+
+it('leaves the shared redis and disk configuration without probe timeouts', function (): void {
+    expect(config('database.redis.default.timeout'))->toBeNull()
+        ->and(config('database.redis.default.read_timeout'))->toBeNull()
+        ->and(config('filesystems.disks.r2.http'))->toBeNull()
+        ->and(config('queue.connections.redis.connection'))->toBe('default')
+        ->and(config('database.redis.health.read_timeout'))->toBeLessThanOrEqual(2);
+});
+
+it('adds and drops the dashboard indexes', function (): void {
+    $migration = require database_path('migrations/2026_10_12_100000_add_admin_dashboard_indexes.php');
+    $present = fn (): bool => Schema::hasIndex('messages', 'messages_created_at_idx')
+        && Schema::hasIndex('ad_promotions', 'ad_promotions_status_activated_idx')
+        && Schema::hasIndex('orders', 'orders_created_status_idx');
+
+    expect($present())->toBeTrue();
+
+    $migration->down();
+    expect($present())->toBeFalse();
+
+    $migration->up();
+    expect($present())->toBeTrue();
 });

@@ -7,6 +7,7 @@ namespace App\Services\Admin\Dashboard\Collectors;
 use App\Models\Ad;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Admin\Dashboard\DashboardPeriod;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -43,16 +44,21 @@ final class DailySeries
     }
 
     /**
+     * Days are Qatar days: the database holds UTC, so each row is shifted by
+     * the zone's fixed offset before its date is taken, and the first bucket
+     * starts at Qatar midnight.
+     *
      * @param Builder<*> $query
      * @return list<array{date: string, count: int}>
      */
     private function perDay(Builder $query, CarbonImmutable $now): array
     {
-        $first = $now->subDays(self::DAYS - 1)->startOfDay();
+        $first = $now->setTimezone(DashboardPeriod::TIMEZONE)->startOfDay()->subDays(self::DAYS - 1);
+        $day = $this->dayExpression($query->getModel()->getConnection()->getDriverName(), $first->offsetHours);
 
         $counts = $query
-            ->where('created_at', '>=', $first)
-            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->where('created_at', '>=', $first->utc())
+            ->selectRaw("{$day} as day, COUNT(*) as total")
             ->groupBy('day')
             ->toBase()
             ->pluck('total', 'day');
@@ -64,5 +70,12 @@ final class DailySeries
             ],
             range(0, self::DAYS - 1),
         );
+    }
+
+    private function dayExpression(string $driver, int $offsetHours): string
+    {
+        return $driver === 'sqlite'
+            ? "date(created_at, '+{$offsetHours} hours')"
+            : "DATE(DATE_ADD(created_at, INTERVAL {$offsetHours} HOUR))";
     }
 }

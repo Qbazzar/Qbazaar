@@ -6,10 +6,10 @@ namespace App\Services\Admin\Dashboard\Collectors;
 
 use App\Models\Ad;
 use App\Services\Admin\Dashboard\SchedulerHeartbeat;
+use App\Services\Admin\Dashboard\StorageProbe;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -21,9 +21,15 @@ final class SystemHealth
 {
     private const int HTTP_TIMEOUT_SECONDS = 2;
 
+    private const int HTTP_CONNECT_TIMEOUT_SECONDS = 1;
+
+    /** Same Redis lists as `redis`, reached through a connection with short timeouts (see config/database.php). */
+    private const string PROBE_CONNECTION = 'redis-health';
+
     public function __construct(
         private readonly SchedulerHeartbeat $heartbeat,
         private readonly AttentionQueues $queues,
+        private readonly StorageProbe $storage,
     ) {}
 
     /**
@@ -58,8 +64,8 @@ final class SystemHealth
         try {
             $sizes = [];
             foreach (array_keys((array) config('horizon.waits')) as $pair) {
-                [$connection, $queue] = explode(':', (string) $pair, 2);
-                $sizes[$queue] = Queue::connection($connection)->size($queue);
+                [, $queue] = explode(':', (string) $pair, 2);
+                $sizes[$queue] = Queue::connection(self::PROBE_CONNECTION)->size($queue);
             }
 
             return ['status' => 'ok', 'sizes' => $sizes];
@@ -79,7 +85,7 @@ final class SystemHealth
 
         try {
             $host = rtrim((string) config('scout.meilisearch.host'), '/');
-            $client = Http::timeout(self::HTTP_TIMEOUT_SECONDS)->withToken((string) config('scout.meilisearch.key'));
+            $client = Http::connectTimeout(self::HTTP_CONNECT_TIMEOUT_SECONDS)->timeout(self::HTTP_TIMEOUT_SECONDS)->withToken((string) config('scout.meilisearch.key'));
             $client->get("{$host}/health")->throw();
             $stats = $client->get("{$host}/indexes/" . (new Ad)->searchableAs() . '/stats');
 
@@ -111,7 +117,7 @@ final class SystemHealth
         $disk = (string) config('media-library.disk_name', config('filesystems.default'));
 
         try {
-            Storage::disk($disk)->getDriver()->fileExists('.dashboard-health-probe');
+            $this->storage->check($disk);
 
             return ['status' => 'ok', 'disk' => $disk];
         } catch (Throwable) {

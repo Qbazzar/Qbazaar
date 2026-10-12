@@ -14,12 +14,25 @@ use Illuminate\Database\Eloquent\Builder;
  */
 final readonly class DashboardWindow
 {
-    public function __construct(
-        public CarbonImmutable $start,
-        public CarbonImmutable $end,
-        public CarbonImmutable $previousStart,
-        public CarbonImmutable $previousEnd,
-    ) {}
+    public CarbonImmutable $start;
+
+    public CarbonImmutable $end;
+
+    public CarbonImmutable $previousStart;
+
+    public CarbonImmutable $previousEnd;
+
+    /**
+     * Bounds may come in any timezone; they are kept in UTC because that is
+     * what the database stores and what query bindings are formatted as.
+     */
+    public function __construct(CarbonImmutable $start, CarbonImmutable $end, CarbonImmutable $previousStart, CarbonImmutable $previousEnd)
+    {
+        $this->start = $start->utc();
+        $this->end = $end->utc();
+        $this->previousStart = $previousStart->utc();
+        $this->previousEnd = $previousEnd->utc();
+    }
 
     /**
      * Rows of $column inside the current range and inside the previous one,

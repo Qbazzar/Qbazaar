@@ -21,7 +21,7 @@ use App\Support\Money;
 final class FinanceStats
 {
     /**
-     * @param array{gmv_now: string, gmv_before: string, commission_now: string, commission_before: string} $completed
+     * @param array{gmv_now: string, gmv_before: string, commission_now: string, commission_before: string, orders_now: int, orders_before: int} $completed
      * @return list<array<string, mixed>>
      */
     public function orderTiles(DashboardWindow $window, array $completed): array
@@ -36,15 +36,17 @@ final class FinanceStats
 
         foreach (OrderStatus::cases() as $status) {
             $row = $counts[$status->value] ?? null;
-            $tiles[] = ['key' => 'orders_' . $status->value, 'kind' => 'count']
-                + Trend::between((int) ($row->current_total ?? 0), (int) ($row->previous_total ?? 0));
+            // Completed orders are counted when they complete, like GMV and commission.
+            $tiles[] = ['key' => 'orders_' . $status->value, 'kind' => 'count'] + ($status === OrderStatus::COMPLETED
+                ? Trend::between($completed['orders_now'], $completed['orders_before'])
+                : Trend::between((int) ($row->current_total ?? 0), (int) ($row->previous_total ?? 0)));
         }
 
         return $tiles;
     }
 
     /**
-     * @param array{gmv_now: string, gmv_before: string, commission_now: string, commission_before: string} $completed
+     * @param array{gmv_now: string, gmv_before: string, commission_now: string, commission_before: string, orders_now: int, orders_before: int} $completed
      * @return list<array<string, mixed>>
      */
     public function commissionTiles(array $completed): array
@@ -93,7 +95,7 @@ final class FinanceStats
      * Completed orders only: GMV and commission are counted when the order
      * completes, which is when the ledger charges the commission.
      *
-     * @return array{gmv_now: string, gmv_before: string, commission_now: string, commission_before: string}
+     * @return array{gmv_now: string, gmv_before: string, commission_now: string, commission_before: string, orders_now: int, orders_before: int}
      */
     public function completedTotals(DashboardWindow $window): array
     {
@@ -104,8 +106,10 @@ final class FinanceStats
                 'COALESCE(SUM(CASE WHEN completed_at >= ? THEN total ELSE 0 END), 0) as gmv_now, '
                 . 'COALESCE(SUM(CASE WHEN completed_at < ? THEN total ELSE 0 END), 0) as gmv_before, '
                 . 'COALESCE(SUM(CASE WHEN completed_at >= ? THEN commission_amount ELSE 0 END), 0) as commission_now, '
-                . 'COALESCE(SUM(CASE WHEN completed_at < ? THEN commission_amount ELSE 0 END), 0) as commission_before',
-                [$window->start, $window->previousEnd, $window->start, $window->previousEnd],
+                . 'COALESCE(SUM(CASE WHEN completed_at < ? THEN commission_amount ELSE 0 END), 0) as commission_before, '
+                . 'COALESCE(SUM(CASE WHEN completed_at >= ? THEN 1 ELSE 0 END), 0) as orders_now, '
+                . 'COALESCE(SUM(CASE WHEN completed_at < ? THEN 1 ELSE 0 END), 0) as orders_before',
+                [$window->start, $window->previousEnd, $window->start, $window->previousEnd, $window->start, $window->previousEnd],
             )
             ->toBase()
             ->get()->sole();
@@ -115,6 +119,8 @@ final class FinanceStats
             'gmv_before' => Money::round((string) $row->gmv_before),
             'commission_now' => Money::round((string) $row->commission_now),
             'commission_before' => Money::round((string) $row->commission_before),
+            'orders_now' => (int) $row->orders_now,
+            'orders_before' => (int) $row->orders_before,
         ];
     }
 
