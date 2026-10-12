@@ -8,7 +8,6 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
-import { Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ListingCard } from '@/components/ads/ListingCard';
@@ -16,6 +15,7 @@ import { PanelState } from '@/components/account/PanelState';
 import { Pager } from '@/components/account/Pager';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { HeartIcon } from '@/components/design-system/icons';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { useClearFavoritesMutation, useFavoritesQuery } from '@/lib/queries/favorites';
 import { t } from '@/lib/i18n/messages';
@@ -51,7 +51,7 @@ export default function FavoritesPage() {
             type="button"
             onClick={clear}
             aria-busy={clearAll.isPending || undefined}
-            className={cn('cursor-pointer rounded-qb-xs text-qb-caption text-qb-ink-subtle transition-colors hover:text-qb-brand', focusRing)}
+            className={cn('qb-motion cursor-pointer text-qb-caption text-qb-ink-subtle hover:text-qb-brand', focusRing)}
           >
             {t('favorites.clear_all')}
           </button>
@@ -85,7 +85,7 @@ function WishlistEmpty() {
   return (
     <section className="flex flex-col items-center gap-4 rounded-[20px] border border-qb-line bg-qb-surface px-6 py-[60px] text-center">
       <span aria-hidden="true" className="flex size-[88px] items-center justify-center rounded-full bg-qb-brand-soft text-qb-brand">
-        <Icon icon={Heart} className="size-10" />
+        <Icon icon={HeartIcon} className="size-10" />
       </span>
       <h2 className="text-qb-h4 font-semibold tracking-normal text-qb-ink">{t('favorites.wishlist_empty.title')}</h2>
       <p className="max-w-[380px] text-qb-body-sm text-qb-ink-subtle">{t('favorites.wishlist_empty.description')}</p>
