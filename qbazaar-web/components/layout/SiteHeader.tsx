@@ -8,11 +8,20 @@
  */
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, Globe, Heart, MapPinPlus, MessageCircle, type LucideIcon } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import {
+  AddAdsPinIcon,
+  BellIcon,
+  BellOutlineIcon,
+  ChatBubbleIcon,
+  GlobeMobileIcon,
+  HeartIcon,
+  LanguageGlobeIcon,
+  type IconGlyph,
+} from '@/components/design-system/icons';
 import { siteFrame } from '@/components/design-system/site-frame';
 import { LanguageMenu } from '@/components/i18n/LanguageMenu';
 import { useAuth } from '@/hooks/useAuth';
@@ -75,21 +84,21 @@ export function SiteHeader() {
             href="/post-ad"
             className={cn(buttonVariants({ size: 'sm' }), 'h-auto gap-[7px] py-2.5 text-qb-body-sm leading-[1.15] [&_svg]:size-5')}
           >
-            <Icon icon={MapPinPlus} />
+            <Icon icon={AddAdsPinIcon} />
             {t('layout.header.add_ad', 'أضف إعلاناً')}
           </Link>
           <span aria-hidden="true" className="h-[30px] w-px bg-qb-line" />
           <LanguageMenu className={headerIcon}>
-            <Icon icon={Globe} className="size-[23px]" />
+            <Icon icon={LanguageGlobeIcon} className="size-[23px]" />
           </LanguageMenu>
-          <HeaderIconLink href="/account/favorites" icon={Heart} label={t('layout.menu.favorites', 'المفضلة')} />
+          <HeaderIconLink href="/account/favorites" icon={HeartIcon} label={t('layout.menu.favorites', 'المفضلة')} />
           <HeaderIconLink
             href="/account/notifications"
-            icon={Bell}
+            icon={BellIcon}
             label={t('account.nav.notifications', 'الإشعارات')}
             unread={unread.notifications}
           />
-          <HeaderIconLink href="/account/messages" icon={MessageCircle} label={t('account.nav.messages', 'الرسائل')} unread={unread.messages} />
+          <HeaderIconLink href="/account/messages" icon={ChatBubbleIcon} label={t('account.nav.messages', 'الرسائل')} unread={unread.messages} />
           {signedIn ? (
             <AccountMenu name={user?.full_name || user?.email || 'Q'} email={user?.email} />
           ) : (
@@ -99,11 +108,11 @@ export function SiteHeader() {
 
         <div className="relative flex items-center gap-2 self-start pt-3.5 min-[761px]:hidden">
           <LanguageMenu className={mobileIconButton} variant="phone">
-            <Icon icon={Globe} />
+            <Icon icon={GlobeMobileIcon} />
           </LanguageMenu>
           <HeaderIconLink
             href="/account/notifications"
-            icon={Bell}
+            icon={BellOutlineIcon}
             label={t('account.nav.notifications', 'الإشعارات')}
             unread={unread.notifications}
             variant="phone"
@@ -128,7 +137,7 @@ const ICON_LINK = {
 
 interface HeaderIconLinkProps {
   href: string;
-  icon: LucideIcon;
+  icon: IconGlyph;
   label: string;
   unread?: number;
   variant?: keyof typeof ICON_LINK;
