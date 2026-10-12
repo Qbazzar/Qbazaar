@@ -10,7 +10,8 @@ const SHARE = { ref: 'button:text-is("Share Ad")', target: 'button:text-is("Shar
 const REPORT = { ref: 'button:text-is("Report Ad")', target: 'button:text-is("Report Ad")' };
 const MODAL = { ref: 'div[style*="z-index: 90"] > div', target: '[role=dialog]' };
 const TOAST = { ref: 'div[style*="rgb(234, 255, 247)"]', target: '[role=status]:not(.sr-only)' };
-const REASON_SPAM = { ref: 'div[style*="z-index: 90"] :text-is("Spam")', target: '[role=dialog] label:has-text("Spam")' };
+// The first reason of both report forms (assets/app.js reportReasons).
+const REASON_FRAUD = { ref: 'div[style*="z-index: 90"] :text-is("Fraud or scam")', target: '[role=dialog] label:has-text("Fraud or scam")' };
 
 module.exports = [
   scenario({
@@ -47,8 +48,8 @@ module.exports = [
     steps: [
       click(REPORT),
       observe('modal-open', MODAL, { crop: true }),
-      click(REASON_SPAM),
-      observe('reason-selected', REASON_SPAM, { text: 'skip', crop: true }),
+      click(REASON_FRAUD),
+      observe('reason-selected', REASON_FRAUD, { text: 'skip', crop: true }),
       click({ ref: 'div[style*="z-index: 90"] button:text-is("Cancel")', target: '[role=dialog] button[aria-label="Close"]' }),
       observe('closed-by-cancel', MODAL, { text: 'skip', styles: false }),
     ],

@@ -1,8 +1,9 @@
 // Home page behaviours (assets/selects.js, assets/slider.js). Figma 489:16010 (category panel) and 492:17733 (distance).
 const { scenario, click, hover, press, observe, motion, stay } = require('./dsl');
 
-const CATEGORY_FIELD = { ref: '[data-qbsel=cat]', target: 'form[role=search] [data-field=category], form[role=search] a[href="/categories"]' };
-const DISTANCE_FIELD = { ref: '[data-qbsel=dist]', target: 'form[role=search] [data-field=distance], form[role=search] [aria-label=Distance]' };
+// The target's fields are comboboxes whose label carries the choice ("Distance: +10 km").
+const CATEGORY_FIELD = { ref: '[data-qbsel=cat]', target: 'form[role=search] [role=combobox][aria-label^="Choose Category"], form[role=search] [data-field=category]' };
+const DISTANCE_FIELD = { ref: '[data-qbsel=dist]', target: 'form[role=search] [role=combobox][aria-label^="Distance"], form[role=search] [data-field=distance]' };
 const PANEL = { ref: '.qb-ddpanel', target: '[role=listbox], [role=menu], [data-dropdown-panel]' };
 const SUBMENU = { ref: '.qb-ddsub.open', target: '[role=listbox] [role=listbox], [role=menu] [role=menu], [data-dropdown-sub]' };
 const RECOMMENDED = { ref: '#recTrack', target: 'ul[aria-label="Recommended for you"]' };

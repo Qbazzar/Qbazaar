@@ -46,6 +46,18 @@ async function runStep(side, step) {
   await page.waitForTimeout(SETTLE_MS);
 }
 
+// A page that is still settling (the reference renders its template after load) can refuse the first try. A
+// refused click never happened, so trying once more after a pause cannot press anything twice.
+const RETRY_PAUSE_MS = 800;
+async function runStepWithRetry(side, step) {
+  try {
+    await runStep(side, step);
+  } catch (error) {
+    await side.page.waitForTimeout(RETRY_PAUSE_MS);
+    await runStep(side, step);
+  }
+}
+
 // Marks the first visible match so later reads and crops address the same element.
 async function mark(side, step, markName) {
   const selector = step.selector[SIDE_KEY[side.name]];
@@ -87,7 +99,7 @@ class ScenarioRun {
     if (step.type === 'stay') return this.stay(step);
     for (const side of [this.sides.reference, this.sides.target]) {
       try {
-        await runStep(side, step);
+        await runStepWithRetry(side, step);
       } catch (error) {
         const onTarget = side.name === 'target';
         this.emit({ component: `scenario:${this.definition.id}`, category: 'behaviour', severity: onTarget ? 'high' : 'low',
@@ -113,18 +125,15 @@ class ScenarioRun {
       this.emit({ component, category: 'behaviour', severity: 'high', property: 'exists', ref: ref.count ? 'visible' : 'not visible', target: target.count ? 'visible' : 'not visible', note: step.selector.ref + ' vs ' + step.selector.target });
       return true;
     }
-    const arabic = this.env.config.locale === 'ar';
-    this.compareFacts(component, step, ref, target, arabic);
+    this.compareFacts(component, step, ref, target);
     const unit = { dedupeKey: JSON.stringify(step.selector), name: component, refSel: `[data-pgs="${markName}"]`, tgtSel: `[data-pgs="${markName}"]`, states: false, icons: step.what.icons !== false, mask: step.what.mask, fixedSize: step.what.fixedSize };
-    // Arabic runs check behaviour only: the copy and the mirrored styles legitimately differ from the English design.
-    if (arabic) return true;
     if (step.what.styles !== false) await this.comparer.compare(unit);
     if (step.what.crop) await this.comparer.pixelDiff(unit, this.env.outDir);
     return true;
   }
 
-  compareFacts(component, step, ref, target, arabic) {
-    if (!arabic && step.what.text && step.what.text !== 'skip' && ref.text !== target.text) {
+  compareFacts(component, step, ref, target) {
+    if (step.what.text && step.what.text !== 'skip' && ref.text !== target.text) {
       this.emit({ component, category: 'behaviour', severity: 'medium', property: 'text', ref: ref.text, target: target.text });
     }
     if (step.what.count && ref.count !== target.count) {
