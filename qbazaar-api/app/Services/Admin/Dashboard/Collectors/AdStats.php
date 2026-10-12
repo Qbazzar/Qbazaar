@@ -15,13 +15,13 @@ final class AdStats
     /**
      * Both views of one grouped query, so a request pays for it once.
      *
-     * @return array{tiles: list<array<string, mixed>>, pending: array{count: int, oldest: string|null}}
+     * @return array{tiles: list<array<string, mixed>>, pending: array{count: int, oldest: string|null}, distribution: array<string, int>}
      */
     public function collect(DashboardWindow $window): array
     {
         $rows = $this->rows($window);
 
-        return ['tiles' => $this->tiles($rows), 'pending' => $this->pendingReview($rows)];
+        return ['tiles' => $this->tiles($rows), 'pending' => $this->pendingReview($rows), 'distribution' => $this->distribution($rows)];
     }
 
     /**
@@ -40,6 +40,22 @@ final class AdStats
             ['key' => 'ads_expired', 'kind' => 'count', 'value' => $count(AdStatus::EXPIRED), 'href' => $this->listUrl(AdStatus::EXPIRED)],
             ['key' => 'ads_rejected', 'kind' => 'count', 'value' => $count(AdStatus::REJECTED), 'href' => $this->listUrl(AdStatus::REJECTED)],
         ];
+    }
+
+    /**
+     * Ads per status, every status present (zero when empty), for the donut.
+     *
+     * @param array<string, object> $rows
+     * @return array<string, int>
+     */
+    private function distribution(array $rows): array
+    {
+        $counts = [];
+        foreach (AdStatus::cases() as $status) {
+            $counts[$status->value] = (int) ($rows[$status->value]->total ?? 0);
+        }
+
+        return $counts;
     }
 
     /**
