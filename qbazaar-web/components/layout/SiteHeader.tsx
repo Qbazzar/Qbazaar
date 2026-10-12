@@ -74,8 +74,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 bg-qb-surface font-qb text-qb-ink shadow-qb-raised">
       <div className={cn(siteFrame, 'flex h-[88px] items-center justify-between gap-4')}>
-        <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('shrink-0 rounded-qb-sm', focusRing)}>
-          <SiteLogo width={139} height={52} eager />
+        <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('shrink-0', focusRing)}>
+          <SiteLogo width={139} height={52} eager className="block" />
         </Link>
 
         {/* Arabic labels are wider, so the gaps shrink sooner and the bar keeps its gutter at 761 px. */}
@@ -108,7 +108,7 @@ export function SiteHeader() {
 
         <div className="relative flex items-center gap-2 self-start pt-3.5 min-[761px]:hidden">
           <LanguageMenu className={mobileIconButton} variant="phone">
-            <Icon icon={GlobeMobileIcon} />
+            <Icon icon={GlobeMobileIcon} className="size-[21px]" />
           </LanguageMenu>
           <HeaderIconLink
             href="/account/notifications"
@@ -124,15 +124,16 @@ export function SiteHeader() {
   );
 }
 
+/** The reference's `.qb-nav.qb-btn` icons: square corners, orange and 4 % dimmer under the pointer, the polish transition. */
 const headerIcon = cn(
-  'relative inline-flex size-[27px] cursor-pointer items-center justify-center rounded-qb-xs text-qb-ink-body transition-colors hover:text-qb-brand',
+  'qb-motion relative inline-flex size-[27px] cursor-pointer items-center justify-center text-qb-ink-body hover:text-qb-brand hover:brightness-[.96]',
   focusRing,
 );
 
 /** The bare icons of the desktop bar and the bordered squares of the phone header. */
 const ICON_LINK = {
   desktop: { link: headerIcon, icon: 'size-[23px]', dot: 'end-0 top-0 size-2 border-[1.5px] border-qb-surface' },
-  phone: { link: mobileIconButton, icon: 'size-5', dot: 'end-3 top-[11px] size-[7px]' },
+  phone: { link: mobileIconButton, icon: 'size-[21px]', dot: 'end-3 top-[11px] size-[7px]' },
 } as const;
 
 interface HeaderIconLinkProps {
@@ -155,13 +156,22 @@ function HeaderIconLink({ href, icon, label, unread = 0, variant = 'desktop' }: 
   );
 }
 
+/**
+ * Plain links in the reference (mobilemenu.js guestHeader): no hover, press or
+ * transition, unlike the buttons around them.
+ */
+const guestLink = cn(
+  'inline-flex items-center justify-center rounded-qb-md px-[18px] text-qb-caption font-semibold whitespace-nowrap',
+  focusRing,
+);
+
 function GuestButtons() {
   return (
     <span className="ms-1 flex items-center gap-2.5">
-      <Link href="/login" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-[43px]')}>
+      <Link href="/login" className={cn(guestLink, 'h-[43px] border border-qb-line bg-qb-surface text-qb-ink-title')}>
         {t('layout.header.login', 'تسجيل الدخول')}
       </Link>
-      <Link href="/register" className={cn(buttonVariants({ size: 'sm' }), 'h-[41px]')}>
+      <Link href="/register" className={cn(guestLink, 'h-[41px] bg-qb-brand text-qb-on-brand')}>
         {t('layout.header.sign_up', 'إنشاء حساب')}
       </Link>
     </span>

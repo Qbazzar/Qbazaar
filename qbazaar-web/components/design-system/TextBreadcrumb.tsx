@@ -35,7 +35,7 @@ export function TextBreadcrumb({ items, className }: BreadcrumbProps) {
                   <bdi>{item.label}</bdi>
                 </span>
               ) : (
-                <Link href={item.href} className={cn('rounded-qb-xs text-qb-breadcrumb transition-colors hover:text-qb-brand', focusRing)}>
+                <Link href={item.href} className={cn('qb-motion text-qb-breadcrumb hover:text-qb-brand', focusRing)}>
                   <bdi>{item.label}</bdi>
                 </Link>
               )}

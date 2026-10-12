@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 /** Box shared by Input, Select and Textarea (`.qb-field input` in Qbazaar-front). */
 const controlBase = [
   'w-full rounded-qb-md border border-qb-field-border bg-qb-surface font-qb text-qb-body text-qb-ink',
-  'placeholder:text-qb-placeholder outline-none transition-colors',
+  'placeholder:text-qb-placeholder outline-none',
   'focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
   'aria-invalid:border-qb-danger aria-invalid:focus-visible:ring-qb-danger/20',
   'disabled:cursor-not-allowed disabled:border-qb-line disabled:bg-qb-fill disabled:text-qb-ink-subtle',

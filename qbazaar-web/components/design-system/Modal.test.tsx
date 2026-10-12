@@ -84,4 +84,14 @@ describe('Sheet', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Menu' })).toHaveClass('start-0', 'shadow-qb-drawer');
   });
+
+  it('closes the drawer with the reference × and slides sheets with transform alone', async () => {
+    render(<Sheet title="Menu" side="start" defaultOpen />);
+    const drawer = await screen.findByRole('dialog', { name: 'Menu' });
+    const close = screen.getByRole('button', { name: 'Close' });
+
+    expect(close).toHaveTextContent('×');
+    expect(close.querySelector('svg')).toBeNull();
+    expect(drawer).toHaveClass('transition-[transform]', 'duration-[280ms]', 'data-starting-style:transform-[translateX(-102%)]');
+  });
 });

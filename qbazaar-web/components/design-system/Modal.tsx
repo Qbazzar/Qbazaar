@@ -46,14 +46,17 @@ function Shell({
   );
 }
 
-/** The 40 px close button of the dialogs; it must sit inside a base-ui `Dialog.Popup`. */
-export function ModalCloseButton({ className }: { className?: string }) {
+/**
+ * The 40 px close button of the dialogs; it must sit inside a base-ui `Dialog.Popup`.
+ * `glyph` replaces the X icon (the menu drawer's is a × character).
+ */
+export function ModalCloseButton({ className, glyph }: { className?: string; glyph?: ReactNode }) {
   return (
     <Dialog.Close
       aria-label={t('ui.close')}
       className={cn('inline-flex size-10 items-center justify-center rounded-qb-md text-qb-ink hover:bg-qb-fill', focusRing, className)}
     >
-      <Icon icon={X} size="lg" />
+      {glyph ?? <Icon icon={X} size="lg" />}
     </Dialog.Close>
   );
 }
@@ -84,7 +87,8 @@ export function Modal(props: ModalProps) {
         className={cn(
           'fixed inset-x-4 top-1/2 z-50 mx-auto max-h-[calc(100dvh-32px)] max-w-[538px] -translate-y-1/2 overflow-y-auto',
           'rounded-qb-2xl border border-qb-line bg-qb-surface p-6 font-qb text-qb-ink',
-          'transition-[opacity,scale] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-reduce:transition-none',
+          // The reference's dialogs fade in rising 8 px (qbFade .2s) and close at once.
+          'animate-qb-dialog-enter motion-reduce:animate-none',
           focusRing,
           className,
         )}
@@ -107,21 +111,29 @@ export function Modal(props: ModalProps) {
   );
 }
 
+/**
+ * The reference slides its sheets with `transform` alone: the bottom sheet in
+ * .34 s from 106 % down, the menu drawer in .28 s from 102 % beside the edge
+ * (mobilemenu.js), both on the standard ease.
+ */
 const SHEET_SIDES = {
   bottom: {
     popup:
-      'inset-x-0 bottom-0 max-h-[90dvh] rounded-t-qb-2xl px-6 pt-3 pb-6 data-starting-style:translate-y-full data-ending-style:translate-y-full',
+      'inset-x-0 bottom-0 max-h-[90dvh] rounded-t-qb-2xl px-6 pt-3 pb-6 duration-[340ms] data-starting-style:transform-[translateY(106%)] data-ending-style:transform-[translateY(106%)]',
     backdrop: undefined,
     header: '',
     close: '-me-2',
+    closeGlyph: undefined,
     body: 'mt-4',
   },
   start: {
     popup:
-      'inset-y-0 start-0 w-[86vw] max-w-[340px] shadow-qb-drawer data-starting-style:-translate-x-full data-ending-style:-translate-x-full rtl:data-starting-style:translate-x-full rtl:data-ending-style:translate-x-full',
+      'inset-y-0 start-0 w-[86vw] max-w-[340px] shadow-qb-drawer duration-[280ms] data-starting-style:transform-[translateX(-102%)] data-ending-style:transform-[translateX(-102%)] rtl:data-starting-style:transform-[translateX(102%)] rtl:data-ending-style:transform-[translateX(102%)]',
     backdrop: 'bg-qb-overlay-strong',
     header: 'border-b border-qb-line px-5 py-[18px]',
-    close: 'size-[34px] rounded-full border border-qb-line text-qb-ink-body [&_svg]:size-4',
+    // `.qb-mdrawer-x`: a 34 px white circle holding a 16 px × character.
+    close: 'size-[34px] rounded-full border border-qb-line bg-qb-surface text-qb-body text-qb-icon-close hover:bg-qb-surface',
+    closeGlyph: <span aria-hidden="true">×</span>,
     body: 'flex flex-col',
   },
 } as const;
@@ -142,7 +154,7 @@ export function Sheet(props: SheetProps) {
       <Dialog.Popup
         className={cn(
           'fixed z-50 flex flex-col overflow-y-auto bg-qb-surface font-qb text-qb-ink',
-          'transition-transform duration-300 motion-reduce:transition-none',
+          'transition-[transform] ease-[cubic-bezier(.4,0,.2,1)] motion-reduce:transition-none',
           layout.popup,
           focusRing,
           className,
@@ -152,7 +164,7 @@ export function Sheet(props: SheetProps) {
         <div className={cn('flex items-center justify-between gap-4', layout.header)}>
           <Dialog.Title className={cn('font-qb text-qb-h5 font-medium tracking-normal', heading ? 'sr-only' : null)}>{title}</Dialog.Title>
           {heading}
-          {showCloseButton ? <ModalCloseButton className={layout.close} /> : null}
+          {showCloseButton ? <ModalCloseButton className={layout.close} glyph={layout.closeGlyph} /> : null}
         </div>
         {description ? <Dialog.Description className="mt-1 text-qb-caption text-qb-ink-subtle">{description}</Dialog.Description> : null}
         {children ? <div className={cn('flex-1', layout.body)}>{children}</div> : null}

@@ -30,6 +30,10 @@ const twMerge = extendTailwindMerge({
       shadow: [...QB_TOKEN_NAMES.shadow],
       spacing: [...QB_TOKEN_NAMES.spacing],
     },
+    // `qb-motion` (design-tokens.css) is a transition: a later `transition-none` replaces it and vice versa.
+    classGroups: {
+      transition: ["qb-motion"],
+    },
   },
 })
 
