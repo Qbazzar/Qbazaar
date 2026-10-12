@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setClientLocale } from '@/lib/i18n/locale';
-import type { Location } from '@/lib/api/types';
+import type { AdFacets, CategoryNode, Location } from '@/lib/api/types';
 
 import { EMPTY_FILTERS } from './filter-values';
 import { FilterPanel } from './FilterPanel';
@@ -13,6 +13,8 @@ function place(slug: string, en: string, children: Location[] = []): Location {
 }
 
 const locations = [place('doha', 'Doha', [place('west-bay', 'West Bay')]), place('al-wakrah', 'Al Wakrah')];
+
+const ALL_FACETS: AdFacets = { ad_type: {}, shipping: {}, seller_type: {}, buy_now: {}, condition: {} };
 
 function renderPanel(overrides: Partial<Parameters<typeof FilterPanel>[0]> = {}) {
   const onApply = vi.fn();
@@ -25,7 +27,8 @@ function renderPanel(overrides: Partial<Parameters<typeof FilterPanel>[0]> = {})
       onApply={onApply}
       onReset={onReset}
       locations={locations}
-      facets={{ categories: {}, locations: { 'west-bay': 4, 'al-wakrah': 1 }, conditions: { new: 2, like_new: 0, used: 7 }, price_buckets: [] }}
+      facets={{ categories: {}, locations: { 'west-bay': 4, 'al-wakrah': 1 }, conditions: { new: 0, like_new: 0, used: 0 }, price_buckets: [] }}
+      adFacets={{ ...ALL_FACETS, condition: { new: 2, used: 7 } }}
       {...overrides}
     />,
   );
@@ -225,5 +228,101 @@ describe('FilterPanel', () => {
     expect(screen.getByLabelText('Minimum price (QAR)')).toBe(min);
     expect(min).toHaveValue(100);
     expect(min).toHaveFocus();
+  });
+  describe('the offer, seller, shipping and Buy Now groups', () => {
+    const groups: Parameters<typeof FilterPanel>[0]['groups'] = ['adType', 'sellerType', 'shipping', 'condition', 'buyNow'];
+    const adFacets: AdFacets = {
+      ad_type: { offering: 7592369, wanted: 95889 },
+      shipping: { delivery: 3988056, pickup_only: 1722375 },
+      seller_type: { private: 5163947, business: 2524311 },
+      buy_now: { true: 12, false: 5 },
+      condition: { new: 3 },
+    };
+
+    it('names every option with its count, as the design does', () => {
+      renderPanel({ groups, adFacets });
+
+      expect(screen.getByRole('radio', { name: 'Available (7,592,369)' })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Wanted (95,889)' })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Private (5,163,947)' })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Dealer (2,524,311)' })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Shipping Available (3,988,056)' })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'Local Pickup Only (1,722,375)' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Buy Now (12)' })).toBeInTheDocument();
+    });
+
+    it('labels each group by its heading', () => {
+      renderPanel({ groups, adFacets });
+
+      for (const name of ['Offer', 'Seller', 'Shipping & Delivery', 'Condition']) {
+        expect(screen.getByRole('radiogroup', { name })).toBeInTheDocument();
+      }
+    });
+
+    it('shows no number at all when the counts timed out', () => {
+      renderPanel({ groups, adFacets: ALL_FACETS });
+
+      expect(screen.getByRole('radio', { name: 'Available' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Buy Now' })).toBeInTheDocument();
+      expect(screen.queryByText(/\(0\)/)).not.toBeInTheDocument();
+    });
+
+    it('shows only the chosen value once a filter narrows the counts', () => {
+      renderPanel({ groups, values: { ...EMPTY_FILTERS, adType: 'wanted' }, adFacets: { ...adFacets, ad_type: { wanted: 40 } } });
+
+      expect(screen.getByRole('radio', { name: 'Wanted (40)' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'Available' })).not.toBeChecked();
+    });
+
+    it('applies the seller, Buy Now and shipping choices together', async () => {
+      const { onApply, user } = renderPanel({ groups, adFacets });
+
+      await user.click(screen.getByRole('radio', { name: /^Dealer/ }));
+      await user.click(screen.getByRole('checkbox', { name: /^Buy Now/ }));
+      await user.click(screen.getByRole('radio', { name: /^Local Pickup Only/ }));
+      await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
+
+      expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, sellerType: 'business', buyNow: true, shipping: 'pickup_only' });
+    });
+
+    it('removes a Buy Now chip at once', async () => {
+      const { onApply, user } = renderPanel({ groups, values: { ...EMPTY_FILTERS, buyNow: true, sellerType: 'private' }, adFacets });
+
+      await user.click(screen.getByRole('button', { name: 'Remove Buy Now' }));
+
+      expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, sellerType: 'private' });
+    });
+
+    it('toggles Buy Now from the keyboard', async () => {
+      const { user } = renderPanel({ groups, adFacets });
+
+      screen.getByRole('checkbox', { name: /^Buy Now/ }).focus();
+      await user.keyboard(' ');
+
+      expect(screen.getByRole('checkbox', { name: /^Buy Now/ })).toBeChecked();
+    });
+  });
+
+  it('counts the options of a category select from meta.facets.custom_fields', async () => {
+    const category = {
+      id: 'c1',
+      slug: 'cars',
+      name: { en: 'Cars', ar: 'سيارات' },
+      children: [],
+      custom_fields: [
+        { key: 'brand', type: 'select', label: { en: 'Brand', ar: 'الماركة' }, options_labeled: [{ value: 'bmw', label: 'BMW' }, { value: 'audi', label: 'Audi' }] },
+      ],
+    } as unknown as CategoryNode;
+    const { user } = renderPanel({
+      groups: ['customFields'],
+      categories: [category],
+      categorySlug: 'cars',
+      adFacets: { ...ALL_FACETS, custom_fields: { brand: { bmw: 1200 } } },
+    });
+
+    await user.click(screen.getByRole('combobox', { name: 'Brand' }));
+
+    expect(await screen.findByRole('option', { name: 'BMW (1,200)' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Audi' })).toBeInTheDocument();
   });
 });

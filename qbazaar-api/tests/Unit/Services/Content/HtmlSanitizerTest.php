@@ -38,3 +38,38 @@ it('forces safe rel on links that open a new tab', function (): void {
 it('returns an empty string for blank input', function (): void {
     expect((new HtmlSanitizer)->sanitize("  \n "))->toBe('');
 });
+
+it('round-trips everything the rich-text editor can produce', function (): void {
+    $html = '<h2 style="text-align: center">عنوان</h2><h3>sub</h3>'
+        . '<p style="text-align: end"><strong>b</strong><em>i</em><u>u</u><s>s</s></p>'
+        . '<p style="text-align: justify">j</p><ul><li><p>one</p></li></ul><ol><li>two</li></ol>'
+        . '<blockquote><p>q</p></blockquote><hr>'
+        . '<a href="https://x.qa" target="_blank" rel="noopener noreferrer nofollow">x</a>';
+
+    expect((new HtmlSanitizer)->sanitize($html))->toBe($html);
+});
+
+it('keeps only a plain text-align declaration in style', function (string $input, string $expected): void {
+    expect((new HtmlSanitizer)->sanitize($input))->toBe($expected);
+})->with([
+    'alignment with extras' => ['<p style="text-align: center; background:url(javascript:x)">a</p>', '<p>a</p>'],
+    'expression value' => ['<p style="text-align: expression(alert(1))">a</p>', '<p>a</p>'],
+    'non-block tag' => ['<span style="text-align: center">a</span>', '<span>a</span>'],
+    'uppercase value is normalised' => ['<p style="TEXT-ALIGN:CENTER;">a</p>', '<p style="text-align: center">a</p>'],
+]);
+
+it('rejects style smuggling around the text-align allowance', function (string $input, string $expected): void {
+    expect((new HtmlSanitizer)->sanitize($input))->toBe($expected);
+})->with([
+    '!important' => ['<p style="text-align: center !important">a</p>', '<p>a</p>'],
+    'comment inside value' => ['<p style="text-align:/**/center">a</p>', '<p>a</p>'],
+    'css escape' => ['<p style="text-align:\63enter">a</p>', '<p>a</p>'],
+    'doubled semicolon' => ['<p style="text-align:center;;">a</p>', '<p>a</p>'],
+    'second declaration' => ['<p style="text-align:center;color:red">a</p>', '<p>a</p>'],
+    'duplicate style attributes' => ['<p style="text-align:center" style="background:url(x)">a</p>', '<p style="text-align: center">a</p>'],
+    'style on a link' => ['<a href="/x" style="text-align:center">a</a>', '<a href="/x">a</a>'],
+    'uppercase tag and attribute' => ['<P STYLE="text-align:center">a</P>', '<p style="text-align: center">a</p>'],
+    'table cell alignment' => ['<table><tbody><tr><td style="text-align:end">a</td></tr></tbody></table>', '<table><tbody><tr><td style="text-align: end">a</td></tr></tbody></table>'],
+    'target self is forced to blank' => ['<a href="https://x.qa" target="_self">a</a>', '<a href="https://x.qa" target="_blank" rel="noopener noreferrer nofollow">a</a>'],
+    'target top is forced to blank' => ['<a href="https://x.qa" target="_top" rel="opener">a</a>', '<a href="https://x.qa" target="_blank" rel="noopener noreferrer nofollow">a</a>'],
+]);

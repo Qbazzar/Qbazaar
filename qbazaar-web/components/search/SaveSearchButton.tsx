@@ -42,7 +42,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const TRIGGER = {
+/** Sizes of the page-action pill, shared with the "Add to Favorite" pill beside it. */
+export const TRIGGER = {
   /** Beside the page title on desktop (69:467). */
   header: { pill: 'h-14 px-5 text-qb-h5 [&_svg]:size-6', face: 'gap-3', label: '' },
   /** Toolbar of tablets (text pill, 544:38513) and phones (icon only, 623:30012). */

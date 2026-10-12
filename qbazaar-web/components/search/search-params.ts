@@ -6,25 +6,47 @@ function isRange(value: unknown): value is { min?: number; max?: number } {
   return bounds.length > 0 && bounds.every(([key, bound]) => (key === 'min' || key === 'max') && typeof bound === 'number' && Number.isFinite(bound));
 }
 
+/** The API keeps custom-field keys to `[a-z0-9_]` and accepts at most 10 filters. */
+const FIELD_KEY = /^[a-z0-9_]{1,64}$/;
+/** Names that match `FIELD_KEY` but would reach the object's prototype. */
+const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const MAX_FIELD_FILTERS = 10;
+/** A real `cf` is a few hundred bytes; anything bigger is not worth parsing. */
+const MAX_CF_LENGTH = 2048;
+
 /**
  * The `cf` search param back to category filters. It comes from the URL, so
- * anything that is not a string or a {min, max} range is dropped.
+ * it is bounded and checked: anything that is not a string or a {min, max}
+ * range, a key the API would refuse, a reversed range (a 422) and entries
+ * past the API's limit are dropped.
  */
 export function decodeCustomFields(raw: string | null): CustomFieldsFilter {
-  if (!raw) return {};
+  const filters: CustomFieldsFilter = Object.create(null);
+  if (!raw || raw.length > MAX_CF_LENGTH) return filters;
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return {};
+    return filters;
   }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return filters;
 
-  const filters: CustomFieldsFilter = {};
   for (const [key, value] of Object.entries(parsed)) {
-    if ((typeof value === 'string' && value !== '') || isRange(value)) filters[key] = value;
+    if (Object.keys(filters).length >= MAX_FIELD_FILTERS) break;
+    if (!FIELD_KEY.test(key) || RESERVED_KEYS.has(key)) continue;
+    if ((typeof value === 'string' && value !== '') || (isRange(value) && !isReversed(value))) filters[key] = value;
   }
   return filters;
+}
+
+function isReversed(range: { min?: number; max?: number }): boolean {
+  return range.min !== undefined && range.max !== undefined && range.max < range.min;
+}
+
+/** Keeps the filters of the fields the category defines; all of them while its fields are not known yet. */
+export function pruneCustomFields(filters: CustomFieldsFilter, allowedKeys: readonly string[] | null): CustomFieldsFilter {
+  if (!allowedKeys) return filters;
+  return Object.fromEntries(Object.entries(filters).filter(([key]) => allowedKeys.includes(key)));
 }
 
 /** Keys that only order or page the results. */

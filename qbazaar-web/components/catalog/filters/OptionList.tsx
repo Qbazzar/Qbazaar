@@ -34,13 +34,17 @@ const radio = [
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-qb-brand-active focus-visible:outline-solid',
 ].join(' ');
 
+/** " (1,234)" after a label; nothing for a count that is missing or zero, so a timed-out count never reads as 0. */
+function Count({ value }: { value: number | undefined }) {
+  if (!value) return null;
+  return <span className="font-normal tabular-nums"> ({formatNumber(value, getLocale())})</span>;
+}
+
 /**
  * Radio rows of a filter group ("Available (7,592,369)"). The design lists the
  * real options only; a chosen one is cleared from its chip or "Reset All".
  */
 export function OptionList({ name, labelledBy, options, value, onChange, labelClassName }: OptionListProps) {
-  const locale = getLocale();
-
   return (
     <div role="radiogroup" aria-labelledby={labelledBy} className="flex flex-col gap-3">
       {options.map((option) => {
@@ -50,11 +54,32 @@ export function OptionList({ name, labelledBy, options, value, onChange, labelCl
             <input type="radio" name={name} value={option.value} checked={checked} onChange={() => onChange(option.value)} className={radio} />
             <span className={cn('min-w-0', labelClassName, checked && 'text-qb-ink-body')}>
               {option.label}
-              {option.count ? <span className="font-normal tabular-nums"> ({formatNumber(option.count, locale)})</span> : null}
+              <Count value={option.count} />
             </span>
           </label>
         );
       })}
     </div>
+  );
+}
+
+interface CheckOptionProps {
+  label: string;
+  /** Matching ads, from the search facets; zero is not shown. */
+  count?: number;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+/** A single on / off row of a filter group ("Buy Now"), drawn like the radios of the other groups. */
+export function CheckOption({ label, count, checked, onChange }: CheckOptionProps) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 font-qb text-qb-body text-qb-ink-subtle">
+      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className={radio} />
+      <span className={cn('min-w-0', checked && 'text-qb-ink-body')}>
+        {label}
+        <Count value={count} />
+      </span>
+    </label>
   );
 }
