@@ -12,6 +12,9 @@ use Illuminate\Support\Str;
  * placeholders the owner edits in /admin/pages. Insert-only: a slug that is
  * already there (edited or created by hand) is never touched.
  *
+ * The bodies below are trusted static seed content, so they go in through
+ * DB::table and bypass the SanitizedHtmlTranslations cast on purpose.
+ *
  * Footer columns (display_order follows the footer order):
  *   Classifieds : careers, press, magazine, connect, mobile-apps
  *   Information : safety-tips, report-vulnerability, youth-protection,
