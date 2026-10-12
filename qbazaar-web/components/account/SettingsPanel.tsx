@@ -74,9 +74,9 @@ export function SettingsRow({ label, value, description, action, icon, className
   );
 }
 
-/** Brand text action of a settings row ("Edit", 15 px medium). */
+/** Brand text action of a settings row ("Edit", 15 px medium): a `.qb-nav` that keeps its orange under the pointer. */
 export const settingsActionClass = cn(
-  'inline-flex cursor-pointer items-center rounded-qb-xs text-qb-body-sm font-medium text-qb-brand hover:text-qb-brand-hover',
+  'qb-motion inline-flex cursor-pointer items-center text-qb-body-sm font-medium text-qb-brand',
   'disabled:pointer-events-none disabled:opacity-50',
   focusRing,
 );
