@@ -2,11 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
 
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { Badge, Chip } from '@/components/design-system/Badge';
+import { cardHover } from '@/components/design-system/card-hover';
 import { Icon } from '@/components/design-system/Icon';
+import { LocationPinSlimIcon } from '@/components/design-system/icons';
 import { useQatarPlace } from '@/components/locations/QatarPlacesProvider';
 import { formatAdAge, formatAdPrice, placeLabel } from '@/lib/ads/format';
 import { getLocale } from '@/lib/i18n/locale';
@@ -38,9 +39,10 @@ const IMAGE_SIZES: Record<CatalogCardLayout, string> = {
   tile: '(min-width: 601px) 335px, 72vw',
 };
 
+/** The reference's clickable `.qb-card`: the pointer over all of it, the 3 px lift and hover shadow. */
 const card = cn(
-  'relative overflow-hidden rounded-qb-xl border border-qb-line bg-qb-surface font-qb',
-  'transition-[box-shadow,translate] duration-200 hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+  'relative cursor-pointer overflow-hidden rounded-qb-xl border border-qb-line bg-qb-surface font-qb',
+  cardHover,
   'has-[a:focus-visible]:outline-solid has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-qb-brand-active',
 );
 
@@ -143,7 +145,7 @@ export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogA
         ) : null}
         {where ? (
           <p className={cn(meta, styles.meta)}>
-            <Icon icon={MapPin} strokeWidth={styles.pinStroke} className={cn(styles.pin, 'pinFit' in styles && styles.pinFit)} />
+            <Icon icon={LocationPinSlimIcon} strokeWidth={styles.pinStroke} className={cn(styles.pin, 'pinFit' in styles && styles.pinFit)} />
             {/* The age is worked out again at hydration, when it may have moved on by a minute. */}
             <span className="truncate" suppressHydrationWarning>
               {where}
@@ -164,8 +166,9 @@ export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogA
           <FavoriteButton
             adId={ad.id}
             adTitle={ad.title}
+            // The reference's static white heart: no transition and no hover colour.
             className={cn(
-              'size-[30px] bg-qb-surface text-qb-ink-muted shadow-qb-soft ring-0 backdrop-blur-none hover:text-qb-brand focus-visible:ring-qb-brand-active [&_svg]:stroke-[1.5]',
+              'size-[30px] cursor-pointer rounded-[15px] bg-qb-surface text-qb-ink-muted shadow-qb-soft ring-0 backdrop-blur-none transition-none hover:text-qb-ink-muted focus-visible:ring-qb-brand-active [&_svg]:stroke-[1.5] [&_svg]:transition-none',
               styles.heart,
             )}
           />

@@ -17,10 +17,17 @@ describe('CatalogHeader', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Cars' })).toHaveClass('font-qb', 'qb-desktop:text-qb-h1');
+    expect(screen.getByRole('heading', { level: 1, name: 'Cars' })).toHaveClass('font-qb', 'text-[clamp(30px,5vw,44px)]');
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveClass('hidden', 'qb-tablet:block');
     expect(screen.getByRole('link', { name: 'Vehicles' })).toHaveAttribute('href', '/c/vehicles');
-    expect(screen.getByRole('button', { name: 'Save Search' }).parentElement).toHaveClass('hidden', 'qb-desktop:flex');
+    expect(screen.getByRole('button', { name: 'Save Search' }).parentElement).toHaveClass('hidden', 'qb-tablet:flex');
+  });
+
+  it('titles all-categories smaller and keeps its breadcrumb on phones', () => {
+    render(<CatalogHeader variant="index" breadcrumbOnPhones title="Categories" breadcrumb={[{ label: 'Home', href: '/' }, { label: 'Categories' }]} />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Categories' })).toHaveClass('text-[clamp(28px,4vw,40px)]');
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).not.toHaveClass('hidden');
   });
 
   it('leaves the breadcrumb out when there is none', () => {
@@ -36,7 +43,7 @@ describe('CatalogStats', () => {
       <CatalogStats items={[{ value: '8,429', label: 'Ads' }, ...todayStat(2000, 'Today', 'en')]} />,
     );
 
-    expect(container).toHaveTextContent('8,429 Ads•+2,000 Today');
+    expect(container).toHaveTextContent('8,429 Ads • +2,000 Today');
     expect(screen.getByText('•')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByText('+2,000')).toHaveClass('text-qb-success');
   });

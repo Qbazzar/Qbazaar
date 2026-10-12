@@ -12,32 +12,40 @@ interface AdRowProps {
   ads: AdSummary[];
   /** Accessible name of the list. */
   label: string;
-  /** From 1001 px the row becomes a three-column grid or a column of list cards. */
+  /**
+   * `grid`: parent-category.html's rows, a swipeable row of 72 % cards on phones and auto-filled
+   * 220 px columns from 601 px. `list`: a swipeable row that becomes a column of list cards from 1001 px.
+   */
   desktop: 'grid' | 'list';
-  /** Ads shown from 1001 px; the swipeable row always holds all of them. */
+  /** Ads shown from 601 px (`grid`) or 1001 px (`list`); the swipeable row always holds all of them. */
   desktopLimit?: number;
   ref?: Ref<HTMLUListElement>;
 }
 
-/**
- * A swipeable row of grid cards under 1001 px, reaching the screen edge, as on
- * the category overview (539:35503, 623:28688) and "Recommended for you"
- * (655:55238, 654:51147).
- */
+const LAYOUTS = {
+  grid: {
+    list: 'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden qb-tablet:[display:grid] qb-tablet:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] qb-tablet:gap-[18px] qb-tablet:overflow-visible qb-tablet:pb-0',
+    item: 'w-[72%] shrink-0 snap-start qb-tablet:w-auto',
+    hidden: 'qb-tablet:hidden',
+  },
+  list: {
+    list: cn(
+      catalogBleed,
+      'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] qb-tablet:gap-3.5 [&::-webkit-scrollbar]:hidden',
+      'qb-desktop:mx-0 qb-desktop:flex-col qb-desktop:gap-6 qb-desktop:overflow-visible qb-desktop:px-0 qb-desktop:pb-0',
+    ),
+    item: 'w-[260px] shrink-0 snap-start qb-tablet:w-[310px] qb-desktop:w-auto',
+    hidden: 'qb-desktop:hidden',
+  },
+} as const;
+
+/** A row of listing cards that scrolls sideways on small screens (parent-category.html, the search's "Recommended for you"). */
 export function AdRow({ ads, label, desktop, desktopLimit = ads.length, ref }: AdRowProps) {
+  const layout = LAYOUTS[desktop];
   return (
-    <ul
-      ref={ref}
-      aria-label={label}
-      className={cn(
-        catalogBleed,
-        'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] qb-tablet:gap-3.5 [&::-webkit-scrollbar]:hidden',
-        'qb-desktop:mx-0 qb-desktop:overflow-visible qb-desktop:px-0 qb-desktop:pb-0',
-        desktop === 'grid' ? 'qb-desktop:[display:grid] qb-desktop:grid-cols-3 qb-desktop:gap-[17px]' : 'qb-desktop:flex-col qb-desktop:gap-6',
-      )}
-    >
+    <ul ref={ref} aria-label={label} className={layout.list}>
       {ads.map((ad, index) => (
-        <li key={ad.id} className={cn('w-[260px] shrink-0 snap-start qb-tablet:w-[310px] qb-desktop:w-auto', index >= desktopLimit && 'qb-desktop:hidden')}>
+        <li key={ad.id} className={cn(layout.item, index >= desktopLimit && layout.hidden)}>
           {desktop === 'grid' ? (
             <CatalogAdCard ad={ad} layout="tile" />
           ) : (

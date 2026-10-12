@@ -40,8 +40,8 @@ describe('SaveSearchButton', () => {
     signIn(true);
     render(<SaveSearchButton params={{ q: 'car' }} variant="toolbar" />);
 
-    expect(screen.getByRole('button', { name: 'Save Search' })).toHaveClass('w-11', 'qb-tablet:w-auto');
-    expect(screen.getByText('Save Search')).toHaveClass('sr-only', 'qb-tablet:not-sr-only');
+    expect(screen.getByRole('button', { name: 'Save Search' })).toHaveClass('size-11', 'rounded-full');
+    expect(screen.getByText('Save Search')).toHaveClass('sr-only');
   });
 
   it('asks for a name, then saves the current search under it', async () => {

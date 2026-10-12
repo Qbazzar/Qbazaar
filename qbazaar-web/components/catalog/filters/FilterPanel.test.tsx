@@ -42,7 +42,8 @@ describe('FilterPanel', () => {
     const { onApply, user } = renderPanel();
     const apply = screen.getByRole('button', { name: 'Apply Filter' });
 
-    expect(apply).toBeDisabled();
+    // Pale but still a button, as the reference's: it only applies once something changed.
+    expect(apply).toHaveAttribute('aria-disabled', 'true');
     screen.getByRole('slider', { name: 'Minimum price (QAR)' }).focus();
     await user.keyboard('{ArrowRight}{ArrowRight}');
     await user.click(screen.getByRole('radio', { name: 'Used (7)' }));
@@ -79,7 +80,8 @@ describe('FilterPanel', () => {
 
   it('leads the sheet with the fields of the design, then the radio groups', () => {
     renderPanel({ variant: 'sheet', groups: ['category', 'price', 'location', 'condition'] });
-    const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
+    // The toggles' "−" is decorative (aria-hidden), so it is left out of the names.
+    const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent?.replace(/[−+]$/, ''));
 
     expect(headings).toEqual(['Price Range (QAR)', 'City / Region', 'Category', 'Condition']);
   });

@@ -1,11 +1,11 @@
 'use client';
 
 import { useId, useState, type FormEvent } from 'react';
-import { Search } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { SearchIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -120,7 +120,7 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
               <Input
                 type="search"
                 aria-labelledby={headingId}
-                startIcon={<Icon icon={Search} />}
+                startIcon={<Icon icon={SearchIcon} />}
                 placeholder={t('catalog.filters.keyword_placeholder', 'ابحث…')}
                 value={draft.keyword}
                 onChange={(event) => patch({ keyword: event.target.value })}
@@ -151,7 +151,7 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
             {() => <PriceRangeFields min={draft.priceMin} max={draft.priceMax} onChange={(next) => patch(next)} />}
           </FilterGroup>
         ) : (
-          <FilterGroup key={key} title={t('catalog.filters.price', 'السعر')} collapsible={false}>
+          <FilterGroup key={key} title={t('catalog.filters.price', 'السعر')} collapsible={false} bodyClassName="mt-2.5">
             {() => <PriceSlider min={draft.priceMin} max={draft.priceMax} onChange={(next) => patch(next)} />}
           </FilterGroup>
         );
@@ -280,10 +280,24 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
     />
   );
 
-  // 16 / 500 on the card (250:4405), 16 / 700 in the sheet (618:26974).
-  const apply = (
-    <Button type="submit" fullWidth disabled={!canApply} className={cn('h-[46px] rounded-qb-lg', sheet ? 'font-bold' : 'font-medium')}>
-      {t('catalog.filters.apply', 'تطبيق الفلتر')}
+  // The card's button keeps the pale orange of category.html, without the disabled fade, until there
+  // is something to apply; the sheet's is always solid and then just closes it (618:26974).
+  const applyLabel = t('catalog.filters.apply', 'تطبيق الفلتر');
+  const apply = sheet ? (
+    <Button type="submit" fullWidth disabled={!canApply} className="h-[46px] rounded-qb-lg font-bold">
+      {applyLabel}
+    </Button>
+  ) : (
+    <Button
+      type="submit"
+      fullWidth
+      aria-disabled={!canApply || undefined}
+      className={cn(
+        'mt-3.5 h-auto rounded-qb-lg p-3.5 font-medium aria-disabled:pointer-events-auto aria-disabled:opacity-100',
+        !canApply && 'bg-(--color-qb-brand-pale) hover:bg-(--color-qb-brand-pale) hover:brightness-[.96]',
+      )}
+    >
+      {applyLabel}
     </Button>
   );
   const resetLabel = t('catalog.filters.reset_all', 'إعادة ضبط الكل');
@@ -309,19 +323,18 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
   const titleId = `${id}-title`;
   return (
     <form onSubmit={submit} noValidate aria-labelledby={titleId} className="font-qb">
-      <div className="flex items-center justify-between gap-4 border-b border-qb-line px-[25px] pt-[25px] pb-[22px]">
-        <h2 id={titleId} className="font-qb text-qb-h3 leading-none font-medium tracking-normal text-qb-ink">
+      <div className="mb-[22px] flex items-center justify-between gap-4">
+        <h2 id={titleId} className="font-qb text-qb-h3 leading-normal font-medium tracking-normal text-qb-ink">
           {t('catalog.filters.title', 'الفلتر')}
         </h2>
-        <button type="button" onClick={reset} className={cn('rounded-qb-xs text-qb-caption text-qb-brand hover:text-qb-brand-active', focusRing)}>
+        {/* A plain orange word in the reference, with no hover colour. */}
+        <button type="button" onClick={reset} className={cn('cursor-pointer text-qb-caption text-qb-brand', focusRing)}>
           {resetLabel}
         </button>
       </div>
-      <div className="px-[25px] pt-[22px]">
-        {chips}
-        {groups.map(group)}
-      </div>
-      <div className="px-[25px] pt-2 pb-[25px]">{apply}</div>
+      {chips}
+      {groups.map(group)}
+      {apply}
     </form>
   );
 }
