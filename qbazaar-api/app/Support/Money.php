@@ -90,4 +90,17 @@ final class Money
     {
         return BigDecimal::of($amount)->isZero();
     }
+
+    /**
+     * Two decimals with thousands separators, for display ("12,345.60"). Built
+     * from the digits of the exact string, so no float is involved.
+     */
+    public static function format(string $amount): string
+    {
+        [$whole, $cents] = explode('.', self::round($amount));
+        $sign = str_starts_with($whole, '-') ? '-' : '';
+        $grouped = preg_replace('/\B(?=(\d{3})+(?!\d))/', ',', ltrim($whole, '-'));
+
+        return $sign . $grouped . '.' . $cents;
+    }
 }
