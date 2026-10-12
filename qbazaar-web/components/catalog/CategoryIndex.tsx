@@ -2,11 +2,12 @@
 
 import { useState, type FormEvent } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
+
+import './catalog-tokens.css';
 
 import { Button } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
-import { Input } from '@/components/design-system/Input';
+import { SearchIcon } from '@/components/design-system/icons';
 import { Pagination } from '@/components/design-system/Pagination';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale, localized } from '@/lib/i18n/locale';
@@ -18,11 +19,15 @@ import { CatalogStats, todayStat } from './CatalogHeader';
 import { CategoryCard } from './CategoryTile';
 import { LoadError } from './LoadError';
 
-/** Six rows of four on desktop, as in 185:6576. */
+/** Six rows of four on desktop. */
 const PAGE_SIZE = 24;
 
+/**
+ * all-categories.html: auto-filled 280 px columns 22 px apart (four at 1440, one on phones), three
+ * columns 14 px apart on tablets (responsive.css).
+ */
 const grid =
-  '[display:grid] grid-cols-2 gap-x-2 gap-y-3.5 qb-tablet:grid-cols-3 qb-tablet:gap-x-2.5 qb-tablet:gap-y-6 qb-desktop:grid-cols-4 qb-desktop:gap-x-4 qb-desktop:px-10';
+  '[display:grid] grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-[22px] qb-tablet:grid-cols-3 qb-tablet:gap-3.5 qb-desktop:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] qb-desktop:gap-[22px]';
 
 /** The listing a search of this page opens, as the reference's `doSearch` opens the category listing. */
 export function listingSearchHref(query: string): string {
@@ -30,7 +35,7 @@ export function listingSearchHref(query: string): string {
   return keyword ? `/search?${new URLSearchParams({ q: keyword })}` : '/search';
 }
 
-/** "10 Categories • +3 Ads Today" under the page title. */
+/** "10 Categories · +3 Ads Today" under the page title. */
 export function CategoryIndexStats() {
   const locale = getLocale();
   const { data } = useMainCategoriesQuery();
@@ -39,6 +44,7 @@ export function CategoryIndexStats() {
   const today = data.reduce((sum, category) => sum + category.today_count, 0);
   return (
     <CatalogStats
+      separator="·"
       items={[
         { value: formatNumber(data.length, locale), label: tPlural('catalog.stats.categories', data.length) },
         ...todayStat(today, tPlural('catalog.stats.ads_today', today), locale),
@@ -74,27 +80,26 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
 
   return (
     <div className="font-qb">
+      {/* The reference boxes the form and leaves the input bare inside it; the box shows the keyboard focus. */}
       <form
         role="search"
         onSubmit={submit}
-        className="relative mx-auto mb-12 max-w-[1125px] qb-tablet:mb-8 qb-desktop:mb-12"
+        className="mx-auto mt-7 mb-10 flex max-w-[820px] items-center gap-3 rounded-[14px] border border-qb-line bg-qb-surface p-1.5 ps-[18px] shadow-(--shadow-qb-search-box) has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active has-[input:focus-visible]:outline-solid"
       >
         <label htmlFor="category-search" className="sr-only">
           {t('catalog.index.search_label', 'ابحث في الأقسام')}
         </label>
-        <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-4 flex items-center text-qb-ink-subtle qb-tablet:start-5">
-          <Icon icon={Search} className="size-5 qb-tablet:size-6" />
-        </span>
-        <Input
+        <Icon icon={SearchIcon} size={20} className="text-qb-icon-faint" />
+        <input
           id="category-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t('catalog.index.search_placeholder', 'ابحث في الأقسام…')}
           autoComplete="off"
-          className="h-11 rounded-[14px] ps-11 pe-4 text-qb-caption shadow-qb-card qb-tablet:h-14 qb-tablet:rounded-qb-xl qb-tablet:ps-14 qb-tablet:pe-32 qb-tablet:text-qb-body qb-desktop:text-qb-h5 [&::-webkit-search-cancel-button]:appearance-none"
+          className="w-full min-w-0 bg-transparent px-0.5 py-px font-qb text-qb-body text-qb-ink outline-none placeholder:text-qb-ink-muted [&::-webkit-search-cancel-button]:appearance-none"
         />
-        <Button type="submit" size="sm" className="absolute inset-y-2 end-2 hidden h-auto rounded-qb-sm px-[30px] text-qb-body qb-tablet:inline-flex">
+        <Button type="submit" className="h-auto rounded-qb-md px-[30px] py-3">
           {t('catalog.index.search_submit', 'بحث')}
         </Button>
       </form>
@@ -102,7 +107,7 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
       {isLoading ? (
         <div aria-busy="true" className={grid}>
           {Array.from({ length: 8 }, (_, index) => (
-            <div key={index} aria-hidden="true" className="h-[120px] animate-pulse rounded-qb-xl border border-qb-line bg-qb-surface motion-reduce:animate-none qb-tablet:h-[148px] qb-tablet:rounded-qb-2xl" />
+            <div key={index} aria-hidden="true" className="h-[159px] animate-pulse rounded-qb-xl border border-qb-line bg-qb-surface motion-reduce:animate-none" />
           ))}
         </div>
       ) : isError || !data ? (
@@ -121,7 +126,7 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
               </li>
             ))}
           </ul>
-          <Pagination page={page} totalPages={totalPages} getHref={pageHref} className="mt-6 qb-desktop:mt-8" />
+          <Pagination page={page} totalPages={totalPages} getHref={pageHref} className="mt-10" />
         </>
       )}
     </div>
