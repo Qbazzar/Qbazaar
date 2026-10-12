@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Manage;
 
+use App\Enums\ReportTarget;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Models\Report;
 use App\Services\Messaging\AdminTranscriptBuilder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ConversationController extends Controller
 {
+    private const SIDE_LIST_LIMIT = 5;
+
     public function index(Request $request): View
     {
         $search = $request->string('q')->toString();
@@ -41,10 +46,10 @@ class ConversationController extends Controller
     public function show(Request $request, Conversation $conversation, AdminTranscriptBuilder $transcript): View
     {
         $conversation->load([
-            'ad:id,title',
+            'ad:id,title,price,currency,status',
             'ad.primaryImage',
-            'buyer:id,full_name,email',
-            'seller:id,full_name,email',
+            'buyer:id,full_name,email,status',
+            'seller:id,full_name,email,status',
             'buyer.avatarMedia',
             'seller.avatarMedia',
         ]);
@@ -66,6 +71,25 @@ class ConversationController extends Controller
             'conversation' => $conversation,
             'messages' => $messages,
             'rows' => $transcript->build($messages->getCollection(), app()->getLocale()),
+            'reports' => $request->user()?->can('reports.view')
+                ? rescue(fn () => $this->reportsOn($conversation))
+                : null,
         ]);
+    }
+
+    /**
+     * The latest reports filed against the conversation itself, read through
+     * reports_target_status_idx.
+     *
+     * @return Collection<int, Report>
+     */
+    private function reportsOn(Conversation $conversation): Collection
+    {
+        return Report::query()
+            ->where('target_type', ReportTarget::CONVERSATION->value)
+            ->where('target_id', $conversation->id)
+            ->latest()
+            ->limit(self::SIDE_LIST_LIMIT)
+            ->get(['id', 'category', 'status', 'created_at']);
     }
 }

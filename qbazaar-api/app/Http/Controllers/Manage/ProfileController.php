@@ -21,7 +21,10 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): View
     {
-        return view('admin.profile.edit', ['user' => $request->user()]);
+        /** @var User $user */
+        $user = $request->user();
+
+        return view('admin.profile.edit', ['user' => $user->loadMissing(['roles', 'avatarMedia'])]);
     }
 
     public function update(Request $request): RedirectResponse

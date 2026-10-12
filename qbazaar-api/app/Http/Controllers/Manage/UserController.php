@@ -11,7 +11,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Manage\ImpersonateUserRequest;
 use App\Http\Requests\Manage\UpdateUserRolesRequest;
 use App\Models\User;
+use App\Services\Admin\EntityTimeline;
 use App\Services\Admin\StaffHierarchy;
+use App\Services\Admin\UserDetailTabs;
 use App\Services\Users\UserModerationService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
@@ -62,19 +64,40 @@ class UserController extends Controller
         ]);
     }
 
-    public function show(#[CurrentUser] User $actor, User $user): View
-    {
+    public function show(
+        Request $request,
+        #[CurrentUser]
+        User $actor,
+        User $user,
+        UserDetailTabs $tabs,
+        EntityTimeline $timeline,
+    ): View {
         $user->load(['roles', 'avatarMedia']);
         $user->loadCount('ads');
 
         $canManageUser = $this->hierarchy->canManage($actor, $user);
+        $canManageRoles = $canManageUser && $actor->can('roles.manage');
+        $activeTab = $tabs->resolve($actor, $request->string('tab')->toString());
 
         return view('admin.users.show', [
             'user' => $user,
-            'roles' => Role::orderBy('name')->get(),
+            'roles' => $canManageRoles ? Role::orderBy('name')->get() : collect(),
             'canManageUser' => $canManageUser,
-            'canManageRoles' => $canManageUser && $actor->can('roles.manage'),
+            'canManageRoles' => $canManageRoles,
+            'tabs' => $tabs->visibleTo($actor),
+            'activeTab' => $activeTab,
+            'panel' => $tabs->panel($activeTab, $user),
+            // The audit trail names staff members, so it follows the activity log's own permission.
+            'timeline' => $actor->can('activity.view') ? rescue(fn () => $timeline->forSubject($user)) : null,
         ]);
+    }
+
+    /** One tab panel of the user page, fetched the first time its tab is opened. */
+    public function tab(#[CurrentUser] User $actor, User $user, string $tab, UserDetailTabs $tabs): View
+    {
+        abort_unless(in_array($tab, $tabs->visibleTo($actor), true), 403);
+
+        return view("admin.users.tabs.{$tab}", ['user' => $user, ...$tabs->panel($tab, $user)]);
     }
 
     public function suspend(#[CurrentUser] User $actor, User $user, UserModerationService $moderation): RedirectResponse
