@@ -103,48 +103,48 @@ class AppServiceProvider extends ServiceProvider
         // Every send costs an SMS: cap each phone and each IP per day so
         // rotating either one alone cannot pump messages.
         RateLimiter::for('otp', fn (Request $r) => [
-            Limit::perMinute((int) config('qbazaar.otp.max_per_minute'))->by('otp:'.$r->ip().'|'.self::recipientKey($r)),
-            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_phone'))->by('otp-phone:'.self::recipientKey($r)),
-            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_ip'))->by('otp-ip:'.$r->ip()),
+            Limit::perMinute((int) config('qbazaar.otp.max_per_minute'))->by('otp:' . $r->ip() . '|' . self::recipientKey($r)),
+            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_phone'))->by('otp-phone:' . self::recipientKey($r)),
+            Limit::perDay((int) config('qbazaar.otp.max_per_day_per_ip'))->by('otp-ip:' . $r->ip()),
         ]);
-        RateLimiter::for('otp-verify', fn (Request $r) => Limit::perMinute((int) config('qbazaar.otp.verify_max_per_minute'))->by('otp-verify:'.$r->ip().'|'.self::recipientKey($r)));
+        RateLimiter::for('otp-verify', fn (Request $r) => Limit::perMinute((int) config('qbazaar.otp.verify_max_per_minute'))->by('otp-verify:' . $r->ip() . '|' . self::recipientKey($r)));
         RateLimiter::for('conversations', fn (Request $r) => [
-            Limit::perMinute((int) config('qbazaar.messaging.new_conversations_per_minute'))->by('conversations:'.(optional($r->user())->id ?: $r->ip())),
-            Limit::perDay((int) config('qbazaar.messaging.new_conversations_per_day'))->by('conversations-day:'.(optional($r->user())->id ?: $r->ip())),
+            Limit::perMinute((int) config('qbazaar.messaging.new_conversations_per_minute'))->by('conversations:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.messaging.new_conversations_per_day'))->by('conversations-day:' . (optional($r->user())->id ?: $r->ip())),
         ]);
         RateLimiter::for('offers', fn (Request $r) => [
-            Limit::perMinute((int) config('qbazaar.offers.max_per_minute'))->by('offers:'.(optional($r->user())->id ?: $r->ip())),
-            Limit::perDay((int) config('qbazaar.offers.max_per_day'))->by('offers-day:'.(optional($r->user())->id ?: $r->ip())),
+            Limit::perMinute((int) config('qbazaar.offers.max_per_minute'))->by('offers:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.offers.max_per_day'))->by('offers-day:' . (optional($r->user())->id ?: $r->ip())),
         ]);
         RateLimiter::for('purchase-requests', fn (Request $r) => [
-            Limit::perMinute((int) config('qbazaar.purchase_requests.max_per_minute'))->by('purchase-requests:'.(optional($r->user())->id ?: $r->ip())),
-            Limit::perDay((int) config('qbazaar.purchase_requests.max_per_day'))->by('purchase-requests-day:'.(optional($r->user())->id ?: $r->ip())),
+            Limit::perMinute((int) config('qbazaar.purchase_requests.max_per_minute'))->by('purchase-requests:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.purchase_requests.max_per_day'))->by('purchase-requests-day:' . (optional($r->user())->id ?: $r->ip())),
         ]);
         RateLimiter::for('integration-test', fn (Request $r) => [
-            Limit::perMinute(3)->by('integration-test:'.(optional($r->user())->id ?: $r->ip())),
-            Limit::perHour(20)->by('integration-test-hour:'.(optional($r->user())->id ?: $r->ip())),
+            Limit::perMinute(3)->by('integration-test:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perHour(20)->by('integration-test-hour:' . (optional($r->user())->id ?: $r->ip())),
         ]);
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('publish', fn (Request $r) => Limit::perMinute((int) config('qbazaar.ads.publish_attempts_per_minute_per_user'))->by(optional($r->user())->id ?: $r->ip()));
-        RateLimiter::for('uploads', fn (Request $r) => Limit::perMinute((int) config('qbazaar.uploads.requests_per_minute'))->by('uploads:'.(optional($r->user())->id ?: $r->ip())));
+        RateLimiter::for('uploads', fn (Request $r) => Limit::perMinute((int) config('qbazaar.uploads.requests_per_minute'))->by('uploads:' . (optional($r->user())->id ?: $r->ip())));
         RateLimiter::for('drafts', fn (Request $r) => Limit::perHour((int) config('qbazaar.ads.drafts_per_hour_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('messages', fn (Request $r) => [
             Limit::perMinute((int) config('qbazaar.messaging.rate_limit_per_minute'))->by(optional($r->user())->id ?: $r->ip()),
             ...($r->hasFile('image') ? [
-                Limit::perMinute((int) config('qbazaar.messaging.images_per_minute'))->by('chat-images:'.(optional($r->user())->id ?: $r->ip())),
-                Limit::perDay((int) config('qbazaar.messaging.images_per_day'))->by('chat-images-day:'.(optional($r->user())->id ?: $r->ip())),
+                Limit::perMinute((int) config('qbazaar.messaging.images_per_minute'))->by('chat-images:' . (optional($r->user())->id ?: $r->ip())),
+                Limit::perDay((int) config('qbazaar.messaging.images_per_day'))->by('chat-images-day:' . (optional($r->user())->id ?: $r->ip())),
             ] : []),
         ]);
         RateLimiter::for('api', fn (Request $r) => $r->user() !== null
-            ? Limit::perMinute((int) config('qbazaar.api.requests_per_minute'))->by('api-user:'.$r->user()->getAuthIdentifier())
-            : Limit::perMinute((int) config('qbazaar.api.guest_requests_per_minute'))->by('api-guest:'.$r->ip()));
+            ? Limit::perMinute((int) config('qbazaar.api.requests_per_minute'))->by('api-user:' . $r->user()->getAuthIdentifier())
+            : Limit::perMinute((int) config('qbazaar.api.guest_requests_per_minute'))->by('api-guest:' . $r->ip()));
         // Each hit sends an email or SMS.
         RateLimiter::for('contact-change', fn (Request $r) => Limit::perHour((int) config('qbazaar.account.contact_change_attempts_per_hour'))
-            ->by('contact-change:'.(optional($r->user())->id ?: $r->ip())));
+            ->by('contact-change:' . (optional($r->user())->id ?: $r->ip())));
 
         RateLimiter::for('follows', fn (Request $r) => [
-            Limit::perMinute((int) config('qbazaar.social.follows_per_minute'))->by('follows:'.(optional($r->user())->id ?: $r->ip())),
-            Limit::perDay((int) config('qbazaar.social.follows_per_day'))->by('follows-day:'.(optional($r->user())->id ?: $r->ip())),
+            Limit::perMinute((int) config('qbazaar.social.follows_per_minute'))->by('follows:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perDay((int) config('qbazaar.social.follows_per_day'))->by('follows-day:' . (optional($r->user())->id ?: $r->ip())),
         ]);
 
         Event::listen(ConnectionEstablished::class, static function (ConnectionEstablished $event): void {
