@@ -8,6 +8,7 @@ const { loadScenarios } = require('../scenarios');
 const { selectPages } = require('./pages');
 const targets = require('../targets.json');
 const { NEEDS_LOGIN } = require('./config');
+const { open: browserOpen, ensureBrowser } = require('./browser');
 
 const SWEEP_KINDS = new Set(['button', 'link', 'tab', 'toggle/switch', 'checkbox/radio', 'accordion', 'dropdown/select', 'input', 'chip/pill', 'card', 'pagination', 'menu']);
 // A missing counterpart is only a finding for controls a person operates, not for data cards or paging.
@@ -143,7 +144,7 @@ async function sweepPage(env, pageDef, width, skipped) {
         await sweepElement(env, ctx, element);
       } catch (error) {
         skipped.push({ what: `inventory ${element.id} @${width}`, reason: `sweep failed: ${error.message.split(String.fromCharCode(10))[0].slice(0, 160)}` });
-        await Promise.all([reference, target].map((side) => require('./browser').open(side.page, side.landed.url))).catch(() => {});
+        await Promise.all([reference, target].map((side) => browserOpen(side.page, side.landed.url))).catch(() => {});
       }
     }
   } finally {
@@ -159,6 +160,7 @@ async function runSweep(env, skipped) {
     if (pageDef.login && !env.storageState) { skipped.push({ what: `inventory sweep ${pageDef.id}`, reason: NEEDS_LOGIN }); continue; }
     for (const width of pageDef.viewports) {
       process.stdout.write(`inventory ${pageDef.id} @${width} ... `);
+      await ensureBrowser(env);
       await sweepPage(env, pageDef, width, skipped);
       console.log('done');
     }

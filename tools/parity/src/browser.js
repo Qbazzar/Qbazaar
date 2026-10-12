@@ -8,6 +8,13 @@ async function launch(config) {
   return chromium.launch({ channel: config.chromeChannel });
 }
 
+/** Relaunches Chrome when it went away mid-run (killed or crashed), so the next page or group still runs. */
+async function ensureBrowser(env) {
+  if (env.browser.isConnected()) return;
+  console.log('(chrome went away, relaunching)');
+  env.browser = await launch(env.config);
+}
+
 async function proxyApiWithCors(context, config) {
   const origin = new URL(config.target).origin;
   const cors = {
@@ -102,4 +109,4 @@ async function loginDemo(browser, config) {
   return state;
 }
 
-module.exports = { launch, newContext, targetContext, open, loginDemo, waitForSettled, FREEZE_CSS };
+module.exports = { launch, ensureBrowser, newContext, targetContext, open, loginDemo, waitForSettled, FREEZE_CSS };

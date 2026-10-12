@@ -1,7 +1,7 @@
 // Prototype flows: clicking an element on a reference page lands on a reference page; the matching
 // element on the target must land on the route that page maps to.
 const { openSide, closeSide } = require('./sides');
-const { open: browserOpen } = require('./browser');
+const { open: browserOpen, ensureBrowser } = require('./browser');
 const { navigationFlows } = require('./spec');
 const { selectPages } = require('./pages');
 const { NEEDS_LOGIN } = require('./config');
@@ -145,8 +145,8 @@ async function runGroup(env, group) {
   const skipped = [];
   try {
     for (const flow of flows) {
-      const description = await reference.page.evaluate(describeReferenceElement, { selector: flow.refSelector, drawerSelector: REFERENCE_DRAWER, crumb: isCrumbFlow(flow) });
       try {
+        const description = await reference.page.evaluate(describeReferenceElement, { selector: flow.refSelector, drawerSelector: REFERENCE_DRAWER, crumb: isCrumbFlow(flow) });
         const reason = await checkFlow(env, flow, { description, target, viewport });
         if (reason) skipped.push({ what: `flow ${flow.page}@${width}`, reason });
       } catch (error) {
@@ -155,8 +155,8 @@ async function runGroup(env, group) {
       }
     }
   } finally {
-    await closeSide(env, reference);
-    await closeSide(env, target);
+    await closeSide(env, reference).catch(() => {});
+    await closeSide(env, target).catch(() => {});
   }
   return skipped;
 }
@@ -188,6 +188,7 @@ async function runFlows(env, skipped) {
   for (const group of groupFlows(config, selectPages(config))) {
     if (group.login && !env.storageState) { skipped.push({ what: `flows ${group.pageDef.id}@${group.width}`, reason: NEEDS_LOGIN }); continue; }
     process.stdout.write(`flows ${group.pageDef.id} @${group.width} login=${group.login} (${group.flows.length}) ... `);
+    await ensureBrowser(env);
     skipped.push(...(await runGroup(env, group)));
     console.log('done');
   }

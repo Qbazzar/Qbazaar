@@ -33,6 +33,7 @@ async function runScenarios(env, pages, skipped) {
     for (const width of scenario.viewports.filter((w) => config.viewports.some((v) => v.width === w))) {
       process.stdout.write(`scenario ${scenario.id} @${width} ... `);
       try {
+        await browserTools.ensureBrowser(env);
         await runScenario(env, scenario, config.viewports.find((v) => v.width === width));
         console.log('done');
       } catch (error) {
@@ -40,6 +41,17 @@ async function runScenarios(env, pages, skipped) {
         skipped.push({ what: `scenario ${scenario.id} @${width}`, reason: `run failed: ${error.message.split(String.fromCharCode(10))[0]}` });
       }
     }
+  }
+}
+
+// A phase that breaks (a browser killed under it, say) is listed under Skipped; the report keeps what ran.
+async function guarded(name, env, skipped, work) {
+  try {
+    await browserTools.ensureBrowser(env);
+    await work();
+  } catch (error) {
+    console.log(`${name} stopped: ${error.message.split(String.fromCharCode(10))[0]}`);
+    skipped.push({ what: name, reason: `stopped: ${error.message.split(String.fromCharCode(10))[0]}` });
   }
 }
 
@@ -61,6 +73,7 @@ async function main() {
         const viewport = config.viewports.find((v) => v.width === width);
         process.stdout.write(`${pageDef.id} @${width} ... `);
         try {
+          await browserTools.ensureBrowser(env);
           await (config.locale === 'ar' ? auditRtl : auditPage)(env, pageDef, viewport);
           console.log(`${findings.list.filter((f) => f.page === pageDef.id && f.viewport === width).length} findings`);
         } catch (error) {
@@ -69,11 +82,11 @@ async function main() {
         }
       }
     }
-    await runScenarios(env, pages, skipped);
-    if (!config.skipFlows) await runFlows(env, skipped);
-    if (!config.skipInventory) await runSweep(env, skipped);
+    await guarded('scenarios', env, skipped, () => runScenarios(env, pages, skipped));
+    if (!config.skipFlows) await guarded('flows', env, skipped, () => runFlows(env, skipped));
+    if (!config.skipInventory) await guarded('inventory sweep', env, skipped, () => runSweep(env, skipped));
   } finally {
-    await browser.close();
+    await env.browser.close().catch(() => {});
   }
   skipped.push(...env.warnings.map((w) => ({ ...w, reason: `warning: ${w.reason}` })));
   const meta = { target: config.target, reference: config.reference, locale: config.locale, viewports: config.viewports.map((v) => v.width), finishedAt: new Date().toISOString() };
