@@ -6,6 +6,7 @@ namespace App\Services\Settings;
 
 use App\Enums\IntegrationSetting;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -25,8 +26,10 @@ class IntegrationConfigApplier
     {
         try {
             $this->apply();
-        } catch (Throwable) {
-            // Table not migrated yet (fresh install, CI before migrate): .env alone applies.
+        } catch (Throwable $e) {
+            // Table not migrated yet (fresh install) or cache down: .env alone applies.
+            // Class only; a message could carry credential text.
+            Log::warning('integration_settings.overlay_failed', ['exception' => $e::class]);
         }
     }
 

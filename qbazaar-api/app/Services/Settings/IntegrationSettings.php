@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Settings;
 
+use App\Enums\IntegrationFieldKind;
 use App\Enums\IntegrationSetting;
 use App\Models\IntegrationSettingRow;
 use App\Models\User;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -19,19 +21,31 @@ use Illuminate\Support\Facades\DB;
  */
 class IntegrationSettings
 {
+    /** @var array<string, array{value: string, secret: bool}>|null */
+    private ?array $rowsMemo = null;
+
+    /** @var array<string, string|null> */
+    private array $valueMemo = [];
+
     private const string ROWS_KEY = 'integration_settings_rows';
 
     private const string PUBLIC_KEY = 'integration_settings_public';
 
     public function get(IntegrationSetting $setting): ?string
     {
-        $row = $this->rows()[$setting->value] ?? null;
-
-        if ($row === null || $row['value'] === '') {
-            return null;
+        if (array_key_exists($setting->value, $this->valueMemo)) {
+            return $this->valueMemo[$setting->value];
         }
 
-        return $row['secret'] ? $this->decrypt($row['value']) : $row['value'];
+        $row = $this->rows()[$setting->value] ?? null;
+
+        $value = match (true) {
+            $row === null, $row['value'] === '' => null,
+            $row['secret'] => $this->decrypt($row['value']),
+            default => $row['value'],
+        };
+
+        return $this->valueMemo[$setting->value] = $value;
     }
 
     public function isSet(IntegrationSetting $setting): bool
@@ -58,7 +72,10 @@ class IntegrationSettings
             return null;
         }
 
-        return mb_strlen($value) >= 12 ? '•••• ' . mb_substr($value, -4) : '••••';
+        // Multi-line secrets (PEM, JSON) and short tokens reveal nothing, not even a suffix.
+        $revealsSuffix = $setting->definition()->kind !== IntegrationFieldKind::TEXTAREA && mb_strlen($value) >= 12;
+
+        return $revealsSuffix ? '•••• ' . mb_substr($value, -4) : '••••';
     }
 
     public function put(IntegrationSetting $setting, string $value, User $actor): void
@@ -96,33 +113,28 @@ class IntegrationSettings
     }
 
     /**
+     * Built from the registry's public flag so a field is exposed only by
+     * declaring itself public there.
+     *
      * @return array<string, mixed>
      */
     private function buildPublicPayload(): array
     {
-        $payload = [
-            'contact' => [
-                'support_email' => $this->get(IntegrationSetting::CONTACT_SUPPORT_EMAIL),
-                'phone' => $this->get(IntegrationSetting::CONTACT_PHONE),
-                'whatsapp' => $this->get(IntegrationSetting::CONTACT_WHATSAPP),
-                'address' => ['ar' => $this->get(IntegrationSetting::CONTACT_ADDRESS_AR), 'en' => $this->get(IntegrationSetting::CONTACT_ADDRESS_EN)],
-                'working_hours' => ['ar' => $this->get(IntegrationSetting::CONTACT_HOURS_AR), 'en' => $this->get(IntegrationSetting::CONTACT_HOURS_EN)],
-            ],
-            'social' => [],
-            'analytics' => ['ga4_measurement_id' => $this->get(IntegrationSetting::GOOGLE_GA4_MEASUREMENT_ID)],
-            'antibot' => [
-                'turnstile_enabled' => (bool) $this->enabled(IntegrationSetting::TURNSTILE_ENABLED),
-                'turnstile_site_key' => $this->get(IntegrationSetting::TURNSTILE_SITE_KEY),
-            ],
-        ];
+        $payload = [];
 
-        foreach ([
-            'instagram' => IntegrationSetting::SOCIAL_INSTAGRAM, 'x' => IntegrationSetting::SOCIAL_X,
-            'facebook' => IntegrationSetting::SOCIAL_FACEBOOK, 'tiktok' => IntegrationSetting::SOCIAL_TIKTOK,
-            'snapchat' => IntegrationSetting::SOCIAL_SNAPCHAT, 'youtube' => IntegrationSetting::SOCIAL_YOUTUBE,
-            'linkedin' => IntegrationSetting::SOCIAL_LINKEDIN,
-        ] as $name => $setting) {
-            $payload['social'][$name] = $this->get($setting);
+        foreach (IntegrationSetting::cases() as $setting) {
+            $definition = $setting->definition();
+            $path = $setting->publicPath();
+
+            if (! $definition->public || $path === null) {
+                continue;
+            }
+
+            $value = $definition->kind === IntegrationFieldKind::TOGGLE
+                ? (bool) $this->enabled($setting)
+                : $this->get($setting);
+
+            Arr::set($payload, $path, $value);
         }
 
         return $payload;
@@ -134,7 +146,7 @@ class IntegrationSettings
     private function rows(): array
     {
         /** @var array<string, array{value: string, secret: bool}> */
-        return Cache::rememberForever(
+        return $this->rowsMemo ??= Cache::rememberForever(
             self::ROWS_KEY,
             fn (): array => IntegrationSettingRow::query()->get()
                 ->mapWithKeys(fn (IntegrationSettingRow $row): array => [
@@ -155,9 +167,18 @@ class IntegrationSettings
 
     private function flushAfterCommit(): void
     {
+        $this->forgetMemo();
+
         DB::afterCommit(function (): void {
+            $this->forgetMemo();
             Cache::forget(self::ROWS_KEY);
             Cache::forget(self::PUBLIC_KEY);
         });
+    }
+
+    private function forgetMemo(): void
+    {
+        $this->rowsMemo = null;
+        $this->valueMemo = [];
     }
 }

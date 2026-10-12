@@ -33,9 +33,11 @@ class UpdateIntegrationSettingsAction
         DB::transaction(function () use ($values, $clear, $groups, $actor, &$changed): void {
             foreach ($groups as $group) {
                 foreach (IntegrationSetting::forGroup($group) as $setting) {
-                    if ($this->apply($setting, $values, $clear, $actor)) {
+                    $outcome = $this->apply($setting, $values, $clear, $actor);
+
+                    if ($outcome !== null) {
                         $changed[] = $setting;
-                        $this->audit($setting, $actor);
+                        $this->audit($setting, $outcome, $actor);
                     }
                 }
             }
@@ -50,47 +52,47 @@ class UpdateIntegrationSettingsAction
      * @param array<string, mixed> $values
      * @param array<string, mixed> $clear
      */
-    private function apply(IntegrationSetting $setting, array $values, array $clear, User $actor): bool
+    private function apply(IntegrationSetting $setting, array $values, array $clear, User $actor): ?string
     {
         $definition = $setting->definition();
         $current = $this->settings->get($setting);
 
         if (! empty($clear[$setting->value])) {
-            return $current !== null && $this->remove($setting);
+            return $current !== null ? $this->remove($setting) : null;
         }
 
         if (! array_key_exists($setting->value, $values)) {
-            return false;
+            return null;
         }
 
         $new = trim((string) $values[$setting->value]);
 
         if ($new === '') {
-            return ! $definition->secret && $current !== null && $this->remove($setting);
+            return ! $definition->secret && $current !== null ? $this->remove($setting) : null;
         }
 
         if ($new === $current) {
-            return false;
+            return null;
         }
 
         $this->settings->put($setting, $new, $actor);
 
-        return true;
+        return 'set';
     }
 
-    private function remove(IntegrationSetting $setting): bool
+    private function remove(IntegrationSetting $setting): string
     {
         $this->settings->forget($setting);
 
-        return true;
+        return 'cleared';
     }
 
-    private function audit(IntegrationSetting $setting, User $actor): void
+    private function audit(IntegrationSetting $setting, string $action, User $actor): void
     {
         activity('settings')
             ->causedBy($actor)
             ->event('updated')
-            ->withProperties(['key' => $setting->value])
+            ->withProperties(['key' => $setting->value, 'action' => $action])
             ->log('Integration setting updated');
     }
 }

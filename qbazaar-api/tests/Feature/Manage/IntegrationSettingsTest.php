@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\IntegrationGroup;
 use App\Enums\IntegrationSetting;
 use App\Enums\PlatformSetting;
+use App\Mail\IntegrationTestMail;
 use App\Models\IntegrationSettingRow;
 use App\Models\User;
 use App\Services\Settings\IntegrationConfigApplier;
@@ -13,14 +14,19 @@ use App\Services\Settings\IntegrationTester;
 use App\Services\Settings\WorkerRestarter;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 use function Pest\Laravel\actingAs;
 
 use Spatie\Activitylog\Models\Activity;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
@@ -163,7 +169,7 @@ it('audits integration changes by key without any value', function (): void {
 
     $logs = Activity::query()->where('description', 'Integration setting updated')->get();
 
-    expect($logs->pluck('properties')->map->toArray()->all())->toContain(['key' => 'email_api_key'], ['key' => 'contact_phone']);
+    expect($logs->pluck('properties')->map->toArray()->all())->toContain(['key' => 'email_api_key', 'action' => 'set'], ['key' => 'contact_phone', 'action' => 'set']);
     expect(json_encode($logs->toArray()))->not->toContain(SECRET_KEY_VALUE)->not->toContain('97444000000');
 });
 
@@ -181,6 +187,8 @@ it('validates contact, key and credential formats', function (array $input, stri
     'not a url' => [['social_x' => 'x.com/q'], 'social_x'],
     'bad ga4 id' => [['google_ga4_measurement_id' => 'UA-123'], 'google_ga4_measurement_id'],
     'service account without client_email' => [['push_service_account' => '{"project_id":"p"}'], 'push_service_account'],
+    'service account without private_key' => [['push_service_account' => '{"type":"service_account","project_id":"p","client_email":"a@b.c"}'], 'push_service_account'],
+    'service account wrong type' => [['push_service_account' => '{"type":"authorized_user","project_id":"p","client_email":"a@b.c","private_key":"k"}'], 'push_service_account'],
     'service account not json' => [['push_service_account' => 'hello'], 'push_service_account'],
     'apple key not pem' => [['apple_private_key' => 'abc'], 'apple_private_key'],
     'unknown payment provider' => [['payment_provider' => 'bitcoin'], 'payment_provider'],
@@ -195,7 +203,7 @@ it('accepts well-formed values for every group', function (): void {
         'social_youtube' => 'https://youtube.com/@qbazaar',
         'google_ga4_measurement_id' => 'G-ABCD123456',
         'apple_private_key' => $pem,
-        'push_service_account' => '{"project_id":"p","client_email":"x@p.iam.gserviceaccount.com"}',
+        'push_service_account' => '{"type":"service_account","project_id":"p","client_email":"x@p.iam.gserviceaccount.com","private_key":"k"}',
         'sms_account_sid' => 'AC' . str_repeat('a', 32),
         'payment_provider' => 'tap',
         'payment_mode' => 'live',
@@ -289,49 +297,133 @@ it('reads a changed value after the cache is busted by a save', function (): voi
     Cache::flush();
 });
 
-it('sends a test email through the mailer and rate limits the action', function (): void {
+it('sends the test email only to the signed-in admin and rate limits the action', function (): void {
     Mail::fake();
 
     foreach (range(1, 3) as $_) {
-        actingAs($this->admin)->post('/admin/settings/test-email', ['test_email' => 'me@example.com'])
+        actingAs($this->admin)->post('/admin/settings/test-email', ['test_email' => 'victim@example.com'])
             ->assertRedirect('/admin/settings#email')
             ->assertSessionHas('status');
     }
 
-    actingAs($this->admin)->post('/admin/settings/test-email', ['test_email' => 'me@example.com'])->assertStatus(429);
+    actingAs($this->admin)->post('/admin/settings/test-email')->assertStatus(429);
 
     Mail::assertSentCount(3);
+    Mail::assertSent(IntegrationTestMail::class, fn (IntegrationTestMail $mail): bool => $mail->hasTo($this->admin->email) && ! $mail->hasTo('victim@example.com'));
 });
 
-it('validates the test email address', function (): void {
-    Mail::fake();
-
-    actingAs($this->admin)->from('/admin/settings')->post('/admin/settings/test-email', ['test_email' => 'nope'])
-        ->assertSessionHasErrors('test_email');
-
-    Mail::assertNothingSent();
-});
-
-it('sends a test SMS through the tester and rate limits the action', function (): void {
-    $this->mock(IntegrationTester::class)->shouldReceive('sendSms')->with('+97455000000')->times(3);
+it('sends the test SMS only to the admin\'s own verified phone and rate limits the action', function (): void {
+    $this->admin->forceFill(['phone' => '+97455000001', 'phone_verified' => true])->save();
+    $this->mock(IntegrationTester::class)->shouldReceive('sendSms')->with('+97455000001')->times(3);
 
     foreach (range(1, 3) as $_) {
-        actingAs($this->admin)->post('/admin/settings/test-sms', ['test_phone' => '+97455000000'])
+        actingAs($this->admin)->post('/admin/settings/test-sms', ['test_phone' => '+97450000000'])
             ->assertRedirect('/admin/settings#sms')
             ->assertSessionHas('status');
     }
 
-    actingAs($this->admin)->post('/admin/settings/test-sms', ['test_phone' => '+97455000000'])->assertStatus(429);
+    actingAs($this->admin)->post('/admin/settings/test-sms')->assertStatus(429);
+});
+
+it('refuses the test SMS when the admin has no verified phone', function (): void {
+    $this->admin->forceFill(['phone' => '+97455000001', 'phone_verified' => false])->save();
+    $this->mock(IntegrationTester::class)->shouldReceive('sendSms')->never();
+
+    actingAs($this->admin)->post('/admin/settings/test-sms')->assertSessionHasErrors('test_phone');
 });
 
 it('reports a failed test send without leaking the provider message', function (): void {
+    $this->admin->forceFill(['phone' => '+97455000001', 'phone_verified' => true])->save();
     $this->mock(IntegrationTester::class)->shouldReceive('sendSms')->andThrow(new RuntimeException('auth failed for ' . SECRET_KEY_VALUE));
 
     $this->followingRedirects();
-    $response = actingAs($this->admin)->post('/admin/settings/test-sms', ['test_phone' => '+97455000000']);
+    $response = actingAs($this->admin)->post('/admin/settings/test-sms');
 
     expect($response->getContent())->not->toContain(SECRET_KEY_VALUE)
         ->and($response->getContent())->toContain(e(__('admin.integrations.test_failed')));
+});
+
+it('never marks a secret field as public', function (): void {
+    foreach (IntegrationSetting::cases() as $setting) {
+        $definition = $setting->definition();
+
+        expect($definition->secret && $definition->public)->toBeFalse("{$setting->value} is secret and public");
+        expect($definition->public)->toBe($setting->publicPath() !== null, "{$setting->value} public flag and path disagree");
+    }
+});
+
+it('builds the public payload from exactly the fields flagged public', function (): void {
+    $expected = collect(IntegrationSetting::cases())
+        ->filter(fn (IntegrationSetting $s): bool => $s->definition()->public)
+        ->map(fn (IntegrationSetting $s): string => $s->publicPath())
+        ->sort()->values()->all();
+
+    $actual = collect(Arr::dot(integrations()->publicPayload()))->keys()->sort()->values()->all();
+
+    expect($actual)->toBe($expected);
+});
+
+it('masks multi-line secrets without revealing any characters', function (): void {
+    $json = '{"type":"service_account","project_id":"p","client_email":"x@p.iam","private_key":"SECRETKEYEND"}';
+    integrations()->put(IntegrationSetting::PUSH_SERVICE_ACCOUNT, $json, $this->admin);
+
+    expect(integrations()->masked(IntegrationSetting::PUSH_SERVICE_ACCOUNT))->toBe('••••');
+});
+
+it('treats a secret that cannot be decrypted as unset and falls back to env', function (): void {
+    config(['services.twilio.token' => 'env-token']);
+    DB::table('integration_settings')->insert([
+        'key' => 'sms_auth_token',
+        'value' => Crypt::encryptString('old-token'),
+        'is_secret' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    DB::table('integration_settings')->where('key', 'sms_auth_token')->update(['value' => 'not-a-valid-ciphertext']);
+    app()->forgetInstance(IntegrationSettings::class);
+    Cache::flush();
+
+    expect(integrations()->get(IntegrationSetting::SMS_AUTH_TOKEN))->toBeNull();
+
+    app(IntegrationConfigApplier::class)->apply();
+
+    expect(config('services.twilio.token'))->toBe('env-token');
+});
+
+it('logs only the exception class when the overlay fails', function (): void {
+    Log::spy();
+    $broken = Mockery::mock(IntegrationSettings::class);
+    $broken->shouldReceive('get')->andThrow(new RuntimeException('leaked ' . SECRET_KEY_VALUE));
+
+    (new IntegrationConfigApplier($broken, app('config')))->applySafely();
+
+    Log::shouldHaveReceived('warning')->once()->with('integration_settings.overlay_failed', ['exception' => RuntimeException::class]);
+});
+
+it('reads the stored rows once however many settings the overlay reads', function (): void {
+    integrations()->put(IntegrationSetting::EMAIL_API_KEY, 'db-resend', $this->admin);
+    Cache::flush();
+    app()->forgetInstance(IntegrationSettings::class);
+
+    DB::enableQueryLog();
+    app(IntegrationConfigApplier::class)->apply();
+    app(IntegrationConfigApplier::class)->apply();
+
+    expect(DB::getQueryLog())->toHaveCount(1);
+});
+
+it('registers the integrations.manage permission through a migration for super_admin only', function (): void {
+    Permission::query()->where('name', 'integrations.manage')->delete();
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $migration = require database_path('migrations/2026_10_12_000002_grant_integrations_manage_permission.php');
+    $migration->up();
+    $migration->up();
+
+    expect(Permission::query()->where('name', 'integrations.manage')->count())->toBe(1)
+        ->and(Role::findByName('super_admin', 'web')->hasPermissionTo('integrations.manage'))->toBeTrue()
+        ->and(Role::findByName('moderator', 'web')->hasPermissionTo('integrations.manage'))->toBeFalse()
+        ->and(Role::findByName('support', 'web')->hasPermissionTo('integrations.manage'))->toBeFalse();
 });
 
 it('lists the payment provider options and the read-only dashboard URLs', function (): void {
@@ -341,7 +433,10 @@ it('lists the payment provider options and the read-only dashboard URLs', functi
         $response->assertSee('value="' . $provider . '"', false);
     }
 
-    $response->assertSee('/api/v1/payments/webhook', false)->assertSee('readonly', false);
+    config(['app.url' => 'https://api.example.test']);
+    $response = actingAs($this->admin)->get('/admin/settings')->assertOk();
+
+    $response->assertSee('https://api.example.test/api/v1/payments/webhook', false)->assertSee('readonly', false);
 });
 
 it('resolves the native resend mailer once a key is stored', function (): void {

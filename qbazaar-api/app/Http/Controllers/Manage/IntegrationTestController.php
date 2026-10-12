@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Manage\SendIntegrationTestRequest;
+use App\Models\User;
 use App\Services\Settings\IntegrationTester;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +16,9 @@ class IntegrationTestController extends Controller
 {
     public function email(SendIntegrationTestRequest $request, IntegrationTester $tester): RedirectResponse
     {
-        $to = $request->validated('test_email');
+        /** @var User $admin */
+        $admin = $request->user();
+        $to = $admin->email;
 
         return $this->attempt(
             fn () => $tester->sendEmail($to),
@@ -27,7 +30,14 @@ class IntegrationTestController extends Controller
 
     public function sms(SendIntegrationTestRequest $request, IntegrationTester $tester): RedirectResponse
     {
-        $to = $request->validated('test_phone');
+        /** @var User $admin */
+        $admin = $request->user();
+
+        if (! $admin->phone_verified || $admin->phone === '') {
+            return $this->failure('sms', 'test_phone', __('admin.integrations.test_sms_no_phone'));
+        }
+
+        $to = $admin->phone;
 
         return $this->attempt(
             fn () => $tester->sendSms($to),
@@ -42,16 +52,24 @@ class IntegrationTestController extends Controller
      */
     private function attempt(callable $send, string $tab, string $errorKey, string $success): RedirectResponse
     {
-        $back = redirect()->to(route('admin.settings.edit') . '#' . $tab);
-
         try {
             $send();
         } catch (Throwable $e) {
             Log::warning('integration_settings.test_failed', ['tab' => $tab, 'exception' => $e::class]);
 
-            return $back->withErrors([$errorKey => __('admin.integrations.test_failed')]);
+            return $this->failure($tab, $errorKey, __('admin.integrations.test_failed'));
         }
 
-        return $back->with('status', $success);
+        return redirect()->to($this->settingsUrl($tab))->with('status', $success);
+    }
+
+    private function failure(string $tab, string $errorKey, string $message): RedirectResponse
+    {
+        return redirect()->to($this->settingsUrl($tab))->withErrors([$errorKey => $message]);
+    }
+
+    private function settingsUrl(string $tab): string
+    {
+        return route('admin.settings.edit') . '#' . $tab;
     }
 }

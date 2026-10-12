@@ -28,6 +28,7 @@ use App\Services\Moderation\ModerationRulesService;
 use App\Services\Payments\CashGateway;
 use App\Services\Payments\PaymentGateways;
 use App\Services\Settings\IntegrationConfigApplier;
+use App\Services\Settings\IntegrationSettings;
 use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -50,6 +51,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // One cache read per request/job, however many times the overlay and views ask.
+        $this->app->scoped(IntegrationSettings::class);
+
         // Scoped, not a singleton: a long-lived Horizon worker must pick up
         // rules the admin edits, so the parsed lists live for one request or
         // job and the shared copy stays in the cache.

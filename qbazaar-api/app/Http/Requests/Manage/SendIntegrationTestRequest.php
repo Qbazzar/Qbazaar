@@ -6,6 +6,10 @@ namespace App\Http\Requests\Manage;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Test sends take no recipient input: they always go to the signed-in admin,
+ * so the action cannot be used to message third parties.
+ */
 class SendIntegrationTestRequest extends FormRequest
 {
     public function authorize(): bool
@@ -18,9 +22,6 @@ class SendIntegrationTestRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'test_email' => ['sometimes', 'required', 'email:rfc', 'max:190'],
-            'test_phone' => ['sometimes', 'required', 'regex:/^\+[1-9]\d{6,14}$/'],
-        ];
+        return [];
     }
 }

@@ -108,6 +108,34 @@ enum IntegrationSetting: string
     }
 
     /**
+     * Where a public setting sits in the public API payload. Null for any
+     * setting that is not public.
+     */
+    public function publicPath(): ?string
+    {
+        return match ($this) {
+            self::CONTACT_SUPPORT_EMAIL => 'contact.support_email',
+            self::CONTACT_PHONE => 'contact.phone',
+            self::CONTACT_WHATSAPP => 'contact.whatsapp',
+            self::CONTACT_ADDRESS_AR => 'contact.address.ar',
+            self::CONTACT_ADDRESS_EN => 'contact.address.en',
+            self::CONTACT_HOURS_AR => 'contact.working_hours.ar',
+            self::CONTACT_HOURS_EN => 'contact.working_hours.en',
+            self::SOCIAL_INSTAGRAM => 'social.instagram',
+            self::SOCIAL_X => 'social.x',
+            self::SOCIAL_FACEBOOK => 'social.facebook',
+            self::SOCIAL_TIKTOK => 'social.tiktok',
+            self::SOCIAL_SNAPCHAT => 'social.snapchat',
+            self::SOCIAL_YOUTUBE => 'social.youtube',
+            self::SOCIAL_LINKEDIN => 'social.linkedin',
+            self::GOOGLE_GA4_MEASUREMENT_ID => 'analytics.ga4_measurement_id',
+            self::TURNSTILE_ENABLED => 'antibot.turnstile_enabled',
+            self::TURNSTILE_SITE_KEY => 'antibot.turnstile_site_key',
+            default => null,
+        };
+    }
+
+    /**
      * @return list<self>
      */
     public static function forGroup(IntegrationGroup $group): array
