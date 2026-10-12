@@ -33,8 +33,8 @@
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12">
         @if ($trendSeries !== [])
             <div @class(['flex flex-col gap-4 md:col-span-2', $donuts !== [] ? 'xl:col-span-8' : 'xl:col-span-12'])>
-                <x-admin.card :title="__('admin.home.trends.title')" icon="trend" class="flex-1">
-                    <x-admin.chart.lines :series="$trendSeries" :label="__('admin.home.trends.title')" height="h-64" />
+                <x-admin.card :title="__('admin.home.trends.title')" icon="trend" class="flex flex-1 flex-col">
+                    <x-admin.chart.lines :series="$trendSeries" :label="__('admin.home.trends.title')" fill />
                 </x-admin.card>
 
                 @if ($revenue !== null)

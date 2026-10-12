@@ -1,4 +1,4 @@
-@props(['series', 'label', 'money' => false, 'height' => 'h-56'])
+@props(['series', 'label', 'money' => false, 'height' => 'h-56', 'fill' => false])
 
 {{-- Multi-series daily line chart on ONE zero-based axis (all series share a unit).
      series: list of ['label', 'tone', 'field', 'points' => list<['date', <field>]>].
@@ -6,6 +6,8 @@
      legend shows totals and the table holds every value. --}}
 @php
     $mirror = app()->getLocale() === 'ar';
+    // In fill mode the chart takes the height its card is given (min 16rem) instead of a fixed one.
+    $height = $fill ? 'h-full' : $height;
     $series = array_values($series);
     $dates = array_column($series[0]['points'] ?? [], 'date');
     $column = static fn (array $s): array => array_map(static fn (array $p): float => (float) ($p[$s['field'] ?? 'count'] ?? 0), array_values($s['points']));
@@ -13,7 +15,12 @@
     $peak = $columns === [] ? 0.0 : max(array_map(static fn (array $c): float => $c === [] ? 0.0 : max($c), $columns));
     $axis = \App\Support\Charts\Geometry::axis($peak, 4, ! $money);
     $format = static fn (float $v): string => $money ? \App\Support\Money::format(\App\Support\Money::round((string) $v)) : number_format($v);
-    $axisFormat = static fn (float $v): string => $v >= 1000 ? rtrim(rtrim(number_format($v / 1000, 1), '0'), '.') . 'K' : number_format($v);
+    $decimals = $axis['step'] < 1 ? 2 : (fmod($axis['step'], 1.0) > 0 ? 1 : 0);
+    $axisFormat = static fn (float $v): string => match (true) {
+        $v >= 1_000_000 => rtrim(rtrim(number_format($v / 1_000_000, 1), '0'), '.') . 'M',
+        $v >= 1000 => rtrim(rtrim(number_format($v / 1000, 1), '0'), '.') . 'K',
+        default => number_format($v, $decimals),
+    };
     $day = static fn (string $date): string => \Illuminate\Support\Carbon::parse($date)->translatedFormat('j M');
     $drawn = [];
     foreach ($series as $index => $s) {
@@ -37,7 +44,7 @@
     $summary = implode('. ', array_map(static fn (array $s, int $i): string => $s['label'] . ': ' . $format(array_sum($columns[$i])), $series, array_keys($series)));
 @endphp
 
-<figure {{ $attributes->class('m-0') }} data-viz-lines="{{ json_encode($data, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT) }}">
+<figure {{ $attributes->class(['m-0', 'flex min-h-0 flex-1 flex-col' => $fill]) }} data-viz-lines="{{ json_encode($data, JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT) }}">
     <figcaption class="mb-3 flex flex-wrap gap-x-5 gap-y-1">
         @foreach ($series as $index => $s)
             <span class="inline-flex items-center gap-2 text-xs text-ink-700">
@@ -51,7 +58,7 @@
     @if (! $hasData)
         <p class="flex {{ $height }} items-center justify-center rounded-xl bg-cream-50 text-sm text-ink-500">{{ __('admin.home.trends.none') }}</p>
     @else
-        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+        <div @class(['grid grid-cols-[auto_1fr] gap-x-2', 'flex-1 grid-rows-[minmax(16rem,1fr)_auto]' => $fill])>
             <div class="relative {{ $height }} min-w-8 text-[11px] text-ink-500" aria-hidden="true">
                 @for ($step = 0; $step <= $steps; $step++)
                     <span dir="ltr" class="absolute end-0 translate-y-1/2 leading-none" style="bottom: {{ round($step / $steps * 100, 2) }}%">{{ $axisFormat($step * $axis['step']) }}</span>
@@ -190,7 +197,10 @@
                 });
             }
 
-            document.querySelectorAll('[data-viz-lines]').forEach(init);
+            // The script sits next to the first chart, so later figures do not exist yet.
+            function run() { document.querySelectorAll('[data-viz-lines]').forEach(init); }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+            else run();
         })();
     </script>
 @endonce

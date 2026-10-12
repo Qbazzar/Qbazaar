@@ -3,15 +3,15 @@
     $waiting = array_values(array_filter($stats['attention'], fn (array $item): bool => $item['count'] > 0));
     $clear = array_values(array_filter($stats['attention'], fn (array $item): bool => $item['count'] === 0));
     $look = [
-        'critical' => ['card' => 'border-red-200 bg-red-50', 'bar' => 'bg-red-600', 'badge' => 'bg-red-600 text-white', 'text' => 'text-red-700'],
-        'warning' => ['card' => 'border-amber-200 bg-amber-50', 'bar' => 'bg-amber-500', 'badge' => 'bg-amber-500 text-white', 'text' => 'text-amber-800'],
+        'critical' => ['card' => 'border-danger-200 bg-danger-50', 'bar' => 'bg-danger-600', 'badge' => 'bg-danger-600 text-white', 'text' => 'text-danger-700'],
+        'warning' => ['card' => 'border-warning-200 bg-warning-50', 'bar' => 'bg-warning-500', 'badge' => 'bg-warning-500 text-white', 'text' => 'text-warning-800'],
     ];
 @endphp
 
 @if ($stats['attention'] !== [])
     <x-admin.card :title="__('admin.home.attention.title')" icon="flag">
         @if ($waiting === [])
-            <p class="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+            <p class="flex items-center gap-2 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm font-semibold text-success-800">
                 <span aria-hidden="true">✓</span> {{ __('admin.home.attention.clear') }}
             </p>
         @else
@@ -44,7 +44,7 @@
             <ul class="mt-3 flex flex-wrap items-center gap-2" aria-label="{{ __('admin.home.attention.clear_items') }}">
                 @foreach ($clear as $item)
                     <li class="inline-flex items-center gap-1.5 rounded-full bg-cream-200 px-3 py-1 text-xs text-ink-700">
-                        <span aria-hidden="true" class="text-emerald-700">✓</span>
+                        <span aria-hidden="true" class="text-success-700">✓</span>
                         {{ __('admin.home.attention.items.' . $item['key']) }}
                         <span dir="ltr" class="font-semibold">0</span>
                     </li>

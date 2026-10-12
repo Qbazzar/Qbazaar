@@ -3,9 +3,9 @@
     @php
         $system = $stats['system'];
         $pillTone = [
-            'success' => ['pill' => 'border-emerald-200 bg-emerald-50 text-emerald-800', 'dot' => 'bg-emerald-600'],
-            'warning' => ['pill' => 'border-amber-200 bg-amber-50 text-amber-900', 'dot' => 'bg-amber-500'],
-            'danger' => ['pill' => 'border-red-200 bg-red-50 text-red-800', 'dot' => 'bg-red-600'],
+            'success' => ['pill' => 'border-success-200 bg-success-50 text-success-800', 'dot' => 'bg-success-600'],
+            'warning' => ['pill' => 'border-warning-200 bg-warning-50 text-warning-900', 'dot' => 'bg-warning-500'],
+            'danger' => ['pill' => 'border-danger-200 bg-danger-50 text-danger-800', 'dot' => 'bg-danger-600'],
             'neutral' => ['pill' => 'border-ink-200 bg-cream-200 text-ink-700', 'dot' => 'bg-ink-300'],
         ];
         $statusTone = ['ok' => 'success', 'unavailable' => 'danger', 'stale' => 'danger', 'disabled' => 'neutral', 'unknown' => 'warning'];

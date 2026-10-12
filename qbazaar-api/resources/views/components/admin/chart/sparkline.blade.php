@@ -16,10 +16,10 @@
 @endphp
 
 <figure {{ $attributes->class('relative m-0') }}>
-    <div role="img" aria-label="{{ $label }}: {{ $text }}" class="relative">
+    <div role="img" aria-label="{{ $label }}, {{ __('admin.home.trends.window') }}: {{ $text }}" class="relative">
         <svg viewBox="0 0 {{ $width }} {{ $height + 4 }}" preserveAspectRatio="none" class="block h-10 w-full overflow-visible" aria-hidden="true" focusable="false">
             @if ($geometry === null || $max <= 0)
-                <line x1="0" y1="{{ $height + 2 }}" x2="{{ $width }}" y2="{{ $height + 2 }}" stroke="var(--viz-muted, #9ca3af)" stroke-width="2" stroke-dasharray="4 4" vector-effect="non-scaling-stroke" />
+                <line x1="0" y1="{{ $height + 2 }}" x2="{{ $width }}" y2="{{ $height + 2 }}" stroke="var(--viz-muted)" stroke-width="2" stroke-dasharray="4 4" vector-effect="non-scaling-stroke" />
             @else
                 <g transform="translate(0 2)">
                     <path d="{{ $geometry['area'] }}" fill="{{ $color }}" opacity="0.12" />
@@ -32,6 +32,7 @@
                   style="left: {{ round($newest['x'] / $width * 100, 2) }}%; top: {{ round(($newest['y'] + 2) / ($height + 4) * 100, 2) }}%; background: {{ $color }}"></span>
         @endif
     </div>
+    <figcaption class="mt-1 text-end text-[10px] leading-none text-ink-500" aria-hidden="true">{{ __('admin.home.trends.window_short') }}</figcaption>
     <div class="sr-only"><table>
         <caption>{{ __('admin.home.trends.table_caption', ['series' => $label]) }}</caption>
         <thead><tr><th scope="col">{{ __('admin.home.trends.date') }}</th><th scope="col">{{ __('admin.home.trends.count') }}</th></tr></thead>

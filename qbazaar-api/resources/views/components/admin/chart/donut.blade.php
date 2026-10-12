@@ -23,7 +23,7 @@
 <figure {{ $attributes->class('m-0 flex flex-wrap items-center gap-x-6 gap-y-4') }} data-viz-donut>
     <div class="relative size-36 shrink-0" role="img" aria-label="{{ $label }}. {{ $total > 0 ? $summary : __('admin.home.trends.none') }}">
         <svg viewBox="0 0 100 100" class="size-full {{ $mirror ? '-scale-x-100' : '' }}" aria-hidden="true" focusable="false">
-            <circle cx="50" cy="50" r="{{ $radius }}" fill="none" stroke="var(--viz-track, #f1f2f5)" stroke-width="14" />
+            <circle cx="50" cy="50" r="{{ $radius }}" fill="none" stroke="var(--viz-track)" stroke-width="14" />
             @foreach ($arcs as $arc)
                 <circle cx="50" cy="50" r="{{ $radius }}" fill="none" stroke="{{ \App\Support\Charts\Palette::css($slices[$arc['index']]['tone']) }}" stroke-width="14"
                         stroke-dasharray="{{ $arc['length'] }} {{ round($circumference - $arc['length'], 3) }}" stroke-dashoffset="{{ -$arc['offset'] }}"
@@ -92,7 +92,10 @@
                 });
             }
 
-            document.querySelectorAll('[data-viz-donut]').forEach(init);
+            // The script sits next to the first chart, so later figures do not exist yet.
+            function run() { document.querySelectorAll('[data-viz-donut]').forEach(init); }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+            else run();
         })();
     </script>
 @endonce

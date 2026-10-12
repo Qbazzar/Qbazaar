@@ -815,6 +815,8 @@ return [
             'total' => 'Total: :total',
             'peak' => 'Peak: :peak',
             'table_caption' => ':series: count per day',
+            'window' => 'last 30 days',
+            'window_short' => '30d',
             'none' => 'No activity in the last 30 days.',
             'keyboard_hint' => 'Chart. Use the left and right arrow keys to read each day.',
             'messages' => 'Messages per day',

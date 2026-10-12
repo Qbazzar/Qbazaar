@@ -11,7 +11,7 @@
 <div {{ $attributes }}>
     <div role="img" aria-label="{{ $label }}: {{ number_format($value) }} / {{ number_format($total) }} ({{ $text }})">
         <svg viewBox="0 0 100 8" preserveAspectRatio="none" class="block h-2 w-full" aria-hidden="true" focusable="false">
-            <rect x="0" y="0" width="100" height="8" rx="3" fill="var(--viz-track, #f1f2f5)" />
+            <rect x="0" y="0" width="100" height="8" rx="3" fill="var(--viz-track)" />
             @if ($share > 0)
                 <rect x="{{ $mirror ? round(100 - $fill, 2) : 0 }}" y="0" width="{{ round($fill, 2) }}" height="8" rx="3" fill="{{ \App\Support\Charts\Palette::css($tone) }}" />
             @endif

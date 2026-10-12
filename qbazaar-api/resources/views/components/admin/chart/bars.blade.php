@@ -22,7 +22,7 @@
                 <li class="contents">
                     <span class="truncate text-sm font-medium text-ink-700" title="{{ $row['label'] }}">{{ $row['label'] }}</span>
                     <svg viewBox="0 0 100 10" preserveAspectRatio="none" class="h-2.5 w-full" aria-hidden="true" focusable="false">
-                        <rect x="0" y="0" width="100" height="10" rx="2" fill="var(--viz-track, #f1f2f5)" />
+                        <rect x="0" y="0" width="100" height="10" rx="2" fill="var(--viz-track)" />
                         @if ($width > 0)
                             <rect x="{{ $mirror ? round(100 - $width, 2) : 0 }}" y="0" width="{{ round($width, 2) }}" height="10" rx="2" fill="{{ $color }}" />
                         @endif

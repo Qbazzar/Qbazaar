@@ -25,6 +25,40 @@
     --color-ink-500: #6b6b6b;
     --color-ink-300: #d1d5db;
     --color-ink-200: #e5e7eb;
+
+    /* Semantic state colours, one place to retune them. */
+    --color-success-50: var(--color-emerald-50);
+    --color-success-200: var(--color-emerald-200);
+    --color-success-600: var(--color-emerald-600);
+    --color-success-700: var(--color-emerald-700);
+    --color-success-800: var(--color-emerald-800);
+    --color-warning-50: var(--color-amber-50);
+    --color-warning-200: var(--color-amber-200);
+    --color-warning-500: var(--color-amber-500);
+    --color-warning-600: var(--color-amber-600);
+    --color-warning-800: var(--color-amber-800);
+    --color-warning-900: var(--color-amber-900);
+    --color-danger-50: var(--color-red-50);
+    --color-danger-200: var(--color-red-200);
+    --color-danger-600: var(--color-red-600);
+    --color-danger-700: var(--color-red-700);
+    --color-danger-800: var(--color-red-800);
+}
+
+/* Chart colours (admin dashboard). Series hues follow the validated
+   categorical order blue, coral, violet, aqua; the rest map to theme tokens. */
+:root {
+    --viz-blue: #2a78d6;
+    --viz-coral: var(--color-coral);
+    --viz-violet: #6250d6;
+    --viz-aqua: #1baf7a;
+    --viz-slate: var(--color-ink-700);
+    --viz-success: var(--color-success-600);
+    --viz-warning: var(--color-warning-600);
+    --viz-danger: var(--color-danger-600);
+    --viz-info: var(--color-sky-600);
+    --viz-muted: var(--color-gray-400);
+    --viz-track: var(--color-cream-200);
 }
 
 /* Self-hosted, same files as qbazaar-web. Noto Kufi is an Arabic-only variable subset, so Latin

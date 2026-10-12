@@ -23,7 +23,7 @@
             @if ($change === null)
                 <span class="text-xs font-medium text-ink-500">{{ __('admin.home.no_change') }}</span>
             @else
-                @php($tone_class = $change > 0 ? 'bg-emerald-50 text-emerald-700' : ($change < 0 ? 'bg-red-50 text-red-700' : 'bg-cream-200 text-ink-700'))
+                @php($tone_class = $change > 0 ? 'bg-success-50 text-success-700' : ($change < 0 ? 'bg-danger-50 text-danger-700' : 'bg-cream-200 text-ink-700'))
                 <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold {{ $tone_class }}">
                     <span aria-hidden="true">{{ $change > 0 ? '▲' : ($change < 0 ? '▼' : '–') }}</span>
                     <span dir="ltr">{{ $change > 0 ? '+' : '' }}{{ $change }}%</span>
