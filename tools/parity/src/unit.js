@@ -43,6 +43,17 @@ class UnitComparer {
     this.sourceBudget = SOURCE_BUDGET;
     this.defaultDiffs = new Set();
     this.hoverDiffs = new Set();
+    // Resting differences already reported for a component's descendants, by descendant key (t:doha).
+    this.covered = new Set();
+    this.resting = null;
+  }
+
+  static diffKey(dedupe, subject, d) {
+    return `${dedupe || ''}|${subject}|${d.property}|${canonicalValue(d.property, d.ref)}|${canonicalValue(d.property, d.target)}`;
+  }
+
+  static coverKey(descendantKey, d) {
+    return `${descendantKey}|${d.property}|${canonicalValue(d.property, d.ref)}|${canonicalValue(d.property, d.target)}`;
   }
 
   emit(extra) {
@@ -63,7 +74,8 @@ class UnitComparer {
       if (d.property === 'outline' && isUserAgentRing(d.ref)) { this.accept(FOCUS_RULE, component, state, d); continue; }
       // Focus rings follow one site-wide rule, so they are reported once, not per control.
       const subject = d.property === 'outline' && state === 'focus-visible' ? 'focus-ring' : component;
-      const key = `${this.dedupe || ''}|${subject}|${d.property}|${canonicalValue(d.property, d.ref)}|${canonicalValue(d.property, d.target)}`;
+      const key = UnitComparer.diffKey(this.dedupe, subject, d);
+      if (state !== 'default' && this.resting && this.resting.has(key)) { this.reportResting(this.resting.get(key)); continue; }
       // :active is forced together with :hover, so it repeats every hover difference.
       if (state === 'hover') this.hoverDiffs.add(key);
       if (state === 'active' && this.hoverDiffs.has(key)) continue;
@@ -81,6 +93,7 @@ class UnitComparer {
     const options = { descendants: unit.descendants !== false };
     const [ref, target] = chipView(...(await Promise.all([this.ref.read(unit.refSel, options), this.target.read(unit.tgtSel, options)])));
     if (!ref || !target) return;
+    this.resting = unit.statesOnly ? this.restingDiffs(unit, ref, target) : null;
     if (!unit.statesOnly) {
       await this.compareRoot(unit, ref, target);
       this.compareChildren(unit, ref, target, 'default');
@@ -113,13 +126,43 @@ class UnitComparer {
     return (await this.ref.sourceOf(selector, property).catch(() => null)) || undefined;
   }
 
-  compareChildren(unit, ref, target, state) {
+  childDiffs(unit, ref, target) {
     const { pairs, missing } = pairDescendants(ref, target);
-    for (const pair of pairs) {
+    const diffs = pairs.map((pair) => {
       const [r, t] = chipView(pair.ref, pair.target);
       const fixed = unit.fixedSize || (r.kind === 'icon') || (r.kind === 'input');
       const options = { fixedSize: fixed && r.kind !== 'text', skip: r.kind === 'icon' ? ['width', 'height'] : [], sameBox: sameBox(r.rect, t.rect), motion: false, ownText: r.ownText || t.ownText, kind: r.kind, refNative: r.native };
-      this.emitDiffs(`${unit.name} > ${r.key.replace(/#\d+$/, '')}`, state, diffStyles(r.styles, t.styles, options));
+      return { key: r.key.replace(/#\d+$/, ''), diffs: diffStyles(r.styles, t.styles, options) };
+    });
+    return { diffs, missing };
+  }
+
+  // A text inside a component is compared in its states only (the component compares it at rest). Its states still
+  // show its resting differences; those are not state differences, so each is reported once, at rest, unless the
+  // component already reported the same descendant with the same values.
+  restingDiffs(unit, ref, target) {
+    const resting = new Map();
+    const add = (component, coverKey, diffs) => {
+      for (const d of diffs) resting.set(UnitComparer.diffKey(this.dedupe, component, d), { component, coverKey, d, reported: false });
+    };
+    const rootKey = ref.ownText && ref.text ? `t:${ref.text.toLowerCase().slice(0, 60)}` : null;
+    add(unit.name, rootKey, diffStyles(ref.styles, target.styles, { ...this.rootOptions(unit, ref, target), motion: false }));
+    for (const child of this.childDiffs(unit, ref, target).diffs) add(`${unit.name} > ${child.key}`, child.key, child.diffs);
+    return resting;
+  }
+
+  reportResting(entry) {
+    if (entry.reported) return;
+    entry.reported = true;
+    if (entry.coverKey && this.covered.has(UnitComparer.coverKey(entry.coverKey, entry.d))) return;
+    this.emit({ component: entry.component, state: 'default', ...entry.d });
+  }
+
+  compareChildren(unit, ref, target, state) {
+    const { diffs, missing } = this.childDiffs(unit, ref, target);
+    for (const child of diffs) {
+      if (state === 'default') for (const d of child.diffs) this.covered.add(UnitComparer.coverKey(child.key, d));
+      this.emitDiffs(`${unit.name} > ${child.key}`, state, child.diffs);
     }
     if (state !== 'default') return;
     for (const m of missing) {
