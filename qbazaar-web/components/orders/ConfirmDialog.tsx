@@ -1,9 +1,9 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import { cn } from '@/lib/utils';
 
@@ -58,7 +58,7 @@ export function ConfirmDialog({
       {children}
       <DialogActions>
         <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} disabled={busy} aria-busy={busy}>
-          {busy ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
+          {busy ? <LoaderCircleIcon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
           {confirmLabel}
         </Button>
         <Button variant="muted" onClick={() => onOpenChange(false)} disabled={busy}>

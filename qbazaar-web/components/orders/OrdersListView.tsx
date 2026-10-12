@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
-import { ArrowUpRight, CreditCard, Package, ShoppingBag } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { FieldSelect } from '@/components/design-system/FieldSelect';
+import { CreditCardIcon, PackageIcon, ShoppingBagSalesIcon, WalletWithdrawIcon } from '@/components/design-system/icons';
 import { Tab, TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
 import type { DealRole, Order, OrderStatus } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
@@ -20,12 +20,12 @@ import { useOrdersQuery } from '@/lib/queries/orders';
 import { cn } from '@/lib/utils';
 
 import { AccountPageFrame } from './AccountPageFrame';
-import { HeaderButtonLabel, pageHeaderButton } from './AccountPageHeader';
+import { pageHeaderButton } from './AccountPageHeader';
 import { panelClass } from './CheckoutPanel';
 import { orderNumber } from './order-number';
 import { PageState } from './PageState';
 import { StatusPill } from './StatusPill';
-import { LoadMore, TableCard, Th, tableClasses as tc } from './TableCard';
+import { LoadMore, TableCard, Th, salesTableClasses as tc } from './TableCard';
 
 const ROLES: DealRole[] = ['buyer', 'seller'];
 const STATUSES: OrderStatus[] = ['created', 'awaiting_handover', 'completed', 'cancelled', 'disputed'];
@@ -42,12 +42,12 @@ export function OrdersListView() {
       actions={
         <>
           <Link href="/account/wallet/bank-accounts" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton)}>
-            <CreditCard aria-hidden="true" />
-            <HeaderButtonLabel>{t('orders.wallet.payment_method')}</HeaderButtonLabel>
+            <CreditCardIcon aria-hidden="true" />
+            {t('orders.wallet.payment_method')}
           </Link>
-          <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton, 'max-qb-tablet:hidden')}>
-            <ArrowUpRight aria-hidden="true" />
-            <HeaderButtonLabel>{t('orders.wallet.withdraw')}</HeaderButtonLabel>
+          <Link href="/account/wallet/withdrawals" className={cn(buttonVariants({ variant: 'outline' }), pageHeaderButton)}>
+            <WalletWithdrawIcon aria-hidden="true" />
+            {t('orders.wallet.withdraw')}
           </Link>
         </>
       }
@@ -95,15 +95,23 @@ function OrdersTable({ role, status }: { role: DealRole; status?: OrderStatus })
   if (orders.length === 0) return <OrdersEmpty role={role} />;
 
   return (
-    <TableCard title={title} titleId={`orders-${role}`}>
+    <TableCard title={title} titleId={`orders-${role}`} tone="sales">
       <table className={tc.table} aria-labelledby={`orders-${role}`}>
         <thead>
           <tr className={tc.headRow}>
-            <Th>{t('orders.list.columns.item')}</Th>
-            <Th className={tc.wide}>{t('orders.list.columns.date')}</Th>
-            <Th className="hidden qb-desktop:table-cell">{t('orders.list.columns.payment')}</Th>
-            <Th className={tc.wide}>{t('orders.list.columns.status')}</Th>
-            <Th className="text-end">{t('orders.list.columns.total')}</Th>
+            <Th classes={tc}>{t('orders.list.columns.item')}</Th>
+            <Th classes={tc} className={tc.wide}>
+              {t('orders.list.columns.date')}
+            </Th>
+            <Th classes={tc} className="hidden qb-desktop:table-cell">
+              {t('orders.list.columns.payment')}
+            </Th>
+            <Th classes={tc} className={tc.wide}>
+              {t('orders.list.columns.status')}
+            </Th>
+            <Th classes={tc} className="text-end">
+              {t('orders.list.columns.total')}
+            </Th>
           </tr>
         </thead>
         <tbody>
@@ -131,12 +139,9 @@ function OrderRow({ order }: { order: Order }) {
   return (
     <tr className={tc.row}>
       <td className={tc.td}>
-        <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="flex size-[50px] shrink-0 items-center justify-center rounded-qb-sm bg-qb-fill text-qb-ink-subtle"
-          >
-            <Icon icon={Package} />
+        <div className="flex items-center gap-3.5">
+          <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-qb-md bg-qb-fill text-qb-ink-subtle">
+            <Icon icon={PackageIcon} />
           </span>
           <div className="min-w-0">
             <Link
@@ -179,7 +184,7 @@ function OrdersEmpty({ role }: { role: DealRole }) {
   return (
     <div className={panelClass}>
       <EmptyState
-        icon={<Icon icon={isBuyer ? ShoppingBag : Package} size="lg" />}
+        icon={<Icon icon={isBuyer ? ShoppingBagSalesIcon : PackageIcon} size="lg" />}
         title={t(isBuyer ? 'orders.list.empty_purchases' : 'orders.list.empty_sales')}
         description={t(isBuyer ? 'orders.list.empty_purchases_body' : 'orders.list.empty_sales_body')}
         action={

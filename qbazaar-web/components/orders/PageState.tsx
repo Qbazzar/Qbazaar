@@ -1,6 +1,6 @@
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 
 export type PageStateProps =
@@ -13,7 +13,7 @@ export function PageState(props: PageStateProps) {
   if (props.kind === 'loading') {
     return (
       <div role="status" className="flex min-h-48 items-center justify-center font-qb text-qb-ink-subtle">
-        <Loader2 className="size-6 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+        <LoaderCircleIcon className="size-6 animate-spin motion-reduce:animate-none" aria-hidden="true" />
         <span className="sr-only">{t('common.loading')}</span>
       </div>
     );

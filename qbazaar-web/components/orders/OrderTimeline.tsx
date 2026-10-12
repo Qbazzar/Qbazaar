@@ -1,6 +1,6 @@
-import { Check } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
+import { CheckIcon } from '@/components/design-system/icons';
 import type { Order } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
 import { formatDateTime, isoDate } from '@/lib/orders/dates';
@@ -36,7 +36,7 @@ export function OrderTimeline({ order }: { order: Order }) {
                 step.state === 'upcoming' && 'border-qb-line bg-qb-surface',
               )}
             >
-              {step.state === 'done' ? <Icon icon={Check} size="sm" /> : null}
+              {step.state === 'done' ? <Icon icon={CheckIcon} size="sm" /> : null}
               {step.state === 'current' ? <span className="size-2.5 rounded-full bg-qb-brand" /> : null}
             </span>
             <div className="min-w-0 pt-0.5">

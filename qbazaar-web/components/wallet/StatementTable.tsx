@@ -2,12 +2,12 @@
 
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Receipt } from 'lucide-react';
 
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { FieldSelect } from '@/components/design-system/FieldSelect';
+import { ReceiptIcon } from '@/components/design-system/icons';
 import { orderNumber } from '@/components/orders/order-number';
 import { PageState } from '@/components/orders/PageState';
 import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
@@ -30,20 +30,15 @@ export function signedAmount(entry: Pick<WalletEntry, 'amount' | 'currency' | 'd
  * first. `headerAction` sits at the end of the title row (563:31406,
  * 613:31879); the account filter then takes its own row below 1001 px.
  */
-export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
+export function StatementTable({ headerAction, className }: { headerAction?: ReactNode; className?: string }) {
   const [account, setAccount] = useState<WalletAccount | ''>('');
   const query = useWalletEntriesQuery(account || undefined);
   const entries = query.data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
     <TableCard
-      title={
-        // Phones say "Transactions" (613:31879), which leaves room for Withdraw Funds beside it.
-        <>
-          <span className="max-qb-tablet:hidden">{t('orders.wallet.history_title')}</span>
-          <span className="qb-tablet:hidden">{t('orders.wallet.history_title_short')}</span>
-        </>
-      }
+      className={className}
+      title={t('orders.wallet.history_title')}
       titleId="wallet-history"
       action={
         <>
@@ -73,7 +68,7 @@ export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
         <PageState kind="error" onRetry={() => query.refetch()} />
       ) : entries.length === 0 ? (
         <EmptyState
-          icon={<Icon icon={Receipt} size="lg" />}
+          icon={<Icon icon={ReceiptIcon} size="lg" />}
           title={t('orders.wallet.empty')}
           description={t('orders.wallet.empty_body')}
           headingLevel="h3"

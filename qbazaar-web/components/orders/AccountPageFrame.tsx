@@ -5,7 +5,7 @@ import { pageGutter } from '@/components/design-system/page-gutter';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-/** Page width and the shared side gutters of the frames (16 px on phones, 30 on tablets, 40 at 1440). */
+/** Page width and the shared side gutters of the checkout frame (16 px on phones, 30 on tablets, 40 at 1440). */
 export const pageFrame = cn('mx-auto w-full max-w-[1440px]', pageGutter);
 
 export interface AccountPageFrameProps {
@@ -21,32 +21,28 @@ export interface AccountPageFrameProps {
 }
 
 /**
- * Full-width page of the sales overview (502:21437, 573:33241, 600:30639):
- * the breadcrumb (hidden on phones), the large title with its actions, then
- * the content.
+ * Full-width page of sales-overview.html and payment-method.html: the 1440 px column with the
+ * site gutter, the trail 22 px above the title (16 px on phones), the 30 to 48 px title with its
+ * actions 30 px above the content.
  */
 export function AccountPageFrame({ breadcrumb, title, description, actions, children }: AccountPageFrameProps) {
   return (
-    <div className={cn(pageFrame, 'pt-8 pb-16 font-qb text-qb-ink qb-tablet:pt-[72px] qb-desktop:pt-[65px] qb-desktop:pb-24')}>
-      <Breadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, ...breadcrumb]} className="hidden qb-tablet:block" />
+    <div className="mx-auto w-full max-w-[1440px] px-qb-gutter py-[clamp(20px,4vw,40px)] font-qb text-qb-ink">
+      <Breadcrumb items={[{ label: t('home.breadcrumb'), href: '/' }, ...breadcrumb]} className="mb-4 qb-tablet:mb-[22px]" />
       {title ? (
-        <div className="flex flex-wrap items-center justify-between gap-4 qb-tablet:mt-[60px] qb-desktop:mt-20">
+        <div className="mb-[30px] flex flex-wrap items-center justify-between gap-5">
           <div className="min-w-0">
-            <h1 className="font-qb text-qb-h2 leading-tight font-semibold tracking-normal text-qb-ink qb-tablet:text-[32px] qb-desktop:text-qb-h1">
-              {title}
-            </h1>
+            <h1 className="text-[length:clamp(30px,5vw,48px)] font-semibold tracking-normal text-qb-ink">{title}</h1>
             {description ? (
               <p dir="auto" className="mt-2 text-start text-qb-caption font-medium text-qb-ink-subtle">
                 {description}
               </p>
             ) : null}
           </div>
-          {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+          {actions ? <div className="flex flex-wrap gap-3.5">{actions}</div> : null}
         </div>
       ) : null}
-      <div className={cn('flex flex-col gap-6', title ? 'mt-6 qb-tablet:mt-8 qb-desktop:mt-[50px]' : 'qb-tablet:mt-8 qb-desktop:mt-12')}>
-        {children}
-      </div>
+      <div className="flex flex-col gap-6">{children}</div>
     </div>
   );
 }

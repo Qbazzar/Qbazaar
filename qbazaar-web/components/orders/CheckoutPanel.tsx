@@ -29,15 +29,16 @@ export interface CheckoutPanelProps {
  */
 export function CheckoutPanel({ title, titleId, action, layout = 'section', children, className }: CheckoutPanelProps) {
   if (layout !== 'section') {
+    // payment-method.html: an r20 card, its 24 px title 6 px over a divider 20 px below.
     return (
-      <section aria-labelledby={titleId} className={cn(panelClass, className)}>
-        <div className="flex items-center justify-between gap-4 border-b border-qb-line px-4 py-4 qb-tablet:px-6 qb-desktop:px-8 qb-desktop:py-6">
-          <h2 id={titleId} className="font-qb text-qb-body-lg font-semibold tracking-normal text-qb-ink qb-tablet:text-qb-h5 qb-desktop:text-qb-h3">
+      <section aria-labelledby={titleId} className={cn(panelClass, 'rounded-[20px]', className)}>
+        <div className="mx-[clamp(18px,3vw,32px)] flex items-center justify-between gap-4 border-b border-qb-line pt-7 pb-5">
+          <h2 id={titleId} className="mb-1.5 font-qb text-qb-h3 font-semibold tracking-normal text-qb-ink">
             {title}
           </h2>
           {action}
         </div>
-        <div className={layout === 'list' ? panelPadding : undefined}>{children}</div>
+        <div className={layout === 'list' ? 'px-[clamp(18px,3vw,32px)] py-7' : 'px-[clamp(18px,3vw,32px)] pb-3'}>{children}</div>
       </section>
     );
   }

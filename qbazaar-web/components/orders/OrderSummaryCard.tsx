@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import Image from 'next/image';
-import { Package } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
+import { PackageIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { formatMoney } from '@/lib/orders/money';
 import { cn } from '@/lib/utils';
@@ -45,7 +45,7 @@ export function OrderSummaryCard({ title, photoUrl, subtitle, subtitlePending, c
           aria-hidden="true"
           className="relative flex h-[58px] w-[63px] shrink-0 items-center justify-center overflow-hidden rounded-qb-sm bg-qb-fill text-qb-ink-subtle"
         >
-          {photoUrl ? <Image src={photoUrl} alt="" fill sizes="63px" className="object-cover" /> : <Icon icon={Package} />}
+          {photoUrl ? <Image src={photoUrl} alt="" fill sizes="63px" className="object-cover" /> : <Icon icon={PackageIcon} />}
         </span>
         <div className="min-w-0">
           <p className="line-clamp-2 text-qb-body font-medium text-qb-ink">

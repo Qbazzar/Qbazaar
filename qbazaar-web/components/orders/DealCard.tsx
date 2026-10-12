@@ -1,8 +1,8 @@
 import { useId, type ReactNode } from 'react';
 import Image from 'next/image';
-import { Handshake, Package, Store } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
+import { HandshakeIcon, PackageIcon, StoreIcon } from '@/components/design-system/icons';
 import type { DealCardAd } from '@/lib/api/commerce-types';
 import { formatDateTime, isoDate } from '@/lib/orders/dates';
 import type { StatusTone } from '@/lib/orders/status';
@@ -71,10 +71,10 @@ export function DealCard({
             id={headingId}
             className="flex min-w-0 items-center gap-1 font-qb text-qb-body leading-6 font-medium tracking-normal text-qb-ink"
           >
-            <Icon icon={kind === 'offer' ? Handshake : Store} size="sm" className="size-[18px] text-qb-brand" />
+            <Icon icon={kind === 'offer' ? HandshakeIcon : StoreIcon} size="sm" className="size-[18px] text-qb-brand" />
             <span className="truncate">{title}</span>
           </h2>
-          <StatusPill tone={status.tone} className="qb-tablet:text-qb-micro">
+          <StatusPill tone={status.tone} outline className="qb-tablet:text-qb-micro">
             {status.label}
           </StatusPill>
         </header>
@@ -85,7 +85,7 @@ export function DealCard({
               <Image src={ad.thumbUrl} alt="" fill sizes="63px" className="object-cover" />
             ) : (
               <span className="flex size-full items-center justify-center text-qb-ink-subtle">
-                <Icon icon={Package} />
+                <Icon icon={PackageIcon} />
               </span>
             )}
           </div>
