@@ -151,6 +151,19 @@ Second round, from the triage of the first full report:
   sweep finding notes the target twin's markup.
 - Scenario steps are retried once after a short pause before a failure is reported (the reference's own pages settle late at times).
 
+Third round, from the live re-run of the tuned gate:
+
+- **Radii** are capped by the box as laid out, before transforms: the home city pills are tilted, and a tilted pill's bounding rect is taller
+  than the pill.
+- **Margins and gaps.** A margin on a child and a flex/grid gap on its parent draw the same space, so a margin difference counts only when
+  the space each element keeps in its parent's flow (margin plus the gap after it) differs.
+- **Texts inside components** are compared in their states only; their resting differences (a city label's gap, its font size) showed up again
+  under hover and focus. They are now reported once, at rest, and not at all when the component already reported the same descendant with the same values.
+- **Scenario copy** drops icons the reference draws as text characters (✕, ›) and masks data with an observation's `textMask` (the share link);
+  the hero category panel's names are API data, so its text is not compared (its count and crop are).
+- **Flows** wait for the URL to change (up to 8s) instead of a fixed pause, open the footer accordions and wait for their transition before
+  looking for a link, and try a refused click once more on a fresh page.
+
 ## CI
 
 CI can run the gate against the GitHub Pages reference (`--reference https://qbazzar.github.io/Qbazaar-front/`) and a built `next start` target

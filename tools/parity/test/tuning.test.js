@@ -181,3 +181,66 @@ test('a template wrapper in a chip compares the chips on both sides', () => {
   const plain = node(bare, { chip: { rect: ref.chip.rect, styles: pill } });
   assert.equal(chipView(plain, plain)[0].styles['background-color'], 'rgba(0, 0, 0, 0)');
 });
+
+// Third round: what the live re-run of the tuned gate still showed.
+
+test('a margin and a parent gap that keep the same space are not a difference', () => {
+  const ref = { ...base(), margin: '0px 0px 12px 0px', 'margin-flow': '0px 0px 12px 0px' };
+  const target = { ...base(), 'margin-flow': '0px 0px 12px 0px' };
+  assert.deepEqual(diffStyles(ref, target), []);
+  // The space itself differs: still reported, with the margins as the values.
+  const tighter = { ...target, 'margin-flow': '0px 0px 8px 0px' };
+  assert.deepEqual(diffStyles(ref, tighter).map((d) => [d.property, d.ref, d.target]), [['margin', '0px 0px 12px 0px', '0px 0px 0px 0px']]);
+  // Styles read without the flow value (older captures, pseudo elements) compare margins as before.
+  const { 'margin-flow': dropped, ...plainRef } = ref;
+  assert.deepEqual(diffStyles(plainRef, base()).map((d) => d.property), ['margin']);
+});
+
+// A probe that answers like readUnit: the root, its descendants, and forced states.
+function unitProbe(rest, states = {}) {
+  let forced = null;
+  return {
+    read: async () => {
+      const node = forced ? states[forced] || rest : rest;
+      return { rect: { x: 0, y: 0, w: 300, h: 23 }, tag: 'label', native: null, text: 'Doha', ...node };
+    },
+    withState: async (selector, state, read) => { forced = state; try { return await read(); } finally { forced = null; } },
+  };
+}
+
+const text = (styles, key = 't:doha#0') => ({ key, kind: 'text', tag: 'span', native: null, rect: { x: 0, y: 0, w: 40, h: 23 }, styles, ownText: true });
+
+test('a text inside a component reports its resting differences once, at rest, not per state', async () => {
+  const labelRef = { ...base(), display: 'flex', gap: '10px 10px', margin: '0px 0px 12px 0px', 'margin-flow': '0px 0px 12px 0px' };
+  const labelTarget = { ...base(), display: 'flex', gap: '8px 8px', 'margin-flow': '0px 0px 12px 0px' };
+  const spanRef = { ...base(), 'font-size': '15px', color: 'rgb(158, 150, 150)' };
+  const spanTarget = { ...base(), 'font-size': '16px', color: 'rgb(158, 158, 158)' };
+  const rest = (label, span, rect = { x: 0, y: 0, w: 310, h: 23 }) => ({ styles: label, ownText: false, rect, descendants: [text(span)] });
+  const targetRect = { x: 0, y: 0, w: 304, h: 25 };
+  const hovered = { ...rest(labelTarget, spanTarget, targetRect), styles: { ...labelTarget, 'background-color': 'rgb(250, 250, 250)' } };
+  const findings = new Findings();
+  const atRest = rest(labelTarget, spanTarget, targetRect);
+  const comparer = new UnitComparer({
+    ref: unitProbe(rest(labelRef, spanRef), { hover: rest(labelRef, spanRef), 'focus-visible': rest(labelRef, spanRef) }),
+    target: unitProbe(atRest, { hover: hovered, 'focus-visible': atRest }),
+    findings, base: { page: 'category', viewport: 1440, locale: 'en' },
+  });
+  // The component (the filter column) already reported the city name's colour at rest.
+  comparer.covered.add(UnitComparer.coverKey('t:doha', { property: 'color', ref: spanRef.color, target: spanTarget.color }));
+  await comparer.compare({ name: 'text:doha', refSel: 'x', tgtSel: 'x', states: ['hover', 'focus-visible'], statesOnly: true, icons: false });
+  const rows = findings.list.map((f) => `${f.state} ${f.component} ${f.property}`).sort();
+  assert.deepEqual(rows, [
+    'default text:doha > t:doha font-size',
+    'default text:doha gap',
+    'hover text:doha background-color',
+  ]);
+});
+
+test('scenario copy is compared without glyph icons and with data masked', () => {
+  const { copyOf } = require('../src/scenarios');
+  const adLink = 'qbazaar\\.qa/\\S+';
+  assert.equal(copyOf('Share this ad ✕ W WhatsApp qbazaar.qa/ad/3380480338 Copy', adLink), copyOf('Share this ad W WhatsApp qbazaar.qa/ads/01m4edcmd846zpsr94e2jet5ma Copy', adLink));
+  assert.equal(copyOf('Home › Categories ›'), 'Home Categories');
+  // Real copy differences survive.
+  assert.notEqual(copyOf('Report this ad ✕ Fraud or scam'), copyOf('Report this ad Select a problem to report Fraud or scam'));
+});
