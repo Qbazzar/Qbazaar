@@ -77,6 +77,12 @@ class Category extends Model
         return $this->hasMany(self::class, 'parent_id')->orderBy('order');
     }
 
+    /** @return HasMany<Ad, $this> */
+    public function ads(): HasMany
+    {
+        return $this->hasMany(Ad::class);
+    }
+
     /**
      * Restrict a query to active categories only.
      *

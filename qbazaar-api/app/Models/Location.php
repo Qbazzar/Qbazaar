@@ -70,6 +70,12 @@ class Location extends Model
         return $this->hasMany(self::class, 'parent_id')->orderBy('order');
     }
 
+    /** @return HasMany<Ad, $this> */
+    public function ads(): HasMany
+    {
+        return $this->hasMany(Ad::class);
+    }
+
     public function getLocalizedName(string $locale): string
     {
         return $this->name[$locale] ?? $this->name['en'] ?? $this->slug;
