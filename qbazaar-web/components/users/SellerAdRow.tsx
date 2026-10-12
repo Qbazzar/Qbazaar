@@ -2,10 +2,11 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
 
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
+import { cardHover } from '@/components/design-system/card-hover';
 import { Icon } from '@/components/design-system/Icon';
+import { LocationPinSlimIcon } from '@/components/design-system/icons';
 import { useQatarPlace } from '@/components/locations/QatarPlacesProvider';
 import { formatAdAge, formatAdPrice, placeLabel } from '@/lib/ads/format';
 import { getLocale } from '@/lib/i18n/locale';
@@ -36,7 +37,7 @@ export function SellerAdRow({ ad, headingLevel: Heading = 'h3', className }: Sel
     <article
       className={cn(
         'relative flex flex-wrap gap-[18px] rounded-qb-xl border border-qb-line bg-qb-surface p-4 font-qb',
-        'transition-[box-shadow,translate] duration-200 hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+        cardHover,
         'has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-qb-brand-active has-[a:focus-visible]:outline-solid',
         className,
       )}
@@ -48,7 +49,7 @@ export function SellerAdRow({ ad, headingLevel: Heading = 'h3', className }: Sel
           <span className="flex size-full items-center justify-center text-qb-micro text-qb-ink-subtle">{t('media.no_image')}</span>
         )}
         <div className="absolute end-3 top-3 z-10">
-          <FavoriteButton adId={ad.id} adTitle={ad.title} className="size-[30px] [&_svg]:size-4" />
+          <FavoriteButton adId={ad.id} adTitle={ad.title} className="size-[30px] shadow-qb-soft [&_svg]:size-4 [&_svg]:stroke-[1.5]" />
         </div>
       </div>
 
@@ -63,7 +64,7 @@ export function SellerAdRow({ ad, headingLevel: Heading = 'h3', className }: Sel
         </div>
         {meta ? (
           <p className="mt-auto flex items-center gap-1.5 border-t border-qb-line pt-3 text-qb-caption text-qb-ink-subtle">
-            <Icon icon={MapPin} className="size-[15px]" strokeWidth={1.6} />
+            <Icon icon={LocationPinSlimIcon} className="size-[15px]" />
             {/* The age is worked out again at hydration, when it may have moved on by a minute. */}
             <span className="truncate" suppressHydrationWarning>
               {meta}

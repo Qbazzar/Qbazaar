@@ -14,8 +14,8 @@
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { HeartIcon } from 'lucide-react';
 
+import { HeartIcon } from '@/components/design-system/icons';
 import { useFavoritesStore } from '@/store/favorites';
 import { useToggleFavoriteMutation } from '@/lib/queries/favorites';
 import { useAuthStore } from '@/store/auth';
@@ -113,8 +113,9 @@ export function FavoriteButton({
       title={label}
       disabled={toggleMutation.isPending}
       className={cn(
-        // The reference's white round heart (0 4px 30px shadow); callers size and place it.
-        'inline-flex items-center justify-center rounded-full bg-qb-surface text-qb-ink-muted shadow-qb-raised transition-colors hover:text-qb-brand',
+        // The reference's white round heart (0 4px 30px shadow; the cards' smaller one passes shadow-qb-soft):
+        // a plain span there, so it neither animates nor reacts to the pointer. Callers size and place it.
+        'inline-flex cursor-pointer items-center justify-center rounded-[50%] bg-qb-surface text-qb-ink-muted shadow-qb-raised',
         'disabled:cursor-progress disabled:opacity-70',
         focusRing,
         withLabel ? 'gap-2 px-3 py-2 text-qb-caption' : SIZE_CLS[size],
@@ -124,7 +125,7 @@ export function FavoriteButton({
       {/* A saved ad's heart is filled with the brand colour (product.html favFill). */}
       <HeartIcon
         aria-hidden="true"
-        className={cn('transition-colors', favorited ? 'fill-qb-brand text-qb-brand' : 'fill-transparent')}
+        className={favorited ? 'fill-qb-brand text-qb-brand' : 'fill-transparent'}
       />
       {withLabel ? <span className="font-medium">{label}</span> : null}
     </button>

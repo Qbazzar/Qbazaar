@@ -2,11 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
 
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { Badge, Chip } from '@/components/design-system/Badge';
+import { cardHover } from '@/components/design-system/card-hover';
 import { Icon } from '@/components/design-system/Icon';
+import { LocationPinIcon } from '@/components/design-system/icons';
 import { useQatarPlace } from '@/components/locations/QatarPlacesProvider';
 import { formatAdAge, formatAdPrice, placeLabel } from '@/lib/ads/format';
 import { getLocale } from '@/lib/i18n/locale';
@@ -48,7 +49,7 @@ const VARIANTS = {
     price: 'px-[11px] text-qb-micro',
     title: 'mb-3 min-h-[42px] text-qb-body leading-[1.3]',
     meta: '',
-    favorite: 'size-[30px] [&_svg]:size-[15px]',
+    favorite: 'size-[30px] shadow-qb-soft [&_svg]:size-[15px] [&_svg]:stroke-[1.5]',
     tags: true,
   },
 } as const;
@@ -76,7 +77,7 @@ export function ListingCard({ ad, variant, favorited = false, headingLevel: Head
     <article
       className={cn(
         'relative flex h-full flex-col overflow-hidden rounded-qb-xl border border-qb-line bg-qb-surface font-qb',
-        'transition-[box-shadow,translate] duration-200 hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+        cardHover,
         'has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-qb-brand-active has-[a:focus-visible]:outline-solid',
         className,
       )}
@@ -110,7 +111,7 @@ export function ListingCard({ ad, variant, favorited = false, headingLevel: Head
         ) : null}
         {meta ? (
           <p className={cn('mt-auto flex items-center gap-1.5 text-qb-label text-qb-ink-subtle', look.meta)}>
-            <Icon icon={MapPin} className="size-[13px]" strokeWidth={1.7} />
+            <Icon icon={LocationPinIcon} className="size-[13px]" strokeWidth={1.7} />
             {/* The age is worked out again at hydration, when it may have moved on by a minute. */}
             <span className="truncate" suppressHydrationWarning>
               {meta}
