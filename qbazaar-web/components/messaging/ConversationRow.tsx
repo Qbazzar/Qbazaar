@@ -37,7 +37,7 @@ export function ConversationRow({ conversation, active, onSelect, selection }: P
       {selection ? (
         <SelectCheckbox
           checked={selection.checked}
-          onChange={(event) => selection.onChange(event.target.checked)}
+          onCheckedChange={selection.onChange}
           aria-label={t('messaging.select_one', { name: other_participant.full_name })}
         />
       ) : null}
@@ -47,8 +47,8 @@ export function ConversationRow({ conversation, active, onSelect, selection }: P
         aria-current={active ? 'true' : undefined}
         data-conversation-id={conversation.id}
         className={cn(
-          'flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-qb-lg border-s-[3px] border-transparent p-3.5 text-start transition-colors',
-          active ? 'qb-desktop:border-qb-brand qb-desktop:bg-qb-acct-active' : 'hover:bg-qb-hover',
+          'mb-1.5 flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-qb-lg border-s-[3px] border-transparent bg-qb-surface p-3.5 text-start',
+          active && 'qb-desktop:border-qb-brand qb-desktop:bg-qb-acct-active',
           focusRing,
           '-outline-offset-2',
         )}
