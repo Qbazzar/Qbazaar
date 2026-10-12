@@ -560,6 +560,17 @@ return [
         ],
     ],
 
+    'role_names' => [
+        'super_admin' => 'مدير عام',
+        'moderator' => 'مشرف',
+        'support' => 'دعم فني',
+    ],
+
+    'conversation' => [
+        'offer_label' => 'عرض سعر',
+        'event' => 'حدث',
+    ],
+
     'home' => [
         'title' => 'الرئيسية',
         'heading' => 'نظرة عامة',

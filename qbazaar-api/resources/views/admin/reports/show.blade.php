@@ -45,13 +45,13 @@
 
         <div class="space-y-6">
             <x-admin.card title="المُبلِّغ">
-                <div class="font-semibold">{{ $report->reporter?->full_name ?? 'الإشراف التلقائي' }}</div>
+                <x-admin.user :user="$report->reporter" size="md" fallback="الإشراف التلقائي" />
                 <div class="break-all text-sm text-ink-500">{{ $report->reporter?->email }}</div>
             </x-admin.card>
 
             @if ($report->reviewer)
                 <x-admin.card title="راجعه">
-                    <div class="font-semibold">{{ $report->reviewer->full_name }}</div>
+                    <x-admin.user :user="$report->reviewer" size="md" />
                 </x-admin.card>
             @endif
 

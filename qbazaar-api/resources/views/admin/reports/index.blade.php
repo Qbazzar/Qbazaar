@@ -36,7 +36,7 @@
                     <span class="block text-xs text-ink-500">{{ \Illuminate\Support\Str::limit($report->target_id, 12) }}</span>
                 </x-admin.table.cell>
                 <x-admin.table.cell label="السبب" class="text-ink-700">{{ $report->category->label()['ar'] }}</x-admin.table.cell>
-                <x-admin.table.cell label="المُبلِّغ" class="text-ink-700">{{ $report->reporter?->full_name ?? 'الإشراف التلقائي' }}</x-admin.table.cell>
+                <x-admin.table.cell label="المُبلِّغ" class="text-ink-700"><x-admin.user :user="$report->reporter" fallback="الإشراف التلقائي" /></x-admin.table.cell>
                 <x-admin.table.cell label="الحالة"><x-admin.badge :status="$report->status" /></x-admin.table.cell>
                 <x-admin.table.cell label="التاريخ" secondary class="text-ink-500">{{ optional($report->created_at)->format('Y-m-d') }}</x-admin.table.cell>
                 <x-admin.table.actions>

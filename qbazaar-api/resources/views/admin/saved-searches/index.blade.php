@@ -18,7 +18,7 @@
         @foreach ($savedSearches as $savedSearch)
             <x-admin.table.row>
                 <x-admin.table.cell primary class="font-semibold">{{ $savedSearch->name ?? '—' }}</x-admin.table.cell>
-                <x-admin.table.cell label="المستخدم" class="text-ink-700">{{ $savedSearch->user?->full_name ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="المستخدم" class="text-ink-700"><x-admin.user :user="$savedSearch->user" /></x-admin.table.cell>
                 <x-admin.table.cell label="معايير البحث" class="font-mono text-xs text-ink-500">
                     <span dir="ltr" class="break-all">{{ \Illuminate\Support\Str::limit(is_array($savedSearch->query_params) ? (string) json_encode($savedSearch->query_params, JSON_UNESCAPED_UNICODE) : (string) $savedSearch->query_params, 70) }}</span>
                 </x-admin.table.cell>

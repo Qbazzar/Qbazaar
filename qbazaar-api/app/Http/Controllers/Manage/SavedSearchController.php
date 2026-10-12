@@ -16,7 +16,7 @@ class SavedSearchController extends Controller
         $search = $request->string('q')->toString();
 
         $savedSearches = SavedSearch::query()
-            ->with(['user:id,full_name,email'])
+            ->with(['user:id,full_name,email', 'user.avatarMedia'])
             ->when(
                 $search !== '',
                 fn ($query) => $query->where(function ($inner) use ($search): void {

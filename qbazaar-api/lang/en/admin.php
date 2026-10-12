@@ -619,6 +619,17 @@ return [
         ],
     ],
 
+    'role_names' => [
+        'super_admin' => 'Super admin',
+        'moderator' => 'Moderator',
+        'support' => 'Support',
+    ],
+
+    'conversation' => [
+        'offer_label' => 'Offer',
+        'event' => 'Event',
+    ],
+
     'home' => [
         'title' => 'Home',
         'heading' => 'Overview',
