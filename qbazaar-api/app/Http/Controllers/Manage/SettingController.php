@@ -48,7 +48,7 @@ class SettingController extends Controller
         $updateIntegrations->execute($validated['integrations'] ?? [], $validated['integrations_clear'] ?? [], $request->editableGroups(), $actor);
 
         return redirect()
-            ->route('admin.settings.edit')
+            ->to(route('admin.settings.edit') . $request->activeTabFragment())
             ->with('status', __('admin.settings.saved'));
     }
 }

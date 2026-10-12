@@ -4,8 +4,9 @@
 @section('heading', __('admin.settings.title'))
 
 @section('content')
-    <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-6 [&_:is(input,select,textarea,button)]:scroll-mb-24">
         @csrf
+        <input type="hidden" name="_tab" value="">
         @method('PUT')
 
         <p class="text-sm text-ink-500">{{ __('admin.settings.intro') }}</p>
@@ -63,7 +64,7 @@
             @endforeach
         </x-admin.tabs>
 
-        <div class="sticky bottom-0 -mx-4 border-t border-ink-200 bg-cream-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div class="sticky bottom-0 z-10 -mx-4 border-t border-ink-200 bg-cream-50/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:-mx-6 sm:px-6">
             <x-admin.button icon="check">{{ __('admin.settings.save') }}</x-admin.button>
         </div>
     </form>

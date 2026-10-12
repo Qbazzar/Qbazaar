@@ -29,7 +29,11 @@
                 var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
                 var panels = tabs.map(function (tab) { return document.getElementById(tab.getAttribute('aria-controls')); });
 
+                var form = root.closest('form');
+                var tabField = form && form.querySelector('input[name="_tab"]');
+
                 function select(index, focus, updateUrl) {
+                    if (tabField) tabField.value = tabs[index].dataset.tab;
                     tabs.forEach(function (tab, i) {
                         var on = i === index;
                         tab.setAttribute('aria-selected', String(on));
@@ -59,6 +63,8 @@
                 });
 
                 list.addEventListener('keydown', function (event) {
+                    // Leave Alt+Arrow (browser back/forward) and other shortcuts alone.
+                    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
                     var rtl = getComputedStyle(list).direction === 'rtl';
                     var current = tabs.indexOf(document.activeElement);
                     var step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[event.key];
@@ -78,10 +84,18 @@
 
                 // A native "required" failure inside a hidden panel would
                 // otherwise block the submit silently.
-                var form = root.closest('form');
+                // Invalid events fire for every bad control in tree order; only the
+                // first one per submit attempt may switch the tab.
+                var handled = false;
                 if (form) form.addEventListener('invalid', function (event) {
+                    if (handled) return;
+                    handled = true;
+                    setTimeout(function () { handled = false; }, 0);
                     var index = panels.findIndex(function (panel) { return panel.contains(event.target); });
-                    if (index >= 0 && panels[index].hidden) select(index, false, true);
+                    if (index >= 0 && panels[index].hidden) {
+                        select(index, false, true);
+                        event.target.focus();
+                    }
                 }, true);
             }
             document.querySelectorAll('[data-tabs]').forEach(init);

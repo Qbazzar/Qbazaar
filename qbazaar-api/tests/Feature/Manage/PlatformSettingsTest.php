@@ -203,3 +203,36 @@ it('marks only the tab holding the invalid field after a failed save', function 
     expect(substr_count($html, 'data-invalid'))->toBe(1);
     expect($html)->toMatch('/id="settings-tab-' . $group . '"[^>]*data-invalid/');
 });
+
+it('renders the admin layout as Arabic right-to-left whatever the app locale', function (): void {
+    app()->setLocale('en');
+
+    actingAs($this->admin)->get('/admin/settings')->assertOk()->assertSee('<html lang="ar" dir="rtl">', false);
+});
+
+it('renders the login page as Arabic right-to-left', function (): void {
+    app()->setLocale('en');
+
+    $this->get('/admin/login')->assertOk()->assertSee('lang="ar" dir="rtl"', false);
+});
+
+it('announces a tab with errors to screen readers', function (): void {
+    actingAs($this->admin)
+        ->from('/admin/settings')
+        ->put('/admin/settings', validSettingsPayload(['ad_max_images' => 'abc']));
+
+    actingAs($this->admin)->get('/admin/settings')
+        ->assertSee('<span class="sr-only">' . __('admin.settings.has_errors') . '</span>', false);
+});
+
+it('returns to the tab the admin was on after saving', function (): void {
+    actingAs($this->admin)->put('/admin/settings', validSettingsPayload(['_tab' => 'orders']))
+        ->assertRedirect('/admin/settings#orders');
+
+    actingAs($this->admin)->put('/admin/settings', validSettingsPayload(['_tab' => '"><script>']))
+        ->assertRedirect('/admin/settings');
+});
+
+it('keeps emails, urls and phones left-to-right inside the admin form components', function (): void {
+    $this->get('/admin/login')->assertOk()->assertSee('type="email"', false)->assertSee('dir="ltr"', false);
+});
