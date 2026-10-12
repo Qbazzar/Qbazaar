@@ -1,0 +1,139 @@
+{
+  "shared": {
+    "header": {
+      "ref": "header",
+      "target": "header",
+      "fixedSize": true
+    },
+    "header-add-ads": {
+      "ref": "header .qb-hcluster > button.qb-btn:first-child",
+      "target": "header a[href=\"/post-ad\"]",
+      "interactive": true,
+      "fixedSize": true
+    },
+    "header-icon": {
+      "ref": "header .qb-nav",
+      "target": "header [aria-label=\"Language\"], header a[aria-label=\"Saved ads\"], header a[aria-label=\"Notifications\"], header a[aria-label=\"Messages\"]",
+      "all": true,
+      "interactive": true,
+      "fixedSize": true
+    },
+    "header-login": {
+      "guestOnly": true,
+      "ref": "header a[href=\"login.html\"]",
+      "target": "header a[href=\"/login\"]",
+      "interactive": true
+    },
+    "header-signup": {
+      "guestOnly": true,
+      "ref": "header a[href=\"signup.html\"]",
+      "target": "header a[href=\"/register\"]",
+      "interactive": true
+    },
+    "footer": {
+      "ref": "footer",
+      "target": "footer",
+      "pixel": true
+    }
+  },
+  "pages": {
+    "index": {
+      "hero-search": {
+        "ref": "main form",
+        "target": "form[role=search]",
+        "fixedSize": true
+      },
+      "hero-search-field": {
+        "ref": "main form > label",
+        "target": "form[role=search] label",
+        "interactive": true
+      },
+      "hero-choose-category": {
+        "ref": "main form [data-qbsel=cat]",
+        "target": "form[role=search] a[href=\"/categories\"], form[role=search] [data-field=category]",
+        "interactive": true,
+        "fixedSize": true
+      },
+      "hero-location": {
+        "ref": "main form > div:nth-of-type(4)",
+        "target": "form[role=search] div:has(> input[aria-label=Location])",
+        "fixedSize": true
+      },
+      "hero-distance": {
+        "ref": "main form [data-qbsel=dist]",
+        "target": "form[role=search] [data-field=distance], form[role=search] [aria-label=Distance]",
+        "interactive": true,
+        "fixedSize": true
+      },
+      "hero-submit": {
+        "ref": "main form button[type=submit]",
+        "target": "form[role=search] button[type=submit]",
+        "interactive": true,
+        "fixedSize": true
+      },
+      "category-tile": {
+        "ref": "main button.qb-card",
+        "target": "main section:nth-of-type(2) ul > li > a",
+        "all": true,
+        "interactive": true,
+        "pixel": false
+      },
+      "ad-card": {
+        "ref": "#recTrack .qb-card",
+        "target": "ul[aria-label=\"Recommended for you\"] > li > article",
+        "all": true,
+        "interactive": true,
+        "pixel": false
+      }
+    },
+    "login": {
+      "auth-card": {
+        "ref": "main .qb-card",
+        "target": "main > div > div",
+        "fixedSize": true
+      },
+      "auth-submit": {
+        "ref": "form button[type=submit]",
+        "target": "form button[type=submit]",
+        "interactive": true,
+        "fixedSize": true
+      },
+      "auth-input": {
+        "ref": "form input[type=email]",
+        "target": "form input[type=text], form input[type=email]",
+        "interactive": true,
+        "fixedSize": true,
+        "pixel": false
+      },
+      "auth-link": {
+        "ref": "form a.qb-link",
+        "target": "form a[href=\"/forgot-password\"]",
+        "interactive": true
+      }
+    },
+    "signup": {
+      "$extends": "login"
+    },
+    "forgot-password": {
+      "$extends": "login"
+    },
+    "new-password": {
+      "$extends": "login"
+    },
+    "send-code": {
+      "$extends": "login"
+    },
+    "enter-code": {
+      "$extends": "login"
+    },
+    "enter-number": {
+      "$extends": "login"
+    },
+    "signup-verify": {
+      "$extends": "login"
+    },
+    "verify-identity": {
+      "$extends": "login"
+    }
+  }
+}
