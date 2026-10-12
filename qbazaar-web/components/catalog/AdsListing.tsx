@@ -164,7 +164,7 @@ export function AdsListing({ category, heading }: AdsListingProps) {
       icon={<Icon icon={SearchXIcon} size="lg" />}
       title={t('ads.empty.no_ads', 'لا توجد إعلانات هنا بعد.')}
       description={hasFilters ? t('catalog.empty.try_filters', 'جرّب تعديل الفلاتر أو تصفّح كل الأقسام.') : undefined}
-      className="rounded-qb-2xl border border-qb-line bg-qb-surface"
+      className="rounded-qb-xl border border-qb-line bg-qb-surface"
       action={
         hasFilters ? (
           <Button variant="secondary" size="sm" onClick={resetFilters}>

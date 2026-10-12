@@ -16,7 +16,7 @@ interface LoadErrorProps {
 /** A failed request of a catalog page, announced, with a retry button. The design has no frame for it. */
 export function LoadError({ title, onRetry, headingLevel, className }: LoadErrorProps) {
   return (
-    <div role="alert" className={cn('rounded-qb-2xl border border-qb-line bg-qb-surface', className)}>
+    <div role="alert" className={cn('rounded-qb-xl border border-qb-line bg-qb-surface', className)}>
       <EmptyState
         icon={<Icon icon={AlertCircleIcon} size="lg" />}
         title={title}

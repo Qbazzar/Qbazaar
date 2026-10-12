@@ -46,7 +46,7 @@ export function HomeCategoryStrip({ initialFeed }: { initialFeed?: HomeFeed }) {
     // The other home sections hide when the feed fails, so this one says so and retries the whole feed.
     if (isError || retrying) {
       return (
-        <div role="alert" className="rounded-qb-2xl border border-qb-line bg-qb-surface">
+        <div role="alert" className="rounded-qb-xl border border-qb-line bg-qb-surface">
           <EmptyState
             icon={<Icon icon={AlertCircleIcon} size="lg" />}
             title={t('common.error', 'حدث خطأ، حاول مرة أخرى')}

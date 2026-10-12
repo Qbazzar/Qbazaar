@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { CatalogHeader } from './CatalogHeader';
 import { CatalogLayout } from './CatalogLayout';
 
-const block = 'animate-pulse rounded-qb-2xl border border-qb-line bg-qb-surface motion-reduce:animate-none';
+const block = 'animate-pulse rounded-qb-xl border border-qb-line bg-qb-surface motion-reduce:animate-none';
 
 /**
  * Loading state of the listing pages: the same frame with placeholders, so

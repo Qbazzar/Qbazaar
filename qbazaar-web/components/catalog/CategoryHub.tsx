@@ -115,7 +115,6 @@ function SubcategoryTiles({ subcategories }: { subcategories: Category[] }) {
             <SubcategoryTile
               href={`/c/${child.slug}`}
               name={localized(child.name, locale)}
-              icon={child.icon}
               count={tPlural('catalog.ads_count', child.ads_count)}
               className="h-full"
             />
