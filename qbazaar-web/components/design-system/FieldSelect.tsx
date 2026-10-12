@@ -45,7 +45,7 @@ export interface FieldSelectProps {
 /** The box of the design-system Input and Select (`controlBase` in Input.tsx). */
 const fieldBox = [
   'relative flex h-[52px] w-full cursor-pointer items-center rounded-qb-md border border-qb-field-border bg-qb-surface ps-4 pe-11',
-  'text-start font-qb text-qb-body text-qb-ink outline-none transition-colors',
+  'text-start font-qb text-qb-body text-qb-ink outline-none',
   'focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
   'aria-invalid:border-qb-danger aria-invalid:focus-visible:ring-qb-danger/20',
   'disabled:cursor-not-allowed disabled:border-qb-line disabled:bg-qb-fill disabled:text-qb-ink-subtle',

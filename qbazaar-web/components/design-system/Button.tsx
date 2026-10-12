@@ -8,21 +8,24 @@ import { focusRing } from './focus-ring';
 export const buttonVariants = cva(
   [
     'inline-flex shrink-0 items-center justify-center gap-2 font-qb font-semibold whitespace-nowrap',
-    'transition-colors duration-150 select-none cursor-pointer',
+    'qb-motion select-none cursor-pointer',
     'disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50',
     '[&_svg]:pointer-events-none [&_svg]:shrink-0',
     focusRing,
   ],
   {
     variants: {
+      // The reference's .qb-btn keeps its colours under the pointer and dims by 4 % (styles.css:243);
+      // only the orange buttons swap to the darker orange (polish.css:24-28). Nothing changes on
+      // :active, so a pressed button keeps its hover look.
       variant: {
-        primary: 'bg-qb-brand text-qb-on-brand hover:bg-qb-brand-hover active:bg-qb-brand-active',
-        secondary: 'border border-qb-brand bg-qb-surface text-qb-brand hover:bg-qb-brand-soft hover:text-qb-brand-on-soft',
-        outline: 'border border-qb-line bg-qb-surface text-qb-ink-title hover:bg-qb-hover',
-        soft: 'bg-qb-brand-soft text-qb-brand-on-soft hover:bg-qb-brand hover:text-qb-on-brand',
-        muted: 'bg-qb-fill font-normal text-qb-ink-muted hover:bg-qb-line hover:text-qb-ink-secondary',
+        primary: 'bg-qb-brand text-qb-on-brand hover:bg-qb-brand-hover',
+        secondary: 'border border-qb-brand bg-qb-surface text-qb-brand hover:brightness-[.96]',
+        outline: 'border border-qb-line bg-qb-surface text-qb-ink-title hover:brightness-[.96]',
+        soft: 'bg-qb-brand-soft text-qb-brand-on-soft hover:brightness-[.96]',
+        muted: 'bg-qb-fill font-normal text-qb-ink-muted hover:brightness-[.96]',
         ghost: 'font-medium text-qb-ink-muted hover:bg-qb-fill',
-        danger: 'border border-qb-line bg-qb-surface text-qb-danger hover:bg-qb-danger-soft',
+        danger: 'border border-qb-line bg-qb-surface text-qb-danger hover:brightness-[.96]',
       },
       // Line height 1.15 as every .qb-btn of the reference, so a padding-sized
       // button (h-auto with py) keeps the reference height. A className that
