@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Menu } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { MenuIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -41,7 +41,7 @@ export function MobileMenu({ signedIn }: { signedIn: boolean }) {
         }}
         className={mobileIconButton}
       >
-        <Icon icon={Menu} strokeWidth={2} />
+        <Icon icon={MenuIcon} />
       </button>
       {requested ? <MobileMenuDrawer open={open} onOpenChange={setOpen} signedIn={signedIn} /> : null}
     </>

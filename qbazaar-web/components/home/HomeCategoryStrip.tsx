@@ -10,7 +10,7 @@ import { cardHover } from '@/components/design-system/card-hover';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
-import { DynamicIcon } from '@/components/ui/dynamic-icon';
+import { CategoryIcon } from '@/components/design-system/icons/CategoryIcon';
 import { useRetry } from '@/hooks/useRetry';
 import type { HomeFeed } from '@/lib/api/home';
 import { localized, getLocale } from '@/lib/i18n/locale';
@@ -97,7 +97,7 @@ export function HomeCategoryStrip({ initialFeed }: { initialFeed?: HomeFeed }) {
             )}
           >
             <span aria-hidden="true" className="flex size-12 items-center justify-center rounded-qb-lg bg-qb-brand-soft text-qb-brand">
-              <DynamicIcon name={cat.icon} className="size-6" strokeWidth={1.6} />
+              <CategoryIcon name={cat.icon} className="size-6" strokeWidth={1.6} />
             </span>
             <span>
               <span className="mb-1.5 block text-qb-body-lg font-medium text-qb-ink">{localized(cat.name, locale)}</span>

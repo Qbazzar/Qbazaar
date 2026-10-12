@@ -1,0 +1,2188 @@
+{
+  "generatedFrom": "tools/parity/reference-icons/index.json",
+  "glyphs": {
+    "add-ads-pin": {
+      "export": "AddAdsPinIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "Header 'Add Ads' button: map pin with a plus"
+    },
+    "alert-circle": {
+      "export": "AlertCircleIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Saved search 'Clean up inactive items' notice"
+    },
+    "alert-circle-dot": {
+      "export": "AlertCircleDotIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(97, 97, 97)",
+      "use": "Account nav 'Marketplace Info'"
+    },
+    "alert-circle-report": {
+      "export": "AlertCircleReportIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Chat header '...' menu 'Report'"
+    },
+    "apple-login": {
+      "export": "AppleLoginIcon",
+      "source": "reference",
+      "size": null,
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(0, 0, 0)",
+      "use": "Login social button: Apple"
+    },
+    "apple-pay": {
+      "export": "ApplePayIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(33,33,33)",
+      "use": "Payment method / checkout: Apple Pay"
+    },
+    "arrow-left": {
+      "export": "ArrowLeftIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 2,
+      "strokes": [
+        2
+      ],
+      "colour": "rgb(75,75,75)",
+      "use": "Product / preview gallery previous button"
+    },
+    "arrow-right": {
+      "export": "ArrowRightIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8,
+        2
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "'View All' links; product gallery next button"
+    },
+    "arrow-up-right": {
+      "export": "ArrowUpRightIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Sales overview revenue card"
+    },
+    "arrow-up-right-revenue": {
+      "export": "ArrowUpRightRevenueIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Account wallet revenue stat"
+    },
+    "arrow-up-upload": {
+      "export": "ArrowUpUploadIcon",
+      "source": "reference",
+      "size": "12x12",
+      "strokeWidth": 3,
+      "strokes": [
+        3
+      ],
+      "colour": "#fff",
+      "use": "Add-ads image drop zone arrow (sits on the cloud)"
+    },
+    "avatar-placeholder": {
+      "export": "AvatarPlaceholderIcon",
+      "source": "reference",
+      "size": "56x56",
+      "strokeWidth": 1.5,
+      "strokes": [
+        1.5
+      ],
+      "colour": "#fff",
+      "use": "Profile photo placeholder after upload state"
+    },
+    "baby-kids-tile": {
+      "export": "BabyKidsTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Baby & Kids'"
+    },
+    "back-arrow-chat": {
+      "export": "BackArrowChatIcon",
+      "source": "reference",
+      "size": null,
+      "strokeWidth": 2,
+      "strokes": [
+        2
+      ],
+      "colour": "#212121",
+      "use": "Phone chat back button (CSS background)"
+    },
+    "bank-qnb": {
+      "export": "BankQnbIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(43,111,219)",
+      "use": "Payment method / checkout: QNB bank"
+    },
+    "beauty-tile": {
+      "export": "BeautyTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Fashion & Beauty'"
+    },
+    "bell": {
+      "export": "BellIcon",
+      "source": "reference",
+      "size": "23x23",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.4,
+        1.6
+      ],
+      "colour": "rgb(75, 75, 75)",
+      "use": "Header notifications button; notifications empty state"
+    },
+    "bell-off": {
+      "export": "BellOffIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide BellOff: muted notifications: no crossed-out bell in the reference"
+    },
+    "bell-outline": {
+      "export": "BellOutlineIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Phone header bell; mobile drawer 'Notifications' (Figma outline)"
+    },
+    "block": {
+      "export": "BlockIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.6,
+        1.8
+      ],
+      "colour": "rgb(224,74,74)",
+      "use": "Chat header '...' menu 'Block'; chat menu 'Block User'"
+    },
+    "block-circle": {
+      "export": "BlockCircleIcon",
+      "source": "reference",
+      "size": "30x30",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(211,60,60)",
+      "use": "Block-user confirmation modal (red)"
+    },
+    "bookmark": {
+      "export": "BookmarkIcon",
+      "source": "reference",
+      "size": "15x15",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(0, 0, 0)",
+      "use": "My-ads 'Reserve' button"
+    },
+    "books-tile": {
+      "export": "BooksTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Books & Magazines'"
+    },
+    "building-2": {
+      "export": "Building2Icon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Building2: company placeholder: the reference shows logos, no building glyph"
+    },
+    "calendar": {
+      "export": "CalendarIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Ad title card 'Since ...', dashboard 'Active since', add-ads profile"
+    },
+    "calendar-alt": {
+      "export": "CalendarAltIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Seller sidebar 'Active since'"
+    },
+    "calendar-member": {
+      "export": "CalendarMemberIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(144, 144, 144)",
+      "use": "Seller profile 'Member Since'"
+    },
+    "camera-attach": {
+      "export": "CameraAttachIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Chat composer 'Attach photo'"
+    },
+    "camera-count": {
+      "export": "CameraCountIcon",
+      "source": "reference",
+      "size": "14x14",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "Gallery photo-count chip (replaces the emoji)"
+    },
+    "cameras-tile": {
+      "export": "CamerasTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Cameras & Lenses'"
+    },
+    "camping-tile": {
+      "export": "CampingTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Camping & Trips'"
+    },
+    "cars-tile": {
+      "export": "CarsTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Cars & Vehicles'"
+    },
+    "cash": {
+      "export": "CashIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Payment method / checkout: Cash"
+    },
+    "categories-drawer": {
+      "export": "CategoriesDrawerIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Mobile drawer 'Categories' (Figma outline)"
+    },
+    "chart-column": {
+      "export": "ChartColumnIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide ChartColumn: statistics: the reference draws no chart glyph"
+    },
+    "chat-bubble": {
+      "export": "ChatBubbleIcon",
+      "source": "reference",
+      "size": "23x23",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6,
+        1.7
+      ],
+      "colour": "rgb(75, 75, 75)",
+      "use": "Header messages button; users list message button"
+    },
+    "chat-lines": {
+      "export": "ChatLinesIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Seller sidebar 'Customer Satisfaction'"
+    },
+    "chat-round": {
+      "export": "ChatRoundIcon",
+      "source": "reference",
+      "size": "17x17",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Organization 'Message' button"
+    },
+    "chat-square": {
+      "export": "ChatSquareIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "'Send Message' button"
+    },
+    "check": {
+      "export": "CheckIcon",
+      "source": "reference",
+      "size": "13x13",
+      "strokeWidth": 3,
+      "strokes": [
+        2,
+        2.2,
+        3
+      ],
+      "colour": "#fff",
+      "use": "Selected-state tick: featured-ad options, notifications select, add-ads highlight options"
+    },
+    "check-alt": {
+      "export": "CheckAltIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Add-ads profile card '0 Ads' tick"
+    },
+    "check-check": {
+      "export": "CheckCheckIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide CheckCheck: read receipt: the reference chat has no double tick"
+    },
+    "check-circle": {
+      "export": "CheckCircleIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Dashboard checklist; add-ads tips"
+    },
+    "check-circle-filled": {
+      "export": "CheckCircleFilledIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 2,
+      "strokes": [
+        2
+      ],
+      "colour": "rgb(27,173,7)",
+      "use": "Product features list; premium plan feature bullets"
+    },
+    "check-circle-filled-alt": {
+      "export": "CheckCircleFilledAltIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(46,178,116)",
+      "use": "Organization 'About' services list"
+    },
+    "check-circle-green": {
+      "export": "CheckCircleGreenIcon",
+      "source": "reference",
+      "size": null,
+      "strokeWidth": 2.2,
+      "strokes": [
+        2.2
+      ],
+      "colour": "#00C35B + #fff",
+      "use": "Phone add-ads selected option tick (CSS background)"
+    },
+    "check-circle-success": {
+      "export": "CheckCircleSuccessIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "#F38057",
+      "use": "Checkout payment result modal: success (buynow.js payModal)"
+    },
+    "check-offer-buy": {
+      "export": "CheckOfferBuyIcon",
+      "source": "reference",
+      "size": "11x11",
+      "strokeWidth": 3,
+      "strokes": [
+        3
+      ],
+      "colour": "#fff",
+      "use": "Offer page check in Buy mode"
+    },
+    "check-small": {
+      "export": "CheckSmallIcon",
+      "source": "reference",
+      "size": "13x13",
+      "strokeWidth": 2.2,
+      "strokes": [
+        2.2
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Replacement for a tick emoji; chat card 'accepted/completed' status"
+    },
+    "check-toast": {
+      "export": "CheckToastIcon",
+      "source": "reference",
+      "size": "22x22",
+      "strokeWidth": 2,
+      "strokes": [
+        2
+      ],
+      "colour": "rgb(7,189,116)",
+      "use": "Photo cropper success toast"
+    },
+    "checkbox-select": {
+      "export": "CheckboxSelectIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(158, 158, 158)",
+      "use": "Messages thread list select toggle"
+    },
+    "chevron-down": {
+      "export": "ChevronDownIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7,
+        2
+      ],
+      "colour": "rgb(158, 158, 158)",
+      "use": "Hero search dropdowns (selects.js) and sort/filter selects"
+    },
+    "chevron-left": {
+      "export": "ChevronLeftIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 2,
+      "strokes": [
+        1.8,
+        2
+      ],
+      "colour": "rgb(158, 150, 150)",
+      "use": "Companies pagination: previous; template 'Back to login'"
+    },
+    "chevron-right": {
+      "export": "ChevronRightIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 2,
+      "strokes": [
+        2
+      ],
+      "colour": "rgb(203, 203, 203)",
+      "use": "Companies pagination: next; payment-method rows"
+    },
+    "chevron-up": {
+      "export": "ChevronUpIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide ChevronUp: select scroll-up arrow: the reference only draws the down chevron"
+    },
+    "chevrons-left": {
+      "export": "ChevronsLeftIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 2,
+      "strokes": [
+        2
+      ],
+      "colour": "rgb(158, 150, 150)",
+      "use": "Companies pagination: first page"
+    },
+    "chevrons-right": {
+      "export": "ChevronsRightIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 2,
+      "strokes": [
+        2
+      ],
+      "colour": "rgb(158, 150, 150)",
+      "use": "Companies pagination: last page"
+    },
+    "clock": {
+      "export": "ClockIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.6,
+        1.7,
+        1.8
+      ],
+      "colour": "rgb(158, 158, 158)",
+      "use": "'Response Time', opening hours, sales overview, notification time"
+    },
+    "clock-expired": {
+      "export": "ClockExpiredIcon",
+      "source": "reference",
+      "size": "13x13",
+      "strokeWidth": 2.2,
+      "strokes": [
+        2.2
+      ],
+      "colour": "rgb(150, 150, 150)",
+      "use": "Chat offer card status: expired"
+    },
+    "close": {
+      "export": "CloseIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": 2.4,
+      "strokes": [
+        2.2,
+        2.4
+      ],
+      "colour": "rgb(224, 74, 74)",
+      "use": "Profile photo upload cancel; chat card 'declined/rejected' status"
+    },
+    "clothes-tile": {
+      "export": "ClothesTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Clothes'"
+    },
+    "cloud-off": {
+      "export": "CloudOffIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide CloudOff: offline state: not in the reference"
+    },
+    "cloud-upload": {
+      "export": "CloudUploadIcon",
+      "source": "reference",
+      "size": "58x44",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(243,128,87)",
+      "use": "Add-ads image drop zone cloud"
+    },
+    "computers-tile": {
+      "export": "ComputersTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Computers & Tablets'"
+    },
+    "copyright": {
+      "export": "CopyrightIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Footer copyright line"
+    },
+    "credit-card": {
+      "export": "CreditCardIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.6,
+        1.7
+      ],
+      "colour": "rgb(75,75,75)",
+      "use": "'Payment Method' buttons; account 'Billing Info' nav"
+    },
+    "download": {
+      "export": "DownloadIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Download: notification type icon: no download glyph in the reference"
+    },
+    "electronics-tile": {
+      "export": "ElectronicsTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Electronics'"
+    },
+    "error-circle": {
+      "export": "ErrorCircleIcon",
+      "source": "reference",
+      "size": "30x30",
+      "strokeWidth": 2,
+      "strokes": [
+        2
+      ],
+      "colour": "rgb(230,90,70)",
+      "use": "Checkout 'Payment Failed' modal"
+    },
+    "eye": {
+      "export": "EyeIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6,
+        1.7
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Ad views counter, preview ribbon, 'visitors' count; password reveal on template auth screens"
+    },
+    "eye-off": {
+      "export": "EyeOffIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(154, 160, 166)",
+      "use": "Auth password reveal toggle (auth.js)"
+    },
+    "eye-off-modal": {
+      "export": "EyeOffModalIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Account edit-email modal password toggle"
+    },
+    "facebook": {
+      "export": "FacebookIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Footer social button"
+    },
+    "facebook-login": {
+      "export": "FacebookLoginIcon",
+      "source": "reference",
+      "size": null,
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(24, 119, 242)",
+      "use": "Login social button: Facebook"
+    },
+    "facebook-template": {
+      "export": "FacebookTemplateIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "#1877F2",
+      "use": "Template auth screen Facebook button (unreachable)"
+    },
+    "factory": {
+      "export": "FactoryIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Factory: Business & Industrial category: the reference has no tile for it"
+    },
+    "file-question-mark": {
+      "export": "FileQuestionMarkIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide FileQuestion: not-found state: not in the reference"
+    },
+    "file-text": {
+      "export": "FileTextIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide FileText: document/help article: not in the reference"
+    },
+    "filter-lines": {
+      "export": "FilterLinesIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "#212121",
+      "use": "Phone parent-category 'Filter' button"
+    },
+    "flag-report": {
+      "export": "FlagReportIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(75,75,75)",
+      "use": "Chat '...' menu 'Report User'"
+    },
+    "flag-reserved": {
+      "export": "FlagReservedIcon",
+      "source": "reference",
+      "size": "17x17",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Publish panel 'Reserved'"
+    },
+    "funnel": {
+      "export": "FunnelIcon",
+      "source": "reference",
+      "size": "15x15",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Phone 'Filter' trigger (category / seller pages)"
+    },
+    "gear": {
+      "export": "GearIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6,
+        1.7
+      ],
+      "colour": "rgb(97, 97, 97)",
+      "use": "Account nav 'Account Settings'; header avatar menu"
+    },
+    "gifts-tile": {
+      "export": "GiftsTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Gifts'"
+    },
+    "globe-mobile": {
+      "export": "GlobeMobileIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(33, 33, 33)",
+      "use": "Phone header language button"
+    },
+    "globe-website": {
+      "export": "GlobeWebsiteIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Organization website contact"
+    },
+    "google-login": {
+      "export": "GoogleLoginIcon",
+      "source": "reference",
+      "size": null,
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(66, 133, 244) + rgb(52, 168, 83) + rgb(251, 188, 5) + rgb(234, 67, 53)",
+      "use": "Login social button: Google"
+    },
+    "google-pay": {
+      "export": "GooglePayIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(66, 133, 244) + rgb(52, 168, 83) + rgb(251, 188, 4) + rgb(234, 67, 53)",
+      "use": "Payment method / checkout: Google Pay"
+    },
+    "google-template": {
+      "export": "GoogleTemplateIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "#4285F4 + #34A853 + #FBBC05 + #EA4335",
+      "use": "Template auth screen Google button (unreachable)"
+    },
+    "grid-view": {
+      "export": "GridViewIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(201, 201, 201)",
+      "use": "Category results 'Grid view' toggle"
+    },
+    "handshake": {
+      "export": "HandshakeIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Handshake: deal/offer state: not in the reference"
+    },
+    "headset-support": {
+      "export": "HeadsetSupportIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Messages inbox avatar for the support thread"
+    },
+    "heart": {
+      "export": "HeartIcon",
+      "source": "reference",
+      "size": "23x23",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.5,
+        1.6,
+        1.7,
+        1.8
+      ],
+      "colour": "rgb(117, 117, 117)",
+      "use": "Header wishlist button, product-card favourite toggle, 'Add to Favorite', mobile circular favourite button"
+    },
+    "heart-drawer": {
+      "export": "HeartDrawerIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Mobile drawer 'Favorites' (Figma outline)"
+    },
+    "home-drawer": {
+      "export": "HomeDrawerIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Mobile drawer 'Home' (Figma outline)"
+    },
+    "home-garden-tile": {
+      "export": "HomeGardenTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Home & Garden'"
+    },
+    "image": {
+      "export": "ImageIcon",
+      "source": "reference",
+      "size": "15x15",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "Preview gallery photo counter"
+    },
+    "image-placeholder": {
+      "export": "ImagePlaceholderIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": 1.5,
+      "strokes": [
+        1.5
+      ],
+      "colour": "rgb(179, 179, 179)",
+      "use": "My-ads row 'Without Photo' placeholder"
+    },
+    "inbox": {
+      "export": "InboxIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Inbox: empty inbox/notification type: not in the reference"
+    },
+    "info-circle": {
+      "export": "InfoCircleIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Offer page hint line"
+    },
+    "info-circle-tip": {
+      "export": "InfoCircleTipIcon",
+      "source": "reference",
+      "size": "14x14",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Add-ads title tip"
+    },
+    "info-square": {
+      "export": "InfoSquareIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(33, 33, 33)",
+      "use": "Phone seller 'Info' sheet trigger"
+    },
+    "instagram": {
+      "export": "InstagramIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "Footer social button (filled orange)"
+    },
+    "jobs-tile": {
+      "export": "JobsTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Jobs'"
+    },
+    "language-flag": {
+      "export": "LanguageFlagIcon",
+      "source": "reference",
+      "size": "15x15",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(54, 65, 83)",
+      "use": "Auth pages header language button (flag placeholder)"
+    },
+    "language-globe": {
+      "export": "LanguageGlobeIcon",
+      "source": "reference",
+      "size": "23x23",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(75, 75, 75)",
+      "use": "Header language button (desktop)"
+    },
+    "layers": {
+      "export": "LayersIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Layers: stand-in for unknown category icons (DynamicIcon): not in the reference"
+    },
+    "leisure-tile": {
+      "export": "LeisureTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Leisure & Hobbies'"
+    },
+    "linkedin": {
+      "export": "LinkedinIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Footer social button"
+    },
+    "list-view": {
+      "export": "ListViewIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(33, 33, 33)",
+      "use": "Category results 'List view' toggle"
+    },
+    "loader-circle": {
+      "export": "LoaderCircleIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Loader2, LoaderCircle: loading spinner: the reference has no spinner"
+    },
+    "location-pin": {
+      "export": "LocationPinIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.6,
+        1.7
+      ],
+      "colour": "rgb(158, 158, 158)",
+      "use": "Hero 'Location' field, ad-card meta line, company location"
+    },
+    "location-pin-emoji": {
+      "export": "LocationPinEmojiIcon",
+      "source": "reference",
+      "size": "13x13",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "currentColor (inherits the host text colour)",
+      "use": "Replacement for a pin emoji (no occurrence seen at runtime)"
+    },
+    "location-pin-slim": {
+      "export": "LocationPinSlimIcon",
+      "source": "reference",
+      "size": "13x13",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(158, 158, 158)",
+      "use": "Ad-card meta pin on parent-category, product, offer, seller, wishlist"
+    },
+    "lock": {
+      "export": "LockIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Lock: help topic seed: not in the reference"
+    },
+    "log-out": {
+      "export": "LogOutIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Account 'Log Out'; header avatar menu; mobile drawer 'Log Out'"
+    },
+    "mail": {
+      "export": "MailIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.5,
+        1.6
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Organization email contact; template OTP screen"
+    },
+    "mail-check": {
+      "export": "MailCheckIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide MailCheck: verified e-mail: not in the reference"
+    },
+    "mail-nav": {
+      "export": "MailNavIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(97, 97, 97)",
+      "use": "Account nav 'Email Message'"
+    },
+    "mastercard": {
+      "export": "MastercardIcon",
+      "source": "reference",
+      "size": "30x24",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(235, 0, 27) + rgb(247, 158, 27) + rgb(255, 95, 0)",
+      "use": "Payment method / checkout: Credit Card"
+    },
+    "megaphone": {
+      "export": "MegaphoneIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Megaphone: promotions: the reference has no promotion glyph"
+    },
+    "menu": {
+      "export": "MenuIcon",
+      "source": "reference",
+      "size": "20x14",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(33,33,33)",
+      "use": "Phone hamburger (#qb-burger). Drawn in CSS, not an SVG: a 20x2 bar plus ::before / ::after bars at -6px / +6px. menu.svg reconstructs that geometry."
+    },
+    "message-square-x": {
+      "export": "MessageSquareXIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide MessageSquareX: closed conversation: not in the reference"
+    },
+    "messages-drawer": {
+      "export": "MessagesDrawerIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Mobile drawer 'Messages' (Figma outline)"
+    },
+    "minus": {
+      "export": "MinusIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Minus: collapse/decrement: not in the reference"
+    },
+    "monitor-smartphone": {
+      "export": "MonitorSmartphoneIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide MonitorSmartphone: signed-in devices: not in the reference"
+    },
+    "moon": {
+      "export": "MoonIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Moon: theme toggle: the reference has no theme switch"
+    },
+    "my-ads-drawer": {
+      "export": "MyAdsDrawerIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Mobile drawer 'My Ads' (Figma outline)"
+    },
+    "package": {
+      "export": "PackageIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Package: orders: not in the reference"
+    },
+    "package-check": {
+      "export": "PackageCheckIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide PackageCheck: order delivered: not in the reference"
+    },
+    "package-open": {
+      "export": "PackageOpenIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide PackageOpen: empty orders: not in the reference"
+    },
+    "paypal": {
+      "export": "PaypalIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(0, 48, 135) + rgb(0, 112, 224)",
+      "use": "Payment method / checkout: PayPal"
+    },
+    "pencil": {
+      "export": "PencilIcon",
+      "source": "reference",
+      "size": "15x15",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(119, 119, 119)",
+      "use": "My-ads 'Complete' button; address list edit"
+    },
+    "pencil-edit": {
+      "export": "PencilEditIcon",
+      "source": "reference",
+      "size": "17x17",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Publish panel 'Edit'"
+    },
+    "percent-circle": {
+      "export": "PercentCircleIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Header avatar menu / mobile drawer 'Sales Overview'"
+    },
+    "pets-tile": {
+      "export": "PetsTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Pets'"
+    },
+    "phone": {
+      "export": "PhoneIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Organization phone contact"
+    },
+    "plus": {
+      "export": "PlusIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 2.2,
+      "strokes": [
+        2.2
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "Mobile drawer footer 'Add Ads'"
+    },
+    "plus-circle": {
+      "export": "PlusCircleIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "#fff",
+      "use": "Account address list 'Add Address'"
+    },
+    "real-estate-tile": {
+      "export": "RealEstateTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Real Estate'"
+    },
+    "receipt": {
+      "export": "ReceiptIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Receipt: transactions: not in the reference"
+    },
+    "refresh-cw": {
+      "export": "RefreshCwIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide RefreshCw: retry/refresh: not in the reference"
+    },
+    "rotate-cw": {
+      "export": "RotateCwIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide RotateCw: rotate photo: not in the reference"
+    },
+    "search": {
+      "export": "SearchIcon",
+      "source": "reference",
+      "size": "22x22",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.4,
+        1.6,
+        1.7
+      ],
+      "colour": "rgb(189,189,189)",
+      "use": "Hero search field, catalog search, 'Save Search' buttons"
+    },
+    "search-circle": {
+      "export": "SearchCircleIcon",
+      "source": "reference",
+      "size": "19x19",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "#212121",
+      "use": "Phone circular search button (category pages)"
+    },
+    "search-drawer": {
+      "export": "SearchDrawerIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Mobile drawer 'Saved Search' (Figma outline)"
+    },
+    "search-x": {
+      "export": "SearchXIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide SearchX: no results state: not in the reference"
+    },
+    "send": {
+      "export": "SendIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "#fff",
+      "use": "Chat composer send button"
+    },
+    "services-tile": {
+      "export": "ServicesTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Services'"
+    },
+    "settings-drawer": {
+      "export": "SettingsDrawerIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Mobile drawer 'Account Settings' (Figma outline)"
+    },
+    "share": {
+      "export": "ShareIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(75, 75, 75)",
+      "use": "'Share Ad' button"
+    },
+    "shield": {
+      "export": "ShieldIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Shield: help topic seed (plain shield): not in the reference"
+    },
+    "shield-alert": {
+      "export": "ShieldAlertIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide ShieldAlert: security alert: not in the reference"
+    },
+    "shield-check": {
+      "export": "ShieldCheckIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(27,173,7)",
+      "use": "'Verified Ad' badge; Safe Pay banner in chat"
+    },
+    "shield-check-data": {
+      "export": "ShieldCheckDataIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(97, 97, 97)",
+      "use": "Account nav 'Data Protection'"
+    },
+    "shield-check-safepay": {
+      "export": "ShieldCheckSafepayIcon",
+      "source": "reference",
+      "size": "12x12",
+      "strokeWidth": 2,
+      "strokes": [
+        1.8,
+        2
+      ],
+      "colour": "rgb(76, 175, 80)",
+      "use": "'Safe Pay' / 'Protected by Safe Pay' badges"
+    },
+    "shield-check-verify": {
+      "export": "ShieldCheckVerifyIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Seller profile 'Verify' chip"
+    },
+    "shopping-bag": {
+      "export": "ShoppingBagIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "Product 'Buy Now' button"
+    },
+    "shopping-bag-sales": {
+      "export": "ShoppingBagSalesIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(43,111,219)",
+      "use": "Sales overview completed-sales card"
+    },
+    "shopping-bag-wallet": {
+      "export": "ShoppingBagWalletIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(90,116,214)",
+      "use": "Account wallet sales stat"
+    },
+    "slider-next": {
+      "export": "SliderNextIcon",
+      "source": "reference",
+      "size": "19x19",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": ".qb-slider next arrow"
+    },
+    "slider-prev": {
+      "export": "SliderPrevIcon",
+      "source": "reference",
+      "size": "19x19",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": ".qb-slider previous arrow"
+    },
+    "sparkles": {
+      "export": "SparklesIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Sparkles: help topic seed: not in the reference"
+    },
+    "sports-tile": {
+      "export": "SportsTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Sports Equipment'"
+    },
+    "star": {
+      "export": "StarIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(250, 207, 188)",
+      "use": "'Follow Seller' button"
+    },
+    "star-filled": {
+      "export": "StarFilledIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Seller profile 'Top Rated' chip"
+    },
+    "star-follow": {
+      "export": "StarFollowIcon",
+      "source": "reference",
+      "size": "17x17",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "Organization 'Follow' button"
+    },
+    "store": {
+      "export": "StoreIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Store: shop/company: not in the reference"
+    },
+    "sun": {
+      "export": "SunIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Sun: theme toggle: the reference has no theme switch"
+    },
+    "swap-pending": {
+      "export": "SwapPendingIcon",
+      "source": "reference",
+      "size": "13x13",
+      "strokeWidth": 2.2,
+      "strokes": [
+        2.2
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Chat offer card status: counter-offer / waiting"
+    },
+    "tag": {
+      "export": "TagIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7,
+        1.8
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Seller sidebar '+3 Ads'; 'Make an Offer' button"
+    },
+    "tag-ads-count": {
+      "export": "TagAdsCountIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(144, 144, 144)",
+      "use": "Seller profile 'Ads no.'"
+    },
+    "tag-nav": {
+      "export": "TagNavIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(75,75,75)",
+      "use": "Account nav 'My Ads' item (template state a.isTag)"
+    },
+    "thumbs-down": {
+      "export": "ThumbsDownIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide ThumbsDown: review vote: not in the reference"
+    },
+    "thumbs-up": {
+      "export": "ThumbsUpIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide ThumbsUp: review vote: not in the reference"
+    },
+    "trash": {
+      "export": "TrashIcon",
+      "source": "reference",
+      "size": "17x17",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.6,
+        1.7
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Delete actions: publish panel, message threads, account 'Delete Account', my-ads rows"
+    },
+    "trash-conversation": {
+      "export": "TrashConversationIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(75,75,75)",
+      "use": "Chat '...' menu 'Delete Conversation'"
+    },
+    "truck": {
+      "export": "TruckIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Truck: delivery: not in the reference"
+    },
+    "twitter": {
+      "export": "TwitterIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": null,
+      "strokes": [],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Footer social button"
+    },
+    "upload": {
+      "export": "UploadIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide Upload: receipt upload: the reference only has the drop-zone cloud"
+    },
+    "user": {
+      "export": "UserIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Seller sidebar 'Friendly'"
+    },
+    "user-nav": {
+      "export": "UserNavIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(255, 255, 255)",
+      "use": "Account nav 'Profile Settings'"
+    },
+    "user-plus": {
+      "export": "UserPlusIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(144, 144, 144)",
+      "use": "Seller profile 'Followers' stat"
+    },
+    "user-plus-empty": {
+      "export": "UserPlusEmptyIcon",
+      "source": "reference",
+      "size": "34x34",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Users list empty state"
+    },
+    "user-x": {
+      "export": "UserXIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide UserX: blocked user: not in the reference"
+    },
+    "users": {
+      "export": "UsersIcon",
+      "source": "reference",
+      "size": "17x17",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(158,158,158)",
+      "use": "Dashboard 'Follower / Following' line"
+    },
+    "users-followers": {
+      "export": "UsersFollowersIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(75, 75, 75)",
+      "use": "Header avatar menu 'Followers'"
+    },
+    "verified-badge": {
+      "export": "VerifiedBadgeIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(43,111,219)",
+      "use": "Blue verified rosette next to seller names"
+    },
+    "verified-badge-lg": {
+      "export": "VerifiedBadgeLgIcon",
+      "source": "reference",
+      "size": "22x22",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "rgb(43,111,219)",
+      "use": "Seller profile header rosette (individual / organization)"
+    },
+    "verified-badge-offer": {
+      "export": "VerifiedBadgeOfferIcon",
+      "source": "reference",
+      "size": "14x14",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(43,111,219)",
+      "use": "Verified rosette next to seller on the offer / buy-now page"
+    },
+    "verified-badge-users": {
+      "export": "VerifiedBadgeUsersIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Orange verified rosette in users list"
+    },
+    "wallet": {
+      "export": "WalletIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(97, 97, 97)",
+      "use": "Account nav 'Wallet'"
+    },
+    "wallet-download": {
+      "export": "WalletDownloadIcon",
+      "source": "reference",
+      "size": "18x18",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(243,128,87)",
+      "use": "Account wallet 'Withdraw Funds'"
+    },
+    "wallet-drawer": {
+      "export": "WalletDrawerIcon",
+      "source": "reference",
+      "size": "21x21",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(51, 51, 51)",
+      "use": "Mobile drawer 'Wallet' (Figma outline)"
+    },
+    "wallet-withdraw": {
+      "export": "WalletWithdrawIcon",
+      "source": "reference",
+      "size": "20x20",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(75,75,75)",
+      "use": "Sales overview 'Withdraw Funds'"
+    },
+    "warning-triangle": {
+      "export": "WarningTriangleIcon",
+      "source": "reference",
+      "size": "16x16",
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": "rgb(75, 75, 75)",
+      "use": "'Report Ad' / 'Report' actions"
+    },
+    "watches-tile": {
+      "export": "WatchesTileIcon",
+      "source": "reference",
+      "size": "24x24",
+      "strokeWidth": 1.6,
+      "strokes": [
+        1.6
+      ],
+      "colour": "rgb(243, 128, 87)",
+      "use": "Category tile 'Watches & Jewelry'"
+    },
+    "x-circle-fail": {
+      "export": "XCircleFailIcon",
+      "source": "reference",
+      "size": "26x26",
+      "strokeWidth": 1.8,
+      "strokes": [
+        1.8
+      ],
+      "colour": "#F38057",
+      "use": "Checkout payment result modal: failure (buynow.js payModal)"
+    },
+    "zoom-in": {
+      "export": "ZoomInIcon",
+      "source": "fallback",
+      "size": null,
+      "strokeWidth": 1.7,
+      "strokes": [
+        1.7
+      ],
+      "colour": null,
+      "use": "fallback for lucide ZoomIn: gallery zoom: not in the reference"
+    }
+  }
+}
