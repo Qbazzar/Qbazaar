@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Manage;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Spatie\Activitylog\Models\Activity;
@@ -26,10 +27,12 @@ class ActivityController extends Controller
             ->values();
 
         $activities = Activity::query()
-            ->with([
-                'causer' => fn (MorphTo $causer) => $causer->morphWith([User::class => ['media']]),
-                'subject',
-            ])
+            ->with('subject')
+            ->with(['causer' => function (Relation $causer): void {
+                if ($causer instanceof MorphTo) {
+                    $causer->morphWith([User::class => ['media']]);
+                }
+            }])
             ->when(
                 $search !== '',
                 fn ($query) => $query->where('description', 'like', "%{$search}%"),
