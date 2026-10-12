@@ -97,6 +97,19 @@ describe('SiteFooter', () => {
     });
   });
 
+  it('draws the links as the reference .qb-nav and the accordion caret as the title pseudo-element', () => {
+    render(<SiteFooter />);
+    const footer = screen.getByRole('contentinfo');
+    const [privacy] = within(footer).getAllByRole('link', { name: 'Privacy Policy' });
+
+    expect(privacy).toHaveClass('qb-motion', 'hover:text-qb-brand');
+    expect(privacy.className).not.toMatch(/rounded/);
+    for (const summary of footer.querySelectorAll('summary')) {
+      expect(summary.children).toHaveLength(0);
+      expect(summary).toHaveClass("after:content-['']", 'after:rotate-45', 'group-open:after:-rotate-135');
+    }
+  });
+
   it('only links CMS pages from the single slug list', () => {
     render(<SiteFooter />);
     const slugs = within(screen.getByRole('contentinfo'))

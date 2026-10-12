@@ -11,38 +11,54 @@ import { cn } from '@/lib/utils';
 
 import { switchLocale } from './switch-locale';
 
-/** The site's languages, each named in itself; the country code stands in for the reference's flag. */
-const LANGUAGES: { locale: Locale; name: string; country: string }[] = [
-  { locale: 'en', name: 'English', country: 'GB' },
-  { locale: 'ar', name: 'العربية', country: 'QA' },
+/**
+ * The site's languages, each named in itself. The desktop panel marks them
+ * with the reference's flags, the phone popup with its country codes.
+ */
+const LANGUAGES: { locale: Locale; name: string; flag: string; country: string }[] = [
+  { locale: 'en', name: 'English', flag: '🇬🇧', country: 'GB' },
+  { locale: 'ar', name: 'العربية', flag: '🇸🇦', country: 'QA' },
 ];
 
 /**
- * The desktop panel of 728:44663 (728:45875): a 303 px card with a 20 px
- * title, hanging from the header's lower edge past the globe's end. The phone
- * and tablet popup of 741:39398 / 736:54497 is Qbazaar-front's `.qb-langpop`.
- * The desktop card's `before` fills the gap under the globe, so the pointer
- * can reach the card without leaving the menu.
+ * The desktop panel is the reference header's (app.js): a 250 px card, 10 px
+ * under the globe, its rows `.qb-btn`s with the chosen one tinted. Its
+ * `before` fills that gap, so the pointer can reach the card without leaving
+ * the menu. The phone and tablet popup of 741:39398 / 736:54497 is
+ * Qbazaar-front's `.qb-langpop` (mobilemenu.js).
  */
 const VARIANTS = {
   desktop: {
     root: 'relative',
     panel: cn(
-      '-end-[51px] mt-7 w-[303px] rounded-qb-2xl pb-[7px] shadow-qb-panel before:absolute before:inset-x-0 before:-top-7 before:h-7',
+      'end-0 mt-2.5 w-[250px] rounded-[14px] p-2 shadow-qb-menu before:absolute before:inset-x-0 before:-top-2.5 before:h-2.5',
       menuEnter,
     ),
-    title: 'px-6 pt-6 pb-4 text-qb-h5 leading-[30px]',
-    list: 'pt-2',
-    row: 'gap-2 px-6 py-2 text-qb-body font-medium text-qb-ink-secondary',
-    radio: (selected: boolean) => cn('size-[15px] border', selected ? 'border-qb-brand bg-qb-brand bg-clip-content p-[2px]' : 'border-qb-radio-ring'),
+    title: 'px-3 pt-2.5 pb-3 text-qb-body',
+    row: (selected: boolean) =>
+      cn('qb-motion gap-3 rounded-[9px] px-3 py-2.5 text-[15px] text-qb-ink-title hover:brightness-[.96]', selected && 'bg-qb-brand-soft'),
+    marker: (language: (typeof LANGUAGES)[number]) => (
+      <span aria-hidden="true" className="w-[22px] text-center text-[18px] leading-none">
+        {language.flag}
+      </span>
+    ),
+    radio: (selected: boolean) =>
+      cn(
+        'flex size-[18px] items-center justify-center border-2',
+        selected ? "border-qb-brand after:size-[9px] after:rounded-full after:bg-qb-brand after:content-['']" : 'border-qb-check-ring',
+      ),
   },
   phone: {
     root: '',
     panel: 'end-0 mt-1.5 w-[262px] rounded-qb-xl pt-1.5 pb-2 shadow-qb-langpop',
-    title: 'px-[18px] pt-3 pb-2.5 text-qb-body',
-    list: '',
-    row: 'gap-2.5 px-[18px] py-[11px] text-qb-body-sm',
-    radio: (selected: boolean) => cn('size-[18px]', selected ? 'border-[5px] border-qb-brand' : 'border-[1.5px] border-qb-ink-disabled'),
+    title: 'border-b border-qb-menu-divider px-[18px] pt-3 pb-2.5 text-qb-body',
+    row: () => 'gap-2.5 px-[18px] py-[11px] text-qb-body-sm hover:bg-qb-hover',
+    marker: (language: (typeof LANGUAGES)[number]) => (
+      <span aria-hidden="true" className="min-w-5 text-qb-tiny font-medium tracking-[0.04em] text-qb-ink-subtle">
+        {language.country}
+      </span>
+    ),
+    radio: (selected: boolean) => cn('size-[18px]', selected ? 'border-[5px] border-qb-brand' : 'border-[1.5px] border-qb-check-ring'),
   },
 } as const;
 
@@ -126,30 +142,28 @@ export function LanguageMenu({ className, children, variant = 'desktop' }: Langu
           aria-labelledby={titleId}
           className={cn('absolute top-full z-50 border border-qb-line bg-qb-surface font-qb text-qb-ink', style.panel)}
         >
-          <p id={titleId} className={cn('border-b border-qb-line font-semibold', style.title)}>
+          <p id={titleId} className={cn('font-semibold', style.title)}>
             {t('layout.language.title', 'اختر لغتك')}
           </p>
-          <ul className={style.list}>
-            {LANGUAGES.map(({ locale, name, country }) => {
-              const selected = locale === current;
+          <ul>
+            {LANGUAGES.map((language) => {
+              const selected = language.locale === current;
               return (
-                <li key={locale}>
+                <li key={language.locale}>
                   <button
                     type="button"
-                    lang={locale}
+                    lang={language.locale}
                     aria-current={selected || undefined}
-                    onClick={selected ? closeToTrigger : () => switchLocale(locale)}
+                    onClick={selected ? closeToTrigger : () => switchLocale(language.locale)}
                     className={cn(
-                      'flex w-full cursor-pointer items-center text-start hover:bg-qb-hover',
-                      style.row,
+                      'flex w-full cursor-pointer items-center text-start',
+                      style.row(selected),
                       focusRing,
                       'focus-visible:-outline-offset-2',
                     )}
                   >
-                    <span aria-hidden="true" className="min-w-5 text-qb-tiny font-medium tracking-[0.04em] text-qb-ink-subtle">
-                      {country}
-                    </span>
-                    <span className="flex-1">{name}</span>
+                    {style.marker(language)}
+                    <span className="flex-1">{language.name}</span>
                     <span aria-hidden="true" className={cn('shrink-0 rounded-full', style.radio(selected))} />
                   </button>
                 </li>

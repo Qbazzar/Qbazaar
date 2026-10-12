@@ -38,6 +38,19 @@ describe('LanguageMenu', () => {
     expect(screen.getByRole('button', { name: 'العربية' })).not.toHaveAttribute('aria-current');
   });
 
+  it('draws the desktop rows as the reference header does: flag, name, radio, the chosen row tinted', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: 'Language' }));
+    const english = screen.getByRole('button', { name: 'English' });
+
+    expect(english).toHaveTextContent('🇬🇧');
+    expect(english).toHaveClass('bg-qb-brand-soft', 'rounded-[9px]', 'hover:brightness-[.96]');
+    expect(screen.getByRole('button', { name: 'العربية' })).not.toHaveClass('bg-qb-brand-soft');
+    expect(screen.getByRole('group', { name: 'Choose your language' })).toHaveClass('w-[250px]', 'rounded-[14px]', 'p-2');
+  });
+
   it('switches to the language picked', async () => {
     const user = userEvent.setup();
     renderMenu();

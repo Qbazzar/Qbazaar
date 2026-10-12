@@ -1,11 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Bell,
   ChartColumn,
-  ChevronRight,
   Heart,
   House,
   LayoutGrid,
@@ -77,11 +77,18 @@ interface MobileMenuDrawerProps {
 export function MobileMenuDrawer({ open, onOpenChange, signedIn }: MobileMenuDrawerProps) {
   const pathname = usePathname() ?? '/';
   const close = () => onOpenChange(false);
+  // The drawer loads on the first tap, already open. A dialog mounted open skips its entrance,
+  // so it opens one frame after mounting and slides in like the later openings.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <Sheet
       side="start"
-      open={open}
+      open={open && mounted}
       onOpenChange={onOpenChange}
       title={t('layout.menu.title', 'القائمة')}
       heading={<SiteLogo width={80} height={30} />}
@@ -136,22 +143,27 @@ function MenuLink({ item, active, onNavigate }: { item: NavItem; active: boolean
       aria-current={active ? 'page' : undefined}
       className={cn(row, focusRing, active ? 'bg-qb-brand text-qb-on-brand' : 'text-qb-ink-title hover:bg-qb-hover')}
     >
-      <Icon icon={item.icon} className="size-[21px]" />
+      <Icon icon={item.icon} strokeWidth={1.7} className="size-[21px]" />
       <span className="flex-1">{item.label}</span>
       <RowChevron className={active ? 'text-qb-on-brand/80' : undefined} />
     </Link>
   );
 }
 
+/** The reference's `›` character (`.chev`), turned to point left in Arabic. */
 function RowChevron({ className }: { className?: string }) {
-  return <Icon icon={ChevronRight} size="sm" flipInRtl className={cn('text-qb-icon-muted', className)} />;
+  return (
+    <span aria-hidden="true" className={cn('inline-block text-qb-icon-muted rtl:-scale-x-100', className)}>
+      ›
+    </span>
+  );
 }
 
 function SignOutRow() {
   const { signOut, pending } = useSignOut();
   return (
     <button type="button" onClick={signOut} disabled={pending} className={cn(row, focusRing, 'cursor-pointer text-qb-brand hover:bg-qb-hover')}>
-      <Icon icon={LogOut} flipInRtl className="size-[21px]" />
+      <Icon icon={LogOut} strokeWidth={1.7} flipInRtl className="size-[21px]" />
       <span className="flex-1 text-start">{t('layout.menu.log_out', 'تسجيل الخروج')}</span>
       <RowChevron />
     </button>
