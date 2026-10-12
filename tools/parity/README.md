@@ -60,8 +60,8 @@ Scenarios marked `writes: true` (they would post, offer or order) run only again
 8. **Pixels.** Component crops on both sides, images / video masked, compared with pixelmatch. Anything above 2% mismatch is reported with a diff PNG.
 9. **Icons.** Each icon pair is rasterised and compared (shape score, rendered size, rendered stroke, ink colour). The reference icon is named from
    `reference-icons/` (e.g. `add-ads-pin`). `reference-icons/index.json` lists every glyph with its stroke width, size and the pages that use it.
-10. **RTL** (`--locale ar`). The Arabic page must mirror the English page (each control sits at the reflected x position), `dir="rtl"` must be set,
-    and scenario facts (existence, ARIA state) must hold.
+10. **RTL** (`--locale ar`). `dir="rtl"` must be set, and controls that share a row in English must swap places in Arabic (widths differ between languages, so
+    only the order is compared). Scenario facts (existence, ARIA state) must hold; copy and styles are not compared in Arabic.
 
 ## Reading report.json
 
