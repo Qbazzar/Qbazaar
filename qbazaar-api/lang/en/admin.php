@@ -587,6 +587,7 @@ return [
         'title' => 'Platform settings',
         'intro' => 'Changes apply immediately across the platform and are recorded in the activity log.',
         'save' => 'Save settings',
+        'save_scope' => 'This button saves the platform settings on every tab. Category rates have their own button in their card.',
         'has_errors' => 'Contains errors',
         'saved' => 'Settings saved.',
         'groups' => [

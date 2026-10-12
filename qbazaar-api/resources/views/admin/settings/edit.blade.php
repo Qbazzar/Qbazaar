@@ -15,7 +15,10 @@
             $tabs = collect($groups)->mapWithKeys(fn ($settings, $group) => [
                 $group => [
                     'label' => __('admin.settings.groups.' . $group),
-                    'error' => $errors->hasAny(collect($settings)->map->value->all()),
+                    'error' => $errors->hasAny([
+                        ...collect($settings)->map->value->all(),
+                        ...($group === \App\Enums\SettingGroup::COMMISSION->value ? ['category_id', 'rate'] : []),
+                    ]),
                 ],
             ])->all();
 
@@ -55,6 +58,10 @@
                             @endforeach
                         </div>
                     </x-admin.card>
+
+                    @if ($group === \App\Enums\SettingGroup::COMMISSION->value)
+                        @include('admin.settings._commission-rates')
+                    @endif
                 </x-admin.tab-panel>
             @endforeach
             @foreach ($integrationGroups as $integrationGroup)
@@ -65,47 +72,24 @@
         </x-admin.tabs>
 
         <div class="sticky bottom-0 z-10 -mx-4 border-t border-ink-200 bg-cream-50/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:-mx-6 sm:px-6">
-            <x-admin.button icon="check">{{ __('admin.settings.save') }}</x-admin.button>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <x-admin.button icon="check">{{ __('admin.settings.save') }}</x-admin.button>
+                <p class="text-xs text-ink-500">{{ __('admin.settings.save_scope') }}</p>
+            </div>
         </div>
     </form>
+
+    <form id="commission-rate-form" method="POST" action="{{ route('admin.settings.commission-rates.store') }}">@csrf</form>
+    @foreach ($commissionRates as $override)
+        <form id="commission-rate-remove-{{ $override->category_id }}" method="POST" action="{{ route('admin.settings.commission-rates.destroy', $override->category_id) }}"
+              data-confirm="حذف نسبة العمولة الخاصة بتصنيف «{{ $override->category->getLocalizedName(app()->getLocale()) }}»؟">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
 
     @if (collect($integrationGroups)->contains(\App\Enums\IntegrationGroup::EMAIL))
         <form id="test-email-form" method="POST" action="{{ route('admin.settings.test-email') }}">@csrf</form>
         <form id="test-sms-form" method="POST" action="{{ route('admin.settings.test-sms') }}">@csrf</form>
     @endif
-
-    <x-admin.card :title="__('admin.commission_rates.title')" :description="__('admin.commission_rates.intro')" class="mt-8">
-        @if ($commissionRates->isEmpty())
-            <p class="mb-4 text-sm text-ink-500">{{ __('admin.commission_rates.empty') }}</p>
-        @else
-            <ul class="mb-5 divide-y divide-ink-200">
-                @foreach ($commissionRates as $override)
-                    <li class="flex items-center justify-between gap-3 py-2 text-sm">
-                        <span>{{ $override->category->getLocalizedName(app()->getLocale()) }}</span>
-                        <span class="flex items-center gap-3">
-                            <span class="font-semibold" dir="ltr">{{ $override->rate }}%</span>
-                            <form method="POST" action="{{ route('admin.settings.commission-rates.destroy', $override->category_id) }}"
-                                  data-confirm="حذف نسبة العمولة الخاصة بتصنيف «{{ $override->category->getLocalizedName(app()->getLocale()) }}»؟">
-                                @csrf
-                                @method('DELETE')
-                                <x-admin.button variant="danger-ghost" size="sm">{{ __('admin.commission_rates.remove') }}</x-admin.button>
-                            </form>
-                        </span>
-                    </li>
-                @endforeach
-            </ul>
-        @endif
-
-        <form method="POST" action="{{ route('admin.settings.commission-rates.store') }}" class="flex flex-wrap items-end gap-3">
-            @csrf
-            <x-admin.select name="category_id" id="commission_category_id" :label="__('admin.commission_rates.category')" required class="min-w-48 flex-1">
-                @foreach ($categories as $category)
-                    <option value="{{ $category->id }}" @selected(old('category_id') === $category->id)>{{ $category->getLocalizedName(app()->getLocale()) }}</option>
-                @endforeach
-            </x-admin.select>
-            <x-admin.input name="rate" id="commission_rate_value" type="number" :label="__('admin.commission_rates.rate')" :value="old('rate')"
-                           required step="0.01" min="0" max="100" class="w-32" />
-            <x-admin.button icon="plus">{{ __('admin.commission_rates.add') }}</x-admin.button>
-        </form>
-    </x-admin.card>
 @endsection
