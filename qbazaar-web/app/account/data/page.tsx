@@ -131,7 +131,7 @@ function DeactivateAccountLine() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className={cn('cursor-pointer rounded-qb-xs font-medium text-qb-brand underline', focusRing)}
+          className={cn('cursor-pointer font-medium text-qb-brand underline', focusRing)}
         >
           {t('account.data.deactivate.submit')}
         </button>
@@ -270,7 +270,7 @@ function RefusalNotice({ refusal }: { refusal: Refusal }) {
     <div role="alert" className="flex flex-col gap-2 text-qb-caption text-qb-danger">
       <p>{refusal.message}</p>
       {refusal.link ? (
-        <Link href={refusal.link.href} className={cn('w-fit rounded-qb-xs font-medium text-qb-brand underline', focusRing)}>
+        <Link href={refusal.link.href} className={cn('w-fit font-medium text-qb-brand underline', focusRing)}>
           {refusal.link.label}
         </Link>
       ) : null}

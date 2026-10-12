@@ -48,7 +48,7 @@ export default function SavedSearchesPage() {
           <button
             type="button"
             onClick={() => setConfirmClear(true)}
-            className={cn('cursor-pointer rounded-qb-xs text-qb-caption text-qb-ink-subtle hover:text-qb-brand', focusRing)}
+            className={cn('qb-motion cursor-pointer text-qb-caption text-qb-ink-subtle hover:text-qb-brand', focusRing)}
           >
             {t('account.saved_searches.clear_all')}
           </button>

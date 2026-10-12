@@ -120,7 +120,7 @@ export function MyAdsRow({ ad, category }: Props) {
       <div className="min-w-0 qb-tablet:min-w-[220px] qb-tablet:flex-[1_1_260px]">
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="min-w-0 text-qb-h3 font-semibold tracking-normal text-qb-ink">
-            <Link href={`/ads/${ad.id}`} className={cn('rounded-qb-xs hover:text-qb-brand', focusRing)}>
+            <Link href={`/ads/${ad.id}`} className={cn('hover:text-qb-brand', focusRing)}>
               <bdi>{title}</bdi>
             </Link>
           </h3>

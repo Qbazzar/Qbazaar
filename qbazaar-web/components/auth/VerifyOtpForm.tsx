@@ -279,7 +279,7 @@ export function VerifyOtpForm() {
                 type="button"
                 onClick={() => void sendCode(phone, true)}
                 disabled={resendSeconds > 0 || sending}
-                className="cursor-pointer rounded-qb-xs underline disabled:cursor-not-allowed disabled:opacity-60"
+                className="cursor-pointer underline disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {t('auth.verify_otp.resend_now')}
               </button>

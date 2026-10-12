@@ -177,7 +177,7 @@ export function DeviceVerificationStep({ pending, onChallenge, onRestart }: Devi
             type="button"
             onClick={() => void resend()}
             disabled={resendSeconds > 0 || resending || submitting}
-            className="cursor-pointer rounded-qb-xs underline disabled:cursor-not-allowed disabled:opacity-60"
+            className="cursor-pointer underline disabled:cursor-not-allowed disabled:opacity-60"
           >
             {t('auth.verify_otp.resend_now')}
           </button>

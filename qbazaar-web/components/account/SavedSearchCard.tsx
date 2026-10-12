@@ -80,7 +80,7 @@ export function SavedSearchCard({ search, labels }: Props) {
               <Menu.Trigger
                 aria-label={t('account.saved_searches.menu_label', { name: search.name })}
                 className={cn(
-                  'flex h-7 shrink-0 cursor-pointer items-start rounded-qb-xs px-1 text-[22px] leading-none text-qb-ink-subtle hover:text-qb-brand',
+                  'qb-motion flex h-7 shrink-0 cursor-pointer items-start px-1 text-[22px] leading-none text-qb-ink-subtle hover:text-qb-brand',
                   focusRing,
                 )}
               >
