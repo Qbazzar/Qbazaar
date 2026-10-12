@@ -176,13 +176,13 @@ it('renders one tab and panel per settings group with every field still present'
 
     foreach (PlatformSetting::grouped() as $group => $settings) {
         $response
-            ->assertSee('id="settings-tab-'.$group.'"', false)
-            ->assertSee('aria-controls="settings-panel-'.$group.'"', false)
-            ->assertSee('id="settings-panel-'.$group.'"', false)
-            ->assertSee(__('admin.settings.groups.'.$group));
+            ->assertSee('id="settings-tab-' . $group . '"', false)
+            ->assertSee('aria-controls="settings-panel-' . $group . '"', false)
+            ->assertSee('id="settings-panel-' . $group . '"', false)
+            ->assertSee(__('admin.settings.groups.' . $group));
 
         foreach ($settings as $setting) {
-            $response->assertSee('name="'.$setting->value.'"', false);
+            $response->assertSee('name="' . $setting->value . '"', false);
         }
     }
 
@@ -201,5 +201,5 @@ it('marks only the tab holding the invalid field after a failed save', function 
     $html = actingAs($this->admin)->get('/admin/settings')->assertOk()->getContent();
 
     expect(substr_count($html, 'data-invalid'))->toBe(1);
-    expect($html)->toMatch('/id="settings-tab-'.$group.'"[^>]*data-invalid/');
+    expect($html)->toMatch('/id="settings-tab-' . $group . '"[^>]*data-invalid/');
 });
