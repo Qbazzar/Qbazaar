@@ -29,11 +29,14 @@ describe('PasswordInput', () => {
     expect(toggle.innerHTML).toBe(hidden);
   });
 
-  it('keeps the eye clear of the left-to-right text on the end side of either direction', () => {
+  it('types left to right with the 16 px padding of .qb-field input and the eye on the end side', () => {
     render(<PasswordInput aria-label="Password" />);
     const input = screen.getByLabelText('Password');
+    const toggle = screen.getByRole('button', { name: t('auth.password.toggle') });
 
     expect(input).toHaveAttribute('dir', 'ltr');
-    expect(input).toHaveClass('pr-12', 'rtl:pl-12');
+    expect(input).toHaveClass('px-4');
+    expect(input).not.toHaveClass('pr-12');
+    expect(toggle).toHaveClass('end-3.5');
   });
 });

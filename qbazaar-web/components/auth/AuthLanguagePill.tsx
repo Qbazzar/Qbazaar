@@ -8,10 +8,10 @@ import { getLocale, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-/** The site's languages; the country code stands in for the reference's flag emoji. */
-const LANGUAGES: { locale: Locale; code: string; name: string; country: string }[] = [
-  { locale: 'en', code: 'EN', name: 'English', country: 'GB' },
-  { locale: 'ar', code: 'AR', name: 'العربية', country: 'QA' },
+/** The site's languages with the flag emoji auth.js shows beside each. */
+const LANGUAGES: { locale: Locale; code: string; name: string; flag: string }[] = [
+  { locale: 'en', code: 'EN', name: 'English', flag: '🇬🇧' },
+  { locale: 'ar', code: 'AR', name: 'العربية', flag: '🇶🇦' },
 ];
 
 /**
@@ -94,10 +94,9 @@ export function AuthLanguagePill() {
           focusRing,
         )}
       >
-        <span aria-hidden="true" className="text-qb-tiny font-semibold">
-          {active.country}
-        </span>
-        <span lang="en">{active.code}</span>
+        {/* auth.js writes the code as the pill's own text, between the flag and the caret. */}
+        <span aria-hidden="true">{active.flag}</span>
+        {active.code}
         <span aria-hidden="true" className="text-qb-auth-caret">
           ▾
         </span>
@@ -137,9 +136,7 @@ export function AuthLanguagePill() {
                   'focus-visible:-outline-offset-2',
                 )}
               >
-                <span aria-hidden="true" className="text-qb-tiny font-semibold">
-                  {language.country}
-                </span>
+                <span aria-hidden="true">{language.flag}</span>
                 <span>{language.name}</span>
               </button>
             );

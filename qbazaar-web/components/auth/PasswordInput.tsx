@@ -18,8 +18,9 @@ export interface PasswordInputProps extends Omit<InputProps, 'type' | 'startIcon
  * Design-system input with the `.qb-eye` toggle of the auth and settings
  * forms (auth.css, auth.js): a bare 20 px slashed eye 14 px from the inline
  * end (on the left in Arabic) that only switches the field's type, so the
- * glyph stays the same and `aria-pressed` carries the state. The typed
- * password always reads left to right and stops short of the eye.
+ * glyph stays the same and `aria-pressed` carries the state. The field keeps
+ * the 16 px padding of `.qb-field input` on both sides, as the design does, and
+ * the typed password always reads left to right.
  */
 export function PasswordInput({ className, ...props }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
@@ -29,7 +30,7 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
       <Input
         type={visible ? 'text' : 'password'}
         dir="ltr"
-        className={cn(authInputClass, 'pr-12 rtl:pr-4 rtl:pl-12 rtl:placeholder:text-right', className)}
+        className={cn(authInputClass, 'rtl:placeholder:text-right', className)}
         {...props}
       />
       <button

@@ -41,7 +41,7 @@ export function SocialSignIn() {
           </button>
         ))}
       </div>
-      <p className="mt-[22px] flex items-center gap-4 text-qb-body-sm text-qb-auth-muted before:h-px before:flex-1 before:bg-qb-line after:h-px after:flex-1 after:bg-qb-line">
+      <p className="mt-[22px] mb-1 flex items-center gap-4 text-qb-body-sm text-qb-auth-muted before:h-px before:flex-1 before:bg-qb-line after:h-px after:flex-1 after:bg-qb-line">
         {t('auth.social.divider')}
       </p>
     </div>

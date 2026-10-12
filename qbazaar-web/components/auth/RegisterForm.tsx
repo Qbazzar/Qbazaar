@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, type FormEvent } from 'react';
+import { useId, useRef, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
@@ -31,8 +31,8 @@ const ACCOUNT_TYPES = [
   { value: 'business', labelKey: 'auth.register.account_type_business' },
 ] as const;
 
-/** `.qb-sec`: 500 20 px section title. */
-const sectionTitle = 'text-qb-h5 font-medium text-qb-auth-section';
+/** `.qb-sec`: 500 20 px section title, 26 px above and 6 px below. */
+const sectionTitle = 'mt-[26px] mb-1.5 text-qb-h5 font-medium tracking-normal text-qb-auth-section';
 
 /** Links inside `.qb-terms`: orange and underlined, in the sentence's own size and weight, with no hover change. */
 const termsLinkClass = cn('text-qb-brand underline', focusRing);
@@ -42,6 +42,8 @@ export function RegisterForm() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const setHydrated = useAuthStore((s) => s.setHydrated);
   const turnstile = useRef<TurnstileHandle>(null);
+  const usageId = useId();
+  const detailsId = useId();
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -79,14 +81,16 @@ export function RegisterForm() {
 
   return (
     <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col">
-      <fieldset className="mt-[26px]">
-        <legend className={sectionTitle}>{t('auth.register.usage_question')}</legend>
+      <div role="radiogroup" aria-labelledby={usageId}>
+        <h2 id={usageId} className={sectionTitle}>
+          {t('auth.register.usage_question')}
+        </h2>
         <div className="mt-3.5 flex gap-3.5">
           {ACCOUNT_TYPES.map(({ value, labelKey }) => (
             <label
               key={value}
               className={cn(
-                'flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-qb-md border border-qb-line bg-qb-surface px-4 py-[15px] text-qb-caption text-qb-ink transition-[border-color,background] duration-150 ease-[ease]',
+                'flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-qb-md border border-qb-line px-4 py-[15px] text-qb-caption text-qb-ink transition-[border-color,background] duration-150 ease-[ease]',
                 'has-[:checked]:border-qb-brand has-[:checked]:bg-qb-brand-soft',
                 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
               )}
@@ -96,10 +100,12 @@ export function RegisterForm() {
             </label>
           ))}
         </div>
-      </fieldset>
+      </div>
 
-      <fieldset className="mt-[26px]">
-        <legend className={sectionTitle}>{t('auth.register.login_details')}</legend>
+      <div role="group" aria-labelledby={detailsId}>
+        <h2 id={detailsId} className={sectionTitle}>
+          {t('auth.register.login_details')}
+        </h2>
         <Field
           label={t('auth.register.full_name_label')}
           required
@@ -168,7 +174,7 @@ export function RegisterForm() {
             />
           )}
         </Field>
-      </fieldset>
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <label className="mt-5 flex items-start gap-2.5 text-start text-qb-body-sm leading-[1.55] text-qb-auth-terms">
