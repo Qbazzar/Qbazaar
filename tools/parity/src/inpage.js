@@ -136,7 +136,7 @@ function readUnit({ selector, descendants }) {
   // prototype's <span class="sc-interp">). The comparer reads box properties there when the reference text sits in a
   // template wrapper (unit.js chipView). A chip that is the unit itself is already compared as the root.
   const BOX_PROPS = ['background-color', 'background-image', 'border-width', 'border-style', 'border-color', 'border-radius', 'box-shadow',
-    'padding', 'margin', 'width', 'height', 'display', 'outline-width', 'outline-style', 'outline-color', 'outline-offset',
+    'padding', 'width', 'height', 'display', 'outline-width', 'outline-style', 'outline-color', 'outline-offset',
     'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay'];
   const paintsBox = (s) => s.backgroundColor !== 'rgba(0, 0, 0, 0)' || s.backgroundImage !== 'none'
     || [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].some((w) => parseFloat(w) > 0);

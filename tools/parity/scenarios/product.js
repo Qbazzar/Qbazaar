@@ -11,7 +11,7 @@ const REPORT = { ref: 'button:text-is("Report Ad")', target: 'button:text-is("Re
 const MODAL = { ref: 'div[style*="z-index: 90"] > div', target: '[role=dialog]' };
 const TOAST = { ref: 'div[style*="rgb(234, 255, 247)"]', target: '[role=status]:not(.sr-only)' };
 // The first reason of both report forms (assets/app.js reportReasons).
-const REASON_FRAUD = { ref: 'div[style*="z-index: 90"] :text-is("Fraud or scam")', target: '[role=dialog] label:has-text("Fraud or scam")' };
+const REASON_FRAUD = { ref: 'div[style*="z-index: 90"] label:has-text("Fraud or scam")', target: '[role=dialog] label:has-text("Fraud or scam")' };
 
 module.exports = [
   scenario({
