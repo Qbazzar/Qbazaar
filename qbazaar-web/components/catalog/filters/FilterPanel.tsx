@@ -332,8 +332,11 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
           {resetLabel}
         </button>
       </div>
-      {chips}
-      {groups.map(group)}
+      {/* Its own box, so the first group under the title has no hairline above it. */}
+      <div>
+        {chips}
+        {groups.map(group)}
+      </div>
       {apply}
     </form>
   );
