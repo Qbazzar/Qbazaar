@@ -1,6 +1,7 @@
 // Compares one matched element pair (a component or an interactive text) across every state.
 const inpage = require('./inpage');
-const { diffStyles } = require('./compare');
+const { diffStyles, canonicalValue } = require('./compare');
+const { FOCUS_RULE, applyFocusPolicy, designedChanges, isUserAgentRing } = require('./focus');
 const { pairDescendants, isUserData } = require('./matching');
 const { compareIcon, pairIcons } = require('./icons');
 const { diffImages, cropOf } = require('./pixels');
@@ -22,6 +23,14 @@ function transformDelta(before, after) {
   return `matrix(${f[0]}, ${f[1]}, ${f[2]}, ${f[3]}, ${Math.round((f[4] - b[4]) * 10) / 10}, ${Math.round((f[5] - b[5]) * 10) / 10})`;
 }
 
+// The prototype's template engine wraps interpolated values in span.sc-interp. When that wrapper sits in a chip (a
+// city pill), the chip is the box a person sees: box properties come from the chip on both sides (inpage chipOf).
+function chipView(ref, target) {
+  if (!ref || !target || !(ref.templateWrapper && ref.chip)) return [ref, target];
+  const merge = (node) => (node.chip ? { ...node, rect: node.chip.rect, styles: { ...node.styles, ...node.chip.styles } } : node);
+  return [merge(ref), merge(target)];
+}
+
 const withDelta = (base, forced) => ({ ...forced, styles: { ...forced.styles, transform: transformDelta(base.styles.transform, forced.styles.transform) } });
 
 class UnitComparer {
@@ -38,15 +47,23 @@ class UnitComparer {
 
   emit(extra) {
     const labelled = this.stateLabel ? { ...extra, state: this.stateLabel } : extra;
-    return this.findings.add({ ...this.base, ...labelled });
+    // The sweep says which target element it paired, so a wrong twin is visible in the report.
+    const noted = this.unitNote && !labelled.note ? { ...labelled, note: this.unitNote } : labelled;
+    return this.findings.add({ ...this.base, ...noted });
+  }
+
+  accept(rule, component, state, d) {
+    this.findings.accept(rule, { ...this.base, component, state: this.stateLabel || state, property: d.property, ref: d.ref, target: d.target });
   }
 
   // A state only reports what differs beyond the default: repeating a default diff per state is noise.
   emitDiffs(component, state, diffs) {
     for (const d of diffs) {
+      // The browser's own focus ring on a focused reference element is not a design decision.
+      if (d.property === 'outline' && isUserAgentRing(d.ref)) { this.accept(FOCUS_RULE, component, state, d); continue; }
       // Focus rings follow one site-wide rule, so they are reported once, not per control.
       const subject = d.property === 'outline' && state === 'focus-visible' ? 'focus-ring' : component;
-      const key = `${this.dedupe || ""}|${subject}|${d.property}|${d.ref}|${d.target}`;
+      const key = `${this.dedupe || ''}|${subject}|${d.property}|${canonicalValue(d.property, d.ref)}|${canonicalValue(d.property, d.target)}`;
       // :active is forced together with :hover, so it repeats every hover difference.
       if (state === 'hover') this.hoverDiffs.add(key);
       if (state === 'active' && this.hoverDiffs.has(key)) continue;
@@ -60,8 +77,9 @@ class UnitComparer {
 
   async compare(unit) {
     this.dedupe = unit.dedupeKey || null;
+    this.unitNote = unit.note || null;
     const options = { descendants: unit.descendants !== false };
-    const [ref, target] = await Promise.all([this.ref.read(unit.refSel, options), this.target.read(unit.tgtSel, options)]);
+    const [ref, target] = chipView(...(await Promise.all([this.ref.read(unit.refSel, options), this.target.read(unit.tgtSel, options)])));
     if (!ref || !target) return;
     if (!unit.statesOnly) {
       await this.compareRoot(unit, ref, target);
@@ -72,7 +90,7 @@ class UnitComparer {
   }
 
   rootOptions(unit, ref, target) {
-    return { ...unit, sameBox: sameBox(ref.rect, target.rect), ownText: ref.ownText || target.ownText, cursor: Array.isArray(unit.states) };
+    return { ...unit, sameBox: sameBox(ref.rect, target.rect), ownText: ref.ownText || target.ownText, cursor: Array.isArray(unit.states), refNative: ref.native };
   }
 
   async compareRoot(unit, ref, target) {
@@ -84,6 +102,8 @@ class UnitComparer {
 
   async compareRenderedFont(unit, ref, target) {
     const [a, b] = await Promise.all([this.ref.renderedFonts(unit.refSel), this.target.renderedFonts(unit.tgtSel)]);
+    // An unstyled native control renders the browser's Arial: the same user-agent default diffStyles skips.
+    if (ref.native && a === 'Arial') return;
     if (a && b && a !== b) this.emit({ component: unit.name, property: 'rendered-font', ref: a, target: b });
   }
 
@@ -95,9 +115,10 @@ class UnitComparer {
 
   compareChildren(unit, ref, target, state) {
     const { pairs, missing } = pairDescendants(ref, target);
-    for (const { ref: r, target: t } of pairs) {
+    for (const pair of pairs) {
+      const [r, t] = chipView(pair.ref, pair.target);
       const fixed = unit.fixedSize || (r.kind === 'icon') || (r.kind === 'input');
-      const options = { fixedSize: fixed && r.kind !== 'text', skip: r.kind === 'icon' ? ['width', 'height'] : [], sameBox: sameBox(r.rect, t.rect), motion: false, ownText: r.ownText || t.ownText, kind: r.kind };
+      const options = { fixedSize: fixed && r.kind !== 'text', skip: r.kind === 'icon' ? ['width', 'height'] : [], sameBox: sameBox(r.rect, t.rect), motion: false, ownText: r.ownText || t.ownText, kind: r.kind, refNative: r.native };
       this.emitDiffs(`${unit.name} > ${r.key.replace(/#\d+$/, '')}`, state, diffStyles(r.styles, t.styles, options));
     }
     if (state !== 'default') return;
@@ -127,19 +148,26 @@ class UnitComparer {
     for (const state of unit.states || DEFAULT_STATES) {
       const full = state === 'hover';
       const read = (probe, sel) => probe.withState(sel, state, () => probe.read(sel, { descendants: full }));
-      const [r, t] = await Promise.all([read(this.ref, unit.refSel), read(this.target, unit.tgtSel)]);
+      const [r, t] = chipView(...(await Promise.all([read(this.ref, unit.refSel), read(this.target, unit.tgtSel)])));
       if (!r || !t) continue;
       const [rd, td] = [withDelta(ref, r), withDelta(target, t)];
-      this.emitDiffs(unit.name, state, diffStyles(rd.styles, td.styles, { ...this.rootOptions(unit, r, t), motion: false, transform: 'full' }));
+      const diffs = diffStyles(rd.styles, td.styles, { ...this.rootOptions(unit, r, t), motion: false, transform: 'full' });
+      this.emitDiffs(unit.name, state, state === 'focus-visible' ? this.focusPolicy(unit.name, diffs, ref, r) : diffs);
       if (full) this.compareChildren(unit, r, t, state);
       this.compareStateChange(unit, state, { ref, target }, { ref: r, target: t });
     }
   }
 
+  focusPolicy(component, diffs, refDefault, refFocused) {
+    const { kept, accepted } = applyFocusPolicy(diffs, refDefault.styles, refFocused.styles);
+    for (const d of accepted) this.accept(FOCUS_RULE, component, 'focus-visible', d);
+    return kept;
+  }
+
   // The reference reacts to a state and the target does not: one explicit finding beats a dozen property rows.
   compareStateChange(unit, state, base, forced) {
     const changed = (before, after) => VISUAL_STATE_PROPS.filter((p) => before.styles[p] !== after.styles[p]);
-    const refChange = changed(base.ref, forced.ref);
+    const refChange = designedChanges(changed(base.ref, forced.ref), forced.ref.styles);
     const targetChange = changed(base.target, forced.target);
     if (!refChange.length || targetChange.length) return;
     this.emit({ component: unit.name, state, category: 'states', severity: 'high', property: 'state-change',
@@ -162,4 +190,4 @@ class UnitComparer {
   }
 }
 
-module.exports = { UnitComparer };
+module.exports = { UnitComparer, chipView };

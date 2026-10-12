@@ -110,13 +110,28 @@ class Probe {
     return found;
   }
 
+  // Which keyframes run on the page, how often, on what, and whether one runs on a page-sized wrapper (a screen fade).
   usedAnimations() {
     return this.page.evaluate(() => {
-      const names = new Set();
+      const uses = new Map();
+      const describe = (el) => {
+        const label = el.getAttribute('data-screen-label');
+        if (label) return `${el.tagName.toLowerCase()}[data-screen-label="${label}"]`;
+        const cls = [...el.classList].slice(0, 2).join('.');
+        return el.tagName.toLowerCase() + (cls ? `.${cls}` : '');
+      };
       for (const el of document.querySelectorAll('*')) {
-        for (const n of getComputedStyle(el).animationName.split(',')) if (n.trim() !== 'none') names.add(n.trim());
+        for (const raw of getComputedStyle(el).animationName.split(',')) {
+          const name = raw.trim();
+          if (name === 'none') continue;
+          const r = el.getBoundingClientRect();
+          const use = uses.get(name) || { name, count: 0, sample: describe(el), pageLevel: false };
+          use.count++;
+          use.pageLevel = use.pageLevel || (r.width >= innerWidth * 0.9 && r.height >= innerHeight * 0.5);
+          uses.set(name, use);
+        }
       }
-      return [...names];
+      return [...uses.values()];
     });
   }
 }

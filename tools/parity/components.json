@@ -50,7 +50,7 @@
       },
       "hero-choose-category": {
         "ref": "main form [data-qbsel=cat]",
-        "target": "form[role=search] a[href=\"/categories\"], form[role=search] [data-field=category]",
+        "target": "form[role=search] [role=combobox][aria-label^=\"Choose Category\"], form[role=search] [data-field=category]",
         "interactive": true,
         "fixedSize": true
       },
@@ -61,7 +61,7 @@
       },
       "hero-distance": {
         "ref": "main form [data-qbsel=dist]",
-        "target": "form[role=search] [data-field=distance], form[role=search] [aria-label=Distance]",
+        "target": "form[role=search] [role=combobox][aria-label^=\"Distance\"], form[role=search] [data-field=distance]",
         "interactive": true,
         "fixedSize": true
       },
@@ -89,7 +89,7 @@
     "login": {
       "auth-card": {
         "ref": "main .qb-card",
-        "target": "main > div > div",
+        "target": "main > div",
         "fixedSize": true
       },
       "auth-submit": {

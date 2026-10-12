@@ -125,9 +125,38 @@ function readUnit({ selector, descendants }) {
     return { x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height };
   };
 
-  const hasOwnText = (el) => norm([...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' ')).length > 0 || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
-  const describe = (el, key, kind) => ({ key, kind, rect: rectOf(el), styles: styles(el), ownText: hasOwnText(el) });
-  const out = { rect: rectOf(root), styles: styles(root), ownText: hasOwnText(root), tag: root.tagName.toLowerCase(), text: norm(root.textContent).slice(0, 80), descendants: [] };
+  // Checkboxes, radios and the like draw no text, so their font and colour are not compared.
+  const TEXTLESS_INPUTS = ['checkbox', 'radio', 'range', 'color', 'file', 'hidden', 'image'];
+  const isToggle = (el) => el.tagName === 'INPUT' && ['checkbox', 'radio'].includes(el.type);
+  const drawsValue = (el) => el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || (el.tagName === 'INPUT' && !TEXTLESS_INPUTS.includes(el.type));
+  const hasOwnText = (el) => norm([...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' ')).length > 0 || drawsValue(el);
+  const nativeKind = (el) => (isToggle(el) ? 'toggle' : ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) ? 'control' : null);
+
+  // A chip: the parent box drawn around a box-less inline wrapper that holds all of its text (a city pill around the
+  // prototype's <span class="sc-interp">). The comparer reads box properties there when the reference text sits in a
+  // template wrapper (unit.js chipView). A chip that is the unit itself is already compared as the root.
+  const BOX_PROPS = ['background-color', 'background-image', 'border-width', 'border-style', 'border-color', 'border-radius', 'box-shadow',
+    'padding', 'margin', 'width', 'height', 'display', 'outline-width', 'outline-style', 'outline-color', 'outline-offset',
+    'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay'];
+  const paintsBox = (s) => s.backgroundColor !== 'rgba(0, 0, 0, 0)' || s.backgroundImage !== 'none'
+    || [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].some((w) => parseFloat(w) > 0);
+  const boxless = (s) => s.display === 'inline' && !paintsBox(s) && [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].every((p) => parseFloat(p) === 0);
+  const chipOf = (el) => {
+    const parent = el.parentElement;
+    if (!parent || parent === document.body || parent === root || !norm(el.textContent) || !boxless(getComputedStyle(el))) return null;
+    if (norm(parent.textContent) !== norm(el.textContent) || !paintsBox(getComputedStyle(parent))) return null;
+    const [r, p] = [el.getBoundingClientRect(), parent.getBoundingClientRect()];
+    return p.height <= r.height * 2 + 48 && p.width <= r.width + 160 ? parent : null;
+  };
+  const chipView = (el) => {
+    const chip = chipOf(el);
+    if (!chip) return {};
+    const chipStyles = styles(chip);
+    return { chip: { rect: rectOf(chip), styles: Object.fromEntries(BOX_PROPS.map((p) => [p, chipStyles[p]])) } };
+  };
+  const templateWrapper = (el) => el.classList.contains('sc-interp');
+  const describe = (el, key, kind) => ({ key, kind, tag: el.tagName.toLowerCase(), native: nativeKind(el), templateWrapper: templateWrapper(el), rect: rectOf(el), styles: styles(el), ownText: hasOwnText(el), ...chipView(el) });
+  const out = { rect: rectOf(root), styles: styles(root), ownText: hasOwnText(root), tag: root.tagName.toLowerCase(), native: nativeKind(root), templateWrapper: templateWrapper(root), text: norm(root.textContent).slice(0, 80), descendants: [], ...chipView(root) };
   if (!descendants) return out;
 
   const counters = {};

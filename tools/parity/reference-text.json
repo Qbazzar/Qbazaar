@@ -1,0 +1,51 @@
+{
+  "$comment": "Texts the prototype shows only because of its demo state or its sample data. A missing-text finding is not raised for them; each skip is counted under 'Accepted differences'. 'pages' limits a rule to those page ids, 'loginPages' to pages that need the demo login.",
+  "rules": [
+    {
+      "id": "demo-state",
+      "texts": ["FA"],
+      "reason": "The prototype's demo user avatar; the target shows the guest buttons, or the signed-in user's own initials."
+    },
+    {
+      "id": "demo-state",
+      "texts": ["Login", "Sign Up"],
+      "loginPages": true,
+      "reason": "The prototype keeps the guest header on signed-in pages; the target is signed in there."
+    },
+    {
+      "id": "demo-state",
+      "texts": ["EN", "🇬🇧"],
+      "reason": "The auth pages' language pill shows the prototype's current language; the language control itself is compared by the login-language-pill scenario."
+    },
+    {
+      "id": "sample-data",
+      "texts": ["Doha", "Al Rayyan", "Al Wakrah", "Al Daayen", "Umm Salal", "Al Shahaniya", "Al Khor", "Al Shamal", "Lusail"],
+      "pages": ["parent-category", "category"],
+      "reason": "Sample city filters; the target lists the cities of its live listings."
+    },
+    {
+      "id": "sample-data",
+      "texts": ["Car & Vehicles", "Motorcycles & Scooters", "Motorhomes & Caravans", "Car Parts & Tires"],
+      "pages": ["parent-category"],
+      "reason": "Sample category names; the target shows the live category tree."
+    },
+    {
+      "id": "sample-data",
+      "texts": ["Mark Toro"],
+      "pages": ["seller", "seller-individual"],
+      "reason": "Sample seller name; the target shows the seller from the live API."
+    },
+    {
+      "id": "sample-data",
+      "texts": ["BonTon"],
+      "pages": ["seller-organization"],
+      "reason": "Sample company name; the target shows the company from the live API."
+    },
+    {
+      "id": "sample-data",
+      "texts": ["Farah Alzinati", "Neutrogena Cream"],
+      "pages": ["messages"],
+      "reason": "Sample chat partner and ad; the target shows the demo account's own conversations."
+    }
+  ]
+}

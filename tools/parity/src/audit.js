@@ -3,7 +3,7 @@ const { openSide, closeSide } = require('./sides');
 const inpage = require('./inpage');
 const { markComponents } = require('./marking');
 const { UnitComparer } = require('./unit');
-const { pairTexts, isUserData } = require('./matching');
+const { pairTexts, isUserData, referenceOnlyText } = require('./matching');
 const { compareKeyframes } = require('./motion');
 const componentsFile = require('../components.json');
 const targetsFile = require('../targets.json');
@@ -85,18 +85,22 @@ function textUnits(pairs, config, width) {
   return { units, interactiveMismatch };
 }
 
-function reportUnmatchedTexts(unmatched, emit) {
+function reportUnmatchedTexts(unmatched, emit, accept, pageDef) {
   for (const row of unmatched) {
     // Links inside content cards carry data (category and place names), so only headings and chrome count.
     if (isUserData(row.text) || !(HEADING.test(row.tag) || (row.interactive && row.chrome))) continue;
+    const demo = referenceOnlyText(row.text, pageDef);
+    if (demo) { accept(`reference-${demo.id}`, { component: `text:${row.key}`, property: 'missing-text', ref: row.text, target: 'absent' }); continue; }
     emit({ component: `text:${row.key}`, category: 'missing', severity: 'medium', property: 'missing-text', ref: row.text, target: 'absent',
       note: `"${row.text}" (${row.tag}) is on the reference page but not on the target page` });
   }
 }
 
 async function checkKeyframes(refSide, targetSide, emit) {
-  const [refFrames, used, targetFrames] = await Promise.all([refSide.probe.keyframes(), refSide.probe.usedAnimations(), targetSide.probe.keyframes()]);
-  for (const p of compareKeyframes(refFrames, used, targetFrames)) emit({ component: 'page', category: 'motion', severity: 'medium', ...p });
+  const [refFrames, refUses, targetFrames, targetUses] = await Promise.all([
+    refSide.probe.keyframes(), refSide.probe.usedAnimations(), targetSide.probe.keyframes(), targetSide.probe.usedAnimations(),
+  ]);
+  for (const p of compareKeyframes(refFrames, refUses, targetFrames, targetUses)) emit({ component: 'page', category: 'motion', severity: 'medium', ...p });
 }
 
 async function timed(config, label, work) {
@@ -109,6 +113,7 @@ async function auditPage(env, pageDef, viewport) {
   const { config, findings, summary } = env;
   const base = { page: pageDef.id, viewport: viewport.width, locale: config.locale };
   const emit = (extra) => findings.add({ ...base, ...extra });
+  const accept = (rule, extra) => findings.accept(rule, { ...base, ...extra });
   const refSide = await openSide(env, 'reference', pageDef, viewport);
   const targetSide = await openSide(env, 'target', pageDef, viewport);
   try {
@@ -122,7 +127,7 @@ async function auditPage(env, pageDef, viewport) {
     for (const m of comps.missing) emit({ component: m.name, category: 'missing', severity: 'high', property: 'missing-component', ref: m.spec.ref, target: 'not found', note: `component ${m.name} is on the reference but its target selector (${m.spec.target}) matches nothing visible` });
     const [refRows, tgtRows] = await Promise.all([refSide.page.evaluate(inpage.collectTexts), targetSide.page.evaluate(inpage.collectTexts)]);
     const { pairs, unmatchedRef } = pairTexts(refRows, tgtRows);
-    reportUnmatchedTexts(unmatchedRef, emit);
+    reportUnmatchedTexts(unmatchedRef, emit, accept, pageDef);
     const texts = textUnits(pairs, config, viewport.width);
     for (const m of texts.interactiveMismatch) {
       emit({ component: m.name, category: 'states', severity: 'medium', property: 'not-interactive', ref: `interactive (${m.ref.tag} inside a button/link)`, target: 'plain text on the target', note: 'the reference makes this text clickable, the target does not' });
