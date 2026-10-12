@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { LocationPinIcon } from '@/components/design-system/icons';
 import { formatRelativeTime } from '@/components/messaging/relative-time';
 import { cn } from '@/lib/utils';
 import type { AdSummary } from '@/lib/api/types';
@@ -67,7 +67,7 @@ export function SavedAdRow({ ad, labels, photoBadge, action, at }: SavedAdRowPro
           <p className="flex min-w-0 items-center gap-1.5 text-qb-label text-qb-ink-subtle qb-tablet:text-qb-caption">
             {location || when ? (
               <>
-                <Icon icon={MapPin} size="sm" />
+                <Icon icon={LocationPinIcon} size="sm" />
                 <span className="truncate">{[location, when].filter(Boolean).join(' • ')}</span>
               </>
             ) : null}

@@ -16,9 +16,9 @@
  */
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { BellOff, BellRing, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { BellIcon, BellOffIcon, LoaderCircleIcon } from '@/components/design-system/icons';
 import {
   enablePush,
   getLastPushError,
@@ -81,7 +81,7 @@ export function EnablePushButton() {
   if (state === 'enabled') {
     return (
       <p role="status" className="inline-flex items-center gap-1.5 font-qb text-qb-caption text-qb-ink-subtle">
-        <BellRing className="size-4" aria-hidden="true" />
+        <BellIcon className="size-4" aria-hidden="true" />
         {t('notifications.push.enabled', 'إشعارات المتصفح مفعّلة')}
       </p>
     );
@@ -90,7 +90,7 @@ export function EnablePushButton() {
   if (state === 'denied') {
     return (
       <p role="status" className="inline-flex items-center gap-1.5 font-qb text-qb-caption text-qb-ink-subtle">
-        <BellOff className="size-4" aria-hidden="true" />
+        <BellOffIcon className="size-4" aria-hidden="true" />
         {t('notifications.push.denied', 'الإشعارات محظورة من إعدادات المتصفح')}
       </p>
     );
@@ -109,9 +109,9 @@ export function EnablePushButton() {
     <div className="inline-flex flex-col items-start gap-1">
       <Button variant="outline" size="sm" disabled={state === 'pending'} onClick={() => void handleEnable()}>
         {state === 'pending' ? (
-          <Loader2 className="animate-spin" aria-hidden="true" />
+          <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
         ) : (
-          <BellRing aria-hidden="true" />
+          <BellIcon aria-hidden="true" />
         )}
         {t('notifications.push.enable', 'فعّل إشعارات المتصفح')}
       </Button>

@@ -8,7 +8,6 @@
  */
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, LifeBuoy } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/design-system/Breadcrumb';
@@ -18,6 +17,7 @@ import { Icon } from '@/components/design-system/Icon';
 import { accountPageClass } from '@/components/account/AccountPage';
 import { formatLongDate } from '@/components/account/format';
 import { PanelState } from '@/components/account/PanelState';
+import { ArrowLeftIcon, HeadsetSupportIcon } from '@/components/design-system/icons';
 import { TicketPriorityPill } from '@/components/support/TicketPriorityPill';
 import { TicketReplyForm } from '@/components/support/TicketReplyForm';
 import { TicketStatusPill } from '@/components/support/TicketStatusPill';
@@ -47,7 +47,7 @@ export function TicketDetailClient({ id }: { id: string }) {
     return (
       <TicketPage>
         <EmptyState
-          icon={<Icon icon={LifeBuoy} size="lg" />}
+          icon={<Icon icon={HeadsetSupportIcon} size="lg" />}
           title={
             notFound
               ? t('support.errors.ticket_not_found', 'لم نعثر على هذه التذكرة')
@@ -76,7 +76,7 @@ export function TicketDetailClient({ id }: { id: string }) {
               focusRing,
             )}
           >
-            <Icon icon={ArrowLeft} size="lg" flipInRtl />
+            <Icon icon={ArrowLeftIcon} size="lg" flipInRtl />
           </Link>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

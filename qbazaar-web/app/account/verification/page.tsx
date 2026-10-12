@@ -14,7 +14,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { BadgeCheck, Briefcase, Loader2, Mail, Phone } from 'lucide-react';
 
 import { Badge } from '@/components/design-system/Badge';
 import { Button, buttonVariants } from '@/components/design-system/Button';
@@ -22,6 +21,7 @@ import { showDesignToast } from '@/components/design-system/design-toast';
 import { PanelState } from '@/components/account/PanelState';
 import { SettingsList, SettingsPanel, SettingsRow } from '@/components/account/SettingsPanel';
 import { VerifiedBadge } from '@/components/account/VerifiedBadge';
+import { JobsTileIcon, LoaderCircleIcon, MailIcon, PhoneIcon, VerifiedBadgeIcon } from '@/components/design-system/icons';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { getVerificationStatus } from '@/lib/api/account';
 import { sendEmailVerification, ApiClientError } from '@/lib/api/auth';
@@ -129,7 +129,7 @@ function VerificationContent() {
       ) : (
         <SettingsList>
           <VerificationRow
-            icon={<Mail />}
+            icon={<MailIcon />}
             title={t('account.verification.channels.email')}
             value={user?.email ?? ''}
             verified={status.email_verified}
@@ -138,7 +138,7 @@ function VerificationContent() {
                 <Button variant="outline" size="sm" onClick={handleSendEmail} disabled={sendingEmail}>
                   {sendingEmail ? (
                     <>
-                      <Loader2 className="animate-spin" aria-hidden="true" />
+                      <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
                       {t('account.verification.ctas.sending_email')}
                     </>
                   ) : (
@@ -150,7 +150,7 @@ function VerificationContent() {
           />
 
           <VerificationRow
-            icon={<Phone />}
+            icon={<PhoneIcon />}
             title={t('account.verification.channels.phone')}
             value={user?.phone ?? ''}
             verified={status.phone_verified}
@@ -176,7 +176,7 @@ function VerificationContent() {
           />
 
           <VerificationRow
-            icon={<Briefcase />}
+            icon={<JobsTileIcon />}
             title={t('account.verification.channels.business')}
             value={null}
             verified={status.business_verified}
@@ -184,7 +184,7 @@ function VerificationContent() {
           />
 
           <VerificationRow
-            icon={<BadgeCheck />}
+            icon={<VerifiedBadgeIcon />}
             title={t('account.verification.channels.kyc')}
             value={null}
             verified={status.kyc_verified}

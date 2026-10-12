@@ -11,12 +11,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { fieldErrorText } from '@/components/auth/FieldError';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import {
@@ -93,7 +93,7 @@ export function PasswordChangeForm({ onDone, onCancel }: PasswordChangeFormProps
 
       <AccountDialogActions className="mt-2">
         <button type="submit" disabled={submitting} className={cn(accountSaveClass, submitting && 'cursor-progress')}>
-          {submitting ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+          {submitting ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
           {t('common.save')}
         </button>
         {onCancel ? (

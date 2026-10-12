@@ -5,9 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { LoaderCircleIcon, PencilIcon, PlusIcon, TrashIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
@@ -133,7 +133,7 @@ function AddressList({
                 aria-label={t('account.address.edit_one', { address: addressSummary(address) })}
                 className={cn(squareButton, 'text-qb-ink-muted')}
               >
-                <Pencil aria-hidden="true" className="size-[18px]" strokeWidth={1.6} />
+                <PencilIcon aria-hidden="true" className="size-[18px]" />
               </button>
               <button
                 type="button"
@@ -141,7 +141,7 @@ function AddressList({
                 aria-label={t('account.address.delete_one', { address: addressSummary(address) })}
                 className={cn(squareButton, 'text-qb-acct-danger')}
               >
-                <Trash2 aria-hidden="true" className="size-[18px]" strokeWidth={1.6} />
+                <TrashIcon aria-hidden="true" className="size-[18px]" strokeWidth={1.6} />
               </button>
             </div>
           </li>
@@ -153,7 +153,7 @@ function AddressList({
           onClick={onAdd}
           className={cn(accountSaveClass, 'flex-none basis-auto gap-2.5 px-[22px] py-3.5')}
         >
-          <Plus aria-hidden="true" />
+          <PlusIcon aria-hidden="true" />
           {t('account.address.add_title')}
         </button>
       </div>
@@ -168,7 +168,7 @@ function AddressList({
       >
         <ModalActions className="mt-2">
           <Button size="sm" disabled={remove.isPending} onClick={() => pendingDelete && remove.mutate(pendingDelete.id)}>
-            {remove.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {remove.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
             {t('common.delete')}
           </Button>
           <Button variant="muted" size="sm" disabled={remove.isPending} onClick={() => setPendingDelete(null)}>
@@ -245,7 +245,7 @@ function AddressForm({
       </div>
       <AccountDialogActions className="mt-2">
         <button type="submit" disabled={save.isPending} className={accountSaveClass}>
-          {save.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+          {save.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
           {t('common.save')}
         </button>
         <button type="button" onClick={onCancel} disabled={save.isPending} className={accountCancelClass}>

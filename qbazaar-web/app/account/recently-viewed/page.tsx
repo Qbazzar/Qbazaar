@@ -10,12 +10,12 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
-import { Clock, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { ClockIcon, LoaderCircleIcon, TrashIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import { AccountPage } from '@/components/account/AccountPage';
 import { ModalActions } from '@/components/account/ModalActions';
@@ -67,7 +67,7 @@ export default function RecentlyViewedPage() {
       actions={
         hasItems ? (
           <Button variant="ghost" size="sm" onClick={() => setConfirmOpen(true)}>
-            <Trash2 aria-hidden="true" />
+            <TrashIcon aria-hidden="true" />
             {t('recently_viewed.clear', 'مسح الكل')}
           </Button>
         ) : null
@@ -82,7 +82,7 @@ export default function RecentlyViewedPage() {
         />
       ) : !hasItems || !data ? (
         <EmptyState
-          icon={<Icon icon={Clock} size="lg" />}
+          icon={<Icon icon={ClockIcon} size="lg" />}
           title={t('recently_viewed.empty', 'لا يوجد سجل مشاهدة بعد')}
           description={t('recently_viewed.empty_body')}
           action={
@@ -115,7 +115,7 @@ export default function RecentlyViewedPage() {
       >
         <ModalActions className="mt-2">
           <Button size="sm" disabled={clearMutation.isPending} onClick={handleClear}>
-            {clearMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {clearMutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
             {t('recently_viewed.clear_confirm.confirm', 'مسح')}
           </Button>
           <Button

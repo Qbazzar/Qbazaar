@@ -16,12 +16,12 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { Textarea } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
 import { fieldErrorText } from '@/components/auth/FieldError';
@@ -243,7 +243,7 @@ function LifecycleDialog({ flow, open, onOpenChange, title, description, withRea
           <Button type="submit" size="sm" disabled={submitting} className={cn(submitting && 'cursor-progress')}>
             {submitting ? (
               <>
-                <Loader2 className="animate-spin" aria-hidden="true" />
+                <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
                 {t(`account.data.${flow}.confirming`)}
               </>
             ) : (

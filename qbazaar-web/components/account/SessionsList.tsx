@@ -11,13 +11,13 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, MonitorSmartphone } from 'lucide-react';
 
 import { Badge } from '@/components/design-system/Badge';
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { LoaderCircleIcon, MonitorSmartphoneIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import { intlLocale } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
@@ -61,7 +61,7 @@ export function SessionsList({ sessions }: SessionsListProps) {
   if (sessions.length === 0) {
     return (
       <EmptyState
-        icon={<Icon icon={MonitorSmartphone} size="lg" />}
+        icon={<Icon icon={MonitorSmartphoneIcon} size="lg" />}
         title={t('account.sessions.empty_title')}
         description={t('account.sessions.empty_body')}
       />
@@ -74,7 +74,7 @@ export function SessionsList({ sessions }: SessionsListProps) {
         {sessions.map((session) => (
           <SettingsRow
             key={session.id}
-            icon={<MonitorSmartphone />}
+            icon={<MonitorSmartphoneIcon />}
             value={
               <span className="flex flex-wrap items-center gap-2">
                 {deviceLabel(session)}
@@ -114,7 +114,7 @@ export function SessionsList({ sessions }: SessionsListProps) {
           >
             {mutation.isPending ? (
               <>
-                <Loader2 className="animate-spin" aria-hidden="true" />
+                <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
                 {t('account.sessions.revoking')}
               </>
             ) : (

@@ -10,10 +10,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { FieldError } from '@/components/auth/FieldError';
 import { OtpInput } from '@/components/auth/OtpInput';
@@ -194,7 +194,7 @@ export function EditPhoneDialog({ open, onOpenChange }: ContactDialogProps) {
           <p className="mt-3.5 text-qb-caption text-qb-ink-faint">{t('account.contact.sms_note')}</p>
           <div className="mt-[26px] flex justify-end">
             <button type="submit" disabled={reauth.sending} className={cn(accountSaveClass, 'flex-none basis-auto px-[26px]')}>
-              {reauth.sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+              {reauth.sending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
               {t('account.contact.confirm_phone')}
             </button>
           </div>
@@ -342,7 +342,7 @@ function DialogButtons({ pending, onCancel }: { pending: boolean; onCancel: () =
   return (
     <AccountDialogActions className="mt-[26px]">
       <button type="submit" disabled={pending} className={cn(accountSaveClass, pending && 'cursor-progress')}>
-        {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+        {pending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
         {t('common.save')}
       </button>
       <button type="button" onClick={onCancel} disabled={pending} className={accountCancelClass}>

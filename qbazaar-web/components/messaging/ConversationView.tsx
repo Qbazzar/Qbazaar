@@ -10,7 +10,6 @@
  */
 import { useCallback, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@/components/design-system/Button';
@@ -19,6 +18,7 @@ import { Icon } from '@/components/design-system/Icon';
 import { AdPhoto } from '@/components/account/AdPhoto';
 import { PanelState } from '@/components/account/PanelState';
 import { formatAdPrice } from '@/components/account/format';
+import { ArrowLeftIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
@@ -135,7 +135,7 @@ export function ConversationView({ conversationId, onBack }: Props) {
           className="-ms-2 qb-desktop:hidden"
           aria-label={t('messaging.back', 'العودة')}
         >
-          <Icon icon={ArrowLeft} size="lg" flipInRtl />
+          <Icon icon={ArrowLeftIcon} size="lg" flipInRtl />
         </Button>
 
         <Link

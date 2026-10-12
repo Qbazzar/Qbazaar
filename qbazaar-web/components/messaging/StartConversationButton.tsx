@@ -10,10 +10,10 @@
  */
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2Icon, MessageSquareText, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, type ButtonProps } from '@/components/design-system/Button';
+import { ChatSquareIcon, LoaderCircleIcon, type IconGlyph } from '@/components/design-system/icons';
 import { useStartConversationMutation } from '@/lib/queries/messaging';
 import { usePhoneVerificationGate } from '@/hooks/usePhoneVerificationGate';
 import { isPhoneNotVerifiedError } from '@/lib/auth/phone-gate';
@@ -22,13 +22,13 @@ import type { Ad } from '@/lib/api/types';
 
 interface StartConversationButtonProps extends Omit<ButtonProps, 'onClick' | 'children'> {
   ad: Pick<Ad, 'id'>;
-  icon?: LucideIcon;
+  icon?: IconGlyph;
   children: ReactNode;
 }
 
 export function StartConversationButton({
   ad,
-  icon: Glyph = MessageSquareText,
+  icon: Glyph = ChatSquareIcon,
   children,
   disabled,
   ...buttonProps
@@ -61,7 +61,7 @@ export function StartConversationButton({
 
   return (
     <Button {...buttonProps} onClick={handleClick} disabled={disabled || pending} aria-busy={pending || undefined}>
-      {pending ? <Loader2Icon className="animate-spin" aria-hidden /> : <Glyph aria-hidden />}
+      {pending ? <LoaderCircleIcon className="animate-spin" aria-hidden /> : <Glyph aria-hidden />}
       {children}
     </Button>
   );

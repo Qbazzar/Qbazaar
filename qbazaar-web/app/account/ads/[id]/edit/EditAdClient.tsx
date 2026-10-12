@@ -7,9 +7,9 @@
  */
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { FileQuestion } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
+import { FileQuestionMarkIcon } from '@/components/design-system/icons';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import { PostAdFlow } from '@/components/post-ad/PostAdFlow';
 import { PostAdFrame, PostAdLoading } from '@/components/post-ad/PostAdPage';
@@ -37,7 +37,7 @@ export function EditAdClient({ adId }: Props) {
     // Someone else's ad is a 404 too, so its title and contents don't leak.
     content = (
       <StatePanel
-        icon={<StateIcon icon={FileQuestion} tone="muted" />}
+        icon={<StateIcon icon={FileQuestionMarkIcon} tone="muted" />}
         title={t('ads.errors.ad_not_found', 'لم نعثر على هذا الإعلان')}
         description={t('ads.errors.ad_not_found_body', 'الإعلان ربما تم حذفه أو الرابط غير صحيح.')}
         action={

@@ -9,11 +9,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { CircleAlert, Loader2, Search } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { AlertCircleIcon, LoaderCircleIcon, SearchIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import { AccountEmptyState } from '@/components/account/AccountEmptyState';
 import { AccountPage, compactTitleClass } from '@/components/account/AccountPage';
@@ -68,7 +68,7 @@ export default function SavedSearchesPage() {
         />
       ) : !data || data.length === 0 ? (
         <AccountEmptyState
-          icon={<Search strokeWidth={1.6} />}
+          icon={<SearchIcon strokeWidth={1.6} />}
           title={t('account.saved_searches.empty_title', 'لا توجد عمليات بحث محفوظة بعد')}
           description={t('account.saved_searches.empty_body')}
           action={
@@ -133,7 +133,7 @@ function ClearAllDialog({
     >
       <ModalActions className="mt-2">
         <Button size="sm" disabled={remove.isPending} onClick={clear}>
-          {remove.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+          {remove.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
           {t('account.saved_searches.clear_all')}
         </Button>
         <Button variant="muted" size="sm" disabled={remove.isPending} onClick={() => onOpenChange(false)}>
@@ -165,12 +165,12 @@ function CleanUpBanner({ searches }: { searches: readonly SavedSearch[] }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3.5 rounded-qb-xl border border-qb-acct-banner-line bg-qb-acct-banner px-[22px] py-[18px]">
       <p className="flex flex-wrap items-center gap-2.5 text-qb-body-sm text-qb-ink-body">
-        <CircleAlert aria-hidden="true" className="size-5 shrink-0 text-qb-brand" strokeWidth={1.7} />
+        <AlertCircleIcon aria-hidden="true" className="size-5 shrink-0 text-qb-brand" strokeWidth={1.7} />
         {t('account.saved_searches.cleanup_title')}
         <span className="text-qb-label text-qb-ink-subtle">— {t('account.saved_searches.cleanup_body')}</span>
       </p>
       <button type="button" onClick={cleanUp} disabled={remove.isPending} className={primaryButtonClass}>
-        {remove.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+        {remove.isPending ? <LoaderCircleIcon className="size-4 animate-spin" aria-hidden="true" /> : null}
         {t('account.saved_searches.cleanup')}
       </button>
     </div>

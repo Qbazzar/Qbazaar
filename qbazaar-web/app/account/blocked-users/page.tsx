@@ -10,7 +10,6 @@
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2, UserX } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
@@ -20,6 +19,7 @@ import { Icon } from '@/components/design-system/Icon';
 import { NamedAvatar } from '@/components/account/NamedAvatar';
 import { PanelState } from '@/components/account/PanelState';
 import { SettingsPanel } from '@/components/account/SettingsPanel';
+import { LoaderCircleIcon, UserXIcon } from '@/components/design-system/icons';
 import { intlLocale } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -65,7 +65,7 @@ export default function BlockedUsersPage() {
         <PanelState loading={isLoading} />
       ) : blocked.length === 0 ? (
         <EmptyState
-          icon={<Icon icon={UserX} size="lg" />}
+          icon={<Icon icon={UserXIcon} size="lg" />}
           title={t('account.blocked_users.empty_title')}
           description={t('account.blocked_users.empty_body')}
           className="rounded-qb-2xl border border-qb-line shadow-qb-card"
@@ -115,7 +115,7 @@ function BlockedUserCard({
       <Button variant="outline" fullWidth onClick={onUnblock} disabled={disabled} className="mt-auto h-11 qb-tablet:h-12">
         {pending ? (
           <>
-            <Loader2 className="animate-spin" aria-hidden="true" />
+            <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
             {t('account.blocked_users.unblocking')}
           </>
         ) : (
