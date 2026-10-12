@@ -66,3 +66,31 @@ it('sanitizes a help article body when staff update it', function (): void {
 
     expect($article->refresh()->body)->toBe(['ar' => '<p>جديد</p><img src="x">', 'en' => '']);
 });
+
+it('keeps editor formatting and alignment but strips smuggled style when a page is saved', function (): void {
+    actingAs($this->admin)->post('/admin/pages', [
+        'slug' => 'about',
+        'display_order' => 0,
+        'is_published' => '1',
+        'title_ar' => 'من نحن',
+        'body_ar' => '<h2 style="text-align: center">عنوان</h2><p style="text-align: end; position:fixed"><u>نص</u></p>',
+        'body_en' => '<blockquote><p style="text-align: justify">Quote</p></blockquote><hr><a href="https://x.qa" target="_blank" rel="noopener noreferrer nofollow" onclick="x()">x</a>',
+    ])->assertRedirect(route('admin.pages.index'));
+
+    $page = Page::query()->where('slug', 'about')->firstOrFail();
+
+    expect($page->body)->toBe([
+        'ar' => '<h2 style="text-align: center">عنوان</h2><p><u>نص</u></p>',
+        'en' => '<blockquote><p style="text-align: justify">Quote</p></blockquote><hr><a href="https://x.qa" target="_blank" rel="noopener noreferrer nofollow">x</a>',
+    ]);
+});
+
+it('renders the rich editor for both languages on the page and article forms', function (): void {
+    $response = actingAs($this->admin)->get('/admin/pages/create')->assertOk();
+
+    $response->assertSee('data-rich-editor', false)
+        ->assertSee('data-dir="rtl"', false)
+        ->assertSee('data-dir="ltr"', false)
+        ->assertSee('name="body_ar"', false)
+        ->assertSee('name="body_en"', false);
+});

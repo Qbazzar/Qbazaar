@@ -38,3 +38,22 @@ it('forces safe rel on links that open a new tab', function (): void {
 it('returns an empty string for blank input', function (): void {
     expect((new HtmlSanitizer)->sanitize("  \n "))->toBe('');
 });
+
+it('round-trips everything the rich-text editor can produce', function (): void {
+    $html = '<h2 style="text-align: center">عنوان</h2><h3>sub</h3>'
+        . '<p style="text-align: end"><strong>b</strong><em>i</em><u>u</u><s>s</s></p>'
+        . '<p style="text-align: justify">j</p><ul><li><p>one</p></li></ul><ol><li>two</li></ol>'
+        . '<blockquote><p>q</p></blockquote><hr>'
+        . '<a href="https://x.qa" target="_blank" rel="noopener noreferrer nofollow">x</a>';
+
+    expect((new HtmlSanitizer)->sanitize($html))->toBe($html);
+});
+
+it('keeps only a plain text-align declaration in style', function (string $input, string $expected): void {
+    expect((new HtmlSanitizer)->sanitize($input))->toBe($expected);
+})->with([
+    'alignment with extras' => ['<p style="text-align: center; background:url(javascript:x)">a</p>', '<p>a</p>'],
+    'expression value' => ['<p style="text-align: expression(alert(1))">a</p>', '<p>a</p>'],
+    'non-block tag' => ['<span style="text-align: center">a</span>', '<span>a</span>'],
+    'uppercase value is normalised' => ['<p style="TEXT-ALIGN:CENTER;">a</p>', '<p style="text-align: center">a</p>'],
+]);

@@ -33,8 +33,8 @@
 
         <x-admin.card title="المحتوى">
             <div class="space-y-4">
-                <x-admin.textarea name="body_ar" label="المحتوى (عربي)" rows="10" :value="old('body_ar', $page->body['ar'] ?? '')" />
-                <x-admin.textarea name="body_en" label="المحتوى (إنجليزي)" rows="10" dir="ltr" :value="old('body_en', $page->body['en'] ?? '')" />
+                <x-admin.rich-editor name="body_ar" label="المحتوى (عربي)" dir="rtl" lang="ar" required :value="old('body_ar', $page->body['ar'] ?? '')" />
+                <x-admin.rich-editor name="body_en" label="المحتوى (إنجليزي)" dir="ltr" lang="en" :value="old('body_en', $page->body['en'] ?? '')" />
             </div>
         </x-admin.card>
 
