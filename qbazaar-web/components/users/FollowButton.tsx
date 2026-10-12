@@ -10,11 +10,11 @@
  * pointer, as polish.css does for every orange button); once followed it
  * turns peach with a brand outline and a star, "Following" (283:6955).
  */
-import { Loader2Icon, Star, type LucideIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Button, type ButtonProps } from '@/components/design-system/Button';
+import { LoaderCircleIcon, StarFollowIcon, type IconGlyph } from '@/components/design-system/icons';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiClientError } from '@/lib/api/auth';
 import { t } from '@/lib/i18n/messages';
@@ -32,7 +32,7 @@ interface FollowButtonProps extends Pick<ButtonProps, 'size' | 'className'> {
   /** "+ Follow" on the private seller card, "Follow" elsewhere. */
   label?: string;
   /** Icon before "Follow" (the company card's star); the followed state always shows the star. */
-  icon?: LucideIcon;
+  icon?: IconGlyph;
 }
 
 const ERROR_KEYS: Record<string, string> = {
@@ -68,7 +68,7 @@ export function FollowButton({ userId, name, isFollowing, stateKnown, label, ico
     });
   };
 
-  const Glyph = isFollowing ? Star : icon;
+  const Glyph = isFollowing ? StarFollowIcon : icon;
 
   return (
     <Button
@@ -80,7 +80,7 @@ export function FollowButton({ userId, name, isFollowing, stateKnown, label, ico
       aria-busy={mutation.isPending || undefined}
       className={cn('font-medium', isFollowing && 'bg-qb-brand-soft hover:bg-qb-surface hover:text-qb-brand', className)}
     >
-      {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
+      {mutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden /> : null}
       {!mutation.isPending && Glyph ? <Glyph aria-hidden strokeWidth={1.7} /> : null}
       <span>
         {isFollowing ? t('users.follow.following') : (label ?? t('users.follow.follow'))}

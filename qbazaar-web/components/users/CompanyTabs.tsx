@@ -50,13 +50,13 @@ export function CompanyTabs({ business, adsCount, locale, defaultTab, ads }: Com
         </div>
       ) : null}
 
-      <TabPanel value="ads" className="mt-6">
+      <TabPanel value="ads" className="mt-6 rounded-none">
         {ads}
       </TabPanel>
-      <TabPanel value="about" className="mt-6">
+      <TabPanel value="about" className="mt-6 rounded-none">
         <AboutPanel business={business} />
       </TabPanel>
-      <TabPanel value="legal" className="mt-6">
+      <TabPanel value="legal" className="mt-6 rounded-none">
         <LegalPanel business={business} />
       </TabPanel>
     </Tabs>
@@ -64,9 +64,10 @@ export function CompanyTabs({ business, adsCount, locale, defaultTab, ads }: Com
 }
 
 /**
- * A tab of the segmented bar: 16 px / 500 in #4b4b4b on white, orange with
- * white text when active (also under the pointer, where the design-system
- * tab would turn it white); an inactive tab greys to #fafafa (273:4687).
+ * A tab of the segmented bar: 16 px / 500 in #4b4b4b on the bar's white,
+ * orange with white text when active. The reference's tabs are plain spans:
+ * nothing changes under the pointer and nothing animates. The label sits in
+ * its own span, as the reference's interpolated text does.
  */
 function CompanyTabTrigger({ value, children }: { value: CompanyTab; children: ReactNode }) {
   return (
@@ -75,12 +76,12 @@ function CompanyTabTrigger({ value, children }: { value: CompanyTab; children: R
       className={cn(
         // Three equal tabs share a phone's width. Arabic "Legal Info" is wider than a third, so there the
         // tabs size to their labels and it stays on one line; a label that still can't fit wraps.
-        'h-auto min-w-0 flex-1 rounded-qb-md border-0 bg-qb-surface px-1.5 py-[11px] text-center text-qb-label leading-tight font-medium whitespace-normal text-qb-ink-body shadow-none max-qb-tablet:rtl:flex-auto',
+        'h-auto min-w-0 flex-1 rounded-qb-md border-0 bg-transparent px-1.5 py-[11px] text-center text-qb-label leading-tight font-medium whitespace-normal text-qb-ink-body shadow-none max-qb-tablet:rtl:flex-auto',
         'qb-tablet:h-auto qb-tablet:flex-[1_1_120px] qb-tablet:px-[18px] qb-tablet:py-3.5 qb-tablet:text-qb-body qb-tablet:leading-normal qb-desktop:h-auto qb-desktop:text-qb-body',
-        'hover:bg-qb-hover data-active:font-medium data-active:hover:bg-qb-brand',
+        'hover:bg-transparent data-active:font-medium data-active:hover:bg-qb-brand',
       )}
     >
-      {children}
+      <span>{children}</span>
     </Tab>
   );
 }
