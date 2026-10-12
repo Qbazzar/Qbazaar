@@ -8,8 +8,8 @@ const LIST_TOGGLE = { ref: `${CAT} [data-dc-tpl="419"]`, target: 'button[aria-la
 const FILTER_TRIGGER = { ref: '.qb-filter-inject', target: 'button:has-text("Filter")' };
 const FILTER_SHEET = { ref: 'aside', target: '[role=dialog]' };
 const FAVOURITE = { ref: `${CAT} [data-dc-tpl="456"]`, target: 'button[aria-label^="Save"]' };
-// The target's sort control is a designed listbox (SortMenu.tsx), its trigger showing the default "Newest".
-const SORT = { ref: `${CAT} [data-dc-tpl="415"]`, target: 'select, [role=combobox]:text-is("Newest")' };
+// The target's sort control is a designed listbox (SortMenu.tsx); the filter fields beside it open dialogs.
+const SORT = { ref: `${CAT} [data-dc-tpl="415"]`, target: 'select, [role=combobox][aria-haspopup=listbox]' };
 
 module.exports = [
   scenario({
@@ -25,10 +25,14 @@ module.exports = [
       observe('list-toggle-reselected', LIST_TOGGLE, { text: 'skip', attributes: true }),
     ],
   }),
+  // The prototype's heart is the signed-in demo user's: a guest on the target is sent to /login by design, so the
+  // toggle runs signed in. Toggling saves a favourite for the demo account, so it runs only against a local target.
   scenario({
     id: 'category-favourite-toggle',
     page: 'category',
     viewports: [1440, 390],
+    login: true,
+    writes: true,
     steps: [
       click(FAVOURITE),
       stay('toggle-does-not-navigate'),

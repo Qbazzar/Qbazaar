@@ -13,10 +13,13 @@ const NAVIGATION_SETTLE_MS = 2000;
 const TEXT_GLYPHS = /[✕✖×›‹»«→←✓✔▾▸]/g;
 const TEXT_CAP = 300;
 
-/** The copy an observation compares: glyph icons dropped, data masked (`textMask`, a regex source), spaces collapsed. */
+/**
+ * The copy an observation compares: glyph icons dropped, data masked, spaces collapsed. `textMask` is a regex source
+ * (matches read as "…") or a function from text to text.
+ */
 function copyOf(text, mask) {
   const unglyphed = String(text || '').replace(TEXT_GLYPHS, ' ');
-  const masked = mask ? unglyphed.replace(new RegExp(mask, 'g'), '…') : unglyphed;
+  const masked = typeof mask === 'function' ? mask(unglyphed) : mask ? unglyphed.replace(new RegExp(mask, 'g'), '…') : unglyphed;
   return masked.replace(/\s+/g, ' ').trim().slice(0, TEXT_CAP);
 }
 
@@ -24,6 +27,9 @@ const OBSERVED_ATTRIBUTES = ['aria-expanded', 'aria-selected', 'aria-checked', '
 
 // Playwright errors carry a call log; the first lines say why a click was refused.
 const compact = (message) => message.split(String.fromCharCode(10)).map((l) => l.trim()).join(" ").slice(0, 420);
+
+const RECHECK_PAUSE_MS = 900;
+const NAVIGATED = /Execution context was destroyed|navigation/i;
 
 const SIDE_KEY = { reference: 'ref', target: 'target' };
 const describe = (step) => `${step.type}${step.selector ? ` ${JSON.stringify(step.selector)}` : ''}${step.key ? ` ${step.key}` : ''}`;
@@ -86,7 +92,13 @@ async function mark(side, step, markName) {
     const attributes = Object.fromEntries(attrs.filter((a) => nodes[0].hasAttribute(a)).map((a) => [a, nodes[0].getAttribute(a)]));
     if (nodes[0].getAttribute('aria-disabled') === 'true' || nodes[0].disabled) attributes.disabled = 'true';
     const properties = Object.fromEntries(props.map((p) => [p, String(nodes[0][p])]));
-    return { count: nodes.length, properties, text: nodes[0].innerText.trim().replace(/\s+/g, ' ').slice(0, 1200), attributes, focused: document.activeElement === nodes[0] || nodes[0].contains(document.activeElement) };
+    // Text kept for screen readers only (a dialog's hidden title, a fieldset's legend) is not copy anyone sees.
+    const hidden = (el) => { const s = getComputedStyle(el); const r = el.getBoundingClientRect();
+      return (s.position === 'absolute' && (s.clip === 'rect(0px, 0px, 0px, 0px)' || s.clipPath === 'inset(50%)')) || (r.width <= 1 && r.height <= 1 && s.overflow === 'hidden'); };
+    const hiddenOnes = [...nodes[0].querySelectorAll('*')].filter(hidden);
+    const outermost = hiddenOnes.filter((el) => !hiddenOnes.some((other) => other !== el && other.contains(el)));
+    const shownText = outermost.reduce((text, el) => (el.innerText ? text.replace(el.innerText, ' ') : text), nodes[0].innerText);
+    return { count: nodes.length, properties, text: shownText.trim().replace(/\s+/g, ' ').slice(0, 1200), attributes, focused: document.activeElement === nodes[0] || nodes[0].contains(document.activeElement) };
   }, { markName, attrs: OBSERVED_ATTRIBUTES, anywhere: Boolean(step.what.anywhere), props: step.what.props || [] }).catch(() => ({ count: 0 }));
 }
 
@@ -123,9 +135,31 @@ class ScenarioRun {
     return true;
   }
 
+  // An element can still be sliding in (a drawer under a busy CPU), and a click can start a client-side navigation
+  // that replaces the page under a read. Both settle: the observation looks once more after a pause.
   async observe(step) {
+    try {
+      return await this.observeOnce(step, { recheck: true });
+    } catch (error) {
+      if (!NAVIGATED.test(error.message)) throw error;
+      await this.settle();
+      return this.observeOnce(step, { recheck: false });
+    }
+  }
+
+  async settle() {
+    await Promise.all([this.sides.reference, this.sides.target].map((side) => side.page.waitForLoadState('load').catch(() => {})));
+    await this.sides.target.page.waitForTimeout(RECHECK_PAUSE_MS);
+  }
+
+  async observeOnce(step, { recheck }) {
     const markName = `${this.definition.id}-${step.name}`;
-    const [ref, target] = [await mark(this.sides.reference, step, markName), await mark(this.sides.target, step, markName)];
+    const markBoth = async () => [await mark(this.sides.reference, step, markName), await mark(this.sides.target, step, markName)];
+    let [ref, target] = await markBoth();
+    if (recheck && Boolean(ref.count) !== Boolean(target.count)) {
+      await this.settle();
+      [ref, target] = await markBoth();
+    }
     const component = `scenario:${this.definition.id}:${step.name}`;
     if (this.env.config.verbose) console.log(`  observe ${step.name}: reference ${ref.count}, target ${target.count}`);
     if (!ref.count && !target.count) {
