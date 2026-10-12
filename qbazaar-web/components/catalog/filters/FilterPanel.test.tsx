@@ -66,13 +66,13 @@ describe('FilterPanel', () => {
     expect(screen.getByRole('button', { name: 'Apply Filter' })).toBeEnabled();
   });
 
-  it('keeps the sheet’s "Apply Filter" solid with nothing chosen, and closes the sheet from it', async () => {
+  it('closes the sheet from its orange "Show Results" bar when nothing changed', async () => {
     const onKeep = vi.fn();
     const { onApply, user } = renderPanel({ variant: 'sheet', onKeep });
-    const apply = screen.getByRole('button', { name: 'Apply Filter' });
+    const apply = screen.getByRole('button', { name: /^(Show Results|Apply Filter)$/ });
 
     expect(apply).toBeEnabled();
-    expect(apply).toHaveClass('font-bold');
+    expect(apply).toHaveClass('bg-qb-brand', 'font-semibold');
     await user.click(apply);
     expect(onKeep).toHaveBeenCalledOnce();
     expect(onApply).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe('FilterPanel', () => {
     await user.click(await screen.findByRole('option', { name: 'West Bay, Doha (4)' }));
     expect(select).toHaveTextContent('West Bay, Doha (4)');
 
-    await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
+    await user.click(screen.getByRole('button', { name: /^(Show Results|Apply Filter)$/ }));
     expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, location: 'west-bay' });
   });
 
@@ -142,7 +142,7 @@ describe('FilterPanel', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('The maximum price can’t be lower than the minimum.');
     expect(max).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByRole('button', { name: 'Apply Filter' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^(Show Results|Apply Filter)$/ })).toBeDisabled();
     expect(onApply).not.toHaveBeenCalled();
   });
 

@@ -63,13 +63,6 @@ interface PanelProps extends FilterPanelProps {
   onKeep?: () => void;
 }
 
-/**
- * The sheet is at least as tall as 618:26974 (584 px, 88 px of it the handle
- * and the title row above this form), so the City / Region panel has room to
- * open below its field (264:4818) instead of flipping over the title.
- */
-const sheetBodyHeight = 'min-h-[min(496px,calc(90dvh-88px))]';
-
 /** The sheet leads with the fields of 618:26974; the radio groups follow in the page's order. */
 const SHEET_FIELDS: FilterGroupKey[] = ['keyword', 'price', 'location'];
 
@@ -99,14 +92,14 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
   const activeCount = countActiveFilters(values, { keyword: keywordIsFilter });
   const invalid = hasInvalidRange(draft);
   const dirty = !filtersEqual(normalizeFilters(draft), values);
-  // The card's button is pale while nothing is chosen (250:4405); the sheet's is always solid and then just closes it (618:26974).
-  const canApply = !invalid && (sheet || dirty || activeCount > 0);
+  // The card's button is pale while there is nothing to apply; the sheet's bar always submits, and closes it when unchanged.
+  const canApply = !invalid && (dirty || activeCount > 0);
   const fieldsCategory = draft.category ?? categorySlug;
   const customFields = filterableFields(fieldsCategory ? findCategoryBySlug(categories, fieldsCategory)?.custom_fields : null);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canApply) return;
+    if (invalid) return;
     if (dirty) onApply(normalizeFilters(draft));
     else onKeep?.();
   };
@@ -280,64 +273,72 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
     />
   );
 
-  // The card's button keeps the pale orange of category.html, without the disabled fade, until there
-  // is something to apply; the sheet's is always solid and then just closes it (618:26974).
-  const applyLabel = t('catalog.filters.apply', 'تطبيق الفلتر');
-  const apply = sheet ? (
-    <Button type="submit" fullWidth disabled={!canApply} className="h-[46px] rounded-qb-lg font-bold">
-      {applyLabel}
-    </Button>
-  ) : (
-    <Button
-      type="submit"
-      fullWidth
-      aria-disabled={!canApply || undefined}
-      className={cn(
-        'mt-3.5 h-auto rounded-qb-lg p-3.5 font-medium aria-disabled:pointer-events-auto aria-disabled:opacity-100',
-        !canApply && 'bg-(--color-qb-brand-pale) hover:bg-(--color-qb-brand-pale) hover:brightness-[.96]',
-      )}
-    >
-      {applyLabel}
-    </Button>
-  );
   const resetLabel = t('catalog.filters.reset_all', 'إعادة ضبط الكل');
+  // A plain orange word in the reference, with no hover colour.
+  const resetButton = (
+    <button type="button" onClick={reset} className={cn('cursor-pointer text-qb-caption text-qb-brand', focusRing)}>
+      {resetLabel}
+    </button>
+  );
+  const titleText = t('catalog.filters.title', 'الفلتر');
+  const titleClass = 'font-qb text-qb-h3 leading-normal font-medium tracking-normal text-qb-ink';
 
   if (sheet) {
+    // category.html on phones: the card's content in the sheet, and the fixed orange "Show Results" bar at
+    // the bottom. The sheet's own (screen-reader) title names the dialog, so the visible "Filter" is no heading.
     return (
-      <form onSubmit={submit} noValidate aria-label={t('catalog.filters.title', 'الفلتر')} className={cn('flex flex-1 flex-col font-qb text-qb-ink', sheetBodyHeight)}>
-        {/* Only the fields scroll; the buttons stay at the bottom of the sheet. */}
-        <div className="-mx-6 min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-2">
-          {chips}
-          {sheetOrder(groups).map(group)}
+      <form onSubmit={submit} noValidate aria-label={titleText} className="flex min-h-0 flex-1 flex-col font-qb text-qb-ink">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 pb-2">
+          <div className="mb-[22px] flex items-center justify-between gap-4">
+            <span className={titleClass}>{titleText}</span>
+            {resetButton}
+          </div>
+          <div>
+            {chips}
+            {sheetOrder(groups).map(group)}
+          </div>
         </div>
-        <div className="-mx-6 flex flex-col items-center gap-3 border-t border-qb-line bg-qb-surface px-6 pt-4 pb-5">
-          {apply}
-          <button type="button" onClick={reset} className={cn('rounded-qb-xs text-qb-body font-medium text-qb-brand hover:text-qb-brand-active', focusRing)}>
-            {resetLabel}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={invalid}
+          className={cn(
+            'w-full shrink-0 cursor-pointer bg-qb-brand p-4 font-qb text-qb-body-sm leading-normal font-semibold text-qb-on-brand disabled:cursor-default disabled:opacity-50',
+            focusRing,
+            '-outline-offset-2',
+          )}
+        >
+          {t('catalog.filters.show_results', t('catalog.filters.apply', 'تطبيق الفلتر'))}
+        </button>
       </form>
     );
   }
 
   const titleId = `${id}-title`;
+  // The card's button keeps the pale orange of category.html, without the disabled fade, until there is something to apply.
   return (
     <form onSubmit={submit} noValidate aria-labelledby={titleId} className="font-qb">
       <div className="mb-[22px] flex items-center justify-between gap-4">
-        <h2 id={titleId} className="font-qb text-qb-h3 leading-normal font-medium tracking-normal text-qb-ink">
-          {t('catalog.filters.title', 'الفلتر')}
+        <h2 id={titleId} className={titleClass}>
+          {titleText}
         </h2>
-        {/* A plain orange word in the reference, with no hover colour. */}
-        <button type="button" onClick={reset} className={cn('cursor-pointer text-qb-caption text-qb-brand', focusRing)}>
-          {resetLabel}
-        </button>
+        {resetButton}
       </div>
       {/* Its own box, so the first group under the title has no hairline above it. */}
       <div>
         {chips}
         {groups.map(group)}
       </div>
-      {apply}
+      <Button
+        type="submit"
+        fullWidth
+        aria-disabled={!canApply || undefined}
+        className={cn(
+          'mt-3.5 h-auto rounded-qb-lg p-3.5 font-medium aria-disabled:pointer-events-auto aria-disabled:opacity-100',
+          !canApply && 'bg-(--color-qb-brand-pale) hover:bg-(--color-qb-brand-pale) hover:brightness-[.96]',
+        )}
+      >
+        {t('catalog.filters.apply', 'تطبيق الفلتر')}
+      </Button>
     </form>
   );
 }

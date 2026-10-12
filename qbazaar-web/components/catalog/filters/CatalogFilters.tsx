@@ -50,14 +50,13 @@ export function FilterSidebar({ onApply, onReset, ...props }: FilterPanelProps) 
 }
 
 /**
- * The sheet itself does not scroll: its handle, title and close button stay on
- * top while the filter form scrolls under them (618:26974, 244:3508). The title
- * takes the sheet's text colour; the form sets its own. The card is the
- * reference's sheet (category.html aside on phones): 22 px top corners, a
- * hairline and the upward 44 px shadow.
+ * The reference's filter sheet (category.html aside under 1001 px, mobilemenu.js): the card itself
+ * slid up, at most 86 % of the screen, 22 px top corners, a hairline and the upward 44 px shadow;
+ * no handle and no close button (Escape, the backdrop and "Show Results" close it). The form scrolls
+ * inside it above the bar, so the sheet itself does not.
  */
 const sheetLayout =
-  'overflow-hidden rounded-t-[22px] border border-qb-line pb-0 shadow-qb-sheet text-(--color-qb-sheet-title) *:last:flex *:last:min-h-0 *:last:flex-col';
+  'max-h-[86vh] overflow-hidden rounded-t-[22px] border border-qb-line p-0 shadow-qb-sheet *:first:hidden *:last:mt-0 *:last:flex *:last:min-h-0 *:last:flex-col';
 
 /**
  * The reference's two "Filter" buttons under 1001 px:
@@ -85,7 +84,7 @@ interface FilterSheetProps extends FilterPanelProps {
   trigger?: keyof typeof TRIGGERS;
 }
 
-/** "Filter" button of the toolbar under 1001 px and the bottom sheet it opens (618:26974). */
+/** "Filter" button of the toolbar under 1001 px and the bottom sheet it opens. */
 export function FilterSheet({ trigger = 'pill', onApply, onReset, ...props }: FilterSheetProps) {
   const locale = getLocale();
   const look = TRIGGERS[trigger];
@@ -98,7 +97,10 @@ export function FilterSheet({ trigger = 'pill', onApply, onReset, ...props }: Fi
     <Sheet
       open={open}
       onOpenChange={setOpen}
-      title={t('catalog.filters.sheet_title', 'فلاتر متقدمة')}
+      title={t('catalog.filters.title', 'الفلتر')}
+      // The title only names the dialog; the form shows its own "Filter" row.
+      heading={<span aria-hidden="true" />}
+      showCloseButton={false}
       className={cn(headingFont, sheetLayout)}
       trigger={
         <button

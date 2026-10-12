@@ -80,7 +80,7 @@ describe('SelectField', () => {
     render(<FilterSheet groups={['location']} values={EMPTY_FILTERS} locations={[doha]} onApply={vi.fn()} onReset={vi.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'Filter' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Advanced Filters' });
+    const dialog = await screen.findByRole('dialog', { name: 'Filter' });
     const field = screen.getByRole('combobox', { name: 'City / Region' });
     await user.click(field);
     await screen.findByRole('listbox');
@@ -88,6 +88,6 @@ describe('SelectField', () => {
 
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
     expect(dialog).toBeInTheDocument();
-    expect(screen.getByRole('dialog', { name: 'Advanced Filters' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Filter' })).toBeInTheDocument();
   });
 });

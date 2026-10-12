@@ -12,6 +12,9 @@ import { ResultsHeading } from '../ResultsHeading';
 import { FilterSheet, FilterSidebar } from './CatalogFilters';
 import { EMPTY_FILTERS } from './filter-values';
 
+/** The sheet's bar: "Show Results" once the copy pass adds it, "Apply Filter" until then. */
+const SHOW_RESULTS = /^(Show Results|Apply Filter)$/;
+
 describe('FilterSidebar', () => {
   beforeEach(() => setClientLocale('en'));
 
@@ -36,7 +39,7 @@ describe('FilterSidebar', () => {
     render(<Page />);
 
     await user.click(screen.getByRole('radio', { name: 'Used' }));
-    await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
+    await user.click(screen.getByRole('button', { name: SHOW_RESULTS }));
 
     expect(screen.getByRole('heading', { level: 2, name: 'Results' })).toHaveFocus();
   });
@@ -57,9 +60,9 @@ describe('FilterSheet', () => {
     render(<FilterSheet groups={['price']} values={EMPTY_FILTERS} onApply={onApply} onReset={vi.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'Filter' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Advanced Filters' });
+    const dialog = await screen.findByRole('dialog', { name: 'Filter' });
     await user.type(screen.getByLabelText('Maximum price (QAR)'), '900');
-    await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
+    await user.click(screen.getByRole('button', { name: SHOW_RESULTS }));
 
     expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, priceMax: 900 });
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
@@ -72,23 +75,23 @@ describe('FilterSheet', () => {
     render(<FilterSheet groups={['location']} values={EMPTY_FILTERS} locations={[doha]} onApply={onApply} onReset={vi.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'Filter' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Advanced Filters' });
+    const dialog = await screen.findByRole('dialog', { name: 'Filter' });
     await user.click(screen.getByRole('combobox', { name: 'City / Region' }));
     await user.click(await screen.findByRole('option', { name: 'Doha' }));
 
     expect(dialog).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
+    await user.click(screen.getByRole('button', { name: SHOW_RESULTS }));
     expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, location: 'doha' });
   });
 
-  it('closes from a solid "Apply Filter" when the applied filters are unchanged', async () => {
+  it('closes from "Show Results" when the applied filters are unchanged', async () => {
     const onApply = vi.fn();
     const user = userEvent.setup();
     render(<FilterSheet groups={['price']} values={{ ...EMPTY_FILTERS, priceMin: 10 }} onApply={onApply} onReset={vi.fn()} />);
 
     await user.click(screen.getByRole('button', { name: /^Filter/ }));
-    const dialog = await screen.findByRole('dialog', { name: 'Advanced Filters' });
-    await user.click(screen.getByRole('button', { name: 'Apply Filter' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Filter' });
+    await user.click(screen.getByRole('button', { name: SHOW_RESULTS }));
 
     expect(onApply).not.toHaveBeenCalled();
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
