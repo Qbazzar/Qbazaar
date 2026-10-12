@@ -17,7 +17,7 @@
     >
         @foreach ($roles as $role)
             <x-admin.table.row>
-                <x-admin.table.cell primary><x-admin.badge tone="brand">{{ $role->name }}</x-admin.badge></x-admin.table.cell>
+                <x-admin.table.cell primary><x-admin.role-badge :role="$role" /></x-admin.table.cell>
                 <x-admin.table.cell label="الحارس" class="text-ink-500">{{ $role->guard_name }}</x-admin.table.cell>
                 <x-admin.table.cell label="عدد الصلاحيات" class="text-ink-700">{{ number_format($role->permissions_count) }}</x-admin.table.cell>
                 <x-admin.table.cell label="عدد المستخدمين" class="text-ink-700">{{ number_format($role->users_count) }}</x-admin.table.cell>

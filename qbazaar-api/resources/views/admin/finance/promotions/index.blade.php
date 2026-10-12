@@ -18,7 +18,7 @@
                 <x-admin.table.cell primary>
                     <span class="font-semibold">{{ \Illuminate\Support\Str::limit($promotion->ad?->title ?? '—', 40) }}</span>
                 </x-admin.table.cell>
-                <x-admin.table.cell label="البائع" class="text-ink-700">{{ $promotion->user?->full_name ?? 'حساب محذوف' }}</x-admin.table.cell>
+                <x-admin.table.cell label="البائع" class="text-ink-700"><x-admin.user :user="$promotion->user" fallback="حساب محذوف" /></x-admin.table.cell>
                 <x-admin.table.cell label="النوع">{{ __("admin.promotion_transfers.types.{$promotion->type->value}") }} ({{ $promotion->duration_days }} يوم)</x-admin.table.cell>
                 <x-admin.table.cell label="المبلغ" class="font-bold"><span dir="ltr">{{ $promotion->price }} {{ $promotion->currency }}</span></x-admin.table.cell>
                 <x-admin.table.cell label="مرجع التحويل" class="text-ink-700"><span dir="ltr">{{ $promotion->transfer_reference ?? '—' }}</span></x-admin.table.cell>

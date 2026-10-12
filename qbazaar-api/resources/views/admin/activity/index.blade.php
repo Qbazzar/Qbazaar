@@ -35,7 +35,13 @@
             <x-admin.table.row>
                 <x-admin.table.cell primary><x-admin.badge>{{ $activity->log_name ?? '—' }}</x-admin.badge></x-admin.table.cell>
                 <x-admin.table.cell label="الوصف" class="text-ink-700">{{ \Illuminate\Support\Str::limit($activity->description, 50) ?: '—' }}</x-admin.table.cell>
-                <x-admin.table.cell label="المُنفِّذ" class="text-ink-700">{{ $causerName }}</x-admin.table.cell>
+                <x-admin.table.cell label="المُنفِّذ" class="text-ink-700">
+                    @if ($activity->causer instanceof \App\Models\User)
+                        <x-admin.user :user="$activity->causer" />
+                    @else
+                        {{ $causerName }}
+                    @endif
+                </x-admin.table.cell>
                 <x-admin.table.cell label="الهدف" secondary class="font-mono text-xs text-ink-500"><span dir="ltr">{{ $subject }}</span></x-admin.table.cell>
                 <x-admin.table.cell label="الحدث" secondary class="text-ink-500">{{ $activity->event ?? '—' }}</x-admin.table.cell>
                 <x-admin.table.cell label="التاريخ" class="text-ink-500">{{ optional($activity->created_at)->format('Y-m-d H:i') }}</x-admin.table.cell>

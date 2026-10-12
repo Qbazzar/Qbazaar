@@ -18,6 +18,7 @@
                 </div>
 
                 <x-admin.detail-list class="mt-4">
+                    <x-admin.detail label="المعرّف"><span dir="ltr" class="select-all font-mono text-xs" title="{{ $ad->id }}">{{ $ad->id }}</span></x-admin.detail>
                     <x-admin.detail label="السعر">{{ $ad->price !== null ? number_format((float) $ad->price, 2) . ' ر.ق' : '—' }}</x-admin.detail>
                     <x-admin.detail label="التصنيف">{{ $ad->category?->getLocalizedName(app()->getLocale()) ?? '—' }}</x-admin.detail>
                     <x-admin.detail label="الموقع">{{ $ad->location?->getLocalizedName(app()->getLocale()) ?? '—' }}</x-admin.detail>
@@ -77,7 +78,7 @@
 
         <div class="space-y-6">
             <x-admin.card title="البائع">
-                <div class="font-semibold">{{ $ad->user?->full_name ?? '—' }}</div>
+                <x-admin.user :user="$ad->user" size="md" />
                 <div class="break-all text-sm text-ink-500">{{ $ad->user?->email }}</div>
             </x-admin.card>
 

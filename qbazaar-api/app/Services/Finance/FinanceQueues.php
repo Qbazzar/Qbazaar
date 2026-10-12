@@ -27,7 +27,7 @@ class FinanceQueues
     {
         return CommissionSettlement::query()
             ->where('status', $status->value)
-            ->with(['user:id,full_name,email,phone', 'reviewer:id,full_name', 'media'])
+            ->with(['user:id,full_name,email,phone', 'reviewer:id,full_name', 'user.media', 'reviewer.media', 'media'])
             ->orderBy('created_at')
             ->orderBy('id')
             ->cursorPaginate(self::PER_PAGE)
@@ -41,7 +41,7 @@ class FinanceQueues
     {
         return Withdrawal::query()
             ->where('status', $status->value)
-            ->with(['user:id,full_name,email,phone', 'reviewer:id,full_name'])
+            ->with(['user:id,full_name,email,phone', 'reviewer:id,full_name', 'user.media', 'reviewer.media'])
             ->orderBy('created_at')
             ->orderBy('id')
             ->cursorPaginate(self::PER_PAGE)
@@ -55,7 +55,7 @@ class FinanceQueues
     {
         return Order::query()
             ->where('status', OrderStatus::DISPUTED->value)
-            ->with(['buyer:id,full_name,email,phone', 'seller:id,full_name,email,phone'])
+            ->with(['buyer:id,full_name,email,phone', 'seller:id,full_name,email,phone', 'buyer.media', 'seller.media'])
             ->orderBy('disputed_at')
             ->orderBy('id')
             ->cursorPaginate(self::PER_PAGE);

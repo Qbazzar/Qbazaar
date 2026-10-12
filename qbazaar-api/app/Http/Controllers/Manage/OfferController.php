@@ -18,7 +18,7 @@ class OfferController extends Controller
         $search = $request->string('q')->toString();
 
         $offers = Offer::query()
-            ->with(['ad:id,title', 'buyer:id,full_name', 'seller:id,full_name'])
+            ->with(['ad:id,title', 'buyer:id,full_name', 'seller:id,full_name', 'buyer.media', 'seller.media'])
             ->when(
                 in_array($status, array_column(OfferStatus::cases(), 'value'), true),
                 fn ($query) => $query->where('status', $status),

@@ -38,7 +38,7 @@ class PromotionQueries
     {
         return AdPromotion::query()
             ->where('status', PromotionStatus::PENDING_PAYMENT->value)
-            ->with(['ad:id,title', 'user:id,full_name,phone'])
+            ->with(['ad:id,title', 'user:id,full_name,phone', 'user.media'])
             ->orderBy('created_at')
             ->orderBy('id')
             ->cursorPaginate($perPage);

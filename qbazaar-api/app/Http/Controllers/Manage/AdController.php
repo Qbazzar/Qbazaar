@@ -31,7 +31,7 @@ class AdController extends Controller
         $search = $request->string('q')->toString();
 
         $ads = Ad::query()
-            ->with(['user', 'category'])
+            ->with(['user.media', 'category', 'primaryImage'])
             ->when(
                 in_array($status, array_column(AdStatus::cases(), 'value'), true),
                 fn ($query) => $query->where('status', $status),
@@ -57,7 +57,7 @@ class AdController extends Controller
 
     public function show(Ad $ad): View
     {
-        $ad->load(['user', 'category', 'location', 'media']);
+        $ad->load(['user.media', 'category', 'location', 'media']);
 
         return view('admin.ads.show', ['ad' => $ad]);
     }

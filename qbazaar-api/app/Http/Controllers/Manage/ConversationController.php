@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Services\Messaging\AdminTranscriptBuilder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -16,7 +17,7 @@ class ConversationController extends Controller
         $search = $request->string('q')->toString();
 
         $conversations = Conversation::query()
-            ->with(['ad:id,title', 'buyer:id,full_name,email', 'seller:id,full_name,email'])
+            ->with(['ad:id,title', 'buyer:id,full_name,email', 'seller:id,full_name,email', 'buyer.media', 'seller.media'])
             ->withCount('messages')
             ->when(
                 $search !== '',
@@ -37,22 +38,28 @@ class ConversationController extends Controller
         ]);
     }
 
-    public function show(Conversation $conversation): View
+    public function show(Conversation $conversation, AdminTranscriptBuilder $transcript): View
     {
         $conversation->load([
             'ad:id,title',
+            'ad.primaryImage',
             'buyer:id,full_name,email',
             'seller:id,full_name,email',
+            'buyer.media',
+            'seller.media',
         ]);
 
         $messages = $conversation->messages()
-            ->with('sender:id,full_name')
+            ->with('sender:id,full_name,email')
+            ->with('sender.media')
             ->orderBy('created_at')
-            ->get();
+            ->orderBy('id')
+            ->paginate(100);
 
         return view('admin.conversations.show', [
             'conversation' => $conversation,
             'messages' => $messages,
+            'rows' => $transcript->build($messages->getCollection(), app()->getLocale()),
         ]);
     }
 }

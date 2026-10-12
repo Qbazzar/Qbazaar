@@ -20,8 +20,8 @@
                 <x-admin.table.cell primary>
                     <a href="{{ route('admin.conversations.show', $conversation) }}" class="font-semibold hover:text-coral-700">{{ \Illuminate\Support\Str::limit($conversation->ad?->title ?? '—', 40) }}</a>
                 </x-admin.table.cell>
-                <x-admin.table.cell label="المشتري" class="text-ink-700">{{ $conversation->buyer?->full_name ?? '—' }}</x-admin.table.cell>
-                <x-admin.table.cell label="البائع" class="text-ink-700">{{ $conversation->seller?->full_name ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="المشتري" class="text-ink-700"><x-admin.user :user="$conversation->buyer" /></x-admin.table.cell>
+                <x-admin.table.cell label="البائع" class="text-ink-700"><x-admin.user :user="$conversation->seller" /></x-admin.table.cell>
                 <x-admin.table.cell label="الرسائل"><x-admin.badge>{{ number_format($conversation->messages_count) }}</x-admin.badge></x-admin.table.cell>
                 <x-admin.table.cell label="آخر رسالة" secondary class="text-ink-500">{{ optional($conversation->last_message_at)->format('Y-m-d H:i') ?? '—' }}</x-admin.table.cell>
                 <x-admin.table.actions>

@@ -21,7 +21,7 @@
     <x-admin.table
         caption="الإعلانات"
         selectable
-        :columns="[['label' => '#', 'secondary' => true], 'العنوان', 'البائع', 'الحالة', ['label' => 'التاريخ', 'secondary' => true], ['label' => 'إجراءات', 'srOnly' => true]]"
+        :columns="['العنوان', 'البائع', 'الحالة', ['label' => 'التاريخ', 'secondary' => true], ['label' => 'إجراءات', 'srOnly' => true]]"
         :empty="$ads->isEmpty()"
         empty-icon="tag"
         empty-message="لا توجد إعلانات مطابقة."
@@ -29,11 +29,13 @@
         @foreach ($ads as $ad)
             <x-admin.table.row>
                 <x-admin.table.select :value="$ad->id" :label="'تحديد: ' . $ad->title" />
-                <x-admin.table.cell label="#" secondary class="text-ink-500">{{ $ad->id }}</x-admin.table.cell>
                 <x-admin.table.cell primary>
-                    <a href="{{ route('admin.ads.show', $ad) }}" class="font-semibold hover:text-coral-700">{{ \Illuminate\Support\Str::limit($ad->title, 50) }}</a>
+                    <div class="flex min-w-0 items-center gap-3">
+                        <x-admin.ad-thumb :ad="$ad" />
+                        <a href="{{ route('admin.ads.show', $ad) }}" title="{{ $ad->title }}" class="block min-w-0 max-w-xs truncate font-semibold hover:text-coral-700 lg:max-w-sm">{{ $ad->title }}</a>
+                    </div>
                 </x-admin.table.cell>
-                <x-admin.table.cell label="البائع" class="text-ink-700">{{ $ad->user?->full_name ?? '—' }}</x-admin.table.cell>
+                <x-admin.table.cell label="البائع" class="max-w-48 text-ink-700"><x-admin.user :user="$ad->user" /></x-admin.table.cell>
                 <x-admin.table.cell label="الحالة"><x-admin.badge :status="$ad->status" /></x-admin.table.cell>
                 <x-admin.table.cell label="التاريخ" secondary class="text-ink-500">{{ optional($ad->created_at)->format('Y-m-d') }}</x-admin.table.cell>
                 <x-admin.table.actions>

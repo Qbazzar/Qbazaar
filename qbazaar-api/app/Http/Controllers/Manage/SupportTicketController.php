@@ -24,7 +24,7 @@ class SupportTicketController extends Controller
         $search = $request->string('q')->toString();
 
         $tickets = SupportTicket::query()
-            ->with(['user', 'assignee'])
+            ->with(['user.media', 'assignee.media'])
             ->withCount('replies')
             ->when(
                 in_array($status, array_column(SupportTicketStatus::cases(), 'value'), true),
@@ -58,9 +58,9 @@ class SupportTicketController extends Controller
     public function show(SupportTicket $ticket): View
     {
         $ticket->load([
-            'user',
-            'assignee',
-            'replies' => fn ($query) => $query->with('author')->oldest(),
+            'user.media',
+            'assignee.media',
+            'replies' => fn ($query) => $query->with('author.media')->oldest(),
         ]);
 
         return view('admin.support.show', [

@@ -18,7 +18,7 @@
         @foreach ($withdrawals as $withdrawal)
             <x-admin.table.row>
                 <x-admin.table.cell primary>
-                    <span class="font-semibold">{{ $withdrawal->user?->full_name ?? 'حساب محذوف' }}</span>
+                    <x-admin.user :user="$withdrawal->user" fallback="حساب محذوف" />
                     @if ($withdrawal->user)
                         <a href="{{ route('admin.finance.statements.show', $withdrawal->user) }}" class="ms-2 text-xs font-semibold text-coral-700 hover:underline">كشف الحساب</a>
                     @endif
@@ -29,7 +29,7 @@
                         <span class="block text-xs text-red-700">سبب الرفض: {{ $withdrawal->rejection_reason }}</span>
                     @endif
                     @if ($withdrawal->reviewer)
-                        <span class="block text-xs text-ink-500">راجعه: {{ $withdrawal->reviewer->full_name }}</span>
+                        <span class="block text-xs text-ink-500">راجعه: <x-admin.user :user="$withdrawal->reviewer" size="xs" /></span>
                     @endif
                 </x-admin.table.cell>
                 <x-admin.table.cell label="الحساب البنكي" class="text-ink-700">

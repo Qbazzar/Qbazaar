@@ -17,7 +17,7 @@
                 <x-admin.detail-list class="mt-4">
                     <x-admin.detail label="التصنيف">{{ $ticket->category->label()['ar'] }}</x-admin.detail>
                     <x-admin.detail label="الأولوية">{{ $ticket->priority->label()['ar'] }}</x-admin.detail>
-                    <x-admin.detail label="المسؤول">{{ $ticket->assignee?->full_name ?? '—' }}</x-admin.detail>
+                    <x-admin.detail label="المسؤول"><x-admin.user :user="$ticket->assignee" size="xs" /></x-admin.detail>
                     <x-admin.detail label="تاريخ الإنشاء">{{ optional($ticket->created_at)->format('Y-m-d H:i') }}</x-admin.detail>
                 </x-admin.detail-list>
             </x-admin.card>
@@ -27,7 +27,7 @@
                 <div class="space-y-4">
                     <div class="flex justify-end">
                         <div class="max-w-[80%] rounded-2xl bg-cream-200 px-4 py-3">
-                            <div class="mb-1 text-xs font-semibold text-ink-500">{{ $ticket->user?->full_name ?? $ticket->email ?? 'المستخدم' }}</div>
+                            <div class="mb-1 text-xs font-semibold text-ink-500"><x-admin.user :user="$ticket->user" size="xs" :fallback="$ticket->email ?? 'المستخدم'" /></div>
                             <p class="whitespace-pre-line break-words text-sm leading-relaxed text-ink-900">{{ $ticket->body }}</p>
                             <div class="mt-1 text-[11px] text-ink-500">{{ optional($ticket->created_at)->format('Y-m-d H:i') }}</div>
                         </div>
@@ -37,7 +37,7 @@
                         <div class="flex {{ $reply->is_staff ? 'justify-start' : 'justify-end' }}">
                             <div class="max-w-[80%] rounded-2xl px-4 py-3 {{ $reply->is_staff ? 'bg-coral-soft' : 'bg-cream-200' }}">
                                 <div class="mb-1 text-xs font-semibold {{ $reply->is_staff ? 'text-coral-700' : 'text-ink-500' }}">
-                                    {{ $reply->author?->full_name ?? '—' }}{{ $reply->is_staff ? ' · فريق الدعم' : '' }}
+                                    <x-admin.user :user="$reply->author" size="xs" />{{ $reply->is_staff ? ' · فريق الدعم' : '' }}
                                 </div>
                                 <p class="whitespace-pre-line break-words text-sm leading-relaxed text-ink-900">{{ $reply->body }}</p>
                                 <div class="mt-1 text-[11px] text-ink-500">{{ optional($reply->created_at)->format('Y-m-d H:i') }}</div>
@@ -58,7 +58,7 @@
 
         <div class="space-y-6">
             <x-admin.card title="المستخدم">
-                <div class="font-semibold">{{ $ticket->user?->full_name ?? '—' }}</div>
+                <x-admin.user :user="$ticket->user" size="md" :fallback="$ticket->email ?? '—'" />
                 <div class="break-all text-sm text-ink-500">{{ $ticket->user?->email ?? $ticket->email }}</div>
             </x-admin.card>
 

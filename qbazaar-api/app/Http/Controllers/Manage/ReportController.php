@@ -31,7 +31,7 @@ class ReportController extends Controller
         $search = $request->string('q')->toString();
 
         $reports = Report::query()
-            ->with(['reporter:id,full_name,email', 'reviewer:id,full_name'])
+            ->with(['reporter:id,full_name,email', 'reviewer:id,full_name', 'reporter.media', 'reviewer.media'])
             ->when(
                 in_array($status, array_column(ReportStatus::cases(), 'value'), true),
                 fn ($query) => $query->where('status', $status),
@@ -64,7 +64,7 @@ class ReportController extends Controller
 
     public function show(Report $report): View
     {
-        $report->load(['reporter', 'reviewer']);
+        $report->load(['reporter.media', 'reviewer.media']);
 
         return view('admin.reports.show', ['report' => $report]);
     }

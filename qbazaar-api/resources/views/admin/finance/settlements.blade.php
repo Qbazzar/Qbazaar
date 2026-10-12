@@ -23,7 +23,7 @@
         @foreach ($settlements as $settlement)
             <x-admin.table.row>
                 <x-admin.table.cell primary>
-                    <span class="font-semibold">{{ $settlement->user?->full_name ?? 'حساب محذوف' }}</span>
+                    <x-admin.user :user="$settlement->user" fallback="حساب محذوف" />
                     @if ($settlement->user)
                         <a href="{{ route('admin.finance.statements.show', $settlement->user) }}" class="ms-2 text-xs font-semibold text-coral-700 hover:underline">كشف الحساب</a>
                     @endif
@@ -34,7 +34,7 @@
                         <span class="block text-xs text-red-700">سبب الرفض: {{ $settlement->rejection_reason }}</span>
                     @endif
                     @if ($settlement->reviewer)
-                        <span class="block text-xs text-ink-500">راجعها: {{ $settlement->reviewer->full_name }}</span>
+                        <span class="block text-xs text-ink-500">راجعها: <x-admin.user :user="$settlement->reviewer" size="xs" /></span>
                     @endif
                 </x-admin.table.cell>
                 <x-admin.table.cell label="الطريقة" class="text-ink-700">

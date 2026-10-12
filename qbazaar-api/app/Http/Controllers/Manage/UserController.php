@@ -31,7 +31,7 @@ class UserController extends Controller
         $search = $request->string('q')->toString();
 
         $users = User::query()
-            ->with('roles')
+            ->with(['roles', 'media'])
             ->when(
                 in_array($status, array_column(UserStatus::cases(), 'value'), true),
                 fn ($query) => $query->where('status', $status),
@@ -64,7 +64,7 @@ class UserController extends Controller
 
     public function show(#[CurrentUser] User $actor, User $user): View
     {
-        $user->load('roles');
+        $user->load(['roles', 'media']);
         $user->loadCount('ads');
 
         $canManageUser = $this->hierarchy->canManage($actor, $user);
