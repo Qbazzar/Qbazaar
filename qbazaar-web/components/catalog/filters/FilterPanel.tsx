@@ -11,7 +11,7 @@ import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { findCategoryBySlug } from '@/store/categories';
-import type { CategoryNode, Location, SearchFacets } from '@/lib/api/types';
+import type { AdFacets, CategoryNode, Location, SearchFacets } from '@/lib/api/types';
 
 import { ActiveFilterChips } from './ActiveFilterChips';
 import { activeFilters } from './active-filters';
@@ -21,6 +21,7 @@ import { FilterGroup } from './FilterGroup';
 import {
   AD_TYPES,
   CONDITIONS,
+  SELLER_TYPES,
   SHIPPING_OPTIONS,
   countActiveFilters,
   filtersEqual,
@@ -29,11 +30,11 @@ import {
   type FilterValues,
 } from './filter-values';
 import { CityOptions, CitySelect } from './LocationFields';
-import { OptionList } from './OptionList';
+import { CheckOption, OptionList } from './OptionList';
 import { PriceRangeFields } from './PriceRangeFields';
 import { PriceSlider } from './PriceSlider';
 
-export type FilterGroupKey = 'keyword' | 'category' | 'price' | 'location' | 'condition' | 'adType' | 'shipping' | 'customFields';
+export type FilterGroupKey = 'keyword' | 'category' | 'price' | 'location' | 'condition' | 'adType' | 'shipping' | 'sellerType' | 'buyNow' | 'customFields';
 
 export interface FilterPanelProps {
   /** Groups in display order; each page lists what its endpoint can filter. */
@@ -44,7 +45,14 @@ export interface FilterPanelProps {
   onReset: () => void;
   categories?: CategoryNode[];
   locations?: Location[];
+  /** Search's top-level counts (categories, places). */
   facets?: SearchFacets | null;
+  /** `meta.facets` of the last response: counts for the other groups, re-read on every response. */
+  adFacets?: AdFacets | null;
+  /** The page's own category when the panel has no category group; its fields are the ones filtered. */
+  categorySlug?: string | null;
+  /** The search words are a filter (a category page) and not the page's subject (search). */
+  keywordIsFilter?: boolean;
 }
 
 interface PanelProps extends FilterPanelProps {
@@ -75,7 +83,7 @@ function sheetOrder(groups: FilterGroupKey[]): FilterGroupKey[] {
  * mounted when new filters apply, so the focus survives, and restarts its
  * draft from them.
  */
-export function FilterPanel({ variant, groups, values, onApply, onReset, onRemoveFilter = onApply, onKeep, categories, locations, facets }: PanelProps) {
+export function FilterPanel({ variant, groups, values, onApply, onReset, onRemoveFilter = onApply, onKeep, categories, locations, facets, adFacets, categorySlug, keywordIsFilter = false }: PanelProps) {
   const id = useId();
   const locale = getLocale();
   const sheet = variant === 'sheet';
@@ -88,11 +96,13 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
   }
   const patch = (next: Partial<FilterValues>) => setDraft((current) => ({ ...current, ...next }));
 
+  const activeCount = countActiveFilters(values, { keyword: keywordIsFilter });
   const invalid = hasInvalidRange(draft);
   const dirty = !filtersEqual(normalizeFilters(draft), values);
   // The card's button is pale while nothing is chosen (250:4405); the sheet's is always solid and then just closes it (618:26974).
-  const canApply = !invalid && (sheet || dirty || countActiveFilters(values) > 0);
-  const customFields = filterableFields(draft.category ? findCategoryBySlug(categories, draft.category)?.custom_fields : null);
+  const canApply = !invalid && (sheet || dirty || activeCount > 0);
+  const fieldsCategory = draft.category ?? categorySlug;
+  const customFields = filterableFields(fieldsCategory ? findCategoryBySlug(categories, fieldsCategory)?.custom_fields : null);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -181,7 +191,7 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
                 name={`${id}-condition`}
                 labelledBy={headingId}
                 value={draft.condition}
-                options={CONDITIONS.map((value) => ({ value, label: t(`ads.condition.${value}`), count: facets?.conditions?.[value] }))}
+                options={CONDITIONS.map((value) => ({ value, label: t(`ads.condition.${value}`), count: adFacets?.condition[value] }))}
                 onChange={(condition) => patch({ condition: CONDITIONS.find((value) => value === condition) ?? null })}
               />
             )}
@@ -195,7 +205,7 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
                 name={`${id}-ad-type`}
                 labelledBy={headingId}
                 value={draft.adType}
-                options={AD_TYPES.map((value) => ({ value, label: t(`catalog.filters.ad_type.${value}`) }))}
+                options={AD_TYPES.map((value) => ({ value, label: t(`catalog.filters.ad_type.${value}`), count: adFacets?.ad_type[value] }))}
                 onChange={(adType) => patch({ adType: AD_TYPES.find((value) => value === adType) ?? null })}
               />
             )}
@@ -209,8 +219,35 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
                 name={`${id}-shipping`}
                 labelledBy={headingId}
                 value={draft.shipping}
-                options={SHIPPING_OPTIONS.map((value) => ({ value, label: t(`catalog.filters.shipping_options.${value}`) }))}
+                options={SHIPPING_OPTIONS.map((value) => ({ value, label: t(`catalog.filters.shipping_options.${value}`), count: adFacets?.shipping[value] }))}
                 onChange={(shipping) => patch({ shipping: SHIPPING_OPTIONS.find((value) => value === shipping) ?? null })}
+              />
+            )}
+          </FilterGroup>
+        );
+      case 'sellerType':
+        return (
+          <FilterGroup key={key} title={t('catalog.filters.seller', 'البائع')}>
+            {(headingId) => (
+              <OptionList
+                name={`${id}-seller-type`}
+                labelledBy={headingId}
+                value={draft.sellerType}
+                options={SELLER_TYPES.map((value) => ({ value, label: t(`catalog.filters.seller_options.${value}`), count: adFacets?.seller_type[value] }))}
+                onChange={(sellerType) => patch({ sellerType: SELLER_TYPES.find((value) => value === sellerType) ?? null })}
+              />
+            )}
+          </FilterGroup>
+        );
+      case 'buyNow':
+        return (
+          <FilterGroup key={key} title={t('catalog.filters.direct_purchase', 'الشراء المباشر')}>
+            {() => (
+              <CheckOption
+                label={t('catalog.filters.buy_now_option', 'اشترِ الآن')}
+                count={adFacets?.buy_now.true}
+                checked={draft.buyNow}
+                onChange={(buyNow) => patch({ buyNow })}
               />
             )}
           </FilterGroup>
@@ -220,11 +257,11 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
         // The sheet lists the fields under their own labels (618:26974).
         return sheet ? (
           <div key={key} className="py-2.5">
-            <CustomFieldFilters compact fields={customFields} value={draft.customFields} onChange={(next) => patch({ customFields: next })} />
+            <CustomFieldFilters compact fields={customFields} counts={adFacets?.custom_fields} value={draft.customFields} onChange={(next) => patch({ customFields: next })} />
           </div>
         ) : (
           <FilterGroup key={key} title={t('catalog.filters.details', 'التفاصيل')}>
-            {() => <CustomFieldFilters fields={customFields} value={draft.customFields} onChange={(next) => patch({ customFields: next })} />}
+            {() => <CustomFieldFilters fields={customFields} counts={adFacets?.custom_fields} value={draft.customFields} onChange={(next) => patch({ customFields: next })} />}
           </FilterGroup>
         );
     }
@@ -232,12 +269,12 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
 
   const reset = () => {
     setDraft(values);
-    if (countActiveFilters(values) > 0) onReset();
+    if (activeCount > 0) onReset();
   };
 
   const chips = (
     <ActiveFilterChips
-      chips={activeFilters(values, { categories, locations, locale })}
+      chips={activeFilters(values, { keyword: keywordIsFilter, categories, locations, locale })}
       onRemove={onRemoveFilter}
       focusNextAfterRemove={variant === 'sidebar'}
     />

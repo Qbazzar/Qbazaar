@@ -32,6 +32,52 @@ describe('parseListingQuery', () => {
   });
 });
 
+describe('the catalog filters in the URL', () => {
+  it('reads the keyword, offer, seller, shipping, condition, Buy Now and category fields', () => {
+    const cf = encodeURIComponent(JSON.stringify({ brand: 'bmw', year: { min: 2015 } }));
+    const { filters } = parseListingQuery(
+      params(`q=%20sedan%20&ad_type=wanted&seller_type=business&shipping=pickup_only&condition=used&buy_now=true&cf=${cf}`),
+    );
+
+    expect(filters).toEqual({
+      ...EMPTY_FILTERS,
+      keyword: 'sedan',
+      adType: 'wanted',
+      sellerType: 'business',
+      shipping: 'pickup_only',
+      condition: 'used',
+      buyNow: true,
+      customFields: { brand: 'bmw', year: { min: 2015 } },
+    });
+  });
+
+  it('ignores values the API would refuse', () => {
+    const { filters } = parseListingQuery(params('ad_type=sale&seller_type=shop&shipping=post&condition=broken&buy_now=1&cf=%7Bnope'));
+
+    expect(filters).toEqual(EMPTY_FILTERS);
+  });
+
+  it('writes them back, drops the cleared ones and returns to page 1', () => {
+    const next = { ...EMPTY_FILTERS, keyword: 'sedan', sellerType: 'private' as const, buyNow: true, customFields: { brand: 'bmw' } };
+    const written = params(listingSearch(params('page=3&ad_type=wanted&shipping=delivery'), { filters: next }));
+
+    expect(written.get('q')).toBe('sedan');
+    expect(written.get('seller_type')).toBe('private');
+    expect(written.get('buy_now')).toBe('true');
+    expect(JSON.parse(written.get('cf') ?? '{}')).toEqual({ brand: 'bmw' });
+    expect(written.has('ad_type')).toBe(false);
+    expect(written.has('shipping')).toBe(false);
+    expect(written.has('page')).toBe(false);
+  });
+
+  it('opens the listing, not the overview, for any of them', () => {
+    expect(hasListingParams(params('seller_type=private'))).toBe(true);
+    expect(hasListingParams(params('buy_now=true'))).toBe(true);
+    expect(hasListingParams(params('q=sedan'))).toBe(true);
+    expect(hasListingParams(params('category=cars'))).toBe(false);
+  });
+});
+
 describe('hasListingParams', () => {
   it.each([
     ['', false],

@@ -15,6 +15,7 @@ vi.mock('next/image', () => ({
 }));
 vi.mock('@/components/ads/FavoriteButton', () => ({ FavoriteButton: () => <button type="button">Save</button> }));
 vi.mock('@/components/search/SaveSearchButton', () => ({ SaveSearchButton: () => null }));
+vi.mock('./CategoryActions', () => ({ CategoryActions: () => null }));
 vi.mock('@/lib/api/ads', () => ({ listAds: vi.fn() }));
 vi.mock('@/lib/queries/categories', () => ({ useCategoryTreeQuery: vi.fn(), useCategoryStatsQuery: vi.fn() }));
 vi.mock('@/lib/queries/locations', () => ({ useQatarLocationsQuery: vi.fn() }));
@@ -99,5 +100,79 @@ describe('AdsListing', () => {
     renderListing();
 
     expect(await screen.findByRole('link', { name: 'Last page' })).toHaveAttribute('href', '/ads?page=250');
+  });
+
+  it('sends the catalog filters of the URL, and only those that are set', async () => {
+    navigation.search = 'category=cars&q=sedan&ad_type=wanted&seller_type=business&shipping=delivery&condition=used&buy_now=true&cf=%7B%22year%22%3A%7B%22min%22%3A2015%7D%7D';
+    const withYear = { ...cars, custom_fields: [{ key: 'year', type: 'number', label: { en: 'Year', ar: 'السنة' } }] } as unknown as CategoryNode;
+    vi.mocked(useCategoryTreeQuery).mockReturnValue(lookup([withYear]));
+    renderListing();
+
+    await waitFor(() =>
+      expect(listAds).toHaveBeenCalledWith({
+        category_id: 'cat-cars',
+        q: 'sedan',
+        ad_type: 'wanted',
+        seller_type: 'business',
+        shipping: 'delivery',
+        condition: 'used',
+        buy_now: true,
+        custom_fields: { year: { min: 2015 } },
+        page: 1,
+      }),
+    );
+  });
+
+  it('counts the filter options from meta.facets of the response', async () => {
+    vi.mocked(listAds).mockResolvedValue({
+      data: [],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 20,
+        total: 9,
+        facets: { ad_type: { offering: 8, wanted: 1 }, shipping: {}, seller_type: { private: 5, business: 4 }, buy_now: { true: 2 }, condition: {} },
+      },
+    } as unknown as PaginatedResponse<AdSummary>);
+    renderListing();
+
+    expect((await screen.findAllByRole('radio', { name: 'Dealer (4)' })).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('checkbox', { name: 'Buy Now (2)' }).length).toBeGreaterThan(0);
+    // A timed-out count arrives as {}: no number, never 0.
+    expect(screen.getAllByRole('radio', { name: 'Shipping Available' }).length).toBeGreaterThan(0);
+  });
+
+  it('offers the search words on a category page as a filter that "Reset All" clears', async () => {
+    navigation.search = 'q=sedan';
+    renderListing();
+
+    expect((await screen.findAllByRole('button', { name: 'Remove “sedan”' })).length).toBeGreaterThan(0);
+  });
+
+  it('keeps the counts of the previous result set off the panel while new filters load', async () => {
+    const facets = { ad_type: {}, shipping: {}, seller_type: { business: 4 }, buy_now: {}, condition: {} };
+    vi.mocked(listAds).mockResolvedValueOnce({ ...page(3), meta: { ...page(3).meta, facets } } as never);
+    const { rerender } = renderListing();
+    expect((await screen.findAllByRole('radio', { name: 'Dealer (4)' })).length).toBeGreaterThan(0);
+
+    vi.mocked(listAds).mockReturnValue(new Promise(() => undefined));
+    navigation.search = 'condition=used';
+    rerender(<AdsListing heading={(selected) => ({ title: selected ? 'Cars' : 'All ads', breadcrumb: [] })} />);
+
+    await waitFor(() => expect(screen.queryByRole('radio', { name: 'Dealer (4)' })).not.toBeInTheDocument());
+    expect(screen.getAllByRole('radio', { name: 'Dealer' }).length).toBeGreaterThan(0);
+  });
+
+  it('drops reversed ranges and fields the category does not have before it asks the API', async () => {
+    navigation.search = `price_min=900&price_max=100&cf=${encodeURIComponent(JSON.stringify({ make: 'bmw', year: { min: 2020, max: 2010 } }))}`;
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    render(<AdsListing category={{ id: 'cat-cars', slug: 'cars' }} heading={() => ({ title: 'Cars', breadcrumb: [] })} />, { wrapper });
+
+    await waitFor(() => expect(listAds).toHaveBeenCalled());
+    const params = vi.mocked(listAds).mock.lastCall?.[0] as Record<string, unknown>;
+    expect(params.price_min).toBeUndefined();
+    expect(params.price_max).toBeUndefined();
+    expect(params.custom_fields).toBeUndefined();
   });
 });

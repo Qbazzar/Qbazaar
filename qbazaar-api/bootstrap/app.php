@@ -29,6 +29,7 @@ use App\Models\OtpCode;
 use App\Models\RecentView;
 use App\Models\RefreshToken;
 use App\Models\TrustedDevice;
+use App\Services\Admin\Dashboard\SchedulerHeartbeat;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -173,6 +174,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ->everyFifteenMinutes()
             ->name('auth.clear-password-resets')
             ->withoutOverlapping();
+
+        // The admin home reads this to tell "cron stopped" from "nothing due".
+        $schedule->call(fn () => app(SchedulerHeartbeat::class)->beat())
+            ->everyMinute()
+            ->name('scheduler.heartbeat');
 
         $schedule->command('horizon:snapshot')
             ->everyFiveMinutes()

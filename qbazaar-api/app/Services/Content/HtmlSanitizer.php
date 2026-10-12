@@ -40,6 +40,11 @@ class HtmlSanitizer
 
     private const array GLOBAL_ATTRIBUTES = ['dir', 'lang'];
 
+    /** Tags that may carry the editor's alignment (the only inline style we accept). */
+    private const array ALIGNABLE = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'th', 'td'];
+
+    private const string ALIGN_PATTERN = '/^\s*text-align\s*:\s*(start|end|left|right|center|justify)\s*;?\s*$/i';
+
     private const array URL_ATTRIBUTES = ['href', 'src'];
 
     private const array ALLOWED_SCHEMES = ['http', 'https', 'mailto', 'tel'];
@@ -110,11 +115,30 @@ class HtmlSanitizer
     {
         foreach (iterator_to_array($element->attributes) as $attribute) {
             $name = strtolower($attribute->name);
+
+            if ($name === 'style') {
+                $this->cleanStyle($element, $attribute->value);
+
+                continue;
+            }
+
             $allowed = in_array($name, $allowedForTag, true) || in_array($name, self::GLOBAL_ATTRIBUTES, true);
 
             if (! $allowed || (in_array($name, self::URL_ATTRIBUTES, true) && ! $this->isSafeUrl($attribute->value))) {
                 $element->removeAttribute($attribute->name);
             }
+        }
+    }
+
+    private function cleanStyle(Element $element, string $style): void
+    {
+        $aligned = in_array(strtolower($element->localName), self::ALIGNABLE, true)
+            && preg_match(self::ALIGN_PATTERN, $style, $matches) === 1;
+
+        if ($aligned) {
+            $element->setAttribute('style', 'text-align: ' . strtolower($matches[1]));
+        } else {
+            $element->removeAttribute('style');
         }
     }
 
