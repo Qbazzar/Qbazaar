@@ -57,6 +57,21 @@ final class UserDetailTabs
     }
 
     /**
+     * The partial that renders one panel, inline on the page or on its own.
+     *
+     * @return view-string
+     */
+    public function view(string $tab): string
+    {
+        return match ($tab) {
+            'ads' => 'admin.users.tabs.ads',
+            'orders' => 'admin.users.tabs.orders',
+            'wallet' => 'admin.users.tabs.wallet',
+            default => 'admin.users.tabs.profile',
+        };
+    }
+
+    /**
      * View data for one panel. Paginators link back to the full user page so
      * paging works the same whether the panel was rendered inline or fetched.
      *

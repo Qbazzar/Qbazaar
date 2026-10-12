@@ -52,7 +52,7 @@
                 @php($tabUrl = route('admin.users.show', [$user, 'tab' => $key]))
                 <x-admin.tab-panel tabs="user-tabs" :id="$key" :data-qb-lazy="$key === $activeTab ? null : route('admin.users.tab', [$user, $key])">
                     @if ($key === $activeTab)
-                        @include("admin.users.tabs.{$key}", ['user' => $user, ...$panel])
+                        @include($panelView, ['user' => $user, ...$panel])
                     @else
                         {{-- Fetched when the tab opens; without scripts the link reloads the page on that tab. --}}
                         <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">

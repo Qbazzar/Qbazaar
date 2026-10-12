@@ -87,6 +87,7 @@ class UserController extends Controller
             'tabs' => $tabs->visibleTo($actor),
             'activeTab' => $activeTab,
             'panel' => $tabs->panel($activeTab, $user),
+            'panelView' => $tabs->view($activeTab),
             // The audit trail names staff members, so it follows the activity log's own permission.
             'timeline' => $actor->can('activity.view') ? rescue(fn () => $timeline->forSubject($user)) : null,
         ]);
@@ -97,7 +98,7 @@ class UserController extends Controller
     {
         abort_unless(in_array($tab, $tabs->visibleTo($actor), true), 403);
 
-        return view("admin.users.tabs.{$tab}", ['user' => $user, ...$tabs->panel($tab, $user)]);
+        return view($tabs->view($tab), ['user' => $user, ...$tabs->panel($tab, $user)]);
     }
 
     public function suspend(#[CurrentUser] User $actor, User $user, UserModerationService $moderation): RedirectResponse
