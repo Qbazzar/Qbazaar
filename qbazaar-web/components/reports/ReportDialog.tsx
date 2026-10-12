@@ -11,12 +11,12 @@ import { useEffect, useId } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2Icon } from 'lucide-react';
 import { z } from 'zod';
 
 import { FieldError } from '@/components/auth/FieldError';
 import { CardDialog } from '@/components/design-system/CardDialog';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { useSubmitReportMutation } from '@/lib/queries/reports';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -50,7 +50,7 @@ const radio = [
 ].join(' ');
 
 // The reference leaves these at the browser's default button size (13.33 px).
-const footerButton = cn('h-[43px] flex-1 cursor-pointer rounded-qb-md text-[13.33px] font-semibold transition-colors', focusRing);
+const footerButton = cn('h-[43px] flex-1 cursor-pointer rounded-qb-md text-[13.33px] font-semibold qb-motion', focusRing);
 
 interface ReportDialogProps {
   open: boolean;
@@ -115,7 +115,7 @@ export function ReportDialog({ open, onOpenChange, target_type, target_id, onRep
                 className="flex cursor-pointer items-center gap-3 border-b border-qb-line px-1 py-[13px] text-qb-caption text-qb-ink-feature"
               >
                 <input type="radio" value={category} className={radio} {...form.register('category')} />
-                {t(audience === 'ad' ? `reports.ad_reasons.${category}` : `reports.categories.${category}.label`)}
+                <span>{t(audience === 'ad' ? `reports.ad_reasons.${category}` : `reports.categories.${category}.label`)}</span>
               </label>
             ))}
           </div>
@@ -126,7 +126,7 @@ export function ReportDialog({ open, onOpenChange, target_type, target_id, onRep
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className={cn(footerButton, 'border border-qb-line bg-qb-surface text-qb-ink-body')}
+            className={cn(footerButton, 'border border-qb-line bg-qb-surface text-qb-ink-body hover:brightness-[.96]')}
           >
             {t('common.cancel')}
           </button>
@@ -135,7 +135,7 @@ export function ReportDialog({ open, onOpenChange, target_type, target_id, onRep
             aria-disabled={mutation.isPending || undefined}
             className={cn(footerButton, 'inline-flex items-center justify-center gap-2 bg-qb-brand text-qb-on-brand hover:bg-qb-brand-hover')}
           >
-            {mutation.isPending ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : null}
+            {mutation.isPending ? <LoaderCircleIcon className="size-4 animate-spin" aria-hidden /> : null}
             {t('reports.submit')}
           </button>
         </div>

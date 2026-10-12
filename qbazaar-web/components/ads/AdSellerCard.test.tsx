@@ -59,7 +59,14 @@ describe('AdSellerCard', () => {
     expect(screen.getAllByText('Private Seller').length).toBeGreaterThan(0);
     expect(screen.getByText('4.5 · 12 reviews')).toBeInTheDocument();
     expect(screen.getByText('3 Ads')).toBeInTheDocument();
+    expect(screen.getByText('124 Followers')).toBeInTheDocument();
     expect(screen.getByText('Active since 08.01.2016')).toBeInTheDocument();
+  });
+
+  it('says a seller without reviews has none yet', () => {
+    renderCard({ seller: { ...seller, rating_avg: 0, rating_count: 0 } });
+
+    expect(screen.getByText('No reviews yet.')).toBeInTheDocument();
   });
 
   it('leaves out "Active since" when the join date is missing', () => {

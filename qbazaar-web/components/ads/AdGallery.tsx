@@ -10,10 +10,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
-import { ArrowLeft, ArrowRight, Camera, type LucideIcon } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { ArrowLeftIcon, ArrowRightIcon, CameraCountIcon, type IconGlyph } from '@/components/design-system/icons';
 import { formatNumber } from '@/lib/i18n/format';
 import { dirFor, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -96,31 +96,37 @@ export function AdGallery({ images, alt, favorite, className }: AdGalleryProps) 
       {count > 1 ? (
         <>
           <ArrowButton
-            icon={ArrowLeft}
+            icon={ArrowLeftIcon}
             label={t('media.prev')}
             onClick={() => emblaApi?.scrollPrev(prefersReducedMotion())}
             className="start-4"
           />
           <ArrowButton
-            icon={ArrowRight}
+            icon={ArrowRightIcon}
             label={t('media.next')}
             onClick={() => emblaApi?.scrollNext(prefersReducedMotion())}
             className="end-4"
           />
+        </>
+      ) : null}
+
+      {/* The heart comes before the counter, in the reference's order. */}
+      {favorite ? <div className="absolute end-4 top-4 z-10">{favorite}</div> : null}
+
+      {count > 1 ? (
+        <>
           <Counter current={selected + 1} total={count} />
           <p aria-live="polite" className="sr-only">
             {slideLabel(selected + 1, count)}
           </p>
         </>
       ) : null}
-
-      {favorite ? <div className="absolute end-4 top-4 z-10">{favorite}</div> : null}
     </section>
   );
 }
 
 interface ArrowButtonProps {
-  icon: LucideIcon;
+  icon: IconGlyph;
   label: string;
   onClick: () => void;
   className?: string;
@@ -151,7 +157,7 @@ function Counter({ current, total }: { current: number; total: number }) {
       aria-hidden="true"
       className="absolute inset-x-0 bottom-4 mx-auto flex w-fit items-center gap-1 rounded-qb-sm bg-qb-icon/75 px-3.5 py-1.5 text-qb-label text-qb-surface"
     >
-      <Camera className="size-3.5" strokeWidth={1.8} />
+      <CameraCountIcon className="size-3.5" strokeWidth={1.8} />
       <span dir="ltr">
         {formatNumber(current, locale)}/{formatNumber(total, locale)}
       </span>
