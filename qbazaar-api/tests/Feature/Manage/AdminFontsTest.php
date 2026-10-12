@@ -22,6 +22,7 @@ it('self-hosts Noto Kufi Arabic and Poppins with swap', function () {
     expect($css)->toContain("font-family: 'Noto Kufi Arabic'")
         ->toContain("font-family: 'Poppins'")
         ->toContain('font-display: swap')
+        ->toContain('unicode-range: U+0020, U+00A0, U+0600-06FF')
         ->toContain("--font-sans: 'Noto Kufi Arabic', 'Poppins'");
     expect(base_path('resources/fonts/noto-kufi-arabic-variable.woff2'))->toBeFile();
     expect(base_path('resources/fonts/OFL-NotoKufiArabic.txt'))->toBeFile();

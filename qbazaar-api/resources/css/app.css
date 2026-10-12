@@ -35,7 +35,7 @@
     font-weight: 100 900;
     font-style: normal;
     font-display: swap;
-    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+060C, U+061B, U+061F;
+    unicode-range: U+0020, U+00A0, U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+060C, U+061B, U+061F;
 }
 @font-face {
     font-family: 'Poppins';
