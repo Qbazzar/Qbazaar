@@ -106,7 +106,12 @@
                             class="rounded-lg text-ink-500 hover:text-ink-900 md:hidden" aria-label="فتح القائمة">
                         <x-admin.icon name="menu" class="size-6" />
                     </button>
-                    <h1 class="truncate text-base font-bold sm:text-lg">@yield('heading', '')</h1>
+                    {{-- Pages built on <x-admin.page> own the h1; for them the bar names the section. --}}
+                    @if (trim($__env->yieldPushContent('admin-page-shell')) !== '')
+                        <p class="truncate text-sm font-bold text-ink-500">@yield('heading', '')</p>
+                    @else
+                        <h1 class="truncate text-base font-bold sm:text-lg">@yield('heading', '')</h1>
+                    @endif
                 </div>
                 <div class="flex shrink-0 items-center gap-3">
                     @php($me = auth()->user())
@@ -137,6 +142,35 @@
     </div>
 
     <x-admin.confirm-dialog />
+
+    @stack('admin-detached-forms')
+
+    <script>
+        // One submission per form: a second click while the first request is in flight is dropped.
+        // GET filters, dialogs and forms that open a new tab (impersonation) are left alone.
+        (function () {
+            window.addEventListener('submit', function (event) {
+                var form = event.target;
+                if (event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
+                if (form.method !== 'post' || (form.target && form.target !== '_self')) return;
+                if (form.dataset.submitting) { event.preventDefault(); return; }
+                form.dataset.submitting = '1';
+                var submitter = event.submitter;
+                if (!submitter) return;
+                submitter.setAttribute('aria-busy', 'true');
+                // Disabled buttons drop out of the posted data, so wait until the browser has collected it.
+                setTimeout(function () { submitter.disabled = true; }, 0);
+            });
+            // A page restored from the back/forward cache must be usable again.
+            window.addEventListener('pageshow', function (event) {
+                if (!event.persisted) return;
+                document.querySelectorAll('form[data-submitting]').forEach(function (form) { delete form.dataset.submitting; });
+                document.querySelectorAll('[aria-busy="true"]').forEach(function (button) { button.removeAttribute('aria-busy'); button.disabled = false; });
+            });
+        })();
+    </script>
+
+    @stack('admin-scripts')
 
     <script>
         (function () {

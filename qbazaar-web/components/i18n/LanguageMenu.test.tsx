@@ -38,6 +38,19 @@ describe('LanguageMenu', () => {
     expect(screen.getByRole('button', { name: 'العربية' })).not.toHaveAttribute('aria-current');
   });
 
+  it('draws the desktop rows as the reference header does: flag, name, radio, the chosen row tinted', async () => {
+    const user = userEvent.setup();
+    renderMenu();
+
+    await user.click(screen.getByRole('button', { name: 'Language' }));
+    const english = screen.getByRole('button', { name: 'English' });
+
+    expect(english).toHaveTextContent('🇬🇧');
+    expect(english).toHaveClass('bg-qb-brand-soft', 'rounded-[9px]', 'hover:brightness-[.96]');
+    expect(screen.getByRole('button', { name: 'العربية' })).not.toHaveClass('bg-qb-brand-soft');
+    expect(screen.getByRole('group', { name: 'Choose your language' })).toHaveClass('w-[250px]', 'rounded-[14px]', 'p-2');
+  });
+
   it('switches to the language picked', async () => {
     const user = userEvent.setup();
     renderMenu();
@@ -77,6 +90,24 @@ describe('LanguageMenu', () => {
 
     await user.unhover(trigger);
     expect(screen.queryByRole('group')).toBeNull();
+  });
+
+  it('draws the phone rows as the reference popup: code, bare name, radio at the end', async () => {
+    const user = userEvent.setup();
+    render(
+      <LanguageMenu className="globe" variant="phone">
+        globe
+      </LanguageMenu>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Language' }));
+    const [code, name, radio] = screen.getByRole('button', { name: 'العربية' }).childNodes;
+
+    expect(code).toHaveTextContent('QA');
+    expect(code).toHaveAttribute('lang', 'en');
+    expect(name.nodeType).toBe(Node.TEXT_NODE);
+    expect(radio).toHaveClass('ms-auto');
+    expect(screen.getByRole('group', { name: 'Choose your language' })).toHaveClass('top-full', 'mt-1.5');
   });
 
   it('leaves the phone popup to clicks', async () => {

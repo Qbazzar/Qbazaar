@@ -30,12 +30,12 @@ export function SectionHeader({ title, subtitle, action, headingLevel: Heading =
         <Link
           href={action.href}
           className={cn(
-            'inline-flex shrink-0 items-center gap-2 rounded-qb-sm text-qb-body text-qb-brand hover:text-qb-brand-active',
+            'inline-flex shrink-0 items-center gap-2 text-qb-body text-qb-brand hover:text-qb-brand-active',
             focusRing,
           )}
         >
           {action.label}
-          <Icon icon={ArrowRight} size="sm" flipInRtl className="size-[18px]" />
+          <Icon icon={ArrowRight} size="sm" strokeWidth={1.8} flipInRtl className="size-[18px]" />
         </Link>
       ) : null}
     </div>

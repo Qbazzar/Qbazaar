@@ -18,7 +18,7 @@ const CLOSE_DELAY_MS = 160;
 
 /** The reference's rows (`.qb-btn`): 1.15 line height, and they dim slightly under the pointer. */
 const row = cn(
-  'flex w-full cursor-pointer items-center gap-3 rounded-qb-md bg-qb-surface px-3 py-[11px] text-start text-qb-body-sm leading-[1.15] transition-[filter] duration-150 hover:brightness-[0.96] motion-reduce:transition-none',
+  'flex w-full cursor-pointer items-center gap-3 rounded-qb-md bg-qb-surface px-3 py-[11px] text-start text-qb-body-sm leading-[1.15] qb-motion hover:brightness-[.96]',
   focusRing,
   'focus-visible:-outline-offset-2',
 );
@@ -128,7 +128,7 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
         onClick={onAvatarClick}
         aria-controls={open ? panelId : undefined}
         className={cn(
-          'relative rounded-full after:absolute after:inset-0 after:rounded-full after:bg-qb-overlay after:opacity-0 after:transition-opacity hover:after:opacity-100 motion-reduce:after:transition-none',
+          'qb-motion relative rounded-full hover:brightness-[.96]',
           focusRing,
         )}
       >

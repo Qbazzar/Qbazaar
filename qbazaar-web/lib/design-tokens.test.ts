@@ -72,3 +72,31 @@ describe('cn with design tokens', () => {
     expect(cn('px-qb-gutter', 'px-5 qb-desktop:px-qb-gutter')).toBe('px-5 qb-desktop:px-qb-gutter');
   });
 });
+
+describe('motion tokens', () => {
+  it('holds the polish transition of the reference in qb-motion', () => {
+    const utility = tokensCss.slice(tokensCss.indexOf('@utility qb-motion'));
+    for (const part of [
+      'background-color 0.18s ease',
+      'color 0.18s ease',
+      'box-shadow 0.2s ease',
+      'transform 0.2s ease',
+      'border-color 0.18s ease',
+      'filter 0.18s ease',
+    ]) {
+      expect(utility).toContain(part);
+    }
+  });
+
+  it('fades in with the reference qbFade keyframes at its three speeds', () => {
+    expect(tokensCss).toMatch(/@keyframes qb-fade\s*\{\s*from\s*\{\s*opacity: 0;\s*transform: translateY\(8px\);/);
+    expect(tokensCss).toContain('--animate-qb-page-enter: qb-fade 0.3s ease;');
+    expect(tokensCss).toContain('--animate-qb-dialog-enter: qb-fade 0.2s ease;');
+    expect(tokensCss).toContain('--animate-qb-menu-enter: qb-fade 0.18s ease;');
+  });
+
+  it('lets cn treat qb-motion as a transition', () => {
+    expect(cn('qb-motion', 'transition-none')).toBe('transition-none');
+    expect(cn('transition-colors', 'qb-motion')).toBe('qb-motion');
+  });
+});

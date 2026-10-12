@@ -4,7 +4,7 @@
      script below reveals it and shows one panel at a time. --}}
 <div data-tabs="{{ $id }}" {{ $attributes }}>
     <div role="tablist" aria-label="{{ $label }}" hidden
-         class="-mx-4 mb-5 flex overflow-x-auto border-b border-ink-200 px-4 sm:mx-0 sm:px-0">
+         class="-mx-4 mb-5 flex overflow-x-auto border-b border-ink-200 px-4 sm:mx-0 sm:px-0 lg:flex-wrap lg:overflow-visible">
         @foreach ($tabs as $key => $tab)
             <button type="button" role="tab" id="{{ $id }}-tab-{{ $key }}" data-tab="{{ $key }}"
                     aria-controls="{{ $id }}-panel-{{ $key }}" aria-selected="false" tabindex="-1" @if ($tab['error'] ?? false) data-invalid @endif
@@ -57,6 +57,12 @@
 
                 list.hidden = false;
                 select(initial(), false, false);
+
+                // Fonts and layout settle after first paint; re-reveal the active tab on narrow screens.
+                window.addEventListener('load', function () {
+                    var active = tabs.find(function (tab) { return tab.getAttribute('aria-selected') === 'true'; });
+                    if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                });
 
                 tabs.forEach(function (tab, i) {
                     tab.addEventListener('click', function () { select(i, false, true); });

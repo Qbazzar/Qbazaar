@@ -36,22 +36,27 @@ function footerColumns(): FooterColumn[] {
 const accordionBody =
   '[&::details-content]:max-h-0 [&::details-content]:overflow-hidden [&::details-content]:transition-[max-height,content-visibility] [&::details-content]:duration-[280ms] [&::details-content]:ease-[ease] [&::details-content]:[transition-behavior:allow-discrete] [&[open]::details-content]:max-h-[640px] motion-reduce:[&::details-content]:transition-none';
 
-/** The reference's caret: an 8 px corner of two #aaa borders, turned down, and up while open. */
+/**
+ * The reference's caret, drawn after the title as its `h3::after` is: an 8 px
+ * corner of two #aaa borders, turned down, and up while open.
+ */
 const accordionCaret =
-  'me-1.5 mb-[5px] size-2 shrink-0 rotate-45 border-r-2 border-b-2 border-qb-icon-accordion transition-transform duration-200 group-open:mt-[5px] group-open:mb-0 group-open:-rotate-135 motion-reduce:transition-none';
+  "after:me-1.5 after:mb-[5px] after:size-2 after:shrink-0 after:rotate-45 after:border-r-2 after:border-b-2 after:border-qb-icon-accordion after:content-[''] after:transition-transform after:duration-200 group-open:after:mt-[5px] group-open:after:mb-0 group-open:after:-rotate-135 motion-reduce:after:transition-none";
 
-const linkClass = cn('rounded-qb-xs text-qb-body-sm font-medium text-qb-ink-secondary hover:text-qb-brand', focusRing);
+/** The reference's `.qb-nav` links: square, orange under the pointer, with the polish transition. */
+const linkClass = cn('qb-motion block text-qb-body-sm font-medium text-qb-ink-secondary hover:text-qb-brand', focusRing);
 
 export function SiteFooter() {
   const columns = footerColumns();
   return (
     <footer className="border-t border-qb-line bg-qb-page font-qb font-medium text-qb-ink">
       <div className={cn(siteFrame, 'px-5 pt-12 pb-7 qb-desktop:px-qb-gutter')}>
-        <div className="flex flex-col gap-[26px] qb-desktop:flex-row qb-desktop:justify-between qb-desktop:gap-10">
+        {/* As the reference row: the brand block takes 300-360 px and the columns their own width, wrapping below it on narrow desktops. */}
+        <div className="flex flex-col gap-[26px] qb-desktop:flex-row qb-desktop:flex-wrap qb-desktop:justify-between qb-desktop:gap-10">
           <FooterBrand />
           <nav
             aria-label={t('layout.footer.nav_label', 'روابط الموقع')}
-            className="flex flex-col qb-desktop:max-w-[898px] qb-desktop:flex-1 qb-desktop:flex-row qb-desktop:justify-between qb-desktop:gap-16"
+            className="flex flex-col qb-desktop:flex-row qb-desktop:flex-wrap qb-desktop:gap-[clamp(28px,5vw,64px)]"
           >
             {columns.map((column) => (
               <FooterColumnBlock key={column.title} column={column} />
@@ -72,9 +77,9 @@ export function SiteFooter() {
 
 function FooterBrand() {
   return (
-    <div className="qb-desktop:max-w-[360px]">
-      <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('mb-4 block w-fit rounded-qb-sm', focusRing)}>
-        <SiteLogo width={123} height={46} />
+    <div className="qb-desktop:max-w-[360px] qb-desktop:flex-[1_1_300px]">
+      <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('mb-4 block w-fit', focusRing)}>
+        <SiteLogo width={123} height={46} className="block" />
       </Link>
       <p className="mb-5 leading-6 text-qb-ink-secondary">{t('layout.footer.tagline', 'نربط العلامات التجارية بجمهورها عبر رسائل وتفاعل مدروس')}</p>
       {/* Not links until the brand's profile URLs exist. */}
@@ -97,8 +102,8 @@ function FooterBrand() {
 
 /** Heading + links on desktop; a collapsible row under 1000 px. Two renderings so neither needs client JS. */
 function FooterColumnBlock({ column }: { column: FooterColumn }) {
-  const links = (
-    <ul className="flex flex-col gap-4">
+  const links = (className?: string) => (
+    <ul className={cn('flex flex-col gap-4', className)}>
       {column.links.map((link) => (
         <li key={link.href + link.label}>
           <Link href={link.href} className={linkClass}>
@@ -112,14 +117,20 @@ function FooterColumnBlock({ column }: { column: FooterColumn }) {
     <>
       <div className="hidden qb-desktop:block">
         <h2 className="mb-5 text-qb-h3 font-semibold tracking-normal">{column.title}</h2>
-        {links}
+        {links()}
       </div>
       <details className={cn('group border-b border-qb-divider first-of-type:border-t qb-desktop:hidden', accordionBody)}>
-        <summary className={cn('flex cursor-pointer list-none items-center justify-between px-0.5 py-4 text-qb-body font-semibold [&::-webkit-details-marker]:hidden', focusRing)}>
+        <summary
+          className={cn(
+            'flex cursor-pointer list-none items-center justify-between px-0.5 py-4 text-qb-body font-semibold [&::-webkit-details-marker]:hidden',
+            accordionCaret,
+            focusRing,
+          )}
+        >
           {column.title}
-          <span aria-hidden="true" className={accordionCaret} />
         </summary>
-        <div className="pb-3.5">{links}</div>
+        {/* `.qb-flinks` of an open column: the 14 px under the last link sits on the list itself. */}
+        {links('pb-3.5')}
       </details>
     </>
   );

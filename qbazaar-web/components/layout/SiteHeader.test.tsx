@@ -50,6 +50,20 @@ describe('SiteHeader', () => {
     expect(screen.queryByRole('link', { name: 'Account' })).toBeNull();
   });
 
+  it('keeps the reference look: square dimming icons, static guest links', () => {
+    render(<SiteHeader />);
+
+    for (const name of ['Language', 'Favorites', 'Notifications', 'Messages']) {
+      const [desktopIcon] = screen.getAllByRole(name === 'Language' ? 'button' : 'link', { name });
+      expect(desktopIcon).toHaveClass('qb-motion', 'hover:text-qb-brand', 'hover:brightness-[.96]');
+      expect(desktopIcon.className).not.toMatch(/rounded/);
+    }
+    for (const name of ['Login', 'Sign Up']) {
+      const link = screen.getByRole('link', { name });
+      expect(link.className).not.toMatch(/hover:|active:|transition|qb-motion/);
+    }
+  });
+
   it('shows the account avatar and announces unread counts when signed in', () => {
     signIn();
     unread.messages = 3;

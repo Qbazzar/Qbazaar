@@ -44,6 +44,32 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Delete' })).toHaveClass('size-10');
   });
 
+  it('moves with the reference polish transition', () => {
+    render(<Button>Search</Button>);
+
+    expect(screen.getByRole('button')).toHaveClass('qb-motion');
+    expect(screen.getByRole('button')).not.toHaveClass('transition-colors');
+  });
+
+  it('darkens an orange button under the pointer and keeps that look while pressed', () => {
+    render(<Button>Apply</Button>);
+    const button = screen.getByRole('button');
+
+    expect(button).toHaveClass('hover:bg-qb-brand-hover');
+    expect(button.className).not.toMatch(/active:/);
+  });
+
+  it.each(['secondary', 'outline', 'soft', 'muted', 'danger'] as const)(
+    'keeps the %s colours under the pointer and dims them like the reference .qb-btn',
+    (variant) => {
+      render(<Button variant={variant}>Save Draft</Button>);
+      const button = screen.getByRole('button');
+
+      expect(button).toHaveClass('hover:brightness-[.96]');
+      expect(button.className).not.toMatch(/hover:bg-/);
+    },
+  );
+
   it('exposes the classes for links styled as buttons', () => {
     expect(buttonVariants({ variant: 'secondary', size: 'sm' })).toContain('border-qb-brand');
   });

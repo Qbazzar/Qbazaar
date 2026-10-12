@@ -8,11 +8,20 @@
  */
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, Globe, Heart, MapPinPlus, MessageCircle, type LucideIcon } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import {
+  AddAdsPinIcon,
+  BellIcon,
+  BellOutlineIcon,
+  ChatBubbleIcon,
+  GlobeMobileIcon,
+  HeartIcon,
+  LanguageGlobeIcon,
+  type IconGlyph,
+} from '@/components/design-system/icons';
 import { siteFrame } from '@/components/design-system/site-frame';
 import { LanguageMenu } from '@/components/i18n/LanguageMenu';
 import { useAuth } from '@/hooks/useAuth';
@@ -65,8 +74,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 bg-qb-surface font-qb text-qb-ink shadow-qb-raised">
       <div className={cn(siteFrame, 'flex h-[88px] items-center justify-between gap-4')}>
-        <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('shrink-0 rounded-qb-sm', focusRing)}>
-          <SiteLogo width={139} height={52} eager />
+        <Link href="/" aria-label={t('brand.name', 'QBazaar')} className={cn('shrink-0', focusRing)}>
+          <SiteLogo width={139} height={52} eager className="block" />
         </Link>
 
         {/* Arabic labels are wider, so the gaps shrink sooner and the bar keeps its gutter at 761 px. */}
@@ -75,21 +84,21 @@ export function SiteHeader() {
             href="/post-ad"
             className={cn(buttonVariants({ size: 'sm' }), 'h-auto gap-[7px] py-2.5 text-qb-body-sm leading-[1.15] [&_svg]:size-5')}
           >
-            <Icon icon={MapPinPlus} />
+            <Icon icon={AddAdsPinIcon} />
             {t('layout.header.add_ad', 'أضف إعلاناً')}
           </Link>
           <span aria-hidden="true" className="h-[30px] w-px bg-qb-line" />
           <LanguageMenu className={headerIcon}>
-            <Icon icon={Globe} className="size-[23px]" />
+            <Icon icon={LanguageGlobeIcon} className="size-[23px]" />
           </LanguageMenu>
-          <HeaderIconLink href="/account/favorites" icon={Heart} label={t('layout.menu.favorites', 'المفضلة')} />
+          <HeaderIconLink href="/account/favorites" icon={HeartIcon} label={t('layout.menu.favorites', 'المفضلة')} />
           <HeaderIconLink
             href="/account/notifications"
-            icon={Bell}
+            icon={BellIcon}
             label={t('account.nav.notifications', 'الإشعارات')}
             unread={unread.notifications}
           />
-          <HeaderIconLink href="/account/messages" icon={MessageCircle} label={t('account.nav.messages', 'الرسائل')} unread={unread.messages} />
+          <HeaderIconLink href="/account/messages" icon={ChatBubbleIcon} label={t('account.nav.messages', 'الرسائل')} unread={unread.messages} />
           {signedIn ? (
             <AccountMenu name={user?.full_name || user?.email || 'Q'} email={user?.email} />
           ) : (
@@ -99,11 +108,11 @@ export function SiteHeader() {
 
         <div className="relative flex items-center gap-2 self-start pt-3.5 min-[761px]:hidden">
           <LanguageMenu className={mobileIconButton} variant="phone">
-            <Icon icon={Globe} />
+            <Icon icon={GlobeMobileIcon} className="size-[21px]" />
           </LanguageMenu>
           <HeaderIconLink
             href="/account/notifications"
-            icon={Bell}
+            icon={BellOutlineIcon}
             label={t('account.nav.notifications', 'الإشعارات')}
             unread={unread.notifications}
             variant="phone"
@@ -115,20 +124,21 @@ export function SiteHeader() {
   );
 }
 
+/** The reference's `.qb-nav.qb-btn` icons: square corners, orange and 4 % dimmer under the pointer, the polish transition. */
 const headerIcon = cn(
-  'relative inline-flex size-[27px] cursor-pointer items-center justify-center rounded-qb-xs text-qb-ink-body transition-colors hover:text-qb-brand',
+  'qb-motion relative inline-flex size-[27px] cursor-pointer items-center justify-center text-qb-ink-body hover:text-qb-brand hover:brightness-[.96]',
   focusRing,
 );
 
 /** The bare icons of the desktop bar and the bordered squares of the phone header. */
 const ICON_LINK = {
   desktop: { link: headerIcon, icon: 'size-[23px]', dot: 'end-0 top-0 size-2 border-[1.5px] border-qb-surface' },
-  phone: { link: mobileIconButton, icon: 'size-5', dot: 'end-3 top-[11px] size-[7px]' },
+  phone: { link: mobileIconButton, icon: 'size-[21px]', dot: 'end-3 top-[11px] size-[7px]' },
 } as const;
 
 interface HeaderIconLinkProps {
   href: string;
-  icon: LucideIcon;
+  icon: IconGlyph;
   label: string;
   unread?: number;
   variant?: keyof typeof ICON_LINK;
@@ -146,13 +156,22 @@ function HeaderIconLink({ href, icon, label, unread = 0, variant = 'desktop' }: 
   );
 }
 
+/**
+ * Plain links in the reference (mobilemenu.js guestHeader): no hover, press or
+ * transition, unlike the buttons around them.
+ */
+const guestLink = cn(
+  'inline-flex items-center justify-center rounded-qb-md px-[18px] text-qb-caption font-semibold whitespace-nowrap',
+  focusRing,
+);
+
 function GuestButtons() {
   return (
     <span className="ms-1 flex items-center gap-2.5">
-      <Link href="/login" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-[43px]')}>
+      <Link href="/login" className={cn(guestLink, 'h-[43px] border border-qb-line bg-qb-surface text-qb-ink-title')}>
         {t('layout.header.login', 'تسجيل الدخول')}
       </Link>
-      <Link href="/register" className={cn(buttonVariants({ size: 'sm' }), 'h-[41px]')}>
+      <Link href="/register" className={cn(guestLink, 'h-[41px] bg-qb-brand text-qb-on-brand')}>
         {t('layout.header.sign_up', 'إنشاء حساب')}
       </Link>
     </span>
