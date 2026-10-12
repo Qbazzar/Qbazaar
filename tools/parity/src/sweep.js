@@ -7,6 +7,7 @@ const { loadStreams, navigationFlows, usedIds } = require('./spec');
 const { loadScenarios } = require('../scenarios');
 const { selectPages } = require('./pages');
 const targets = require('../targets.json');
+const { NEEDS_LOGIN } = require('./config');
 
 const SWEEP_KINDS = new Set(['button', 'link', 'tab', 'toggle/switch', 'checkbox/radio', 'accordion', 'dropdown/select', 'input', 'chip/pill', 'card', 'pagination', 'menu']);
 // A missing counterpart is only a finding for controls a person operates, not for data cards or paging.
@@ -38,6 +39,7 @@ function describeElement({ selector, roleSelector }) {
   const caption = el.closest('label') ? norm(el.closest('label').innerText) : '';
   return {
     fingerprint: el.outerHTML.slice(0, 160),
+    toggle: el.tagName === 'INPUT' && ['checkbox', 'radio'].includes(el.type),
     text: norm(el.innerText || el.value || el.placeholder).slice(0, 60) || caption.slice(0, 60),
     label: norm(el.getAttribute('aria-label') || el.getAttribute('title') || el.getAttribute('placeholder')),
     landmark: landmark ? landmark.tagName.toLowerCase() : 'body',
@@ -45,8 +47,10 @@ function describeElement({ selector, roleSelector }) {
   };
 }
 
-// Target page: the twin by text or label first, else by position among the same kind of control.
-function findTwin({ text, label, landmark, ordinal, roleSelector, clickable }) {
+// Target page: the twin by text or label first, else by position among the same kind of control. A native
+// checkbox or radio of the reference pairs with the control itself (or the box painted for a hidden one), not
+// with the label that names it. Returns the twin's markup for the finding note, or false.
+function findTwin({ text, label, landmark, ordinal, roleSelector, clickable, toggle }) {
   const norm = (t) => (t || '').trim().replace(/\s+/g, ' ').toLowerCase();
   const visible = (n) => { const r = n.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(n).visibility !== 'hidden'; };
   const scope = landmark === 'body' ? document.body : document.querySelector(landmark) || document.body;
@@ -54,11 +58,25 @@ function findTwin({ text, label, landmark, ordinal, roleSelector, clickable }) {
   const named = (n) => [n.innerText, n.value, n.placeholder, n.getAttribute('aria-label'), n.getAttribute('title')].map((v) => norm(v).slice(0, 60));
   const byName = pool.filter((n) => (text && named(n).includes(text)) || (label && named(n).includes(label)));
   const byRole = roleSelector ? [...scope.querySelectorAll(roleSelector)].filter(visible) : [];
-  const found = byName[0] || byRole[Math.min(ordinal, byRole.length - 1)];
-  if (!found) return false;
+  const TOGGLES = 'input[type=checkbox], input[type=radio], [role=checkbox], [role=radio], [role=switch]';
+  const controlOf = (n) => (n.matches(TOGGLES) ? n : n.control || n.querySelector(TOGGLES) || n);
+  const paintedBox = (control) => {
+    const r = control.getBoundingClientRect();
+    if (r.width >= 4 && r.height >= 4 && getComputedStyle(control).opacity !== '0') return control;
+    const scope = control.closest('label') || control.parentElement || control;
+    const drawn = (n) => {
+      const b = n.getBoundingClientRect();
+      const s = getComputedStyle(n);
+      return b.width >= 8 && b.width <= 48 && Math.abs(b.width - b.height) <= 4 && (parseFloat(s.borderTopWidth) > 0 || s.backgroundColor !== 'rgba(0, 0, 0, 0)');
+    };
+    return [...scope.querySelectorAll('*')].find((n) => n !== control && !n.contains(control) && drawn(n)) || control;
+  };
+  const picked = byName[0] || byRole[Math.min(ordinal, byRole.length - 1)];
+  if (!picked) return false;
+  const found = toggle ? paintedBox(controlOf(picked)) : picked;
   document.querySelectorAll('[data-pgf]').forEach((n) => n.removeAttribute('data-pgf'));
   found.setAttribute('data-pgf', '1');
-  return true;
+  return found.outerHTML.replace(/\s+/g, ' ').slice(0, 200);
 }
 
 function candidates(pageDef, width, covered) {
@@ -93,19 +111,20 @@ async function sweepElement(env, ctx, element) {
     if (REQUIRED_KINDS.has(element.kind)) env.findings.add({ ...base, component: name, category: 'missing', severity: 'medium', property: 'missing-control', ref: `${element.kind} "${description.text || description.label}"`, target: 'no counterpart', note: element.component });
     return;
   }
-  await comparer.compare({ name, refSel: '[data-pgf]', tgtSel: '[data-pgf]', states: ctx.states, icons: true, mask: [] });
+  const note = `target twin: ${twin}`;
+  await comparer.compare({ name, refSel: '[data-pgf]', tgtSel: '[data-pgf]', states: ctx.states, icons: true, mask: [], note });
   const writes = element.kind === 'toggle/switch' && !env.config.localTarget;
-  if (STATE_CHANGING.has(element.kind) && !writes) await compareAfterClick(ctx, name);
+  if (STATE_CHANGING.has(element.kind) && !writes) await compareAfterClick(ctx, name, note);
 }
 
-async function compareAfterClick(ctx, name) {
+async function compareAfterClick(ctx, name, note) {
   const { reference, target, comparer } = ctx;
   const clicks = await Promise.allSettled([reference, target].map((side) => side.page.locator('[data-pgf]').first().click({ timeout: CLICK_TIMEOUT_MS, force: true })));
   // A control that cannot be clicked on either side has no after-click state to compare.
   if (clicks.some((c) => c.status === 'rejected')) return;
   await reference.page.waitForTimeout(SETTLE_MS);
   comparer.stateLabel = 'after-click';
-  await comparer.compare({ name, refSel: '[data-pgf]', tgtSel: '[data-pgf]', states: false, icons: false, dedupeKey: name });
+  await comparer.compare({ name, refSel: '[data-pgf]', tgtSel: '[data-pgf]', states: false, icons: false, dedupeKey: name, note });
   comparer.stateLabel = null;
 }
 
@@ -137,7 +156,7 @@ async function runSweep(env, skipped) {
   const { config } = env;
   if (config.skipInventory || config.locale === 'ar') return;
   for (const pageDef of selectPages(config)) {
-    if (pageDef.login && !env.storageState) { skipped.push({ what: `inventory sweep ${pageDef.id}`, reason: 'needs the demo login' }); continue; }
+    if (pageDef.login && !env.storageState) { skipped.push({ what: `inventory sweep ${pageDef.id}`, reason: NEEDS_LOGIN }); continue; }
     for (const width of pageDef.viewports) {
       process.stdout.write(`inventory ${pageDef.id} @${width} ... `);
       await sweepPage(env, pageDef, width, skipped);
