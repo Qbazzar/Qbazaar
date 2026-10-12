@@ -107,6 +107,7 @@ describe('LanguageMenu', () => {
     expect(code).toHaveAttribute('lang', 'en');
     expect(name.nodeType).toBe(Node.TEXT_NODE);
     expect(radio).toHaveClass('ms-auto');
+    expect(screen.getByRole('group', { name: 'Choose your language' })).toHaveClass('top-full', 'mt-1.5');
   });
 
   it('leaves the phone popup to clicks', async () => {

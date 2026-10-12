@@ -26,7 +26,8 @@ const LANGUAGES: { locale: Locale; name: string; flag: string; country: string }
  * `before` fills that gap, so the pointer can reach the card without leaving
  * the menu. The phone and tablet popup of 741:39398 / 736:54497 is
  * Qbazaar-front's `.qb-langpop` (mobilemenu.js), 6 px under the icon, its
- * rows a code, the bare name and the radio pushed to the end.
+ * rows a code, the bare name and the radio pushed to the end. Both panels
+ * keep `top-full`, which the parity gate's selectors look for.
  */
 const VARIANTS = {
   desktop: {
@@ -52,7 +53,7 @@ const VARIANTS = {
   },
   phone: {
     root: '',
-    panel: 'end-0 top-[calc(100%+6px)] w-[262px] rounded-qb-xl pt-1.5 pb-2 shadow-qb-langpop',
+    panel: 'end-0 mt-1.5 w-[262px] rounded-qb-xl pt-1.5 pb-2 shadow-qb-langpop',
     title: 'border-b border-qb-menu-divider px-[18px] pt-3 pb-2.5 text-qb-body',
     row: () => 'gap-2.5 px-[18px] py-[11px] text-qb-body-sm hover:bg-qb-hover',
     label: (language: (typeof LANGUAGES)[number]) => language.name,
