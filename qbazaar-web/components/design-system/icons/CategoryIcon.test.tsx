@@ -34,7 +34,7 @@ describe('CategoryIcon', () => {
   });
 
   it('matches categoryIcons in lucide-map.json', () => {
-    const fromMap = Object.fromEntries(Object.entries(CATEGORY_GLYPHS).map(([name, glyph]) => [name, glyph.glyph.name]));
+    const fromMap = Object.fromEntries(Object.entries(CATEGORY_GLYPHS).map(([name, glyph]) => [name, glyph.glyph?.name]));
     expect(fromMap).toEqual(lucideMap.categoryIcons);
     expect(CATEGORY_GLYPHS.Smartphone).toBe(ElectronicsTileIcon);
   });

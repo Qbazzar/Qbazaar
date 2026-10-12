@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import { Heart as LucideHeart, type LucideIcon } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
-import { createGlyph, isGlyphComponent } from './glyph';
+import { createGlyph, isRegistryGlyph } from './glyph';
 import { AddAdsPinIcon, BellOutlineIcon, MenuIcon } from './glyphs';
 
 const Sample = createGlyph('SampleIcon', {
@@ -49,8 +49,8 @@ describe('createGlyph', () => {
   });
 
   it('tells registry glyphs from lucide icons', () => {
-    expect(isGlyphComponent(AddAdsPinIcon)).toBe(true);
-    expect(isGlyphComponent(LucideHeart)).toBe(false);
+    expect(isRegistryGlyph(AddAdsPinIcon)).toBe(true);
+    expect(isRegistryGlyph(LucideHeart)).toBe(false);
     expect(AddAdsPinIcon.displayName).toBe('AddAdsPinIcon');
   });
 

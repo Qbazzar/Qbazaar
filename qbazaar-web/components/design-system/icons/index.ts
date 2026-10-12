@@ -5,6 +5,6 @@
  * each glyph's reference size, stroke variants, colour and where the design uses it;
  * scripts/icons/codemod.mjs moves lucide imports onto this set.
  */
-export { createGlyph, isGlyphComponent } from './glyph';
-export type { GlyphComponent, GlyphData, GlyphNode, GlyphProps, IconGlyph } from './glyph';
+export { createGlyph, isRegistryGlyph } from './glyph';
+export type { GlyphData, GlyphNode, GlyphProps, IconGlyph, RegistryGlyph } from './glyph';
 export * from './glyphs';

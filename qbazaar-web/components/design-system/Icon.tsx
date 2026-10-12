@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 
-import { isGlyphComponent, type GlyphProps, type IconGlyph } from './icons/glyph';
+import { isRegistryGlyph, type GlyphProps, type IconGlyph } from './icons/glyph';
 
 const SIZES = { sm: 16, md: 20, lg: 24 } as const;
 
@@ -24,7 +24,7 @@ export function Icon({ icon: Glyph, size = 'md', label, flipInRtl, className, ..
   return (
     <Glyph
       size={px}
-      {...(isGlyphComponent(Glyph) ? null : { strokeWidth: LEGACY_LUCIDE_STROKE })}
+      {...(isRegistryGlyph(Glyph) ? null : { strokeWidth: LEGACY_LUCIDE_STROKE })}
       className={cn('shrink-0', flipInRtl && 'rtl:-scale-x-100', className)}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
       {...props}

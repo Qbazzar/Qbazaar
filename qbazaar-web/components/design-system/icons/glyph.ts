@@ -6,7 +6,6 @@
  * paints it, as with lucide. No hooks, so glyphs render in server components too.
  */
 import { createElement, forwardRef, type ForwardRefExoticComponent, type ReactNode, type RefAttributes, type SVGProps } from 'react';
-import type { LucideIcon } from 'lucide-react';
 
 type GlyphAttributes = Readonly<Record<string, string>>;
 
@@ -27,13 +26,13 @@ export interface GlyphProps extends Omit<SVGProps<SVGSVGElement>, 'ref'> {
 }
 
 /**
- * A forwardRef component like a lucide icon, so a glyph also fits props still typed
- * LucideIcon while the files move over one stream at a time.
+ * An icon component, and what an `icon` prop accepts. A forwardRef component like a lucide
+ * icon, so registry glyphs and lucide icons fit each other's props both ways while the
+ * streams move their files one at a time; `glyph` is set on registry glyphs only.
  */
-export type GlyphComponent = ForwardRefExoticComponent<GlyphProps & RefAttributes<SVGSVGElement>> & { readonly glyph: GlyphData };
+export type IconGlyph = ForwardRefExoticComponent<GlyphProps & RefAttributes<SVGSVGElement>> & { readonly glyph?: GlyphData };
 
-/** What an `icon` prop accepts. Lucide icons stay assignable until the codemod has moved every file (phase 2). */
-export type IconGlyph = GlyphComponent | LucideIcon;
+export type RegistryGlyph = IconGlyph & { readonly glyph: GlyphData };
 
 const DEFAULT_SIZE = 24;
 
@@ -48,7 +47,7 @@ function renderNodes(nodes: readonly GlyphNode[]): ReactNode[] {
   );
 }
 
-export function createGlyph(displayName: string, glyph: GlyphData): GlyphComponent {
+export function createGlyph(displayName: string, glyph: GlyphData): IconGlyph {
   const Glyph = forwardRef<SVGSVGElement, GlyphProps>(function Glyph({ size = DEFAULT_SIZE, children, ...props }, ref) {
     return createElement(
       'svg',
@@ -69,6 +68,6 @@ export function createGlyph(displayName: string, glyph: GlyphData): GlyphCompone
   return Object.assign(Glyph, { glyph });
 }
 
-export function isGlyphComponent(icon: IconGlyph): icon is GlyphComponent {
-  return 'glyph' in icon;
+export function isRegistryGlyph(icon: IconGlyph): icon is RegistryGlyph {
+  return icon.glyph !== undefined;
 }

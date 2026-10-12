@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import * as lucide from 'lucide-react';
 import { describe, expect, it } from 'vitest';
 
-import type { GlyphComponent } from './glyph';
+import type { IconGlyph } from './glyph';
 import * as glyphs from './glyphs';
 
 // Vitest runs from qbazaar-web; the reference library sits beside it in tools/parity.
@@ -44,14 +44,14 @@ function rendered(component: ComponentType) {
   return parse(renderToStaticMarkup(createElement(component)));
 }
 
-const allGlyphs = glyphs as unknown as Record<string, GlyphComponent>;
+const allGlyphs = glyphs as unknown as Record<string, IconGlyph>;
 const referenceIcons = index.icons.filter((icon) => !NOT_GLYPHS.has(icon.name));
 
 describe('reference glyphs', () => {
   it.each(referenceIcons.map((icon) => [icon.name, icon.file]))('%s matches the reference SVG', (name, file) => {
     const component = allGlyphs[exportNameFor(name)];
     expect(component, `no export for ${name}`).toBeDefined();
-    expect(component.glyph.name).toBe(name);
+    expect(component.glyph?.name).toBe(name);
 
     const reference = parse(readFileSync(`${referenceDir}${file}`, 'utf8'));
     const ours = rendered(component);
@@ -74,7 +74,7 @@ describe('reference glyphs', () => {
 
   it('lists every glyph in registry.json under its export name', () => {
     for (const component of Object.values(allGlyphs)) {
-      expect(registry.glyphs[component.glyph.name]?.export).toBe(component.displayName);
+      expect(registry.glyphs[component.glyph?.name ?? '']?.export).toBe(component.displayName);
     }
     expect(Object.keys(registry.glyphs)).toHaveLength(Object.keys(allGlyphs).length);
   });

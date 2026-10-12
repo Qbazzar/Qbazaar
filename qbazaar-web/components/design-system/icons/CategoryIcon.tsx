@@ -5,7 +5,7 @@
  */
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
 
-import type { GlyphComponent, GlyphProps } from './glyph';
+import type { GlyphProps, IconGlyph } from './glyph';
 import {
   CarsTileIcon,
   ClothesTileIcon,
@@ -19,7 +19,7 @@ import {
 } from './glyphs';
 
 /** Mirrors `categoryIcons` in scripts/icons/lucide-map.json (a test keeps the two equal). */
-export const CATEGORY_GLYPHS: Readonly<Record<string, GlyphComponent>> = {
+export const CATEGORY_GLYPHS: Readonly<Record<string, IconGlyph>> = {
   Bike: LeisureTileIcon,
   Briefcase: JobsTileIcon,
   Car: CarsTileIcon,
