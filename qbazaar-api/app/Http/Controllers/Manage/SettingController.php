@@ -35,7 +35,7 @@ class SettingController extends Controller
         $updateSettings->execute($request->validated(), $actor);
 
         return redirect()
-            ->route('admin.settings.edit')
+            ->to(route('admin.settings.edit') . $request->activeTabFragment())
             ->with('status', __('admin.settings.saved'));
     }
 }

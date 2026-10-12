@@ -4,41 +4,55 @@
 @section('heading', __('admin.settings.title'))
 
 @section('content')
-    <form method="POST" action="{{ route('admin.settings.update') }}" class="mx-auto max-w-2xl space-y-6">
+    <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-6 [&_:is(input,select,textarea,button)]:scroll-mb-24">
         @csrf
+        <input type="hidden" name="_tab" value="">
         @method('PUT')
 
         <p class="text-sm text-ink-500">{{ __('admin.settings.intro') }}</p>
 
-        @foreach ($groups as $group => $settings)
-            <x-admin.card :title="__('admin.settings.groups.' . $group)">
-                <div class="space-y-5">
-                    @foreach ($settings as $setting)
-                        @php($key = $setting->value)
-                        @php($definition = $setting->definition())
-                        <x-admin.input
-                            :name="$key"
-                            type="number"
-                            :label="__('admin.settings.fields.' . $key . '.label')"
-                            :value="old($key, $values[$key])"
-                            :hint="__('admin.settings.fields.' . $key . '.help')"
-                            :suffix="__('admin.settings.fields.' . $key . '.unit')"
-                            required
-                            dir="ltr"
-                            step="{{ $definition->step() }}"
-                            min="{{ $definition->min }}"
-                            max="{{ $definition->max }}"
-                            input-class="max-w-xs"
-                        />
-                    @endforeach
-                </div>
-            </x-admin.card>
-        @endforeach
+        @php
+            $tabs = collect($groups)->mapWithKeys(fn ($settings, $group) => [
+                $group => [
+                    'label' => __('admin.settings.groups.' . $group),
+                    'error' => $errors->hasAny(collect($settings)->map->value->all()),
+                ],
+            ])->all();
+        @endphp
 
-        <x-admin.button icon="check">{{ __('admin.settings.save') }}</x-admin.button>
+        <x-admin.tabs id="settings" :tabs="$tabs" :label="__('admin.settings.title')">
+            @foreach ($groups as $group => $settings)
+                <x-admin.tab-panel tabs="settings" :id="$group">
+                    <x-admin.card :title="$tabs[$group]['label']">
+                        <div class="grid gap-x-6 gap-y-5 lg:grid-cols-2 2xl:grid-cols-3">
+                            @foreach ($settings as $setting)
+                                @php($key = $setting->value)
+                                @php($definition = $setting->definition())
+                                <x-admin.input
+                                    :name="$key"
+                                    type="number"
+                                    :label="__('admin.settings.fields.' . $key . '.label')"
+                                    :value="old($key, $values[$key])"
+                                    :hint="__('admin.settings.fields.' . $key . '.help')"
+                                    :suffix="__('admin.settings.fields.' . $key . '.unit')"
+                                    required
+                                    step="{{ $definition->step() }}"
+                                    min="{{ $definition->min }}"
+                                    max="{{ $definition->max }}"
+                                />
+                            @endforeach
+                        </div>
+                    </x-admin.card>
+                </x-admin.tab-panel>
+            @endforeach
+        </x-admin.tabs>
+
+        <div class="sticky bottom-0 z-10 -mx-4 border-t border-ink-200 bg-cream-50/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:-mx-6 sm:px-6">
+            <x-admin.button icon="check">{{ __('admin.settings.save') }}</x-admin.button>
+        </div>
     </form>
 
-    <x-admin.card :title="__('admin.commission_rates.title')" :description="__('admin.commission_rates.intro')" class="mx-auto mt-8 max-w-2xl">
+    <x-admin.card :title="__('admin.commission_rates.title')" :description="__('admin.commission_rates.intro')" class="mt-8">
         @if ($commissionRates->isEmpty())
             <p class="mb-4 text-sm text-ink-500">{{ __('admin.commission_rates.empty') }}</p>
         @else
@@ -68,7 +82,7 @@
                 @endforeach
             </x-admin.select>
             <x-admin.input name="rate" id="commission_rate_value" type="number" :label="__('admin.commission_rates.rate')" :value="old('rate')"
-                           required dir="ltr" step="0.01" min="0" max="100" class="w-32" />
+                           required step="0.01" min="0" max="100" class="w-32" />
             <x-admin.button icon="plus">{{ __('admin.commission_rates.add') }}</x-admin.button>
         </form>
     </x-admin.card>

@@ -508,6 +508,7 @@ return [
         'title' => 'Platform settings',
         'intro' => 'Changes apply immediately across the platform and are recorded in the activity log.',
         'save' => 'Save settings',
+        'has_errors' => 'Contains errors',
         'saved' => 'Settings saved.',
         'groups' => [
             'commission' => 'Commission',
