@@ -82,15 +82,47 @@ function readUnit({ selector, descendants }) {
   const MODERN = /(?:oklab|oklch|lab|lch|color)\([^()]*\)/g;
   const canon = (v) => (/(?:oklab|oklch|lab|lch|color)\(/.test(v) ? v.replace(MODERN, toRgb) : v);
 
+  // The box as laid out, before transforms (its own or an ancestor's): a tilted pill's bounding rect is taller than
+  // the pill itself. The rect keeps its sub-pixel precision whenever no transform changed the size.
+  const layoutSize = (el) => {
+    const r = el.getBoundingClientRect();
+    if (typeof el.offsetWidth !== 'number') return { width: r.width, height: r.height };
+    const transformed = Math.abs(r.width - el.offsetWidth) > 1 || Math.abs(r.height - el.offsetHeight) > 1;
+    return transformed ? { width: el.offsetWidth, height: el.offsetHeight } : { width: r.width, height: r.height };
+  };
+
   // Percent and pill radii (9999px) both resolve to what is drawn: at most half the shorter side.
   const radiusPx = (el, s, corners) => {
-    const r = el.getBoundingClientRect();
+    const r = layoutSize(el);
     const cap = Math.min(r.width, r.height) / 2;
     return corners.map((c) => {
       const v = s.getPropertyValue(c).split(' ')[0];
       const px = v.endsWith('%') ? (parseFloat(v) / 100) * r.width : parseFloat(v);
       return `${Math.round(Math.min(px || 0, cap) * 100) / 100}px`;
     }).join(' ');
+  };
+
+  // The space an element keeps around itself in its parent's flow: its margin plus the flex or grid gap that
+  // follows it (below it, or on its inline-end side). A margin on one side and a parent gap on the other draw
+  // the same space, so margins are compared through this value (compare.js).
+  const inFlow = (el) => {
+    const s = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    return s.display !== 'none' && s.position !== 'absolute' && s.position !== 'fixed' && r.width > 0 && r.height > 0;
+  };
+  const flowMargin = (el, s) => {
+    const margin = [s.marginTop, s.marginRight, s.marginBottom, s.marginLeft].map((v) => parseFloat(v) || 0);
+    const parent = el.parentElement;
+    const ps = parent ? getComputedStyle(parent) : null;
+    if (!ps || !/flex|grid/.test(ps.display) || el.nodeType !== 1 || !inFlow(el)) return margin.map((v) => `${v}px`).join(' ');
+    const [rowGap, columnGap] = [parseFloat(ps.rowGap) || 0, parseFloat(ps.columnGap) || 0];
+    const r = el.getBoundingClientRect();
+    const rtl = ps.direction === 'rtl';
+    const siblings = [...parent.children].filter((c) => c !== el && inFlow(c)).map((c) => c.getBoundingClientRect());
+    const sameRow = (o) => o.top < r.bottom - 0.5 && o.bottom > r.top + 0.5;
+    if (rowGap && siblings.some((o) => o.top >= r.bottom - 0.5)) margin[2] += rowGap;
+    if (columnGap && siblings.some((o) => sameRow(o) && (rtl ? o.right <= r.left + 0.5 : o.left >= r.right - 0.5))) margin[rtl ? 3 : 1] += columnGap;
+    return margin.map((v) => `${Math.round(v * 100) / 100}px`).join(' ');
   };
 
   const styles = (el, pseudo) => {
@@ -110,6 +142,7 @@ function readUnit({ selector, descendants }) {
       'text-transform': g('text-transform'), 'text-decoration-line': g('text-decoration-line'),
       padding: quad(s, ['padding-top', 'padding-right', 'padding-bottom', 'padding-left']),
       margin: quad(s, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']),
+      'margin-flow': pseudo ? quad(s, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']) : flowMargin(el, s),
       gap: `${g('row-gap')} ${g('column-gap')}`, width: g('width'), height: g('height'),
       display: g('display'), visibility: g('visibility'), 'z-index': g('z-index'),
       'transition-property': g('transition-property'), 'transition-duration': g('transition-duration'),
