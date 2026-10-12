@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { Combobox } from '@base-ui/react/combobox';
 import { DirectionProvider } from '@base-ui/react/direction-provider';
-import { ChevronDown, Search } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { ChevronDownIcon, SearchIcon } from '@/components/design-system/icons';
 import { formatNumber } from '@/lib/i18n/format';
 import { dirFor, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -87,7 +87,7 @@ export function SelectField({ labelledBy, options, searchOnlyOptions = [], value
             {selected ? selected.label : placeholder}
           </span>
           <Icon
-            icon={ChevronDown}
+            icon={ChevronDownIcon}
             className="size-[21px] shrink-0 text-qb-icon-faint transition-transform duration-200 group-data-popup-open:rotate-180 motion-reduce:transition-none"
           />
         </Combobox.Trigger>
@@ -95,7 +95,7 @@ export function SelectField({ labelledBy, options, searchOnlyOptions = [], value
           <Combobox.Positioner side="bottom" align="start" sideOffset={14} className="z-50">
             <Combobox.Popup className={selectPanel}>
               <div className="flex h-[42px] items-center gap-2.5 border-b border-(--color-qb-select-divider) px-4">
-                <Icon icon={Search} className="size-[18px] shrink-0 text-(--color-qb-search-icon)" />
+                <Icon icon={SearchIcon} className="size-[18px] shrink-0 text-(--color-qb-search-icon)" />
                 <Combobox.Input
                   aria-label={t('catalog.filters.select_search', 'ابحث في الخيارات')}
                   placeholder={t('catalog.filters.select_search_placeholder', 'بحث..')}

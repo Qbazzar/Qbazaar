@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { CloseIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -60,7 +60,7 @@ export function ActiveFilterChips({ chips, onRemove, focusNextAfterRemove = fals
             )}
           >
             {chip.label}
-            <Icon icon={X} size="sm" />
+            <Icon icon={CloseIcon} size="sm" />
           </button>
         </li>
       ))}

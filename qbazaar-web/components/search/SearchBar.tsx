@@ -13,7 +13,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SearchIcon, XIcon } from 'lucide-react';
+import { CloseIcon, SearchIcon } from '@/components/design-system/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
@@ -177,7 +177,7 @@ export function SearchBar({
             }}
             className="text-ink-500 hover:bg-cream-200 grid size-7 place-items-center rounded-full transition-colors"
           >
-            <XIcon className="size-3.5" aria-hidden />
+            <CloseIcon className="size-3.5" aria-hidden />
           </button>
         ) : null}
         <Button

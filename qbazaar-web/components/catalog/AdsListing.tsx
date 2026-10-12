@@ -2,12 +2,12 @@
 
 import type { ReactNode } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { SearchX } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import type { BreadcrumbItem } from '@/components/design-system/Breadcrumb';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { SearchXIcon } from '@/components/design-system/icons';
 import { Pagination } from '@/components/design-system/Pagination';
 import { SaveSearchButton } from '@/components/search/SaveSearchButton';
 import { pruneCustomFields } from '@/components/search/search-params';
@@ -161,7 +161,7 @@ export function AdsListing({ category, heading }: AdsListingProps) {
   const emptyState = (
     <EmptyState
       headingLevel="h3"
-      icon={<Icon icon={SearchX} size="lg" />}
+      icon={<Icon icon={SearchXIcon} size="lg" />}
       title={t('ads.empty.no_ads', 'لا توجد إعلانات هنا بعد.')}
       description={hasFilters ? t('catalog.empty.try_filters', 'جرّب تعديل الفلاتر أو تصفّح كل الأقسام.') : undefined}
       className="rounded-qb-2xl border border-qb-line bg-qb-surface"
