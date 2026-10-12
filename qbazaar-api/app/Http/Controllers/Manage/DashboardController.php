@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Admin\Dashboard\DashboardLayout;
 use App\Services\Admin\Dashboard\DashboardPeriod;
 use App\Services\Admin\Dashboard\DashboardStatsService;
 use Illuminate\Http\Request;
@@ -23,8 +24,11 @@ class DashboardController extends Controller
         $user = $request->user();
         $period = DashboardPeriod::fromRequest($request->query('period'));
 
+        $payload = $stats->forUser($user, $period);
+
         return view('admin.dashboard', [
-            'stats' => $stats->forUser($user, $period),
+            'stats' => $payload,
+            'home' => new DashboardLayout($payload),
             'period' => $period,
         ]);
     }

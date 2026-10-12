@@ -1,5 +1,12 @@
 {{-- Headline figures with their 30-day sparkline, then the stock figures as share bars.
      The figure lists are built in dashboard.blade.php. --}}
+@php
+    $tiles = $home->tiles();
+    $kpis = $home->kpis();
+    $stock = $home->stock();
+    $totals = $home->totals();
+@endphp
+
 @if ($kpis !== [])
     <section aria-label="{{ __('admin.home.sections.kpis') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
         @foreach ($kpis as $def)
@@ -12,7 +19,7 @@
             @endphp
             <x-admin.dashboard.kpi
                 :label="__('admin.home.tiles.' . $def['tile'])"
-                :value="$showMoney($tile)"
+                :value="$home->format($tile)"
                 :icon="$def['icon']"
                 :href="$tile['href'] ?? null"
                 :change="$change"
@@ -31,7 +38,7 @@
             @php($tile = $tiles[$def['tile']])
             <x-admin.dashboard.kpi
                 :label="__('admin.home.tiles.' . $def['tile'])"
-                :value="$showMoney($tile)"
+                :value="$home->format($tile)"
                 :icon="$def['icon']"
                 :href="$tile['href'] ?? null"
                 :tone="$def['tone']"

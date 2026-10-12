@@ -5,7 +5,7 @@
     foreach (array_keys($stats['recent']) as $name) {
         $recentTabs[$name] = ['label' => __('admin.home.recent_tabs.' . $name)];
     }
-    $moreTiles = $tiles->reject(fn (array $tile, string $key): bool => in_array($key, $shownTiles, true));
+    $moreTiles = $home->moreTiles();
 @endphp
 
 @if ($stats['recent'] !== [] || $moreTiles->isNotEmpty())
@@ -56,7 +56,7 @@
                             </dt>
                             <dd class="flex shrink-0 items-center gap-2">
                                 @if (array_key_exists('change', $tile))<x-admin.trend :change="$tile['change']" />@endif
-                                <span dir="ltr" class="min-w-12 text-end text-sm font-bold">{{ $showMoney($tile) }}</span>
+                                <span dir="ltr" class="min-w-12 text-end text-sm font-bold">{{ $home->format($tile) }}</span>
                             </dd>
                         </div>
                     @endforeach
