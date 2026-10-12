@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Services\Messaging\AdminTranscriptBuilder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -16,7 +17,7 @@ class ConversationController extends Controller
         $search = $request->string('q')->toString();
 
         $conversations = Conversation::query()
-            ->with(['ad:id,title', 'buyer:id,full_name,email', 'seller:id,full_name,email'])
+            ->with(['ad:id,title', 'buyer:id,full_name,email', 'seller:id,full_name,email', 'buyer.avatarMedia', 'seller.avatarMedia'])
             ->withCount('messages')
             ->when(
                 $search !== '',
@@ -37,22 +38,34 @@ class ConversationController extends Controller
         ]);
     }
 
-    public function show(Conversation $conversation): View
+    public function show(Request $request, Conversation $conversation, AdminTranscriptBuilder $transcript): View
     {
         $conversation->load([
             'ad:id,title',
+            'ad.primaryImage',
             'buyer:id,full_name,email',
             'seller:id,full_name,email',
+            'buyer.avatarMedia',
+            'seller.avatarMedia',
         ]);
 
+        // Long threads open on their newest page; older pages stay one click away.
+        $perPage = 100;
+        $lastPage = max(1, (int) ceil($conversation->messages()->count() / $perPage));
+        $page = $request->integer('page') ?: $lastPage;
+
         $messages = $conversation->messages()
-            ->with('sender:id,full_name')
-            ->orderBy('created_at')
-            ->get();
+            ->with('sender:id,full_name,email')
+            ->with('sender.avatarMedia')
+            // The relation sorts newest first; the transcript reads oldest to newest.
+            ->reorder('created_at')
+            ->orderBy('id')
+            ->paginate($perPage, page: $page);
 
         return view('admin.conversations.show', [
             'conversation' => $conversation,
             'messages' => $messages,
+            'rows' => $transcript->build($messages->getCollection(), app()->getLocale()),
         ]);
     }
 }

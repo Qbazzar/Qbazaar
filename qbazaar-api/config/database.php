@@ -168,6 +168,21 @@ return [
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
 
+        // Same server and database as `default`, for the admin home's probes
+        // only: short timeouts and no retries so an outage fails fast. The
+        // shared connection keeps its defaults for Horizon's blocking pops.
+        'health' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_DB', '0'),
+            'timeout' => 1.5,
+            'read_timeout' => 1.5,
+            'max_retries' => 0,
+        ],
+
         'cache' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),

@@ -43,8 +43,9 @@ class TwilioSmsChannel
         $sid = (string) config('services.twilio.sid', '');
         $token = (string) config('services.twilio.token', '');
         $from = (string) config('services.twilio.from', '');
+        $serviceSid = (string) config('services.twilio.messaging_service_sid', '');
 
-        if ($sid === '' || $token === '' || $from === '') {
+        if ($sid === '' || $token === '' || ($from === '' && $serviceSid === '')) {
             // Dev mode — don't call Twilio; surface enough info to debug locally.
             Log::info('twilio.sms.dev_mode', [
                 'to' => $to,
@@ -58,7 +59,7 @@ class TwilioSmsChannel
         try {
             $client = new TwilioClient($sid, $token);
             $client->messages->create($to, [
-                'from' => $from,
+                ...($serviceSid !== '' ? ['messagingServiceSid' => $serviceSid] : ['from' => $from]),
                 'body' => $message->body,
             ]);
         } catch (Throwable $e) {

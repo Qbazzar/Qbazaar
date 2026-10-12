@@ -77,6 +77,16 @@ return [
             'after_commit' => true,
         ],
 
+        // Dashboard-only twin of `redis` on a connection with short timeouts,
+        // so a Redis outage cannot hang the admin home. Never used by workers.
+        'redis-health' => [
+            'driver' => 'redis',
+            'connection' => 'health',
+            'queue' => env('REDIS_QUEUE', 'default'),
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 150),
+            'block_for' => null,
+        ],
+
         // Same Redis lists, read by the media and low supervisors whose jobs
         // run for minutes. Jobs are still pushed through `redis`.
         'redis-long' => [

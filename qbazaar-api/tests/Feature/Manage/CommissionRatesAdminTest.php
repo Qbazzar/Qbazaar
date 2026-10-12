@@ -118,3 +118,86 @@ it('keeps category overrides to settings.manage', function (): void {
 
     expect(CategoryCommissionRate::query()->count())->toBe(0);
 });
+
+/**
+ * @return array{DOMXPath, DOMDocument}
+ */
+function settingsPageXpath(string $html): array
+{
+    $dom = new DOMDocument;
+    libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="utf-8"?>' . $html);
+    libxml_clear_errors();
+
+    return [new DOMXPath($dom), $dom];
+}
+
+it('renders the category commission card inside the commission panel only', function (): void {
+    CategoryCommissionRate::query()->create(['category_id' => $this->category->id, 'rate' => '3.50']);
+
+    [$xpath] = settingsPageXpath(actingAs($this->admin)->get('/admin/settings')->assertOk()->getContent());
+
+    $panels = $xpath->query('//*[@role="tabpanel"]');
+    $withCard = [];
+
+    foreach ($panels as $panel) {
+        if ($xpath->query('.//select[@id="commission_category_id"]', $panel)->length > 0) {
+            $withCard[] = $panel->getAttribute('id');
+        }
+    }
+
+    expect($withCard)->toBe(['settings-panel-commission'])
+        ->and($xpath->query('//select[@id="commission_category_id"]')->length)->toBe(1);
+});
+
+it('never nests a form inside another form on the settings page', function (): void {
+    CategoryCommissionRate::query()->create(['category_id' => $this->category->id, 'rate' => '3.50']);
+
+    [$xpath] = settingsPageXpath(actingAs($this->admin)->get('/admin/settings')->getContent());
+
+    expect($xpath->query('//form//form')->length)->toBe(0)
+        ->and($xpath->query('//form[@id="commission-rate-form"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@form="commission-rate-form"]')->length)->toBeGreaterThanOrEqual(3)
+        ->and($xpath->query('//button[@form="commission-rate-remove-' . $this->category->id . '"]')->length)->toBe(1);
+});
+
+it('keeps the settings Save and the category Save separate', function (): void {
+    [$xpath] = settingsPageXpath(actingAs($this->admin)->get('/admin/settings')->getContent());
+
+    $mainForm = '//form[@action="' . route('admin.settings.update') . '"]';
+
+    expect($xpath->query($mainForm . '//button[not(@form) and not(@role="tab")]')->length)->toBe(1)
+        ->and($xpath->query('//button[@form="commission-rate-form"]')->length)->toBe(1)
+        ->and($xpath->query($mainForm . '//*[@id="commission_category_id"]/@form')->item(0)?->nodeValue)->toBe('commission-rate-form');
+});
+
+it('uses no fixed widths wider than a phone on the settings page', function (): void {
+    $html = actingAs($this->admin)->get('/admin/settings')->getContent();
+
+    expect($html)->not->toMatch('/\b(?:min-w|w)-\[(?:[4-9]\d{2}|\d{4,})px\]/')
+        ->and($html)->not->toMatch('/style="[^"]*width:\s*\d{3,}px/');
+});
+
+it('saves the main settings and a category rate independently', function (): void {
+    $payload = [];
+    foreach (PlatformSetting::cases() as $setting) {
+        $payload[$setting->value] = $setting->definition()->defaultValue();
+    }
+    $payload['commission_rate'] = '6.00';
+
+    actingAs($this->admin)->put('/admin/settings', $payload)->assertRedirect('/admin/settings');
+    actingAs($this->admin)->post('/admin/settings/commission-rates', ['category_id' => $this->category->id, 'rate' => '2.5'])->assertRedirect('/admin/settings');
+
+    expect(app(SettingsService::class)->decimal(PlatformSetting::COMMISSION_RATE))->toBe('6.00')
+        ->and(CategoryCommissionRate::query()->findOrFail($this->category->id)->rate)->toBe('2.50');
+});
+
+it('marks the commission tab when the category rate form fails', function (): void {
+    actingAs($this->admin)->from('/admin/settings')
+        ->post('/admin/settings/commission-rates', ['category_id' => $this->category->id, 'rate' => '500'])
+        ->assertSessionHasErrors('rate');
+
+    $html = actingAs($this->admin)->get('/admin/settings')->getContent();
+
+    expect($html)->toMatch('/id="settings-tab-commission"[^>]*data-invalid/');
+});

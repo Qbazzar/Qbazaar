@@ -65,6 +65,8 @@ tags:
     description: In-app, email, and push notifications
   - name: CMS Pages
     description: Static CMS pages (about, terms, privacy, safety)
+  - name: Settings
+    description: Public platform settings (contact details, social links, public keys)
   - name: Help
     description: Help center categories, articles, and search
   - name: Support
@@ -4894,6 +4896,32 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  /api/v1/settings/public:
+    get:
+      tags: [Settings]
+      summary: Public platform settings
+      description: |
+        Read-only values the web needs for the footer and the contact page:
+        contact details, social links, the GA4 measurement id and the
+        Turnstile site key. Managed in /admin/settings (Contact, Google and
+        Anti-bot tabs). Credentials and secrets are never part of this
+        payload. Cached server-side until an admin saves; clients may cache
+        for 5 minutes (`Cache-Control: public, max-age=300`). Any field the
+        admin has not filled is `null`. No auth required.
+      operationId: publicSettings
+      security: []
+      responses:
+        '200':
+          description: Public settings
+          headers:
+            Cache-Control:
+              schema: { type: string, example: 'public, max-age=300' }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicSettingsEnvelope'
+        '429': { $ref: '#/components/responses/RateLimited' }
+
   # ──────────────────────────────────────────────────────────────────────────
   # CMS Pages (Sprint 12) — public, 1-hour Cache::remember on both endpoints
   # ──────────────────────────────────────────────────────────────────────────
@@ -5335,6 +5363,52 @@ components:
           type: string
 
     # ─── Domain ──────────────────────────────────────────────────────
+    PublicSettingsEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [contact, social, analytics, antibot]
+              properties:
+                contact:
+                  type: object
+                  properties:
+                    support_email: { type: string, format: email, nullable: true }
+                    phone: { type: string, nullable: true, description: E.164, example: '+97444000000' }
+                    whatsapp: { type: string, nullable: true, description: E.164 }
+                    address:
+                      type: object
+                      properties:
+                        ar: { type: string, nullable: true }
+                        en: { type: string, nullable: true }
+                    working_hours:
+                      type: object
+                      properties:
+                        ar: { type: string, nullable: true }
+                        en: { type: string, nullable: true }
+                social:
+                  type: object
+                  description: https links; null when not set
+                  properties:
+                    instagram: { type: string, format: uri, nullable: true }
+                    x: { type: string, format: uri, nullable: true }
+                    facebook: { type: string, format: uri, nullable: true }
+                    tiktok: { type: string, format: uri, nullable: true }
+                    snapchat: { type: string, format: uri, nullable: true }
+                    youtube: { type: string, format: uri, nullable: true }
+                    linkedin: { type: string, format: uri, nullable: true }
+                analytics:
+                  type: object
+                  properties:
+                    ga4_measurement_id: { type: string, nullable: true, example: G-ABCD123456 }
+                antibot:
+                  type: object
+                  properties:
+                    turnstile_enabled: { type: boolean }
+                    turnstile_site_key: { type: string, nullable: true }
+
     HealthResponse:
       allOf:
         - $ref: '#/components/schemas/SuccessEnvelope'

@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -404,28 +405,42 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     }
 
     /**
+     * Only the avatar row, so admin lists can eager-load it without pulling
+     * the business cover or any other media of the user.
+     *
+     * @return MorphOne<Media, $this>
+     */
+    public function avatarMedia(): MorphOne
+    {
+        return $this->morphOne(Media::class, 'model')
+            ->where('collection_name', 'avatar')
+            ->orderByDesc('id');
+    }
+
+    /**
      * Convenience accessors for the avatar URLs. Each returns null when no
      * avatar exists; we don't want the empty-string Spatie default leaking
      * into JSON payloads — null is more honest for the frontend.
      */
     public function avatarOriginalUrl(): ?string
     {
-        $media = $this->getFirstMedia('avatar');
-
-        return $media?->getUrl() ?: null;
+        return $this->avatarFile()?->getUrl() ?: null;
     }
 
     public function avatarThumbUrl(): ?string
     {
-        $media = $this->getFirstMedia('avatar');
-
-        return $media?->getUrl('thumb') ?: null;
+        return $this->avatarFile()?->getUrl('thumb') ?: null;
     }
 
     public function avatarMediumUrl(): ?string
     {
-        $media = $this->getFirstMedia('avatar');
+        return $this->avatarFile()?->getUrl('medium') ?: null;
+    }
 
-        return $media?->getUrl('medium') ?: null;
+    private function avatarFile(): ?Media
+    {
+        return $this->relationLoaded('avatarMedia')
+            ? $this->avatarMedia
+            : $this->getFirstMedia('avatar');
     }
 }

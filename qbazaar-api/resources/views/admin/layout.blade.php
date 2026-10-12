@@ -2,12 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'الإدارة') · QBazaar</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" href="{{ Vite::asset('resources/fonts/noto-kufi-arabic-variable.woff2') }}" as="font" type="font/woff2" crossorigin>
     @vite(['resources/css/app.css'])
 </head>
 <body class="min-h-screen bg-cream-50 text-ink-900 antialiased">
@@ -32,7 +30,7 @@
                 @php($pendingReviewCount = auth()->user()->can(\App\Listeners\Ads\NotifyAdminsOfPendingAd::REVIEW_PERMISSION) ? app(\App\Services\Ads\PendingReviewCounter::class)->count() : 0)
                 @php($groups = [
                     'عام' => [
-                        ['route' => 'admin.dashboard', 'label' => 'لوحة القيادة', 'match' => 'admin.dashboard', 'icon' => 'dashboard'],
+                        ['route' => 'admin.dashboard', 'label' => __('admin.navigation.home'), 'match' => 'admin.dashboard', 'icon' => 'home'],
                     ],
                     'الإشراف' => [
                         ['route' => 'admin.ads.index', 'label' => 'الإعلانات', 'match' => 'admin.ads.*', 'icon' => 'tag', 'permission' => 'ads.view', 'badge' => $pendingReviewCount, 'badge_label' => __('admin.ad_review.pending_badge')],

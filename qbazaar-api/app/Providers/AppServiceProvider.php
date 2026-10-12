@@ -27,6 +27,8 @@ use App\Services\Auth\AuthRateLimiters;
 use App\Services\Moderation\ModerationRulesService;
 use App\Services\Payments\CashGateway;
 use App\Services\Payments\PaymentGateways;
+use App\Services\Settings\IntegrationConfigApplier;
+use App\Services\Settings\IntegrationSettings;
 use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -49,6 +51,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // One cache read per request/job, however many times the overlay and views ask.
+        $this->app->scoped(IntegrationSettings::class);
+
         // Scoped, not a singleton: a long-lived Horizon worker must pick up
         // rules the admin edits, so the parsed lists live for one request or
         // job and the shared copy stays in the cache.
@@ -119,6 +124,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute((int) config('qbazaar.purchase_requests.max_per_minute'))->by('purchase-requests:' . (optional($r->user())->id ?: $r->ip())),
             Limit::perDay((int) config('qbazaar.purchase_requests.max_per_day'))->by('purchase-requests-day:' . (optional($r->user())->id ?: $r->ip())),
         ]);
+        RateLimiter::for('integration-test', fn (Request $r) => [
+            Limit::perMinute(3)->by('integration-test:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perHour(20)->by('integration-test-hour:' . (optional($r->user())->id ?: $r->ip())),
+        ]);
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('publish', fn (Request $r) => Limit::perMinute((int) config('qbazaar.ads.publish_attempts_per_minute_per_user'))->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('uploads', fn (Request $r) => Limit::perMinute((int) config('qbazaar.uploads.requests_per_minute'))->by('uploads:' . (optional($r->user())->id ?: $r->ip())));
@@ -147,6 +156,9 @@ class AppServiceProvider extends ServiceProvider
                 self::addMySqlFunctionsToSqlite($event->connection);
             }
         });
+
+        // Last: reading the settings opens the DB connection, which must already have the listener above.
+        $this->app->make(IntegrationConfigApplier::class)->applySafely();
     }
 
     /**

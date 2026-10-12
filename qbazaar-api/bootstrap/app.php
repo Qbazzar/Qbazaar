@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\IntegrationSetting;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Exceptions\NotFoundErrorCode;
@@ -28,6 +29,7 @@ use App\Models\OtpCode;
 use App\Models\RecentView;
 use App\Models\RefreshToken;
 use App\Models\TrustedDevice;
+use App\Services\Admin\Dashboard\SchedulerHeartbeat;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -173,6 +175,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ->name('auth.clear-password-resets')
             ->withoutOverlapping();
 
+        // The admin home reads this to tell "cron stopped" from "nothing due".
+        $schedule->call(fn () => app(SchedulerHeartbeat::class)->beat())
+            ->everyMinute()
+            ->name('scheduler.heartbeat');
+
         $schedule->command('horizon:snapshot')
             ->everyFiveMinutes()
             ->name('horizon.snapshot');
@@ -221,6 +228,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Secret integration inputs must never be flashed back into the session on a validation error.
+        $exceptions->dontFlash(array_map(
+            fn (IntegrationSetting $setting): string => 'integrations.' . $setting->value,
+            array_values(array_filter(IntegrationSetting::cases(), fn (IntegrationSetting $s): bool => $s->definition()->secret)),
+        ));
+
         // Render exceptions to our JSON error envelope for /api/* and Accept: application/json clients
         $exceptions->shouldRenderJsonWhen(function (Request $request) {
             return $request->is('api/*') || $request->expectsJson();

@@ -13,9 +13,7 @@
             <x-admin.card>
                 <div class="flex items-start justify-between gap-4">
                     <div class="flex min-w-0 items-center gap-4">
-                        @if ($user->avatarThumbUrl())
-                            <img src="{{ $user->avatarThumbUrl() }}" alt="" class="size-14 shrink-0 rounded-full border border-ink-200 object-cover">
-                        @endif
+                        <x-admin.user-avatar :user="$user" size="lg" />
                         <div class="min-w-0">
                             <h2 class="text-xl font-bold">{{ $user->full_name ?? '—' }}</h2>
                             <div class="break-all text-sm text-ink-500">{{ $user->email }}</div>
@@ -26,7 +24,7 @@
 
                 <x-admin.detail-list class="mt-5">
                     <x-admin.detail label="المعرّف"><span class="font-mono text-xs">{{ $user->id }}</span></x-admin.detail>
-                    <x-admin.detail label="الهاتف">{{ $user->phone ?? '—' }}</x-admin.detail>
+                    <x-admin.detail label="الهاتف"><x-admin.phone :phone="$user->phone" /></x-admin.detail>
                     <x-admin.detail label="نوع الحساب">{{ $user->account_type->value }}</x-admin.detail>
                     <x-admin.detail label="اللغة">{{ $user->language->value }}</x-admin.detail>
                     <x-admin.detail label="البريد موثّق">{{ $user->email_verified ? 'نعم' : 'لا' }}</x-admin.detail>
@@ -43,7 +41,7 @@
                 @else
                     <div class="flex flex-wrap gap-2">
                         @foreach ($assignedRoles as $roleName)
-                            <x-admin.badge tone="brand">{{ $roleName }}</x-admin.badge>
+                            <x-admin.role-badge :role="$roleName" />
                         @endforeach
                     </div>
                 @endif
