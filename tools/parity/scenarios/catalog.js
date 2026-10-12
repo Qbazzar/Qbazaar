@@ -8,6 +8,8 @@ const LIST_TOGGLE = { ref: `${CAT} [data-dc-tpl="419"]`, target: 'button[aria-la
 const FILTER_TRIGGER = { ref: '.qb-filter-inject', target: 'button:has-text("Filter")' };
 const FILTER_SHEET = { ref: 'aside', target: '[role=dialog]' };
 const FAVOURITE = { ref: `${CAT} [data-dc-tpl="456"]`, target: 'button[aria-label^="Save"]' };
+// The target's sort control is a designed listbox (SortMenu.tsx), its trigger showing the default "Newest".
+const SORT = { ref: `${CAT} [data-dc-tpl="415"]`, target: 'select, [role=combobox]:text-is("Newest")' };
 
 module.exports = [
   scenario({
@@ -61,6 +63,6 @@ module.exports = [
     id: 'category-sort',
     page: 'category',
     viewports: [1440],
-    steps: [observe('sort-control', { ref: `${CAT} [data-dc-tpl="415"]`, target: 'select' }, { text: 'skip' })],
+    steps: [observe('sort-control', SORT, { text: 'skip' })],
   }),
 ];

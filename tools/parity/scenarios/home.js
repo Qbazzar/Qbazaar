@@ -18,10 +18,11 @@ module.exports = [
     viewports: [1440],
     steps: [
       click(CATEGORY_FIELD),
-      observe('panel', PANEL, { crop: true, count: true }),
+      // The category names are data: the prototype's sample tree against the live one from the API.
+      observe('panel', PANEL, { crop: true, count: true, text: 'skip' }),
       stay('open-does-not-navigate'),
       hover({ ref: '.qb-dditem:has(.qb-ddchev)', target: '[role=tree] [role=treeitem][aria-expanded], [role=option]:has([data-chevron])' }),
-      observe('submenu', SUBMENU, { crop: true, count: true }),
+      observe('submenu', SUBMENU, { crop: true, count: true, text: 'skip' }),
       click({ ref: '.qb-ddsub.open .qb-dditem', target: '[role=tree] [role=group] [role=treeitem], [role=listbox] [role=listbox] [role=option]' }),
       observe('field-after-choice', CATEGORY_FIELD, { crop: true }),
     ],

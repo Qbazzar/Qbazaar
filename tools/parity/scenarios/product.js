@@ -12,6 +12,8 @@ const MODAL = { ref: 'div[style*="z-index: 90"] > div', target: '[role=dialog]' 
 const TOAST = { ref: 'div[style*="rgb(234, 255, 247)"]', target: '[role=status]:not(.sr-only)' };
 // The first reason of both report forms (assets/app.js reportReasons).
 const REASON_FRAUD = { ref: 'div[style*="z-index: 90"] label:has-text("Fraud or scam")', target: '[role=dialog] label:has-text("Fraud or scam")' };
+// The share link is the ad's own address (data): a sample id in the prototype, the live ad's on the target.
+const AD_LINK = 'qbazaar\\.qa/\\S+';
 
 module.exports = [
   scenario({
@@ -34,7 +36,7 @@ module.exports = [
     viewports: [1440, 390],
     steps: [
       click(SHARE),
-      observe('modal-open', MODAL, { crop: true }),
+      observe('modal-open', MODAL, { crop: true, textMask: AD_LINK }),
       observe('feedback-toast', TOAST, { text: 'skip', styles: false }),
       press('Escape'),
       observe('stays-open-on-escape', MODAL, { text: 'skip', styles: false }),

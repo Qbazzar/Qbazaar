@@ -8,6 +8,18 @@ const { selectPages } = require('./pages');
 const SETTLE_MS = 400;
 const STEP_TIMEOUT_MS = 6000;
 const NAVIGATION_SETTLE_MS = 2000;
+// The reference draws some icons as text characters (a modal's ✕, a menu row's ›); the target draws them as SVGs,
+// which the icon checks compare. Copy is compared without them.
+const TEXT_GLYPHS = /[✕✖×›‹»«→←✓✔▾▸]/g;
+const TEXT_CAP = 300;
+
+/** The copy an observation compares: glyph icons dropped, data masked (`textMask`, a regex source), spaces collapsed. */
+function copyOf(text, mask) {
+  const unglyphed = String(text || '').replace(TEXT_GLYPHS, ' ');
+  const masked = mask ? unglyphed.replace(new RegExp(mask, 'g'), '…') : unglyphed;
+  return masked.replace(/\s+/g, ' ').trim().slice(0, TEXT_CAP);
+}
+
 const OBSERVED_ATTRIBUTES = ['aria-expanded', 'aria-selected', 'aria-checked', 'aria-pressed', 'aria-current', 'aria-hidden', 'disabled', 'checked', 'open', 'hidden'];
 
 // Playwright errors carry a call log; the first lines say why a click was refused.
@@ -74,7 +86,7 @@ async function mark(side, step, markName) {
     const attributes = Object.fromEntries(attrs.filter((a) => nodes[0].hasAttribute(a)).map((a) => [a, nodes[0].getAttribute(a)]));
     if (nodes[0].getAttribute('aria-disabled') === 'true' || nodes[0].disabled) attributes.disabled = 'true';
     const properties = Object.fromEntries(props.map((p) => [p, String(nodes[0][p])]));
-    return { count: nodes.length, properties, text: nodes[0].innerText.trim().replace(/\s+/g, ' ').slice(0, 300), attributes, focused: document.activeElement === nodes[0] || nodes[0].contains(document.activeElement) };
+    return { count: nodes.length, properties, text: nodes[0].innerText.trim().replace(/\s+/g, ' ').slice(0, 1200), attributes, focused: document.activeElement === nodes[0] || nodes[0].contains(document.activeElement) };
   }, { markName, attrs: OBSERVED_ATTRIBUTES, anywhere: Boolean(step.what.anywhere), props: step.what.props || [] }).catch(() => ({ count: 0 }));
 }
 
@@ -133,8 +145,9 @@ class ScenarioRun {
   }
 
   compareFacts(component, step, ref, target) {
-    if (step.what.text && step.what.text !== 'skip' && ref.text !== target.text) {
-      this.emit({ component, category: 'behaviour', severity: 'medium', property: 'text', ref: ref.text, target: target.text });
+    const [refCopy, targetCopy] = [copyOf(ref.text, step.what.textMask), copyOf(target.text, step.what.textMask)];
+    if (step.what.text && step.what.text !== 'skip' && refCopy !== targetCopy) {
+      this.emit({ component, category: 'behaviour', severity: 'medium', property: 'text', ref: refCopy, target: targetCopy });
     }
     if (step.what.count && ref.count !== target.count) {
       this.emit({ component, category: 'behaviour', severity: 'medium', property: 'count', ref: String(ref.count), target: String(target.count) });
@@ -206,4 +219,4 @@ async function runScenario(env, definition, viewport) {
   }
 }
 
-module.exports = { runScenario };
+module.exports = { runScenario, copyOf };
