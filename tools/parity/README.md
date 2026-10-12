@@ -163,6 +163,13 @@ Third round, from the live re-run of the tuned gate:
   the hero category panel's names are API data, so its text is not compared (its count and crop are).
 - **Flows** wait for the URL to change (up to 8s) instead of a fixed pause, open the footer accordions and wait for their transition before
   looking for a link, and try a refused click once more on a fresh page.
+- **Observations** that find their element on one side only look once more after the page settles (a drawer still sliding in), and one that a
+  client-side navigation interrupted is read again. Text kept for screen readers only is not compared as copy. A `textMask` can also be a
+  function: the gallery counter compares its place in the set (first, #2, last), not the sample ad's photo count.
+- **Demo-user state.** The drawer content and the favourite toggle run signed in, like the drawer flows (the prototype is the demo user's
+  session; a guest's heart sends them to /login by design). The toggle saves a favourite, so it runs only against a local target.
+- **Sweep.** The prototype numbers its template nodes per layout, so an inventory id can name an icon at another width; such elements, and ones
+  the prototype re-rendered before the compare, are listed as warnings instead of being compared.
 
 ## CI
 
