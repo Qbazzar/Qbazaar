@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { CalendarDays, Eye, MapPin, type LucideIcon } from 'lucide-react';
 
 import { AdStatusBadge } from '@/components/account/AdStatusBadge';
 import { Icon } from '@/components/design-system/Icon';
+import { CalendarIcon, EyeIcon, LocationPinIcon, type IconGlyph } from '@/components/design-system/icons';
 import { formatTimeAgo } from '@/lib/ads/display';
 import { formatAdPrice } from '@/lib/ads/format';
 import { localized, type Locale } from '@/lib/i18n/locale';
@@ -48,21 +48,21 @@ export function AdOverviewCard({ ad, locale }: AdOverviewCardProps) {
       </div>
 
       <ul className="mt-5 flex flex-col gap-3.5 text-qb-body-sm text-qb-ink-secondary">
-        {location ? <MetaRow icon={MapPin}>{location}</MetaRow> : null}
+        {location ? <MetaRow icon={LocationPinIcon}>{location}</MetaRow> : null}
         {ad.published_at ? (
-          <MetaRow icon={CalendarDays}>
+          <MetaRow icon={CalendarIcon}>
             {/* Relative to "now", so the server and the browser may differ by a minute. */}
             <span suppressHydrationWarning>{formatTimeAgo(ad.published_at, locale)}</span>
           </MetaRow>
         ) : null}
-        <MetaRow icon={Eye}>{tPlural('ads.detail.views', ad.views_count, locale)}</MetaRow>
+        <MetaRow icon={EyeIcon}>{tPlural('ads.detail.views', ad.views_count, locale)}</MetaRow>
       </ul>
     </section>
   );
 }
 
 /** One meta line with its 18 px grey line icon. */
-function MetaRow({ icon, children }: { icon: LucideIcon; children: ReactNode }) {
+function MetaRow({ icon, children }: { icon: IconGlyph; children: ReactNode }) {
   return (
     <li className="flex items-center gap-2.5">
       <Icon icon={icon} strokeWidth={1.6} className="size-[18px] text-qb-ink-subtle" />

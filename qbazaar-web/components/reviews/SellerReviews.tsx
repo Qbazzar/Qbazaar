@@ -5,11 +5,11 @@
  * review in the notification-row style of the design (455:14636).
  */
 import { useId } from 'react';
-import { Clock } from 'lucide-react';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
+import { ClockIcon } from '@/components/design-system/icons';
 import { formatRating, formatTimeAgo } from '@/lib/ads/display';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -78,7 +78,7 @@ export function SellerReviews({ userId, ratingAvg, ratingCount, className }: Sel
                     </p>
                   ) : null}
                   <p className="mt-2 flex items-center gap-1.5 text-qb-label text-qb-ink-subtle">
-                    <Icon icon={Clock} size="sm" />
+                    <Icon icon={ClockIcon} size="sm" />
                     {formatTimeAgo(review.created_at, locale)}
                   </p>
                 </div>

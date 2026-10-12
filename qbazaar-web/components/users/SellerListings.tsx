@@ -7,12 +7,12 @@
  * across on desktop (seller-organization.html, polish.css).
  */
 import { useEffect, useRef } from 'react';
-import { Loader2Icon, PackageOpen } from 'lucide-react';
 
 import { ListingCard } from '@/components/ads/ListingCard';
 import { cardVariants } from '@/components/design-system/Card';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { LoaderCircleIcon, PackageOpenIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { useUserAdsQuery } from '@/lib/queries/users';
@@ -93,7 +93,7 @@ export function SellerListings({ userId, sellerName, layout }: SellerListingsPro
     return (
       <EmptyState
         headingLevel={headingLevel[layout]}
-        icon={<Icon icon={PackageOpen} size="lg" />}
+        icon={<Icon icon={PackageOpenIcon} size="lg" />}
         title={t('users.profile.ads_empty_title')}
         description={t('users.profile.ads_empty_body', { name: sellerName })}
         className={cn(cardVariants({ large: true, padding: 'none' }))}
@@ -123,7 +123,7 @@ export function SellerListings({ userId, sellerName, layout }: SellerListingsPro
             aria-busy={isFetchingNextPage || undefined}
             className={loadMoreButton}
           >
-            {isFetchingNextPage ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : null}
+            {isFetchingNextPage ? <LoaderCircleIcon className="size-4 animate-spin" aria-hidden /> : null}
             {t(loadMoreLabel[layout])}
           </button>
         </div>

@@ -9,10 +9,10 @@
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2Icon, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/design-system/Button';
+import { LoaderCircleIcon, StarIcon } from '@/components/design-system/icons';
 import { Textarea } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
 import { createReview } from '@/lib/api/users';
@@ -100,7 +100,7 @@ export function ReviewSellerButton({ adId, sellerId, className }: ReviewSellerBu
         onClick={openDialog}
         className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink', className)}
       >
-        <Star aria-hidden />
+        <StarIcon aria-hidden />
         {t('reviews.rate_seller')}
       </Button>
       <Modal open={open} onOpenChange={setOpen} showCloseButton title={t('reviews.rate_seller')}>
@@ -122,7 +122,7 @@ export function ReviewSellerButton({ adId, sellerId, className }: ReviewSellerBu
                     onChange={() => choose(value)}
                     className="sr-only"
                   />
-                  <Star
+                  <StarIcon
                     aria-hidden
                     className={cn('size-8 transition-colors', value <= rating ? 'fill-qb-brand text-qb-brand' : 'text-qb-ink-disabled')}
                   />
@@ -158,7 +158,7 @@ export function ReviewSellerButton({ adId, sellerId, className }: ReviewSellerBu
             {t('common.cancel')}
           </Button>
           <Button aria-disabled={mutation.isPending || undefined} onClick={submit}>
-            {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
+            {mutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden /> : null}
             {t('reviews.submit')}
           </Button>
         </div>

@@ -8,11 +8,11 @@
  * its own empty state.
  */
 import Link from 'next/link';
-import { Check, Loader2Icon, MessageCircle, UserPlus } from 'lucide-react';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { Avatar } from '@/components/design-system/Avatar';
+import { ChatBubbleIcon, CheckIcon, LoaderCircleIcon, UserPlusIcon } from '@/components/design-system/icons';
 import { TextBreadcrumb } from '@/components/design-system/TextBreadcrumb';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
@@ -99,7 +99,7 @@ export function ConnectionsView({ kind }: { kind: FollowListKind }) {
                 aria-busy={list.isFetchingNextPage || undefined}
                 className={loadMoreButton}
               >
-                {list.isFetchingNextPage ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : null}
+                {list.isFetchingNextPage ? <LoaderCircleIcon className="size-4 animate-spin" aria-hidden /> : null}
                 {t('users.connections.load_more')}
               </button>
             </div>
@@ -167,7 +167,7 @@ function ConnectionCard({ row, kind }: { row: FollowListUser; kind: FollowListKi
             focusRing,
           )}
         >
-          <Icon icon={MessageCircle} className="size-4" strokeWidth={1.7} />
+          <Icon icon={ChatBubbleIcon} className="size-4" strokeWidth={1.7} />
         </Link>
       </div>
       <button
@@ -180,7 +180,7 @@ function ConnectionCard({ row, kind }: { row: FollowListUser; kind: FollowListKi
           focusRing,
         )}
       >
-        {mutation.isPending ? <Loader2Icon className="size-4 animate-spin" aria-hidden /> : following ? <Check className="size-[13px]" strokeWidth={2.2} aria-hidden /> : null}
+        {mutation.isPending ? <LoaderCircleIcon className="size-4 animate-spin" aria-hidden /> : following ? <CheckIcon className="size-[13px]" strokeWidth={2.2} aria-hidden /> : null}
         {following ? t('users.follow.following') : t('users.connections.follow_back')}
         <span className="sr-only"> {row.full_name}</span>
       </button>
@@ -193,7 +193,7 @@ function ConnectionsEmpty({ kind }: { kind: FollowListKind }) {
   return (
     <section className="rounded-[20px] border border-qb-line bg-qb-surface px-6 py-[clamp(48px,8vw,74px)] text-center">
       <span aria-hidden="true" className="mb-[22px] inline-flex size-[76px] items-center justify-center rounded-full bg-qb-brand-soft text-qb-brand">
-        <Icon icon={UserPlus} className="size-[34px]" strokeWidth={1.6} />
+        <Icon icon={UserPlusIcon} className="size-[34px]" />
       </span>
       <h2 className="mb-2.5 text-qb-h4 font-semibold tracking-normal text-qb-icon">{t(`users.connections.empty.${kind}.title`)}</h2>
       <p className="mx-auto mb-[26px] max-w-[420px] text-qb-body-sm leading-[1.6] text-qb-ink-note">{t(`users.connections.empty.${kind}.body`)}</p>

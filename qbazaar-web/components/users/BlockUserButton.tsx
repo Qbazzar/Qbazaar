@@ -9,9 +9,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Ban, Loader2Icon } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { BlockIcon, LoaderCircleIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import { useAuth } from '@/hooks/useAuth';
 import { t } from '@/lib/i18n/messages';
@@ -75,7 +75,7 @@ export function BlockUserButton({ userId, userName, onBlocked, className }: Bloc
         onClick={openDialog}
         className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink', className)}
       >
-        <Ban aria-hidden />
+        <BlockIcon aria-hidden />
         {t('users.block.button')}
       </Button>
       <Modal
@@ -90,7 +90,7 @@ export function BlockUserButton({ userId, userName, onBlocked, className }: Bloc
             onClick={mutation.isPending ? undefined : () => mutation.mutate()}
             className={cn(dialogButton, 'text-qb-body qb-tablet:text-qb-caption')}
           >
-            {mutation.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
+            {mutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden /> : null}
             {mutation.isPending ? t('users.block.blocking') : t('users.block.confirm')}
           </Button>
           <Button variant="muted" onClick={() => setOpen(false)} className={cn(dialogButton, 'text-qb-body qb-tablet:text-qb-caption')}>
