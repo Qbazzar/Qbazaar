@@ -9,11 +9,11 @@
  */
 import { useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Search } from 'lucide-react';
 
 import { AutocompleteInput } from '@/components/design-system/AutocompleteInput';
 import { buttonVariants } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
+import { LocationPinIcon, SearchIcon } from '@/components/design-system/icons';
 import { SelectMenu, type SelectMenuOption } from '@/components/design-system/SelectMenu';
 import { useRenderedQatarPlaces } from '@/components/locations/QatarPlacesProvider';
 import type { CategoryNode, Location } from '@/lib/api/types';
@@ -24,30 +24,30 @@ import { useCategoryTreeQuery } from '@/lib/queries/categories';
 import { useQatarLocationsQuery } from '@/lib/queries/locations';
 import { cn } from '@/lib/utils';
 
-/** Small tablets (601-743 px) fit all four fields and the button on one row with tighter spacing. */
-const field =
-  'flex min-w-0 items-center gap-2.5 rounded-qb-md px-3.5 py-2.5 qb-tablet:max-[743px]:gap-1.5 qb-tablet:max-[743px]:px-2';
+/**
+ * The reference's square fields (the bar is the rounded box): 10 × 14 px padding. Under 1001 px every
+ * field may shrink to nothing (responsive.css `form > * { min-width: 0 }`); from 1001 px each keeps the
+ * reference's minimum width.
+ */
+const field = 'flex min-w-0 items-center gap-2 px-3.5 py-2.5';
 /**
  * The field in use gets its own ring, next to the brand border of the whole bar. Forced-colors mode drops
  * the ring (a shadow), so outline-hidden draws an outline there instead.
  */
 const typingRing = 'focus-within:ring-2 focus-within:ring-qb-brand-active focus-within:ring-inset focus-within:outline-hidden';
 const choiceRing = 'outline-none focus-visible:ring-2 focus-visible:ring-qb-brand-active focus-visible:ring-inset focus-visible:outline-hidden';
-/** The two text fields keep room for a readable placeholder; on small tablets they share what the selects leave. */
-const textFieldWidth = 'min-w-28 qb-tablet:max-[743px]:min-w-0 qb-tablet:max-[743px]:flex-[1_1_0]';
 /**
- * All four labels read as one bar: 20 px on desktop, 14 px below (the reference's .qb-hlabel). Typed text
- * stays 16 px under the desktop, so phones do not zoom into the field. The labels keep Poppins' normal
- * line height (1.5) in Arabic too, where the taller Arabic face would otherwise make the bar taller.
+ * Typed text and the keyword placeholder are 16 px at every width, the placeholder in the browser's
+ * #757575; the 1.5 line height (Poppins' normal) stays in Arabic too, where the taller Arabic face would
+ * otherwise make the bar taller. The 1 × 2 px padding is the browser's own, so the field is 27 px tall.
  */
 const input =
-  'w-full min-w-0 bg-transparent text-qb-body leading-[1.5] text-qb-ink outline-none placeholder:text-qb-caption placeholder:leading-[1.5] placeholder:text-qb-icon-faint qb-desktop:text-qb-h5 qb-desktop:placeholder:text-qb-h5 [&::-webkit-search-cancel-button]:hidden';
-/** On small tablets the selects keep their label's width and leave the rest to the text fields. */
-const choiceFieldWidth = 'qb-tablet:max-[743px]:flex-none';
+  'w-full min-w-0 bg-transparent px-0.5 py-px text-qb-body leading-[1.5] text-qb-ink outline-none placeholder:text-qb-ink-muted [&::-webkit-search-cancel-button]:hidden';
+/** The select labels (.qb-hlabel): 14 px on tablets, 20 px from 1001 px. */
 const choiceLabel = 'text-qb-caption leading-[1.5] qb-desktop:text-qb-h5';
-/** Tablet fields are narrow, so their icons shrink there instead of clipping the text. */
-const fieldIcon = 'size-4 text-qb-icon-faint qb-desktop:size-5';
-const chevron = 'size-[19px] text-qb-icon-faint qb-desktop:size-6';
+/** The field icons are 20 px boxes (22 for the magnifier) that give way first when a field is narrow, as in the reference. */
+const fieldIcon = 'size-5 shrink text-qb-icon-faint';
+const chevron = 'size-5 text-qb-icon-faint';
 
 /** The radius steps of the design's Distance list, after "All Qatar". */
 const DISTANCES_KM = [5, 10, 20, 30, 50, 100, 150, 200] as const;
@@ -196,10 +196,15 @@ export function HomeSearchBar() {
   };
 
   return (
-    <form role="search" onSubmit={submit} className="mx-auto mt-7 w-full max-w-[1000px] font-qb">
-      <div className="flex w-full items-stretch rounded-qb-xl border border-qb-line bg-qb-surface/97 py-1.5 ps-1 pe-1.5 shadow-qb-card has-[input:focus-visible,[role=combobox]:focus-visible]:border-qb-brand qb-tablet:ps-2.5 qb-tablet:max-[743px]:ps-1.5 qb-desktop:p-2">
-        <label className={cn(field, typingRing, textFieldWidth, 'flex-[2_1_200px] qb-desktop:min-w-[150px]')}>
-          <Icon icon={Search} className="size-[19px] text-qb-icon-search qb-desktop:size-6" />
+    <div className="mx-auto mt-7 w-full max-w-[1000px] font-qb">
+      {/* The form is the reference's rounded white bar; the error line sits under it. */}
+      <form
+        role="search"
+        onSubmit={submit}
+        className="flex w-full items-stretch rounded-qb-xl border border-qb-line bg-qb-surface/97 py-1.5 ps-1 pe-1.5 shadow-qb-card has-[input:focus-visible,[role=combobox]:focus-visible]:border-qb-brand qb-tablet:ps-2.5 qb-desktop:flex-wrap qb-desktop:p-2"
+      >
+        <label className={cn(field, typingRing, 'flex-[2_1_200px] gap-2.5 qb-desktop:min-w-[150px]')}>
+          <Icon icon={SearchIcon} size={22} className="shrink text-qb-icon-faint" />
           <input
             type="search"
             className={input}
@@ -218,16 +223,17 @@ export function HomeSearchBar() {
           onChange={(option) => setCategory(option.value)}
           onIntent={() => setCategoriesWanted(true)}
           loadingLabel={t('common.loading', 'جارٍ التحميل…')}
-          className={cn('hidden flex-[1_1_160px] qb-tablet:flex', choiceFieldWidth)}
-          fieldClassName={cn(field, choiceRing, 'gap-2')}
+          className="hidden min-w-0 flex-[1_1_160px] qb-tablet:flex qb-desktop:min-w-[150px]"
+          fieldClassName={cn(field, choiceRing)}
           {...CHOICE_TEXT}
         />
         <Divider />
-        <TabletField className={cn('relative', typingRing, textFieldWidth, 'flex-[1_1_130px] gap-1.5 px-2.5 qb-tablet:max-[743px]:gap-1 qb-desktop:min-w-[120px] qb-desktop:gap-2 qb-desktop:px-3.5')}>
-          <Icon icon={MapPin} className={fieldIcon} />
+        {/* The reference's "Location" reads #bdbdbd like the select labels, at the 16 px of typed text. */}
+        <TabletField className={cn('relative flex-[1_1_130px] text-qb-icon-faint qb-desktop:min-w-[120px]', typingRing)}>
+          <Icon icon={LocationPinIcon} className={fieldIcon} />
           <AutocompleteInput
             ref={locationRef}
-            className={input}
+            className={cn(input, 'placeholder:text-qb-icon-faint')}
             placeholder={t('home.search.location', 'الموقع')}
             aria-label={t('home.search.location', 'الموقع')}
             aria-invalid={locationError === 'unknown' || undefined}
@@ -250,24 +256,24 @@ export function HomeSearchBar() {
             setDistance(option.value);
             setLocationError(null);
           }}
-          className={cn('hidden flex-[1_1_120px] qb-tablet:flex', choiceFieldWidth)}
-          fieldClassName={cn(field, choiceRing, 'gap-1 qb-desktop:gap-2')}
+          className="hidden min-w-0 flex-[1_1_120px] qb-tablet:flex qb-desktop:min-w-[110px]"
+          fieldClassName={cn(field, choiceRing)}
           {...CHOICE_TEXT}
         />
         <button
           type="submit"
           aria-disabled={locating || undefined}
-          className={cn(buttonVariants({ size: 'md' }), 'm-1 h-auto min-h-11 shrink-0 px-[26px] qb-tablet:max-[743px]:mx-0.5 qb-tablet:max-[743px]:px-2.5 max-[600px]:not-focus-visible:sr-only')}
+          className={cn(buttonVariants({ size: 'md' }), 'm-1 h-auto min-h-11 shrink-0 px-[26px] max-[600px]:not-focus-visible:sr-only')}
         >
           {t('home.search.submit', 'بحث')}
         </button>
-      </div>
+      </form>
       {locationError ? (
         <p id={errorId} role="alert" className="mt-2 text-qb-caption text-qb-danger">
           {LOCATION_ERRORS[locationError]()}
         </p>
       ) : null}
-    </form>
+    </div>
   );
 }
 
