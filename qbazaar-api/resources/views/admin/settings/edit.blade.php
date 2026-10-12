@@ -17,6 +17,18 @@
                     'error' => $errors->hasAny(collect($settings)->map->value->all()),
                 ],
             ])->all();
+
+            foreach ($integrationGroups as $integrationGroup) {
+                $tabs[$integrationGroup->value] = [
+                    'label' => __('admin.integrations.groups.' . $integrationGroup->value),
+                    'error' => $errors->hasAny(
+                        collect(\App\Enums\IntegrationSetting::forGroup($integrationGroup))
+                            ->map(fn ($setting) => 'integrations.' . $setting->value)
+                            ->all()
+                    ) || ($integrationGroup === \App\Enums\IntegrationGroup::EMAIL && $errors->has('test_email'))
+                        || ($integrationGroup === \App\Enums\IntegrationGroup::SMS && $errors->has('test_phone')),
+                ];
+            }
         @endphp
 
         <x-admin.tabs id="settings" :tabs="$tabs" :label="__('admin.settings.title')">
@@ -44,12 +56,22 @@
                     </x-admin.card>
                 </x-admin.tab-panel>
             @endforeach
+            @foreach ($integrationGroups as $integrationGroup)
+                <x-admin.tab-panel tabs="settings" :id="$integrationGroup->value">
+                    @include('admin.settings._integration-panel', ['group' => $integrationGroup])
+                </x-admin.tab-panel>
+            @endforeach
         </x-admin.tabs>
 
         <div class="sticky bottom-0 -mx-4 border-t border-ink-200 bg-cream-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
             <x-admin.button icon="check">{{ __('admin.settings.save') }}</x-admin.button>
         </div>
     </form>
+
+    @if (collect($integrationGroups)->contains(\App\Enums\IntegrationGroup::EMAIL))
+        <form id="test-email-form" method="POST" action="{{ route('admin.settings.test-email') }}">@csrf</form>
+        <form id="test-sms-form" method="POST" action="{{ route('admin.settings.test-sms') }}">@csrf</form>
+    @endif
 
     <x-admin.card :title="__('admin.commission_rates.title')" :description="__('admin.commission_rates.intro')" class="mt-8">
         @if ($commissionRates->isEmpty())

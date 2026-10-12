@@ -53,6 +53,7 @@ use App\Http\Controllers\Api\V1\Offers\OfferController;
 use App\Http\Controllers\Api\V1\Orders\OrderCheckoutController;
 use App\Http\Controllers\Api\V1\Orders\OrderController;
 use App\Http\Controllers\Api\V1\Promotions\PromotionController;
+use App\Http\Controllers\Api\V1\PublicSettingsController;
 use App\Http\Controllers\Api\V1\PurchaseRequests\PurchaseRequestController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
@@ -685,6 +686,8 @@ Route::get('/companies', CompanyController::class)
     ->name('api.v1.companies.index');
 
 // ── Sprint 12 — CMS Pages (public, 1h cached) ──────────────────────────────
+Route::get('/settings/public', PublicSettingsController::class)->middleware('throttle:api')->name('api.v1.settings.public');
+
 Route::prefix('pages')->name('api.v1.pages.')->middleware('throttle:api')->group(function (): void {
     Route::get('/', [PageController::class, 'index'])->name('index');
     Route::get('/{slug}', [PageController::class, 'show'])->name('show');

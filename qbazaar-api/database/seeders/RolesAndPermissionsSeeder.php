@@ -90,6 +90,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // Platform settings (commission policy, ad lifecycle)
         'settings.manage',
 
+        // Third-party credentials (email, SMS, Google, Apple, push, anti-bot, payment): super_admin only
+        'integrations.manage',
+
         // Ledger, wallets and orders (read-only; also receives reconciliation alerts)
         'finance.view',
 

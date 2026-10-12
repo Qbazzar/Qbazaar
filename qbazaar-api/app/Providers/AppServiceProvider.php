@@ -27,6 +27,7 @@ use App\Services\Auth\AuthRateLimiters;
 use App\Services\Moderation\ModerationRulesService;
 use App\Services\Payments\CashGateway;
 use App\Services\Payments\PaymentGateways;
+use App\Services\Settings\IntegrationConfigApplier;
 use App\Services\Users\FollowTableSellerFollowers;
 use App\Services\Users\SellerFollowers;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -82,6 +83,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->make(IntegrationConfigApplier::class)->applySafely();
+
         User::observe(UserObserver::class);
         Ad::observe([AdObserver::class, AdOffersObserver::class, AdListingCacheObserver::class, AdReviewQueueObserver::class]);
         Category::observe(TaxonomyCacheObserver::class);
@@ -118,6 +121,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('purchase-requests', fn (Request $r) => [
             Limit::perMinute((int) config('qbazaar.purchase_requests.max_per_minute'))->by('purchase-requests:' . (optional($r->user())->id ?: $r->ip())),
             Limit::perDay((int) config('qbazaar.purchase_requests.max_per_day'))->by('purchase-requests-day:' . (optional($r->user())->id ?: $r->ip())),
+        ]);
+        RateLimiter::for('integration-test', fn (Request $r) => [
+            Limit::perMinute(3)->by('integration-test:' . (optional($r->user())->id ?: $r->ip())),
+            Limit::perHour(20)->by('integration-test-hour:' . (optional($r->user())->id ?: $r->ip())),
         ]);
         RateLimiter::for('search', fn (Request $r) => Limit::perMinute(60)->by(optional($r->user())->id ?: $r->ip()));
         RateLimiter::for('publish', fn (Request $r) => Limit::perMinute((int) config('qbazaar.ads.publish_attempts_per_minute_per_user'))->by(optional($r->user())->id ?: $r->ip()));
