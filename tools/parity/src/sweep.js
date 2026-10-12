@@ -40,6 +40,8 @@ function describeElement({ selector, roleSelector }) {
   const caption = el.closest('label') ? norm(el.closest('label').innerText) : '';
   return {
     fingerprint: el.outerHTML.slice(0, 160),
+    // The prototype numbers its template nodes per layout: at another width an inventory id can name an icon.
+    icon: Boolean(el.closest('svg')),
     toggle: el.tagName === 'INPUT' && ['checkbox', 'radio'].includes(el.type),
     text: norm(el.innerText || el.value || el.placeholder).slice(0, 60) || caption.slice(0, 60),
     label: norm(el.getAttribute('aria-label') || el.getAttribute('title') || el.getAttribute('placeholder')),
@@ -105,6 +107,10 @@ async function sweepElement(env, ctx, element) {
   // The inventories describe some elements twice (a wrapper and its button, a desktop and a mobile entry).
   if (!description || ctx.seen.has(description.fingerprint)) return;
   ctx.seen.add(description.fingerprint);
+  if (description.icon) {
+    env.warnings.push({ what: `sweep ${element.id} on ${base.page}@${base.viewport}`, reason: 'its inventory selector names an icon at this width, not the control' });
+    return;
+  }
   const twin = await target.page.evaluate(findTwin, { ...description, roleSelector, clickable: 'a, button, [role=button], [role=link], label, input' });
   const name = `inv:${element.id}`;
   env.swept.add(element.id);
@@ -113,6 +119,15 @@ async function sweepElement(env, ctx, element) {
     return;
   }
   const note = `target twin: ${twin}`;
+  // The prototype re-renders its template on state changes; a node that was replaced is no longer the one described.
+  const stillMarked = await reference.page.evaluate((fingerprint) => {
+    const marked = document.querySelector('[data-pgf]');
+    return Boolean(marked) && marked.outerHTML.slice(0, 160) === fingerprint;
+  }, description.fingerprint);
+  if (!stillMarked) {
+    env.warnings.push({ what: `sweep ${element.id} on ${base.page}@${base.viewport}`, reason: 'the reference re-rendered the element before it could be compared' });
+    return;
+  }
   await comparer.compare({ name, refSel: '[data-pgf]', tgtSel: '[data-pgf]', states: ctx.states, icons: true, mask: [], note });
   const writes = element.kind === 'toggle/switch' && !env.config.localTarget;
   if (STATE_CHANGING.has(element.kind) && !writes) await compareAfterClick(ctx, name, note);
