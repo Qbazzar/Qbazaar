@@ -14,7 +14,7 @@
  * where a top-level spinner is acceptable.
  */
 import type { ReactNode } from 'react';
-import { Loader2Icon } from 'lucide-react';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 interface Props {
@@ -34,7 +34,7 @@ export function RequireAuth({ children, fallback }: Props) {
           role="status"
           aria-live="polite"
         >
-          <Loader2Icon
+          <LoaderCircleIcon
             className="text-muted-foreground size-6 animate-spin"
             aria-hidden="true"
           />

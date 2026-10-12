@@ -6,12 +6,12 @@ import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -34,8 +34,8 @@ const ACCOUNT_TYPES = [
 /** `.qb-sec`: 500 20 px section title. */
 const sectionTitle = 'text-qb-h5 font-medium text-qb-auth-section';
 
-/** Links inside `.qb-terms`: orange and underlined, in the sentence's own size and weight. */
-const termsLinkClass = cn('rounded-qb-xs text-qb-brand underline hover:text-qb-brand-hover', focusRing);
+/** Links inside `.qb-terms`: orange and underlined, in the sentence's own size and weight, with no hover change. */
+const termsLinkClass = cn('text-qb-brand underline', focusRing);
 
 export function RegisterForm() {
   const router = useRouter();
@@ -86,7 +86,7 @@ export function RegisterForm() {
             <label
               key={value}
               className={cn(
-                'flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-qb-md border border-qb-line bg-qb-surface px-4 py-[15px] text-qb-caption text-qb-ink transition-colors',
+                'flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-qb-md border border-qb-line bg-qb-surface px-4 py-[15px] text-qb-caption text-qb-ink transition-[border-color,background] duration-150 ease-[ease]',
                 'has-[:checked]:border-qb-brand has-[:checked]:bg-qb-brand-soft',
                 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
               )}
@@ -170,8 +170,8 @@ export function RegisterForm() {
         </Field>
       </fieldset>
 
-      <div className="mt-5 flex flex-col gap-1.5">
-        <label className="flex items-start gap-2.5 text-start text-qb-body-sm leading-[1.55] text-qb-auth-terms">
+      <div className="flex flex-col gap-1.5">
+        <label className="mt-5 flex items-start gap-2.5 text-start text-qb-body-sm leading-[1.55] text-qb-auth-terms">
           <input
             type="checkbox"
             className="mt-[3px] size-[17px] shrink-0 accent-qb-ink"
@@ -204,7 +204,7 @@ export function RegisterForm() {
       >
         {submitting ? (
           <>
-            <Loader2 className="animate-spin" aria-hidden="true" />
+            <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
             {t('auth.register.submitting')}
           </>
         ) : (

@@ -5,11 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import {
@@ -154,7 +154,7 @@ export function ResetPasswordForm() {
         >
           {submitting ? (
             <>
-              <Loader2 className="animate-spin" aria-hidden="true" />
+              <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
               {t('auth.reset_password.submitting')}
             </>
           ) : (

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { ApiClientError, login, verifyNewDevice, type DeviceChallenge } from '@/lib/api/auth';
 import { AuthErrorCode } from '@/lib/api/types';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -194,7 +194,7 @@ export function DeviceVerificationStep({ pending, onChallenge, onRestart }: Devi
         >
           {submitting ? (
             <>
-              <Loader2 className="animate-spin" aria-hidden="true" />
+              <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
               {t('auth.verify_otp.submitting')}
             </>
           ) : (

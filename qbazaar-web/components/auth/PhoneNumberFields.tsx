@@ -1,8 +1,8 @@
 'use client';
 
 import { useId, type ReactNode, type Ref } from 'react';
-import { ChevronDown } from 'lucide-react';
 
+import { ChevronDownIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -107,7 +107,7 @@ export function PhoneNumberFields({
               ))}
             </select>
             {withChevron ? (
-              <ChevronDown
+              <ChevronDownIcon
                 aria-hidden="true"
                 strokeWidth={2}
                 className="pointer-events-none absolute end-4 top-1/2 size-[18px] -translate-y-1/2 text-qb-ink-subtle"

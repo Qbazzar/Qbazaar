@@ -20,6 +20,15 @@ describe('PasswordInput', () => {
     expect(toggle).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('draws the same slashed eye in both states, as auth.js only switches the type', () => {
+    render(<PasswordInput aria-label="Password" />);
+    const toggle = screen.getByRole('button', { name: t('auth.password.toggle') });
+    const hidden = toggle.innerHTML;
+
+    fireEvent.click(toggle);
+    expect(toggle.innerHTML).toBe(hidden);
+  });
+
   it('keeps the eye clear of the left-to-right text on the end side of either direction', () => {
     render(<PasswordInput aria-label="Password" />);
     const input = screen.getByLabelText('Password');

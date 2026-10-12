@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { qatarPhoneRegex } from '@/lib/validation/auth';
@@ -220,7 +220,7 @@ export function VerifyOtpForm() {
               disabled={sending}
               className={cn(authSubmitClass, 'mt-[26px]', sending && 'cursor-progress')}
             >
-              {sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+              {sending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
               {t('auth.verify_otp.send')}
             </Button>
           </form>
@@ -296,7 +296,7 @@ export function VerifyOtpForm() {
             >
               {submitting ? (
                 <>
-                  <Loader2 className="animate-spin" aria-hidden="true" />
+                  <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
                   {t('auth.verify_otp.submitting')}
                 </>
               ) : (
