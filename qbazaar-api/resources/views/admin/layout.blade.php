@@ -32,7 +32,7 @@
                 @php($pendingReviewCount = auth()->user()->can(\App\Listeners\Ads\NotifyAdminsOfPendingAd::REVIEW_PERMISSION) ? app(\App\Services\Ads\PendingReviewCounter::class)->count() : 0)
                 @php($groups = [
                     'عام' => [
-                        ['route' => 'admin.dashboard', 'label' => 'لوحة القيادة', 'match' => 'admin.dashboard', 'icon' => 'dashboard'],
+                        ['route' => 'admin.dashboard', 'label' => __('admin.navigation.home'), 'match' => 'admin.dashboard', 'icon' => 'home'],
                     ],
                     'الإشراف' => [
                         ['route' => 'admin.ads.index', 'label' => 'الإعلانات', 'match' => 'admin.ads.*', 'icon' => 'tag', 'permission' => 'ads.view', 'badge' => $pendingReviewCount, 'badge_label' => __('admin.ad_review.pending_badge')],
