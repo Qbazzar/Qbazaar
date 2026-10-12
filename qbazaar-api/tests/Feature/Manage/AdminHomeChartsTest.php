@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Admin\Dashboard\AttentionPriority;
 use App\Services\Admin\Dashboard\DashboardPeriod;
 use App\Services\Admin\Dashboard\DashboardStatsService;
+use App\Support\Charts\Palette;
 use Carbon\CarbonImmutable;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -187,9 +188,10 @@ it('renders the sparkline with a summary, a table and a flat baseline when empty
     $flat = Blade::render('<x-admin.chart.sparkline :points="$points" label="Users" />', ['points' => days(30)]);
     $busy = Blade::render('<x-admin.chart.sparkline :points="$points" label="Users" tone="coral" />', ['points' => array_map(fn (array $p, int $i): array => ['date' => $p['date'], 'count' => $i], days(30), range(0, 29))]);
 
-    expect($flat)->toContain('role="img"')->toContain('aria-label="Users: 0"')->toContain('stroke-dasharray')->toContain('sr-only')
+    $window = __('admin.home.trends.window');
+    expect($flat)->toContain('role="img"')->toContain("aria-label=\"Users, {$window}: 0\"")->toContain(__('admin.home.trends.window_short'))->toContain('stroke-dasharray')->toContain('sr-only')
         ->and(substr_count($flat, '<tr>'))->toBe(31)
-        ->and($busy)->toContain('aria-label="Users: 435"')->toContain('vector-effect="non-scaling-stroke"')->toContain('var(--viz-coral');
+        ->and($busy)->toContain("aria-label=\"Users, {$window}: 435\"")->toContain('vector-effect="non-scaling-stroke"')->toContain('var(--viz-coral');
 });
 
 it('renders the multi-series line chart with legend, zero-based axis and data table', function (): void {
@@ -275,4 +277,69 @@ it('mirrors the charts in Arabic so the newest day sits at the start edge', func
     $rtl = $render();
 
     expect($ltr)->toContain('&quot;mirror&quot;:false')->and($rtl)->toContain('&quot;mirror&quot;:true');
+});
+
+// --- Review follow-ups -------------------------------------------------------------
+
+it('starts every chart script after the document is parsed, so later charts are wired too', function (): void {
+    $html = Blade::render('<x-admin.chart.lines label="A" :series="$a" /><x-admin.chart.lines label="B" :series="$a" /><x-admin.chart.donut :slices="$d" label="D1" /><x-admin.chart.donut :slices="$d" label="D2" />', [
+        'a' => [['label' => 'U', 'tone' => 'blue', 'field' => 'count', 'points' => days(30, 'count', 2)]],
+        'd' => [['label' => 'X', 'value' => 1, 'tone' => 'info']],
+    ]);
+
+    expect(substr_count($html, "document.readyState === 'loading'"))->toBe(2)
+        ->and(substr_count($html, 'DOMContentLoaded'))->toBe(2)
+        ->and(substr_count($html, '<script>'))->toBe(2)
+        ->and(substr_count($html, 'data-viz-lines='))->toBe(2)
+        ->and(substr_count($html, 'data-viz-donut'))->toBeGreaterThanOrEqual(2);
+});
+
+it('uses an M tier and money precision on money axes', function (): void {
+    $big = Blade::render('<x-admin.chart.lines money label="G" :series="$s" />', ['s' => [['label' => 'G', 'tone' => 'violet', 'field' => 'gmv', 'points' => days(30, 'gmv', '3000000.00')]]]);
+    $small = Blade::render('<x-admin.chart.lines money label="G" :series="$s" />', ['s' => [['label' => 'G', 'tone' => 'violet', 'field' => 'gmv', 'points' => days(30, 'gmv', '0.40')]]]);
+
+    expect($big)->toContain('>3M</span>')->not->toContain('3,000K')
+        ->and($small)->toContain('>0.40</span>')->toContain('>0.00</span>');
+});
+
+it('keeps raw colours out of the dashboard views and defines the chart tokens once', function (): void {
+    $css = file_get_contents(resource_path('css/app.css'));
+    $files = [...glob(resource_path('views/admin/dashboard/*.php')), ...glob(resource_path('views/components/admin/chart/*.php')), ...glob(resource_path('views/components/admin/dashboard/*.php')), resource_path('views/admin/dashboard.blade.php')];
+
+    foreach ($files as $file) {
+        expect(file_get_contents($file))->not->toMatch('/#[0-9a-fA-F]{6}|(emerald|amber|red)-\d{2,3}|<style/');
+    }
+    expect($css)->toContain('--viz-coral: var(--color-coral)')->and(Palette::css('coral'))->toBe('var(--viz-coral)');
+});
+
+it('never hands another role the finance series or distributions a super admin cached', function (): void {
+    $service = app(DashboardStatsService::class);
+    $service->forUser(chartStaff('super_admin'), DashboardPeriod::WEEK);
+
+    $moderator = $service->forUser(chartStaff('moderator'), DashboardPeriod::WEEK);
+
+    expect($moderator['series'])->not->toHaveKeys(['revenue', 'orders'])
+        ->and($moderator['distributions'])->not->toHaveKey('orders')
+        ->and($moderator)->not->toHaveKey('system');
+});
+
+it('gives finance.view alone the money charts but none of the finance queues', function (): void {
+    $viewer = chartStaff('support');
+    $viewer->givePermissionTo('finance.view');
+
+    $stats = app(DashboardStatsService::class)->forUser($viewer, DashboardPeriod::WEEK);
+    expect($stats['series'])->toHaveKey('revenue')
+        ->and(array_column($stats['attention'], 'key'))->not->toContain('pending_settlements', 'pending_withdrawals', 'disputes');
+
+    actingAs($viewer)->get(route('admin.dashboard'))->assertOk()
+        ->assertSee(__('admin.home.trends.revenue'))
+        ->assertDontSee(route('admin.finance.withdrawals.index', [], false), false);
+});
+
+it('shows system health only with settings.manage', function (): void {
+    $manager = chartStaff('support');
+    $manager->givePermissionTo('settings.manage');
+
+    actingAs($manager)->get(route('admin.dashboard'))->assertOk()->assertSee(__('admin.home.system.title'));
+    actingAs(chartStaff('moderator'))->get(route('admin.dashboard'))->assertOk()->assertDontSee(__('admin.home.system.title'));
 });

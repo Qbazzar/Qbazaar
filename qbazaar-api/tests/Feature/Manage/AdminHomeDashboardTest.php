@@ -7,6 +7,7 @@ use App\Enums\AdStatus;
 use App\Enums\OrderStatus;
 use App\Enums\SettlementStatus;
 use App\Models\CommissionSettlement;
+use App\Models\Message;
 use App\Models\Order;
 use App\Models\Report;
 use App\Models\SupportTicket;
@@ -20,6 +21,7 @@ use App\Support\Money;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -209,6 +211,11 @@ it('keeps a fixed number of queries however many rows there are', function (): v
             Report::factory()->create();
             SupportTicket::query()->create(['user_id' => $owner->id, 'subject' => 'S', 'category' => 'general', 'body' => 'b']);
             Order::factory()->create(['ad_id' => $ad->id, 'source_id' => (string) Str::ulid()]);
+            // Members with photos exercise the avatar eager loads, messages the daily series.
+            $member = User::factory()->create();
+            $member->addMedia(UploadedFile::fake()->image('me.jpg', 20, 20))->toMediaCollection('avatar');
+            Message::factory()->create(['sender_id' => $member->id]);
+            SupportTicket::query()->create(['user_id' => $member->id, 'subject' => 'S', 'category' => 'general', 'body' => 'b']);
         }
     };
 
@@ -217,7 +224,7 @@ it('keeps a fixed number of queries however many rows there are', function (): v
     $few = $queries();
     $seed(12);
 
-    expect($queries())->toBe($few)->and($few)->toBeLessThanOrEqual(50);
+    expect($queries())->toBe($few)->and($few)->toBeLessThanOrEqual(47);
 });
 
 it('caches per period and per permission set', function (): void {
