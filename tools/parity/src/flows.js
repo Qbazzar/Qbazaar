@@ -6,8 +6,15 @@ const { navigationFlows } = require('./spec');
 const { selectPages } = require('./pages');
 const { NEEDS_LOGIN } = require('./config');
 
-const NAVIGATION_WAIT_MS = 2500;
+// A click that navigates is read once the URL changes (a server-rendered page can take a few seconds on live);
+// a click that does not is read after the full wait.
+const NAVIGATION_WAIT_MS = 8000;
+const NAVIGATION_SETTLE_MS = 800;
 const DRAWER_OPEN_MS = 700;
+// The footer's accordions animate their content in (max-height, content-visibility); text reads empty until then.
+const ACCORDION_OPEN_MS = 450;
+// A click Chrome refused (the page still settling, a toast passing over) is tried once more on a fresh page.
+const FLOW_ATTEMPTS = 2;
 const TARGET_BURGER = 'button[aria-label="Open menu"]';
 const TARGET_DRAWER = '[role=dialog]';
 // The prototype's mobile drawer (assets/mobilemenu.js) shows the signed-in demo user's menu.
@@ -47,7 +54,7 @@ function describeReferenceElement({ selector, drawerSelector, crumb }) {
 // Runs in the target page: the clickable that corresponds to the reference element. A breadcrumb goes by its place
 // in the trail; otherwise the same text wins (same occurrence among twins), else any link that goes where the
 // reference goes.
-function findTargetElement({ text, label, landmark, occurrence, hrefExact, hrefPrefix, crumbIndex, footer, scopeSelector }) {
+function findTargetElement({ text, label, landmark, occurrence, hrefExact, hrefPrefix, crumbIndex, scopeSelector }) {
   const norm = (t) => (t || '').trim().replace(/\s+/g, ' ').toLowerCase();
   const visible = (n) => { const r = n.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(n).visibility !== 'hidden'; };
   const mark = (found) => {
@@ -55,8 +62,6 @@ function findTargetElement({ text, label, landmark, occurrence, hrefExact, hrefP
     found.setAttribute('data-pgf', '1');
     return true;
   };
-  // Footer columns fold into accordions on narrow screens; their links exist once a column is open.
-  if (footer) document.querySelectorAll('footer details:not([open])').forEach((d) => { d.open = true; });
   if (crumbIndex >= 0) {
     const trail = [...document.querySelectorAll('nav[aria-label] ol')].find((ol) => /crumb/i.test(ol.closest('nav').getAttribute('aria-label')) && visible(ol));
     const item = trail ? trail.children[crumbIndex] : null;
@@ -93,9 +98,21 @@ function routeMatches(reached, { path, aliases }) {
 const linkHints = (path) => (segments(path).length <= 1 ? { hrefExact: path } : { hrefPrefix: `${firstSegment(path)}/` });
 
 async function clickAndRead(side) {
+  const before = side.page.url();
   await side.page.locator('[data-pgf]').first().click({ timeout: 5000 });
-  await side.page.waitForTimeout(NAVIGATION_WAIT_MS);
+  await side.page.waitForURL((url) => url.toString() !== before, { timeout: NAVIGATION_WAIT_MS }).catch(() => {});
+  await side.page.waitForTimeout(NAVIGATION_SETTLE_MS);
   return new URL(side.page.url());
+}
+
+// Footer columns fold into accordions on narrow screens; their links can be read once a column has opened.
+async function openFooterAccordions(page) {
+  const opened = await page.evaluate(() => {
+    const closed = [...document.querySelectorAll('footer details:not([open])')];
+    closed.forEach((details) => { details.open = true; });
+    return closed.length;
+  });
+  if (opened) await page.waitForTimeout(ACCORDION_OPEN_MS);
 }
 
 // The target renders its drawer only once the menu button is pressed.
@@ -109,6 +126,7 @@ async function openTargetDrawer(page) {
 
 async function locateOnTarget(target, description, dest) {
   const hints = { ...description, ...linkHints(dest.path) };
+  if (description.footer) await openFooterAccordions(target.page);
   if (!description.drawer) return target.page.evaluate(findTargetElement, hints);
   if (!(await openTargetDrawer(target.page))) return false;
   return target.page.evaluate(findTargetElement, { ...hints, scopeSelector: TARGET_DRAWER });
@@ -140,6 +158,26 @@ async function checkFlow(env, flow, { description, target, viewport }) {
   return null;
 }
 
+async function runFlow(env, flow, { reference, target, viewport }) {
+  const description = await reference.page.evaluate(describeReferenceElement, { selector: flow.refSelector, drawerSelector: REFERENCE_DRAWER, crumb: isCrumbFlow(flow) });
+  const reason = await checkFlow(env, flow, { description, target, viewport });
+  return reason ? [{ what: `flow ${flow.page}@${viewport.width}`, reason }] : [];
+}
+
+/** Runs one flow; a step Chrome refused is tried once more on a freshly opened page before it is listed as failed. */
+async function runFlowWithRetry(env, flow, sides) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await runFlow(env, flow, sides);
+    } catch (error) {
+      await browserOpen(sides.target.page, sides.target.landed.url).catch(() => {});
+      if (attempt >= FLOW_ATTEMPTS) {
+        return [{ what: `flow ${flow.element} on ${flow.page}@${sides.viewport.width}`, reason: `failed: ${error.message.split(String.fromCharCode(10))[0]}` }];
+      }
+    }
+  }
+}
+
 async function runGroup(env, group) {
   const { pageDef, width, flows, login } = group;
   const viewport = env.config.viewports.find((v) => v.width === width);
@@ -147,16 +185,7 @@ async function runGroup(env, group) {
   const target = await openSide(env, 'target', { ...pageDef, login }, viewport);
   const skipped = [];
   try {
-    for (const flow of flows) {
-      try {
-        const description = await reference.page.evaluate(describeReferenceElement, { selector: flow.refSelector, drawerSelector: REFERENCE_DRAWER, crumb: isCrumbFlow(flow) });
-        const reason = await checkFlow(env, flow, { description, target, viewport });
-        if (reason) skipped.push({ what: `flow ${flow.page}@${width}`, reason });
-      } catch (error) {
-        skipped.push({ what: `flow ${flow.element} on ${flow.page}@${width}`, reason: `failed: ${error.message.split(String.fromCharCode(10))[0]}` });
-        await browserOpen(target.page, target.landed.url).catch(() => {});
-      }
-    }
+    for (const flow of flows) skipped.push(...(await runFlowWithRetry(env, flow, { reference, target, viewport })));
   } finally {
     await closeSide(env, reference).catch(() => {});
     await closeSide(env, target).catch(() => {});
