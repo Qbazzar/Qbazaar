@@ -215,6 +215,36 @@
   --font-qb-script: "storyScript", "notoKufiArabic", "storyScript Fallback", cursive;
   --font-qb-script-compact: "dancingScript", "notoKufiArabic", "dancingScript Fallback", cursive;
   --font-qb-brand: "acme", "acme Fallback", sans-serif;
+
+  /* Entrances: the reference's qbFade (styles.css:233) at its three speeds,
+     .3s for a page, .2s for a dialog, .18s for a header menu. */
+  --animate-qb-page-enter: qb-fade 0.3s ease;
+  --animate-qb-dialog-enter: qb-fade 0.2s ease;
+  --animate-qb-menu-enter: qb-fade 0.18s ease;
+
+  @keyframes qb-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* The reference's one interactive transition (polish.css:16-20), shared by
+   .qb-btn, .qb-card, .qb-nav and the orange buttons. Elements the reference
+   leaves static carry no transition at all, so this is opt-in. */
+@utility qb-motion {
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.18s ease,
+    filter 0.18s ease;
 }
 
 /* Arabic pages: Noto Kufi Arabic leads every stack. Its variable Arabic subset
