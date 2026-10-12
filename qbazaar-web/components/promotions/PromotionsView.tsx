@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Megaphone } from 'lucide-react';
 
 import { Pager } from '@/components/account/Pager';
 import { buttonVariants } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
+import { MegaphoneIcon } from '@/components/design-system/icons';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
 import { PageState } from '@/components/orders/PageState';
 import { StatusPill } from '@/components/orders/StatusPill';
@@ -90,7 +90,7 @@ function PromotableAd({ ad }: { ad: SummaryWithPromotion }) {
         aria-label={t('orders.promotion.promote_label', { title: isolate(ad.title) })}
         className={cn(buttonVariants({ size: 'sm', variant: 'soft' }), 'rounded-qb-sm')}
       >
-        <Megaphone aria-hidden="true" />
+        <MegaphoneIcon aria-hidden="true" />
         {t('orders.promotion.promote')}
       </Link>
     </li>
@@ -109,7 +109,7 @@ function PromotionsTable() {
         <PageState kind="error" onRetry={() => query.refetch()} />
       ) : rows.length === 0 ? (
         <p className="flex items-center justify-center gap-2 border-t border-qb-line px-5 py-8 text-center text-qb-body text-qb-ink-secondary">
-          <Icon icon={Megaphone} className="text-qb-ink-subtle" />
+          <Icon icon={MegaphoneIcon} className="text-qb-ink-subtle" />
           {t('orders.promotion.empty')}
         </p>
       ) : (

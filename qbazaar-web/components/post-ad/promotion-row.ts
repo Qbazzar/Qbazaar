@@ -5,15 +5,15 @@ export const focusWithinRow =
   'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active';
 
 /**
- * A promotion row of add-ads.html, also used by the promote page: a 1 px
- * border, peach with an orange border when chosen, and 1.15 line heights, so
- * a row with one line of description is 81 px. Arabic keeps the normal line
- * height: its taller glyphs collide at 1.15 once a description wraps.
+ * A promotion row of add-ads.html, also used by the promote page: the 1.5 px
+ * `.qb-btn` border, peach with an orange border when chosen, dimming under
+ * the pointer, and 1.15 line heights. Arabic keeps the normal line height:
+ * its taller glyphs collide at 1.15 once a description wraps.
  */
 export const promotionRow = {
   shell: (checked: boolean) =>
     cn(
-      'group flex cursor-pointer items-center gap-4 rounded-qb-lg border px-5 py-[18px] transition-colors',
+      'group flex cursor-pointer items-center gap-4 rounded-qb-lg border-[1.5px] px-5 py-[18px] leading-[1.15] qb-motion hover:brightness-[.96]',
       focusWithinRow,
       checked ? 'border-qb-brand bg-(--color-qb-promo-active)' : 'border-qb-line bg-qb-surface',
     ),

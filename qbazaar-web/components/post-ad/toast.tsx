@@ -1,7 +1,7 @@
-import { CircleCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Icon } from '@/components/design-system/Icon';
+import { CheckCircleIcon } from '@/components/design-system/icons';
 
 /**
  * The mint "saved" toast of 324:13009 and 638:36172. Styled per toast because
@@ -16,7 +16,7 @@ export function showSaved(message: string): void {
     unstyled: true,
     richColors: false,
     closeButton: false,
-    icon: <Icon icon={CircleCheck} className="size-[30px] text-qb-brand" />,
+    icon: <Icon icon={CheckCircleIcon} className="size-[30px] text-qb-brand" />,
     classNames: {
       toast: [
         'mt-[68px] flex items-center gap-2 rounded-[14px] border border-(--color-qb-mint) bg-(--color-qb-mint-soft) px-4 py-2.5',

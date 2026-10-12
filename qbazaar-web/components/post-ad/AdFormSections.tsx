@@ -1,11 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Info } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
 import { FieldSelect, type FieldSelectOption } from '@/components/design-system/FieldSelect';
+import { InfoCircleTipIcon } from '@/components/design-system/icons';
 import { Input, Textarea } from '@/components/design-system/Input';
 import type { CategoryField, CategoryNode, Location } from '@/lib/api/types';
 import { localized } from '@/lib/i18n/locale';
@@ -86,7 +86,7 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
         />
       </div>
 
-      <div className={fieldGap}>
+      <div>
         <FieldLabel htmlFor={fieldId('title')}>{t('post_ad.basic.ad_title')}</FieldLabel>
         <Input
           id={fieldId('title')}
@@ -96,14 +96,14 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
           autoComplete="off"
           aria-required
           onChange={(event) => update({ title: event.target.value }, 'title')}
-          className="h-[57px] rounded-qb-lg text-qb-body-sm"
+          className="mb-2 h-[57px] rounded-qb-lg text-qb-body-sm text-qb-black"
           {...describedBy('title', errors.title, titleHintId)}
         />
-        <p id={titleHintId} className="mt-2 flex items-center gap-1.5 text-qb-label text-qb-brand">
-          <Icon icon={Info} size="sm" className="size-3.5" />
+        <FieldError name="title" message={errors.title} className="mt-0 mb-2" />
+        <p id={titleHintId} className={cn('flex items-center gap-1.5 text-qb-label text-qb-brand', fieldGap)}>
+          <Icon icon={InfoCircleTipIcon} size={14} />
           {t('post_ad.basic.ad_title_hint')}
         </p>
-        <FieldError name="title" message={errors.title} />
       </div>
 
       <div className={fieldGap}>
@@ -118,7 +118,7 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
               categoryPath ? 'text-qb-ink' : 'text-qb-ink-subtle',
             )}
           >
-            {categoryPath || t('post_ad.basic.category_placeholder')}
+            <span>{categoryPath || t('post_ad.basic.category_placeholder')}</span>
           </div>
           <Button
             id={fieldId('categoryId')}
@@ -130,8 +130,6 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
             className={cn(
               'h-auto shrink-0 px-[26px] text-qb-body-sm font-medium shadow-(--shadow-qb-brand-tight)',
               buttonLeading,
-              // The design keeps the peach fill on hover (selects.js); the soft variant would turn solid orange.
-              'hover:bg-qb-brand-soft hover:text-qb-brand-on-soft',
               'max-qb-tablet:rounded-qb-pill max-qb-tablet:border max-qb-tablet:border-qb-brand max-qb-tablet:px-4 max-qb-tablet:py-[9px] max-qb-tablet:text-qb-micro',
             )}
           >
@@ -151,9 +149,7 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
         />
       </div>
 
-      <div className={fieldGap}>
-        <PhotoUploader error={errors.photos} />
-      </div>
+      <PhotoUploader error={errors.photos} />
 
       <div>
         <FieldLabel htmlFor={fieldId('description')}>{t('post_ad.basic.description')}</FieldLabel>
@@ -165,13 +161,13 @@ export function BasicInfoSection({ tree }: { tree: readonly CategoryNode[] }) {
           placeholder={t('post_ad.basic.description_placeholder')}
           aria-required
           onChange={(event) => update({ description: event.target.value }, 'description')}
-          className="min-h-[122px] resize-y px-3.5 text-qb-body-sm"
+          className="mb-2 min-h-[122px] resize-y px-3.5 text-qb-body-sm text-qb-black"
           {...describedBy('description', errors.description, descriptionHintId)}
         />
-        <p id={descriptionHintId} className="mt-2 font-qb-label text-qb-label text-qb-brand">
+        <FieldError name="description" message={errors.description} className="mt-0 mb-2" />
+        <p id={descriptionHintId} className="font-qb-label text-qb-label text-qb-brand">
           {t('post_ad.basic.description_hint')}
         </p>
-        <FieldError name="description" message={errors.description} />
       </div>
     </FormSection>
   );
@@ -411,7 +407,7 @@ export function LocationSection({ cities }: { cities: readonly Location[] }) {
         </div>
       </div>
 
-      <div className="mb-3.5">
+      <div>
         <FieldLabel htmlFor={fieldId('street')} optional={t('post_ad.optional')}>
           {t('post_ad.location.street')}
         </FieldLabel>
@@ -422,10 +418,10 @@ export function LocationSection({ cities }: { cities: readonly Location[] }) {
           placeholder={t('post_ad.location.street_placeholder')}
           autoComplete="street-address"
           onChange={(event) => update({ street: event.target.value }, 'street')}
-          className={controlSize}
+          className={cn(controlSize, 'mb-3.5')}
           {...describedBy('street', errors.street)}
         />
-        <FieldError name="street" message={errors.street} />
+        <FieldError name="street" message={errors.street} className="mt-0 mb-3.5" />
       </div>
 
       <label className="mb-2 flex cursor-pointer items-center gap-3 text-qb-body-sm text-qb-ink-body">

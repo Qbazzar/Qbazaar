@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { CloudOff } from 'lucide-react';
 
 import { Breadcrumb, type BreadcrumbItem } from '@/components/design-system/Breadcrumb';
 import { Button } from '@/components/design-system/Button';
+import { CloudOffIcon } from '@/components/design-system/icons';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import type { Ad, CategoryNode, Location, User } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
@@ -87,7 +87,7 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
     if (!treeQuery.isError && !citiesQuery.isError) return <PostAdLoading />;
     return (
       <StatePanel
-        icon={<StateIcon icon={CloudOff} tone="muted" />}
+        icon={<StateIcon icon={CloudOffIcon} tone="muted" />}
         title={t('post_ad.load_failed')}
         description={t('common.error')}
         action={

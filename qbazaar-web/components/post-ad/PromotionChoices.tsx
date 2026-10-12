@@ -1,7 +1,6 @@
 'use client';
 
-import { Check } from 'lucide-react';
-
+import { CheckIcon } from '@/components/design-system/icons';
 import type { PromotionOffer, PromotionType } from '@/lib/api/commerce-types';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -26,20 +25,18 @@ export function promotionTitle(type: PromotionType): string {
   return t(`orders.promotion.types.${type}`);
 }
 
-/** The 22 px tick box of the promotion rows; its ring darkens under the pointer (CheckBox 367:15366). */
+/** The 22 px tick box of the promotion rows (add-ads.html): grey ring, orange with a white tick once chosen. */
 function TickBox({ checked, className }: { checked: boolean; className?: string }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        'flex size-[22px] shrink-0 items-center justify-center rounded-qb-xs border-2 transition-colors',
-        checked
-          ? 'border-qb-brand bg-qb-brand text-qb-on-brand'
-          : 'border-(--color-qb-check-ring) group-hover:border-(--color-qb-check-ring-hover)',
+        'flex size-[22px] shrink-0 items-center justify-center rounded-qb-xs border-2',
+        checked ? 'border-qb-brand bg-qb-brand text-qb-on-brand' : 'border-(--color-qb-check-ring)',
         className,
       )}
     >
-      {checked ? <Check className="size-[13px]" strokeWidth={3} /> : null}
+      {checked ? <CheckIcon className="size-[13px]" strokeWidth={3} /> : null}
     </span>
   );
 }

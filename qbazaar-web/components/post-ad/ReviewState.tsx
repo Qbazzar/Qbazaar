@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { BadgeCheck, Clock } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
 import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
+import { ClockIcon, VerifiedBadgeIcon } from '@/components/design-system/icons';
 import type { Ad } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
 import { formatMoney } from '@/lib/orders/money';
@@ -27,7 +27,7 @@ export function ReviewState({ ad, onPostAnother }: { ad: Ad | null; onPostAnothe
         aria-hidden="true"
         className="mb-6 flex size-[92px] items-center justify-center rounded-qb-2xl border border-qb-line bg-qb-surface text-qb-brand shadow-qb-brand"
       >
-        <Icon icon={live ? BadgeCheck : Clock} size="lg" className="size-9" />
+        <Icon icon={live ? VerifiedBadgeIcon : ClockIcon} size="lg" className="size-9" />
       </div>
       <h1
         id={VIEW_HEADING_ID}

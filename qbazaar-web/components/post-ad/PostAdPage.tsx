@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { LoaderCircle } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { pageGutter } from '@/components/design-system/page-gutter';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ export function PostAdFrame({ children }: { children: ReactNode }) {
 export function PostAdLoading() {
   return (
     <div role="status" className="flex min-h-[60vh] items-center justify-center">
-      <Icon icon={LoaderCircle} size="lg" label={t('common.loading')} className="animate-spin text-qb-ink-subtle motion-reduce:animate-none" />
+      <Icon icon={LoaderCircleIcon} size="lg" label={t('common.loading')} className="animate-spin text-qb-ink-subtle motion-reduce:animate-none" />
     </div>
   );
 }
