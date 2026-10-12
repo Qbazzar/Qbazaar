@@ -104,6 +104,7 @@ describe('SiteFooter', () => {
 
     expect(privacy).toHaveClass('qb-motion', 'hover:text-qb-brand');
     expect(privacy.className).not.toMatch(/rounded/);
+    for (const list of footer.querySelectorAll('details > ul')) expect(list).toHaveClass('pb-3.5');
     for (const summary of footer.querySelectorAll('summary')) {
       expect(summary.children).toHaveLength(0);
       expect(summary).toHaveClass("after:content-['']", 'after:rotate-45', 'group-open:after:-rotate-135');

@@ -31,6 +31,7 @@
   --color-qb-icon-faint: #bdbdbd; /* hero search field icons, labels and placeholders */
   --color-qb-icon-search: #828282; /* hero search magnifier (Figma 728:45181) */
   --color-qb-icon-accordion: #aaaaaa; /* footer accordion chevrons */
+  --color-qb-icon-close: #555555; /* the menu drawer's × (mobilemenu.js .qb-mdrawer-x) */
   --color-qb-ink-caption: #aaaaaa; /* the menu drawer's MENU caption */
   --color-qb-navy: #000640;
   --color-qb-black: #000000;

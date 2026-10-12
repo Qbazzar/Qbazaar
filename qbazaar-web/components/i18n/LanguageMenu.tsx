@@ -25,7 +25,8 @@ const LANGUAGES: { locale: Locale; name: string; flag: string; country: string }
  * under the globe, its rows `.qb-btn`s with the chosen one tinted. Its
  * `before` fills that gap, so the pointer can reach the card without leaving
  * the menu. The phone and tablet popup of 741:39398 / 736:54497 is
- * Qbazaar-front's `.qb-langpop` (mobilemenu.js).
+ * Qbazaar-front's `.qb-langpop` (mobilemenu.js), 6 px under the icon, its
+ * rows a code, the bare name and the radio pushed to the end.
  */
 const VARIANTS = {
   desktop: {
@@ -36,7 +37,8 @@ const VARIANTS = {
     ),
     title: 'px-3 pt-2.5 pb-3 text-qb-body',
     row: (selected: boolean) =>
-      cn('qb-motion gap-3 rounded-[9px] px-3 py-2.5 text-[15px] text-qb-ink-title hover:brightness-[.96]', selected && 'bg-qb-brand-soft'),
+      cn('qb-motion gap-3 rounded-[9px] px-3 py-2.5 leading-[1.15] hover:brightness-[.96]', selected && 'bg-qb-brand-soft'),
+    label: (language: (typeof LANGUAGES)[number]) => <span className="flex-1 text-[15px] text-qb-ink-title">{language.name}</span>,
     marker: (language: (typeof LANGUAGES)[number]) => (
       <span aria-hidden="true" className="w-[22px] text-center text-[18px] leading-none">
         {language.flag}
@@ -44,21 +46,24 @@ const VARIANTS = {
     ),
     radio: (selected: boolean) =>
       cn(
-        'flex size-[18px] items-center justify-center border-2',
+        'flex size-[18px] shrink-0 items-center justify-center rounded-full border-2',
         selected ? "border-qb-brand after:size-[9px] after:rounded-full after:bg-qb-brand after:content-['']" : 'border-qb-check-ring',
       ),
   },
   phone: {
     root: '',
-    panel: 'end-0 mt-1.5 w-[262px] rounded-qb-xl pt-1.5 pb-2 shadow-qb-langpop',
+    panel: 'end-0 top-[calc(100%+6px)] w-[262px] rounded-qb-xl pt-1.5 pb-2 shadow-qb-langpop',
     title: 'border-b border-qb-menu-divider px-[18px] pt-3 pb-2.5 text-qb-body',
     row: () => 'gap-2.5 px-[18px] py-[11px] text-qb-body-sm hover:bg-qb-hover',
+    label: (language: (typeof LANGUAGES)[number]) => language.name,
+    // The code is Latin in the Arabic row too, so it keeps its tracking.
     marker: (language: (typeof LANGUAGES)[number]) => (
-      <span aria-hidden="true" className="min-w-5 text-qb-tiny font-medium tracking-[0.04em] text-qb-ink-subtle">
+      <span aria-hidden="true" lang="en" className="min-w-5 text-qb-tiny font-medium tracking-[0.04em] text-qb-ink-subtle">
         {language.country}
       </span>
     ),
-    radio: (selected: boolean) => cn('size-[18px]', selected ? 'border-[5px] border-qb-brand' : 'border-[1.5px] border-qb-check-ring'),
+    radio: (selected: boolean) =>
+      cn('ms-auto size-[18px] shrink-0 rounded-full', selected ? 'border-[5px] border-qb-brand' : 'border-[1.5px] border-qb-check-ring'),
   },
 } as const;
 
@@ -163,8 +168,8 @@ export function LanguageMenu({ className, children, variant = 'desktop' }: Langu
                     )}
                   >
                     {style.marker(language)}
-                    <span className="flex-1">{language.name}</span>
-                    <span aria-hidden="true" className={cn('shrink-0 rounded-full', style.radio(selected))} />
+                    {style.label(language)}
+                    <span aria-hidden="true" className={style.radio(selected)} />
                   </button>
                 </li>
               );

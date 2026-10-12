@@ -102,8 +102,8 @@ function FooterBrand() {
 
 /** Heading + links on desktop; a collapsible row under 1000 px. Two renderings so neither needs client JS. */
 function FooterColumnBlock({ column }: { column: FooterColumn }) {
-  const links = (
-    <ul className="flex flex-col gap-4">
+  const links = (className?: string) => (
+    <ul className={cn('flex flex-col gap-4', className)}>
       {column.links.map((link) => (
         <li key={link.href + link.label}>
           <Link href={link.href} className={linkClass}>
@@ -117,7 +117,7 @@ function FooterColumnBlock({ column }: { column: FooterColumn }) {
     <>
       <div className="hidden qb-desktop:block">
         <h2 className="mb-5 text-qb-h3 font-semibold tracking-normal">{column.title}</h2>
-        {links}
+        {links()}
       </div>
       <details className={cn('group border-b border-qb-divider first-of-type:border-t qb-desktop:hidden', accordionBody)}>
         <summary
@@ -129,7 +129,8 @@ function FooterColumnBlock({ column }: { column: FooterColumn }) {
         >
           {column.title}
         </summary>
-        <div className="pb-3.5">{links}</div>
+        {/* `.qb-flinks` of an open column: the 14 px under the last link sits on the list itself. */}
+        {links('pb-3.5')}
       </details>
     </>
   );

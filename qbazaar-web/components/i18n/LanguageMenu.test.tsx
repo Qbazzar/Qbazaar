@@ -92,6 +92,23 @@ describe('LanguageMenu', () => {
     expect(screen.queryByRole('group')).toBeNull();
   });
 
+  it('draws the phone rows as the reference popup: code, bare name, radio at the end', async () => {
+    const user = userEvent.setup();
+    render(
+      <LanguageMenu className="globe" variant="phone">
+        globe
+      </LanguageMenu>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Language' }));
+    const [code, name, radio] = screen.getByRole('button', { name: 'العربية' }).childNodes;
+
+    expect(code).toHaveTextContent('QA');
+    expect(code).toHaveAttribute('lang', 'en');
+    expect(name.nodeType).toBe(Node.TEXT_NODE);
+    expect(radio).toHaveClass('ms-auto');
+  });
+
   it('leaves the phone popup to clicks', async () => {
     const user = userEvent.setup();
     render(
