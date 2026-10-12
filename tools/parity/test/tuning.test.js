@@ -241,6 +241,12 @@ test('scenario copy is compared without glyph icons and with data masked', () =>
   const adLink = 'qbazaar\\.qa/\\S+';
   assert.equal(copyOf('Share this ad ✕ W WhatsApp qbazaar.qa/ad/3380480338 Copy', adLink), copyOf('Share this ad W WhatsApp qbazaar.qa/ads/01m4edcmd846zpsr94e2jet5ma Copy', adLink));
   assert.equal(copyOf('Home › Categories ›'), 'Home Categories');
+  // A gallery counter compares its place in the set, not the sample's photo count.
+  const gallery = require('../scenarios/product').find((s) => s.id === 'product-gallery');
+  const place = (name) => gallery.steps.find((s) => s.name === name).what.textMask;
+  assert.equal(copyOf('1/22', place('counter-at-start')), copyOf('1/4', place('counter-at-start')));
+  assert.equal(copyOf('22/22', place('counter-wraps-to-last')), copyOf('4 / 4', place('counter-wraps-to-last')));
+  assert.notEqual(copyOf('2/22', place('counter-after-next')), copyOf('1/4', place('counter-after-next')));
   // Real copy differences survive.
   assert.notEqual(copyOf('Report this ad ✕ Fraud or scam'), copyOf('Report this ad Select a problem to report Fraud or scam'));
 });
