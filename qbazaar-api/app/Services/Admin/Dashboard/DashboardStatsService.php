@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Admin\Dashboard;
 
+use App\Enums\OrderStatus;
 use App\Models\Report;
 use App\Models\SupportTicket;
 use App\Models\User;
@@ -34,7 +35,7 @@ class DashboardStatsService
 
     public const int HEALTH_TTL_SECONDS = 60;
 
-    private const string KEY_PREFIX = 'admin:dashboard:v1:';
+    private const string KEY_PREFIX = 'admin:dashboard:v2:';
 
     public function __construct(
         private readonly WarmedCache $cache,
@@ -72,6 +73,7 @@ class DashboardStatsService
             // attention list and the health card never disagree.
             $payload['attention'][] = ['key' => 'failed_jobs', 'count' => $payload['system']['failed_jobs'], 'oldest' => null, 'amount' => null, 'href' => null];
         }
+        $payload['attention'] = AttentionPriority::sort($payload['attention'], CarbonImmutable::now());
 
         return $payload + ['sections' => $sections, 'period' => $period->value];
     }
@@ -86,12 +88,14 @@ class DashboardStatsService
         $window = $period->window($now);
         $has = static fn (string $section): bool => in_array($section, $sections, true);
         $ads = $has(DashboardAccess::CONTENT) || $has(DashboardAccess::REVIEW) ? $this->ads->collect($window) : null;
+        $groups = $this->groups($window, $sections, $ads);
 
         return [
             'generated_at' => $now->toIso8601String(),
-            'groups' => $this->groups($window, $sections, $ads),
+            'groups' => $groups,
             'attention' => $this->attention($has, $ads['pending'] ?? null),
             'series' => $this->seriesFor($now, $has),
+            'distributions' => $this->distributions($ads, $groups, $has),
             'breakdowns' => $has(DashboardAccess::CONTENT)
                 ? ['categories' => $this->breakdowns->categories(), 'locations' => $this->breakdowns->locations()]
                 : [],
@@ -174,7 +178,10 @@ class DashboardStatsService
     }
 
     /**
-     * @return array<string, list<array{date: string, count: int}>>
+     * Daily points for the sparklines and the trend charts; `revenue` carries
+     * money as decimal strings and exists for finance viewers only.
+     *
+     * @return array<string, list<array<string, mixed>>>
      */
     private function seriesFor(CarbonImmutable $now, callable $has): array
     {
@@ -182,6 +189,31 @@ class DashboardStatsService
             'users' => $has(DashboardAccess::USERS) ? $this->series->users($now) : [],
             'ads' => $has(DashboardAccess::CONTENT) ? $this->series->ads($now) : [],
             'orders' => $has(DashboardAccess::FINANCE) ? $this->series->orders($now) : [],
+            'messages' => $has(DashboardAccess::CONVERSATIONS) ? $this->series->messages($now) : [],
+            'revenue' => $has(DashboardAccess::FINANCE) ? $this->series->revenue($now) : [],
+        ]);
+    }
+
+    /**
+     * Status splits for the donuts. Orders reuse the order tiles already
+     * built (finance only), so this adds no query.
+     *
+     * @param array{distribution: array<string, int>}|null $ads
+     * @param list<array{key: string, tiles: list<array<string, mixed>>}> $groups
+     * @return array<string, array<string, int>>
+     */
+    private function distributions(?array $ads, array $groups, callable $has): array
+    {
+        $orders = [];
+        foreach (collect($groups)->firstWhere('key', 'orders')['tiles'] ?? [] as $tile) {
+            if (str_starts_with($tile['key'], 'orders_') && OrderStatus::tryFrom(substr($tile['key'], 7)) !== null) {
+                $orders[substr($tile['key'], 7)] = (int) $tile['value'];
+            }
+        }
+
+        return array_filter([
+            'ads' => $ads !== null && $has(DashboardAccess::CONTENT) ? $ads['distribution'] : [],
+            'orders' => $orders,
         ]);
     }
 
