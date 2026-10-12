@@ -1,5 +1,6 @@
 // Browser lifecycle: deterministic contexts, demo login and the localhost CORS harness.
 const { chromium } = require('playwright');
+const { buildConfig } = require('./config');
 
 const FREEZE_CSS = '*{caret-color:transparent !important}';
 
@@ -31,6 +32,7 @@ async function newContext(browser, config, { width, height }, { side, storageSta
     storageState: side === 'target' ? storageState : undefined,
   });
   if (side === 'target') {
+    // Without the cookie the site answers in Arabic (its default locale).
     await context.addCookies([{ name: 'NEXT_LOCALE', value: locale, url: config.target }]);
     if (config.localTarget) await proxyApiWithCors(context, config);
   }
@@ -71,9 +73,19 @@ async function open(page, url, { scroll = true } = {}) {
   return { status: response ? response.status() : 0, url: page.url() };
 }
 
+/**
+ * A target context for ad-hoc probes and scripts, set up like the gate's own: NEXT_LOCALE (English unless asked),
+ * the CORS harness for a localhost target, DPR 1. Usage: `await targetContext(browser, { target: 'https://qbazaar.qa' })`.
+ */
+function targetContext(browser, { target, locale = 'en', viewport = { width: 1440, height: 900 }, storageState } = {}) {
+  const config = buildConfig(['--target', target], {});
+  return newContext(browser, config, viewport, { side: 'target', storageState, locale });
+}
+
+/** Signs the demo account in once; returns its storage state, or null without credentials or when the login fails. */
 async function loginDemo(browser, config) {
+  if (!config.demo) return null;
   const { email, password } = config.demo;
-  if (!email || !password) return null;
   const context = await newContext(browser, config, config.viewports[0], { side: 'target', locale: 'en' });
   const page = await context.newPage();
   await open(page, `${config.target}/login`, { scroll: false });
@@ -84,9 +96,10 @@ async function loginDemo(browser, config) {
     page.click('button[type=submit]'),
   ]);
   await page.waitForTimeout(3000);
-  const state = await context.storageState();
+  const signedIn = !new URL(page.url()).pathname.startsWith('/login');
+  const state = signedIn ? await context.storageState() : null;
   await context.close();
   return state;
 }
 
-module.exports = { launch, newContext, open, loginDemo, waitForSettled, FREEZE_CSS };
+module.exports = { launch, newContext, targetContext, open, loginDemo, waitForSettled, FREEZE_CSS };
