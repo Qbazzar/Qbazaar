@@ -21,7 +21,7 @@ import { useMakeOfferMutation } from '@/lib/queries/offers';
 import { cn } from '@/lib/utils';
 
 import { AmountField } from './AmountField';
-import { DealActions, DealPanel, HowItWorks, InfoHint, dealButton, dealLabel } from './DealFormParts';
+import { DealActions, DealPanel, HowItWorks, InfoHint } from './DealFormParts';
 import { focusFirstInvalid } from './focus-invalid';
 import { FormError, NoteField } from './NoteField';
 
@@ -32,8 +32,8 @@ interface FormErrors {
 }
 
 /**
- * Make an Offer (657:57378): the buyer proposes a price. The offer opens (or
- * reuses) their conversation with the seller and lands there as a card.
+ * Make an Offer (offer.html, 657:57378): the buyer proposes a price. The offer opens (or reuses)
+ * their conversation with the seller and lands there as a card.
  */
 export function MakeOfferForm({ ad }: { ad: DealAd }) {
   const router = useRouter();
@@ -54,12 +54,14 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
   if (blocker) {
     return (
       <DealPanel title={t('orders.deal.offer_title')} titleId="offer-title">
-        <Notice tone={blocker === 'own_ad' ? 'brand' : 'neutral'} role="status">
-          {t(`orders.deal.${blocker}`)}
-        </Notice>
-        <Link href={adHref} className={cn(buttonVariants({ variant: 'outline' }), dealButton, 'self-start')}>
-          {t('orders.deal.back_to_ad')}
-        </Link>
+        <div className="flex flex-col items-start gap-4">
+          <Notice tone={blocker === 'own_ad' ? 'brand' : 'neutral'} role="status">
+            {t(`orders.deal.${blocker}`)}
+          </Notice>
+          <Link href={adHref} className={buttonVariants({ variant: 'outline' })}>
+            {t('orders.deal.back_to_ad')}
+          </Link>
+        </div>
       </DealPanel>
     );
   }
@@ -94,7 +96,7 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
 
   return (
     <DealPanel title={t('orders.deal.offer_title')} titleId="offer-title">
-      <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-4">
+      <form ref={formRef} onSubmit={submit} noValidate>
         <AmountField
           label={t('orders.deal.your_offer')}
           value={amount}
@@ -102,10 +104,10 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
           error={errors.amount}
           currency={ad.currency}
           required
-          className={dealLabel.offer}
+          className="mb-3.5"
         />
         {suggestions.length > 0 ? (
-          <div role="group" aria-label={t('orders.deal.suggested')} className="flex flex-wrap gap-2.5">
+          <div role="group" aria-label={t('orders.deal.suggested')} className="mb-[22px] flex flex-wrap gap-2.5">
             {suggestions.map((suggestion) => {
               const label = formatListPrice(Number(suggestion.amount), ad.currency);
               return (
@@ -116,14 +118,12 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
                   aria-label={t('orders.deal.suggested_label', { amount: label, percent: suggestion.percent })}
                   onClick={() => setAmount(suggestion.amount.replace(/\.00$/, ''))}
                   className={cn(
-                    // Compact pills on phones (709:33285), 47 px chips from the tablet up (709:32645, 657:57378).
-                    'h-8 rounded-qb-pill border border-qb-line bg-qb-surface px-3 text-qb-label font-medium text-qb-ink transition-colors hover:bg-qb-hover',
-                    'qb-tablet:h-[47px] qb-tablet:rounded-qb-lg qb-tablet:px-4 qb-tablet:text-qb-caption qb-desktop:px-6 qb-desktop:text-qb-body',
-                    'aria-pressed:border-qb-brand aria-pressed:bg-qb-brand-soft aria-pressed:text-qb-brand-on-soft',
+                    // The `.qb-btn` chips of offer.html: they dim under the pointer and fill the amount, with no chosen look.
+                    'cursor-pointer rounded-qb-md border border-qb-line bg-qb-surface px-4 py-[9px] text-qb-caption leading-[1.15] text-qb-ink-body qb-motion hover:brightness-[.96]',
                     focusRing,
                   )}
                 >
-                  {label}
+                  <span>{label}</span>
                 </button>
               );
             })}
@@ -137,7 +137,7 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
           max={LIMITS.noteMax}
           error={errors.note}
           placeholder={t('orders.deal.message_placeholder')}
-          className={dealLabel.offer}
+          textareaClassName="mb-4"
         />
         <InfoHint>{t('orders.deal.offer_hint')}</InfoHint>
 
@@ -146,8 +146,12 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
           steps={[t('orders.deal.offer_step_1'), t('orders.deal.offer_step_2'), t('orders.deal.offer_step_3')]}
         />
 
-        <FormError>{errors.form}</FormError>
-        <DealActions page="offer" submitLabel={t('orders.deal.send_offer')} busy={busy} cancelLabel={t('common.cancel')} cancelHref={adHref} />
+        {errors.form ? (
+          <div className="mb-4">
+            <FormError>{errors.form}</FormError>
+          </div>
+        ) : null}
+        <DealActions submitLabel={t('orders.deal.send_offer')} busy={busy} cancelLabel={t('common.cancel')} cancelHref={adHref} />
       </form>
     </DealPanel>
   );
