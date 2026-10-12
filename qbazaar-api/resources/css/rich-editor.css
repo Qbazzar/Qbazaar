@@ -21,9 +21,9 @@
 .qb-rte-i { font-style: italic; }
 .qb-rte-u { text-decoration: underline; }
 .qb-rte-s { text-decoration: line-through; }
-.qb-rte-btn:hover:not(:disabled) { background: var(--color-cream-200, #f1f2f5); color: var(--rte-ink); }
+.qb-rte-btn:hover:not([aria-disabled='true']) { background: var(--color-cream-200, #f1f2f5); color: var(--rte-ink); }
 .qb-rte-btn[aria-pressed='true'] { background: var(--rte-soft); color: var(--color-coral-700, #a8410e); }
-.qb-rte-btn:disabled { opacity: .4; cursor: not-allowed; }
+.qb-rte-btn[aria-disabled='true'] { opacity: .4; cursor: not-allowed; }
 .qb-rte-btn:focus-visible, .qb-rte-textbtn:focus-visible, .qb-rte-linkinput:focus-visible { outline: 2px solid var(--rte-focus); outline-offset: 1px; }
 
 .qb-rte-linkbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--rte-line); background: var(--color-cream-200, #f1f2f5); }
@@ -54,3 +54,17 @@
 .qb-rte-content a { color: var(--color-coral-700, #a8410e); text-decoration: underline; text-underline-offset: 3px; }
 .qb-rte-content hr.ProseMirror-selectednode { border-top-color: var(--rte-focus); }
 .qb-rte-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: inline-start; height: 0; color: var(--rte-muted); pointer-events: none; }
+
+.qb-rte-notice { margin: 0 0 0.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--rte-focus); border-radius: 0.5rem; background: var(--rte-soft); color: var(--color-coral-700, #a8410e); font-size: 0.8125rem; font-weight: 600; }
+.qb-rte-notice[hidden] { display: none; }
+.qb-rte-content table { width: 100%; margin: 1rem 0; border-collapse: collapse; table-layout: fixed; }
+.qb-rte-content th, .qb-rte-content td { padding: 0.375rem 0.625rem; border: 1px solid var(--rte-line); text-align: start; vertical-align: top; }
+.qb-rte-content th { background: var(--color-cream-200, #f1f2f5); font-weight: 600; }
+.qb-rte-content th p, .qb-rte-content td p { margin: 0; }
+.qb-rte-content img { max-width: 100%; height: auto; }
+.qb-rte-content mark { background: #fef08a; }
+.qb-rte-content pre { margin: 1rem 0; padding: 0.75rem 1rem; overflow-x: auto; border-radius: 0.5rem; background: var(--color-cream-200, #f1f2f5); direction: ltr; text-align: left; }
+.qb-rte-content code { padding: 0.1em 0.3em; border-radius: 0.25rem; background: var(--color-cream-200, #f1f2f5); font-size: 0.9em; }
+.qb-rte-content pre code { padding: 0; background: transparent; }
+.qb-rte-content h1 { font-size: 1.5rem; margin: 1.5rem 0 0.5rem; font-weight: 600; }
+.qb-rte-content h4, .qb-rte-content h5, .qb-rte-content h6 { margin: 1rem 0 0.5rem; font-weight: 600; }

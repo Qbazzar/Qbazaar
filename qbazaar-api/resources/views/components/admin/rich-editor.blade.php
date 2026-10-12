@@ -28,6 +28,8 @@
         'alignStart' => 'محاذاة للبداية (Align start)', 'alignCenter' => 'توسيط (Center)', 'alignEnd' => 'محاذاة للنهاية (Align end)', 'alignJustify' => 'ضبط (Justify)',
         'link' => 'رابط (Link)', 'clear' => 'مسح التنسيق (Clear formatting)', 'source' => 'عرض المصدر HTML (Source)',
         'linkUrl' => 'عنوان الرابط (Link URL)', 'linkApply' => 'تطبيق (Apply)', 'linkRemove' => 'إزالة الرابط (Remove link)', 'linkCancel' => 'إلغاء (Cancel)',
+        'linkInvalid' => 'رابط غير صالح (Invalid link)',
+        'sourceNotice' => 'يحتوي هذا المحتوى على تنسيق لا يستطيع المحرر المرئي الاحتفاظ به؛ عدّله كـ HTML. (This content has formatting the visual editor can\'t keep; edit it as HTML.)',
         'placeholder' => '',
     ];
 @endphp

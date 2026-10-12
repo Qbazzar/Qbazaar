@@ -4,21 +4,42 @@ import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import { Placeholder } from '@tiptap/extensions';
+import { TableKit } from '@tiptap/extension-table';
+import Image from '@tiptap/extension-image';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
+import Highlight from '@tiptap/extension-highlight';
 
 import { GROUPS, iconFor } from './rich-editor-toolbar.js';
+import { roundTrips } from './rich-editor-fidelity.js';
 
-const SAFE_LINK = /^(https?:\/\/|mailto:|tel:|\/|#)/i;
+const SAFE_LINK = /^(https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i;
 const BARE_DOMAIN = /^[\w-]+(\.[\w-]+)+(\/|$)/;
 
 /** Turns what an editor typed into a link we accept, or null when it is unusable. */
 export function normaliseUrl(raw) {
     const url = raw.trim();
     if (url === '') return '';
-    if (SAFE_LINK.test(url)) return url;
-    return BARE_DOMAIN.test(url) ? `https://${url}` : null;
+    const candidate = SAFE_LINK.test(url) ? url : BARE_DOMAIN.test(url) ? `https://${url}` : null;
+    return candidate !== null && isParsable(candidate) ? candidate : null;
 }
 
-const isExternal = (url) => /^https?:\/\//i.test(url) && new URL(url).host !== window.location.host;
+function isParsable(url) {
+    try {
+        new URL(url, window.location.origin);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function isExternal(url) {
+    try {
+        return /^https?:\/\//i.test(url) && new URL(url).host !== window.location.host;
+    } catch {
+        return false;
+    }
+}
 
 function el(tag, attrs = {}, html = '') {
     const node = document.createElement(tag);
@@ -56,7 +77,10 @@ class RichEditor {
         root.prepend(this.frame);
         root.classList.add('is-enhanced');
 
+        this.notice = el('p', { class: 'qb-rte-notice', role: 'status', hidden: '' }, this.labels.sourceNotice || '');
+        root.prepend(this.notice);
         this.editor = this.createEditor();
+        if (!this.holdsInEditor(textarea.value, false)) this.setSourceMode(true, true);
     }
 
     createEditor() {
@@ -68,12 +92,15 @@ class RichEditor {
             content: textarea.value,
             extensions: [
                 StarterKit.configure({
-                    heading: { levels: [2, 3] },
-                    code: false,
-                    codeBlock: false,
+                    heading: { levels: [1, 2, 3, 4, 5, 6] },
                     link: { openOnClick: false, autolink: false, HTMLAttributes: { target: null, rel: null } },
                 }),
-                TextAlign.configure({ types: ['heading', 'paragraph'], alignments: ['start', 'center', 'end', 'justify'] }),
+                TextAlign.configure({ types: ['heading', 'paragraph'], alignments: ['start', 'center', 'end', 'justify', 'left', 'right'] }),
+                TableKit.configure({ table: { resizable: false } }),
+                Image.configure({ inline: true, allowBase64: false }),
+                Subscript,
+                Superscript,
+                Highlight,
                 Placeholder.configure({ placeholder: this.labels.placeholder || '' }),
             ],
             editorProps: {
@@ -102,7 +129,7 @@ class RichEditor {
     }
 
     buildToolbar() {
-        const isRtl = getComputedStyle(this.root).direction === 'rtl';
+        const isRtl = this.dir === 'rtl';
         const bar = el('div', { class: 'qb-rte-toolbar', role: 'toolbar', 'aria-label': this.labels.toolbar || '' });
         GROUPS.forEach((group) => {
             const wrap = el('div', { class: 'qb-rte-group', role: 'group' });
@@ -117,6 +144,7 @@ class RichEditor {
     buildButton(def, isRtl) {
         const label = this.labels[def.id] || def.id;
         const button = el('button', { type: 'button', class: 'qb-rte-btn', 'aria-label': label, title: label, tabindex: '-1', 'data-cmd': def.id }, iconFor(def.id, isRtl));
+        button.setAttribute('aria-disabled', 'false');
         if (def.active || def.special) button.setAttribute('aria-pressed', 'false');
         // Keep the editor selection while a button is pressed with the mouse.
         button.addEventListener('mousedown', (e) => e.preventDefault());
@@ -153,7 +181,7 @@ class RichEditor {
 
     // Roving tabindex: one tab stop for the whole toolbar, arrows move inside it.
     onToolbarKey(e) {
-        const items = [...this.toolbar.querySelectorAll('button:not(:disabled)')];
+        const items = [...this.toolbar.querySelectorAll('button')];
         const index = items.indexOf(document.activeElement);
         if (index < 0) return;
         const rtl = getComputedStyle(this.toolbar).direction === 'rtl';
@@ -171,6 +199,7 @@ class RichEditor {
     }
 
     runCommand(def) {
+        if (this.buttons.get(def.id).button.getAttribute('aria-disabled') === 'true') return undefined;
         if (def.special === 'link') return this.openLinkBar();
         if (def.special === 'source') return this.toggleSource();
         return def.run(this.editor.chain().focus()).run();
@@ -181,40 +210,46 @@ class RichEditor {
         if (!editor) return;
         this.buttons.forEach(({ button, def }) => {
             if (def.active) button.setAttribute('aria-pressed', String(!this.sourceMode && def.active(editor)));
-            if (def.can) button.disabled = this.sourceMode || !def.can(editor);
-            else if (def.special !== 'source') button.disabled = this.sourceMode;
+            // aria-disabled (not disabled) so a focused button never drops focus to <body>.
+            const off = def.special !== 'source' && (this.sourceMode || (def.can ? !def.can(editor) : false));
+            button.setAttribute('aria-disabled', String(off));
         });
-        this.ensureRovingStop();
-    }
-
-    // A disabled button cannot hold the tab stop, so hand it to the first usable one.
-    ensureRovingStop() {
-        const stop = this.toolbar.querySelector('button[tabindex="0"]');
-        if (stop && !stop.disabled) return;
-        this.toolbar.querySelectorAll('button').forEach((b) => { b.tabIndex = -1; });
-        const usable = this.toolbar.querySelector('button:not(:disabled)');
-        if (usable) usable.tabIndex = 0;
     }
 
     syncToTextarea() {
         this.textarea.value = this.editor.isEmpty ? '' : this.editor.getHTML();
     }
 
+    // In source mode the textarea is already the truth; in visual mode copy the editor out.
     flush() {
-        if (this.sourceMode) this.editor.commands.setContent(this.textarea.value, { emitUpdate: false });
-        else this.syncToTextarea();
+        if (!this.sourceMode) this.syncToTextarea();
+    }
+
+    /** Loads `html` into the editor and reports whether it came back unchanged (nothing would be lost). */
+    holdsInEditor(html, emitUpdate) {
+        this.editor.commands.setContent(html, { emitUpdate });
+        return roundTrips(html, this.editor.getHTML(), this.editor.isEmpty);
     }
 
     toggleSource() {
-        this.sourceMode = !this.sourceMode;
-        this.root.classList.toggle('is-source', this.sourceMode);
-        this.buttons.get('source').button.setAttribute('aria-pressed', String(this.sourceMode));
+        if (!this.sourceMode) return this.setSourceMode(true);
+        // Leaving source mode must never flatten markup the editor cannot represent.
+        if (this.holdsInEditor(this.textarea.value, false)) return this.setSourceMode(false);
+        this.notice.hidden = false;
+        this.textarea.focus();
+        return undefined;
+    }
+
+    setSourceMode(on, lossy = false) {
+        this.sourceMode = on;
+        this.root.classList.toggle('is-source', on);
+        this.buttons.get('source').button.setAttribute('aria-pressed', String(on));
+        this.notice.hidden = !lossy;
         this.closeLinkBar();
-        if (this.sourceMode) {
+        if (on && !lossy) {
             this.syncToTextarea();
             this.textarea.focus();
-        } else {
-            this.editor.commands.setContent(this.textarea.value, { emitUpdate: false });
+        } else if (!on) {
             this.syncToTextarea();
             this.editor.commands.focus();
         }
@@ -239,7 +274,7 @@ class RichEditor {
     applyLink(remove = false) {
         const url = remove ? '' : normaliseUrl(this.linkInput.value);
         if (url === null) {
-            this.linkError.textContent = 'https://example.com';
+            this.linkError.textContent = this.labels.linkInvalid || '';
             this.linkInput.setAttribute('aria-invalid', 'true');
             return;
         }

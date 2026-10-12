@@ -94,3 +94,54 @@ it('renders the rich editor for both languages on the page and article forms', f
         ->assertSee('name="body_ar"', false)
         ->assertSee('name="body_en"', false);
 });
+
+it('sanitizes style input when an existing page is updated', function (): void {
+    $page = Page::query()->create([
+        'slug' => 'privacy',
+        'title' => ['ar' => 'الخصوصية', 'en' => 'Privacy'],
+        'body' => ['ar' => '<p>قديم</p>', 'en' => ''],
+        'display_order' => 0,
+        'is_published' => true,
+    ]);
+
+    actingAs($this->admin)->put("/admin/pages/{$page->id}", [
+        'slug' => 'privacy',
+        'display_order' => 0,
+        'is_published' => '1',
+        'title_ar' => 'الخصوصية',
+        'body_ar' => '<p style="text-align: center; background:url(x)">أ</p>',
+        'body_en' => '<p style="text-align:center">b</p>',
+    ])->assertRedirect(route('admin.pages.index'));
+
+    expect($page->refresh()->body)->toBe([
+        'ar' => '<p>أ</p>',
+        'en' => '<p style="text-align: center">b</p>',
+    ]);
+});
+
+it('sanitizes style input when help articles are stored and updated', function (): void {
+    $category = HelpCategory::query()->create([
+        'slug' => 'safety',
+        'name' => ['ar' => 'الأمان', 'en' => 'Safety'],
+        'display_order' => 0,
+    ]);
+    $payload = fn (string $ar): array => [
+        'category_id' => $category->id,
+        'slug' => 'stay-safe',
+        'display_order' => 0,
+        'title_ar' => 'ابق آمناً',
+        'body_ar' => $ar,
+        'body_en' => '<p style="TEXT-ALIGN:END">Safe</p>',
+    ];
+
+    actingAs($this->admin)->post('/admin/help-articles', $payload('<p style="text-align:center;;">أ</p>'))
+        ->assertRedirect(route('admin.help-articles.index'));
+
+    $article = HelpArticle::query()->where('slug', 'stay-safe')->firstOrFail();
+    expect($article->body)->toBe(['ar' => '<p>أ</p>', 'en' => '<p style="text-align: end">Safe</p>']);
+
+    actingAs($this->admin)->put("/admin/help-articles/{$article->id}", $payload('<h2 style="text-align:justify">ب</h2>'))
+        ->assertRedirect(route('admin.help-articles.index'));
+
+    expect($article->refresh()->body['ar'])->toBe('<h2 style="text-align: justify">ب</h2>');
+});

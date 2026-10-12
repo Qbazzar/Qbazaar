@@ -56,7 +56,7 @@ export const GROUPS = [
         { id: 'hr', run: (c) => c.setHorizontalRule() },
     ],
     [
-        { id: 'alignStart', run: (c) => c.setTextAlign('start'), active: (e) => e.isActive({ textAlign: 'start' }) },
+        { id: 'alignStart', run: (c) => c.setTextAlign('start'), active: (e) => !['center', 'end', 'justify', 'left', 'right'].some((a) => e.isActive({ textAlign: a })) },
         { id: 'alignCenter', run: (c) => c.setTextAlign('center'), active: (e) => e.isActive({ textAlign: 'center' }) },
         { id: 'alignEnd', run: (c) => c.setTextAlign('end'), active: (e) => e.isActive({ textAlign: 'end' }) },
         { id: 'alignJustify', run: (c) => c.setTextAlign('justify'), active: (e) => e.isActive({ textAlign: 'justify' }) },
