@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Building2 } from 'lucide-react';
 
 import { CompanyDirectoryCard } from '@/components/companies/CompanyDirectoryCard';
 import { CompanySearchForm } from '@/components/companies/CompanySearchForm';
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { Building2Icon } from '@/components/design-system/icons';
 import { Pagination } from '@/components/design-system/Pagination';
 import type { Company } from '@/lib/api/types';
 import { companiesApiPath, companiesHref, readCompaniesParams, type CompaniesParams } from '@/lib/companies/directory';
@@ -54,13 +54,15 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
   return (
     <main className="bg-qb-page pb-16 font-qb text-qb-ink">
       <div className="mx-auto max-w-[1440px] px-qb-gutter pt-[clamp(20px,4vw,40px)]">
-        <h1 className="text-[clamp(30px,5vw,48px)] font-semibold tracking-normal text-qb-ink">{t('companies.title')}</h1>
+        <h1 className="mb-[clamp(30px,6vw,70px)] text-[clamp(30px,5vw,48px)] leading-[normal] font-semibold tracking-normal text-qb-ink">
+          {t('companies.title')}
+        </h1>
         {/* Present in every state, so a new search's count is read out when the results change in place. */}
         <p role="status" className="sr-only">
           {result ? `${formatNumber(total, locale)} ${tPlural('companies.count', total, locale)}` : ''}
         </p>
 
-        <section aria-labelledby="companies-search-title" className="mt-[clamp(30px,6vw,70px)]">
+        <section aria-labelledby="companies-search-title">
           <div className="mx-auto max-w-[760px] text-center">
             <h2 id="companies-search-title" className="text-[clamp(28px,4vw,42px)] font-bold tracking-normal text-qb-ink">
               {t('companies.hero')}
@@ -76,7 +78,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
           {result ? (
             <CompanyResults companies={result.data} params={params} lastPage={result.meta.last_page} locale={locale} />
           ) : (
-            <EmptyState icon={<Icon icon={Building2} size="lg" />} title={t('companies.error_title')} description={t('companies.error_body')} />
+            <EmptyState icon={<Icon icon={Building2Icon} size="lg" />} title={t('companies.error_title')} description={t('companies.error_body')} />
           )}
         </div>
       </div>
@@ -96,7 +98,7 @@ function CompanyResults({ companies, params, lastPage, locale }: CompanyResultsP
     const filtered = Boolean(params.query) || params.page > 1;
     return (
       <EmptyState
-        icon={<Icon icon={Building2} size="lg" />}
+        icon={<Icon icon={Building2Icon} size="lg" />}
         title={params.query ? t('companies.no_results_title', { query: params.query }) : t('companies.empty_title')}
         description={params.query ? t('companies.no_results_body') : undefined}
         action={
