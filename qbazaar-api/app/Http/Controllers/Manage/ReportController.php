@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\Report;
 use App\Models\User;
+use App\Services\Admin\Reports\ReportDetailPanels;
 use App\Services\Ads\AdLifecycleService;
 use App\Services\Users\UserModerationService;
 use Illuminate\Container\Attributes\CurrentUser;
@@ -62,11 +63,9 @@ class ReportController extends Controller
         ]);
     }
 
-    public function show(Report $report): View
+    public function show(Report $report, ReportDetailPanels $panels): View
     {
-        $report->load(['reporter.avatarMedia', 'reviewer.avatarMedia']);
-
-        return view('admin.reports.show', ['report' => $report]);
+        return view('admin.reports.show', $panels->forShow($report));
     }
 
     public function resolve(Report $report): RedirectResponse

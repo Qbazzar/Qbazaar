@@ -12,8 +12,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
+use App\Models\User;
 use App\Rules\NoMarkup;
+use App\Services\Admin\Ads\AdDetailPanels;
 use App\Services\Ads\AdLifecycleService;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -55,17 +58,15 @@ class AdController extends Controller
         ]);
     }
 
-    public function show(Ad $ad): View
+    public function show(#[CurrentUser] User $viewer, Ad $ad, AdDetailPanels $panels): View
     {
-        $ad->load(['user.avatarMedia', 'category', 'location', 'media']);
-
-        return view('admin.ads.show', ['ad' => $ad]);
+        return view('admin.ads.show', $panels->forShow($ad, $viewer));
     }
 
-    public function edit(Ad $ad): View
+    public function edit(Ad $ad, AdDetailPanels $panels): View
     {
         return view('admin.ads.edit', [
-            'ad' => $ad,
+            ...$panels->forEdit($ad),
             'categories' => $this->categoryOptions(),
             'locations' => $this->locationOptions(),
             'priceTypes' => PriceType::cases(),

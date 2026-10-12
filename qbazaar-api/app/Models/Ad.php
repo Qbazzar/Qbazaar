@@ -219,6 +219,12 @@ class Ad extends Model implements HasMedia
         return $this->hasMany(Conversation::class);
     }
 
+    /** @return HasMany<AdPromotion, $this> */
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(AdPromotion::class);
+    }
+
     /** @return BelongsTo<Category, $this> */
     public function category(): BelongsTo
     {
