@@ -12,6 +12,7 @@ use App\Http\Controllers\Manage\DashboardController;
 use App\Http\Controllers\Manage\Finance;
 use App\Http\Controllers\Manage\HelpArticleController;
 use App\Http\Controllers\Manage\HelpCategoryController;
+use App\Http\Controllers\Manage\IntegrationTestController;
 use App\Http\Controllers\Manage\LocationController;
 use App\Http\Controllers\Manage\ModerationRuleController;
 use App\Http\Controllers\Manage\NotificationController;
@@ -191,6 +192,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
             Route::post('settings/commission-rates', [CommissionRateController::class, 'store'])->name('settings.commission-rates.store');
             Route::delete('settings/commission-rates/{category}', [CommissionRateController::class, 'destroy'])->name('settings.commission-rates.destroy');
+        });
+
+        // Integration credential checks: super_admin only, rate limited per admin
+        Route::middleware(['permission:integrations.manage', 'throttle:integration-test'])->group(function () {
+            Route::post('settings/test-email', [IntegrationTestController::class, 'email'])->name('settings.test-email');
+            Route::post('settings/test-sms', [IntegrationTestController::class, 'sms'])->name('settings.test-sms');
         });
 
         // Finance: settlements, withdrawals, disputes and user statements

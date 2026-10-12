@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Manage;
 
+use App\Enums\IntegrationGroup;
+use App\Enums\IntegrationSetting;
 use App\Enums\PlatformSetting;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -35,6 +37,32 @@ class UpdatePlatformSettingsRequest extends FormRequest
             $rules[$setting->value] = $setting->definition()->rules();
         }
 
+        return [...$rules, ...$this->integrationRules()];
+    }
+
+    /**
+     * Groups the actor may edit; input for any other group is never validated or saved.
+     *
+     * @return list<IntegrationGroup>
+     */
+    public function editableGroups(): array
+    {
+        return IntegrationGroup::visibleTo($this->user());
+    }
+
+    /**
+     * @return array<string, list<mixed>>
+     */
+    private function integrationRules(): array
+    {
+        $rules = ['integrations_clear' => ['sometimes', 'array'], 'integrations_clear.*' => ['boolean']];
+
+        foreach ($this->editableGroups() as $group) {
+            foreach (IntegrationSetting::forGroup($group) as $setting) {
+                $rules["integrations.{$setting->value}"] = $setting->definition()->rules();
+            }
+        }
+
         return $rules;
     }
 
@@ -47,6 +75,10 @@ class UpdatePlatformSettingsRequest extends FormRequest
 
         foreach (PlatformSetting::cases() as $setting) {
             $attributes[$setting->value] = (string) __("admin.settings.fields.{$setting->value}.label");
+        }
+
+        foreach (IntegrationSetting::cases() as $setting) {
+            $attributes["integrations.{$setting->value}"] = (string) __("admin.integrations.fields.{$setting->value}.label");
         }
 
         return $attributes;

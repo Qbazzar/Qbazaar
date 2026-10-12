@@ -51,6 +51,7 @@ return [
         'sid' => env('TWILIO_SID'),
         'token' => env('TWILIO_TOKEN'),
         'from' => env('TWILIO_FROM'),
+        'messaging_service_sid' => env('TWILIO_MESSAGING_SERVICE_SID'),
     ],
 
     /*
@@ -64,6 +65,7 @@ return [
     'turnstile' => [
         'enabled' => (bool) env('TURNSTILE_ENABLED', false) && env('APP_ENV') !== 'testing',
         'secret' => env('TURNSTILE_SECRET_KEY'),
+        'site_key' => env('TURNSTILE_SITE_KEY'),
         'verify_url' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
         'timeout_seconds' => 5,
     ],
@@ -79,10 +81,39 @@ return [
     */
     'google' => [
         'client_ids' => env('GOOGLE_CLIENT_IDS', ''),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'ga4_measurement_id' => env('GA4_MEASUREMENT_ID'),
     ],
 
     'apple' => [
         'client_ids' => env('APPLE_CLIENT_IDS', ''),
+        'team_id' => env('APPLE_TEAM_ID'),
+        'key_id' => env('APPLE_KEY_ID'),
+        'private_key' => env('APPLE_PRIVATE_KEY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Firebase Cloud Messaging and the payment gateway
+    |--------------------------------------------------------------------------
+    |
+    | Configuration only: no FCM sender or payment integration ships yet
+    | (checkout stays cash-only until milestone M7). The admin integration
+    | settings overlay these values.
+    */
+    'fcm' => [
+        'service_account' => env('FCM_SERVICE_ACCOUNT_JSON'),
+        'project_id' => env('FCM_PROJECT_ID'),
+    ],
+
+    'payment' => [
+        'enabled' => false,
+        'provider' => env('PAYMENT_PROVIDER', 'generic'),
+        'mode' => env('PAYMENT_MODE', 'test'),
+        'merchant_id' => env('PAYMENT_MERCHANT_ID'),
+        'public_key' => env('PAYMENT_PUBLIC_KEY'),
+        'secret_key' => env('PAYMENT_SECRET_KEY'),
+        'webhook_secret' => env('PAYMENT_WEBHOOK_SECRET'),
     ],
 
 ];

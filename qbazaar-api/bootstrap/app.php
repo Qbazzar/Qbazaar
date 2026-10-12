@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\IntegrationSetting;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Exceptions\NotFoundErrorCode;
@@ -227,6 +228,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Secret integration inputs must never be flashed back into the session on a validation error.
+        $exceptions->dontFlash(array_map(
+            fn (IntegrationSetting $setting): string => 'integrations.' . $setting->value,
+            array_values(array_filter(IntegrationSetting::cases(), fn (IntegrationSetting $s): bool => $s->definition()->secret)),
+        ));
+
         // Render exceptions to our JSON error envelope for /api/* and Accept: application/json clients
         $exceptions->shouldRenderJsonWhen(function (Request $request) {
             return $request->is('api/*') || $request->expectsJson();
