@@ -30,7 +30,7 @@ class ActivityController extends Controller
             ->with('subject')
             ->with(['causer' => function (Relation $causer): void {
                 if ($causer instanceof MorphTo) {
-                    $causer->morphWith([User::class => ['media']]);
+                    $causer->morphWith([User::class => ['avatarMedia']]);
                 }
             }])
             ->when(

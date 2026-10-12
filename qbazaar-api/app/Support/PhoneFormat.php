@@ -18,7 +18,7 @@ final class PhoneFormat
 
         $digits = preg_replace('/\D+/', '', $phone) ?? '';
 
-        if (preg_match('/^974(\d{4})(\d{4})$/', $digits, $parts) === 1) {
+        if (preg_match('/^(?:00)?974(\d{4})(\d{4})$/', $digits, $parts) === 1) {
             return "+974 {$parts[1]} {$parts[2]}";
         }
 

@@ -4,24 +4,31 @@ declare(strict_types=1);
 
 use App\Enums\ChatMessageKey;
 use App\Enums\MessageType;
+use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use Database\Seeders\CategorySeeder;
+use Database\Seeders\LocationSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 use function Pest\Laravel\actingAs;
+
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
+    Storage::fake('public');
     $this->withoutVite();
     config(['scout.driver' => null]);
     $this->seed([RolesAndPermissionsSeeder::class, LocationSeeder::class, CategorySeeder::class]);
-    $admin = User::factory()->create();
-    $admin->assignRole('super_admin');
-    actingAs($admin);
+    $this->admin = User::factory()->create()->assignRole('super_admin');
+    actingAs($this->admin);
     $this->conversation = Conversation::factory()->create();
 });
 
@@ -36,6 +43,31 @@ function say(Conversation $conversation, string $senderId, string $body, array $
     ]);
 }
 
+function withAvatar(User $user): User
+{
+    $user->addMedia(UploadedFile::fake()->image('me.jpg', 20, 20))->toMediaCollection('avatar');
+
+    return $user;
+}
+
+function queriesFor(string $uri): int
+{
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    test()->get($uri)->assertOk();
+    DB::disableQueryLog();
+
+    return count(DB::getQueryLog());
+}
+
+/** Warms caches (permissions, etc.) so the two measurements compare like with like. */
+function steadyQueries(string $uri): int
+{
+    queriesFor($uri);
+
+    return queriesFor($uri);
+}
+
 it('shows initials per sender and the avatar once per run of messages', function (): void {
     $c = $this->conversation;
     say($c, $c->buyer_id, 'one');
@@ -44,8 +76,21 @@ it('shows initials per sender and the avatar once per run of messages', function
 
     $html = $this->get("/admin/conversations/{$c->id}")->assertOk()->getContent();
 
-    // Header (buyer, seller) + one per run (buyer run, seller run) = 4 avatars.
-    expect(substr_count($html, 'role="img"'))->toBe(4);
+    // Header avatars sit beside the name (decorative); each sender run gets one labelled avatar.
+    expect(substr_count($html, 'role="img"'))->toBe(2)
+        ->and(substr_count($html, 'aria-hidden="true">'))->toBeGreaterThanOrEqual(2);
+});
+
+it('renders the real avatar photo with lazy loading and the name as alt text', function (): void {
+    $c = $this->conversation;
+    withAvatar($c->buyer);
+    say($c, $c->buyer_id, 'hello');
+
+    $html = $this->get("/admin/conversations/{$c->id}")->getContent();
+
+    expect($html)->toContain('loading="lazy"')
+        ->and($html)->toContain('alt="' . e($c->buyer->full_name) . '"')
+        ->and($html)->toContain('alt=""');
 });
 
 it('localises deal messages in arabic and english with formatted amounts', function (): void {
@@ -81,60 +126,105 @@ it('escapes user written text', function (): void {
         ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false);
 });
 
-it('runs a fixed number of queries however many messages there are', function (): void {
+it('runs a fixed number of queries across many distinct senders with avatars', function (): void {
     $c = $this->conversation;
-    $count = function () use ($c): int {
-        DB::flushQueryLog();
-        DB::enableQueryLog();
-        $this->get("/admin/conversations/{$c->id}")->assertOk();
+    $uri = "/admin/conversations/{$c->id}";
+    say($c, withAvatar(User::factory()->create())->id, 'a');
+    say($c, User::factory()->create()->id, 'b');
+    $few = steadyQueries($uri);
 
-        return count(DB::getQueryLog());
-    };
-
-    say($c, $c->buyer_id, 'a');
-    say($c, $c->seller_id, 'b');
-    $count(); // warm the permission cache
-    $few = $count();
-
-    foreach (range(1, 30) as $i) {
-        say($c, $i % 2 ? $c->buyer_id : $c->seller_id, "m{$i}");
+    foreach (range(1, 25) as $i) {
+        $sender = User::factory()->create();
+        if ($i % 3 === 0) {
+            withAvatar($sender);
+        }
+        say($c, $sender->id, "m{$i}");
     }
 
-    expect($count())->toBe($few);
+    expect(steadyQueries($uri))->toBe($few);
+});
+
+it('opens long threads on the newest page and keeps older pages reachable', function (): void {
+    $c = $this->conversation;
+    foreach (range(1, 105) as $i) {
+        $this->travelTo(now()->startOfDay()->addSeconds($i));
+        say($c, $c->buyer_id, sprintf('msg-%03d', $i));
+    }
+
+    $this->get("/admin/conversations/{$c->id}")
+        ->assertSee('msg-105')
+        ->assertSee('msg-101')
+        ->assertDontSee('msg-100')
+        ->assertSee('page=1', false);
+
+    $this->get("/admin/conversations/{$c->id}?page=1")
+        ->assertSee('msg-001')
+        ->assertDontSee('msg-105');
 });
 
 it('does not add queries per row on the users list', function (): void {
-    $count = function (): int {
-        DB::flushQueryLog();
-        DB::enableQueryLog();
-        $this->get('/admin/users')->assertOk();
-
-        return count(DB::getQueryLog());
-    };
-
     User::factory()->count(2)->create();
-    $count(); // warm the permission cache
-    $few = $count();
-    User::factory()->count(15)->create();
+    $few = steadyQueries('/admin/users');
 
-    expect($count())->toBe($few);
+    User::factory()->count(15)->create()->each(fn (User $user) => withAvatar($user));
+
+    expect(steadyQueries('/admin/users'))->toBe($few);
 });
 
 it('does not add queries per row on the conversations list', function (): void {
-    $count = function (): int {
-        DB::flushQueryLog();
-        DB::enableQueryLog();
-        $this->get('/admin/conversations')->assertOk();
-
-        return count(DB::getQueryLog());
-    };
-
     Conversation::factory()->count(2)->create();
-    $count(); // warm the permission cache
-    $few = $count();
-    Conversation::factory()->count(8)->create();
+    $few = steadyQueries('/admin/conversations');
 
-    expect($count())->toBe($few);
+    Conversation::factory()->count(8)->create()->each(function (Conversation $conversation): void {
+        withAvatar($conversation->buyer);
+        withAvatar($conversation->seller);
+    });
+
+    expect(steadyQueries('/admin/conversations'))->toBe($few);
+});
+
+it('does not add queries per row on the ads list with covers and seller avatars', function (): void {
+    $make = function (): void {
+        $ad = Ad::factory()->active()->create(['user_id' => withAvatar(User::factory()->create())->id]);
+        $ad->addMedia(UploadedFile::fake()->image('p.jpg', 20, 20))->toMediaCollection('images');
+    };
+    $make();
+    $few = steadyQueries('/admin/ads');
+
+    foreach (range(1, 8) as $ignored) {
+        $make();
+    }
+
+    expect(steadyQueries('/admin/ads'))->toBe($few);
+});
+
+it('does not add queries per row on the activity log with avatar causers', function (): void {
+    $log = fn (User $user) => activity()->causedBy($user)->log('did something');
+    $log(withAvatar(User::factory()->create()));
+    $few = steadyQueries('/admin/activity');
+
+    foreach (range(1, 8) as $ignored) {
+        $log(withAvatar(User::factory()->create()));
+    }
+
+    expect(steadyQueries('/admin/activity'))->toBe($few);
+});
+
+it('hides the user and ad links from staff without users.view and ads.view', function (): void {
+    $c = $this->conversation;
+    $c->update(['ad_id' => Ad::factory()->active()->create()->id]);
+    Role::findByName('moderator', 'web')->revokePermissionTo(['users.view', 'ads.view']);
+    actingAs(User::factory()->create()->assignRole('moderator'));
+
+    $this->get("/admin/conversations/{$c->id}")
+        ->assertOk()
+        ->assertDontSee('/admin/users/', false)
+        ->assertDontSee('/admin/ads/', false);
+
+    actingAs($this->admin);
+    $this->get("/admin/conversations/{$c->id}")
+        ->assertSee("/admin/users/{$c->buyer_id}", false)
+        ->assertSee("/admin/ads/{$c->ad_id}", false);
 });
 
 it('shows localised role names and an isolated phone number in the users list', function (): void {
@@ -145,4 +235,14 @@ it('shows localised role names and an isolated phone number in the users list', 
         ->assertSee('مشرف')
         ->assertSee('dir="ltr"', false)
         ->assertSee('+974 3900 0000');
+});
+
+it('shows localised role names on the roles index', function (): void {
+    app()->setLocale('ar');
+
+    $this->get('/admin/roles')
+        ->assertSee('مدير عام')
+        ->assertSee('مشرف')
+        ->assertSee('دعم فني')
+        ->assertDontSee('>super_admin<', false);
 });

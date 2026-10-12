@@ -8,7 +8,7 @@
 
 <span {{ $attributes->class('inline-flex max-w-full min-w-0 items-center gap-2 align-middle') }}>
     @if ($user !== null)
-        <x-admin.user-avatar :user="$user" :size="$size" />
+        <x-admin.user-avatar :user="$user" :size="$size" decorative />
     @endif
     @if ($url)
         <a href="{{ $url }}" title="{{ $name }}" class="min-w-0 truncate font-semibold hover:text-coral-700">{{ $name }}</a>

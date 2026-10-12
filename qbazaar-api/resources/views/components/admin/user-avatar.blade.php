@@ -1,4 +1,4 @@
-@props(['user' => null, 'size' => 'sm', 'href' => null])
+@props(['user' => null, 'size' => 'sm', 'decorative' => false])
 
 @php
     $sizes = [
@@ -25,14 +25,10 @@
     $photo = $user?->avatarThumbUrl();
 @endphp
 
-@if ($href)
-    <a href="{{ $href }}" tabindex="-1" aria-hidden="true" class="shrink-0">
-@endif
 @if ($photo)
-    <img src="{{ $photo }}" alt="{{ $label }}" width="{{ $dimension['px'] }}" height="{{ $dimension['px'] }}" loading="lazy" {{ $attributes->class(['shrink-0 rounded-full border border-ink-200 object-cover', $dimension['box']]) }}>
+    <img src="{{ $photo }}" alt="{{ $decorative ? '' : $label }}" width="{{ $dimension['px'] }}" height="{{ $dimension['px'] }}" loading="lazy" {{ $attributes->class(['shrink-0 rounded-full border border-ink-200 object-cover', $dimension['box']]) }}>
+@elseif ($decorative)
+    <span aria-hidden="true" {{ $attributes->class(['inline-flex shrink-0 select-none items-center justify-center rounded-full font-bold', $dimension['box'], $tone]) }}>{{ $initials }}</span>
 @else
     <span role="img" aria-label="{{ $label }}" {{ $attributes->class(['inline-flex shrink-0 select-none items-center justify-center rounded-full font-bold', $dimension['box'], $tone]) }}>{{ $initials }}</span>
-@endif
-@if ($href)
-    </a>
 @endif
