@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -76,6 +76,7 @@ interface MobileMenuDrawerProps {
 /** The slide-in navigation drawer of phones and small tablets (mobilemenu.js of the reference). */
 export function MobileMenuDrawer({ open, onOpenChange, signedIn }: MobileMenuDrawerProps) {
   const pathname = usePathname() ?? '/';
+  const captionId = useId();
   const close = () => onOpenChange(false);
   // The drawer loads on the first tap, already open. A dialog mounted open skips its entrance,
   // so it opens one frame after mounting and slides in like the later openings.
@@ -93,8 +94,9 @@ export function MobileMenuDrawer({ open, onOpenChange, signedIn }: MobileMenuDra
       title={t('layout.menu.title', 'القائمة')}
       heading={<SiteLogo width={80} height={30} />}
     >
-      <nav aria-label={t('layout.menu.title', 'القائمة')} className="flex flex-1 flex-col">
-        <p aria-hidden="true" className="px-5 pt-3.5 pb-1.5 text-qb-micro font-semibold text-qb-ink-caption uppercase ltr:tracking-[0.08em]">
+      {/* The visible MENU caption (`.qb-mdrawer-hd`) names the navigation. */}
+      <nav aria-labelledby={captionId} className="flex flex-1 flex-col">
+        <p id={captionId} className="px-5 pt-3.5 pb-1.5 text-qb-micro font-semibold text-qb-ink-caption uppercase ltr:tracking-[0.08em]">
           {t('layout.menu.title', 'القائمة')}
         </p>
         <ul className="flex-1 px-3 pt-1.5 pb-3">

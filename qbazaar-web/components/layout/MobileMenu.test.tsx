@@ -36,7 +36,9 @@ describe('MobileMenu', () => {
     const drawer = await screen.findByRole('dialog', { name: 'Menu' });
 
     expect(drawer).toHaveClass('start-0', 'max-w-[340px]');
-    expect(screen.getByRole('navigation', { name: 'Menu' })).toBeInTheDocument();
+    // Named by its visible MENU caption, as the reference shows it.
+    const nav = screen.getByRole('navigation', { name: 'Menu' });
+    expect(document.getElementById(nav.getAttribute('aria-labelledby') ?? '')).toHaveClass('uppercase');
     expect(screen.getByRole('link', { name: 'Categories' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
   });
