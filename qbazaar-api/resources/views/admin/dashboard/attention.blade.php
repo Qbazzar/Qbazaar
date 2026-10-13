@@ -15,15 +15,18 @@
                 <span aria-hidden="true">✓</span> {{ __('admin.home.attention.clear') }}
             </p>
         @else
-            <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(15rem,1fr))]">
+            {{-- One row at every width: cards share it while they fit and the row scrolls sideways instead of wrapping.
+                 The 10rem floor keeps the label and count readable; the padding keeps focus rings and shadows unclipped. --}}
+            @php($noLinks = collect($waiting)->every(fn (array $item): bool => ! $item['href']))
+            <ul class="-m-1 flex snap-x gap-3 overflow-x-auto p-1" @if ($noLinks) tabindex="0" aria-label="{{ __('admin.home.attention.title') }}" @endif>
                 @foreach ($waiting as $item)
                     @php
                         $tone = $look[$item['severity']];
                         $tag = $item['href'] ? 'a' : 'div';
                     @endphp
-                    <li class="flex">
+                    <li class="flex min-w-[10rem] flex-1 snap-start">
                         <{{ $tag }} @if ($item['href']) href="{{ $item['href'] }}" @endif
-                            @class(['relative flex w-full flex-col gap-1 overflow-hidden rounded-xl border py-3 ps-5 pe-4', $tone['card'], 'transition hover:shadow-sm focus-visible:outline-2 focus-visible:outline-coral-600' => $item['href']])>
+                            @class(['relative flex w-full flex-col gap-1 overflow-hidden rounded-xl border py-3 ps-5 pe-4', $tone['card'], 'transition hover:shadow-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-coral-600' => $item['href']])>
                             <span aria-hidden="true" class="absolute inset-y-0 start-0 w-1.5 {{ $tone['bar'] }}"></span>
                             <span class="flex items-start justify-between gap-3">
                                 <span class="text-sm font-semibold text-ink-900">{{ __('admin.home.attention.items.' . $item['key']) }}</span>
