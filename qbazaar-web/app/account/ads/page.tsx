@@ -61,7 +61,7 @@ export default function MyAdsPage() {
           />
         ) : null}
 
-        <h2 className="mt-2 text-qb-h3 leading-normal font-semibold tracking-normal text-qb-ink">
+        <h2 className="mt-2 text-qb-h3 leading-[normal] font-semibold tracking-normal text-qb-ink">
           {t('account.nav.my_ads')}
         </h2>
       </div>

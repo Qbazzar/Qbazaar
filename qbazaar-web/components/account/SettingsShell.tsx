@@ -24,7 +24,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
 
   return (
     <div className={cn('mx-auto max-w-[1440px] py-[clamp(20px,4vw,40px)] font-qb text-qb-ink', pageGutter)}>
-      <h1 className="mb-6 text-[clamp(28px,4vw,40px)] leading-normal font-semibold tracking-normal">
+      <h1 className="mb-6 text-[clamp(28px,4vw,40px)] leading-[normal] font-semibold tracking-normal">
         {t('account.nav.settings')}
       </h1>
       <div className="flex items-start gap-6 qb-desktop:flex-wrap">

@@ -18,7 +18,7 @@ export function SettingsPanel({ title, description, actions, children, className
     <section className={cn('flex flex-col gap-5 font-qb', className)}>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-qb-h3 leading-normal font-semibold tracking-normal text-qb-ink">{title}</h2>
+          <h2 className="text-qb-h3 leading-[normal] font-semibold tracking-normal text-qb-ink">{title}</h2>
           {description ? <p className="mt-2 text-qb-body-sm text-qb-ink-subtle">{description}</p> : null}
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
@@ -66,7 +66,7 @@ export function SettingsRow({ label, value, description, action, icon, className
       {/* The basis lets a wide action drop under the text on phones instead of squeezing it. */}
       <div className="min-w-0 flex-1 basis-[200px]">
         {label ? <p className="mb-1.5 text-qb-caption text-qb-ink-subtle">{label}</p> : null}
-        <div className="text-[17px] leading-normal font-semibold text-qb-ink">{value}</div>
+        <div className="text-[17px] leading-[normal] font-semibold text-qb-ink">{value}</div>
         {description ? <p className="mt-1 text-qb-caption text-qb-ink-subtle">{description}</p> : null}
       </div>
       {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}

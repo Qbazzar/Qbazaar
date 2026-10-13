@@ -76,6 +76,8 @@ export function AvatarCropDialog({
                 crop={crop}
                 zoom={zoom}
                 aspect={1}
+                // cropper.js scales the photo to cover the whole 300 px viewport.
+                objectFit="cover"
                 cropShape="round"
                 cropSize={{ width: 260, height: 260 }}
                 showGrid={false}
@@ -97,7 +99,8 @@ export function AvatarCropDialog({
               value={zoom}
               onChange={(event) => onZoomChange(Number(event.target.value))}
               disabled={uploading}
-              className={cn('min-w-0 flex-1 accent-qb-brand', focusRing)}
+              // The browser's own range: 2 px margin and a white field, which the preflight resets.
+              className={cn('m-0.5 min-w-0 flex-1 bg-qb-surface accent-qb-brand', focusRing)}
             />
           </label>
 

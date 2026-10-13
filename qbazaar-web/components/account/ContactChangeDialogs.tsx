@@ -72,7 +72,12 @@ export function EditEmailDialog({ open, onOpenChange }: ContactDialogProps) {
   };
 
   return (
-    <AccountDialog open={open} onOpenChange={close} title={t('account.contact.email_title')}>
+    <AccountDialog
+      open={open}
+      onOpenChange={close}
+      title={t('account.contact.email_title')}
+      headerClassName="mb-[22px]"
+    >
       {step === 'email' ? (
         <form
           noValidate
@@ -117,7 +122,8 @@ export function EditEmailDialog({ open, onOpenChange }: ContactDialogProps) {
               />
             )}
           </Field>
-          <DialogButtons pending={reauth.sending} onCancel={() => close(false)} />
+          {/* 26 px under the last field, as under the design's password row: the 18 px gap plus 8. */}
+          <DialogButtons pending={reauth.sending} onCancel={() => close(false)} className="mt-2" />
         </form>
       ) : (
         <SecurityCodeStep
@@ -338,9 +344,17 @@ function CodeStep({
   );
 }
 
-function DialogButtons({ pending, onCancel }: { pending: boolean; onCancel: () => void }) {
+function DialogButtons({
+  pending,
+  onCancel,
+  className = 'mt-[26px]',
+}: {
+  pending: boolean;
+  onCancel: () => void;
+  className?: string;
+}) {
   return (
-    <AccountDialogActions className="mt-[26px]">
+    <AccountDialogActions className={className}>
       <button type="submit" disabled={pending} className={cn(accountSaveClass, pending && 'cursor-progress')}>
         {pending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
         {t('common.save')}

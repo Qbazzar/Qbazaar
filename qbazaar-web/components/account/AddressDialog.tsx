@@ -66,7 +66,13 @@ export function AddressDialog({ open, onOpenChange, addresses, defaultName }: Ad
   const title = showForm && !editing ? t('account.address.add_title') : t('account.address.edit_title');
 
   return (
-    <AccountDialog open={open} onOpenChange={close} title={title}>
+    <AccountDialog
+      open={open}
+      onOpenChange={close}
+      title={title}
+      // The saved list ("Edit Address", modalAddressList) keeps 22 px under its title, the form 24.
+      headerClassName={showForm ? undefined : 'mb-[22px]'}
+    >
       {showForm ? (
         <AddressForm
           key={editing?.id ?? 'new'}

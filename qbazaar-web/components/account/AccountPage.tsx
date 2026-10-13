@@ -40,7 +40,7 @@ export function AccountPage({ title, actions, children, variant = 'page', titleC
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1
           className={cn(
-            'leading-normal font-semibold tracking-normal text-qb-ink',
+            'leading-[normal] font-semibold tracking-normal text-qb-ink',
             isAccount ? compactTitleClass : 'text-[clamp(30px,5vw,48px)]',
             titleClassName,
           )}

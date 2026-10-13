@@ -33,7 +33,7 @@ export function SettingsSidebar({ pathname }: { pathname: string }) {
         onClick={signOut}
         disabled={pending}
         className={cn(
-          'qb-motion mt-2 flex w-full cursor-pointer items-center gap-3 rounded-qb-lg border-t border-qb-line px-4 pt-[18px] pb-3.5 text-start text-qb-body-sm text-qb-acct-danger hover:brightness-[.96] disabled:cursor-progress disabled:opacity-60',
+          'qb-motion mt-2 flex w-full cursor-pointer items-center gap-3 rounded-qb-lg border-t border-qb-line px-4 pt-[18px] pb-3.5 text-start text-qb-body-sm leading-[1.15] text-qb-acct-danger hover:brightness-[.96] disabled:cursor-progress disabled:opacity-60',
           focusRing,
         )}
       >
