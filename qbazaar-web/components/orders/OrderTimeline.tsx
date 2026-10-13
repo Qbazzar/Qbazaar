@@ -1,4 +1,3 @@
-
 import { Icon } from '@/components/design-system/Icon';
 import { CheckIcon } from '@/components/design-system/icons';
 import type { Order } from '@/lib/api/commerce-types';

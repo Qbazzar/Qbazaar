@@ -1,4 +1,3 @@
-
 import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
 import { CheckCircleIcon } from '@/components/design-system/icons';
