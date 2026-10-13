@@ -174,7 +174,8 @@ export function VerifyOtpForm() {
           <Button
             fullWidth
             onClick={() => setStep('number')}
-            className={cn(authSubmitClass, 'mx-auto mt-[34px] max-w-[420px]')}
+            // A block-level box as the design's a.qb-btn, so the auto margins centre it.
+            className={cn(authSubmitClass, 'mx-auto mt-[34px] flex max-w-[420px]')}
           >
             {t('auth.verify_otp.continue')}
           </Button>
@@ -292,7 +293,7 @@ export function VerifyOtpForm() {
               type="submit"
               fullWidth
               disabled={submitting || code.length !== CODE_LENGTH}
-              className={cn(authSubmitClass, 'mx-auto mt-[30px] max-w-[420px]', submitting && 'cursor-progress')}
+              className={cn(authSubmitClass, 'mx-auto mt-[30px] flex max-w-[420px]', submitting && 'cursor-progress')}
             >
               {submitting ? (
                 <>

@@ -145,7 +145,7 @@ export function PhoneNumberFields({
         </p>
       ) : null}
       {hideNote ? null : (
-        <p id={noteId} className="mt-3.5 text-qb-micro text-qb-auth-note">
+        <p id={noteId} className="mt-3.5 text-qb-micro leading-[1.6] text-qb-auth-note">
           {t('auth.phone.note')}
         </p>
       )}
