@@ -30,8 +30,9 @@ test('keyframes are parsed and compared by content', () => {
   const css = '@keyframes qbFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }';
   const [fade] = parseKeyframes(css, 'styles.css', 0);
   assert.equal(fade.name, 'qbFade');
-  assert.equal(compareKeyframes([fade], ['qbFade'], [{ ...fade, name: 'other' }]).length, 0);
-  assert.equal(compareKeyframes([fade], ['qbFade'], []).length, 1);
+  const onWrapper = { name: 'qbFade', count: 1, sample: 'div', pageLevel: true };
+  assert.equal(compareKeyframes([fade], [onWrapper], [{ ...fade, name: 'other' }], [{ ...onWrapper, name: 'other' }]).length, 0);
+  assert.equal(compareKeyframes([fade], [onWrapper], [], []).length, 1);
 });
 
 test('sequences differ in duration and easing', () => {

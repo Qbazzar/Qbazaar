@@ -21,6 +21,15 @@ function toReferenceBase(value) {
   return 'file:///' + path.resolve(value).replaceAll('\\', '/').replace(/^\/+/, '').replace(/\/?$/, '/');
 }
 
+// The demo account comes from the environment only (never a flag, a file or a log line).
+const DEMO_ENV = ['QB_DEMO_EMAIL', 'QB_DEMO_PASSWORD'];
+const NEEDS_LOGIN = `needs the demo login: set ${DEMO_ENV.join(' and ')} in the environment`;
+
+function demoCredentials(env = process.env) {
+  const [email, password] = DEMO_ENV.map((name) => (env[name] || '').trim());
+  return email && password ? { email, password } : null;
+}
+
 function buildConfig(argv, env = process.env) {
   const args = parseArgs(argv);
   if (!args.target) throw new Error('--target <url> is required');
@@ -40,10 +49,10 @@ function buildConfig(argv, env = process.env) {
     skipInventory: Boolean(args['skip-inventory']),
     skipFlows: Boolean(args['skip-flows']),
     skipScenarios: Boolean(args['skip-scenarios']),
-    demo: { email: env.QB_DEMO_EMAIL, password: env.QB_DEMO_PASSWORD },
+    demo: demoCredentials(env),
     apiOrigin: String(args.api || 'https://api.qbazaar.qa'),
     chromeChannel: String(args.channel || 'chrome'),
   };
 }
 
-module.exports = { ROOT, buildConfig, parseArgs, toReferenceBase };
+module.exports = { ROOT, NEEDS_LOGIN, buildConfig, parseArgs, toReferenceBase, demoCredentials };

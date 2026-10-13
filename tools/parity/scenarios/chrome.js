@@ -48,6 +48,8 @@ module.exports = [
     id: 'chrome-drawer',
     page: 'index',
     viewports: [390],
+    // The prototype's drawer is the signed-in demo user's menu, so its content is compared signed in (as its flows are).
+    login: true,
     steps: [
       click(BURGER),
       observe('drawer-open', DRAWER, { crop: true }),

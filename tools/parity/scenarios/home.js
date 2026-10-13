@@ -1,10 +1,12 @@
 // Home page behaviours (assets/selects.js, assets/slider.js). Figma 489:16010 (category panel) and 492:17733 (distance).
 const { scenario, click, hover, press, observe, motion, stay } = require('./dsl');
 
-const CATEGORY_FIELD = { ref: '[data-qbsel=cat]', target: 'form[role=search] [data-field=category], form[role=search] a[href="/categories"]' };
-const DISTANCE_FIELD = { ref: '[data-qbsel=dist]', target: 'form[role=search] [data-field=distance], form[role=search] [aria-label=Distance]' };
-const PANEL = { ref: '.qb-ddpanel', target: '[role=listbox], [role=menu], [data-dropdown-panel]' };
-const SUBMENU = { ref: '.qb-ddsub.open', target: '[role=listbox] [role=listbox], [role=menu] [role=menu], [data-dropdown-sub]' };
+// The target's fields are comboboxes whose label carries the choice ("Distance: +10 km").
+const CATEGORY_FIELD = { ref: '[data-qbsel=cat]', target: 'form[role=search] [role=combobox][aria-label^="Choose Category"], form[role=search] [data-field=category]' };
+const DISTANCE_FIELD = { ref: '[data-qbsel=dist]', target: 'form[role=search] [role=combobox][aria-label^="Distance"], form[role=search] [data-field=distance]' };
+// The target's category field opens a tree (role=tree) whose branches open a group on hover; distance opens a listbox.
+const PANEL = { ref: '.qb-ddpanel', target: '[role=tree], [role=listbox], [role=menu], [data-dropdown-panel]' };
+const SUBMENU = { ref: '.qb-ddsub.open', target: '[role=tree] [role=group], [role=listbox] [role=listbox], [role=menu] [role=menu], [data-dropdown-sub]' };
 const RECOMMENDED = { ref: '#recTrack', target: 'ul[aria-label="Recommended for you"]' };
 const SLIDER_NEXT = { ref: '#recTrack ~ .qb-slide-next, .qb-slide-host:has(#recTrack) .qb-slide-next', target: 'button[aria-label="Next"]' };
 const SLIDER_PREV = { ref: '.qb-slide-host:has(#recTrack) .qb-slide-prev', target: 'button[aria-label="Previous"]' };
@@ -16,11 +18,12 @@ module.exports = [
     viewports: [1440],
     steps: [
       click(CATEGORY_FIELD),
-      observe('panel', PANEL, { crop: true, count: true }),
+      // The category names are data: the prototype's sample tree against the live one from the API.
+      observe('panel', PANEL, { crop: true, count: true, text: 'skip' }),
       stay('open-does-not-navigate'),
-      hover({ ref: '.qb-dditem:has(.qb-ddchev)', target: '[role=option]:has([data-chevron])' }),
-      observe('submenu', SUBMENU, { crop: true, count: true }),
-      click({ ref: '.qb-ddsub.open .qb-dditem', target: '[role=listbox] [role=listbox] [role=option]' }),
+      hover({ ref: '.qb-dditem:has(.qb-ddchev)', target: '[role=tree] [role=treeitem][aria-expanded], [role=option]:has([data-chevron])' }),
+      observe('submenu', SUBMENU, { crop: true, count: true, text: 'skip' }),
+      click({ ref: '.qb-ddsub.open .qb-dditem', target: '[role=tree] [role=group] [role=treeitem], [role=listbox] [role=listbox] [role=option]' }),
       observe('field-after-choice', CATEGORY_FIELD, { crop: true }),
     ],
   }),

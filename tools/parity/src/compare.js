@@ -19,9 +19,14 @@ function toHex(css) {
 }
 
 const normaliseColours = (value) => value.replace(/rgba?\([^)]+\)/g, (m) => toHex(m));
-// Tailwind stacks transparent zero shadows; only drawn shadows count.
+// Tailwind stacks shadows that draw nothing: transparent ones, and zero-size ones (no offset, blur or spread)
+// whatever their colour, such as a focus ring caught before its transition starts. Only drawn shadows count.
+const zeroSize = (shadow) => {
+  const lengths = shadow.match(/-?[\d.]+px/g) || [];
+  return lengths.length > 0 && lengths.every((l) => parseFloat(l) === 0);
+};
 const normaliseShadow = (v) => {
-  const drawn = normaliseColours(v).split(',').map((s) => s.trim()).filter((s) => s !== 'none' && !/^#[0-9A-F]{6}00/.test(s));
+  const drawn = normaliseColours(v).split(',').map((s) => s.trim()).filter((s) => s !== 'none' && !/^#[0-9A-F]{6}00/.test(s) && !zeroSize(s));
   return drawn.join(', ') || 'none';
 };
 const pxList = (value) => value.split(/\s+/).map((t) => (t === 'normal' || t === 'auto' ? NaN : parseFloat(t)));
@@ -125,7 +130,32 @@ function sameValue(property, a, b, options) {
   return a === b;
 }
 
-const SKIPPED = new Set(['transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay',
+// Unstyled native controls in the reference draw with the browser's own font (13.33px Arial on Windows), and a
+// checkbox or radio keeps the default cursor. Those values come from the user agent, not from the design.
+const UA_CONTROL_FONT_SIZE = '13.3333px';
+function userAgentDefault(property, refValue, refNative) {
+  if (!refNative) return false;
+  if (property === 'font-family') return firstFamily(refValue) === 'arial';
+  if (property === 'font-size') return refValue === UA_CONTROL_FONT_SIZE;
+  if (property === 'cursor') return refNative === 'toggle' && refValue === 'default';
+  return false;
+}
+
+// A margin and a parent's flex or grid gap draw the same space: margins count only when the space each element keeps
+// in its parent's flow (margin plus the gap after it, inpage flowMargin) differs.
+const sameFlowSpace = (ref, tgt) => Boolean(ref['margin-flow'] && tgt['margin-flow'])
+  && sameLists(pxList(ref['margin-flow']), pxList(tgt['margin-flow']), SIZE_TOLERANCE);
+
+/** The value a property is compared by, so two spellings of the same drawing read as one. */
+function canonicalValue(property, value) {
+  const text = String(value);
+  if (property === 'box-shadow') return normaliseShadow(text);
+  if (property === 'filter') return neutralFilter(text);
+  if (COLOUR_PROPS.has(property) || property === 'outline') return normaliseColours(text);
+  return text;
+}
+
+const SKIPPED = new Set(['margin-flow', 'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay',
   'animation-name', 'animation-duration', 'animation-timing-function', 'animation-iteration-count', 'animation-delay']);
 
 /** Returns [{ property, ref, target }] for every property that differs beyond tolerance. */
@@ -144,6 +174,8 @@ function diffStyles(refRaw, tgtRaw, options = {}) {
     if (property === 'cursor' && !options.cursor) continue;
     // Same box, same content: a different padding or gap draws the same pixels.
     if (options.sameBox && (property === 'padding' || property === 'gap' || property === 'line-height')) continue;
+    if (userAgentDefault(property, ref[property], options.refNative)) continue;
+    if (property === 'margin' && sameFlowSpace(ref, tgt)) continue;
     if (!sameValue(property, ref[property], tgt[property], options)) diffs.push({ property, ref: ref[property], target: tgt[property] });
   }
   if (options.motion === false) return diffs;
@@ -151,4 +183,4 @@ function diffStyles(refRaw, tgtRaw, options = {}) {
   return diffs;
 }
 
-module.exports = { diffStyles, normaliseColours, sameBezier, toHex };
+module.exports = { diffStyles, canonicalValue, normaliseColours, sameBezier, toHex, firstFamily, UA_CONTROL_FONT_SIZE };

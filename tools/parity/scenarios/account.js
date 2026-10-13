@@ -7,14 +7,15 @@ const NAV_ROW = (label, href) => ({ ref: `${refOf('acct.nav.account')}:has-text(
 const MODAL = { ref: '[style*="position: fixed"][style*="z-index: 120"] > div', target: '[role=dialog]' };
 const EDIT_NAME = inventory('acct.profile.editName', 'button:has-text("Edit"):near(:text("Full name"))');
 const MODAL_CLOSE = inventory('acct.modal.close', '[role=dialog] button[aria-label="Close"]');
-const EDIT_EMAIL = inventory('acct.account.editEmail', 'button:has-text("Edit"):near(:text("Email"))');
-const EDIT_PASSWORD = inventory('acct.account.editPassword', 'button:has-text("Edit"):near(:text("Password"))');
+// The target's Edit buttons carry the field in their accessible name ("Edit Email"); :near() also caught the nav's "Email Message".
+const EDIT_EMAIL = inventory('acct.account.editEmail', 'main button:has-text("Edit"):has-text("Email")');
+const EDIT_PASSWORD = inventory('acct.account.editPassword', 'main button:has-text("Edit"):has-text("Password")');
 const TOGGLE = { ref: `${refOf('acct.dataprot.toggle0')}`, target: '[role=switch]' };
 const CHANGE_PHOTO = inventory('acct.profile.changePhoto', 'input[type=file]');
 const CROPPER = { ref: '.qb-crop-back > div', target: '[role=dialog]' };
 const CROP_ZOOM = { ref: '.qb-crop-zoom input', target: '[role=dialog] input[type=range]' };
 const THREAD = (n) => ({ ref: `.qb-mlist > div:has(.qb-av) >> nth=${n}`, target: `main button:has(span[role=img]) >> nth=${n}` });
-const CHAT_MENU_BUTTON = { ref: '.qb-mchat span:text-is("⋯")', target: 'main button[aria-label*="ore"], main button[aria-label*="ettings"]' };
+const CHAT_MENU_BUTTON = { ref: '.qb-mchat span:text-is("⋯")', target: 'main button[aria-haspopup=menu][aria-label*="ettings"], main button[aria-label*="ore"]' };
 const CHAT_MENU = inventory('msg.menu', '[role=menu]');
 const COMPOSER = { ref: '.qb-mchat input[placeholder="Type your message.."]', target: 'textarea[aria-label^="Type"]' };
 
@@ -126,6 +127,8 @@ module.exports = [
     viewports: [1440],
     login: true,
     steps: [
+      // The reference opens with its first chat showing; the target shows the chat once a conversation is picked.
+      click(THREAD(0)),
       click(CHAT_MENU_BUTTON),
       observe('menu-open', CHAT_MENU, { crop: true, count: true }),
       click(inventory('msg.menu.block', '[role=menuitem]:has-text("Block")')),

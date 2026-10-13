@@ -15,23 +15,34 @@ function canonDeclarations(text) {
 const canonSteps = (steps) => Object.fromEntries(Object.entries(steps).map(([k, v]) => [k, canonDeclarations(v)]));
 const propertyNames = (steps) => [...new Set(Object.values(steps).flatMap((d) => d.split(';').map((x) => x.split(':')[0])))].sort().join(',');
 
-/** Looks up the reference keyframes in use on a page among the target's keyframes. */
-function compareKeyframes(refFrames, usedNames, targetFrames) {
-  const problems = [];
-  for (const name of usedNames) {
-    const ref = refFrames.find((k) => k.name === name);
+const sameSteps = (a, b) => JSON.stringify(canonSteps(a.steps)) === JSON.stringify(canonSteps(b.steps));
+const where = (use) => `${use.sample}${use.count > 1 ? ` and ${use.count - 1} more` : ''}`;
+
+/**
+ * Every reference animation in use on a page must run on the target too: keyframes with the same content, on a
+ * page-sized wrapper when the reference runs it on one (a screen fade). Keyframes the target only defines (a toast
+ * library's swipe-out, say) do not count. All gaps of a page form one finding, so its id stays stable.
+ */
+function compareKeyframes(refFrames, refUses, targetFrames, targetUses) {
+  const framesOf = (use) => targetFrames.filter((t) => t.name === use.name);
+  const gaps = [];
+  for (const use of refUses) {
+    const ref = refFrames.find((k) => k.name === use.name);
     if (!ref) continue;
-    const refSteps = JSON.stringify(canonSteps(ref.steps));
-    const identical = targetFrames.some((t) => JSON.stringify(canonSteps(t.steps)) === refSteps);
-    if (identical) continue;
-    const similar = targetFrames.find((t) => propertyNames(t.steps) === propertyNames(ref.steps));
-    problems.push({
-      property: 'keyframes', source: ref.source,
-      ref: `@keyframes ${name}: ${JSON.stringify(ref.steps)}`,
-      target: similar ? `@keyframes ${similar.name} animates the same properties differently: ${JSON.stringify(similar.steps)}` : 'no @keyframes with this content',
-    });
+    const running = targetUses.filter((t) => !use.pageLevel || t.pageLevel);
+    if (running.some((t) => framesOf(t).some((frames) => sameSteps(frames, ref)))) continue;
+    const similar = running.flatMap(framesOf).find((t) => propertyNames(t.steps) === propertyNames(ref.steps));
+    gaps.push({ ref, use, similar });
   }
-  return problems;
+  if (!gaps.length) return [];
+  const runningNames = targetUses.map((u) => u.name).join(', ') || 'none';
+  return [{
+    property: 'keyframes', source: gaps[0].ref.source,
+    ref: gaps.map(({ ref, use }) => `@keyframes ${ref.name}: ${JSON.stringify(ref.steps)} on ${where(use)}`).join('; '),
+    target: gaps.map(({ ref, use, similar }) => (similar
+      ? `@keyframes ${similar.name} runs instead and animates the same properties differently: ${JSON.stringify(similar.steps)}`
+      : `nothing runs ${ref.name}'s keyframes${use.pageLevel ? ' on a page-sized wrapper' : ''} (running: ${runningNames})`)).join('; '),
+  }];
 }
 
 // Runs inside the page: samples a scalar series of the element until the animation settles.

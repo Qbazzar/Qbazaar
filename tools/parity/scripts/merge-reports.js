@@ -20,6 +20,19 @@ function mergeCoverage(runs) {
   return [...groups.values()].map((g) => ({ ...g, exercised: g.elements - g.unexercised.length }));
 }
 
+// Accepted differences add up across chunks: occurrences sum, pages and examples join.
+function mergeAccepted(runs) {
+  const rules = new Map();
+  for (const entry of runs.flatMap((r) => r.accepted || [])) {
+    const seen = rules.get(entry.rule) || { ...entry, count: 0, pages: [], examples: [] };
+    seen.count += entry.count;
+    seen.pages = [...new Set([...seen.pages, ...entry.pages])];
+    seen.examples = [...seen.examples, ...entry.examples].slice(0, 5);
+    rules.set(entry.rule, seen);
+  }
+  return [...rules.values()];
+}
+
 function merge(runs) {
   const findings = new Map();
   const skipped = new Map();
@@ -30,7 +43,7 @@ function merge(runs) {
     compared.push(...(run.compared || []));
   }
   const last = runs[runs.length - 1];
-  return { meta: { ...last.meta, runs: runs.length }, findings: [...findings.values()], skipped: [...skipped.values()], referenceOnly: last.referenceOnly, compared, coverage: mergeCoverage(runs) };
+  return { meta: { ...last.meta, runs: runs.length }, findings: [...findings.values()], accepted: mergeAccepted(runs), skipped: [...skipped.values()], referenceOnly: last.referenceOnly, compared, coverage: mergeCoverage(runs) };
 }
 
 const [outDir, ...runDirs] = process.argv.slice(2);

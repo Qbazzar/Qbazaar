@@ -10,7 +10,12 @@ const SHARE = { ref: 'button:text-is("Share Ad")', target: 'button:text-is("Shar
 const REPORT = { ref: 'button:text-is("Report Ad")', target: 'button:text-is("Report Ad")' };
 const MODAL = { ref: 'div[style*="z-index: 90"] > div', target: '[role=dialog]' };
 const TOAST = { ref: 'div[style*="rgb(234, 255, 247)"]', target: '[role=status]:not(.sr-only)' };
-const REASON_SPAM = { ref: 'div[style*="z-index: 90"] :text-is("Spam")', target: '[role=dialog] label:has-text("Spam")' };
+// The first reason of both report forms (assets/app.js reportReasons).
+const REASON_FRAUD = { ref: 'div[style*="z-index: 90"] label:has-text("Fraud or scam")', target: '[role=dialog] label:has-text("Fraud or scam")' };
+// The share link is the ad's own address (data): a sample id in the prototype, the live ad's on the target.
+const AD_LINK = 'qbazaar\\.qa/\\S+';
+// The photo count is data (22 sample photos, the live ad's own); the counter's place in the set is the behaviour.
+const counterPlace = (text) => text.replace(/(\d+) ?\/ ?(\d+)/, (match, at, of) => (at === '1' ? 'first' : at === of ? 'last' : `#${at}`));
 
 module.exports = [
   scenario({
@@ -18,12 +23,12 @@ module.exports = [
     page: 'product',
     viewports: [1440, 390],
     steps: [
-      observe('counter-at-start', COUNTER, { styles: false }),
+      observe('counter-at-start', COUNTER, { styles: false, textMask: counterPlace }),
       click(GALLERY_NEXT),
-      observe('counter-after-next', COUNTER, { styles: false }),
+      observe('counter-after-next', COUNTER, { styles: false, textMask: counterPlace }),
       click(GALLERY_PREV),
       click(GALLERY_PREV, { force: true }),
-      observe('counter-wraps-to-last', COUNTER, { styles: false }),
+      observe('counter-wraps-to-last', COUNTER, { styles: false, textMask: counterPlace }),
       observe('next-button', GALLERY_NEXT, { text: 'skip', crop: true }),
     ],
   }),
@@ -33,7 +38,7 @@ module.exports = [
     viewports: [1440, 390],
     steps: [
       click(SHARE),
-      observe('modal-open', MODAL, { crop: true }),
+      observe('modal-open', MODAL, { crop: true, textMask: AD_LINK }),
       observe('feedback-toast', TOAST, { text: 'skip', styles: false }),
       press('Escape'),
       observe('stays-open-on-escape', MODAL, { text: 'skip', styles: false }),
@@ -47,8 +52,8 @@ module.exports = [
     steps: [
       click(REPORT),
       observe('modal-open', MODAL, { crop: true }),
-      click(REASON_SPAM),
-      observe('reason-selected', REASON_SPAM, { text: 'skip', crop: true }),
+      click(REASON_FRAUD),
+      observe('reason-selected', REASON_FRAUD, { text: 'skip', crop: true }),
       click({ ref: 'div[style*="z-index: 90"] button:text-is("Cancel")', target: '[role=dialog] button[aria-label="Close"]' }),
       observe('closed-by-cancel', MODAL, { text: 'skip', styles: false }),
     ],

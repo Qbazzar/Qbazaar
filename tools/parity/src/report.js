@@ -54,10 +54,16 @@ function pageSection(page, findings) {
   return `### ${page} (${mine.length})\n\n${table(['sev', 'category', 'vp', 'component', 'state', 'property', 'reference', 'target', 'id'], rows)}${more}`;
 }
 
-const cell = (value) => String(value === undefined ? '' : value).replaceAll('|', '\\|').replace(/\s+/g, ' ').slice(0, 90);
+const cell = (value, max = 90) => String(value === undefined ? '' : value).replaceAll('|', '\\|').replace(/\s+/g, ' ').slice(0, max);
+
+function acceptedSection(accepted) {
+  if (!accepted || !accepted.length) return '';
+  const rows = accepted.map((a) => [a.rule, a.count, a.pages.length, cell(a.reason, 400)]);
+  return `## Accepted differences\n\nCounted once for the whole run, not reported per element.\n\n${table(['rule', 'occurrences', 'pages', 'why'], rows)}`;
+}
 
 function buildMarkdown(result) {
-  const { meta, findings, skipped, referenceOnly, coverage } = result;
+  const { meta, findings, skipped, referenceOnly, coverage, accepted } = result;
   const pages = [...new Set(findings.map((f) => f.page))];
   const bySeverity = count(findings, (f) => f.severity);
   const byCategory = count(findings, (f) => f.category);
@@ -69,6 +75,7 @@ function buildMarkdown(result) {
     table(['category', 'findings'], CATEGORIES.map((c) => [c, byCategory[c] || 0])),
     '## Most repeated differences',
     recurringPatterns(findings),
+    acceptedSection(accepted),
     '## By page',
     totalsByPage(findings, pages),
     coverage && coverage.length ? `## Inventory coverage

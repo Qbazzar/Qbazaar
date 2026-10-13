@@ -82,15 +82,47 @@ function readUnit({ selector, descendants }) {
   const MODERN = /(?:oklab|oklch|lab|lch|color)\([^()]*\)/g;
   const canon = (v) => (/(?:oklab|oklch|lab|lch|color)\(/.test(v) ? v.replace(MODERN, toRgb) : v);
 
+  // The box as laid out, before transforms (its own or an ancestor's): a tilted pill's bounding rect is taller than
+  // the pill itself. The rect keeps its sub-pixel precision whenever no transform changed the size.
+  const layoutSize = (el) => {
+    const r = el.getBoundingClientRect();
+    if (typeof el.offsetWidth !== 'number') return { width: r.width, height: r.height };
+    const transformed = Math.abs(r.width - el.offsetWidth) > 1 || Math.abs(r.height - el.offsetHeight) > 1;
+    return transformed ? { width: el.offsetWidth, height: el.offsetHeight } : { width: r.width, height: r.height };
+  };
+
   // Percent and pill radii (9999px) both resolve to what is drawn: at most half the shorter side.
   const radiusPx = (el, s, corners) => {
-    const r = el.getBoundingClientRect();
+    const r = layoutSize(el);
     const cap = Math.min(r.width, r.height) / 2;
     return corners.map((c) => {
       const v = s.getPropertyValue(c).split(' ')[0];
       const px = v.endsWith('%') ? (parseFloat(v) / 100) * r.width : parseFloat(v);
       return `${Math.round(Math.min(px || 0, cap) * 100) / 100}px`;
     }).join(' ');
+  };
+
+  // The space an element keeps around itself in its parent's flow: its margin plus the flex or grid gap that
+  // follows it (below it, or on its inline-end side). A margin on one side and a parent gap on the other draw
+  // the same space, so margins are compared through this value (compare.js).
+  const inFlow = (el) => {
+    const s = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    return s.display !== 'none' && s.position !== 'absolute' && s.position !== 'fixed' && r.width > 0 && r.height > 0;
+  };
+  const flowMargin = (el, s) => {
+    const margin = [s.marginTop, s.marginRight, s.marginBottom, s.marginLeft].map((v) => parseFloat(v) || 0);
+    const parent = el.parentElement;
+    const ps = parent ? getComputedStyle(parent) : null;
+    if (!ps || !/flex|grid/.test(ps.display) || el.nodeType !== 1 || !inFlow(el)) return margin.map((v) => `${v}px`).join(' ');
+    const [rowGap, columnGap] = [parseFloat(ps.rowGap) || 0, parseFloat(ps.columnGap) || 0];
+    const r = el.getBoundingClientRect();
+    const rtl = ps.direction === 'rtl';
+    const siblings = [...parent.children].filter((c) => c !== el && inFlow(c)).map((c) => c.getBoundingClientRect());
+    const sameRow = (o) => o.top < r.bottom - 0.5 && o.bottom > r.top + 0.5;
+    if (rowGap && siblings.some((o) => o.top >= r.bottom - 0.5)) margin[2] += rowGap;
+    if (columnGap && siblings.some((o) => sameRow(o) && (rtl ? o.right <= r.left + 0.5 : o.left >= r.right - 0.5))) margin[rtl ? 3 : 1] += columnGap;
+    return margin.map((v) => `${Math.round(v * 100) / 100}px`).join(' ');
   };
 
   const styles = (el, pseudo) => {
@@ -110,6 +142,7 @@ function readUnit({ selector, descendants }) {
       'text-transform': g('text-transform'), 'text-decoration-line': g('text-decoration-line'),
       padding: quad(s, ['padding-top', 'padding-right', 'padding-bottom', 'padding-left']),
       margin: quad(s, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']),
+      'margin-flow': pseudo ? quad(s, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']) : flowMargin(el, s),
       gap: `${g('row-gap')} ${g('column-gap')}`, width: g('width'), height: g('height'),
       display: g('display'), visibility: g('visibility'), 'z-index': g('z-index'),
       'transition-property': g('transition-property'), 'transition-duration': g('transition-duration'),
@@ -125,9 +158,39 @@ function readUnit({ selector, descendants }) {
     return { x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height };
   };
 
-  const hasOwnText = (el) => norm([...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' ')).length > 0 || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
-  const describe = (el, key, kind) => ({ key, kind, rect: rectOf(el), styles: styles(el), ownText: hasOwnText(el) });
-  const out = { rect: rectOf(root), styles: styles(root), ownText: hasOwnText(root), tag: root.tagName.toLowerCase(), text: norm(root.textContent).slice(0, 80), descendants: [] };
+  // Checkboxes, radios and the like draw no text, so their font and colour are not compared.
+  const TEXTLESS_INPUTS = ['checkbox', 'radio', 'range', 'color', 'file', 'hidden', 'image'];
+  const isToggle = (el) => el.tagName === 'INPUT' && ['checkbox', 'radio'].includes(el.type);
+  const drawsValue = (el) => el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || (el.tagName === 'INPUT' && !TEXTLESS_INPUTS.includes(el.type));
+  const hasOwnText = (el) => norm([...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' ')).length > 0 || drawsValue(el);
+  // A label inside an unstyled native button inherits the browser's control font, so it counts as the control.
+  const nativeKind = (el) => (isToggle(el) ? 'toggle' : el.closest('button, input, select, textarea') ? 'control' : null);
+
+  // A chip: the parent box drawn around a box-less inline wrapper that holds all of its text (a city pill around the
+  // prototype's <span class="sc-interp">). The comparer reads box properties there when the reference text sits in a
+  // template wrapper (unit.js chipView). A chip that is the unit itself is already compared as the root.
+  const BOX_PROPS = ['background-color', 'background-image', 'border-width', 'border-style', 'border-color', 'border-radius', 'box-shadow',
+    'padding', 'width', 'height', 'display', 'outline-width', 'outline-style', 'outline-color', 'outline-offset',
+    'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay'];
+  const paintsBox = (s) => s.backgroundColor !== 'rgba(0, 0, 0, 0)' || s.backgroundImage !== 'none'
+    || [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].some((w) => parseFloat(w) > 0);
+  const boxless = (s) => s.display === 'inline' && !paintsBox(s) && [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].every((p) => parseFloat(p) === 0);
+  const chipOf = (el) => {
+    const parent = el.parentElement;
+    if (!parent || parent === document.body || parent === root || !norm(el.textContent) || !boxless(getComputedStyle(el))) return null;
+    if (norm(parent.textContent) !== norm(el.textContent) || !paintsBox(getComputedStyle(parent))) return null;
+    const [r, p] = [el.getBoundingClientRect(), parent.getBoundingClientRect()];
+    return p.height <= r.height * 2 + 48 && p.width <= r.width + 160 ? parent : null;
+  };
+  const chipView = (el) => {
+    const chip = chipOf(el);
+    if (!chip) return {};
+    const chipStyles = styles(chip);
+    return { chip: { rect: rectOf(chip), styles: Object.fromEntries(BOX_PROPS.map((p) => [p, chipStyles[p]])) } };
+  };
+  const templateWrapper = (el) => el.classList.contains('sc-interp');
+  const describe = (el, key, kind) => ({ key, kind, tag: el.tagName.toLowerCase(), native: nativeKind(el), templateWrapper: templateWrapper(el), rect: rectOf(el), styles: styles(el), ownText: hasOwnText(el), ...chipView(el) });
+  const out = { rect: rectOf(root), styles: styles(root), ownText: hasOwnText(root), tag: root.tagName.toLowerCase(), native: nativeKind(root), templateWrapper: templateWrapper(root), text: norm(root.textContent).slice(0, 80), descendants: [], ...chipView(root) };
   if (!descendants) return out;
 
   const counters = {};
