@@ -14,6 +14,8 @@ import { EMPTY_FILTERS } from './filter-values';
 
 /** The sheet's bar: "Show Results" once the copy pass adds it, "Apply Filter" until then. */
 const SHOW_RESULTS = /^(Show Results|Apply Filter)$/;
+/** The bar comes after the card's own "Apply Filter" in the sheet. */
+const sheetBar = () => screen.getAllByRole('button', { name: SHOW_RESULTS }).at(-1)!;
 
 describe('FilterSidebar', () => {
   beforeEach(() => setClientLocale('en'));
@@ -57,18 +59,18 @@ describe('FilterSheet', () => {
   it('opens as a dialog and closes once the filters are applied', async () => {
     const onApply = vi.fn();
     const user = userEvent.setup();
-    render(<FilterSheet groups={['price']} values={EMPTY_FILTERS} onApply={onApply} onReset={vi.fn()} />);
+    render(<FilterSheet groups={['price', 'condition']} values={EMPTY_FILTERS} onApply={onApply} onReset={vi.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'Filter' }));
     const dialog = await screen.findByRole('dialog', { name: 'Filter' });
-    await user.type(screen.getByLabelText('Maximum price (QAR)'), '900');
-    await user.click(screen.getByRole('button', { name: SHOW_RESULTS }));
+    await user.click(screen.getByRole('radio', { name: 'Used' }));
+    await user.click(sheetBar());
 
-    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, priceMax: 900 });
+    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, condition: 'used' });
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
   });
 
-  it('chooses the city from the designed select inside the sheet', async () => {
+  it('lists the cities as the card’s radios inside the sheet', async () => {
     const onApply = vi.fn();
     const user = userEvent.setup();
     const doha: Location = { id: 'doha', parent_id: null, slug: 'doha', name: { ar: 'الدوحة', en: 'Doha' }, type: 'city', lat: null, lng: null, children: [] };
@@ -76,11 +78,10 @@ describe('FilterSheet', () => {
 
     await user.click(screen.getByRole('button', { name: 'Filter' }));
     const dialog = await screen.findByRole('dialog', { name: 'Filter' });
-    await user.click(screen.getByRole('combobox', { name: 'City / Region' }));
-    await user.click(await screen.findByRole('option', { name: 'Doha' }));
+    await user.click(screen.getByRole('radio', { name: 'Doha' }));
 
     expect(dialog).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: SHOW_RESULTS }));
+    await user.click(sheetBar());
     expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, location: 'doha' });
   });
 
@@ -91,7 +92,7 @@ describe('FilterSheet', () => {
 
     await user.click(screen.getByRole('button', { name: /^Filter/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Filter' });
-    await user.click(screen.getByRole('button', { name: SHOW_RESULTS }));
+    await user.click(sheetBar());
 
     expect(onApply).not.toHaveBeenCalled();
     await waitFor(() => expect(dialog).not.toBeInTheDocument());

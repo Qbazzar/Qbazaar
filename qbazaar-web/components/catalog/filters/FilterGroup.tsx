@@ -11,8 +11,6 @@ interface FilterGroupProps {
   children: (headingId: string) => ReactNode;
   /** The price group has no toggle in the design. */
   collapsible?: boolean;
-  /** A labelled field of the bottom sheet (618:26974): a small label, no divider and no toggle. */
-  field?: boolean;
   /** Classes of the body under the heading. */
   bodyClassName?: string;
 }
@@ -20,24 +18,18 @@ interface FilterGroupProps {
 /**
  * One section of the filter card (category.html aside): a 16 px / 500 heading
  * with the grey "−" (or "+" while closed) at its end, 14 px over its options,
- * between hairlines. The sheet's fields have a small label instead.
+ * between hairlines.
  */
-export function FilterGroup({ title, children, collapsible = true, field = false, bodyClassName }: FilterGroupProps) {
+export function FilterGroup({ title, children, collapsible = true, bodyClassName }: FilterGroupProps) {
   const id = useId();
   const [open, setOpen] = useState(true);
   const headingId = `${id}-heading`;
   const bodyId = `${id}-body`;
-  const toggles = collapsible && !field;
 
   return (
-    <section className={field ? 'py-2.5 first:pt-0' : 'border-t border-qb-line py-[18px] first:border-t-0 first:pt-0'}>
-      <h3
-        className={cn(
-          'font-qb leading-normal font-medium tracking-normal',
-          field ? 'text-qb-caption text-qb-ink-body' : 'text-qb-body text-qb-ink',
-        )}
-      >
-        {toggles ? (
+    <section className="border-t border-qb-line py-[18px] first:border-t-0 first:pt-0">
+      <h3 className="font-qb text-qb-body leading-normal font-medium tracking-normal text-qb-ink">
+        {collapsible ? (
           <button
             type="button"
             id={headingId}
@@ -55,7 +47,7 @@ export function FilterGroup({ title, children, collapsible = true, field = false
           <span id={headingId}>{title}</span>
         )}
       </h3>
-      <div id={bodyId} hidden={!open} className={cn(field ? 'mt-3' : 'mt-3.5', bodyClassName)}>
+      <div id={bodyId} hidden={!open} className={cn('mt-3.5', bodyClassName)}>
         {children(headingId)}
       </div>
     </section>

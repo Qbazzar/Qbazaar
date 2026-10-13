@@ -16,6 +16,12 @@ const locations = [place('doha', 'Doha', [place('west-bay', 'West Bay')]), place
 
 const ALL_FACETS: AdFacets = { ad_type: {}, shipping: {}, seller_type: {}, buy_now: {}, condition: {} };
 
+/**
+ * The sheet's orange bar, below the card's own "Apply Filter". It reads "Show Results" once the copy
+ * pass adds the key and "Apply Filter" until then, so it is the last button of that name.
+ */
+const sheetBar = () => screen.getAllByRole('button', { name: /^(Show Results|Apply Filter)$/ }).at(-1)!;
+
 function renderPanel(overrides: Partial<Parameters<typeof FilterPanel>[0]> = {}) {
   const onApply = vi.fn();
   const onReset = vi.fn();
@@ -69,7 +75,7 @@ describe('FilterPanel', () => {
   it('closes the sheet from its orange "Show Results" bar when nothing changed', async () => {
     const onKeep = vi.fn();
     const { onApply, user } = renderPanel({ variant: 'sheet', onKeep });
-    const apply = screen.getByRole('button', { name: /^(Show Results|Apply Filter)$/ });
+    const apply = sheetBar();
 
     expect(apply).toBeEnabled();
     expect(apply).toHaveClass('bg-qb-brand', 'font-semibold');
@@ -78,12 +84,23 @@ describe('FilterPanel', () => {
     expect(onApply).not.toHaveBeenCalled();
   });
 
-  it('leads the sheet with the fields of the design, then the radio groups', () => {
+  it('shows the card itself in the sheet: its groups in the same order, the slider and "Apply Filter"', () => {
     renderPanel({ variant: 'sheet', groups: ['category', 'price', 'location', 'condition'] });
     // The toggles' "−" is decorative (aria-hidden), so it is left out of the names.
     const headings = screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent?.replace(/[−+]$/, ''));
 
-    expect(headings).toEqual(['Price Range (QAR)', 'City / Region', 'Category', 'Condition']);
+    expect(headings).toEqual(['Category', 'Price', 'Cities', 'Condition']);
+    expect(screen.getByRole('slider', { name: 'Minimum price (QAR)' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^(Show Results|Apply Filter)$/ })[0]).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('draws the sheet’s "Filter" as the funnel pill, which is no heading', () => {
+    renderPanel({ variant: 'sheet' });
+    const title = screen.getByText('Filter');
+
+    expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
+    expect(title).toHaveClass('rounded-qb-md', 'border', 'font-semibold');
+    expect(title.querySelector('svg')).not.toBeNull();
   });
 
   it('sets the city names in the medium weight of the reference', () => {
@@ -117,33 +134,19 @@ describe('FilterPanel', () => {
     expect(within(screen.getByRole('radiogroup', { name: 'Cities' })).getByRole('radio', { name: 'West Bay, Doha (4)' })).toBeChecked();
   });
 
-  it('picks a district from the search box of the sheet’s "City / Region" select', async () => {
+  it('picks a city from the radios of the sheet and applies it from the bar', async () => {
     const { onApply, user } = renderPanel({ variant: 'sheet' });
-    const select = screen.getByRole('combobox', { name: 'City / Region' });
 
-    expect(select).toHaveTextContent('All Regions');
-    await user.click(select);
-    const list = await screen.findByRole('listbox');
-    expect(within(list).getAllByRole('option').map((option) => option.textContent)).toEqual(['Doha (4)', 'Al Wakrah (1)']);
+    await user.click(within(screen.getByRole('radiogroup', { name: 'Cities' })).getByRole('radio', { name: 'Al Wakrah (1)' }));
+    await user.click(sheetBar());
 
-    await user.type(screen.getByRole('combobox', { name: 'Search the options' }), 'west');
-    await user.click(await screen.findByRole('option', { name: 'West Bay, Doha (4)' }));
-    expect(select).toHaveTextContent('West Bay, Doha (4)');
-
-    await user.click(screen.getByRole('button', { name: /^(Show Results|Apply Filter)$/ }));
-    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, location: 'west-bay' });
+    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTERS, location: 'al-wakrah' });
   });
 
-  it('announces a maximum below the minimum and blocks applying it', async () => {
-    const { onApply, user } = renderPanel({ variant: 'sheet', values: { ...EMPTY_FILTERS, priceMin: 500 } });
-    const max = screen.getByLabelText('Maximum price (QAR)');
+  it('blocks the sheet’s bar while a price range is upside down', () => {
+    renderPanel({ variant: 'sheet', values: { ...EMPTY_FILTERS, priceMin: 500, priceMax: 100 } });
 
-    await user.type(max, '100');
-
-    expect(screen.getByRole('alert')).toHaveTextContent('The maximum price can’t be lower than the minimum.');
-    expect(max).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByRole('button', { name: /^(Show Results|Apply Filter)$/ })).toBeDisabled();
-    expect(onApply).not.toHaveBeenCalled();
+    expect(sheetBar()).toBeDisabled();
   });
 
   it('labels each radio group by its heading and collapses it from the toggle', async () => {
@@ -157,15 +160,16 @@ describe('FilterPanel', () => {
     expect(screen.queryByRole('radiogroup', { name: 'Condition' })).toBeNull();
   });
 
-  it('collapses the radio groups of the sheet too, while its fields keep plain labels', async () => {
+  it('collapses the groups of the sheet from their toggles, as on the card', async () => {
     const { user } = renderPanel({ variant: 'sheet' });
-    const toggle = screen.getByRole('button', { name: 'Condition' });
+    const toggle = screen.getByRole('button', { name: 'Cities' });
 
-    expect(screen.queryByRole('button', { name: 'City / Region' })).toBeNull();
-    expect(screen.getByText('Price Range (QAR)')).toBeInTheDocument();
+    // The price group has no toggle, in the sheet as on the card.
+    expect(screen.queryByRole('button', { name: 'Price' })).toBeNull();
     await user.click(toggle);
 
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('radiogroup', { name: 'Cities' })).toBeNull();
   });
 
   it('removes an applied filter at once from its chip', async () => {
@@ -199,9 +203,9 @@ describe('FilterPanel', () => {
 
   it('does not reapply the same filters from the keyboard, but tells the sheet to close', async () => {
     const onKeep = vi.fn();
-    const { onApply, user } = renderPanel({ variant: 'sheet', values: { ...EMPTY_FILTERS, priceMin: 100 }, onKeep });
+    const { onApply, user } = renderPanel({ variant: 'sheet', groups: ['keyword', 'condition'], values: { ...EMPTY_FILTERS, keyword: 'car' }, onKeep });
 
-    await user.type(screen.getByLabelText('Minimum price (QAR)'), '{Enter}');
+    await user.type(screen.getByRole('searchbox', { name: 'Search' }), '{Enter}');
 
     expect(onApply).not.toHaveBeenCalled();
     expect(onKeep).toHaveBeenCalledOnce();
@@ -209,12 +213,12 @@ describe('FilterPanel', () => {
 
   it('only clears the draft from "Reset All" when nothing is applied', async () => {
     const { onReset, user } = renderPanel({ variant: 'sheet' });
-    const min = screen.getByLabelText('Minimum price (QAR)');
+    const used = screen.getByRole('radio', { name: 'Used (7)' });
 
-    await user.type(min, '100');
+    await user.click(used);
     await user.click(screen.getByRole('button', { name: 'Reset All' }));
 
-    expect(min).toHaveValue(null);
+    expect(used).not.toBeChecked();
     expect(onReset).not.toHaveBeenCalled();
   });
 
@@ -222,13 +226,14 @@ describe('FilterPanel', () => {
     const user = userEvent.setup();
     const props = { variant: 'sheet' as const, groups: ['price' as const], onApply: vi.fn(), onReset: vi.fn() };
     const { rerender } = render(<FilterPanel {...props} values={EMPTY_FILTERS} />);
-    const min = screen.getByLabelText('Minimum price (QAR)');
+    const min = screen.getByRole('slider', { name: 'Minimum price (QAR)' });
 
-    await user.type(min, '5');
+    min.focus();
+    await user.keyboard('{ArrowRight}');
     rerender(<FilterPanel {...props} values={{ ...EMPTY_FILTERS, priceMin: 100 }} />);
 
-    expect(screen.getByLabelText('Minimum price (QAR)')).toBe(min);
-    expect(min).toHaveValue(100);
+    expect(screen.getByRole('slider', { name: 'Minimum price (QAR)' })).toBe(min);
+    expect(min).toHaveAttribute('aria-valuetext', 'QAR 100');
     expect(min).toHaveFocus();
   });
   describe('the offer, seller, shipping and Buy Now groups', () => {
