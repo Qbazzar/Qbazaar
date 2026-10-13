@@ -5,11 +5,11 @@
  * follow and message, the Info rows and the highlight chips, in a white r24
  * card with 32 / 16 px padding and the canonical card shadow.
  */
-import { CalendarDays, MailCheck, ShieldCheck, Star, Tag, UserPlus, type LucideIcon } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { Icon } from '@/components/design-system/Icon';
+import { CalendarMemberIcon, MailCheckIcon, ShieldCheckVerifyIcon, StarFilledIcon, TagAdsCountIcon, UserPlusIcon, type IconGlyph } from '@/components/design-system/icons';
 import { formatDayMonthYear } from '@/lib/ads/dates';
 import { formatRating } from '@/lib/ads/display';
 import { formatNumber } from '@/lib/i18n/format';
@@ -40,15 +40,15 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
   const highlightsTitleId = useId();
   const badges = profile.verification_badges;
   const highlights = [
-    badges?.phone_verified ? { icon: ShieldCheck, label: t('users.profile.verified_phone') } : null,
-    badges?.email_verified ? { icon: MailCheck, label: t('users.profile.verified_email') } : null,
+    badges?.phone_verified ? { icon: ShieldCheckVerifyIcon, label: t('users.profile.verified_phone') } : null,
+    badges?.email_verified ? { icon: MailCheckIcon, label: t('users.profile.verified_email') } : null,
     profile.rating_count > 0
       ? {
-          icon: Star,
+          icon: StarFilledIcon,
           label: `${formatRating(profile.rating_avg, locale)} · ${tPlural('reviews.count', profile.rating_count, locale)}`,
         }
       : null,
-  ].filter((item): item is { icon: LucideIcon; label: string } => item !== null);
+  ].filter((item): item is { icon: IconGlyph; label: string } => item !== null);
 
   return (
     <section
@@ -65,7 +65,7 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
           />
           <h1 className="flex items-center gap-1.5 text-qb-h3 font-medium tracking-normal text-qb-ink">
             <span dir="auto">{name}</span>
-            {isVerifiedSeller(profile) ? <VerifiedMark className="size-[22px]" /> : null}
+            {isVerifiedSeller(profile) ? <VerifiedMark large className="size-[22px]" /> : null}
           </h1>
           <p className="font-qb-label text-qb-tiny font-medium text-qb-ink-label">{t(`users.profile.seller_type.${profile.account_type}`)}</p>
         </div>
@@ -78,9 +78,9 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
           {t('users.profile.info')}
         </h2>
         <dl className="flex flex-col gap-3.5 text-qb-body">
-          <InfoRow icon={UserPlus} label={t('users.profile.followers')} value={formatNumber(profile.followers_count, locale)} />
-          <InfoRow icon={CalendarDays} label={t('users.profile.member_since')} value={formatDayMonthYear(profile.joined_at, locale)} />
-          <InfoRow icon={Tag} label={t('users.profile.ads_number')} value={formatNumber(profile.ads_count, locale)} />
+          <InfoRow icon={UserPlusIcon} label={t('users.profile.followers')} value={formatNumber(profile.followers_count, locale)} />
+          <InfoRow icon={CalendarMemberIcon} label={t('users.profile.member_since')} value={formatDayMonthYear(profile.joined_at, locale)} />
+          <InfoRow icon={TagAdsCountIcon} label={t('users.profile.ads_number')} value={formatNumber(profile.ads_count, locale)} />
         </dl>
       </section>
 
@@ -106,7 +106,7 @@ export function SellerProfileCard({ profile, locale, actions, secondaryActions, 
   );
 }
 
-function InfoRow({ icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+function InfoRow({ icon, label, value }: { icon: IconGlyph; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <dt className="flex items-center gap-1.5 text-qb-ink-label">

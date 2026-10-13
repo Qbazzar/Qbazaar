@@ -1,5 +1,5 @@
-import { BadgeCheck } from 'lucide-react';
 
+import { VerifiedBadgeIcon, VerifiedBadgeLgIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import type { AccountType, PublicUser } from '@/lib/api/types';
@@ -14,15 +14,13 @@ export function isVerifiedSeller(user: Pick<PublicUser, 'verification_badges'>):
   return Boolean(user.verification_badges?.phone_verified);
 }
 
-/** Blue tick after a verified seller's name. */
-export function VerifiedMark({ className }: { className?: string }) {
-  return (
-    <BadgeCheck
-      role="img"
-      aria-label={t('users.profile.verified')}
-      className={cn('size-5 shrink-0 fill-qb-info text-qb-surface', className)}
-    />
-  );
+/**
+ * Blue tick after a verified seller's name. The profile headers draw the
+ * reference's larger rosette (`large`); cards and deal summaries the small one.
+ */
+export function VerifiedMark({ className, large = false }: { className?: string; large?: boolean }) {
+  const Rosette = large ? VerifiedBadgeLgIcon : VerifiedBadgeIcon;
+  return <Rosette role="img" aria-label={t('users.profile.verified')} className={cn('size-5 shrink-0 text-qb-info', className)} />;
 }
 
 /**

@@ -8,9 +8,9 @@
  */
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TriangleAlert } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { WarningTriangleIcon } from '@/components/design-system/icons';
 import { useAuth } from '@/hooks/useAuth';
 import { t } from '@/lib/i18n/messages';
 import { currentLocationPath } from '@/lib/navigation/safe-return-to';
@@ -56,7 +56,7 @@ export function ReportButton({ target_type, target_id, label, className }: Repor
           className,
         )}
       >
-        <TriangleAlert aria-hidden />
+        <WarningTriangleIcon aria-hidden />
         {reported ? t('reports.reported') : (label ?? t('reports.title'))}
       </Button>
 

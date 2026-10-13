@@ -1,6 +1,6 @@
 import { useId } from 'react';
-import { Check } from 'lucide-react';
 
+import { CheckCircleFilledIcon } from '@/components/design-system/icons';
 import { buildAdSpecSheet } from '@/lib/ads/display';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -28,10 +28,10 @@ export function AdSpecs({ ad, locale }: AdSpecsProps) {
     <>
       {specs.length ? (
         <section aria-labelledby={specsTitleId} className={cn(detailCard, detailCardMain)}>
-          <h2 id={specsTitleId} className={detailCardTitle}>
+          <h2 id={specsTitleId} className={cn(detailCardTitle, 'mb-5')}>
             {t('ads.detail.technical_data')}
           </h2>
-          <dl className="mt-5 [display:grid] grid-cols-1 gap-5 qb-tablet:grid-cols-2 qb-desktop:grid-cols-[repeat(auto-fill,minmax(180px,1fr))]">
+          <dl className="[display:grid] grid-cols-1 gap-5 qb-tablet:grid-cols-2 qb-desktop:grid-cols-[repeat(auto-fill,minmax(180px,1fr))]">
             {specs.map((spec) => (
               <div key={spec.key} className="flex min-w-0 flex-col gap-1">
                 <dt className="text-qb-caption text-qb-ink-subtle">{spec.label}</dt>
@@ -47,15 +47,13 @@ export function AdSpecs({ ad, locale }: AdSpecsProps) {
 
       {features.length ? (
         <section aria-labelledby={featuresTitleId} className={cn(detailCard, detailCardMain)}>
-          <h2 id={featuresTitleId} className={detailCardTitle}>
+          <h2 id={featuresTitleId} className={cn(detailCardTitle, 'mb-5')}>
             {t('ads.detail.features')}
           </h2>
-          <ul className="mt-5 [display:grid] grid-cols-1 gap-[18px] qb-desktop:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
+          <ul className="[display:grid] grid-cols-1 gap-[18px] qb-desktop:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
             {features.map((feature) => (
               <li key={feature} className="flex items-start gap-2.5 text-qb-caption text-qb-ink-feature">
-                <span aria-hidden="true" className="flex size-5 shrink-0 items-center justify-center rounded-full bg-qb-tick text-qb-surface">
-                  <Check className="size-3" strokeWidth={3} />
-                </span>
+                <CheckCircleFilledIcon aria-hidden="true" className="mt-px size-5 shrink-0 text-qb-tick" />
                 {feature}
               </li>
             ))}

@@ -16,10 +16,10 @@ export function AdDescription({ text, className }: AdDescriptionProps) {
 
   return (
     <section aria-labelledby={titleId} className={cn(detailCard, detailCardMain, className)}>
-      <h2 id={titleId} className={detailCardTitle}>
+      <h2 id={titleId} className={cn(detailCardTitle, 'mb-3.5')}>
         {t('ads.detail.description')}
       </h2>
-      <p dir="auto" className="mt-4 text-qb-body-sm leading-[1.7] break-words whitespace-pre-line text-qb-ink-faint">
+      <p dir="auto" className="text-qb-body-sm leading-[1.7] break-words whitespace-pre-line text-qb-ink-faint">
         {text}
       </p>
     </section>

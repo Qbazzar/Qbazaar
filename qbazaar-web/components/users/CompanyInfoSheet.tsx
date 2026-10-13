@@ -1,10 +1,10 @@
 'use client';
 
 import { Dialog } from '@base-ui/react/dialog';
-import { Info } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { InfoSquareIcon } from '@/components/design-system/icons';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -29,13 +29,13 @@ export function CompanyInfoSheet({ business, locale, className }: CompanyInfoShe
     <Dialog.Root>
       <Dialog.Trigger
         className={cn(
-          'inline-flex cursor-pointer items-center gap-[9px] rounded-qb-sm px-0.5 py-1 font-qb text-[17px] font-medium text-qb-ink',
+          'inline-flex cursor-pointer items-center gap-[9px] px-0.5 py-1 font-qb text-[17px] font-medium text-qb-ink',
           focusRing,
           className,
         )}
       >
         {t('users.profile.info')}
-        <Icon icon={Info} strokeWidth={1.6} className="size-[18px]" />
+        <Icon icon={InfoSquareIcon} className="size-[18px]" />
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-qb-overlay-strong transition-opacity duration-[250ms] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none" />

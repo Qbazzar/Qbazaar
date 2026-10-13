@@ -1,5 +1,5 @@
-import { Star } from 'lucide-react';
 
+import { StarIcon } from '@/components/design-system/icons';
 import { formatRating } from '@/lib/ads/display';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
@@ -20,7 +20,7 @@ export function RatingStars({ value, className, size = 16 }: { value: number; cl
       className={cn('inline-flex items-center gap-0.5', className)}
     >
       {Array.from({ length: MAX_RATING }, (_, index) => (
-        <Star
+        <StarIcon
           key={index}
           width={size}
           height={size}

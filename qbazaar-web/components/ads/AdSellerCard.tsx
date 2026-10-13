@@ -10,7 +10,6 @@
  * completed deal.
  */
 import Link from 'next/link';
-import { CalendarDays, MessageSquareText, ShoppingBag, Tag, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { Avatar } from '@/components/design-system/Avatar';
@@ -18,11 +17,21 @@ import { Badge } from '@/components/design-system/Badge';
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import {
+  CalendarAltIcon,
+  ChatLinesIcon,
+  ChatSquareIcon,
+  ShoppingBagIcon,
+  TagIcon,
+  UserIcon,
+  type IconGlyph,
+} from '@/components/design-system/icons';
 import { StartConversationButton } from '@/components/messaging/StartConversationButton';
 import { ReviewSellerButton } from '@/components/reviews/ReviewSellerButton';
 import { SellerTypeChip, VerifiedMark, isVerifiedSeller, sellerDisplayName } from '@/components/users/SellerBadges';
 import { formatDottedDate } from '@/lib/ads/dates';
 import { formatRating } from '@/lib/ads/display';
+import { formatNumber } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
@@ -42,9 +51,9 @@ interface AdSellerCardProps {
 }
 
 /**
- * The reference's 52 px, r10, 14 px / 500 action buttons. Only the orange
- * one reacts to the pointer (polish.css darkens it); the outlined and the
- * text button keep their look.
+ * The reference's 52 px, r10, 14 px / 500 action buttons. Under the pointer
+ * the orange one turns darker orange (polish.css); the outlined and the text
+ * button keep their colours and dim by 4 % (.qb-btn:hover).
  */
 const actionButton = 'h-auto min-h-[52px] w-full rounded-qb-md px-3.5 text-qb-caption font-medium [&_svg]:size-[18px]';
 
@@ -80,14 +89,18 @@ function SellerSummary({ seller, locale }: { seller: PublicUser; locale: Locale 
       </div>
 
       <ul className="flex flex-col gap-4 border-t border-qb-line pt-[18px] text-qb-body-sm text-qb-ink-secondary">
-        {seller.rating_count > 0 ? (
-          <InfoRow icon={MessageSquareText}>
-            {`${formatRating(seller.rating_avg, locale)} · ${tPlural('reviews.count', seller.rating_count, locale)}`}
-          </InfoRow>
-        ) : null}
-        <InfoRow icon={Tag}>{tPlural('ads.detail.seller_ads', seller.ads_count, locale)}</InfoRow>
+        {/* The reference's "Customer Satisfaction" line: the rating, or that there is none yet. */}
+        <InfoRow icon={ChatLinesIcon}>
+          {seller.rating_count > 0
+            ? `${formatRating(seller.rating_avg, locale)} · ${tPlural('reviews.count', seller.rating_count, locale)}`
+            : t('reviews.empty')}
+        </InfoRow>
+        <InfoRow icon={TagIcon}>{tPlural('ads.detail.seller_ads', seller.ads_count, locale)}</InfoRow>
+        <InfoRow icon={UserIcon}>
+          {`${formatNumber(seller.followers_count, locale)} ${tPlural('users.profile.followers_label', seller.followers_count, locale)}`}
+        </InfoRow>
         {seller.joined_at ? (
-          <InfoRow icon={CalendarDays}>{t('ads.detail.active_since', { date: formatDottedDate(seller.joined_at) })}</InfoRow>
+          <InfoRow icon={CalendarAltIcon}>{t('ads.detail.active_since', { date: formatDottedDate(seller.joined_at) })}</InfoRow>
         ) : null}
       </ul>
     </>
@@ -122,7 +135,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
     <>
       {canBuy ? (
         <Link href={`/ads/${ad.id}/buy`} className={cn(buttonVariants({ size: 'sm' }), actionButton)}>
-          <ShoppingBag aria-hidden />
+          <ShoppingBagIcon aria-hidden />
           {t('ads.actions.buy_now')}
         </Link>
       ) : null}
@@ -131,7 +144,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
           href={`/ads/${ad.id}/offer`}
           className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), actionButton, 'hover:bg-qb-surface hover:text-qb-brand')}
         >
-          <Tag aria-hidden />
+          <TagIcon aria-hidden />
           {t('ads.actions.make_offer')}
         </Link>
       ) : null}
@@ -139,8 +152,9 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
         ad={ad}
         variant="ghost"
         size="sm"
-        icon={MessageSquareText}
-        className={cn(actionButton, 'text-qb-brand hover:bg-transparent')}
+        icon={ChatSquareIcon}
+        // A bare .qb-btn in the reference: square corners, no fill, the 4 % dim under the pointer.
+        className={cn(actionButton, 'rounded-none text-qb-brand hover:bg-transparent hover:brightness-[.96]')}
       >
         {t('ads.actions.send_message')}
       </StartConversationButton>
@@ -150,7 +164,7 @@ function SellerActions({ ad, isOwner }: Pick<AdSellerCardProps, 'ad' | 'isOwner'
 }
 
 /** One fact about the seller with its 18 px grey line icon. */
-function InfoRow({ icon, children }: { icon: LucideIcon; children: ReactNode }) {
+function InfoRow({ icon, children }: { icon: IconGlyph; children: ReactNode }) {
   return (
     <li className="flex items-center gap-3">
       <Icon icon={icon} strokeWidth={1.7} className="size-[18px] text-qb-ink-subtle" />

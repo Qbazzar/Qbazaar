@@ -7,9 +7,9 @@
  * Legal Info tabs (seller-organization.html). Reviews follow the ads.
  */
 import { useState } from 'react';
-import { MessageCircle, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { ChatRoundIcon, StarFollowIcon } from '@/components/design-system/icons';
 import { TextBreadcrumb } from '@/components/design-system/TextBreadcrumb';
 import { Badge } from '@/components/design-system/Badge';
 import { Button } from '@/components/design-system/Button';
@@ -58,7 +58,7 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
       isFollowing={profile.is_following}
       stateKnown={viewerStateKnown}
       label={label}
-      icon={label ? undefined : Star}
+      icon={label ? undefined : StarFollowIcon}
       size="sm"
       className={className}
     />
@@ -89,7 +89,7 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
       <>
         {followButton(companyButton)}
         <Button variant="secondary" size="sm" onClick={messageSoon} className={cn(companyButton, messageButton)}>
-          <MessageCircle aria-hidden strokeWidth={1.7} />
+          <ChatRoundIcon aria-hidden />
           {t('users.profile.message')}
         </Button>
       </>
@@ -117,11 +117,17 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
     );
   }
 
-  const sellerButton = 'h-10 w-full rounded-qb-md px-2.5';
+  // 11 px padding all round on the .qb-btn line height (1.15), at least 40 px tall.
+  const sellerButton = 'h-auto min-h-10 w-full rounded-qb-md p-[11px]';
   const actions = isSelf ? null : (
     <>
-      {followButton(cn(sellerButton, 'text-qb-body-sm font-semibold'), t('users.follow.follow_seller'))}
-      <Button variant="secondary" size="sm" onClick={messageSoon} className={cn(sellerButton, messageButton, 'text-qb-caption font-medium')}>
+      {followButton(cn(sellerButton, 'text-qb-body-sm leading-[1.15] font-semibold'), t('users.follow.follow_seller'))}
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={messageSoon}
+        className={cn(sellerButton, messageButton, 'text-qb-caption leading-[1.15] font-medium')}
+      >
         {t('ads.actions.send_message')}
       </Button>
     </>

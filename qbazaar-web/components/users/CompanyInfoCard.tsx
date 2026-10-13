@@ -1,8 +1,8 @@
-import { Clock, Globe, Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { ClockIcon, GlobeWebsiteIcon, LocationPinIcon, MailIcon, PhoneIcon, type IconGlyph } from '@/components/design-system/icons';
 import { intlLocale } from '@/lib/i18n/format';
 import type { Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -48,21 +48,21 @@ export function CompanyInfoList({ business, locale }: CompanyInfoListProps) {
   return (
     <ul className="flex flex-col gap-4 text-qb-body-sm text-qb-ink-body">
       {business.contact_phone ? (
-        <InfoItem icon={Phone} label={t('users.profile.contact.phone')}>
+        <InfoItem icon={PhoneIcon} label={t('users.profile.contact.phone')}>
           <a href={`tel:${business.contact_phone}`} dir="ltr" className={linkClass}>
             {business.contact_phone}
           </a>
         </InfoItem>
       ) : null}
       {business.contact_email ? (
-        <InfoItem icon={Mail} label={t('users.profile.contact.email')}>
+        <InfoItem icon={MailIcon} label={t('users.profile.contact.email')}>
           <a href={`mailto:${business.contact_email}`} className={cn(linkClass, 'break-all')}>
             {business.contact_email}
           </a>
         </InfoItem>
       ) : null}
       {business.website ? (
-        <InfoItem icon={Globe} label={t('users.profile.contact.website')}>
+        <InfoItem icon={GlobeWebsiteIcon} label={t('users.profile.contact.website')}>
           {website ? (
             <a
               href={website}
@@ -78,12 +78,12 @@ export function CompanyInfoList({ business, locale }: CompanyInfoListProps) {
         </InfoItem>
       ) : null}
       {business.address ? (
-        <InfoItem icon={MapPin} label={t('users.profile.contact.address')}>
+        <InfoItem icon={LocationPinIcon} label={t('users.profile.contact.address')}>
           <bdi>{business.address}</bdi>
         </InfoItem>
       ) : null}
       {hours.length ? (
-        <InfoItem icon={Clock} label={t('users.profile.contact.hours')}>
+        <InfoItem icon={ClockIcon} label={t('users.profile.contact.hours')}>
           <span className="flex flex-col gap-1">
             {hours.map((line) => (
               <span key={line.days}>
@@ -97,7 +97,7 @@ export function CompanyInfoList({ business, locale }: CompanyInfoListProps) {
   );
 }
 
-function InfoItem({ icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
+function InfoItem({ icon, label, children }: { icon: IconGlyph; label: string; children: ReactNode }) {
   return (
     <li className="flex items-center gap-3">
       <Icon icon={icon} label={label} strokeWidth={1.6} className="size-[18px] text-qb-ink-subtle" />

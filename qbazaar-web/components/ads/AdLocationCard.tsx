@@ -1,10 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { MapPin } from 'lucide-react';
 import { useId } from 'react';
 
 import { Icon } from '@/components/design-system/Icon';
+import { LocationPinIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -37,7 +37,7 @@ export function AdLocationCard({ locationName, latitude, longitude }: AdLocation
         {t('locations.pick')}
       </h2>
       <p className="mt-3.5 flex items-center gap-2.5 text-qb-body-sm text-qb-ink-secondary">
-        <Icon icon={MapPin} className="size-[18px] text-qb-brand" strokeWidth={1.6} />
+        <Icon icon={LocationPinIcon} className="size-[18px] text-qb-brand" strokeWidth={1.6} />
         {locationName}
       </p>
       {hasPin ? (

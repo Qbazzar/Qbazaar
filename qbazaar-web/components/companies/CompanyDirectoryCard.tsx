@@ -1,9 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Users } from 'lucide-react';
 
 import { initialsOf } from '@/components/design-system/Avatar';
+import { cardHover } from '@/components/design-system/card-hover';
 import { Icon } from '@/components/design-system/Icon';
+import { UsersIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 /** The five tints companies.html gives the logo tiles, in its order. */
@@ -47,7 +48,7 @@ export function CompanyDirectoryCard({ href, name, logoUrl, toneKey, meta, count
     <article
       className={cn(
         'relative flex h-full flex-col items-center rounded-qb-xl border border-qb-line bg-qb-surface px-[22px] py-6 text-center font-qb',
-        'transition-[box-shadow,translate] duration-200 hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+        cardHover,
         'has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-qb-brand-active has-[a:focus-visible]:outline-solid',
         className,
       )}
@@ -67,7 +68,7 @@ export function CompanyDirectoryCard({ href, name, logoUrl, toneKey, meta, count
         </Link>
       </h2>
       <p className="mt-3 flex max-w-full items-center gap-[5px] text-qb-label font-medium text-qb-ink-subtle">
-        <Icon icon={Users} className="size-3.5" strokeWidth={1.6} />
+        <Icon icon={UsersIcon} className="size-3.5" strokeWidth={1.6} />
         <span className="truncate">{meta}</span>
       </p>
       <span className="mt-2.5 rounded-qb-sm bg-qb-brand-soft px-3.5 py-[5px] text-qb-label font-medium text-qb-brand">{count}</span>

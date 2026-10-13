@@ -75,13 +75,17 @@ export function ShareAdDialog({ open, onOpenChange, title, url }: ShareAdDialogP
                 href={channel.href(url, title)}
                 target={external ? '_blank' : undefined}
                 rel={external ? 'noopener noreferrer' : undefined}
-                className={cn('flex flex-col items-center gap-2 rounded-qb-md', focusRing)}
+                // A .qb-btn in the reference: the polish transition and the 4 % dim under the pointer.
+                className={cn('qb-motion flex flex-col items-center gap-2 leading-[1.15] hover:brightness-[.96]', focusRing)}
               >
                 <span
                   aria-hidden="true"
-                  className={cn('flex size-[52px] items-center justify-center rounded-full text-qb-body-lg font-bold text-qb-on-brand', channel.tone)}
+                  className={cn(
+                    'flex size-[52px] items-center justify-center rounded-full text-qb-body-lg leading-[1.15] font-bold text-qb-on-brand',
+                    channel.tone,
+                  )}
                 >
-                  {channel.glyph}
+                  <span>{channel.glyph}</span>
                 </span>
                 <span className="text-qb-label leading-[1.15] text-qb-ink-body">{t(`ads.share.channels.${channel.key}`)}</span>
               </a>
@@ -98,7 +102,7 @@ export function ShareAdDialog({ open, onOpenChange, title, url }: ShareAdDialogP
           type="button"
           onClick={copy}
           className={cn(
-            'shrink-0 cursor-pointer rounded-qb-sm bg-qb-brand px-[18px] py-[9px] text-qb-caption leading-[1.15] font-semibold text-qb-on-brand transition-colors hover:bg-qb-brand-hover',
+            'qb-motion shrink-0 cursor-pointer rounded-qb-sm bg-qb-brand px-[18px] py-[9px] text-qb-caption leading-[1.15] font-semibold text-qb-on-brand hover:bg-qb-brand-hover',
             focusRing,
           )}
         >

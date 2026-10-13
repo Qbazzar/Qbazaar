@@ -13,9 +13,9 @@ interface AdFactsCardProps {
   isOwner: boolean;
 }
 
-/** "Share Ad" and "Report Ad": two equal outlined buttons that keep their look under the pointer. */
+/** "Share Ad" and "Report Ad": two equal outlined .qb-btn buttons that keep their colours and dim by 4 % under the pointer. */
 const factsAction =
-  'h-auto min-h-10 min-w-0 flex-1 gap-[7px] rounded-qb-md border border-qb-line bg-qb-surface px-2.5 py-[11px] text-qb-caption leading-[1.15] font-normal whitespace-normal text-qb-ink-body hover:bg-qb-surface hover:text-qb-ink-body [&_svg]:size-4';
+  'h-auto min-h-10 min-w-0 flex-1 gap-[7px] rounded-qb-md border border-qb-line bg-qb-surface px-2.5 py-[11px] text-qb-caption leading-[1.15] font-normal whitespace-normal text-qb-ink-body hover:bg-qb-surface hover:text-qb-ink-body hover:brightness-[.96] [&_svg]:size-4';
 
 /** Ad id and date (dd.mm.yyyy), with the share and report actions (product.html). */
 export function AdFactsCard({ ad, isOwner }: AdFactsCardProps) {

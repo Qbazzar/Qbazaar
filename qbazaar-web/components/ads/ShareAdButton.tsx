@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Share2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { ShareIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -27,7 +27,7 @@ export function ShareAdButton({ title, className }: ShareAdButtonProps) {
   return (
     <>
       <Button variant="outline" size="sm" onClick={openDialog} className={cn('font-normal', className)}>
-        <Share2 aria-hidden />
+        <ShareIcon aria-hidden />
         {t('ads.detail.share_ad')}
       </Button>
       <ShareAdDialog open={open} onOpenChange={setOpen} title={title} url={url} />

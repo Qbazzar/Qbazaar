@@ -1,8 +1,8 @@
 import Form from 'next/form';
-import { Search } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { SearchIcon } from '@/components/design-system/icons';
 import { COMPANY_QUERY_MAX_LENGTH } from '@/lib/companies/directory';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -30,7 +30,7 @@ export function CompanySearchForm({ query }: { query: string }) {
       <label htmlFor={INPUT_ID} className="sr-only">
         {t('companies.search_label')}
       </label>
-      <Icon icon={Search} className="size-5 text-qb-ink-subtle" />
+      <Icon icon={SearchIcon} className="size-5 text-qb-ink-subtle" />
       <input
         id={INPUT_ID}
         name="q"
@@ -40,12 +40,13 @@ export function CompanySearchForm({ query }: { query: string }) {
         placeholder={t('companies.search_placeholder')}
         enterKeyHint="search"
         autoComplete="off"
-        className="h-[51px] min-w-0 flex-1 bg-transparent font-qb text-qb-body text-qb-ink-title outline-none placeholder:text-qb-ink-subtle"
+        // The reference's input keeps the browser's 1 px / 2 px padding.
+        className="h-[51px] min-w-0 flex-1 bg-transparent px-0.5 py-px font-qb text-qb-body text-qb-ink-title outline-none placeholder:text-qb-ink-subtle"
       />
       <button
         type="submit"
         className={cn(
-          'hidden h-[43px] shrink-0 cursor-pointer items-center rounded-qb-md bg-qb-brand px-[34px] font-qb text-qb-body font-semibold text-qb-on-brand transition-colors hover:bg-qb-brand-hover qb-tablet:inline-flex',
+          'qb-motion m-1 hidden h-[43px] shrink-0 cursor-pointer items-center rounded-qb-md bg-qb-brand px-[34px] font-qb text-qb-body leading-[1.15] font-semibold text-qb-on-brand hover:bg-qb-brand-hover qb-tablet:inline-flex',
           focusRing,
         )}
       >
