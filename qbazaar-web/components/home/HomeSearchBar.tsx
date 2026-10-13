@@ -45,9 +45,12 @@ const input =
   'w-full min-w-0 bg-transparent px-0.5 py-px text-qb-body leading-[1.5] text-qb-ink outline-none placeholder:text-qb-ink-muted [&::-webkit-search-cancel-button]:hidden';
 /** The select labels (.qb-hlabel): 14 px on tablets, 20 px from 1001 px. */
 const choiceLabel = 'text-qb-caption leading-[1.5] qb-desktop:text-qb-h5';
-/** The field icons are 20 px boxes (22 for the magnifier) that give way first when a field is narrow, as in the reference. */
+/**
+ * The field icons are 20 px boxes (22 for the magnifier) that give way first when a field is narrow, as in the
+ * reference: there the "Choose Category" chevron has no room left at all from tablet width up.
+ */
 const fieldIcon = 'size-5 shrink text-qb-icon-faint';
-const chevron = 'size-5 text-qb-icon-faint';
+const chevron = fieldIcon;
 
 /** The radius steps of the design's Distance list, after "All Qatar". */
 const DISTANCES_KM = [5, 10, 20, 30, 50, 100, 150, 200] as const;

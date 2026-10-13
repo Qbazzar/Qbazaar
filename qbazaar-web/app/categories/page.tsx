@@ -34,7 +34,8 @@ export default async function CategoriesIndexPage({ searchParams }: PageProps) {
           variant="index"
           breadcrumbOnPhones
           title={title}
-          breadcrumb={[{ label: t('home.breadcrumb', 'الرئيسية'), href: '/' }, { label: title }]}
+          // The reference's trail ends in "Category"; the title stays until the copy pass adds the key.
+          breadcrumb={[{ label: t('home.breadcrumb', 'الرئيسية'), href: '/' }, { label: t('catalog.index.crumb', title) }]}
           stats={<CategoryIndexStats />}
         />
       </div>
