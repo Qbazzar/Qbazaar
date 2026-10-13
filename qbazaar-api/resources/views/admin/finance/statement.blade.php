@@ -5,6 +5,7 @@
 
 @php
     $canViewUsers = auth()->user()?->can('users.view') ?? false;
+    $currency = config('qbazaar.default_currency', 'QAR');
     $displayName = $user->full_name ?: $user->email;
     $crumbs = $canViewUsers
         ? [['المستخدمون', route('admin.users.index')], [$displayName, route('admin.users.show', $user)], 'كشف الحساب']
@@ -65,11 +66,10 @@
 
             @foreach ([
                 ['title' => 'آخر تسويات العمولة', 'icon' => 'banknotes', 'id' => 'side-settlements', 'rows' => $settlements,
-                    'all' => ['كل التسويات', route('admin.finance.settlements.index')], 'empty' => 'لا توجد تسويات.'],
+                    'all' => ['كل تسويات هذا المستخدم', route('admin.finance.settlements.index', ['user' => $user->id])], 'empty' => 'لا توجد تسويات.'],
                 ['title' => 'آخر طلبات السحب', 'icon' => 'arrow-right', 'id' => 'side-withdrawals', 'rows' => $withdrawals,
-                    'all' => ['كل طلبات السحب', route('admin.finance.withdrawals.index')], 'empty' => 'لا توجد طلبات سحب.'],
+                    'all' => ['كل سحوبات هذا المستخدم', route('admin.finance.withdrawals.index', ['user' => $user->id])], 'empty' => 'لا توجد طلبات سحب.'],
             ] as $list)
-                {{-- The finance queues list every user, so the link says so rather than promising this user's history. --}}
                 <x-admin.side-card :title="$list['title']" :icon="$list['icon']" :id="$list['id']" :link="$list['all']">
                     @if ($list['rows'] === null)
                         <x-admin.error-state :retry-url="route('admin.finance.statements.show', $user)" />
@@ -80,7 +80,7 @@
                             @foreach ($list['rows'] as $row)
                                 <li class="flex items-center justify-between gap-3">
                                     <div class="min-w-0">
-                                        <span class="block font-semibold text-ink-900"><bdi dir="ltr">{{ $row->amount }} QAR</bdi></span>
+                                        <span class="block font-semibold text-ink-900"><bdi dir="ltr">{{ $row->amount }} {{ $currency }}</bdi></span>
                                         <span class="text-xs text-ink-500" dir="ltr">{{ optional($row->created_at)->format('Y-m-d') }}</span>
                                     </div>
                                     <x-admin.badge :status="$row->status" />

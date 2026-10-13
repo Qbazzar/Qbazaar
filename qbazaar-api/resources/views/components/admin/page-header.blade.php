@@ -12,8 +12,9 @@
 
 <header @if ($sticky) data-qb-page-header @endif {{ $attributes->class([
     'mb-6',
-    // Bleeds over main's padding so the translucent bar spans the content edge to edge.
-    '-mx-4 sticky top-0 z-20 -mt-px border-b border-transparent bg-cream-50/90 px-4 py-3 backdrop-blur-md transition-[border-color,box-shadow] sm:-mx-6 sm:px-6 data-stuck:border-ink-200 data-stuck:shadow-[0_6px_12px_-8px_rgb(0_0_0/0.12)]' => $sticky,
+    // The bar itself (::before) reaches past the page column on both sides; main clips it to the content area,
+    // so it spans the whole column however wide the screen is.
+    'sticky top-0 z-20 -mt-px py-3 before:absolute before:inset-y-0 before:-inset-x-[100vw] before:-z-10 before:border-b before:border-transparent before:bg-cream-50/90 before:backdrop-blur-md before:transition-[border-color,box-shadow] data-stuck:before:border-ink-200 data-stuck:before:shadow-[0_6px_12px_-8px_rgb(0_0_0/0.12)]' => $sticky,
 ]) }}>
     @if ($crumbs)
         <x-admin.breadcrumb :items="$crumbs" class="mb-1.5" />

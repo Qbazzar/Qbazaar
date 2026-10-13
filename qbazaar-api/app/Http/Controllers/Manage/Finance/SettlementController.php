@@ -25,11 +25,14 @@ class SettlementController extends Controller
 {
     public function index(Request $request, FinanceQueues $queues): View
     {
-        $status = SettlementStatus::tryFrom((string) $request->query('status')) ?? SettlementStatus::PENDING;
+        $userId = $request->string('user')->toString() ?: null;
+        // Narrowed to one user the queue shows every status, since it is that user's history.
+        $status = SettlementStatus::tryFrom((string) $request->query('status')) ?? ($userId ? null : SettlementStatus::PENDING);
 
         return view('admin.finance.settlements', [
             'status' => $status,
-            'settlements' => $queues->settlements($status),
+            'filteredUser' => $userId ? User::query()->select(['id', 'full_name', 'email'])->find($userId) : null,
+            'settlements' => $queues->settlements($status, $userId),
         ]);
     }
 

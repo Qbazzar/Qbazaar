@@ -28,6 +28,11 @@ final class ReportDetailPanels
 
     public const TIMELINE_LIMIT = 8;
 
+    /** Cap on the reported message text shown in the target section. */
+    public const MESSAGE_PREVIEW_LENGTH = 600;
+
+    private const MESSAGE_COLUMNS = ['id', 'conversation_id', 'sender_id', 'body', 'created_at'];
+
     public function __construct(
         private readonly TargetReports $reports,
         private readonly EntityTimeline $timeline,
@@ -41,15 +46,19 @@ final class ReportDetailPanels
      *     target: Model|false|null,
      *     otherReports: TargetReportSummary|null,
      *     timeline: Collection<int, TimelineEntry>|null,
+     *     canReadMessage: bool,
      * }
      */
-    public function forShow(Report $report): array
+    public function forShow(Report $report, User $viewer): array
     {
         $report->load(['reporter.avatarMedia', 'reviewer.avatarMedia']);
+        // A reported private message is read only by those who can act on the report: they need it to decide.
+        $canReadMessage = $viewer->can('reports.action');
 
         return [
             'report' => $report,
-            'target' => rescue(fn (): ?Model => $this->targetOf($report), false),
+            'target' => rescue(fn (): ?Model => $this->targetOf($report, $canReadMessage), false),
+            'canReadMessage' => $canReadMessage,
             'otherReports' => rescue(fn (): TargetReportSummary => $this->reports->for(
                 $report->target_type,
                 $report->target_id,
@@ -61,7 +70,7 @@ final class ReportDetailPanels
         ];
     }
 
-    private function targetOf(Report $report): ?Model
+    private function targetOf(Report $report, bool $canReadMessage): ?Model
     {
         return match ($report->target_type) {
             ReportTarget::AD => Ad::withTrashed()
@@ -71,9 +80,10 @@ final class ReportDetailPanels
             ReportTarget::CONVERSATION => Conversation::query()
                 ->with(['ad:id,title', 'buyer.avatarMedia', 'seller.avatarMedia'])
                 ->find($report->target_id),
-            ReportTarget::MESSAGE => Message::query()
-                ->with('sender.avatarMedia')
-                ->find($report->target_id),
+            ReportTarget::MESSAGE => $canReadMessage
+                ? Message::query()->with('sender.avatarMedia')->find($report->target_id, self::MESSAGE_COLUMNS)
+                // Without the right to read it only the link back to the conversation is needed, never the text.
+                : Message::query()->find($report->target_id, ['id', 'conversation_id', 'created_at']),
         };
     }
 

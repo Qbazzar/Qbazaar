@@ -5,7 +5,13 @@
 
 @section('content')
     <x-admin.page-toolbar>
-        <x-admin.status-tabs route="admin.finance.withdrawals.index" :statuses="\App\Enums\WithdrawalStatus::cases()" :active="$status" />
+        <x-admin.status-tabs route="admin.finance.withdrawals.index" :statuses="\App\Enums\WithdrawalStatus::cases()" :active="$status" :params="array_filter(['user' => $filteredUser?->id])" />
+        @if ($filteredUser ?? null)
+            <p class="mt-3 text-sm text-ink-500">
+                سجل {{ $filteredUser->full_name ?: $filteredUser->email }} فقط،
+                <a href="{{ route('admin.finance.withdrawals.index') }}" class="font-semibold text-coral-700 hover:underline">عرض الكل</a>
+            </p>
+        @endif
     </x-admin.page-toolbar>
 
     <x-admin.table
