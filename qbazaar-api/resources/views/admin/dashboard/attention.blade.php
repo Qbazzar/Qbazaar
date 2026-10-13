@@ -2,6 +2,8 @@
 @php
     $waiting = array_values(array_filter($stats['attention'], fn (array $item): bool => $item['count'] > 0));
     $clear = array_values(array_filter($stats['attention'], fn (array $item): bool => $item['count'] === 0));
+    // A row of plain cards has nothing focusable, so the scroller itself becomes the focus stop.
+    $noLinks = collect($waiting)->every(fn (array $item): bool => ! $item['href']);
     $look = [
         'critical' => ['card' => 'border-danger-200 bg-danger-50', 'bar' => 'bg-danger-600', 'badge' => 'bg-danger-600 text-white', 'text' => 'text-danger-700'],
         'warning' => ['card' => 'border-warning-200 bg-warning-50', 'bar' => 'bg-warning-500', 'badge' => 'bg-warning-500 text-white', 'text' => 'text-warning-800'],
@@ -17,7 +19,6 @@
         @else
             {{-- One row at every width: cards share it while they fit and the row scrolls sideways instead of wrapping.
                  The 10rem floor keeps the label and count readable; the padding keeps focus rings and shadows unclipped. --}}
-            @php($noLinks = collect($waiting)->every(fn (array $item): bool => ! $item['href']))
             <ul class="-m-1 flex snap-x gap-3 overflow-x-auto p-1" @if ($noLinks) tabindex="0" aria-label="{{ __('admin.home.attention.title') }}" @endif>
                 @foreach ($waiting as $item)
                     @php
