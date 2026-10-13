@@ -95,7 +95,7 @@ function OrdersTable({ role, status }: { role: DealRole; status?: OrderStatus })
   if (orders.length === 0) return <OrdersEmpty role={role} />;
 
   return (
-    <TableCard title={title} titleId={`orders-${role}`} tone="sales">
+    <TableCard title={title} titleId={`orders-${role}`} tone="sales" inset>
       <table className={tc.table} aria-labelledby={`orders-${role}`}>
         <thead>
           <tr className={tc.headRow}>

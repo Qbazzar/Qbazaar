@@ -10,7 +10,7 @@ import { FieldSelect } from '@/components/design-system/FieldSelect';
 import { ReceiptIcon } from '@/components/design-system/icons';
 import { orderNumber } from '@/components/orders/order-number';
 import { PageState } from '@/components/orders/PageState';
-import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
+import { LoadMore, TableCard, Th, insetTableClasses as tc } from '@/components/orders/TableCard';
 import type { WalletAccount, WalletEntry } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
 import { formatDate, isoDate } from '@/lib/orders/dates';
@@ -37,6 +37,7 @@ export function StatementTable({ headerAction, className }: { headerAction?: Rea
 
   return (
     <TableCard
+      inset
       className={className}
       title={t('orders.wallet.history_title')}
       titleId="wallet-history"
@@ -79,11 +80,11 @@ export function StatementTable({ headerAction, className }: { headerAction?: Rea
           <table className={tc.table} aria-labelledby="wallet-history">
             <thead>
               <tr className={tc.headRow}>
-                <Th>{t('orders.wallet.columns.transaction')}</Th>
-                <Th className={tc.wide}>{t('orders.wallet.columns.date')}</Th>
-                <Th className="hidden qb-desktop:table-cell">{t('orders.wallet.columns.account')}</Th>
-                <Th className="text-end">{t('orders.wallet.columns.amount')}</Th>
-                <Th className="hidden text-end qb-desktop:table-cell">{t('orders.wallet.columns.balance')}</Th>
+                <Th classes={tc}>{t('orders.wallet.columns.transaction')}</Th>
+                <Th classes={tc} className={tc.wide}>{t('orders.wallet.columns.date')}</Th>
+                <Th classes={tc} className="hidden qb-desktop:table-cell">{t('orders.wallet.columns.account')}</Th>
+                <Th classes={tc} className="text-end max-qb-desktop:pe-0">{t('orders.wallet.columns.amount')}</Th>
+                <Th classes={tc} className="hidden text-end qb-desktop:table-cell">{t('orders.wallet.columns.balance')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -131,7 +132,8 @@ function StatementRow({ entry }: { entry: WalletEntry }) {
       </td>
       <td className={cn(tc.td, tc.wide)}>{date}</td>
       <td className={cn(tc.td, 'hidden qb-desktop:table-cell')}>{t(`orders.wallet.account.${entry.account}`)}</td>
-      <td className={cn(tc.td, tc.amount)}>
+      {/* The last column shown until the balance one appears at 1001 px, so it ends on the card padding. */}
+      <td className={cn(tc.td, tc.amount, 'max-qb-desktop:pe-0')}>
         <span dir="ltr" className={entry.account === 'wallet' && entry.direction === 'increase' ? 'text-qb-success' : undefined}>
           {signedAmount(entry)}
         </span>
