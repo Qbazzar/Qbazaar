@@ -31,7 +31,8 @@ export interface PostAdFlowProps {
   user: User;
   /** The ad being edited; omit to post a new one. */
   ad?: Ad;
-  breadcrumb: BreadcrumbItem[];
+  /** Trail above the form. The new-ad form has none, as add-ads.html; the edit page keeps its way back. */
+  breadcrumb?: BreadcrumbItem[];
 }
 
 const NO_CATEGORIES: CategoryNode[] = [];
@@ -151,7 +152,7 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
 
   return (
     <>
-      <Breadcrumb items={breadcrumb} className={formBreadcrumbClass} />
+      {breadcrumb ? <Breadcrumb items={breadcrumb} className={formBreadcrumbClass} /> : null}
       <AdFormView
         title={adId ? t('post_ad.edit_title') : t('post_ad.page_title')}
         seller={seller}
