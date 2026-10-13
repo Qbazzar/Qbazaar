@@ -250,3 +250,47 @@ test('scenario copy is compared without glyph icons and with data masked', () =>
   // Real copy differences survive.
   assert.notEqual(copyOf('Report this ad ✕ Fraud or scam'), copyOf('Report this ad Select a problem to report Fraud or scam'));
 });
+
+// A minimal page for the sweep's in-page twin finder: each node lists the simple selectors it matches.
+function fakePage(nodes) {
+  const all = nodes.map((n) => ({
+    attrs: {}, innerText: '', ...n,
+    matches(sel) { return sel.split(',').some((s) => this.selectors.includes(s.trim())); },
+    getBoundingClientRect() { return { ...this.rect, right: this.rect.left + this.rect.width, bottom: this.rect.top + this.rect.height }; },
+    getAttribute(a) { return this.attrs[a] ?? null; },
+    setAttribute(a, v) { this.attrs[a] = v; },
+    removeAttribute(a) { delete this.attrs[a]; },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+    contains(o) { return o === this; },
+    closest() { return null; },
+    get outerHTML() { return this.html; },
+  }));
+  const body = { querySelectorAll: (sel) => all.filter((n) => (sel === '[data-pgf]' ? n.attrs['data-pgf'] : n.matches(sel))) };
+  return { all, document: { body, querySelector: () => null, querySelectorAll: body.querySelectorAll } };
+}
+
+test('a sweep element that is not one of its kind of control pairs with the nearest one, not the first', () => {
+  const { findTwin } = require('../src/sweep');
+  const { all, document } = fakePage([
+    { html: '<input type="checkbox" name="city">', selectors: ['input', 'input[type=checkbox]'], rect: { left: 40, top: 300, width: 19, height: 19 } },
+    { html: '<button aria-pressed="false">heart 1</button>', selectors: ['button', 'button[aria-pressed]'], rect: { left: 1090, top: 400, width: 30, height: 30 } },
+    { html: '<button aria-pressed="false">heart 2</button>', selectors: ['button', 'button[aria-pressed]'], rect: { left: 1090, top: 700, width: 30, height: 30 } },
+  ]);
+  const saved = { document: global.document, getComputedStyle: global.getComputedStyle, scrollY: global.scrollY };
+  Object.assign(global, { document, getComputedStyle: () => ({ visibility: 'visible', opacity: '1' }), scrollY: 0 });
+  try {
+    const roleSelector = '[role=switch], input[type=checkbox], button[aria-pressed]';
+    const twin = (extra) => findTwin({ text: '', label: '', landmark: 'body', roleSelector, clickable: 'button', toggle: false, ...extra });
+    // A styled div heart on a list card (no place among the controls): the nearest heart, not the filter checkbox.
+    assert.match(twin({ ordinal: -1, centre: { x: 1105, y: 712 } }), /heart 2/);
+    assert.equal(all[2].attrs['data-pgf'], '1');
+    // A reference control that is one of its kind still pairs by its order among them.
+    assert.match(twin({ ordinal: 0, centre: { x: 1105, y: 712 } }), /type="checkbox"/);
+    // Text or label still win over position.
+    all[1].attrs['aria-label'] = 'Save';
+    assert.match(twin({ label: 'save', ordinal: -1, centre: { x: 1105, y: 712 } }), /heart 1/);
+  } finally {
+    for (const [key, value] of Object.entries(saved)) if (value === undefined) delete global[key]; else global[key] = value;
+  }
+});

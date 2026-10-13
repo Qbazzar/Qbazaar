@@ -38,6 +38,7 @@ function describeElement({ selector, roleSelector }) {
   const landmark = el.closest('header, footer, aside, nav, main');
   const peers = roleSelector ? [...(landmark || document.body).querySelectorAll(roleSelector)].filter((n) => n.getBoundingClientRect().width > 0) : [];
   const caption = el.closest('label') ? norm(el.closest('label').innerText) : '';
+  const box = el.getBoundingClientRect();
   return {
     fingerprint: el.outerHTML.slice(0, 160),
     // The prototype numbers its template nodes per layout: at another width an inventory id can name an icon.
@@ -46,14 +47,19 @@ function describeElement({ selector, roleSelector }) {
     text: norm(el.innerText || el.value || el.placeholder).slice(0, 60) || caption.slice(0, 60),
     label: norm(el.getAttribute('aria-label') || el.getAttribute('title') || el.getAttribute('placeholder')),
     landmark: landmark ? landmark.tagName.toLowerCase() : 'body',
-    ordinal: Math.max(0, peers.findIndex((n) => n === el || n.contains(el) || el.contains(n))),
+    // -1 when the element is not one of its kind's controls (a styled div acting as a toggle); the target then
+    // pairs by where it sits on the page (findTwin).
+    ordinal: peers.findIndex((n) => n === el || n.contains(el) || el.contains(n)),
+    centre: { x: box.left + box.width / 2, y: box.top + scrollY + box.height / 2 },
   };
 }
 
-// Target page: the twin by text or label first, else by position among the same kind of control. A native
-// checkbox or radio of the reference pairs with the control itself (or the box painted for a hidden one), not
-// with the label that names it. Returns the twin's markup for the finding note, or false.
-function findTwin({ text, label, landmark, ordinal, roleSelector, clickable, toggle }) {
+// Target page: the twin by text or label first, else by position among the same kind of control. A reference
+// element that is not one of those controls has no place in their order: the control nearest to where it sits is
+// its twin (a list card's heart, not the first filter checkbox of the page). A native checkbox or radio of the
+// reference pairs with the control itself (or the box painted for a hidden one), not with the label that names it.
+// Returns the twin's markup for the finding note, or false.
+function findTwin({ text, label, landmark, ordinal, centre, roleSelector, clickable, toggle }) {
   const norm = (t) => (t || '').trim().replace(/\s+/g, ' ').toLowerCase();
   const visible = (n) => { const r = n.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(n).visibility !== 'hidden'; };
   const scope = landmark === 'body' ? document.body : document.querySelector(landmark) || document.body;
@@ -74,7 +80,13 @@ function findTwin({ text, label, landmark, ordinal, roleSelector, clickable, tog
     };
     return [...scope.querySelectorAll('*')].find((n) => n !== control && !n.contains(control) && drawn(n)) || control;
   };
-  const picked = byName[0] || byRole[Math.min(ordinal, byRole.length - 1)];
+  const distance = (n) => {
+    const r = n.getBoundingClientRect();
+    return Math.hypot(r.left + r.width / 2 - centre.x, r.top + scrollY + r.height / 2 - centre.y);
+  };
+  const nearest = (nodes) => nodes.reduce((best, n) => (best === undefined || distance(n) < distance(best) ? n : best), undefined);
+  const byPlace = ordinal >= 0 || !centre ? byRole[Math.min(Math.max(ordinal, 0), byRole.length - 1)] : nearest(byRole);
+  const picked = byName[0] || byPlace;
   if (!picked) return false;
   const found = toggle ? paintedBox(controlOf(picked)) : picked;
   document.querySelectorAll('[data-pgf]').forEach((n) => n.removeAttribute('data-pgf'));
@@ -182,4 +194,4 @@ async function runSweep(env, skipped) {
   }
 }
 
-module.exports = { runSweep };
+module.exports = { runSweep, findTwin };
