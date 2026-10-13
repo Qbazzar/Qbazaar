@@ -148,7 +148,8 @@ Second round, from the triage of the first full report:
 - **Keyframes** pair with the animations that run on the target (a page fade with a page-sized wrapper), not with any keyframes the target
   defines; all gaps of a page are one finding.
 - **Sweep twins.** A native checkbox or radio pairs with the target's control (or the box painted for a hidden one), not its label; every
-  sweep finding notes the target twin's markup.
+  sweep finding notes the target twin's markup. A reference element that is not one of its kind's controls (a list card's heart drawn as a
+  styled element) pairs with the target control nearest to where it sits, not the first one on the page.
 - Scenario steps are retried once after a short pause before a failure is reported (the reference's own pages settle late at times).
 
 Third round, from the live re-run of the tuned gate:
