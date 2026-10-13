@@ -179,7 +179,7 @@ export function AmountInput({
         type="text"
         inputMode="decimal"
         autoComplete="off"
-        className="h-full min-w-0 flex-1 bg-transparent font-qb text-qb-body-sm text-qb-black outline-none placeholder:text-qb-placeholder disabled:cursor-not-allowed"
+        className="h-full min-w-0 flex-1 bg-transparent px-0.5 py-px font-qb text-qb-body-sm text-qb-black outline-none placeholder:text-qb-placeholder disabled:cursor-not-allowed"
         onChange={(event) => onValueChange(event.target.value, event)}
         aria-describedby={[currencyId, describedByIds].filter(Boolean).join(' ')}
         {...props}
