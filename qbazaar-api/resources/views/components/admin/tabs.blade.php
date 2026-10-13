@@ -1,8 +1,9 @@
-@props(['tabs', 'id' => 'tabs', 'label' => null])
+@props(['tabs', 'id' => 'tabs', 'label' => null, 'active' => null])
 
 {{-- Without JS the tablist stays hidden and every panel shows stacked; the
-     script below reveals it and shows one panel at a time. --}}
-<div data-tabs="{{ $id }}" {{ $attributes }}>
+     script below reveals it and shows one panel at a time. `active` is the tab
+     the server rendered (e.g. from ?tab=), used when the URL has no #hash. --}}
+<div data-tabs="{{ $id }}" @if ($active) data-active="{{ $active }}" @endif {{ $attributes }}>
     <div role="tablist" aria-label="{{ $label }}" hidden
          class="-mx-4 mb-5 flex overflow-x-auto border-b border-ink-200 px-4 sm:mx-0 sm:px-0 lg:flex-wrap lg:overflow-visible">
         @foreach ($tabs as $key => $tab)
@@ -52,7 +53,8 @@
                 function initial() {
                     var firstError = tabs.findIndex(function (tab) { return tab.dataset.invalid !== undefined; });
                     if (firstError >= 0) return firstError;
-                    return Math.max(indexOfHash(), 0);
+                    var preset = tabs.findIndex(function (tab) { return tab.dataset.tab === root.dataset.active; });
+                    return indexOfHash() >= 0 ? indexOfHash() : Math.max(preset, 0);
                 }
 
                 list.hidden = false;

@@ -27,6 +27,7 @@ use App\Http\Controllers\Manage\SupportTicketController;
 use App\Http\Controllers\Manage\UserController;
 use App\Http\Middleware\AuditAdminMutations;
 use App\Http\Middleware\EnsureApiDocsEnabled;
+use App\Services\Admin\UserDetailTabs;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -80,6 +81,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('permission:users.view')->group(function () {
             Route::get('users', [UserController::class, 'index'])->name('users.index');
             Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+            Route::get('users/{user}/tabs/{tab}', [UserController::class, 'tab'])
+                ->whereIn('tab', UserDetailTabs::keys())
+                ->name('users.tab');
         });
         Route::middleware('permission:users.ban')->group(function () {
             Route::post('users/{user}/suspend', [UserController::class, 'suspend'])->name('users.suspend');

@@ -11,12 +11,16 @@ use App\Enums\SupportTicketStatus;
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use App\Models\User;
+use App\Services\Admin\EntityTimeline;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SupportTicketController extends Controller
 {
+    private const SIDE_LIST_LIMIT = 5;
+
     public function index(Request $request): View
     {
         $status = $request->string('status')->toString();
@@ -55,7 +59,7 @@ class SupportTicketController extends Controller
         ]);
     }
 
-    public function show(SupportTicket $ticket): View
+    public function show(Request $request, SupportTicket $ticket, EntityTimeline $timeline): View
     {
         $ticket->load([
             'user.avatarMedia',
@@ -66,7 +70,31 @@ class SupportTicketController extends Controller
         return view('admin.support.show', [
             'ticket' => $ticket,
             'statuses' => SupportTicketStatus::cases(),
+            'otherTickets' => rescue(fn () => $this->otherTicketsOf($ticket)),
+            'timeline' => $request->user()?->can('activity.view')
+                ? rescue(fn () => $timeline->forSubject($ticket))
+                : null,
         ]);
+    }
+
+    /**
+     * The requester's latest other tickets for the side column, read through
+     * the (user_id, created_at) index.
+     *
+     * @return Collection<int, SupportTicket>
+     */
+    private function otherTicketsOf(SupportTicket $ticket): Collection
+    {
+        if ($ticket->user_id === null) {
+            return new Collection;
+        }
+
+        return SupportTicket::query()
+            ->where('user_id', $ticket->user_id)
+            ->whereKeyNot($ticket->getKey())
+            ->latest()
+            ->limit(self::SIDE_LIST_LIMIT)
+            ->get(['id', 'subject', 'status', 'created_at']);
     }
 
     public function reply(Request $request, SupportTicket $ticket, ReplyToTicketAsStaffAction $replyAsStaff): RedirectResponse
