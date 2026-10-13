@@ -29,8 +29,9 @@ export function DealPanel({ title, titleId, children, className }: { title: stri
         className,
       )}
     >
+      {/* The text sits in its own span inside the spaced heading, as the reference's template renders it. */}
       <h1 id={titleId} className="mb-[22px] text-[26px] font-semibold tracking-normal">
-        {title}
+        <span>{title}</span>
       </h1>
       {children}
     </section>

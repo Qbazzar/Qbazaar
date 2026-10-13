@@ -118,8 +118,10 @@ export function MakeOfferForm({ ad }: { ad: DealAd }) {
                   aria-label={t('orders.deal.suggested_label', { amount: label, percent: suggestion.percent })}
                   onClick={() => setAmount(suggestion.amount.replace(/\.00$/, ''))}
                   className={cn(
-                    // The `.qb-btn` chips of offer.html: they dim under the pointer and fill the amount, with no chosen look.
+                    // The `.qb-btn` chips of offer.html: they dim under the pointer, fill the amount, and the one equal to
+                    // the typed amount turns peach with an orange border and text (app.js offerPresets).
                     'cursor-pointer rounded-qb-md border border-qb-line bg-qb-surface px-4 py-[9px] text-qb-caption leading-[1.15] text-qb-ink-body qb-motion hover:brightness-[.96]',
+                    'aria-pressed:border-qb-brand aria-pressed:bg-qb-brand-soft aria-pressed:text-qb-brand-on-soft',
                     focusRing,
                   )}
                 >

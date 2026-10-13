@@ -14,14 +14,17 @@ const CARD: Record<TableTone, { card: string; head: string; title: string; padde
   /** sales-overview.html: r20, 28 px by 18 to 32 px padding, the title 4 px over a divider 20 px below. */
   sales: {
     card: 'rounded-[20px]',
-    head: 'px-[clamp(18px,3vw,32px)] pt-7 pb-5',
+    head: 'gap-3 px-[clamp(18px,3vw,32px)] pt-7 pb-5',
     title: 'mb-1 text-qb-ink',
     padded: 'px-[clamp(18px,3vw,32px)] py-7',
   },
-  /** wallet.html `.qb-wtable`: r16 with a 1 px border, 26 px by 28 px padding, the title 20 px over the rows. */
+  /**
+   * wallet.html `.qb-wtable`: r16 with a 1 px border, 26 px by 28 px padding, the title's 20 px bottom margin over the
+   * rows; an action beside it keeps the same margin, so the two stay centred on one line.
+   */
   wallet: {
     card: 'rounded-qb-xl border border-qb-line',
-    head: 'px-7 pt-[26px] pb-5',
+    head: 'gap-x-3 px-7 pt-[26px] *:mb-5',
     title: 'text-qb-ink-title',
     padded: 'px-7 py-[26px]',
   },
@@ -44,7 +47,7 @@ export function TableCard({ title, titleId, action, padded = false, tone = 'wall
   const look = CARD[tone];
   return (
     <section aria-labelledby={titleId} className={cn(panelClass, look.card, className)}>
-      <div className={cn('flex flex-wrap items-center justify-between gap-3', look.head)}>
+      <div className={cn('flex flex-wrap items-center justify-between', look.head)}>
         <h2 id={titleId} className={cn('font-qb text-qb-h3 font-semibold tracking-normal', look.title)}>
           {title}
         </h2>

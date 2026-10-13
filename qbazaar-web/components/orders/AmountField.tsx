@@ -42,7 +42,7 @@ export function AmountField({ label, value, onChange, error, hint, currency = 'Q
           error ? 'border-qb-danger' : 'border-qb-line',
         )}
       >
-        <span aria-hidden="true" className="me-2 shrink-0 text-qb-ink-subtle">
+        <span aria-hidden="true" className="me-2 shrink-0 leading-[normal] text-qb-ink-subtle">
           {currency}
         </span>
         <input
