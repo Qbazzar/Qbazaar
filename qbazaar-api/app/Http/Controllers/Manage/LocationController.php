@@ -71,6 +71,9 @@ class LocationController extends Controller
 
     public function edit(Location $location): View
     {
+        // A side-card figure: if it fails the form still opens and the card says so.
+        rescue(fn () => $location->loadCount(['children', 'ads']));
+
         return view('admin.locations.form', [
             'location' => $location,
             'parents' => $this->parentOptions($location->id),

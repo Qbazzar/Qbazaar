@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Models\HelpCategory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -56,6 +57,12 @@ class HelpCategoryController extends Controller
 
     public function edit(HelpCategory $help_category): View
     {
+        // A side-card figure: if it fails the form still opens and the card says so.
+        rescue(fn () => $help_category->loadCount([
+            'articles',
+            'articles as published_articles_count' => fn (Builder $query): Builder => $query->where('is_published', true),
+        ]));
+
         return view('admin.help-categories.form', ['category' => $help_category]);
     }
 

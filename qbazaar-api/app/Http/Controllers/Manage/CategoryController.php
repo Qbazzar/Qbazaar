@@ -65,6 +65,9 @@ class CategoryController extends Controller
 
     public function edit(Category $category): View
     {
+        // A side-card figure: if it fails the form still opens and the card says so.
+        rescue(fn () => $category->loadCount(['children', 'ads']));
+
         return view('admin.categories.form', [
             'category' => $category,
             'parents' => $this->parentOptions($category->id),
