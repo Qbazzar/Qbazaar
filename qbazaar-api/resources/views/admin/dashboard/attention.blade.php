@@ -15,13 +15,14 @@
                 <span aria-hidden="true">✓</span> {{ __('admin.home.attention.clear') }}
             </p>
         @else
-            <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(15rem,1fr))]">
+            {{-- One row at every width: the cards share it on desktop and scroll sideways on smaller screens instead of wrapping. --}}
+            <ul class="flex snap-x gap-3 overflow-x-auto pb-1">
                 @foreach ($waiting as $item)
                     @php
                         $tone = $look[$item['severity']];
                         $tag = $item['href'] ? 'a' : 'div';
                     @endphp
-                    <li class="flex">
+                    <li class="flex min-w-[10rem] flex-1 basis-0 snap-start lg:min-w-0">
                         <{{ $tag }} @if ($item['href']) href="{{ $item['href'] }}" @endif
                             @class(['relative flex w-full flex-col gap-1 overflow-hidden rounded-xl border py-3 ps-5 pe-4', $tone['card'], 'transition hover:shadow-sm focus-visible:outline-2 focus-visible:outline-coral-600' => $item['href']])>
                             <span aria-hidden="true" class="absolute inset-y-0 start-0 w-1.5 {{ $tone['bar'] }}"></span>
