@@ -165,6 +165,8 @@ return [
             'conversation' => 'Conversation',
             'message' => 'Message',
         ],
+        'filed' => 'Report filed',
+        'automatic_reporter' => 'Automatic moderation',
     ],
 
     'location' => [
@@ -407,6 +409,20 @@ return [
         ],
         'duplicate_of' => 'Matching ads:',
         'pending_badge' => 'Ads waiting for review',
+        // Status history titles, named after the move (key: the new status, or the transition).
+        'history' => [
+            'pending' => 'Sent for review',
+            'approved' => 'Ad approved',
+            'active' => 'Ad activated',
+            'renewed' => 'Ad renewed',
+            'unblocked' => 'Suspension lifted',
+            'rejected' => 'Ad rejected',
+            'blocked' => 'Ad suspended',
+            'expired' => 'Ad expired',
+            'sold' => 'Ad sold',
+            'draft' => 'Moved back to draft',
+            'seller' => 'Seller',
+        ],
     ],
 
     'announcement' => [

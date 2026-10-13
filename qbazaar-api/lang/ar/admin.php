@@ -106,6 +106,8 @@ return [
             'conversation' => 'محادثة',
             'message' => 'رسالة',
         ],
+        'filed' => 'تقديم البلاغ',
+        'automatic_reporter' => 'الإشراف التلقائي',
     ],
 
     'location' => [
@@ -348,6 +350,20 @@ return [
         ],
         'duplicate_of' => 'الإعلانات المشابهة:',
         'pending_badge' => 'إعلانات بانتظار المراجعة',
+        // Status history titles, named after the move (key: the new status, or the transition).
+        'history' => [
+            'pending' => 'إرسال للمراجعة',
+            'approved' => 'اعتماد الإعلان',
+            'active' => 'تفعيل الإعلان',
+            'renewed' => 'تجديد الإعلان',
+            'unblocked' => 'رفع الإيقاف',
+            'rejected' => 'رفض الإعلان',
+            'blocked' => 'إيقاف الإعلان',
+            'expired' => 'انتهاء الصلاحية',
+            'sold' => 'بيع الإعلان',
+            'draft' => 'إعادة إلى المسودة',
+            'seller' => 'البائع',
+        ],
     ],
 
     'announcement' => [
