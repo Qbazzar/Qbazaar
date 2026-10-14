@@ -16,8 +16,6 @@ interface CustomFieldFiltersProps {
   fields: CategoryField[];
   value: CustomFieldsFilter;
   onChange: (next: CustomFieldsFilter) => void;
-  /** The bottom sheet labels its fields smaller (618:26974). */
-  compact?: boolean;
   /** `meta.facets.custom_fields`: ads per option value, by field key. */
   counts?: Record<string, FacetCounts> | null;
 }
@@ -40,10 +38,10 @@ function selectOptions(field: CategoryField, counts: FacetCounts | undefined): S
  * schema: designed selects ("Property Type: All Type", 264:4818), number
  * ranges and exact text values.
  */
-export function CustomFieldFilters({ fields, value, onChange, compact = false, counts }: CustomFieldFiltersProps) {
+export function CustomFieldFilters({ fields, value, onChange, counts }: CustomFieldFiltersProps) {
   const id = useId();
   const locale = getLocale();
-  const labelClass = cn('block font-qb text-qb-ink-body', compact ? 'text-qb-caption font-medium' : 'text-qb-body');
+  const labelClass = 'block font-qb text-qb-body text-qb-ink-body';
 
   const setField = (key: string, next: FieldValue | undefined) => {
     const draft: CustomFieldsFilter = { ...value };

@@ -9,7 +9,7 @@
  * primary discovery surface.
  */
 import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeftIcon } from '@/components/design-system/icons';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
 import { localized, getLocale } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
@@ -63,7 +63,7 @@ function TreeNode({ node, depth, activeSlug }: NodeProps) {
           )}
           style={{ paddingInlineStart: `${depth * 12 + 8}px` }}
         >
-          <ChevronLeft className="size-4 shrink-0 transition-transform group-open:-rotate-90 rtl:rotate-180 rtl:group-open:rotate-90" />
+          <ChevronLeftIcon className="size-4 shrink-0 transition-transform group-open:-rotate-90 rtl:rotate-180 rtl:group-open:rotate-90" />
           <DynamicIcon name={node.icon} className="size-4 shrink-0" />
           <Link
             href={`/c/${node.slug}`}

@@ -126,7 +126,7 @@ function CategoryOverview({ slug, title, breadcrumb, node }: OverviewProps) {
         />
       }
       sidebar={<FilterSidebar {...panel} />}
-      toolbar={<ListingToolbar filters={<FilterSheet {...panel} />} actions={<CategoryActions slug={slug} saveParams={saveParams} variant="toolbar" />} />}
+      toolbar={<ListingToolbar filters={<FilterSheet trigger="row" {...panel} />} actions={<CategoryActions slug={slug} saveParams={saveParams} variant="toolbar" />} />}
       toolbarBelowDesktopOnly
     >
       {pageQuery.isError ? (

@@ -3,13 +3,13 @@
 /** The first eight main categories of the home feed as the "Browse Categories" tiles. */
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { CircleAlert } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { cardHover } from '@/components/design-system/card-hover';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { AlertCircleIcon } from '@/components/design-system/icons';
 import { CategoryIcon } from '@/components/design-system/icons/CategoryIcon';
 import { useRetry } from '@/hooks/useRetry';
 import type { HomeFeed } from '@/lib/api/home';
@@ -46,9 +46,9 @@ export function HomeCategoryStrip({ initialFeed }: { initialFeed?: HomeFeed }) {
     // The other home sections hide when the feed fails, so this one says so and retries the whole feed.
     if (isError || retrying) {
       return (
-        <div role="alert" className="rounded-qb-2xl border border-qb-line bg-qb-surface">
+        <div role="alert" className="rounded-qb-xl border border-qb-line bg-qb-surface">
           <EmptyState
-            icon={<Icon icon={CircleAlert} size="lg" />}
+            icon={<Icon icon={AlertCircleIcon} size="lg" />}
             title={t('common.error', 'حدث خطأ، حاول مرة أخرى')}
             headingLevel="h3"
             action={

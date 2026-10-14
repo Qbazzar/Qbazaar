@@ -40,7 +40,8 @@ export function HomeAdSection({ id, title, subtitle, action, ads, isLoading, cla
       ) : (
         <AdRail label={title}>
           {(ads ?? []).map((ad) => (
-            <AdSummaryCard key={ad.id} ad={ad} />
+            // The whole reference card shows the pointer, not only its title link.
+            <AdSummaryCard key={ad.id} ad={ad} className="cursor-pointer" />
           ))}
         </AdRail>
       )}

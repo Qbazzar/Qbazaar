@@ -7,7 +7,7 @@
  * state (highlighted index, Enter handling). The list itself just renders the
  * rows + emits hover/click events.
  */
-import { SearchIcon } from 'lucide-react';
+import { SearchIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 import type { SearchSuggestion } from '@/lib/api/types';

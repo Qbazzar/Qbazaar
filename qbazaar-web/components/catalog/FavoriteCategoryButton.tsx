@@ -8,11 +8,11 @@
  */
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Heart } from 'lucide-react';
 
 import { apiErrorMessage } from '@/components/account/api-error-message';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { HeartIcon } from '@/components/design-system/icons';
 import { TRIGGER } from '@/components/search/SaveSearchButton';
 import { useAuth } from '@/hooks/useAuth';
 import { t } from '@/lib/i18n/messages';
@@ -20,8 +20,6 @@ import { currentLocationPath } from '@/lib/navigation/safe-return-to';
 import { useCategoryPageQuery } from '@/lib/queries/categories';
 import { useSetFavoriteCategoryMutation } from '@/lib/queries/favorite-categories';
 import { cn } from '@/lib/utils';
-
-import { toolbarPill } from './layout';
 
 interface FavoriteCategoryButtonProps {
   slug: string;
@@ -60,17 +58,15 @@ export function FavoriteCategoryButton({ slug, variant = 'header', className }: 
       disabled={!isHydrated || signedInAndLoading || mutation.isPending}
       // The name starts with the visible text (WCAG 2.5.3) and adds what pressing it does.
       aria-label={favorited ? t('catalog.favorite_category.remove', 'في المفضلة، إزالة القسم من المفضلة') : undefined}
-      className={cn(
-        toolbarPill,
-        'shrink-0 cursor-pointer font-qb transition-[background-color,box-shadow,translate] duration-200 motion-reduce:transition-none',
-        'hover:-translate-y-[3px] hover:bg-qb-hover hover:shadow-qb-hover motion-reduce:hover:translate-y-0 disabled:pointer-events-none disabled:opacity-50',
-        trigger.pill,
-        focusRing,
-        className,
-      )}
+      className={cn('shrink-0 font-qb disabled:pointer-events-none disabled:opacity-50', trigger.button, focusRing, className)}
     >
       <span className={cn('inline-flex items-center', trigger.face)}>
-        <Icon icon={Heart} className={cn('shrink-0 text-qb-brand', favorited && 'fill-qb-brand')} />
+        {/* Orange on the pill; the phone circle draws it dark like its search neighbour. */}
+        <Icon
+          icon={HeartIcon}
+          size={trigger.iconSize}
+          className={cn(trigger.iconInk || 'text-qb-brand', favorited && 'fill-qb-brand text-qb-brand')}
+        />
         <span className={trigger.label}>
           {favorited ? t('catalog.favorite_category.added', 'في المفضلة') : t('catalog.favorite_category.add', 'أضف إلى المفضلة')}
         </span>

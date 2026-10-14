@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { Search } from 'lucide-react';
 
 import { Breadcrumb, type BreadcrumbItem } from '@/components/design-system/Breadcrumb';
 import { Button } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { SearchIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { AdRow } from '@/components/catalog/AdRow';
 import { siteFrame } from '@/components/design-system/site-frame';
-import { breadcrumbHover, catalogPageTop, headingFont } from '@/components/catalog/layout';
+import { catalogPageTop, headingFont } from '@/components/catalog/layout';
 import { useResultsFocusTarget } from '@/components/catalog/results-focus';
 import { t } from '@/lib/i18n/messages';
 import { useFeaturedAdsQuery } from '@/lib/queries/ads';
@@ -53,7 +53,7 @@ export function SearchNotFound({ query, breadcrumb, searching, onSearch, onReset
   return (
     <main className={cn('bg-qb-page font-qb text-qb-ink', headingFont)}>
       <div className={cn(siteFrame, catalogPageTop)}>
-        <Breadcrumb items={breadcrumb} className={cn('mb-[68px] hidden qb-tablet:block qb-desktop:mb-[83px]', breadcrumbHover)} />
+        <Breadcrumb items={breadcrumb} className="mb-[68px] hidden qb-tablet:block qb-desktop:mb-[83px]" />
         <h1 ref={headingRef} tabIndex={-1} className="sr-only">
           {t('catalog.not_found.heading', 'لا توجد نتائج')}
         </h1>
@@ -63,7 +63,7 @@ export function SearchNotFound({ query, breadcrumb, searching, onSearch, onReset
             {t('search.placeholder', 'ابحث عن سيارة، شقة، هاتف…')}
           </label>
           <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-4 flex items-center text-qb-ink-subtle qb-desktop:start-5">
-            <Icon icon={Search} className="qb-desktop:size-6" />
+            <Icon icon={SearchIcon} className="qb-desktop:size-6" />
           </span>
           <Input
             id={`${id}-q`}
@@ -78,7 +78,7 @@ export function SearchNotFound({ query, breadcrumb, searching, onSearch, onReset
 
         <div className="flex min-h-[324px] items-center justify-center rounded-qb-2xl border border-qb-line bg-qb-surface shadow-qb-card qb-tablet:min-h-[512px] qb-desktop:min-h-[415px]">
           <EmptyState
-            icon={<Icon icon={Search} size="lg" className="size-[42px]" />}
+            icon={<Icon icon={SearchIcon} size="lg" className="size-[42px]" />}
             title={t('catalog.not_found.title', 'لا توجد نتائج')}
             description={t('catalog.not_found.text', 'لم نعثر على أي شيء يطابق بحثك.')}
             className={notFoundText}

@@ -55,7 +55,7 @@ describe('ListingToolbar', () => {
     expect(onChange).toHaveBeenCalledWith('grid');
   });
 
-  it('puts the filter trigger and the page actions in the toolbar below desktop', () => {
+  it('puts the filter trigger below desktop and the page actions on phones in the toolbar', () => {
     render(
       <ListingToolbar
         filters={<button type="button">Filter</button>}
@@ -64,6 +64,15 @@ describe('ListingToolbar', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Filter' }).parentElement).toHaveClass('qb-desktop:hidden');
-    expect(screen.getByRole('button', { name: 'Save Search' }).parentElement).toHaveClass('qb-desktop:hidden');
+    expect(screen.getByRole('button', { name: 'Save Search' }).parentElement).toHaveClass('qb-tablet:hidden');
+  });
+
+  it('draws the list and grid views as two separate buttons, list first', () => {
+    render(<ListingToolbar view={{ value: 'list', onChange: vi.fn() }} />);
+    const [list, grid] = within(screen.getByRole('group', { name: 'View' })).getAllByRole('button');
+
+    expect(list).toHaveAccessibleName('List view');
+    expect(list).toHaveClass('size-11', 'border', 'text-qb-ink');
+    expect(grid).toHaveClass('text-(--color-qb-toggle-off)');
   });
 });

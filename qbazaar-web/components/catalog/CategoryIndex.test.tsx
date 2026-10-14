@@ -106,6 +106,6 @@ describe('CategoryIndexStats', () => {
     mockQuery(categories);
     const { container } = render(<CategoryIndexStats />);
 
-    expect(container).toHaveTextContent('3 Categories•+4 Ads Today');
+    expect(container).toHaveTextContent('3 Categories · +4 Ads Today');
   });
 });
