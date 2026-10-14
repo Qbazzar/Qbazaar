@@ -4,8 +4,10 @@
 @section('heading', 'المحادثات')
 
 @section('content')
+    @include('admin.partials.ad-filter-chip', ['clearUrl' => route('admin.conversations.index')])
+
     <x-admin.page-toolbar>
-        <x-admin.filter-bar :reset-url="route('admin.conversations.index')" :search="$search" placeholder="بحث بالإعلان أو المشارك…" />
+        <x-admin.filter-bar :reset-url="route('admin.conversations.index')" :search="$search" placeholder="بحث بالإعلان أو المشارك…" :carry="request()->filled('ad') ? ['ad' => request()->string('ad')->toString()] : []" />
     </x-admin.page-toolbar>
 
     <x-admin.table

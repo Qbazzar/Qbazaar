@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Enums\ReportTarget;
 use App\Http\Controllers\Controller;
+use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\Report;
 use App\Services\Messaging\AdminTranscriptBuilder;
@@ -20,10 +21,13 @@ class ConversationController extends Controller
     public function index(Request $request): View
     {
         $search = $request->string('q')->toString();
+        $adId = $request->string('ad')->toString();
 
         $conversations = Conversation::query()
             ->with(['ad:id,title', 'buyer:id,full_name,email', 'seller:id,full_name,email', 'buyer.avatarMedia', 'seller.avatarMedia'])
             ->withCount('messages')
+            // Served by conversations_ad_last_msg_idx, which also gives the newest-first order.
+            ->when($adId !== '', fn ($query) => $query->where('ad_id', $adId))
             ->when(
                 $search !== '',
                 fn ($query) => $query->where(function ($inner) use ($search): void {
@@ -40,6 +44,7 @@ class ConversationController extends Controller
         return view('admin.conversations.index', [
             'conversations' => $conversations,
             'search' => $search,
+            'adFilter' => $adId === '' ? null : Ad::withTrashed()->find($adId, ['id', 'title']),
         ]);
     }
 
