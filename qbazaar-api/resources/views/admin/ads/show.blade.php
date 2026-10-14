@@ -81,6 +81,8 @@
         @endif
 
         {{-- Main column --}}
+        @include('admin.ads.partials.deal-main')
+
         <x-admin.form-section id="ad-photos" :title="'الصور (' . $images->count() . ')'" icon="photo">
             <x-admin.gallery :images="$gallery" empty="لم يرفع البائع صوراً لهذا الإعلان." />
         </x-admin.form-section>
@@ -102,6 +104,8 @@
                 <p class="max-w-[70ch] text-sm leading-[1.9] whitespace-pre-line break-words text-ink-700">{{ $ad->description }}</p>
             </div>
         </x-admin.form-section>
+
+        @include('admin.ads.partials.deal-engagement')
 
         @if ($ad->moderation_result !== null || $isPending)
             <x-admin.form-section id="ad-auto-check" :title="__('admin.ad_review.auto_check')" icon="shield">
@@ -245,6 +249,8 @@
                     <p class="text-ink-500">حساب البائع محذوف.</p>
                 @endif
             </x-admin.side-card>
+
+            @include('admin.ads.partials.deal-buyer')
 
             <x-admin.side-card id="ad-stats" title="الإحصاءات" icon="trend">
                 <dl class="grid grid-cols-3 gap-2 text-center">
