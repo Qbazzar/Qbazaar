@@ -121,3 +121,33 @@ it('keeps the query count flat with 1 or 25 movements, settlements and withdrawa
 
     expect($many)->toBe($few)->toBeLessThanOrEqual(10);
 });
+
+it('prints the configured currency and links the side lists to this user only', function (): void {
+    config(['qbazaar.default_currency' => 'USD']);
+    giveStatementHistory($this->seller, 2);
+    actingAs($this->admin);
+
+    $this->get(route('admin.finance.statements.show', $this->seller))
+        ->assertOk()
+        ->assertSee('<bdi dir="ltr">10.00 USD</bdi>', false)
+        ->assertDontSee('<bdi dir="ltr">10.00 QAR</bdi>', false)
+        ->assertSee(route('admin.finance.settlements.index', ['user' => $this->seller->id]), false)
+        ->assertSee(route('admin.finance.withdrawals.index', ['user' => $this->seller->id]), false);
+});
+
+it('narrows the settlement and withdrawal queues to one user across every status', function (): void {
+    $stranger = User::factory()->create(['full_name' => 'غريب عن الكشف']);
+    test()->settlementOf($this->seller, SettlementStatus::APPROVED);
+    test()->withdrawalOf($this->seller, WithdrawalStatus::PAID);
+    test()->settlementOf($stranger, SettlementStatus::APPROVED);
+    test()->withdrawalOf($stranger, WithdrawalStatus::PAID);
+    actingAs($this->admin);
+
+    foreach (['admin.finance.settlements.index', 'admin.finance.withdrawals.index'] as $route) {
+        $this->get(route($route, ['user' => $this->seller->id]))
+            ->assertOk()
+            ->assertSee('نورة البائعة')
+            ->assertDontSee('غريب عن الكشف')
+            ->assertSee('user=' . $this->seller->id, false);
+    }
+});

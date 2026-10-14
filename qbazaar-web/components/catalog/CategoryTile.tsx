@@ -1,9 +1,8 @@
 import Link from 'next/link';
 
-import './catalog-tokens.css';
-
+import { cardHover } from '@/components/design-system/card-hover';
 import { focusRing } from '@/components/design-system/focus-ring';
-import { DynamicIcon } from '@/components/ui/dynamic-icon';
+import { CategoryIcon } from '@/components/design-system/icons/CategoryIcon';
 import { cn } from '@/lib/utils';
 
 interface CategoryTileProps {
@@ -16,58 +15,46 @@ interface CategoryTileProps {
   className?: string;
 }
 
-/** Raised white tile that lifts 3 px on hover (`.qb-card:hover` of the reference). */
-const tileBase = cn(
-  'flex rounded-qb-xl border border-qb-line bg-qb-surface font-qb shadow-qb-card transition-[box-shadow,translate] duration-200',
-  'hover:-translate-y-[3px] hover:shadow-qb-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0',
-  focusRing,
-);
+/** The reference's flat `.qb-card`: no shadow at rest, it lifts 3 px with the hover shadow. */
+const tileBase = cn('flex cursor-pointer border border-qb-line bg-qb-surface font-qb', cardHover, focusRing);
 
-/**
- * The peach icon square. Without an icon from the API it stays empty, as the
- * sub-category squares of parent-category.html do, rather than repeating one
- * stand-in icon on every tile.
- */
-function IconBox({ icon, className }: { icon: string | null; className?: string }) {
+/** The peach icon square; empty without an icon. */
+function IconBox({ icon, className }: { icon?: string | null; className?: string }) {
   return (
-    <span aria-hidden="true" className={cn('flex shrink-0 items-center justify-center rounded-qb-md bg-qb-brand-soft text-qb-brand', className)}>
-      {icon ? <DynamicIcon name={icon} strokeWidth={1.5} className="size-5 qb-tablet:size-6" /> : null}
+    <span aria-hidden="true" className={cn('flex size-11 shrink-0 items-center justify-center bg-qb-brand-soft text-qb-brand', className)}>
+      {icon ? <CategoryIcon name={icon} className="size-6" /> : null}
     </span>
   );
 }
 
-/** Category card of "Discover Categories" (185:6576, 536:32620, 621:27193). */
+/** Category card of all-categories.html: the same 22 px card at every width. */
 export function CategoryCard({ href, name, count, icon, className }: CategoryTileProps) {
   return (
-    <Link href={href} className={cn(tileBase, 'h-[120px] flex-col p-4 qb-tablet:h-[148px] qb-tablet:rounded-qb-2xl', className)}>
-      <IconBox icon={icon} className="size-9 qb-tablet:size-[43px]" />
-      <span className="mt-auto min-w-0">
-        <span className="block truncate text-qb-caption leading-none font-medium text-(--color-qb-tile-name) qb-tablet:text-qb-body qb-tablet:text-qb-ink qb-desktop:text-qb-h5">
-          {name}
-        </span>{' '}
-        <span className="mt-[11px] block text-qb-micro leading-none text-qb-ink-subtle qb-tablet:mt-3.5 qb-tablet:text-qb-caption qb-desktop:mt-4">
-          {count}
-        </span>
+    <Link href={href} className={cn(tileBase, 'flex-col gap-4 rounded-qb-xl p-[22px]', className)}>
+      <IconBox icon={icon} className="rounded-qb-lg" />
+      <span className="min-w-0">
+        <span className="mb-1.5 block truncate text-[17px] leading-normal font-medium text-qb-ink">{name}</span>{' '}
+        <span className="block text-qb-caption text-qb-ink-subtle">{count}</span>
       </span>
     </Link>
   );
 }
 
-/** Compact sub-category row of the category page's "Categories" block (18:912, 623:28688). */
-export function SubcategoryTile({ href, name, count, icon, className }: CategoryTileProps) {
+/**
+ * Sub-category card of parent-category.html (`.qb-catgrid`): a `.qb-card.qb-btn`, so the
+ * hover also dims it like the reference's buttons. Its peach square stays empty, as in the
+ * reference.
+ */
+export function SubcategoryTile({ href, name, count, className }: Omit<CategoryTileProps, 'icon'>) {
   return (
     <Link
       href={href}
-      className={cn(
-        tileBase,
-        'min-h-14 items-center gap-2.5 rounded-qb-xl p-2 qb-tablet:min-h-[97px] qb-tablet:gap-3 qb-tablet:rounded-qb-2xl qb-tablet:px-[25px]',
-        className,
-      )}
+      className={cn(tileBase, 'items-center gap-3.5 rounded-[14px] p-4 leading-[1.15] hover:brightness-[.96]', className)}
     >
-      <IconBox icon={icon} className="size-10 rounded-qb-sm qb-tablet:size-[47px] qb-tablet:rounded-qb-md" />
+      <IconBox className="rounded-qb-md" />
       <span className="min-w-0">
-        <span className="block truncate text-qb-micro leading-tight font-medium text-(--color-qb-tile-name) qb-tablet:text-qb-body">{name}</span>{' '}
-        <span className="mt-1 block text-[11px] leading-tight text-qb-icon-muted qb-tablet:mt-1.5 qb-tablet:text-qb-caption">{count}</span>
+        <span className="block truncate text-qb-body-sm leading-[1.15] font-medium text-qb-ink-title">{name}</span>{' '}
+        <span className="mt-0.5 block text-qb-label leading-[1.15] text-qb-ink-subtle">{count}</span>
       </span>
     </Link>
   );

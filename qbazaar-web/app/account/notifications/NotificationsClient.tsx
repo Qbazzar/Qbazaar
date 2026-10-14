@@ -9,10 +9,10 @@
 import { useState, type ReactNode } from 'react';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 import { toast } from 'sonner';
-import { Bell, Check, Loader2, Trash2 } from 'lucide-react';
 
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { BellIcon, CheckIcon, LoaderCircleIcon, TrashIcon } from '@/components/design-system/icons';
 import { TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
 import { AccountEmptyState } from '@/components/account/AccountEmptyState';
 import { AccountPage } from '@/components/account/AccountPage';
@@ -127,19 +127,21 @@ function NotificationsList({
   return (
     <>
       <div className="mb-[22px] flex items-center justify-between gap-3">
-        <label className="flex cursor-pointer items-center gap-3 text-qb-body-lg text-qb-ink-body">
+        {/* As in the design only the box toggles; it carries the name, so the caption is not read twice. */}
+        <div className="flex items-center gap-3 text-qb-body-lg text-qb-ink-body">
           <SelectCheckbox
             checked={allSelected}
             disabled={items.length === 0}
-            onChange={(event) => setSelected(event.target.checked ? new Set(items.map((n) => n.id)) : new Set())}
+            onCheckedChange={(checked) => setSelected(checked ? new Set(items.map((n) => n.id)) : new Set())}
+            aria-label={t('notifications.select_all')}
           />
-          {t('notifications.select_all')}
-        </label>
+          <span aria-hidden="true">{t('notifications.select_all')}</span>
+        </div>
         {visibleSelected.length > 0 ? (
           // Overlaps the row's margins, so the list does not move when the buttons appear.
           <div className="-my-2.5 flex items-center gap-3">
             <BulkButton
-              icon={<Check aria-hidden="true" />}
+              icon={<CheckIcon aria-hidden="true" />}
               label={t('notifications.read_all')}
               pending={bulk.isPending && bulk.variables?.action === 'read'}
               disabled={bulk.isPending}
@@ -147,7 +149,7 @@ function NotificationsList({
               className="border border-qb-line bg-qb-surface text-qb-ink-body hover:bg-qb-hover"
             />
             <BulkButton
-              icon={<Trash2 aria-hidden="true" />}
+              icon={<TrashIcon aria-hidden="true" />}
               label={t('notifications.delete_selected')}
               pending={bulk.isPending && bulk.variables?.action === 'delete'}
               disabled={bulk.isPending}
@@ -160,7 +162,7 @@ function NotificationsList({
 
       {items.length === 0 ? (
         <AccountEmptyState
-          icon={<Bell strokeWidth={1.6} />}
+          icon={<BellIcon strokeWidth={1.6} />}
           title={t('notifications.empty.title')}
           description={t('notifications.empty.filter_body')}
         />
@@ -170,7 +172,7 @@ function NotificationsList({
             <li key={n.id} className="flex items-center gap-4">
               <SelectCheckbox
                 checked={selected.has(n.id)}
-                onChange={(event) => toggle(n.id, event.target.checked)}
+                onCheckedChange={(checked) => toggle(n.id, checked)}
                 aria-label={t('notifications.select_one', { title: n.title })}
               />
               <NotificationRow notification={n} className="min-w-0 flex-1" />
@@ -211,7 +213,7 @@ function BulkButton({
         className,
       )}
     >
-      {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : icon}
+      {pending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : icon}
       <span aria-hidden="true" className="hidden qb-tablet:inline">
         {label}
       </span>

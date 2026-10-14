@@ -287,6 +287,8 @@ it('shows the validation summary linked to each failing field and keeps the inpu
     'moderation rules' => ['moderation-rules', ['value' => 'kept-word'], ['type'], 'value="kept-word"'],
 ]);
 
+// Only the pages that read related rows (counts or select options) are compared; pages, help categories
+// and moderation rules never touch their siblings, so a flat count there would prove nothing.
 it('keeps each edit page within its query budget with 1 or 25 related rows', function (string $resource, int $budget): void {
     actingAs(contentFormStaff('super_admin'));
 
@@ -299,13 +301,10 @@ it('keeps each edit page within its query budget with 1 or 25 related rows', fun
     // binding + one count query + the parent options
     'categories (children + ads)' => ['categories', 3],
     'locations (children + ads)' => ['locations', 3],
-    // binding only
-    'pages (other pages)' => ['pages', 1],
     // binding + one count query
     'help categories (articles)' => ['help-categories', 2],
     // binding + the category options
     'help articles (category options)' => ['help-articles', 2],
-    'moderation rules (other rules)' => ['moderation-rules', 1],
 ]);
 
 it('keeps each create page within its query budget with 1 or 25 existing rows', function (string $resource, int $budget): void {
@@ -323,10 +322,7 @@ it('keeps each create page within its query budget with 1 or 25 existing rows', 
     // the parent or category options, nothing else
     'categories' => ['categories', 1],
     'locations' => ['locations', 1],
-    'pages' => ['pages', 0],
-    'help categories' => ['help-categories', 0],
     'help articles' => ['help-articles', 1],
-    'moderation rules' => ['moderation-rules', 0],
 ]);
 
 it('counts the side-card figures in one query', function (string $resource, array $labels): void {

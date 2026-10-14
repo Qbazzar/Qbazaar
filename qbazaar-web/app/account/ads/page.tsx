@@ -11,11 +11,11 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
-import { Megaphone } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { MegaphoneIcon } from '@/components/design-system/icons';
 import { TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
 import { AccountPage } from '@/components/account/AccountPage';
 import { MyAdsRow } from '@/components/account/MyAdsRow';
@@ -61,7 +61,7 @@ export default function MyAdsPage() {
           />
         ) : null}
 
-        <h2 className="mt-2 text-qb-h3 leading-normal font-semibold tracking-normal text-qb-ink">
+        <h2 className="mt-2 text-qb-h3 leading-[normal] font-semibold tracking-normal text-qb-ink">
           {t('account.nav.my_ads')}
         </h2>
       </div>
@@ -94,7 +94,7 @@ function MyAdsTab({ status }: { status?: AdStatus }) {
   if (data.data.length === 0) {
     return (
       <EmptyState
-        icon={<Icon icon={Megaphone} size="lg" />}
+        icon={<Icon icon={MegaphoneIcon} size="lg" />}
         title={t('ads.empty.no_my_ads', 'لا توجد إعلانات في هذا التبويب بعد.')}
         description={t('account.my_ads.empty_body')}
         action={

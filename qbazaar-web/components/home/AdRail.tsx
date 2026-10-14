@@ -12,10 +12,10 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { SliderNextIcon, SliderPrevIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -214,13 +214,14 @@ function RailArrow({ side, label, inactive, onClick }: RailArrowProps) {
       aria-disabled={inactive || undefined}
       onClick={inactive ? undefined : onClick}
       className={cn(
-        'absolute top-[57px] flex size-[42px] cursor-pointer items-center justify-center rounded-full border border-qb-brand bg-qb-surface text-qb-brand shadow-qb-lift transition-colors hover:bg-qb-brand hover:text-qb-on-brand',
+        // slider.js .qb-slide-btn: its own .15 s ease on the background, colour and opacity.
+        'absolute top-[57px] flex size-[42px] cursor-pointer items-center justify-center rounded-[50%] border border-qb-brand bg-qb-surface text-qb-brand shadow-qb-lift transition-[background,color,opacity] duration-150 ease-[ease] hover:bg-qb-brand hover:text-qb-on-brand motion-reduce:transition-none',
         'aria-disabled:cursor-default aria-disabled:opacity-40 aria-disabled:hover:bg-qb-surface aria-disabled:hover:text-qb-brand aria-disabled:not-focus:invisible',
         side === 'start' ? '-start-2' : '-end-2',
         focusRing,
       )}
     >
-      <Icon icon={side === 'start' ? ArrowLeft : ArrowRight} flipInRtl className="size-[19px]" />
+      <Icon icon={side === 'start' ? SliderPrevIcon : SliderNextIcon} flipInRtl className="size-[19px]" />
     </button>
   );
 }
@@ -237,8 +238,8 @@ function RailDots({ page, pages, onSelect }: { page: number; pages: number; onSe
           aria-current={index === page || undefined}
           onClick={() => onSelect(index)}
           className={cn(
-            'h-[9px] cursor-pointer rounded-qb-pill transition-[width,background-color] duration-200 motion-reduce:transition-none',
-            index === page ? 'w-10 bg-qb-brand' : 'w-[9px] bg-qb-brand-tint',
+            'h-[9px] cursor-pointer transition-[width,background] duration-200 ease-[ease] motion-reduce:transition-none',
+            index === page ? 'w-10 rounded-qb-lg bg-qb-brand' : 'w-[9px] rounded-[50%] bg-qb-brand-tint',
             focusRing,
           )}
         />

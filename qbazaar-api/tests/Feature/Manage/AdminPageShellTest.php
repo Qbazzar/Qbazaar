@@ -72,6 +72,23 @@ describe('x-admin.page', function (): void {
             ->assertSee('mt-6 grid gap-2 sm:hidden', false);
     });
 
+    it('moves Save to the bottom pair on phones so it renders once per screen size', function (): void {
+        $html = (string) $this->blade('<x-admin.page title="تعديل" :form="[\'/x\', \'PUT\']" cancel="/back" submit="حفظ">x</x-admin.page>');
+        $header = substr($html, strpos($html, '<header'), strpos($html, '</header>') - strpos($html, '<header'));
+        $bottom = substr($html, strpos($html, 'mt-6 grid gap-2 sm:hidden'));
+
+        // Header Save hides on phones; the bottom pair (phones only) carries the visible one.
+        expect(preg_match('/<button[^>]*max-sm:hidden[^>]*>(?:(?!<\/button>).)*حفظ/s', $header))->toBe(1)
+            ->and($bottom)->toContain('حفظ')
+            ->and(substr_count($html, 'حفظ'))->toBe(2);
+    });
+
+    it('keeps the sticky bar as wide as the content column whatever the screen width', function (): void {
+        $this->blade('<x-admin.page title="عنوان">x</x-admin.page>')
+            ->assertSee('before:-inset-x-[100vw]', false)
+            ->assertDontSee('-mx-4', false);
+    });
+
     it('leaves the buttons to the page when submit is false', function (): void {
         $this->blade('<x-admin.page title="عنوان" :form="[\'action\' => \'/x\']" :submit="false">x</x-admin.page>')
             ->assertSee('method="POST" action="/x"', false)
@@ -124,6 +141,15 @@ describe('x-admin.page', function (): void {
     });
 });
 
+describe('x-admin.breadcrumb', function (): void {
+    it('draws its separators as a chevron that flips in RTL instead of a mirrored character', function (): void {
+        $view = $this->blade('<x-admin.breadcrumb :items="[[\'أ\', \'/a\'], [\'ب\', \'/b\'], \'ج\']" />');
+
+        expect(substr_count((string) $view, 'data-qb-crumb-separator'))->toBe(2);
+        $view->assertSee('rtl:rotate-180', false)->assertDontSee('‹', false)->assertDontSee('›', false);
+    });
+});
+
 describe('layout integration', function (): void {
     beforeEach(function (): void {
         $this->seed(RolesAndPermissionsSeeder::class);
@@ -156,6 +182,16 @@ describe('layout integration', function (): void {
             ->assertSee('IntersectionObserver', false)
             ->assertSee('details[data-qb-menu][open]', false)
             ->assertSee("form.dataset.submitting = '1'", false);
+    });
+
+    it('lifts the submit guard on its own and skips forms that download a file', function (): void {
+        $this->blade(<<<'BLADE'
+            @extends('admin.layout')
+            @section('content')<p>x</p>@endsection
+            BLADE)
+            ->assertSee("hasAttribute('data-download')", false)
+            ->assertSee('RELEASE_AFTER_MS', false)
+            ->assertSee('overflow-x-clip', false);
     });
 
     it('keeps the top-bar h1 on pages that do not use the shell', function (): void {

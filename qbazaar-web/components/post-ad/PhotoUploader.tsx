@@ -3,10 +3,10 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type Announcements, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
-import { ArrowUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Icon } from '@/components/design-system/Icon';
+import { ArrowUpUploadIcon } from '@/components/design-system/icons';
 import { PHOTO_ACCEPTED_TYPES } from '@/lib/images/prepare-photo';
 import { t } from '@/lib/i18n/messages';
 import { AD_LIMITS, isPublishable } from '@/lib/post-ad/form';
@@ -143,17 +143,17 @@ export const PhotoUploader = memo(function PhotoUploader({ error }: { error?: st
 
   return (
     <div>
-      <p id={LABEL_ID} className="mb-2.5 text-qb-body-sm text-qb-ink-body">
+      <label id={LABEL_ID} htmlFor={fieldId('photos')} className="mb-2.5 block text-qb-body-sm text-qb-ink-body">
         {t('post_ad.basic.images')}
-      </p>
+      </label>
       <label
         onDragOver={onDragOver}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={cn(
-          'flex cursor-pointer flex-col items-center gap-2.5 rounded-qb-lg border-[1.5px] border-dashed px-5 py-9 text-center transition-colors',
+          'mb-3.5 flex cursor-pointer flex-col items-center gap-2.5 rounded-qb-lg border-[1.5px] border-dashed px-5 py-9 text-center',
           'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active',
-          dragging ? 'border-qb-brand bg-qb-brand-soft' : 'border-qb-line-strong hover:bg-qb-hover',
+          dragging ? 'border-qb-brand bg-qb-brand-soft' : 'border-(--color-qb-check-ring)',
           error && 'border-qb-danger',
           full && 'cursor-not-allowed opacity-60',
         )}
@@ -181,11 +181,11 @@ export const PhotoUploader = memo(function PhotoUploader({ error }: { error?: st
       </label>
 
       {notice ? (
-        <p id={NOTICE_ID} role="alert" className="mt-2 text-qb-label text-qb-danger">
+        <p id={NOTICE_ID} role="alert" className="mb-2 text-qb-label text-qb-danger">
           {notice}
         </p>
       ) : null}
-      <FieldError name="photos" message={error} />
+      <FieldError name="photos" message={error} className="mt-0 mb-2" />
 
       {photos.length > 0 ? (
         <DndContext
@@ -195,7 +195,7 @@ export const PhotoUploader = memo(function PhotoUploader({ error }: { error?: st
           accessibility={{ announcements, screenReaderInstructions: { draggable: t('post_ad.photos.reorder_hint') } }}
         >
           <SortableContext items={keys} strategy={rectSortingStrategy}>
-            <ul aria-label={t('post_ad.photos.list_label')} className="mt-3.5 [display:grid] grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-2.5">
+            <ul aria-label={t('post_ad.photos.list_label')} className="[display:grid] grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-2.5">
               {photos.map((photo, index) => (
                 <PhotoTile
                   key={photo.key}
@@ -210,7 +210,7 @@ export const PhotoUploader = memo(function PhotoUploader({ error }: { error?: st
               ))}
             </ul>
           </SortableContext>
-          <p className="mt-2 text-qb-label text-qb-ink-subtle">{t('post_ad.photos.reorder_hint')}</p>
+          <p className="mt-2 mb-3.5 text-qb-label text-qb-ink-subtle">{t('post_ad.photos.reorder_hint')}</p>
         </DndContext>
       ) : null}
       <p aria-live="polite" className="sr-only">
@@ -231,7 +231,7 @@ function UploadCloud() {
         <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
       </svg>
       <span className="absolute top-[60%] left-1/2 flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-qb-surface bg-qb-success">
-        <Icon icon={ArrowUp} size="sm" strokeWidth={3} className="size-3 text-qb-surface" />
+        <Icon icon={ArrowUpUploadIcon} size="sm" strokeWidth={3} className="size-3 text-qb-surface" />
       </span>
     </span>
   );

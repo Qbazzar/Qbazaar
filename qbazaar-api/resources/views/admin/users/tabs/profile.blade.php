@@ -43,14 +43,18 @@
         <x-admin.card title="النشاط التجاري" icon="folder" class="@container">
             <x-admin.meta-list class="gap-x-10 @min-[34rem]:grid-cols-2">
                 <x-admin.meta-item label="الاسم التجاري">{{ $business->business_name ?: '—' }}</x-admin.meta-item>
-                <x-admin.meta-item label="الاسم القانوني">{{ $business->legal_name ?: '—' }}</x-admin.meta-item>
-                <x-admin.meta-item label="السجل التجاري" ltr>{{ $business->commercial_registration_number ?: '—' }}</x-admin.meta-item>
-                <x-admin.meta-item label="هاتف التواصل"><x-admin.phone :phone="$business->contact_phone" /></x-admin.meta-item>
-                <x-admin.meta-item label="بريد التواصل" ltr>{{ $business->contact_email ?: '—' }}</x-admin.meta-item>
-                <x-admin.meta-item label="الموقع الإلكتروني" ltr>{{ $business->website ?: '—' }}</x-admin.meta-item>
-                @if ($business->address)
-                    <x-admin.meta-item label="العنوان" class="@min-[34rem]:col-span-2">{{ $business->address }}</x-admin.meta-item>
-                @endif
+                @can('users.update')
+                    <x-admin.meta-item label="الاسم القانوني">{{ $business->legal_name ?: '—' }}</x-admin.meta-item>
+                    <x-admin.meta-item label="السجل التجاري" ltr>{{ $business->commercial_registration_number ?: '—' }}</x-admin.meta-item>
+                    <x-admin.meta-item label="هاتف التواصل"><x-admin.phone :phone="$business->contact_phone" /></x-admin.meta-item>
+                    <x-admin.meta-item label="بريد التواصل" ltr>{{ $business->contact_email ?: '—' }}</x-admin.meta-item>
+                    <x-admin.meta-item label="الموقع الإلكتروني" ltr>{{ $business->website ?: '—' }}</x-admin.meta-item>
+                    @if ($business->address)
+                        <x-admin.meta-item label="العنوان" class="@min-[34rem]:col-span-2">{{ $business->address }}</x-admin.meta-item>
+                    @endif
+                @else
+                    <p class="text-sm text-ink-500 @min-[34rem]:col-span-2">بيانات التواصل والسجل التجاري مقيّدة، وتظهر لمن يملك صلاحية تعديل المستخدمين.</p>
+                @endcan
             </x-admin.meta-list>
         </x-admin.card>
     @endif

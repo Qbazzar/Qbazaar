@@ -8,7 +8,7 @@
  * it on demand). The pill is clamped to "99+" so it never wraps.
  */
 import Link from 'next/link';
-import { MessageSquareIcon } from 'lucide-react';
+import { ChatSquareIcon } from '@/components/design-system/icons';
 import { Button } from '@/components/ui/button';
 import { useUnreadCountQuery } from '@/lib/queries/messaging';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,7 +33,7 @@ export function MessagesBadge() {
       className="relative"
     >
       <Link href="/account/messages">
-        <MessageSquareIcon className="size-5" aria-hidden />
+        <ChatSquareIcon className="size-5" aria-hidden />
         {total > 0 ? (
           <span
             className={cn(

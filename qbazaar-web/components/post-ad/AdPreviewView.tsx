@@ -2,12 +2,12 @@
 
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { CalendarDays, Eye, Flag, Heart, LoaderCircle, MapPin, MessageSquare, Share2, Star } from 'lucide-react';
 
 import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { Button } from '@/components/design-system/Button';
 import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
+import { CalendarIcon, ChatSquareIcon, EyeIcon, FlagReportIcon, HeartIcon, LoaderCircleIcon, LocationPinIcon, ShareIcon, StarIcon } from '@/components/design-system/icons';
 import type { CategoryField, CategoryNode, Location } from '@/lib/api/types';
 import { intlLocale } from '@/lib/i18n/format';
 import { getLocale, localized, type Locale } from '@/lib/i18n/locale';
@@ -58,7 +58,7 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
       {variant === 'preview' ? (
         <div className="flex flex-col gap-4 rounded-qb-lg border border-qb-brand-tint bg-qb-brand-soft px-5 py-3.5 qb-tablet:flex-row qb-tablet:items-center qb-tablet:justify-between">
           <p className="flex items-center gap-2.5 text-qb-body-sm font-medium text-qb-brand-on-soft">
-            <Icon icon={Eye} size="md" />
+            <Icon icon={EyeIcon} size="md" />
             {t('post_ad.preview.banner')}
           </p>
           <div className="flex shrink-0 gap-2.5">
@@ -100,17 +100,17 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
               <p className="shrink-0 text-[26px] font-semibold text-qb-brand">{priceText(values, locale)}</p>
             </div>
             <ul className="mt-5 flex flex-col gap-3.5 text-qb-body-sm text-qb-ink-secondary">
-              <MetaRow icon={<Icon icon={MapPin} size="sm" className="size-[18px] text-qb-brand" />}>
+              <MetaRow icon={<Icon icon={LocationPinIcon} size="sm" className="size-[18px] text-qb-brand" />}>
                 {[...place.map((node) => localized(node.name)), values.showFullAddress ? values.street.trim() : '']
                   .filter(Boolean)
                   .join(' – ')}
               </MetaRow>
               {ad ? (
-                <MetaRow icon={<Icon icon={CalendarDays} size="sm" className="size-[18px] text-qb-brand" />}>
+                <MetaRow icon={<Icon icon={CalendarIcon} size="sm" className="size-[18px] text-qb-brand" />}>
                   {t('post_ad.preview.created', { time: formatRelativeTime(ad.created_at, intlLocale(locale)) })}
                 </MetaRow>
               ) : null}
-              <MetaRow icon={<Icon icon={Eye} size="sm" className="size-[18px] text-qb-brand" />}>
+              <MetaRow icon={<Icon icon={EyeIcon} size="sm" className="size-[18px] text-qb-brand" />}>
                 {tPlural('post_ad.preview.views', ad?.views_count ?? 0, locale)}
               </MetaRow>
             </ul>
@@ -146,11 +146,11 @@ export function AdPreviewView({ variant, seller, tree, cities, fields, canPublis
             {/* Inert in the preview, but drawn as buyers will see them. */}
             <div className="flex gap-2.5 border-t border-qb-line pt-4">
               <Button variant="outline" size="sm" disabled className={cn('min-w-0 flex-1 font-normal text-qb-ink-body disabled:opacity-100', buttonLeading)}>
-                <Icon icon={Share2} size="sm" />
+                <Icon icon={ShareIcon} size="sm" />
                 {t('post_ad.preview.share')}
               </Button>
               <Button variant="outline" size="sm" disabled className={cn('min-w-0 flex-1 font-normal text-qb-ink-body disabled:opacity-100', buttonLeading)}>
-                <Icon icon={Flag} size="sm" />
+                <Icon icon={FlagReportIcon} size="sm" />
                 {t('post_ad.preview.report')}
               </Button>
             </div>
@@ -206,7 +206,7 @@ function BuyerView({ seller, faded }: { seller: SellerSummary; faded: boolean })
           aria-describedby={BUYER_NOTE_ID}
           className={cn('h-[46px] bg-(--color-qb-fill-disabled) text-qb-caption font-medium text-qb-surface disabled:opacity-100', buttonLeading)}
         >
-          <Icon icon={MessageSquare} size="sm" />
+          <Icon icon={ChatSquareIcon} size="sm" />
           {t('post_ad.preview.send_message')}
         </Button>
         <Button
@@ -216,7 +216,7 @@ function BuyerView({ seller, faded }: { seller: SellerSummary; faded: boolean })
           aria-describedby={BUYER_NOTE_ID}
           className={cn('h-12 disabled:opacity-100', buttonLeading, faded && 'border-(--color-qb-brand-faded) text-(--color-qb-brand-faded)')}
         >
-          <Icon icon={Star} size="sm" />
+          <Icon icon={StarIcon} size="sm" />
           {t('post_ad.preview.follow')}
         </Button>
         <Button
@@ -226,7 +226,7 @@ function BuyerView({ seller, faded }: { seller: SellerSummary; faded: boolean })
           aria-describedby={BUYER_NOTE_ID}
           className={cn('h-[30px] font-semibold disabled:opacity-100', buttonLeading, faded ? 'text-(--color-qb-brand-faded)' : 'text-qb-brand')}
         >
-          <Icon icon={Heart} size="sm" />
+          <Icon icon={HeartIcon} size="sm" />
           {t('post_ad.preview.favorite')}
         </Button>
       </div>
@@ -325,7 +325,7 @@ function PublishCard({ running, onConfirm }: { running: PostAdAction | null; onC
         </p>
       ) : null}
       <Button fullWidth disabled={running !== null} aria-busy={busy || undefined} onClick={confirm} className={cn('mt-5 h-12', buttonLeading)}>
-        {busy ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
+        {busy ? <Icon icon={LoaderCircleIcon} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
         {t('post_ad.actions.confirm_publish')}
       </Button>
     </section>

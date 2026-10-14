@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Image from 'next/image';
-import { ImageIcon, ImageOff } from 'lucide-react';
 
+import { ImagePlaceholderIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import type { Media } from '@/lib/api/types';
@@ -34,7 +34,7 @@ export function AdPhoto({ image, sizes, children, compact = false, dashedWhenEmp
           className,
         )}
       >
-        <ImageIcon aria-hidden="true" className="size-6" strokeWidth={1.6} />
+        <ImagePlaceholderIcon aria-hidden="true" className="size-[26px]" />
         <span className="text-qb-label">{t('account.my_ads.without_photo')}</span>
       </div>
     );
@@ -45,7 +45,7 @@ export function AdPhoto({ image, sizes, children, compact = false, dashedWhenEmp
         <Image src={src} alt="" fill sizes={sizes} className="object-cover" />
       ) : (
         <span className="flex size-full flex-col items-center justify-center gap-2 text-qb-ink-disabled">
-          <ImageOff className={compact ? 'size-5' : 'size-8'} aria-hidden="true" />
+          <ImagePlaceholderIcon className={compact ? 'size-5' : 'size-8'} aria-hidden="true" />
           {compact ? null : <span className="text-qb-h5 text-qb-ink-disabled">{t('account.my_ads.without_photo')}</span>}
         </span>
       )}

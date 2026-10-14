@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setClientLocale } from '@/lib/i18n/locale';
-import type { Location } from '@/lib/api/types';
+import type { CategoryNode } from '@/lib/api/types';
 
 import { EMPTY_FILTERS } from './filter-values';
 import { FilterSheet } from './CatalogFilters';
@@ -76,18 +76,25 @@ describe('SelectField', () => {
 
   it('closes on Escape inside the filter sheet without closing the sheet', async () => {
     const user = userEvent.setup();
-    const doha: Location = { id: 'doha', parent_id: null, slug: 'doha', name: { ar: 'الدوحة', en: 'Doha' }, type: 'city', lat: null, lng: null, children: [] };
-    render(<FilterSheet groups={['location']} values={EMPTY_FILTERS} locations={[doha]} onApply={vi.fn()} onReset={vi.fn()} />);
+    // A select of the category's own fields, as the sheet lists them.
+    const cars = {
+      id: 'c1',
+      slug: 'cars',
+      name: { en: 'Cars', ar: 'سيارات' },
+      children: [],
+      custom_fields: [{ key: 'brand', type: 'select', label: { en: 'Brand', ar: 'الماركة' }, options_labeled: [{ value: 'bmw', label: 'BMW' }] }],
+    } as unknown as CategoryNode;
+    render(<FilterSheet groups={['customFields']} values={EMPTY_FILTERS} categories={[cars]} categorySlug="cars" onApply={vi.fn()} onReset={vi.fn()} />);
 
     await user.click(screen.getByRole('button', { name: 'Filter' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Advanced Filters' });
-    const field = screen.getByRole('combobox', { name: 'City / Region' });
+    const dialog = await screen.findByRole('dialog', { name: 'Filter' });
+    const field = screen.getByRole('combobox', { name: 'Brand' });
     await user.click(field);
     await screen.findByRole('listbox');
     await user.keyboard('{Escape}');
 
     await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument());
     expect(dialog).toBeInTheDocument();
-    expect(screen.getByRole('dialog', { name: 'Advanced Filters' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Filter' })).toBeInTheDocument();
   });
 });

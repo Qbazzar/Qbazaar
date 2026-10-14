@@ -8,12 +8,12 @@
  */
 import { useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, Clock, Eye, Heart, Loader2, Pencil, RefreshCw, Tag, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { BookmarkIcon, ClockIcon, EyeIcon, HeartIcon, LoaderCircleIcon, PencilIcon, RefreshCwIcon, TagIcon, TrashIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import {
   useDeleteAdMutation,
@@ -40,9 +40,16 @@ interface Props {
   category: string;
 }
 
-/** Grey row buttons of the design ("Complete", "Reserve"): Montserrat 500 14 px on #f7f7f7. */
+/**
+ * Grey `.qb-btn` row buttons of the design ("Complete"): Montserrat 500 14 px on a
+ * 1.15 line, #f7f7f7, 15 px glyphs, 4 % dimmer under the pointer with the polish transition.
+ */
 const rowButton =
-  'inline-flex cursor-pointer items-center gap-2 rounded-qb-md bg-qb-acct-tile px-[18px] py-3 font-qb-label text-qb-caption font-medium whitespace-nowrap text-qb-acct-meta hover:bg-qb-fill-strong disabled:cursor-progress disabled:opacity-60 [&_svg]:size-4';
+  'qb-motion inline-flex cursor-pointer items-center gap-2 rounded-qb-md bg-qb-acct-tile px-[18px] py-3 font-qb-label text-qb-caption leading-[1.15] font-medium whitespace-nowrap text-qb-acct-meta hover:brightness-[.96] disabled:cursor-progress disabled:opacity-60 [&_svg]:size-[15px]';
+
+/** "Reserve" draws in the browser's own button colours in the design (#f0f0f0, black); orange-tinted while reserved. */
+const reserveButton = (reserved: boolean) =>
+  reserved ? 'bg-qb-brand-soft text-qb-brand' : 'bg-qb-fill-disabled text-qb-black';
 
 export function MyAdsRow({ ad, category }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -113,7 +120,7 @@ export function MyAdsRow({ ad, category }: Props) {
       <div className="min-w-0 qb-tablet:min-w-[220px] qb-tablet:flex-[1_1_260px]">
         <div className="flex flex-wrap items-center gap-3">
           <h3 className="min-w-0 text-qb-h3 font-semibold tracking-normal text-qb-ink">
-            <Link href={`/ads/${ad.id}`} className={cn('rounded-qb-xs hover:text-qb-brand', focusRing)}>
+            <Link href={`/ads/${ad.id}`} className={cn('hover:text-qb-brand', focusRing)}>
               <bdi>{title}</bdi>
             </Link>
           </h3>
@@ -123,16 +130,16 @@ export function MyAdsRow({ ad, category }: Props) {
         {isDraft ? null : (
           <ul className="flex flex-col gap-2 text-qb-caption text-qb-acct-meta qb-tablet:flex-row qb-tablet:flex-wrap qb-tablet:gap-x-[22px]">
             <li className="flex items-center gap-1.5">
-              <Eye aria-hidden="true" className="size-4" strokeWidth={1.6} />
+              <EyeIcon aria-hidden="true" className="size-4" strokeWidth={1.6} />
               {tPlural('account.my_ads.visitors', ad.views_count)}
             </li>
             <li className="flex items-center gap-1.5">
-              <Heart aria-hidden="true" className="size-4" strokeWidth={1.6} />
+              <HeartIcon aria-hidden="true" className="size-4" strokeWidth={1.6} />
               {tPlural('account.my_ads.likes', ad.favorites_count)}
             </li>
             {published ? (
               <li className="flex items-center gap-1.5">
-                <Clock aria-hidden="true" className="size-4" strokeWidth={1.6} />
+                <ClockIcon aria-hidden="true" className="size-4" strokeWidth={1.6} />
                 {t('account.my_ads.published_on', { date: published })}
               </li>
             ) : null}
@@ -142,18 +149,18 @@ export function MyAdsRow({ ad, category }: Props) {
 
       <div className="flex flex-wrap items-center justify-end gap-3.5">
         <Link href={`/account/ads/${ad.id}/edit`} className={cn(rowButton, focusRing)}>
-          <Pencil aria-hidden="true" />
+          <PencilIcon aria-hidden="true" />
           {isDraft ? t('account.my_ads.complete') : t('ads.actions.edit', 'تعديل')}
         </Link>
         {ad.status === 'active' ? (
           <button
             type="button"
             aria-pressed={reserved}
-            className={cn(rowButton, reserved && 'bg-qb-brand-soft text-qb-brand hover:bg-qb-brand-soft', focusRing)}
+            className={cn(rowButton, reserveButton(reserved), focusRing)}
             disabled={reserveMutation.isPending}
             onClick={() => void onReserve()}
           >
-            {reserveMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Bookmark aria-hidden="true" />}
+            {reserveMutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : <BookmarkIcon aria-hidden="true" />}
             {t('account.my_ads.reserve')}
           </button>
         ) : null}
@@ -164,7 +171,7 @@ export function MyAdsRow({ ad, category }: Props) {
             disabled={markSoldMutation.isPending}
             onClick={() => void onMarkSold()}
           >
-            {markSoldMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Tag aria-hidden="true" />}
+            {markSoldMutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : <TagIcon aria-hidden="true" />}
             {t('ads.actions.mark_sold', 'تم البيع')}
           </button>
         ) : null}
@@ -175,20 +182,20 @@ export function MyAdsRow({ ad, category }: Props) {
             disabled={renewMutation.isPending}
             onClick={() => void onRenew()}
           >
-            {renewMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}
+            {renewMutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : <RefreshCwIcon aria-hidden="true" />}
             {t('ads.actions.renew', 'تجديد')}
           </button>
         ) : null}
         <button
           type="button"
           className={cn(
-            'flex size-11 cursor-pointer items-center justify-center rounded-qb-md border border-qb-line bg-qb-surface text-qb-acct-danger hover:bg-qb-danger-soft',
+            'qb-motion flex size-11 cursor-pointer items-center justify-center rounded-qb-md border border-qb-line bg-qb-surface text-qb-acct-danger hover:brightness-[.96]',
             focusRing,
           )}
           aria-label={t('account.my_ads.delete_label', { title })}
           onClick={() => setConfirmDelete(true)}
         >
-          <Trash2 aria-hidden="true" className="size-[18px]" strokeWidth={1.6} />
+          <TrashIcon aria-hidden="true" className="size-[18px]" />
         </button>
       </div>
 
@@ -205,7 +212,7 @@ export function MyAdsRow({ ad, category }: Props) {
       >
         <ModalActions className="mt-2">
           <Button size="sm" disabled={deleteMutation.isPending} onClick={() => void onDelete()}>
-            {deleteMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {deleteMutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
             {t('common.delete', 'حذف')}
           </Button>
           <Button variant="muted" size="sm" disabled={deleteMutation.isPending} onClick={() => setConfirmDelete(false)}>

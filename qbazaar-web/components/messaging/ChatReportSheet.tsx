@@ -2,10 +2,10 @@
 
 import { useState, type RefObject } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
-import { Loader2 } from 'lucide-react';
 
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import type { ReportCategory } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
 import { useSubmitReportMutation } from '@/lib/queries/reports';
@@ -128,7 +128,7 @@ export function ChatReportSheet({ open, onOpenChange, peerId, finalFocus }: Chat
                 focusRing,
               )}
             >
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+              {mutation.isPending ? <LoaderCircleIcon className="size-4 animate-spin" aria-hidden="true" /> : null}
               {t('messaging.report.submit')}
             </button>
           </form>

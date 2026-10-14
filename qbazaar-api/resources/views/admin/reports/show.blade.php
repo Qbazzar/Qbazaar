@@ -150,9 +150,11 @@
                     <x-admin.meta-item label="البائع"><x-admin.user :user="$target->seller" size="xs" fallback="حساب محذوف" /></x-admin.meta-item>
                     <x-admin.meta-item label="آخر رسالة" ltr>{{ $dateTime($target->last_message_at) }}</x-admin.meta-item>
                 </x-admin.meta-list>
+            @elseif (! $canReadMessage)
+                <x-admin.empty-state compact icon="inbox" message="نص الرسالة المُبلَّغ عنها مقيّد، ويظهر لمن يملك صلاحية اتخاذ إجراء على البلاغات." />
             @else
                 <figure class="grid gap-2">
-                    <blockquote class="max-w-[70ch] rounded-xl border border-ink-200 bg-cream-50 px-4 py-3 text-sm leading-[1.9] whitespace-pre-line break-words text-ink-700">{{ \Illuminate\Support\Str::limit((string) $target->body, 600) ?: '—' }}</blockquote>
+                    <blockquote class="max-w-[70ch] rounded-xl border border-ink-200 bg-cream-50 px-4 py-3 text-sm leading-[1.9] whitespace-pre-line break-words text-ink-700">{{ \Illuminate\Support\Str::limit((string) $target->body, \App\Services\Admin\Reports\ReportDetailPanels::MESSAGE_PREVIEW_LENGTH) ?: '—' }}</blockquote>
                     <figcaption class="flex flex-wrap items-center gap-x-2 text-[13px] text-ink-500">
                         <x-admin.user :user="$target->sender" size="xs" fallback="حساب محذوف" />
                         <span aria-hidden="true">·</span>

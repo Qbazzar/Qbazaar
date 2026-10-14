@@ -20,6 +20,16 @@
   --color-qb-saved-soft: #effff6;
   /* Category tile names (621:27193, 18:912, 623:28688) */
   --color-qb-tile-name: #555555;
+  /* The filter card and the white pills of the listing pages (category.html) */
+  --shadow-qb-pill: 0 4px 30px 0 rgb(161 161 161 / 0.1);
+  /* The listing's "Filter" pill under 1001 px (.qb-filter-btn) */
+  --shadow-qb-filter-btn: 0 2px 8px 0 rgb(0 0 0 / 0.05);
+  /* The unselected list / grid view toggle (category.html) */
+  --color-qb-toggle-off: #c9c9c9;
+  /* The search box of all-categories.html (its own lighter card shadow) */
+  --shadow-qb-search-box: 0 4px 40px 0 rgb(161 161 161 / 0.12);
+  /* The pale orange of "Apply Filter" and "Show All" (category.html, parent-category.html) */
+  --color-qb-brand-pale: #f49e7e;
   /* "Advanced Filters" title of the filter sheet (618:26974) */
   --color-qb-sheet-title: #454545;
 }

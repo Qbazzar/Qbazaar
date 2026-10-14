@@ -4,11 +4,11 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -108,7 +108,7 @@ export function ForgotPasswordForm() {
             disabled={resending}
             className={cn(authSubmitClass, 'mt-[26px]', resending && 'cursor-progress')}
           >
-            {resending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {resending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
             {t('auth.forgot_password.resend')}
           </Button>
         </div>
@@ -143,7 +143,7 @@ export function ForgotPasswordForm() {
             >
               {submitting ? (
                 <>
-                  <Loader2 className="animate-spin" aria-hidden="true" />
+                  <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
                   {t('auth.forgot_password.submitting')}
                 </>
               ) : (

@@ -63,9 +63,9 @@ class ReportController extends Controller
         ]);
     }
 
-    public function show(Report $report, ReportDetailPanels $panels): View
+    public function show(#[CurrentUser] User $viewer, Report $report, ReportDetailPanels $panels): View
     {
-        return view('admin.reports.show', $panels->forShow($report));
+        return view('admin.reports.show', $panels->forShow($report, $viewer));
     }
 
     public function resolve(Report $report): RedirectResponse

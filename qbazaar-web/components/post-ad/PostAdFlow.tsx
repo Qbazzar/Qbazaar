@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { CloudOff } from 'lucide-react';
 
 import { Breadcrumb, type BreadcrumbItem } from '@/components/design-system/Breadcrumb';
 import { Button } from '@/components/design-system/Button';
+import { CloudOffIcon } from '@/components/design-system/icons';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import type { Ad, CategoryNode, Location, User } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
@@ -31,7 +31,8 @@ export interface PostAdFlowProps {
   user: User;
   /** The ad being edited; omit to post a new one. */
   ad?: Ad;
-  breadcrumb: BreadcrumbItem[];
+  /** Trail above the form. The new-ad form has none, as add-ads.html; the edit page keeps its way back. */
+  breadcrumb?: BreadcrumbItem[];
 }
 
 const NO_CATEGORIES: CategoryNode[] = [];
@@ -87,7 +88,7 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
     if (!treeQuery.isError && !citiesQuery.isError) return <PostAdLoading />;
     return (
       <StatePanel
-        icon={<StateIcon icon={CloudOff} tone="muted" />}
+        icon={<StateIcon icon={CloudOffIcon} tone="muted" />}
         title={t('post_ad.load_failed')}
         description={t('common.error')}
         action={
@@ -151,7 +152,7 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
 
   return (
     <>
-      <Breadcrumb items={breadcrumb} className={formBreadcrumbClass} />
+      {breadcrumb ? <Breadcrumb items={breadcrumb} className={formBreadcrumbClass} /> : null}
       <AdFormView
         title={adId ? t('post_ad.edit_title') : t('post_ad.page_title')}
         seller={seller}

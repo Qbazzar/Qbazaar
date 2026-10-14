@@ -24,11 +24,14 @@ class WithdrawalController extends Controller
 {
     public function index(Request $request, FinanceQueues $queues): View
     {
-        $status = WithdrawalStatus::tryFrom((string) $request->query('status')) ?? WithdrawalStatus::PENDING;
+        $userId = $request->string('user')->toString() ?: null;
+        // Narrowed to one user the queue shows every status, since it is that user's history.
+        $status = WithdrawalStatus::tryFrom((string) $request->query('status')) ?? ($userId ? null : WithdrawalStatus::PENDING);
 
         return view('admin.finance.withdrawals', [
             'status' => $status,
-            'withdrawals' => $queues->withdrawals($status),
+            'filteredUser' => $userId ? User::query()->select(['id', 'full_name', 'email'])->find($userId) : null,
+            'withdrawals' => $queues->withdrawals($status, $userId),
             'canManage' => $this->admin($request)->can('finance.manage'),
         ]);
     }

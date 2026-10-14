@@ -1,12 +1,12 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { CalendarDays, Check, LoaderCircle, Tag } from 'lucide-react';
 
 import { Avatar } from '@/components/design-system/Avatar';
 import { Button } from '@/components/design-system/Button';
 import { cardVariants } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
+import { CalendarIcon, CheckAltIcon, LoaderCircleIcon, TagIcon } from '@/components/design-system/icons';
 import { VerifiedMark } from '@/components/users/SellerBadges';
 import type { AccountType } from '@/lib/api/types';
 import { getLocale } from '@/lib/i18n/locale';
@@ -48,14 +48,14 @@ const IDENTITY_STYLES = {
     name: 'text-qb-h5 text-qb-ink-title',
     badge: 'bg-qb-brand-soft text-qb-brand-on-soft',
     rows: 'gap-2.5',
-    adsIcon: Check,
+    adsIcon: CheckAltIcon,
   },
   /** The seller card of preview.html. */
   preview: {
     name: 'text-[17px] text-qb-ink',
     badge: 'border border-qb-brand bg-qb-surface text-qb-brand',
     rows: 'gap-3',
-    adsIcon: Tag,
+    adsIcon: TagIcon,
   },
 } as const;
 
@@ -77,7 +77,7 @@ export function SellerIdentity({ seller, variant = 'form' }: { seller: SellerSum
       </div>
       <ul className="mt-[18px] flex flex-col gap-3.5 border-t border-qb-line pt-[18px] text-qb-body-sm text-qb-ink-secondary">
         <li className={cn('flex items-center', styles.rows)}>
-          <Icon icon={styles.adsIcon} size="sm" className="size-[18px] text-qb-ink-subtle" />
+          <Icon icon={styles.adsIcon} size={18} className="text-qb-ink-subtle" />
           {seller.adsCount === undefined ? (
             <span className="h-4 w-14 animate-pulse rounded-qb-xs bg-qb-fill motion-reduce:animate-none" />
           ) : (
@@ -85,7 +85,7 @@ export function SellerIdentity({ seller, variant = 'form' }: { seller: SellerSum
           )}
         </li>
         <li className={cn('flex items-center', styles.rows)}>
-          <Icon icon={CalendarDays} size="sm" className="size-[18px] text-qb-ink-subtle" />
+          <Icon icon={CalendarIcon} size={18} className="text-qb-ink-subtle" />
           {t('post_ad.profile.member_since', { date: formatDate(seller.memberSince, locale) })}
         </li>
       </ul>
@@ -139,7 +139,7 @@ export function ProfileCard({
           action={preview}
           disabled={disabled}
           variant="ghost"
-          className="h-7 text-qb-caption text-qb-brand hover:bg-transparent hover:underline max-qb-tablet:h-[42px]"
+          className="h-7 rounded-none text-qb-caption text-qb-brand hover:bg-transparent hover:brightness-[.96] max-qb-tablet:h-[42px]"
         />
       </div>
     </section>
@@ -171,7 +171,7 @@ function ActionButton({
         buttonLeading,
       )}
     >
-      {action.busy ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
+      {action.busy ? <Icon icon={LoaderCircleIcon} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
       {action.label}
     </Button>
   );

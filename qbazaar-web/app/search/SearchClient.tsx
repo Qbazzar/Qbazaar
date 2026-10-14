@@ -9,10 +9,10 @@
 import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { parseAsBoolean, parseAsFloat, parseAsInteger, parseAsString, parseAsStringEnum, useQueryStates } from 'nuqs';
-import { SearchX } from 'lucide-react';
 
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { SearchXIcon } from '@/components/design-system/icons';
 import { Pagination } from '@/components/design-system/Pagination';
 import { CatalogHeader, CatalogStats } from '@/components/catalog/CatalogHeader';
 import { CatalogLayout } from '@/components/catalog/CatalogLayout';
@@ -227,9 +227,9 @@ export function SearchClient() {
           empty={
             <EmptyState
               headingLevel="h3"
-              icon={<Icon icon={SearchX} size="lg" />}
+              icon={<Icon icon={SearchXIcon} size="lg" />}
               title={t('ads.empty.no_ads', 'لا توجد إعلانات هنا بعد.')}
-              className="rounded-qb-2xl border border-qb-line bg-qb-surface"
+              className="rounded-qb-xl border border-qb-line bg-qb-surface"
             />
           }
         />

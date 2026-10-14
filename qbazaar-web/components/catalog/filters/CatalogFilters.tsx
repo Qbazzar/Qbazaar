@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ListFilter } from 'lucide-react';
 
 import '../catalog-tokens.css';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { FilterLinesIcon, FunnelIcon } from '@/components/design-system/icons';
 import { Sheet } from '@/components/design-system/Modal';
 import { formatNumber } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
@@ -41,7 +41,7 @@ export function FilterSidebar({ onApply, onReset, ...props }: FilterPanelProps) 
   return (
     <aside
       aria-label={t('catalog.filters.title', 'الفلتر')}
-      className="hidden w-[356px] shrink-0 self-start rounded-qb-2xl border border-qb-line bg-qb-surface shadow-qb-card qb-desktop:block"
+      className="hidden w-[360px] shrink-0 self-start rounded-qb-xl border border-qb-line bg-qb-surface p-6 shadow-(--shadow-qb-pill) qb-desktop:block"
     >
       {/* No focus request for the chips: a removed chip hands the focus to the next one. */}
       <FilterPanel variant="sidebar" {...props} {...focusing} onRemoveFilter={onApply} />
@@ -50,20 +50,45 @@ export function FilterSidebar({ onApply, onReset, ...props }: FilterPanelProps) 
 }
 
 /**
- * The sheet itself does not scroll: its handle, title and close button stay on
- * top while the filter form scrolls under them (618:26974, 244:3508). The title
- * takes the sheet's text colour; the form sets its own.
+ * The reference's filter sheet (category.html aside under 1001 px, mobilemenu.js): the card itself
+ * slid up, at most 86 % of the screen, 22 px top corners, a hairline and the upward 44 px shadow;
+ * no handle and no close button (Escape, the backdrop and "Show Results" close it). The form scrolls
+ * inside it above the bar, so the sheet itself does not.
  */
-const sheetLayout = 'overflow-hidden pb-0 text-(--color-qb-sheet-title) *:last:flex *:last:min-h-0 *:last:flex-col';
+const sheetLayout =
+  'max-h-[86vh] overflow-hidden rounded-t-[22px] border border-qb-line p-0 shadow-qb-sheet *:first:hidden *:last:mt-0 *:last:flex *:last:min-h-0 *:last:flex-col';
+
+/**
+ * The reference's two "Filter" buttons under 1001 px:
+ * - `pill`: the listing's `.qb-filter-btn` (category.html): funnel first, 600, a soft shadow, #fafafa under the pointer.
+ * - `row`: the parent category's `.qb-cp-row .btn` (parent-category.html): text first, the filter lines after it, no hover.
+ */
+const TRIGGERS = {
+  pill: {
+    button:
+      'gap-2 rounded-qb-md px-[18px] py-2.5 text-qb-label leading-normal font-semibold text-qb-ink-title shadow-(--shadow-qb-filter-btn) qb-motion hover:bg-qb-hover motion-reduce:transition-none',
+    icon: FunnelIcon,
+    iconSize: 15,
+    iconFirst: true,
+  },
+  row: {
+    button: 'gap-2 rounded-qb-lg px-4 py-[11px] text-qb-caption leading-normal font-medium text-qb-ink',
+    icon: FilterLinesIcon,
+    iconSize: 16,
+    iconFirst: false,
+  },
+} as const;
 
 interface FilterSheetProps extends FilterPanelProps {
-  /** Classes for the trigger, which sits in the toolbar pill. */
-  triggerClassName?: string;
+  /** Which of the reference's two Filter buttons opens the sheet. */
+  trigger?: keyof typeof TRIGGERS;
 }
 
-/** "Filter" button of the toolbar under 1001 px and the bottom sheet it opens (618:26974). */
-export function FilterSheet({ triggerClassName, onApply, onReset, ...props }: FilterSheetProps) {
+/** "Filter" button of the toolbar under 1001 px and the bottom sheet it opens. */
+export function FilterSheet({ trigger = 'pill', onApply, onReset, ...props }: FilterSheetProps) {
   const locale = getLocale();
+  const look = TRIGGERS[trigger];
+  const icon = <Icon icon={look.icon} size={look.iconSize} />;
   const [open, setOpen] = useState(false);
   const focusing = useFocusingHandlers({ onApply, onReset });
   const active = countActiveFilters(props.values, { keyword: props.keywordIsFilter });
@@ -72,19 +97,19 @@ export function FilterSheet({ triggerClassName, onApply, onReset, ...props }: Fi
     <Sheet
       open={open}
       onOpenChange={setOpen}
-      title={t('catalog.filters.sheet_title', 'فلاتر متقدمة')}
+      title={t('catalog.filters.title', 'الفلتر')}
+      // The title only names the dialog; the form shows its own "Filter" row.
+      heading={<span aria-hidden="true" />}
+      showCloseButton={false}
       className={cn(headingFont, sheetLayout)}
       trigger={
         <button
           type="button"
-          className={cn(
-            'inline-flex h-full shrink-0 cursor-pointer items-center gap-2 rounded-qb-md px-3 font-qb text-qb-micro text-qb-ink qb-tablet:px-4 qb-tablet:text-qb-body',
-            focusRing,
-            triggerClassName,
-          )}
+          className={cn('inline-flex shrink-0 cursor-pointer items-center border border-qb-line bg-qb-surface font-qb whitespace-nowrap', look.button, focusRing)}
         >
-          {t('catalog.filters.open', 'فلتر')}
-          <Icon icon={ListFilter} size="sm" className="qb-tablet:size-5" />
+          {look.iconFirst ? icon : null}
+          <span>{t('catalog.filters.open', 'فلتر')}</span>
+          {look.iconFirst ? null : icon}
           {active > 0 ? (
             <span className="inline-flex min-w-[18px] items-center justify-center rounded-qb-pill bg-qb-brand px-1 text-qb-tiny leading-[18px] font-semibold text-qb-on-brand">
               {formatNumber(active, locale)}

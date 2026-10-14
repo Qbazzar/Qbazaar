@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { ShieldCheckIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n/messages';
 import { phoneVerificationHref } from '@/lib/auth/phone-gate';
@@ -38,7 +38,7 @@ export function PhoneVerificationNotice({ context, compact = false, className }:
       )}
     >
       <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-qb-md bg-qb-brand-soft text-qb-brand">
-        <ShieldCheck className="size-5" aria-hidden="true" />
+        <ShieldCheckIcon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
         {compact ? null : (

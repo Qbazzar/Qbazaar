@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
-import { ArrowLeft, ChevronRight, X } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { ArrowLeftIcon } from '@/components/design-system/icons';
 import { modalBackdrop } from '@/components/design-system/Modal';
 import type { CategoryNode } from '@/lib/api/types';
 import { localized } from '@/lib/i18n/locale';
@@ -28,9 +28,10 @@ const COLUMN_TITLES = ['post_ad.picker.category', 'post_ad.picker.subcategory', 
 const PHONE_QUERY = '(max-width: 600.98px)';
 
 /**
- * "Select Category" (335:7242): one column per level side by side from 601 px,
- * one level at a time with a back button on phones (639:36814, 640:37592).
- * Only a leaf category can carry an ad, so "Add" waits for one.
+ * "Select Category" (add-ads.html, 335:7242): one column per level side by side from 601 px,
+ * one level at a time with a back button on phones (639:36814, 640:37592). The r18 card with the
+ * reference's deep shadow fades in as its dialogs do (qbFade .2s). Only a leaf category can carry
+ * an ad, so "Add" waits for one.
  */
 export function CategoryPicker({ open, onOpenChange, tree, value, onSelect }: CategoryPickerProps) {
   return (
@@ -39,9 +40,9 @@ export function CategoryPicker({ open, onOpenChange, tree, value, onSelect }: Ca
         <Dialog.Backdrop className={modalBackdrop} />
         <Dialog.Popup
           className={cn(
-            'fixed inset-x-4 top-1/2 z-50 mx-auto flex max-h-[calc(100dvh-32px)] max-w-[760px] -translate-y-1/2 flex-col overflow-hidden',
-            'rounded-qb-xl bg-qb-surface font-qb text-qb-ink shadow-qb-popover',
-            'transition-[opacity,scale] duration-200 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-reduce:transition-none',
+            'fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-40px)] w-[calc(100%-40px)] max-w-[760px] -translate-1/2 flex-col overflow-hidden',
+            'rounded-[18px] bg-qb-surface font-qb text-qb-ink shadow-qb-modal',
+            'animate-qb-dialog-enter motion-reduce:animate-none',
           )}
         >
           {/* Remounted on every open so it starts from the current value. */}
@@ -102,18 +103,16 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
             aria-label={t('post_ad.picker.back')}
             className={cn('-ms-2 inline-flex size-10 items-center justify-center rounded-qb-md hover:bg-qb-fill qb-tablet:hidden', focusRing)}
           >
-            <Icon icon={ArrowLeft} size="lg" flipInRtl />
+            <Icon icon={ArrowLeftIcon} size="lg" flipInRtl />
           </button>
         ) : null}
         <Dialog.Title className="min-w-0 flex-1 truncate text-qb-h3 font-medium tracking-normal text-(--color-qb-ink-heading)">
           <span className={cn(phoneParent && 'max-qb-tablet:hidden')}>{t('post_ad.picker.title')}</span>
           {phoneParent ? <span className="qb-tablet:hidden">{localized(phoneParent.name)}</span> : null}
         </Dialog.Title>
-        <Dialog.Close
-          aria-label={t('ui.close')}
-          className={cn('-me-2 inline-flex size-10 items-center justify-center rounded-qb-md text-qb-ink-subtle hover:bg-qb-fill', focusRing)}
-        >
-          <Icon icon={X} size="lg" />
+        {/* The reference closes with a 22 px "✕" character, not an icon. */}
+        <Dialog.Close aria-label={t('ui.close')} className={cn('cursor-pointer rounded-qb-xs text-[22px] leading-none text-qb-ink-subtle', focusRing)}>
+          <span aria-hidden="true">✕</span>
         </Dialog.Close>
       </div>
 
@@ -141,7 +140,7 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
           size="sm"
           disabled={!leaf}
           onClick={() => leaf && onSelect(leaf.id)}
-          className="h-auto px-[34px] py-[11px] text-qb-body-sm"
+          className="h-auto px-[34px] py-[11px] text-qb-body-sm leading-[1.15]"
         >
           {t('post_ad.picker.add')}
         </Button>
@@ -184,7 +183,7 @@ function PickerColumn({
       {options.length === 0 ? (
         <p className="px-3 py-2 text-qb-caption text-qb-ink-subtle">{t('post_ad.picker.choose_first')}</p>
       ) : (
-        <ul aria-labelledby={headingId} className="flex flex-col gap-0.5">
+        <ul aria-labelledby={headingId} className="flex flex-col">
           {options.map((node) => {
             const selected = node.id === selectedId;
             const parent = !isLeaf(node);
@@ -195,13 +194,18 @@ function PickerColumn({
                   aria-pressed={selected}
                   onClick={() => onChoose(node)}
                   className={cn(
-                    'flex w-full items-center justify-between gap-2 rounded-qb-sm px-3 py-[11px] text-start text-qb-caption transition-colors',
+                    'mb-0.5 flex w-full cursor-pointer items-center justify-between gap-2 rounded-qb-sm px-3 py-[11px] text-start text-qb-caption',
                     focusRing,
-                    selected ? 'bg-qb-brand text-qb-on-brand' : 'text-qb-ink-body hover:bg-qb-hover',
+                    selected ? 'bg-qb-brand text-qb-on-brand' : 'bg-qb-surface text-qb-ink-body',
                   )}
                 >
                   <span>{localized(node.name)}</span>
-                  {parent ? <Icon icon={ChevronRight} size="sm" flipInRtl /> : null}
+                  {/* A "›" character on the reference; it points the other way in Arabic. */}
+                  {parent ? (
+                    <span aria-hidden="true" className="inline-block rtl:-scale-x-100">
+                      ›
+                    </span>
+                  ) : null}
                 </button>
               </li>
             );

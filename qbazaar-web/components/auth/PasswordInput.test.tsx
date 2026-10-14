@@ -20,11 +20,23 @@ describe('PasswordInput', () => {
     expect(toggle).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('keeps the eye clear of the left-to-right text on the end side of either direction', () => {
+  it('draws the same slashed eye in both states, as auth.js only switches the type', () => {
+    render(<PasswordInput aria-label="Password" />);
+    const toggle = screen.getByRole('button', { name: t('auth.password.toggle') });
+    const hidden = toggle.innerHTML;
+
+    fireEvent.click(toggle);
+    expect(toggle.innerHTML).toBe(hidden);
+  });
+
+  it('types left to right with the 16 px padding of .qb-field input and the eye on the end side', () => {
     render(<PasswordInput aria-label="Password" />);
     const input = screen.getByLabelText('Password');
+    const toggle = screen.getByRole('button', { name: t('auth.password.toggle') });
 
     expect(input).toHaveAttribute('dir', 'ltr');
-    expect(input).toHaveClass('pr-12', 'rtl:pl-12');
+    expect(input).toHaveClass('px-4');
+    expect(input).not.toHaveClass('pr-12');
+    expect(toggle).toHaveClass('end-3.5');
   });
 });

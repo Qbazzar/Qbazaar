@@ -13,13 +13,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Search } from 'lucide-react';
 
 import { fieldErrorText } from '@/components/auth/FieldError';
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { SearchCircleIcon, SearchIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
 import { t } from '@/lib/i18n/messages';
@@ -42,15 +42,23 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-/** Sizes of the page-action pill, shared with the "Add to Favorite" pill beside it. */
+/** The page-action buttons, shared with the "Add to Favorite" pill beside it (category.html). */
 export const TRIGGER = {
-  /** Beside the page title on desktop (69:467). */
-  header: { pill: 'h-14 px-5 text-qb-h5 [&_svg]:size-6', face: 'gap-3', label: '' },
-  /** Toolbar of tablets (text pill, 544:38513) and phones (icon only, 623:30012). */
+  /** Beside the page title from 601 px: the white `.qb-card.qb-btn` pill with 20 px text and an 18 px icon. */
+  header: {
+    button: cn(toolbarPill, 'gap-2 px-5 py-3 text-qb-h5 leading-[1.15]'),
+    face: 'gap-2',
+    label: '',
+    iconSize: 18,
+    iconInk: '',
+  },
+  /** The phone toolbar's 44 px circles (mobilemenu.js `.qb-cat-circles`): the icon alone, dark, no hover. */
   toolbar: {
-    pill: 'h-10 w-11 justify-center qb-tablet:h-11 qb-tablet:w-auto qb-tablet:px-4 qb-tablet:text-qb-body [&_svg]:size-5',
-    face: 'qb-tablet:gap-2',
-    label: 'sr-only qb-tablet:not-sr-only',
+    button: 'inline-flex size-11 cursor-pointer items-center justify-center rounded-full border border-qb-line bg-qb-surface',
+    face: '',
+    label: 'sr-only',
+    iconSize: 19,
+    iconInk: 'text-qb-ink',
   },
 } as const;
 
@@ -75,17 +83,16 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
   const savedLabel = t('search.save_search.saved', 'تم الحفظ');
   const trigger = TRIGGER[variant];
   const triggerClass = cn(
-    toolbarPill,
-    'shrink-0 cursor-pointer font-qb transition-[background-color,box-shadow,translate] duration-200 motion-reduce:transition-none',
-    'hover:-translate-y-[3px] hover:bg-qb-hover hover:shadow-qb-hover motion-reduce:hover:translate-y-0 disabled:pointer-events-none disabled:opacity-50',
-    saved && 'border-(--color-qb-saved) bg-(--color-qb-saved-soft) text-(--color-qb-saved) hover:bg-(--color-qb-saved-soft)',
-    trigger.pill,
+    'shrink-0 font-qb disabled:pointer-events-none disabled:opacity-50',
+    trigger.button,
+    saved && 'border-(--color-qb-saved) bg-(--color-qb-saved-soft) text-(--color-qb-saved)',
     focusRing,
     className,
   );
+  const icon = variant === 'toolbar' ? SearchCircleIcon : SearchIcon;
   const face = (label: string, hidden = false) => (
     <span aria-hidden={hidden || undefined} className={cn('col-start-1 row-start-1 inline-flex items-center', trigger.face, hidden && 'invisible')}>
-      <Icon icon={Search} className={cn('shrink-0', saved ? 'text-(--color-qb-search-icon)' : 'text-qb-ink-body')} />
+      <Icon icon={icon} size={trigger.iconSize} className={saved ? 'text-(--color-qb-search-icon)' : trigger.iconInk || 'text-qb-ink-body'} />
       <span className={trigger.label}>{label}</span>
     </span>
   );

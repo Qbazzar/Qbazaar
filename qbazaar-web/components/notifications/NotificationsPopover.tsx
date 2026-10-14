@@ -11,7 +11,7 @@
  */
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCheckIcon, Loader2Icon } from 'lucide-react';
+import { CheckCheckIcon, LoaderCircleIcon } from '@/components/design-system/icons';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,7 +54,7 @@ export function NotificationsPopover() {
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-10" role="status">
-            <Loader2Icon
+            <LoaderCircleIcon
               className="text-muted-foreground size-5 animate-spin"
               aria-hidden
             />

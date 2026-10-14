@@ -1,11 +1,13 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 
-import { Field } from '@/components/design-system/Field';
 import { Textarea } from '@/components/design-system/Input';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
+import { cn } from '@/lib/utils';
+
+import { dealLabelClass } from './DealFormParts';
 
 export interface NoteFieldProps {
   label: ReactNode;
@@ -19,55 +21,61 @@ export interface NoteFieldProps {
   required?: boolean;
   rows?: number;
   className?: string;
+  /** Classes of the text box itself, e.g. the 16 px gap under it on the deal forms. */
+  textareaClassName?: string;
 }
 
 /** The counter appears once the text gets close to the limit, so the field stays quiet until it matters. */
 const COUNTER_FROM = 40;
 
-/** Free-text field for messages, reasons and notes, with the characters left near the limit. */
-export function NoteField({ label, value, onChange, max, error, placeholder, hint, required, rows, className }: NoteFieldProps) {
+/**
+ * Free-text field for messages, reasons and notes, as the message box of offer.html: the 15 px
+ * label ("Message (optional)"), an r10 box with 14 px padding and 15 px text, and the characters
+ * left near the limit.
+ */
+export function NoteField({ label, value, onChange, max, error, placeholder, hint, required, rows = 3, className, textareaClassName }: NoteFieldProps) {
+  const id = useId();
   const remaining = Math.max(0, max - value.length);
   const left = remaining <= COUNTER_FROM ? tPlural('orders.common.chars_left', remaining) : null;
+  const hintId = hint || left ? `${id}-hint` : undefined;
+  const errorId = error ? `${id}-error` : undefined;
+
   return (
-    <Field
-      label={
-        required ? (
-          label
+    <div className={cn('font-qb', className)}>
+      <label htmlFor={id} className={dealLabelClass}>
+        {label}
+        {required ? (
+          <span aria-hidden="true" className="text-qb-brand">
+            {' *'}
+          </span>
         ) : (
-          <>
-            {label}{' '}
-            <span className="text-qb-micro font-medium text-(--color-qb-ink-optional) qb-tablet:text-qb-caption qb-tablet:font-normal">
-              {t('orders.common.optional')}
-            </span>
-          </>
-        )
-      }
-      required={required}
-      hint={
-        hint && left ? (
-          <>
-            {hint}
-            <span className="mt-1 block">{left}</span>
-          </>
-        ) : (
-          (hint ?? left)
-        )
-      }
-      error={error ?? undefined}
-      className={className}
-    >
-      {(control) => (
-        <Textarea
-          {...control}
-          rows={rows}
-          maxLength={max}
-          placeholder={placeholder}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="rounded-qb-lg"
-        />
-      )}
-    </Field>
+          ` ${t('orders.common.optional')}`
+        )}
+      </label>
+      <Textarea
+        id={id}
+        rows={rows}
+        maxLength={max}
+        placeholder={placeholder}
+        value={value}
+        required={required}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
+        onChange={(event) => onChange(event.target.value)}
+        className={cn('block min-h-0 p-3.5 text-qb-body-sm text-qb-black', textareaClassName)}
+      />
+      {hintId ? (
+        <p id={hintId} className="mt-2 text-qb-caption text-qb-ink-subtle">
+          {hint}
+          {hint && left ? <span className="mt-1 block">{left}</span> : left}
+        </p>
+      ) : null}
+      {error ? (
+        <p id={errorId} role="alert" className="mt-2 text-qb-caption text-qb-danger">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

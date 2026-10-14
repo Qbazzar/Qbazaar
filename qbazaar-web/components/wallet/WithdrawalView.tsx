@@ -2,11 +2,11 @@
 
 import { useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { Landmark } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { BankQnbIcon } from '@/components/design-system/icons';
 import { Notice } from '@/components/design-system/Notice';
 import { RadioCard } from '@/components/design-system/RadioCard';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
@@ -159,7 +159,7 @@ function WithdrawalForm({ wallet, accounts }: { wallet: Wallet; accounts: BankAc
                 value={account.id}
                 checked={accountId === account.id}
                 onChange={() => setAccountId(account.id)}
-                icon={<Landmark />}
+                icon={<BankQnbIcon />}
                 label={<bdi>{account.holder_name}</bdi>}
                 description={
                   <>

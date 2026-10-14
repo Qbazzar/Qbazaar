@@ -2,11 +2,11 @@
 
 import { useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Landmark, Wallet as WalletIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
+import { BankQnbIcon, WalletIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { Notice } from '@/components/design-system/Notice';
 import { RadioDot } from '@/components/design-system/RadioDot';
@@ -188,7 +188,7 @@ function PromoteForm({ ad, offers, wallet, initialType }: { ad: Ad; offers: Prom
               value="bank_transfer"
               checked={!payByWallet}
               onChange={() => setMethod('bank_transfer')}
-              icon={<Landmark />}
+              icon={<BankQnbIcon />}
               label={t('orders.promotion.bank_transfer')}
               details={t('orders.promotion.bank_hint')}
             />

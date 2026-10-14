@@ -70,21 +70,21 @@ describe('CategoryHub', () => {
 
     const cars = within(screen.getByRole('list', { name: 'Cars' })).getAllByRole('listitem');
     expect(cars).toHaveLength(4);
-    expect(cars[3]).toHaveClass('qb-desktop:hidden');
+    expect(cars[3]).not.toHaveClass('qb-tablet:hidden');
   });
 
-  it('lists six tiles and reveals the rest on "View More"', async () => {
-    const sections = Array.from({ length: 8 }, (_, i) => section(`sub-${i}`, `Sub ${i}`, []));
+  it('lists two rows of four tiles and reveals the rest on "View More"', async () => {
+    const sections = Array.from({ length: 10 }, (_, i) => section(`sub-${i}`, `Sub ${i}`, []));
     render(<CategoryHub sections={sections} isLoading={false} />);
     const more = screen.getByRole('button', { name: 'View More' });
 
-    expect(screen.getAllByRole('link', { name: /^Sub/ })).toHaveLength(6);
+    expect(screen.getAllByRole('link', { name: /^Sub/ })).toHaveLength(8);
     // Without an icon from the API the peach square stays empty, as in parent-category.html.
     expect(screen.getByRole('link', { name: /^Sub 0/ }).querySelector('svg')).toBeNull();
     expect(more).toHaveAttribute('aria-expanded', 'false');
 
     await userEvent.setup().click(more);
-    expect(screen.getAllByRole('link', { name: /^Sub/ })).toHaveLength(8);
+    expect(screen.getAllByRole('link', { name: /^Sub/ })).toHaveLength(10);
     expect(screen.getByRole('button', { name: 'View Less' })).toHaveAttribute('aria-expanded', 'true');
   });
 

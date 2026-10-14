@@ -8,7 +8,7 @@
  * events invalidate it on demand). The pill is clamped to "99+" so it never
  * wraps the small button.
  */
-import { BellIcon } from 'lucide-react';
+import { BellIcon } from '@/components/design-system/icons';
 import { Button } from '@/components/ui/button';
 import {
   Popover,

@@ -16,7 +16,7 @@
  *   not from the thread itself, so loading older messages stays silent.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheckIcon } from '@/components/design-system/icons';
 import { useMessagesQuery } from '@/lib/queries/messaging';
 import { useAuth } from '@/hooks/useAuth';
 import { MessageBubble } from './MessageBubble';
@@ -209,7 +209,7 @@ function useIncomingAnnouncement(conversationId: string, messages: Message[], vi
 function SafetyNotice() {
   return (
     <p className="flex max-w-[80%] items-center gap-2.5 self-center rounded-[14px] border border-qb-brand bg-qb-brand-soft px-[18px] py-3.5 text-start text-qb-body-sm text-qb-brand-active qb-tablet:text-center">
-      <ShieldCheck className="size-5 shrink-0 text-qb-brand" strokeWidth={1.6} aria-hidden="true" />
+      <ShieldCheckIcon className="size-5 shrink-0 text-qb-brand" strokeWidth={1.6} aria-hidden="true" />
       {t('messaging.safety_notice')}
     </p>
   );

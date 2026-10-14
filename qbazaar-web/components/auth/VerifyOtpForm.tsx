@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { qatarPhoneRegex } from '@/lib/validation/auth';
@@ -174,7 +174,8 @@ export function VerifyOtpForm() {
           <Button
             fullWidth
             onClick={() => setStep('number')}
-            className={cn(authSubmitClass, 'mx-auto mt-[34px] max-w-[420px]')}
+            // A block-level box as the design's a.qb-btn, so the auto margins centre it.
+            className={cn(authSubmitClass, 'mx-auto mt-[34px] flex max-w-[420px]')}
           >
             {t('auth.verify_otp.continue')}
           </Button>
@@ -220,7 +221,7 @@ export function VerifyOtpForm() {
               disabled={sending}
               className={cn(authSubmitClass, 'mt-[26px]', sending && 'cursor-progress')}
             >
-              {sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+              {sending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
               {t('auth.verify_otp.send')}
             </Button>
           </form>
@@ -279,7 +280,7 @@ export function VerifyOtpForm() {
                 type="button"
                 onClick={() => void sendCode(phone, true)}
                 disabled={resendSeconds > 0 || sending}
-                className="cursor-pointer rounded-qb-xs underline disabled:cursor-not-allowed disabled:opacity-60"
+                className="cursor-pointer underline disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {t('auth.verify_otp.resend_now')}
               </button>
@@ -292,11 +293,11 @@ export function VerifyOtpForm() {
               type="submit"
               fullWidth
               disabled={submitting || code.length !== CODE_LENGTH}
-              className={cn(authSubmitClass, 'mx-auto mt-[30px] max-w-[420px]', submitting && 'cursor-progress')}
+              className={cn(authSubmitClass, 'mx-auto mt-[30px] flex max-w-[420px]', submitting && 'cursor-progress')}
             >
               {submitting ? (
                 <>
-                  <Loader2 className="animate-spin" aria-hidden="true" />
+                  <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
                   {t('auth.verify_otp.submitting')}
                 </>
               ) : (

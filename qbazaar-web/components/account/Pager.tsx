@@ -1,9 +1,8 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
 import { Button } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 
 export interface PagerProps {
@@ -24,7 +23,7 @@ export function Pager({ page, lastPage, onChange }: PagerProps) {
         disabled={page <= 1}
         aria-label={t('ui.pagination.previous')}
       >
-        <Icon icon={ChevronLeft} flipInRtl />
+        <Icon icon={ChevronLeftIcon} flipInRtl />
       </Button>
       <span aria-live="polite" className="text-qb-body-sm text-qb-ink-body">
         {t('ads.list.page_of', { current: String(page), total: String(lastPage) })}
@@ -36,7 +35,7 @@ export function Pager({ page, lastPage, onChange }: PagerProps) {
         disabled={page >= lastPage}
         aria-label={t('ui.pagination.next')}
       >
-        <Icon icon={ChevronRight} flipInRtl />
+        <Icon icon={ChevronRightIcon} flipInRtl />
       </Button>
     </nav>
   );

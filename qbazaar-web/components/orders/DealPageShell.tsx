@@ -7,14 +7,13 @@ import { t } from '@/lib/i18n/messages';
 import { isolate } from '@/lib/orders/text';
 import { cn } from '@/lib/utils';
 
-import { pageFrame } from './AccountPageFrame';
 import { AdDealSummary } from './AdDealSummary';
 
 /**
- * Page frame of Buy Now and Make an Offer: the trail down to the ad, the
- * form, and the item card beside it. On phones Buy Now moves the card above
- * the form (buynow.js, 709:33450) while the offer page keeps it under the
- * form (709:33285); the form stays first in the reading order everywhere.
+ * Page frame of Buy Now and Make an Offer (buy-now.html, offer.html): a 1100 px column with the
+ * site gutter, the trail down to the ad, then the form card and the item card side by side in a
+ * wrapping row. On phones Buy Now moves the item card above the form (buynow.js); the offer page
+ * keeps it under the form. The form stays first in the reading order everywhere.
  */
 export function DealPageShell({
   ad,
@@ -35,14 +34,14 @@ export function DealPageShell({
 
   return (
     <main className="bg-qb-page font-qb text-qb-ink">
-      <div className={cn(pageFrame, 'pt-12 pb-16 qb-tablet:pt-[35px] qb-desktop:pt-16 qb-desktop:pb-24')}>
+      <div className="mx-auto w-full max-w-[1100px] px-qb-gutter py-[clamp(20px,4vw,40px)]">
         <Breadcrumb
           items={[...crumbs, { label: current }]}
-          className="hidden text-qb-caption qb-tablet:block qb-desktop:text-qb-h5 [&_a]:inline-block [&_a]:max-w-[22ch] [&_a]:truncate [&_a]:align-bottom"
+          className="mb-4 qb-tablet:mb-[22px] [&_a]:inline-block [&_a]:max-w-[22ch] [&_a]:truncate [&_a]:align-bottom"
         />
-        <div className="flex flex-col gap-6 qb-tablet:mt-5 qb-tablet:flex-row qb-tablet:items-start qb-desktop:mt-[62px] qb-desktop:gap-[33px]">
-          <div className="min-w-0 flex-1">{children}</div>
-          <aside className={cn('qb-tablet:w-[258px] qb-tablet:shrink-0 qb-desktop:w-[421px]', summaryAboveOnPhone && 'order-first qb-tablet:order-none')}>
+        <div className="flex flex-wrap items-start gap-6">
+          {children}
+          <aside className={cn('min-w-[min(260px,100%)] flex-[1_1_300px] self-start', summaryAboveOnPhone && 'max-qb-tablet:order-first')}>
             <AdDealSummary ad={ad} />
           </aside>
         </div>

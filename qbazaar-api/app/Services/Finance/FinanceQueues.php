@@ -14,7 +14,8 @@ use Illuminate\Contracts\Pagination\CursorPaginator;
 
 /**
  * The finance staff's work queues, oldest first so nothing waits longest.
- * Each one reads a (status, created_at) or (status, disputed_at) index.
+ * Each one reads a (status, created_at) or (status, disputed_at) index; narrowed to one user
+ * it reads that user's (user_id, created_at) index instead.
  */
 class FinanceQueues
 {
@@ -23,10 +24,11 @@ class FinanceQueues
     /**
      * @return CursorPaginator<int, CommissionSettlement>
      */
-    public function settlements(SettlementStatus $status): CursorPaginator
+    public function settlements(?SettlementStatus $status, ?string $userId = null): CursorPaginator
     {
         return CommissionSettlement::query()
-            ->where('status', $status->value)
+            ->when($status, fn ($query, SettlementStatus $status) => $query->where('status', $status->value))
+            ->when($userId, fn ($query) => $query->where('user_id', $userId))
             ->with(['user:id,full_name,email,phone', 'reviewer:id,full_name', 'user.avatarMedia', 'reviewer.avatarMedia', 'media'])
             ->orderBy('created_at')
             ->orderBy('id')
@@ -37,10 +39,11 @@ class FinanceQueues
     /**
      * @return CursorPaginator<int, Withdrawal>
      */
-    public function withdrawals(WithdrawalStatus $status): CursorPaginator
+    public function withdrawals(?WithdrawalStatus $status, ?string $userId = null): CursorPaginator
     {
         return Withdrawal::query()
-            ->where('status', $status->value)
+            ->when($status, fn ($query, WithdrawalStatus $status) => $query->where('status', $status->value))
+            ->when($userId, fn ($query) => $query->where('user_id', $userId))
             ->with(['user:id,full_name,email,phone', 'reviewer:id,full_name', 'user.avatarMedia', 'reviewer.avatarMedia'])
             ->orderBy('created_at')
             ->orderBy('id')

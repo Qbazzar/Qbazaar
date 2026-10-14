@@ -9,11 +9,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
-import { LifeBuoy, Plus } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { Icon } from '@/components/design-system/Icon';
+import { HeadsetSupportIcon, PlusIcon } from '@/components/design-system/icons';
 import { TabList, TabPanel, Tabs } from '@/components/design-system/Tabs';
 import { AccountPage } from '@/components/account/AccountPage';
 import { PillTab } from '@/components/account/PillTab';
@@ -44,7 +44,7 @@ export function MyTicketsClient() {
       title={t('support.my_tickets', 'تذاكر الدعم')}
       actions={
         <Link href="/support/new" className={buttonVariants({ size: 'sm' })}>
-          <Plus aria-hidden="true" />
+          <PlusIcon aria-hidden="true" />
           {t('support.new_ticket', 'تذكرة جديدة')}
         </Link>
       }
@@ -86,7 +86,7 @@ function TicketsList({
   if (data.data.length === 0) {
     return (
       <EmptyState
-        icon={<Icon icon={LifeBuoy} size="lg" />}
+        icon={<Icon icon={HeadsetSupportIcon} size="lg" />}
         title={t('support.no_tickets', 'لا توجد تذاكر في هذا التبويب')}
         description={t('support.new_ticket_sub')}
         action={

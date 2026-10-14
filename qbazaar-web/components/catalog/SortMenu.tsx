@@ -2,10 +2,10 @@
 
 import { DirectionProvider } from '@base-ui/react/direction-provider';
 import { Select } from '@base-ui/react/select';
-import { ChevronDown } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { ChevronDownIcon } from '@/components/design-system/icons';
 import { dirFor, getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -34,19 +34,13 @@ export function SortMenu({ value, onChange }: SortMenuProps) {
         <Select.Label className="sr-only">{t('search.sort.label', 'الترتيب')}</Select.Label>
         <Select.Trigger
           className={cn(
-            'group flex h-full cursor-pointer items-center gap-2 rounded-qb-md ps-3 pe-2.5 font-qb text-qb-micro whitespace-nowrap text-qb-ink transition-colors',
-            'hover:bg-qb-hover data-popup-open:bg-qb-hover',
-            'qb-tablet:gap-2.5 qb-tablet:ps-4 qb-tablet:pe-3 qb-tablet:text-qb-body',
-            'qb-desktop:min-w-[221px] qb-desktop:justify-between qb-desktop:rounded-qb-sm qb-desktop:ps-4 qb-desktop:pe-4 qb-desktop:text-qb-h5',
+            // The reference's sort box: 15 px, 20 px from 1001 px (catListView), no hover of its own.
+            'group flex cursor-pointer items-center gap-2 rounded-qb-lg border border-qb-line bg-qb-surface px-4 py-[11px] font-qb text-qb-body-sm leading-normal whitespace-nowrap text-qb-ink-body qb-desktop:text-qb-h5',
             focusRing,
           )}
         >
           <Select.Value />
-          <Icon
-            icon={ChevronDown}
-            size="sm"
-            className="transition-transform duration-200 group-data-popup-open:rotate-180 motion-reduce:transition-none qb-tablet:size-5 qb-desktop:size-6"
-          />
+          <Icon icon={ChevronDownIcon} size={18} className="transition-transform duration-200 group-data-popup-open:rotate-180 motion-reduce:transition-none" />
         </Select.Trigger>
         <Select.Portal>
           <Select.Positioner alignItemWithTrigger={false} side="bottom" align="start" sideOffset={14} className="z-50">

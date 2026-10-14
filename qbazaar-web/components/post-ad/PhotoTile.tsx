@@ -4,10 +4,10 @@ import { memo } from 'react';
 import Image from 'next/image';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronLeft, ChevronRight, CircleAlert, LoaderCircle, RotateCw, Star, X } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { AlertCircleIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, LoaderCircleIcon, RotateCwIcon, StarIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { AD_LIMITS } from '@/lib/post-ad/form';
 import type { PhotoItem } from '@/lib/post-ad/photos';
@@ -104,7 +104,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
 
       {photo.status === 'processing' ? (
         <span aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <Icon icon={LoaderCircle} size="lg" className="animate-spin text-qb-ink-secondary motion-reduce:animate-none" />
+          <Icon icon={LoaderCircleIcon} size="lg" className="animate-spin text-qb-ink-secondary motion-reduce:animate-none" />
         </span>
       ) : null}
 
@@ -123,7 +123,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
 
       {photo.status === 'failed' ? (
         <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-qb-danger-soft px-1 text-center text-qb-danger">
-          <Icon icon={CircleAlert} size="md" />
+          <Icon icon={AlertCircleIcon} size="md" />
           {photo.failure === 'upload' ? (
             <button
               type="button"
@@ -131,7 +131,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
               aria-label={t('post_ad.photos.retry', { n: position })}
               className={cn('inline-flex items-center gap-1 rounded-qb-xs px-1.5 py-0.5 text-qb-tiny font-medium underline-offset-2 hover:underline', focusRing)}
             >
-              <Icon icon={RotateCw} size="sm" className="size-3" />
+              <Icon icon={RotateCwIcon} size="sm" className="size-3" />
               {t('post_ad.photos.retry_short')}
             </button>
           ) : null}
@@ -149,7 +149,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
           aria-label={t('post_ad.photos.make_cover', { n: position })}
           className={cn(cornerButton, 'start-1 top-1')}
         >
-          <Icon icon={Star} size="sm" className="size-3" />
+          <Icon icon={StarIcon} size="sm" className="size-3" />
         </button>
       ) : null}
 
@@ -159,7 +159,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
         aria-label={t('post_ad.photos.remove', { n: position })}
         className={cn(cornerButton, 'end-1 top-1')}
       >
-        <Icon icon={X} size="sm" className="size-3.5" />
+        <Icon icon={CloseIcon} size="sm" className="size-3.5" />
       </button>
 
       {position > 1 ? (
@@ -170,7 +170,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
           aria-label={t('post_ad.photos.move_earlier', { n: position })}
           className={cn(cornerButton, 'start-1 bottom-1')}
         >
-          <Icon icon={ChevronLeft} size="sm" flipInRtl className="size-3.5" />
+          <Icon icon={ChevronLeftIcon} size="sm" flipInRtl className="size-3.5" />
         </button>
       ) : null}
       {position < total ? (
@@ -181,7 +181,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, position, total, onRem
           aria-label={t('post_ad.photos.move_later', { n: position })}
           className={cn(cornerButton, 'end-1 bottom-1')}
         >
-          <Icon icon={ChevronRight} size="sm" flipInRtl className="size-3.5" />
+          <Icon icon={ChevronRightIcon} size="sm" flipInRtl className="size-3.5" />
         </button>
       ) : null}
     </li>

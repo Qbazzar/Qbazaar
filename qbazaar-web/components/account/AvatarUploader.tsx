@@ -25,13 +25,11 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Camera, Loader2, ZoomIn } from 'lucide-react';
-import Cropper, { type Area } from 'react-easy-crop';
+import type { Area } from 'react-easy-crop';
 
 import { Avatar } from '@/components/design-system/Avatar';
-import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
-import { Modal } from '@/components/design-system/Modal';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 import { uploadAvatar } from '@/lib/api/uploads';
@@ -39,7 +37,7 @@ import { ApiClientError } from '@/lib/api/auth';
 import { useAuthStore } from '@/store/auth';
 import type { AvatarUploadResponse } from '@/lib/api/types';
 
-import { ModalActions } from './ModalActions';
+import { AvatarCropDialog } from './AvatarCropDialog';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -270,7 +268,7 @@ export function AvatarUploader({
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
         className={cn(
-          'group flex cursor-pointer flex-col items-center gap-3.5 rounded-qb-lg',
+          'flex cursor-pointer flex-col items-center gap-3.5 rounded-qb-lg',
           'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
           uploading && 'pointer-events-none opacity-60',
         )}
@@ -295,14 +293,17 @@ export function AvatarUploader({
               dragOver && 'ring-2 ring-qb-brand',
             )}
           />
-          <span
-            aria-hidden="true"
-            className="absolute inset-0 flex items-center justify-center rounded-full bg-qb-overlay text-white opacity-0 transition-opacity group-hover:opacity-100"
-          >
-            {uploading ? <Loader2 className="size-6 animate-spin" /> : <Camera className="size-6" />}
-          </span>
+          {uploading ? (
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 flex items-center justify-center rounded-full bg-qb-overlay text-qb-on-brand"
+            >
+              <LoaderCircleIcon className="size-6 animate-spin" />
+            </span>
+          ) : null}
         </span>
-        <span className="text-qb-body-sm font-medium text-qb-brand group-hover:underline">
+        {/* `.qb-nav` link: keeps its orange under the pointer, as the design has no hover veil on the photo. */}
+        <span className="qb-motion text-qb-body-sm font-medium text-qb-brand">
           {t('account.avatar.change_photo')}
         </span>
       </label>
@@ -316,64 +317,18 @@ export function AvatarUploader({
         </p>
       ) : null}
 
-      <Modal
-        open={pickedImage !== null}
-        onOpenChange={(open) => {
-          if (!open && !uploading) closeCropModal();
-        }}
-        title={t('account.avatar.crop_title')}
-        description={t('account.avatar.crop_subtitle')}
-      >
-        <div className="relative aspect-square w-full overflow-hidden rounded-qb-lg bg-qb-icon">
-          {pickedImage ? (
-            <Cropper
-              image={pickedImage}
-              crop={crop}
-              zoom={zoom}
-              aspect={1}
-              cropShape="round"
-              showGrid={false}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCropComplete}
-            />
-          ) : null}
-        </div>
-
-        <div className="mt-4 flex flex-col gap-2">
-          <label htmlFor="avatar-zoom" className="flex items-center gap-2 text-qb-label font-medium text-qb-ink-secondary">
-            <ZoomIn className="size-3.5" aria-hidden="true" />
-            {t('account.avatar.crop_zoom_label')}
-          </label>
-          <input
-            id="avatar-zoom"
-            type="range"
-            min={1}
-            max={3}
-            step={0.01}
-            value={zoom}
-            onChange={(event) => setZoom(Number(event.target.value))}
-            className="w-full accent-qb-brand"
-            disabled={uploading}
-          />
-        </div>
-
-        <ModalActions className="mt-6">
-          <Button size="sm" onClick={handleConfirmCrop} disabled={uploading || !croppedArea}>
-            {uploading ? (
-              <>
-                <Loader2 className="animate-spin" aria-hidden="true" />
-                {t('account.avatar.uploading')}
-              </>
-            ) : (
-              t('account.avatar.crop_confirm')
-            )}
-          </Button>
-          <Button variant="muted" size="sm" onClick={closeCropModal} disabled={uploading}>
-            {t('account.avatar.crop_cancel')}
-          </Button>
-        </ModalActions>
-      </Modal>
+      <AvatarCropDialog
+        image={pickedImage}
+        crop={crop}
+        zoom={zoom}
+        uploading={uploading}
+        canSave={croppedArea !== null}
+        onCropChange={setCrop}
+        onZoomChange={setZoom}
+        onCropComplete={onCropComplete}
+        onSave={() => void handleConfirmCrop()}
+        onClose={closeCropModal}
+      />
     </div>
   );
 }

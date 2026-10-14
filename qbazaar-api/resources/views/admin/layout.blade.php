@@ -136,7 +136,7 @@
 
             @include('admin.partials.toast')
 
-            <main id="main" tabindex="-1" class="flex-1 p-4 outline-hidden sm:p-6">
+            <main id="main" tabindex="-1" class="flex-1 overflow-x-clip p-4 outline-hidden sm:p-6">
                 @yield('content')
             </main>
         </div>
@@ -148,14 +148,30 @@
 
     <script>
         // One submission per form: a second click while the first request is in flight is dropped.
-        // GET filters, dialogs and forms that open a new tab (impersonation) are left alone.
+        // GET filters, dialogs and forms that open a new tab (impersonation) are left alone, and so are
+        // forms marked data-download: their response never replaces the page, so there is nothing to wait for.
         (function () {
+            // A POST that answers with a file or a 204 leaves the page in place, so the guard lifts itself.
+            var RELEASE_AFTER_MS = 8000;
+
+            function release(form) {
+                delete form.dataset.submitting;
+                // form.elements also covers buttons that sit outside the form and point at it with form="...".
+                Array.prototype.forEach.call(form.elements, function (button) {
+                    if (button.getAttribute('aria-busy') !== 'true') return;
+                    button.removeAttribute('aria-busy');
+                    button.disabled = false;
+                });
+            }
+
             window.addEventListener('submit', function (event) {
                 var form = event.target;
                 if (event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
                 if (form.method !== 'post' || (form.target && form.target !== '_self')) return;
+                if (form.hasAttribute('data-download')) return;
                 if (form.dataset.submitting) { event.preventDefault(); return; }
                 form.dataset.submitting = '1';
+                setTimeout(function () { release(form); }, RELEASE_AFTER_MS);
                 var submitter = event.submitter;
                 if (!submitter) return;
                 submitter.setAttribute('aria-busy', 'true');
@@ -165,8 +181,7 @@
             // A page restored from the back/forward cache must be usable again.
             window.addEventListener('pageshow', function (event) {
                 if (!event.persisted) return;
-                document.querySelectorAll('form[data-submitting]').forEach(function (form) { delete form.dataset.submitting; });
-                document.querySelectorAll('[aria-busy="true"]').forEach(function (button) { button.removeAttribute('aria-busy'); button.disabled = false; });
+                document.querySelectorAll('form[data-submitting]').forEach(release);
             });
         })();
     </script>

@@ -1,12 +1,11 @@
 'use client';
 
-import { useRef, useState, type FormEvent } from 'react';
+import { useId, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { buttonVariants } from '@/components/design-system/Button';
-import { Field } from '@/components/design-system/Field';
 import { Input } from '@/components/design-system/Input';
 import { Notice } from '@/components/design-system/Notice';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,9 +16,8 @@ import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/e
 import { buyNowBlocker } from '@/lib/orders/offers';
 import { LIMITS, validateQuantity, validateText } from '@/lib/orders/validation';
 import { useCreatePurchaseRequestMutation } from '@/lib/queries/purchase-requests';
-import { cn } from '@/lib/utils';
 
-import { DealActions, DealPanel, HowItWorks, InfoHint, dealButton, dealLabel } from './DealFormParts';
+import { DealActions, DealPanel, HowItWorks, InfoHint, dealLabelClass } from './DealFormParts';
 import { focusFirstInvalid } from './focus-invalid';
 import { FormError, NoteField } from './NoteField';
 
@@ -30,9 +28,9 @@ interface FormErrors {
 }
 
 /**
- * Buy Now (659:58417): the buyer asks to buy at the ad's price. The request
- * is posted as a card in their chat with the seller, where the seller
- * accepts or declines it; no money moves here.
+ * Buy Now (buy-now.html, 659:58417): the buyer asks to buy at the ad's price. The request is
+ * posted as a card in their chat with the seller, where the seller accepts or declines it; no
+ * money moves here.
  */
 export function BuyNowForm({ ad }: { ad: DealAd }) {
   const router = useRouter();
@@ -51,12 +49,14 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
   if (blocker) {
     return (
       <DealPanel title={t('orders.deal.buy_title')} titleId="buy-now-title">
-        <Notice tone={blocker === 'own_ad' ? 'brand' : 'neutral'} role="status">
-          {t(`orders.deal.${blocker}`)}
-        </Notice>
-        <Link href={adHref} className={cn(buttonVariants({ variant: 'outline' }), dealButton, 'self-start')}>
-          {t('orders.deal.back_to_ad')}
-        </Link>
+        <div className="flex flex-col items-start gap-4">
+          <Notice tone={blocker === 'own_ad' ? 'brand' : 'neutral'} role="status">
+            {t(`orders.deal.${blocker}`)}
+          </Notice>
+          <Link href={adHref} className={buttonVariants({ variant: 'outline' })}>
+            {t('orders.deal.back_to_ad')}
+          </Link>
+        </div>
       </DealPanel>
     );
   }
@@ -88,35 +88,17 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
 
   return (
     <DealPanel title={t('orders.deal.buy_title')} titleId="buy-now-title">
-      <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-4">
+      <form ref={formRef} onSubmit={submit} noValidate>
+        {/* "Contact Details" and its pill take the place of the offer's amount (buynow.js). */}
         <div>
-          <p className="text-qb-caption font-medium text-qb-ink-body qb-tablet:text-qb-body qb-tablet:font-semibold qb-desktop:font-normal">
-            {t('orders.deal.contact_details')}
-          </p>
-          <p className="mt-2 rounded-qb-lg border border-qb-brand bg-qb-brand-soft px-4 py-3.5 text-qb-caption text-qb-brand-on-soft qb-tablet:font-medium qb-desktop:font-normal">
+          <p className="mb-2.5 text-qb-body-sm font-medium text-qb-ink-body">{t('orders.deal.contact_details')}</p>
+          <p className="rounded-qb-md border border-qb-brand bg-qb-brand-soft px-[18px] py-[15px] text-qb-body-sm font-medium text-qb-brand">
             {t('orders.deal.contact_chat')}
           </p>
         </div>
 
         {available > 1 ? (
-          <Field
-            label={t('orders.deal.quantity')}
-            hint={t('orders.deal.quantity_available', { count: available })}
-            error={errors.quantity}
-            required
-            className={dealLabel.buy}
-          >
-            {(control) => (
-              <Input
-                {...control}
-                inputMode="numeric"
-                autoComplete="off"
-                value={quantity}
-                onChange={(event) => setQuantity(event.target.value)}
-                className="h-12 max-w-40 rounded-qb-lg"
-              />
-            )}
-          </Field>
+          <QuantityField available={available} value={quantity} onChange={setQuantity} error={errors.quantity} />
         ) : null}
 
         <NoteField
@@ -126,7 +108,7 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
           max={LIMITS.noteMax}
           error={errors.note}
           placeholder={t('orders.deal.message_placeholder')}
-          className={dealLabel.buy}
+          textareaClassName="mb-4"
         />
         <InfoHint>{t('orders.deal.buy_hint')}</InfoHint>
 
@@ -135,9 +117,12 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
           steps={[t('orders.deal.buy_step_1'), t('orders.deal.buy_step_2'), t('orders.deal.buy_step_3')]}
         />
 
-        <FormError>{errors.form}</FormError>
+        {errors.form ? (
+          <div className="mb-4">
+            <FormError>{errors.form}</FormError>
+          </div>
+        ) : null}
         <DealActions
-          page="buy"
           submitLabel={t('orders.deal.send_request')}
           busy={create.isPending || gateStatus === 'loading'}
           cancelLabel={t('common.cancel')}
@@ -145,5 +130,51 @@ export function BuyNowForm({ ad }: { ad: DealAd }) {
         />
       </form>
     </DealPanel>
+  );
+}
+
+/** How many to buy, when the ad has more than one: the offer page's r10 box, 160 px wide. */
+function QuantityField({
+  available,
+  value,
+  onChange,
+  error,
+}: {
+  available: number;
+  value: string;
+  onChange: (value: string) => void;
+  error: string | undefined;
+}) {
+  const id = useId();
+  const hintId = `${id}-hint`;
+  const errorId = error ? `${id}-error` : undefined;
+  return (
+    <div className="mt-[22px] mb-[22px]">
+      <label htmlFor={id} className={dealLabelClass}>
+        {t('orders.deal.quantity')}
+        <span aria-hidden="true" className="text-qb-brand">
+          {' *'}
+        </span>
+      </label>
+      <Input
+        id={id}
+        inputMode="numeric"
+        autoComplete="off"
+        required
+        aria-invalid={error ? true : undefined}
+        aria-describedby={[hintId, errorId].filter(Boolean).join(' ')}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-auto max-w-40 p-3.5 text-qb-body-sm text-qb-black"
+      />
+      <p id={hintId} className="mt-2 text-qb-caption text-qb-ink-subtle">
+        {t('orders.deal.quantity_available', { count: available })}
+      </p>
+      {error ? (
+        <p id={errorId} role="alert" className="mt-2 text-qb-caption text-qb-danger">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }
