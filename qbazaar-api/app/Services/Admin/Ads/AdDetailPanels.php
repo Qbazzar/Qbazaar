@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Admin\Ads;
 
+use App\Data\Admin\AdDeal\AdTransaction;
 use App\Enums\ReportTarget;
 use App\Models\Ad;
 use App\Models\AdPromotion;
@@ -28,6 +29,7 @@ final class AdDetailPanels
     public function __construct(
         private readonly TargetReports $reports,
         private readonly AdStatusHistory $history,
+        private readonly AdTransactionSummary $transaction,
     ) {}
 
     /**
@@ -37,6 +39,7 @@ final class AdDetailPanels
      *     reports: TargetReportSummary|null,
      *     promotions: EloquentCollection<int, AdPromotion>|null,
      *     history: Collection<int, TimelineEntry>|null,
+     *     deal: AdTransaction|null,
      * }
      */
     public function forShow(Ad $ad, User $viewer): array
@@ -50,6 +53,8 @@ final class AdDetailPanels
             'media',
         ])->loadCount(['conversations', 'promotions']);
 
+        $history = rescue(fn (): Collection => $this->history->forAd($ad), null);
+
         return [
             'ad' => $ad,
             'otherAds' => rescue(fn (): EloquentCollection => $this->otherAdsBySeller($ad), null),
@@ -58,7 +63,8 @@ final class AdDetailPanels
                 ? rescue(fn (): TargetReportSummary => $this->reports->for(ReportTarget::AD, $ad->id), null)
                 : null,
             'promotions' => rescue(fn (): EloquentCollection => $this->latestPromotions($ad), null),
-            'history' => rescue(fn (): Collection => $this->history->forAd($ad), null),
+            'history' => $history,
+            'deal' => rescue(fn (): AdTransaction => $this->transaction->forAd($ad, $viewer, $history), null),
         ];
     }
 
