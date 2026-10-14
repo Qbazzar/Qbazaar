@@ -183,3 +183,20 @@ it('stays within a fixed query budget whatever the number of other reports and l
     expect($withTwentyFive)->toBe($withOne)
         ->and($withOne)->toBeLessThanOrEqual(15);
 });
+
+it('shows a reported private message only to staff who can act on the report, cut to a preview', function (): void {
+    $message = Message::factory()->create(['sender_id' => $this->seller->id, 'body' => 'سري ' . str_repeat('ك', 700)]);
+    $report = Report::factory()->create(['target_type' => ReportTarget::MESSAGE->value, 'target_id' => $message->id]);
+
+    actingAs(User::factory()->create()->assignRole('moderator'));
+    $html = $this->get(route('admin.reports.show', $report))->assertOk()->assertSee('سري')->getContent();
+    expect(substr_count($html, 'ك'))->toBeGreaterThan(500)->toBeLessThan(700);
+
+    actingAs(User::factory()->create()->assignRole('support'));
+    $this->get(route('admin.reports.show', $report))
+        ->assertOk()
+        ->assertDontSee('سري')
+        ->assertDontSee('محمد الكعبي')
+        ->assertSee('نص الرسالة المُبلَّغ عنها مقيّد')
+        ->assertDontSee('العنصر المُبلَّغ عنه لم يعد موجوداً.');
+});

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Admin\UserDetailTabs;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -124,6 +125,88 @@ describe('users.show', function (): void {
         $this->get(route('admin.users.tab', [$this->customer, 'ads']))->assertOk();
     });
 
+    it('opens the tab named in the query string, as the ad page links to the seller ads', function (): void {
+        $this->makeAd($this->customer, ['title' => 'غسالة ملابس']);
+        actingAs($this->admin);
+
+        $this->get(route('admin.users.show', [$this->customer, 'tab' => 'ads']))
+            ->assertOk()
+            ->assertSee('data-active="ads"', false)
+            ->assertSee('غسالة ملابس');
+    });
+
+    it('serves the profile and wallet panels lazily through the tab route', function (): void {
+        actingAs($this->admin);
+
+        $this->get(route('admin.users.tab', [$this->customer, 'profile']))
+            ->assertOk()
+            ->assertSee('سارة العميلة')
+            ->assertSee('بيانات الحساب')
+            ->assertDontSee('<html', false)
+            ->assertDontSee('<h1', false);
+        $this->get(route('admin.users.tab', [$this->customer, 'wallet']))
+            ->assertOk()
+            ->assertSee('أرصدة المحفظة')
+            ->assertDontSee('<html', false)
+            ->assertDontSee('<h1', false);
+
+        actingAs(User::factory()->create()->assignRole('support'));
+        $this->get(route('admin.users.tab', [$this->customer, 'profile']))->assertOk()->assertSee('بيانات الحساب');
+        $this->get(route('admin.users.tab', [$this->customer, 'wallet']))->assertForbidden();
+    });
+
+    it('shows the business contact details only to staff who can edit users', function (): void {
+        $shop = User::factory()->business()->create();
+        $shop->businessProfile()->create([
+            'business_name' => 'متجر النور',
+            'legal_name' => 'شركة النور القانونية',
+            'commercial_registration_number' => 'CR-778899',
+            'contact_phone' => '+97444112233',
+            'contact_email' => 'contact@noor.example',
+            'website' => 'https://noor.example',
+            'address' => 'الدوحة، شارع المرقاب',
+        ]);
+        $private = ['شركة النور القانونية', 'CR-778899', 'contact@noor.example', 'https://noor.example', 'الدوحة، شارع المرقاب'];
+
+        actingAs($this->admin);
+        $full = $this->get(route('admin.users.tab', [$shop, 'profile']))->assertOk()->assertSee('متجر النور');
+        foreach ($private as $value) {
+            $full->assertSee($value);
+        }
+
+        actingAs(User::factory()->create()->assignRole('support'));
+        $restricted = $this->get(route('admin.users.tab', [$shop, 'profile']))
+            ->assertOk()
+            ->assertSee('متجر النور')
+            ->assertSee('مقيّدة');
+        foreach ($private as $value) {
+            $restricted->assertDontSee($value);
+        }
+    });
+
+    it('merges buyer and seller orders newest first across pages without double counting', function (): void {
+        $other = User::factory()->create();
+        $ids = [];
+        foreach (range(1, 14) as $i) {
+            $ids[$i] = Order::factory()->create([
+                'ad_id' => null,
+                'buyer_id' => $i % 2 === 0 ? $this->customer->id : $other->id,
+                'seller_id' => $i % 2 === 0 ? $other->id : $this->customer->id,
+                'created_at' => now()->subMinutes(100 - $i),
+            ])->id;
+        }
+        Order::factory()->create(['ad_id' => null, 'buyer_id' => $other->id, 'seller_id' => $other->id]);
+        $tabs = app(UserDetailTabs::class);
+
+        $first = $tabs->panel('orders', $this->customer)['orders'];
+        request()->query->set('page', 2);
+        $second = $tabs->panel('orders', $this->customer)['orders'];
+
+        expect($first->total())->toBe(14)
+            ->and($first->pluck('id')->all())->toBe([$ids[14], $ids[13], $ids[12], $ids[11], $ids[10], $ids[9], $ids[8], $ids[7], $ids[6], $ids[5]])
+            ->and($second->pluck('id')->all())->toBe([$ids[4], $ids[3], $ids[2], $ids[1]]);
+    });
+
     it('pages a long tab and links the pages back to the full user page', function (): void {
         givePeoplePageHistory($this->customer, $this->admin, 12);
         actingAs($this->admin);
@@ -138,7 +221,7 @@ describe('users.show', function (): void {
             ->assertDontSee('إعلان رقم 12');
     });
 
-    it('keeps the query count flat with 1 or 25 ads, orders and audit rows on every tab', function (string $tab): void {
+    it('keeps the query count flat with 1 or 25 ads, orders and audit rows on every tab', function (string $tab, int $budget): void {
         actingAs($this->admin);
         $uri = route('admin.users.show', [$this->customer, 'tab' => $tab]);
 
@@ -148,8 +231,14 @@ describe('users.show', function (): void {
         givePeoplePageHistory($this->customer, $this->admin, 24);
         $many = $this->steadyQueryCount($uri);
 
-        expect($many)->toBe($few)->toBeLessThanOrEqual(14);
-    })->with(['profile', 'ads', 'orders', 'wallet']);
+        expect($many)->toBe($few)->toBeLessThanOrEqual($budget);
+    })->with([
+        'profile' => ['profile', 14],
+        'ads' => ['ads', 14],
+        // two bounded id reads (one per side), their two counts, the rows and the four eager loads
+        'orders' => ['orders', 16],
+        'wallet' => ['wallet', 14],
+    ]);
 
     it('keeps each lazily loaded panel flat with 1 or 25 rows', function (string $tab): void {
         actingAs($this->admin);

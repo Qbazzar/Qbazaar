@@ -19,9 +19,11 @@
     <nav aria-label="{{ __('admin.shell.breadcrumb') }}" {{ $attributes }}>
         <ol class="flex flex-wrap items-center gap-y-0.5 text-[13px] text-ink-500">
             @foreach ($items as $item)
-                {{-- A pseudo-element separator: screen readers skip it and it follows the text direction. --}}
-                <li class="min-w-0 not-first:before:mx-1.5 not-first:before:text-ink-300 not-first:before:content-['‹']"
-                    @if ($loop->last) aria-current="page" @endif>
+                {{-- The chevron points to where the trail continues: right in LTR, flipped to the left in RTL. --}}
+                <li class="flex min-w-0 items-center" @if ($loop->last) aria-current="page" @endif>
+                    @unless ($loop->first)
+                        <svg class="mx-1.5 size-3 shrink-0 text-ink-300 rtl:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-qb-crumb-separator><path d="m9 6 6 6-6 6"/></svg>
+                    @endunless
                     @if ($item['url'] && ! $loop->last)
                         <a href="{{ $item['url'] }}" class="rounded transition hover:text-coral-700">{{ $item['label'] }}</a>
                     @else

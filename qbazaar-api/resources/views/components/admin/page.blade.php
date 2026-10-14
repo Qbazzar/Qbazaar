@@ -65,7 +65,7 @@
                 <x-admin.button variant="secondary" :href="$cancel" class="max-sm:hidden">{{ __('admin.shell.cancel') }}</x-admin.button>
             @endif
             @if ($submitLabel)
-                <x-admin.button icon="check">{{ $submitLabel }}</x-admin.button>
+                <x-admin.button icon="check" class="max-sm:hidden">{{ $submitLabel }}</x-admin.button>
             @endif
         </x-slot:actions>
         @isset($menu)
