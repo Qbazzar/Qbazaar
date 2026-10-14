@@ -42,6 +42,7 @@
                         ['route' => 'admin.roles.index', 'label' => 'الأدوار', 'match' => 'admin.roles.*', 'icon' => 'key', 'permission' => 'roles.manage'],
                     ],
                     'المالية' => [
+                        ['route' => 'admin.finance.revenue.index', 'label' => __('admin.revenue.nav'), 'match' => 'admin.finance.revenue.*', 'icon' => 'trend', 'permission' => 'finance.view'],
                         ['route' => 'admin.finance.settlements.index', 'label' => 'تسويات العمولة', 'match' => 'admin.finance.settlements.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
                         ['route' => 'admin.finance.withdrawals.index', 'label' => 'طلبات السحب', 'match' => 'admin.finance.withdrawals.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
                         ['route' => 'admin.finance.disputes.index', 'label' => 'نزاعات الطلبات', 'match' => 'admin.finance.disputes.*', 'icon' => 'flag', 'permission' => 'finance.manage'],
