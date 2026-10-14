@@ -2,9 +2,9 @@
 
 import type { ReactNode, RefObject } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
-import { Loader2, Trash2 } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LoaderCircleIcon, TrashIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -49,7 +49,7 @@ const VARIANTS: Record<
         aria-hidden="true"
         className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-qb-brand-soft text-qb-brand"
       >
-        <Trash2 className="size-[30px]" strokeWidth={1.7} />
+        <TrashIcon className="size-[30px]" strokeWidth={1.7} />
       </span>
     ),
   },
@@ -82,7 +82,7 @@ export function ChatConfirmDialog({
       disabled={pending}
       className={cn(buttonClass, 'bg-qb-brand text-qb-on-brand hover:bg-qb-brand-hover')}
     >
-      {pending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+      {pending ? <LoaderCircleIcon className="size-4 animate-spin" aria-hidden="true" /> : null}
       {confirmLabel}
     </button>
   );

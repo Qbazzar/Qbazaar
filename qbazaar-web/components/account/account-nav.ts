@@ -1,19 +1,9 @@
-import {
-  CircleAlert,
-  Mail,
-  Megaphone,
-  Settings,
-  ShieldCheck,
-  Trash2,
-  User,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react';
+import { AlertCircleDotIcon, GearIcon, MailNavIcon, MegaphoneIcon, ShieldCheckDataIcon, TrashIcon, UserNavIcon, WalletIcon, type IconGlyph } from '@/components/design-system/icons';
 
 export interface AccountNavItem {
   href: string;
   labelKey: string;
-  icon: LucideIcon;
+  icon: IconGlyph;
   /** Only the page itself sits in the settings shell; its sub-pages are full-width pages. */
   exact?: boolean;
   /** Other settings pages opened from this section's rows ("Active sessions" under Account Settings). */
@@ -31,24 +21,24 @@ export const ACCOUNT_HUB_PATH = '/account';
  * paid promotions list stays reachable.
  */
 export const SETTINGS_NAV: readonly AccountNavItem[] = [
-  { href: '/account/profile', labelKey: 'account.nav.profile_settings', icon: User },
-  { href: '/account/wallet', labelKey: 'account.nav.wallet', icon: Wallet, exact: true },
-  { href: '/account/promotions', labelKey: 'account.nav.promotions', icon: Megaphone, link: true },
+  { href: '/account/profile', labelKey: 'account.nav.profile_settings', icon: UserNavIcon },
+  { href: '/account/wallet', labelKey: 'account.nav.wallet', icon: WalletIcon, exact: true },
+  { href: '/account/promotions', labelKey: 'account.nav.promotions', icon: MegaphoneIcon, link: true },
   {
     href: '/account/security',
     labelKey: 'account.nav.account_settings',
-    icon: Settings,
+    icon: GearIcon,
     subPages: ['/account/sessions', '/account/verification', '/account/email-change'],
   },
   {
     href: '/account/privacy',
     labelKey: 'account.nav.data_protection',
-    icon: ShieldCheck,
+    icon: ShieldCheckDataIcon,
     subPages: ['/account/blocked-users'],
   },
-  { href: '/account/email-messages', labelKey: 'account.nav.email_message', icon: Mail },
-  { href: '/account/marketplace', labelKey: 'account.nav.marketplace_info', icon: CircleAlert },
-  { href: '/account/data', labelKey: 'account.nav.delete_account', icon: Trash2 },
+  { href: '/account/email-messages', labelKey: 'account.nav.email_message', icon: MailNavIcon },
+  { href: '/account/marketplace', labelKey: 'account.nav.marketplace_info', icon: AlertCircleDotIcon },
+  { href: '/account/data', labelKey: 'account.nav.delete_account', icon: TrashIcon },
 ];
 
 /** The section the hub stands for from the tablet layout up, where `/account` opens on it. */

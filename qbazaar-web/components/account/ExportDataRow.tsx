@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { requestDataExport } from '@/lib/api/account';
 import { t } from '@/lib/i18n/messages';
 
@@ -54,7 +54,7 @@ export function ExportDataRow() {
           <Button variant="outline" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
             {mutation.isPending ? (
               <>
-                <Loader2 className="animate-spin" aria-hidden="true" />
+                <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
                 {t('account.data.export.submitting')}
               </>
             ) : (

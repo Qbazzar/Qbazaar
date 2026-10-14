@@ -8,9 +8,9 @@
  * deleting happen through the list's checkboxes.
  */
 import { useRouter } from 'next/navigation';
-import { Clock } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
+import { ClockIcon } from '@/components/design-system/icons';
 import { DynamicIcon } from '@/components/ui/dynamic-icon';
 import { useMarkNotificationReadMutation } from '@/lib/queries/notifications';
 import { formatRelativeTime } from '@/components/messaging/relative-time';
@@ -65,7 +65,7 @@ export function NotificationRow({ notification: n, className }: Props) {
           </p>
         </div>
         <p className="flex items-center gap-1.5 text-qb-caption text-qb-ink-subtle">
-          <Clock aria-hidden="true" className="size-3.5" strokeWidth={1.6} />
+          <ClockIcon aria-hidden="true" className="size-[15px]" strokeWidth={1.6} />
           {formatRelativeTime(n.created_at)}
         </p>
       </div>

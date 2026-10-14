@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { LogOut } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LogOutIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -11,8 +11,9 @@ import { SETTINGS_NAV, settingsSectionFor, type AccountNavItem } from './account
 import { useSignOut } from './useSignOut';
 
 /**
- * Settings menu of account.html (`.qb-navitem`): grey rows that slide and tint
- * on hover, the current one an orange pill, then "Log Out" under a line.
+ * Settings menu of account.html (`.qb-navitem`): grey rows 4 px apart that
+ * slide 5 px and tint on hover (background and transform over .18 s), the
+ * current one an orange pill, then the "Log Out" `.qb-btn` under a line.
  */
 export function SettingsSidebar({ pathname }: { pathname: string }) {
   const { signOut, pending } = useSignOut();
@@ -20,7 +21,7 @@ export function SettingsSidebar({ pathname }: { pathname: string }) {
 
   return (
     <nav aria-label={t('account.nav.settings')}>
-      <ul className="flex flex-col gap-1">
+      <ul className="flex flex-col">
         {SETTINGS_NAV.map((item) => (
           <li key={item.href}>
             <SidebarLink item={item} active={item === current} />
@@ -32,11 +33,11 @@ export function SettingsSidebar({ pathname }: { pathname: string }) {
         onClick={signOut}
         disabled={pending}
         className={cn(
-          'mt-2 flex w-full cursor-pointer items-center gap-3 rounded-qb-lg border-t border-qb-line px-4 pt-[18px] pb-3.5 text-start text-qb-body-sm text-qb-acct-danger disabled:cursor-progress disabled:opacity-60',
+          'qb-motion mt-2 flex w-full cursor-pointer items-center gap-3 rounded-qb-lg border-t border-qb-line px-4 pt-[18px] pb-3.5 text-start text-qb-body-sm leading-[1.15] text-qb-acct-danger hover:brightness-[.96] disabled:cursor-progress disabled:opacity-60',
           focusRing,
         )}
       >
-        <LogOut aria-hidden="true" className="size-5 shrink-0 rtl:-scale-x-100" strokeWidth={1.6} />
+        <LogOutIcon aria-hidden="true" className="size-[18px] shrink-0 rtl:-scale-x-100" />
         {t('account.nav.log_out')}
       </button>
     </nav>
@@ -50,10 +51,10 @@ function SidebarLink({ item, active }: { item: AccountNavItem; active: boolean }
       href={item.href}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 rounded-qb-lg px-4 py-3.5 text-qb-body-sm transition-[background-color,translate] duration-200 motion-reduce:transition-none',
+        'mb-1 flex items-center gap-3 rounded-qb-lg px-4 py-3.5 text-qb-body-sm transition-[background,transform] duration-[180ms] ease-[ease] motion-reduce:transition-none',
         active
           ? 'bg-qb-brand font-semibold text-qb-on-brand'
-          : 'font-medium text-qb-ink-secondary hover:translate-x-[5px] hover:bg-qb-brand-soft rtl:hover:-translate-x-[5px]',
+          : 'font-medium text-qb-ink-secondary hover:bg-qb-brand-soft hover:[transform:translateX(5px)] rtl:hover:[transform:translateX(-5px)]',
         focusRing,
       )}
     >

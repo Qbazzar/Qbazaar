@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { CalendarDays, CircleCheck, Users } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
+import { CalendarIcon, CheckCircleIcon, UsersIcon } from '@/components/design-system/icons';
 import { intlLocale } from '@/lib/i18n/format';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -70,13 +70,13 @@ export function ProfileSummary({
         <ul className="flex flex-col gap-2 text-qb-body-sm text-qb-ink-secondary qb-tablet:flex-row qb-tablet:flex-wrap qb-tablet:gap-x-[26px]">
           {since ? (
             <li className="flex items-center gap-2">
-              <CalendarDays aria-hidden="true" className="size-[17px] shrink-0" strokeWidth={1.6} />
+              <CalendarIcon aria-hidden="true" className="size-[17px] shrink-0" strokeWidth={1.6} />
               {t('account.profile.active_since', { date: since })}
             </li>
           ) : null}
           {follows ? (
             <li className="flex items-center gap-2">
-              <Users aria-hidden="true" className="size-[17px] shrink-0" strokeWidth={1.6} />
+              <UsersIcon aria-hidden="true" className="size-[17px] shrink-0" strokeWidth={1.6} />
               {`${tPlural('account.my_ads.followers', follows.followers)} • ${tPlural('account.my_ads.following', follows.following)}`}
             </li>
           ) : null}
@@ -89,7 +89,7 @@ export function ProfileSummary({
           focusRing,
         )}
       >
-        <CircleCheck aria-hidden="true" className="size-6 shrink-0 text-qb-brand" strokeWidth={1.6} />
+        <CheckCircleIcon aria-hidden="true" className="size-6 shrink-0 text-qb-brand" strokeWidth={1.6} />
         <span>
           <span className="block text-qb-body font-medium text-qb-ink-title">{t('account.my_ads.sales_title')}</span>
           <span className="mt-0.5 block text-qb-caption text-qb-ink-subtle">{t('account.my_ads.sales_body')}</span>

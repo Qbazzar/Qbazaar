@@ -9,11 +9,12 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Menu } from '@base-ui/react/menu';
 import { toast } from 'sonner';
-import { Loader2, Search } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { cardHover } from '@/components/design-system/card-hover';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LoaderCircleIcon, SearchIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import { formatRelativeTime } from '@/components/messaging/relative-time';
 import { useDeleteSavedSearchMutation, useSavedSearchAlertsMutation } from '@/lib/queries/search';
@@ -57,13 +58,13 @@ export function SavedSearchCard({ search, labels }: Props) {
     );
 
   return (
-    <article className="rounded-qb-xl border border-qb-line bg-qb-surface p-5 font-qb">
+    <article className={cn('rounded-qb-xl border border-qb-line bg-qb-surface p-5 font-qb', cardHover)}>
       <div className="flex items-start gap-4">
         <span
           aria-hidden="true"
           className="flex size-[72px] shrink-0 items-center justify-center rounded-qb-lg bg-qb-fill text-qb-ink-subtle"
         >
-          <Search className="size-7" strokeWidth={1.6} />
+          <SearchIcon className="size-7" strokeWidth={1.6} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
@@ -79,7 +80,7 @@ export function SavedSearchCard({ search, labels }: Props) {
               <Menu.Trigger
                 aria-label={t('account.saved_searches.menu_label', { name: search.name })}
                 className={cn(
-                  'flex h-7 shrink-0 cursor-pointer items-start rounded-qb-xs px-1 text-[22px] leading-none text-qb-ink-subtle hover:text-qb-brand',
+                  'qb-motion flex h-7 shrink-0 cursor-pointer items-start px-1 text-[22px] leading-none text-qb-ink-subtle hover:text-qb-brand',
                   focusRing,
                 )}
               >
@@ -132,7 +133,7 @@ export function SavedSearchCard({ search, labels }: Props) {
           <span aria-hidden="true" className="relative h-[17px] w-[30px] shrink-0 rounded-[9px] bg-current">
             <span
               className={cn(
-                'absolute top-0.5 size-[13px] rounded-full bg-qb-surface transition-[inset-inline-start] duration-200 motion-reduce:transition-none',
+                'absolute top-0.5 size-[13px] rounded-full bg-qb-surface',
                 search.alerts_enabled ? 'start-[15px]' : 'start-0.5',
               )}
             />
@@ -142,7 +143,7 @@ export function SavedSearchCard({ search, labels }: Props) {
         <Link
           href={href}
           className={cn(
-            'rounded-qb-md bg-qb-brand px-6 py-2.5 text-qb-caption font-semibold text-qb-on-brand hover:bg-qb-brand-hover',
+            'qb-motion rounded-qb-md bg-qb-brand px-6 py-2.5 text-qb-caption font-semibold text-qb-on-brand hover:bg-qb-brand-hover',
             focusRing,
           )}
         >
@@ -160,7 +161,7 @@ export function SavedSearchCard({ search, labels }: Props) {
       >
         <ModalActions className="mt-2">
           <Button size="sm" disabled={deleteMutation.isPending} onClick={onDelete}>
-            {deleteMutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {deleteMutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
             {t('account.saved_searches.delete', 'حذف')}
           </Button>
           <Button variant="muted" size="sm" disabled={deleteMutation.isPending} onClick={() => setConfirmOpen(false)}>

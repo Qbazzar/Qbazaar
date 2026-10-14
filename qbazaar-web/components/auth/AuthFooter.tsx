@@ -3,16 +3,19 @@ import type { ReactNode } from 'react';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { cn } from '@/lib/utils';
 
-/** Underlined brand link inside auth copy ("Signup", "Login", "Edit"): `a.qb-link`. */
-export const authLinkClass = cn(
-  'rounded-qb-xs font-medium text-qb-brand underline hover:text-qb-brand-hover',
-  focusRing,
-);
+/**
+ * Underlined brand link inside auth copy ("Signup", "Login", "Edit"): `a.qb-link`
+ * keeps its colour under the pointer and has square corners.
+ */
+export const authLinkClass = cn('font-medium text-qb-brand underline', focusRing);
 
-/** Geometry of `.qb-btn` in auth.css: 56 px high, r12, 600 16 px. */
-export const authButtonClass = 'h-14 rounded-qb-lg text-qb-body font-semibold';
+/**
+ * Geometry of `.qb-btn` in auth.css: 56 px high with the label on a 56 px line,
+ * no side padding, r12, 600 16 px. The auth buttons are static (no transition).
+ */
+export const authButtonClass = 'h-14 rounded-qb-lg px-0 text-qb-body leading-[56px] font-semibold transition-none';
 
-/** The orange `.qb-btn`, a shade darker on hover. */
+/** The orange `.qb-btn`, #ef6f42 under the pointer and while pressed. */
 export const authSubmitClass = cn(authButtonClass, 'hover:bg-qb-auth-btn-hover');
 
 /** `.qb-field input:focus` only turns the border orange; the design system's ring stays off. */

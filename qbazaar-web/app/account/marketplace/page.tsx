@@ -7,7 +7,6 @@
  */
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
 
 import {
   AccountDialog,
@@ -23,6 +22,7 @@ import { SettingsList, SettingsPanel, SettingsRow, settingsActionClass } from '@
 import { apiErrorMessage } from '@/components/account/api-error-message';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { useAuth } from '@/hooks/useAuth';
 import { getAccountProfile, getBusinessProfile, updateBusinessProfile } from '@/lib/api/account';
@@ -144,7 +144,7 @@ function StoreNameForm({ business, onDone }: { business: BusinessProfile; onDone
       </Field>
       <AccountDialogActions>
         <button type="submit" disabled={save.isPending} className={accountSaveClass}>
-          {save.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+          {save.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
           {t('common.save')}
         </button>
         <button type="button" onClick={onDone} disabled={save.isPending} className={accountCancelClass}>

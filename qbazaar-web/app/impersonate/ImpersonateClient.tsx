@@ -15,10 +15,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { CircleAlert, LoaderCircle } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { Card } from '@/components/design-system/Card';
+import { AlertCircleIcon, LoaderCircleIcon } from '@/components/design-system/icons';
 import { StateIcon } from '@/components/design-system/StatePanel';
 import { getAccountProfile } from '@/lib/api/account';
 import { setAccessTokenNonReactive, useAuthStore } from '@/store/auth';
@@ -81,7 +81,7 @@ export function ImpersonateClient() {
           className="mb-6 flex size-[76px] items-center justify-center rounded-qb-xl border border-qb-line bg-qb-surface text-qb-brand shadow-qb-brand qb-tablet:size-[92px] qb-tablet:rounded-qb-2xl"
         >
           <StateIcon
-            icon={error ? CircleAlert : LoaderCircle}
+            icon={error ? AlertCircleIcon : LoaderCircleIcon}
             tone={error ? 'muted' : 'brand'}
             className={error ? undefined : 'motion-safe:animate-spin'}
           />

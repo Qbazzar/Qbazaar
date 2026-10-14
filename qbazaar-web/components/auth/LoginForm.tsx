@@ -6,11 +6,11 @@ import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { cn } from '@/lib/utils';
 import { t, translateMaybeKey } from '@/lib/i18n/messages';
@@ -123,7 +123,7 @@ export function LoginForm({ onDeviceCheck }: LoginFormProps) {
           </label>
           <Link
             href="/forgot-password"
-            className={cn('rounded-qb-xs text-qb-body-sm font-medium text-qb-brand hover:underline', focusRing)}
+            className={cn('text-qb-body-sm font-medium text-qb-brand hover:underline', focusRing)}
           >
             {t('auth.login.forgot')}
           </Link>
@@ -137,7 +137,7 @@ export function LoginForm({ onDeviceCheck }: LoginFormProps) {
         >
           {submitting ? (
             <>
-              <Loader2 className="animate-spin" aria-hidden="true" />
+              <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
               {t('auth.login.submitting')}
             </>
           ) : (

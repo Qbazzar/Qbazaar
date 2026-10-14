@@ -11,10 +11,10 @@
  */
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
 
 import { SettingsShell } from '@/components/account/SettingsShell';
 import { isSettingsPath } from '@/components/account/account-nav';
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { t } from '@/lib/i18n/messages';
 
@@ -29,7 +29,7 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
 function AccountLoading() {
   return (
     <div className="flex min-h-svh items-center justify-center" role="status">
-      <Loader2 className="size-6 animate-spin text-qb-ink-subtle motion-reduce:animate-none" aria-hidden="true" />
+      <LoaderCircleIcon className="size-6 animate-spin text-qb-ink-subtle motion-reduce:animate-none" aria-hidden="true" />
       <span className="sr-only">{t('common.loading')}</span>
     </div>
   );

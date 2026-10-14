@@ -15,11 +15,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Handshake, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { Field } from '@/components/design-system/Field';
+import { HandshakeIcon, LoaderCircleIcon } from '@/components/design-system/icons';
 import { Input, Textarea } from '@/components/design-system/Input';
 import { Modal } from '@/components/design-system/Modal';
 import { fieldErrorText } from '@/components/auth/FieldError';
@@ -149,7 +149,7 @@ export function OfferComposer({ conversationId }: Props) {
           className="size-10 shrink-0 rounded-qb-md"
           aria-label={t('messaging.offer.make', 'اعرض سعر')}
         >
-          <Handshake aria-hidden="true" />
+          <HandshakeIcon aria-hidden="true" />
         </Button>
       }
     >
@@ -193,7 +193,7 @@ export function OfferComposer({ conversationId }: Props) {
 
         <ModalActions className="mt-1">
           <Button type="submit" size="sm" disabled={mutation.isPending}>
-            {mutation.isPending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+            {mutation.isPending ? <LoaderCircleIcon className="animate-spin" aria-hidden="true" /> : null}
             {t('messaging.offer.submit', 'إرسال العرض')}
           </Button>
           <Button type="button" variant="muted" size="sm" onClick={() => handleClose(false)}>

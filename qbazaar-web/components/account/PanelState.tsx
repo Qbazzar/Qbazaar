@@ -1,5 +1,5 @@
-import { Loader2 } from 'lucide-react';
 
+import { LoaderCircleIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +15,7 @@ export function PanelState({ loading, message, className }: PanelStateProps) {
   if (loading) {
     return (
       <div role="status" className={cn('flex justify-center py-12', className)}>
-        <Loader2 className="size-6 animate-spin text-qb-ink-subtle motion-reduce:animate-none" aria-hidden="true" />
+        <LoaderCircleIcon className="size-6 animate-spin text-qb-ink-subtle motion-reduce:animate-none" aria-hidden="true" />
         <span className="sr-only">{t('common.loading')}</span>
       </div>
     );

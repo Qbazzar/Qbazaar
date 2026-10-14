@@ -221,7 +221,7 @@ export function OtpInput({
             aria-invalid={ariaInvalid}
             data-otp-box={index}
             className={cn(
-              'peer size-full min-w-0 rounded-qb-lg border border-qb-line bg-qb-surface text-center text-qb-h5 font-medium text-qb-ink outline-none transition-colors',
+              'peer size-full min-w-0 rounded-qb-lg border border-qb-line bg-qb-surface text-center text-qb-h5 font-medium text-qb-ink outline-none',
               'focus:border-qb-brand',
               'disabled:pointer-events-none disabled:opacity-50',
               'aria-invalid:border-qb-danger',

@@ -4,11 +4,11 @@ import { useRef, useState } from 'react';
 import { Menu } from '@base-ui/react/menu';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Ban, CircleAlert } from 'lucide-react';
 
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { apiErrorMessage } from '@/components/account/api-error-message';
+import { AlertCircleReportIcon, BlockIcon } from '@/components/design-system/icons';
 import { blockUser } from '@/lib/api/users';
 import { messagingKeys } from '@/lib/queries/messaging';
 import { t } from '@/lib/i18n/messages';
@@ -73,11 +73,11 @@ export function ChatSettingsMenu({ peer }: ChatSettingsMenuProps) {
                   onClick={() => setReportOpen(true)}
                 >
                   {t('messaging.menu.report')}
-                  <CircleAlert aria-hidden="true" className="text-qb-brand" strokeWidth={1.8} />
+                  <AlertCircleReportIcon aria-hidden="true" className="text-qb-brand" strokeWidth={1.8} />
                 </Menu.Item>
                 <Menu.Item className={cn(itemClass, 'text-qb-chat-block')} onClick={() => setBlockOpen(true)}>
                   {t('messaging.menu.block')}
-                  <Ban aria-hidden="true" strokeWidth={1.8} />
+                  <BlockIcon aria-hidden="true" strokeWidth={1.8} />
                 </Menu.Item>
               </Menu.Group>
             </Menu.Popup>

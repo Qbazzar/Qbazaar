@@ -10,9 +10,9 @@
  * - The camera tile before the field sends a photo (the composer of messages.html).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Camera, Loader2, Send } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
+import { CameraAttachIcon, LoaderCircleIcon, SendIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 import { useSendImageMessageMutation, useSendMessageMutation } from '@/lib/queries/messaging';
 import { apiErrorMessage } from '@/components/account/api-error-message';
@@ -113,7 +113,7 @@ export function ChatInput({ conversationId, viewerRole, onTyping }: Props) {
     >
       <label
         className={cn(
-          'flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-qb-lg bg-qb-fill-strong text-qb-ink-subtle has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
+          'qb-motion flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-qb-lg bg-qb-fill-strong text-qb-ink-subtle hover:brightness-[.96] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-qb-brand-active',
           photoMutation.isPending && 'pointer-events-none opacity-60',
         )}
       >
@@ -126,12 +126,12 @@ export function ChatInput({ conversationId, viewerRole, onTyping }: Props) {
           className="sr-only"
         />
         {photoMutation.isPending ? (
-          <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+          <LoaderCircleIcon className="size-5 animate-spin" aria-hidden="true" />
         ) : (
-          <Camera className="size-5" strokeWidth={1.6} aria-hidden="true" />
+          <CameraAttachIcon className="size-5" strokeWidth={1.6} aria-hidden="true" />
         )}
       </label>
-      <div className="flex min-w-0 flex-1 items-center rounded-[14px] border border-qb-line bg-qb-surface px-[18px] py-[13px] focus-within:border-qb-brand">
+      <label className="flex min-w-0 flex-1 cursor-text items-center rounded-[14px] border border-qb-line bg-qb-surface px-[18px] py-3.5 focus-within:border-qb-brand">
         <textarea
           ref={textareaRef}
           value={body}
@@ -142,24 +142,24 @@ export function ChatInput({ conversationId, viewerRole, onTyping }: Props) {
           onKeyDown={onKeyDown}
           placeholder={t('messaging.placeholder', 'اكتب رسالتك…')}
           rows={1}
-          className="max-h-[148px] min-h-[26px] flex-1 resize-none bg-transparent py-0.5 font-qb text-qb-body-sm text-qb-ink outline-none placeholder:text-qb-placeholder"
+          className="max-h-[148px] flex-1 resize-none bg-transparent px-0.5 py-px font-qb text-qb-body-sm text-qb-black outline-none placeholder:text-qb-ink-muted"
           aria-label={t('messaging.placeholder', 'اكتب رسالتك…')}
         />
-      </div>
+      </label>
       <button
         type="submit"
         disabled={mutation.isPending || body.trim().length === 0}
         className={cn(
-          'inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-qb-lg bg-qb-brand text-qb-on-brand transition-colors hover:bg-qb-brand-hover',
+          'qb-motion inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-qb-lg bg-qb-brand text-qb-on-brand hover:bg-qb-brand-hover',
           'disabled:cursor-not-allowed',
           focusRing,
         )}
         aria-label={t('messaging.send', 'إرسال')}
       >
         {mutation.isPending ? (
-          <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+          <LoaderCircleIcon className="size-5 animate-spin" aria-hidden="true" />
         ) : (
-          <Send className="size-5 rtl:-scale-x-100" aria-hidden="true" />
+          <SendIcon className="size-5 rtl:-scale-x-100" aria-hidden="true" />
         )}
       </button>
       {viewerRole === 'buyer' ? (

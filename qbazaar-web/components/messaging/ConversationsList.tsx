@@ -14,13 +14,13 @@
  */
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { MessageSquareX, Search, SquareCheckBig, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { showDesignToast } from '@/components/design-system/design-toast';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { PanelState } from '@/components/account/PanelState';
 import { apiErrorMessage } from '@/components/account/api-error-message';
+import { CheckboxSelectIcon, MessageSquareXIcon, SearchIcon, TrashIcon } from '@/components/design-system/icons';
 import { useAuth } from '@/hooks/useAuth';
 import { useConversationsQuery, useHideConversationsMutation } from '@/lib/queries/messaging';
 import { t } from '@/lib/i18n/messages';
@@ -96,7 +96,7 @@ export function ConversationsList({ activeConversationId, onSelect }: Props) {
             aria-label={t('messaging.select_mode')}
             className={cn(headerIcon, selecting ? 'text-qb-brand' : 'text-qb-ink-subtle hover:text-qb-ink')}
           >
-            <SquareCheckBig aria-hidden="true" strokeWidth={1.6} />
+            <CheckboxSelectIcon aria-hidden="true" strokeWidth={1.6} />
           </button>
           <button
             type="button"
@@ -105,20 +105,21 @@ export function ConversationsList({ activeConversationId, onSelect }: Props) {
             aria-label={t('messaging.delete.selected')}
             className={cn(headerIcon, 'text-qb-ink-subtle enabled:hover:text-qb-danger')}
           >
-            <Trash2 aria-hidden="true" strokeWidth={1.6} />
+            <TrashIcon aria-hidden="true" strokeWidth={1.6} />
           </button>
         </div>
       </div>
 
-      <label className="mb-5 flex items-center gap-2.5 rounded-qb-lg border border-qb-line px-3.5 py-3 focus-within:border-qb-brand">
-        <Search aria-hidden="true" className="size-5 shrink-0 text-qb-icon-faint" strokeWidth={1.6} />
+      <label className="mb-5 flex items-center gap-2.5 rounded-qb-lg border border-qb-line px-3.5 py-3 text-qb-body focus-within:border-qb-brand">
+        <SearchIcon aria-hidden="true" className="size-[18px] shrink-0 text-qb-icon-faint" />
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t('messaging.search_placeholder')}
           aria-label={t('messaging.search_label')}
-          className="min-w-0 flex-1 bg-transparent font-qb text-qb-body-sm text-qb-ink outline-none placeholder:text-qb-placeholder"
+          // A bare field as the design's: the browser's black text, grey placeholder and 1×2 px padding.
+          className="min-w-0 flex-1 bg-transparent px-0.5 py-px font-qb text-qb-body-sm text-qb-black outline-none placeholder:text-qb-ink-muted"
         />
       </label>
 
@@ -132,7 +133,7 @@ export function ConversationsList({ activeConversationId, onSelect }: Props) {
         <p className="px-3 py-10 text-center text-qb-body-sm text-qb-ink-subtle">{t('messaging.empty.inbox_short')}</p>
       ) : visibleRows.length === 0 ? (
         <div role="status" className="flex flex-col items-center px-3 py-10 text-center">
-          <MessageSquareX aria-hidden="true" className="mb-2.5 size-9 text-qb-ink-disabled" strokeWidth={1.5} />
+          <MessageSquareXIcon aria-hidden="true" className="mb-2.5 size-9 text-qb-ink-disabled" />
           <p className="text-qb-body-sm font-medium text-qb-ink-body">{t('messaging.search_empty_title')}</p>
           <p className="mt-1 text-qb-label text-qb-ink-subtle">{t('messaging.search_empty_body')}</p>
         </div>
@@ -140,7 +141,7 @@ export function ConversationsList({ activeConversationId, onSelect }: Props) {
         <>
           <ul className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
             {visibleRows.map((conversation) => (
-              <li key={conversation.id} className="mb-1.5">
+              <li key={conversation.id}>
                 <ConversationRow
                   conversation={conversation}
                   active={conversation.id === activeConversationId}
