@@ -12,9 +12,9 @@ use App\Services\Catalog\WarmedCache;
 use App\Support\Money;
 use Carbon\CarbonImmutable;
 use Generator;
-use Illuminate\Contracts\Pagination\Paginator;
-use Illuminate\Pagination\Paginator as SimplePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
+use stdClass;
 
 /**
  * The platform's income statement, read from the ledger. Nothing here is
@@ -78,7 +78,7 @@ class RevenueReportService
         $page = max(1, min($page, self::MAX_PAGES));
 
         if ($revenueAccountId === null) {
-            return new SimplePaginator([], $perPage, $page);
+            return new Paginator([], $perPage, $page);
         }
 
         $paginator = $this->repository->latest($window, $revenueAccountId, $perPage, $page);
@@ -89,7 +89,7 @@ class RevenueReportService
             $paginator->hasMorePagesWhen(false);
         }
 
-        return $paginator->through(fn (object $row): RevenueLine => $this->line($row, $names));
+        return $paginator->through(fn (stdClass $row): RevenueLine => $this->line($row, $names));
     }
 
     /**
@@ -104,7 +104,7 @@ class RevenueReportService
         }
 
         foreach ($this->repository->chunks($window, $revenueAccountId, self::EXPORT_CHUNK) as $rows) {
-            yield array_map(fn (object $row): RevenueLine => $this->line($row, new Collection), $rows);
+            yield array_map(fn (stdClass $row): RevenueLine => $this->line($row, new Collection), $rows);
         }
     }
 
@@ -116,8 +116,8 @@ class RevenueReportService
     private function build(RevenueWindow $window, bool $withSellers): RevenueReport
     {
         $accounts = $this->repository->platformAccounts();
-        $ids = array_values(array_map(static fn (object $account): string => $account->id, $accounts));
-        $types = array_column(array_map(static fn (object $account): array => [$account->id, $account->type], $accounts), 1, 0);
+        $ids = array_values(array_map(static fn (stdClass $account): string => $account->id, $accounts));
+        $types = array_column(array_map(static fn (stdClass $account): array => [$account->id, $account->type], $accounts), 1, 0);
         $revenueId = ($accounts[LedgerAccountType::PLATFORM_REVENUE->value] ?? null)?->id;
         $now = CarbonImmutable::now(DashboardPeriod::TIMEZONE);
 
@@ -126,8 +126,8 @@ class RevenueReportService
 
         return new RevenueReport(
             window: $window,
-            current: $this->folder->fold(IncomeFolder::period($movements, 'current'), $types, $this->money($orders->current_gmv), (int) $orders->current_orders),
-            previous: $this->folder->fold(IncomeFolder::period($movements, 'previous'), $types, $this->money($orders->previous_gmv), (int) $orders->previous_orders),
+            current: $this->folder->fold($movements->map(fn (stdClass $row): Movement => Movement::fromRow($row, 'current_')), $types, $this->money($orders->current_gmv), (int) $orders->current_orders),
+            previous: $this->folder->fold($movements->map(fn (stdClass $row): Movement => Movement::fromRow($row, 'previous_')), $types, $this->money($orders->previous_gmv), (int) $orders->previous_orders),
             escrowHeld: $this->balance($accounts, LedgerAccountType::PLATFORM_ESCROW),
             payoutsPending: $this->balance($accounts, LedgerAccountType::PLATFORM_PAYOUTS_PAYABLE),
             series: $ids === [] ? [] : $this->series($window, $ids, $types),
@@ -148,7 +148,7 @@ class RevenueReportService
         $buckets = $this->repository->series($window, $ids)->groupBy('bucket_start');
 
         return array_map(function (string $date) use ($buckets, $types): array {
-            $statement = $this->folder->fold($buckets->get($date, []), $types, Money::ZERO, 0);
+            $statement = $this->folder->fold(($buckets->get($date) ?? new Collection)->map(fn (stdClass $row): Movement => Movement::fromRow($row)), $types, Money::ZERO, 0);
 
             return [
                 'date' => $date,
@@ -167,12 +167,12 @@ class RevenueReportService
         $rows = $this->repository->incomeByCategory($window, $revenueId, self::TOP_ROWS);
         $names = Category::query()->whereIn('id', $rows->pluck('category_key')->filter())->pluck('name', 'id');
 
-        return $rows->map(fn (object $row): array => [
-            'id' => $row->category_key,
+        return array_values($rows->map(fn (stdClass $row): array => [
+            'id' => $row->category_key === null ? null : (string) $row->category_key,
             'name' => $row->category_key === null ? null : $this->localizedNames($names->get($row->category_key)),
             'income' => Money::round((string) $row->income),
             'lines' => (int) $row->line_count,
-        ])->all();
+        ])->all());
     }
 
     /**
@@ -183,12 +183,12 @@ class RevenueReportService
         $rows = $this->repository->topSellers($window, $revenueId, self::TOP_ROWS);
         $names = $this->userNames($rows->pluck('seller_id'));
 
-        return $rows->map(fn (object $row): array => [
+        return array_values($rows->map(fn (stdClass $row): array => [
             'id' => (string) $row->seller_id,
             'name' => $names->get($row->seller_id, ''),
             'commission' => Money::round((string) $row->commission),
             'orders' => (int) $row->orders,
-        ])->all();
+        ])->all());
     }
 
     /**
@@ -209,7 +209,7 @@ class RevenueReportService
     /**
      * @param Collection<string, string> $names
      */
-    private function line(object $row, Collection $names): RevenueLine
+    private function line(stdClass $row, Collection $names): RevenueLine
     {
         return new RevenueLine(
             id: (string) $row->id,
@@ -227,7 +227,7 @@ class RevenueReportService
     }
 
     /**
-     * @param array<string, object> $accounts
+     * @param array<string, stdClass> $accounts
      */
     private function balance(array $accounts, LedgerAccountType $type): string
     {

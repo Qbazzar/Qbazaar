@@ -7,7 +7,6 @@ namespace App\Services\Finance\Revenue;
 use App\Enums\LedgerAccountType;
 use App\Enums\LedgerTransactionType;
 use App\Support\Money;
-use Generator;
 
 /**
  * Folds grouped ledger movements (account, transaction type, debit, credit)
@@ -32,25 +31,7 @@ final class IncomeFolder
     }
 
     /**
-     * One period's side of rows that carry `current_*` and `previous_*` sums.
-     *
-     * @param iterable<object> $rows
-     * @return Generator<int, object>
-     */
-    public static function period(iterable $rows, string $period): Generator
-    {
-        foreach ($rows as $row) {
-            yield (object) [
-                'account_id' => $row->account_id,
-                'type' => $row->type,
-                'debit' => $row->{$period . '_debit'},
-                'credit' => $row->{$period . '_credit'},
-            ];
-        }
-    }
-
-    /**
-     * @param iterable<object> $rows account_id, type, debit, credit
+     * @param iterable<Movement> $rows
      * @param array<string, string> $accountTypes ledger account type by account id
      */
     public function fold(iterable $rows, array $accountTypes, string $gmv, int $orders): IncomeStatement
@@ -63,7 +44,7 @@ final class IncomeFolder
             $debit = Money::round((string) $row->debit);
             $type = (string) $row->type;
 
-            switch ($accountTypes[$row->account_id] ?? null) {
+            switch ($accountTypes[$row->accountId] ?? null) {
                 case LedgerAccountType::PLATFORM_REVENUE->value:
                     $key = IncomeSource::forType($type)->value;
                     $income[$key] = Money::add($income[$key] ?? Money::ZERO, $credit);

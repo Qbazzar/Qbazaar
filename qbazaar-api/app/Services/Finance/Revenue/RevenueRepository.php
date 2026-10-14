@@ -9,11 +9,12 @@ use App\Enums\LedgerReferenceType;
 use App\Enums\OrderStatus;
 use App\Support\Sql\LocalBucket;
 use Generator;
-use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 /**
  * Every revenue query, each one a grouped aggregate (or a bounded page) over
@@ -26,7 +27,7 @@ final class RevenueRepository
     /**
      * The platform accounts a report reads, keyed by account type.
      *
-     * @return array<string, object{id: string, type: string, balance: string}>
+     * @return array<string, stdClass>
      */
     public function platformAccounts(): array
     {
@@ -37,7 +38,6 @@ final class RevenueRepository
             LedgerAccountType::PLATFORM_PAYOUTS_PAYABLE,
         ];
 
-        /** @var array<string, object{id: string, type: string, balance: string}> */
         return DB::table('ledger_accounts')
             ->whereIn('code', array_map(static fn (LedgerAccountType $type): string => $type->code(), $types))
             ->get(['id', 'type', 'balance'])
@@ -50,7 +50,7 @@ final class RevenueRepository
      * the one before it, in a single pass.
      *
      * @param list<string> $accountIds
-     * @return Collection<int, object>
+     * @return Collection<int, stdClass>
      */
     public function movements(RevenueWindow $window, array $accountIds): Collection
     {
@@ -77,9 +77,9 @@ final class RevenueRepository
     /**
      * Gross value and count of the orders completed in the window and the one before.
      *
-     * @return object{current_gmv: string|null, current_orders: string|null, previous_gmv: string|null, previous_orders: string|null}
+     * @return stdClass {current_gmv, current_orders, previous_gmv, previous_orders}
      */
-    public function orderTotals(RevenueWindow $window): object
+    public function orderTotals(RevenueWindow $window): stdClass
     {
         $current = [$window->startUtc(), $window->endUtc()];
         $previous = [$window->previousStartUtc(), $window->previousEndUtc()];
@@ -94,7 +94,7 @@ final class RevenueRepository
                 $sum('total', 'current_gmv') . ', ' . $sum('1', 'current_orders') . ', ' . $sum('total', 'previous_gmv') . ', ' . $sum('1', 'previous_orders'),
                 [...$current, ...$current, ...$previous, ...$previous],
             )
-            ->first();
+            ->first() ?? new stdClass;
     }
 
     /**
@@ -102,7 +102,7 @@ final class RevenueRepository
      * window only.
      *
      * @param list<string> $accountIds
-     * @return Collection<int, object>
+     * @return Collection<int, stdClass>
      */
     public function series(RevenueWindow $window, array $accountIds): Collection
     {
@@ -121,7 +121,7 @@ final class RevenueRepository
     /**
      * Net platform income per category of the ad behind each order or promotion.
      *
-     * @return Collection<int, object{category_key: string|null, income: string, line_count: int}>
+     * @return Collection<int, stdClass>
      */
     public function incomeByCategory(RevenueWindow $window, string $revenueAccountId, int $limit): Collection
     {
@@ -136,7 +136,7 @@ final class RevenueRepository
     /**
      * Sellers ranked by the commission the platform charged on their orders.
      *
-     * @return Collection<int, object{seller_id: string, commission: string, orders: int}>
+     * @return Collection<int, stdClass>
      */
     public function topSellers(RevenueWindow $window, string $revenueAccountId, int $limit): Collection
     {
@@ -152,13 +152,19 @@ final class RevenueRepository
 
     /**
      * One page of revenue lines, newest first, without counting the rest.
+     *
+     * @return Paginator<int, stdClass>
      */
     public function latest(RevenueWindow $window, string $revenueAccountId, int $perPage, int $page): Paginator
     {
-        return $this->lineSelect($this->withReferences($this->revenueLines($window, $revenueAccountId)))
+        $rows = $this->lineSelect($this->withReferences($this->revenueLines($window, $revenueAccountId)))
             ->orderByDesc('e.created_at')
             ->orderByDesc('e.id')
-            ->simplePaginate($perPage, ['*'], 'page', $page);
+            ->forPage($page, $perPage + 1)
+            ->get();
+
+        // One row more than the page tells the paginator whether a next page exists, without a count.
+        return new Paginator($rows, $perPage, $page, ['path' => Paginator::resolveCurrentPath()]);
     }
 
     /**
@@ -166,7 +172,7 @@ final class RevenueRepository
      * continues after the last (created_at, id) of the one before, which the
      * entries index serves, so no chunk re-reads or skips rows.
      *
-     * @return Generator<int, list<object>>
+     * @return Generator<int, list<stdClass>>
      */
     public function chunks(RevenueWindow $window, string $revenueAccountId, int $size): Generator
     {
@@ -185,6 +191,7 @@ final class RevenueRepository
             }
 
             $rows = $query->get()->all();
+            $rows = array_values($rows);
 
             if ($rows !== []) {
                 yield $rows;
@@ -196,7 +203,7 @@ final class RevenueRepository
     /**
      * What the revenue account booked for one order, by transaction type.
      *
-     * @return Collection<int, object{type: string, debit: string, credit: string}>
+     * @return Collection<int, stdClass>
      */
     public function orderMovements(string $orderId): Collection
     {

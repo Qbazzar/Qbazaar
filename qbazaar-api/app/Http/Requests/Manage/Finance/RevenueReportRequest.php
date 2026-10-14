@@ -87,6 +87,6 @@ class RevenueReportRequest extends FormRequest
 
     private function day(string $key): CarbonImmutable
     {
-        return CarbonImmutable::createFromFormat('Y-m-d', (string) $this->input($key), DashboardPeriod::TIMEZONE)->startOfDay();
+        return CarbonImmutable::parse((string) $this->input($key), DashboardPeriod::TIMEZONE)->startOfDay();
     }
 }

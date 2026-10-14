@@ -203,14 +203,14 @@ final class RevenuePresenter
      */
     public function transactions(): array
     {
-        return array_map(fn (RevenueLine $line): array => [
+        return array_values(array_map(fn (RevenueLine $line): array => [
             'when' => $line->at->format('Y-m-d H:i'),
-            'type' => __('admin.revenue.types.' . $line->type),
+            'type' => (string) __('admin.revenue.types.' . $line->type),
             'amount' => $this->signed($line),
             'refund' => Money::isPositive($line->debit),
             'subject' => $line->adTitle,
             'links' => $this->links($line),
-        ], $this->lines->items());
+        ], $this->lines->items()));
     }
 
     /**
@@ -272,12 +272,12 @@ final class RevenuePresenter
 
         return [
             'key' => $key,
-            'label' => __('admin.revenue.statement.' . $key),
+            'label' => (string) __('admin.revenue.statement.' . $key),
             'kind' => $kind,
             'value' => $recorded ? $this->money($now) : null,
             'previous' => $before !== null ? $this->money($before) : null,
             'change' => $recorded && $before !== null ? Trend::between($now, $before)['change'] : false,
-            'note' => $recorded ? null : __('admin.revenue.not_recorded_notes.' . $key),
+            'note' => $recorded ? null : (string) __('admin.revenue.not_recorded_notes.' . $key),
         ];
     }
 
@@ -286,7 +286,7 @@ final class RevenuePresenter
      */
     private function heading(string $key): array
     {
-        return ['key' => $key, 'label' => __('admin.revenue.statement.' . $key), 'kind' => 'heading', 'value' => null, 'previous' => null, 'change' => false, 'note' => null];
+        return ['key' => $key, 'label' => (string) __('admin.revenue.statement.' . $key), 'kind' => 'heading', 'value' => null, 'previous' => null, 'change' => false, 'note' => null];
     }
 
     private function signed(RevenueLine $line): string

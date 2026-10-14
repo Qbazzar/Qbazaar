@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Finance\Revenue;
 
 use App\Support\Money;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -23,7 +24,7 @@ final class RevenueCsvExporter
         $name = 'revenue-' . $window->start->toDateString() . '-' . $window->end->subSecond()->toDateString() . '.csv';
 
         return response()->streamDownload(function () use ($window, $accountId): void {
-            $out = fopen('php://output', 'w');
+            $out = fopen('php://output', 'w') ?: throw new RuntimeException('The response stream could not be opened.');
             // The byte-order mark lets Excel read the Arabic headings as UTF-8.
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, $this->headings());
