@@ -1,15 +1,15 @@
 'use client';
 
 import { useRef, useState, type FormEvent } from 'react';
-import { Landmark, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/design-system/Badge';
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
+import { BankQnbIcon, TrashIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { AccountPageFrame } from '@/components/orders/AccountPageFrame';
-import { CheckoutPanel, panelPadding } from '@/components/orders/CheckoutPanel';
+import { CheckoutPanel } from '@/components/orders/CheckoutPanel';
 import { ConfirmDialog } from '@/components/orders/ConfirmDialog';
 import { focusFirstInvalid } from '@/components/orders/focus-invalid';
 import { FormError } from '@/components/orders/NoteField';
@@ -20,7 +20,6 @@ import { dealErrorMessage, fieldErrors, isHandledGlobally } from '@/lib/orders/e
 import { formatIbanForDisplay, isValidIban, normalizeIban } from '@/lib/orders/iban';
 import { LIMITS, validateText } from '@/lib/orders/validation';
 import { useAddBankAccountMutation, useBankAccountsQuery, useDeleteBankAccountMutation } from '@/lib/queries/wallet';
-import { cn } from '@/lib/utils';
 
 import { walletTrail } from './wallet-trail';
 
@@ -36,7 +35,7 @@ export function BankAccountsView() {
         ) : query.isError ? (
           <PageState kind="error" onRetry={() => query.refetch()} />
         ) : query.data.length === 0 ? (
-          <p className={cn(panelPadding, 'text-qb-body text-qb-ink-secondary')}>{t('orders.bank.empty')}</p>
+          <p className="py-7 text-qb-body text-qb-ink-secondary">{t('orders.bank.empty')}</p>
         ) : (
           <ul className="flex flex-col">
             {query.data.map((account) => (
@@ -66,12 +65,9 @@ function BankAccountRow({ account }: { account: BankAccount }) {
   };
 
   return (
-    <li className="flex items-center gap-4 border-b border-qb-line px-4 py-4 last:border-b-0 qb-tablet:px-6 qb-desktop:px-8 qb-desktop:py-5">
-      <span
-        aria-hidden="true"
-        className="flex size-[60px] shrink-0 items-center justify-center rounded-qb-md bg-qb-brand-soft text-qb-brand [&_svg]:size-6"
-      >
-        <Landmark />
+    <li className="flex items-center gap-5 border-b border-qb-line px-2.5 py-[22px]">
+      <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-[14px] bg-qb-brand-soft text-qb-info [&_svg]:size-[26px]">
+        <BankQnbIcon />
       </span>
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-2 text-qb-body-lg font-semibold text-qb-ink">
@@ -84,7 +80,7 @@ function BankAccountRow({ account }: { account: BankAccount }) {
             </Badge>
           ) : null}
         </p>
-        <p className="mt-1 text-qb-body-sm text-qb-ink-subtle">
+        <p className="mt-1 text-qb-body-sm leading-[1.5] text-qb-ink-subtle">
           <span dir="ltr" className="font-medium tracking-wide">
             {account.iban_masked}
           </span>
@@ -103,7 +99,7 @@ function BankAccountRow({ account }: { account: BankAccount }) {
         onClick={() => setConfirming(true)}
         className="text-qb-danger hover:bg-qb-danger-soft"
       >
-        <Trash2 aria-hidden="true" />
+        <TrashIcon aria-hidden="true" />
       </Button>
       <ConfirmDialog
         open={confirming}

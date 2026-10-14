@@ -3,12 +3,12 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Banknote, CheckCircle2, Loader2, ShieldCheck, Store, Truck, XCircle } from 'lucide-react';
 
 import { Breadcrumb } from '@/components/design-system/Breadcrumb';
 import { Button, buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { CashIcon, CheckCircleIcon, LoaderCircleIcon, ShieldCheckSafepayIcon, StoreIcon, TruckIcon, XCircleFailIcon } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import { Notice } from '@/components/design-system/Notice';
 import { useAuth } from '@/hooks/useAuth';
@@ -258,7 +258,7 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
                 value={option}
                 checked={fulfillment === option}
                 onChange={() => setFulfillment(option)}
-                icon={option === 'delivery' ? <Truck /> : <Store />}
+                icon={option === 'delivery' ? <TruckIcon /> : <StoreIcon />}
                 label={t(`orders.common.${option}`)}
                 srDescription={
                   option === 'pickup'
@@ -294,7 +294,7 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
                 name="payment_method"
                 value={method}
                 defaultChecked
-                icon={<Banknote />}
+                icon={<CashIcon />}
                 label={t('orders.common.cash')}
                 srDescription={t('orders.checkout.cash_hint')}
               />
@@ -323,11 +323,11 @@ function CheckoutForm({ checkout, onPlaced }: { checkout: Checkout; onPlaced: ()
             <>
               <FormError>{formError}</FormError>
               <Button type="submit" fullWidth className={cn(ctaButton, formError && 'mt-3')} disabled={submit.isPending} aria-busy={submit.isPending}>
-                {submit.isPending ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
+                {submit.isPending ? <LoaderCircleIcon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
                 {t('orders.checkout.place_order')}
               </Button>
               <p className="mt-4 flex items-center justify-center gap-1.5 text-qb-label text-qb-ink-subtle">
-                <Icon icon={ShieldCheck} size="sm" className="size-3.5 text-qb-success" />
+                <Icon icon={ShieldCheckSafepayIcon} size="sm" className="size-3.5 text-qb-success" />
                 {t('orders.checkout.cash_note')}
               </p>
             </>
@@ -362,7 +362,7 @@ function ResultIcon({ tone }: { tone: 'success' | 'danger' }) {
       aria-hidden="true"
       className="absolute inset-x-0 top-[38px] mx-auto flex size-[54px] items-center justify-center rounded-full bg-qb-brand-soft text-qb-brand"
     >
-      <Icon icon={tone === 'success' ? CheckCircle2 : XCircle} className="size-[26px]" />
+      <Icon icon={tone === 'success' ? CheckCircleIcon : XCircleFailIcon} className="size-[26px]" />
     </span>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
-import { Check } from 'lucide-react';
-
+import { CheckCircleGreenIcon, CheckIcon } from '@/components/design-system/icons';
 import type { PromotionOffer, PromotionType } from '@/lib/api/commerce-types';
 import { getLocale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -26,20 +25,30 @@ export function promotionTitle(type: PromotionType): string {
   return t(`orders.promotion.types.${type}`);
 }
 
-/** The 22 px tick box of the promotion rows; its ring darkens under the pointer (CheckBox 367:15366). */
-function TickBox({ checked, className }: { checked: boolean; className?: string }) {
+/**
+ * The 22 px tick box of the promotion rows (add-ads.html): grey ring, orange with a white tick once chosen.
+ * `phoneTick` is the add-ads phone layer (responsive.css, Figma 633:33029), which shows an unticked row's
+ * box as the design's 24 px green tick circle under 601 px.
+ */
+function TickBox({ checked, phoneTick = false, className }: { checked: boolean; phoneTick?: boolean; className?: string }) {
+  if (phoneTick && !checked) {
+    return (
+      <span aria-hidden="true" className={cn('flex shrink-0', className)}>
+        <CheckCircleGreenIcon className="size-6 qb-tablet:hidden" />
+        <span className="hidden size-[22px] rounded-qb-xs border-2 border-(--color-qb-check-ring) qb-tablet:block" />
+      </span>
+    );
+  }
   return (
     <span
       aria-hidden="true"
       className={cn(
-        'flex size-[22px] shrink-0 items-center justify-center rounded-qb-xs border-2 transition-colors',
-        checked
-          ? 'border-qb-brand bg-qb-brand text-qb-on-brand'
-          : 'border-(--color-qb-check-ring) group-hover:border-(--color-qb-check-ring-hover)',
+        'flex size-[22px] shrink-0 items-center justify-center rounded-qb-xs border-2',
+        checked ? 'border-qb-brand bg-qb-brand text-qb-on-brand' : 'border-(--color-qb-check-ring)',
         className,
       )}
     >
-      {checked ? <Check className="size-[13px]" strokeWidth={3} /> : null}
+      {checked ? <CheckIcon className="size-[13px]" strokeWidth={3} /> : null}
     </span>
   );
 }
@@ -71,7 +80,7 @@ export function HighlightSection() {
           return (
             <label key={offer.type} className={promotionRow.shell(checked)}>
               <input type="checkbox" checked={checked} onChange={() => toggle(offer.type)} className="sr-only" aria-describedby={`promotion-${offer.type}-body`} />
-              <TickBox checked={checked} />
+              <TickBox checked={checked} phoneTick />
               <span className="min-w-0 flex-1">
                 <span className={promotionRow.title}>{promotionTitle(offer.type)}</span>
                 <span id={`promotion-${offer.type}-body`} className={promotionRow.body}>

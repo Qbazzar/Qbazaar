@@ -30,5 +30,6 @@ export function PostAdClient() {
     );
   }
 
-  return <PostAdFlow user={user} breadcrumb={breadcrumb} />;
+  // The form opens straight on its cards, as add-ads.html does; only the phone notice above keeps a trail.
+  return <PostAdFlow user={user} />;
 }

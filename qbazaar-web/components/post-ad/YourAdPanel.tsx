@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { Eye, Heart, LoaderCircle, PenLine, Trash2, type LucideIcon } from 'lucide-react';
 
 import { ModalActions } from '@/components/account/ModalActions';
 import { Button } from '@/components/design-system/Button';
 import { cardVariants } from '@/components/design-system/Card';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { EyeIcon, HeartIcon, LoaderCircleIcon, PencilEditIcon, TrashIcon, type IconGlyph } from '@/components/design-system/icons';
 import { Modal } from '@/components/design-system/Modal';
 import type { Ad } from '@/lib/api/types';
 import { formatNumber } from '@/lib/i18n/format';
@@ -54,11 +54,11 @@ export function YourAdPanel({ ad, running, onEdit, onDelete }: YourAdPanelProps)
         </h2>
         <dl className="mt-[22px] flex flex-col gap-4 border-b border-qb-line pb-[18px] text-qb-body-sm">
           <SummaryRow label={t('post_ad.your_ad.visits')}>
-            <Icon icon={Eye} size="sm" />
+            <Icon icon={EyeIcon} size="sm" />
             {formatNumber(ad.views_count, locale)}
           </SummaryRow>
           <SummaryRow label={t('post_ad.your_ad.wishlist')}>
-            <Icon icon={Heart} size="sm" />
+            <Icon icon={HeartIcon} size="sm" />
             {formatNumber(ad.favorites_count, locale)}
           </SummaryRow>
           <SummaryRow label={t('post_ad.your_ad.published')}>{formatDate(ad.published_at ?? new Date().toISOString(), locale)}</SummaryRow>
@@ -78,7 +78,7 @@ export function YourAdPanel({ ad, running, onEdit, onDelete }: YourAdPanelProps)
       >
         <ModalActions className="mt-2">
           <Button size="sm" disabled={running !== null} aria-busy={deleting || undefined} onClick={onDelete}>
-            {deleting ? <Icon icon={LoaderCircle} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
+            {deleting ? <Icon icon={LoaderCircleIcon} size="sm" className="animate-spin motion-reduce:animate-none" /> : null}
             {t('common.delete')}
           </Button>
           <Button variant="muted" size="sm" disabled={deleting} onClick={() => setConfirmDelete(false)}>
@@ -127,9 +127,9 @@ function PanelActions({
   onDelete: () => void;
 }) {
   const styles = ACTION_LAYOUTS[layout];
-  const items: Array<{ icon: LucideIcon; label: string; onClick: () => void }> = [
-    { icon: PenLine, label: t('post_ad.actions.edit'), onClick: onEdit },
-    { icon: Trash2, label: t('common.delete'), onClick: onDelete },
+  const items: Array<{ icon: IconGlyph; label: string; onClick: () => void }> = [
+    { icon: PencilEditIcon, label: t('post_ad.actions.edit'), onClick: onEdit },
+    { icon: TrashIcon, label: t('common.delete'), onClick: onDelete },
   ];
   return (
     <ul className={styles.list}>

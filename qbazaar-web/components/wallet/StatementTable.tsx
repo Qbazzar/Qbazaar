@@ -2,15 +2,15 @@
 
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Receipt } from 'lucide-react';
 
 import { EmptyState } from '@/components/design-system/EmptyState';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { FieldSelect } from '@/components/design-system/FieldSelect';
+import { ReceiptIcon } from '@/components/design-system/icons';
 import { orderNumber } from '@/components/orders/order-number';
 import { PageState } from '@/components/orders/PageState';
-import { LoadMore, TableCard, Th, tableClasses as tc } from '@/components/orders/TableCard';
+import { LoadMore, TableCard, Th, insetTableClasses as tc } from '@/components/orders/TableCard';
 import type { WalletAccount, WalletEntry } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
 import { formatDate, isoDate } from '@/lib/orders/dates';
@@ -30,20 +30,16 @@ export function signedAmount(entry: Pick<WalletEntry, 'amount' | 'currency' | 'd
  * first. `headerAction` sits at the end of the title row (563:31406,
  * 613:31879); the account filter then takes its own row below 1001 px.
  */
-export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
+export function StatementTable({ headerAction, className }: { headerAction?: ReactNode; className?: string }) {
   const [account, setAccount] = useState<WalletAccount | ''>('');
   const query = useWalletEntriesQuery(account || undefined);
   const entries = query.data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
     <TableCard
-      title={
-        // Phones say "Transactions" (613:31879), which leaves room for Withdraw Funds beside it.
-        <>
-          <span className="max-qb-tablet:hidden">{t('orders.wallet.history_title')}</span>
-          <span className="qb-tablet:hidden">{t('orders.wallet.history_title_short')}</span>
-        </>
-      }
+      inset
+      className={className}
+      title={t('orders.wallet.history_title')}
       titleId="wallet-history"
       action={
         <>
@@ -73,7 +69,7 @@ export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
         <PageState kind="error" onRetry={() => query.refetch()} />
       ) : entries.length === 0 ? (
         <EmptyState
-          icon={<Icon icon={Receipt} size="lg" />}
+          icon={<Icon icon={ReceiptIcon} size="lg" />}
           title={t('orders.wallet.empty')}
           description={t('orders.wallet.empty_body')}
           headingLevel="h3"
@@ -84,11 +80,11 @@ export function StatementTable({ headerAction }: { headerAction?: ReactNode }) {
           <table className={tc.table} aria-labelledby="wallet-history">
             <thead>
               <tr className={tc.headRow}>
-                <Th>{t('orders.wallet.columns.transaction')}</Th>
-                <Th className={tc.wide}>{t('orders.wallet.columns.date')}</Th>
-                <Th className="hidden qb-desktop:table-cell">{t('orders.wallet.columns.account')}</Th>
-                <Th className="text-end">{t('orders.wallet.columns.amount')}</Th>
-                <Th className="hidden text-end qb-desktop:table-cell">{t('orders.wallet.columns.balance')}</Th>
+                <Th classes={tc}>{t('orders.wallet.columns.transaction')}</Th>
+                <Th classes={tc} className={tc.wide}>{t('orders.wallet.columns.date')}</Th>
+                <Th classes={tc} className="hidden qb-desktop:table-cell">{t('orders.wallet.columns.account')}</Th>
+                <Th classes={tc} className="text-end max-qb-desktop:pe-0">{t('orders.wallet.columns.amount')}</Th>
+                <Th classes={tc} className="hidden text-end qb-desktop:table-cell">{t('orders.wallet.columns.balance')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -136,7 +132,8 @@ function StatementRow({ entry }: { entry: WalletEntry }) {
       </td>
       <td className={cn(tc.td, tc.wide)}>{date}</td>
       <td className={cn(tc.td, 'hidden qb-desktop:table-cell')}>{t(`orders.wallet.account.${entry.account}`)}</td>
-      <td className={cn(tc.td, tc.amount)}>
+      {/* The last column shown until the balance one appears at 1001 px, so it ends on the card padding. */}
+      <td className={cn(tc.td, tc.amount, 'max-qb-desktop:pe-0')}>
         <span dir="ltr" className={entry.account === 'wallet' && entry.direction === 'increase' ? 'text-qb-success' : undefined}>
           {signedAmount(entry)}
         </span>

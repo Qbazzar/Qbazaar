@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Plus } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { LocationPinIcon, PlusIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import type { CheckoutAddressInput, DeliveryAddress, SavedAddress } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
@@ -132,7 +132,7 @@ export function ShippingAddressPanel({
                   value={option.id}
                   checked={choice.kind === 'saved' && choice.id === option.id}
                   onChange={() => onChoiceChange({ kind: 'saved', id: option.id })}
-                  icon={<MapPin />}
+                  icon={<LocationPinIcon />}
                   label={savedAddressTitle(option)}
                   details={addressLines(option).map((line) => (
                     <bdi key={line} className="block">
@@ -146,7 +146,7 @@ export function ShippingAddressPanel({
                 value="new"
                 checked={choice.kind === 'new'}
                 onChange={() => onChoiceChange({ kind: 'new' })}
-                icon={<Plus />}
+                icon={<PlusIcon />}
                 label={t('orders.checkout.new_address')}
               />
             </div>

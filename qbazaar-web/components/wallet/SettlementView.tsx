@@ -1,11 +1,11 @@
 'use client';
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Landmark, Upload, Wallet as WalletIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button, buttonVariants } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
+import { BankQnbIcon, UploadIcon, WalletIcon } from '@/components/design-system/icons';
 import { Input } from '@/components/design-system/Input';
 import { Notice } from '@/components/design-system/Notice';
 import { RadioCard } from '@/components/design-system/RadioCard';
@@ -175,7 +175,7 @@ function SettlementForm({ wallet, pendingTransfer }: { wallet: Wallet; pendingTr
               checked={method === 'bank_transfer'}
               disabled={!canTransfer}
               onChange={() => setMethod('bank_transfer')}
-              icon={<Landmark />}
+              icon={<BankQnbIcon />}
               label={t('orders.settlement.bank_transfer')}
               description={t('orders.settlement.bank_transfer_hint')}
             />
@@ -250,7 +250,7 @@ function SettlementForm({ wallet, pendingTransfer }: { wallet: Wallet; pendingTr
                           'rounded-qb-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-solid peer-focus-visible:outline-qb-brand-active peer-aria-invalid:border-qb-danger',
                         )}
                       >
-                        <Upload aria-hidden="true" />
+                        <UploadIcon aria-hidden="true" />
                         {t(receipt ? 'orders.settlement.change_file' : 'orders.settlement.choose_file')}
                       </label>
                     </div>

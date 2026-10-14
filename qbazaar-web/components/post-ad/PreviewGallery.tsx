@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { ArrowLeft, ArrowRight, ImageIcon, ImageOff } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
+import { ArrowLeftIcon, ArrowRightIcon, ImageIcon, ImagePlaceholderIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +24,7 @@ export function PreviewGallery({ title, urls }: { title: string; urls: readonly 
   if (total === 0) {
     return (
       <div className="flex h-[clamp(190px,40vw,380px)] flex-col items-center justify-center gap-2 rounded-qb-xl bg-qb-line text-qb-ink-subtle">
-        <Icon icon={ImageOff} size="lg" />
+        <Icon icon={ImagePlaceholderIcon} size="lg" />
         <span className="text-qb-caption">{t('post_ad.preview.no_photos')}</span>
       </div>
     );
@@ -50,10 +50,10 @@ export function PreviewGallery({ title, urls }: { title: string; urls: readonly 
       {total > 1 ? (
         <>
           <button type="button" onClick={() => go(-1)} aria-label={t('post_ad.preview.previous_photo')} className={cn(arrowButton, 'start-4')}>
-            <Icon icon={ArrowLeft} size="md" flipInRtl />
+            <Icon icon={ArrowLeftIcon} size="md" flipInRtl />
           </button>
           <button type="button" onClick={() => go(1)} aria-label={t('post_ad.preview.next_photo')} className={cn(arrowButton, 'end-4')}>
-            <Icon icon={ArrowRight} size="md" flipInRtl />
+            <Icon icon={ArrowRightIcon} size="md" flipInRtl />
           </button>
         </>
       ) : null}

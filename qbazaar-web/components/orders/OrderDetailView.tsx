@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Info, ShieldAlert } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { ArrowLeftIcon, InfoCircleIcon, ShieldAlertIcon } from '@/components/design-system/icons';
 import { Notice } from '@/components/design-system/Notice';
 import type { Order } from '@/lib/api/commerce-types';
 import { t } from '@/lib/i18n/messages';
@@ -37,7 +37,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
           focusRing,
         )}
       >
-        <Icon icon={ArrowLeft} size="sm" flipInRtl />
+        <Icon icon={ArrowLeftIcon} size="sm" flipInRtl />
         {t('orders.detail.back')}
       </Link>
       {query.isPending ? (
@@ -97,7 +97,7 @@ function OrderDetail({ order }: { order: Order }) {
           <CheckoutPanel title={t('orders.detail.progress')} titleId="order-progress">
             <div className="flex flex-col gap-6">
               <OrderTimeline order={order} />
-              <Notice tone={order.status === 'disputed' ? 'danger' : 'brand'} icon={<Info aria-hidden="true" />} role="status">
+              <Notice tone={order.status === 'disputed' ? 'danger' : 'brand'} icon={<InfoCircleIcon aria-hidden="true" />} role="status">
                 {t(`orders.detail.next.${nextStepKey(order)}`, {
                   date: order.report_problem_until ? formatDateTime(order.report_problem_until) : '',
                 })}
@@ -146,7 +146,7 @@ function DisputePanel({ order }: { order: Order }) {
           <dd>
             <Notice
               tone={resolved ? (dispute.resolution === 'completed' ? 'success' : 'neutral') : 'brand'}
-              icon={<ShieldAlert aria-hidden="true" />}
+              icon={<ShieldAlertIcon aria-hidden="true" />}
               title={
                 resolved
                   ? t(dispute.resolution === 'completed' ? 'orders.detail.ruling_completed' : 'orders.detail.ruling_cancelled')
