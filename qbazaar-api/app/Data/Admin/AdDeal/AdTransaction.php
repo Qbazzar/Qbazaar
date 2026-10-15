@@ -15,6 +15,8 @@ use Illuminate\Support\Collection;
 final readonly class AdTransaction
 {
     /**
+     * `pastOrders` counts the cancelled orders when none of them is the deal.
+     *
      * @param Collection<int, ConversationRow> $conversations
      * @param Collection<int, Offer> $offers
      */
@@ -24,6 +26,7 @@ final readonly class AdTransaction
         public ?User $buyer,
         public BuyerBasis $buyerBasis,
         public ?OrderDeal $deal,
+        public int $pastOrders,
         public Collection $conversations,
         public int $conversationsTotal,
         public Collection $offers,

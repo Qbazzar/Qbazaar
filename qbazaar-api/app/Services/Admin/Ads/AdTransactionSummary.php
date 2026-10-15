@@ -55,6 +55,7 @@ final class AdTransactionSummary
             buyer: $access->users ? $buyer : null,
             buyerBasis: $basis,
             deal: $order === null ? null : $this->dealOf($order, $statusMoves, $orders->count() - 1),
+            pastOrders: $order === null ? $orders->count() : 0,
             conversations: $access->conversations ? $this->chats->conversations($ad) : new Collection,
             conversationsTotal: (int) ($ad->conversations_count ?? 0),
             offers: $access->offers ? $this->chats->offers($ad, self::LIST_LIMIT) : new EloquentCollection,
@@ -80,13 +81,15 @@ final class AdTransactionSummary
     }
 
     /**
+     * Only an open order or one that was handed over is the deal; a cancelled
+     * one is history and names no buyer.
+     *
      * @param EloquentCollection<int, Order> $orders
      */
     private function currentOrder(EloquentCollection $orders): ?Order
     {
         return $orders->first(fn (Order $order): bool => $order->status->isActive())
-            ?? $orders->first(fn (Order $order): bool => $order->completed_at !== null)
-            ?? $orders->first();
+            ?? $orders->first(fn (Order $order): bool => $order->completed_at !== null);
     }
 
     /**

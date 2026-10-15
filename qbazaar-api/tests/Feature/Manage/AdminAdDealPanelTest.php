@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Data\Admin\AdDeal\OrderDeal;
+use App\Data\Admin\AdDeal\PaymentSummary;
 use App\Data\Ledger\LedgerActor;
 use App\Enums\AdStatus;
 use App\Enums\LedgerAccountType;
 use App\Enums\OfferStatus;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Ad;
 use App\Models\Conversation;
@@ -138,13 +141,12 @@ describe('super admin on a sold ad', function (): void {
             ->assertSee(__('admin.deal.payment.escrow_state.refunded'));
     });
 
-    it('tracks a cancelled order as failed', function (): void {
-        $ad = $this->makeAd($this->seller, ['status' => AdStatus::ACTIVE->value, 'published_at' => now()]);
-        $order = $this->placeOrder($this->seller, $this->buyer, '90.00', $ad);
-        app(OrderTransitionService::class)->cancel($order, LedgerActor::system(), $this->buyer->id, 'غيّرت رأيي');
+    it('tracks an order cancelled after handover as failed, with its reason', function (): void {
+        [$ad, $order] = soldAdWithDeal();
+        $order->forceFill(['status' => OrderStatus::CANCELLED, 'cancelled_at' => now(), 'cancellation_reason' => 'غيّرت رأيي'])->save();
         actingAs($this->admin);
 
-        $this->get(route('admin.ads.show', $ad->refresh()))
+        $this->get(route('admin.ads.show', $ad))
             ->assertOk()
             ->assertSee(__('admin.deal.order_status.cancelled'))
             ->assertSee(__('admin.deal.steps.failed'))
@@ -295,13 +297,83 @@ describe('permissions per section', function (): void {
         [$ad] = soldAdWithDeal();
         actingAs($this->admin);
 
+        $response = $this->get(route('admin.ads.show', $ad))->assertOk();
+
+        foreach (['iban', 'gateway_ref', 'card_number', 'cvv', 'api_key', 'secret'] as $needle) {
+            $response->assertDontSee($needle, false);
+        }
+
+        foreach ([OrderDeal::class, PaymentSummary::class] as $class) {
+            $properties = array_map(fn (ReflectionProperty $property): string => $property->getName(), (new ReflectionClass($class))->getProperties());
+
+            expect(preg_grep('/token|secret|card|gateway|iban|password/i', $properties))->toBeEmpty();
+        }
+    });
+
+    it('treats a sold ad whose only order was cancelled as sold outside the platform', function (): void {
+        $ad = $this->makeAd($this->seller, ['status' => AdStatus::ACTIVE->value, 'published_at' => now()]);
+        $order = $this->placeOrder($this->seller, $this->buyer, '90.00', $ad);
+        app(OrderTransitionService::class)->cancel($order, LedgerActor::system(), $this->buyer->id, 'سبب');
+        $ad->refresh()->forceFill(['status' => AdStatus::SOLD])->save();
+        actingAs($this->admin);
+
         $this->get(route('admin.ads.show', $ad))
             ->assertOk()
-            ->assertDontSee('iban', false);
+            ->assertSee(__('admin.deal.buyer.off_platform'))
+            ->assertSee(__('admin.deal.order.past_orders', ['count' => 1]))
+            ->assertDontSee('id="ad-payment-title"', false)
+            ->assertDontSee(route('admin.finance.statements.show', $this->buyer), false);
+    });
+
+    it('shows a handed-over cash order cancelled by a ruling as paid then reversed', function (): void {
+        [$ad, $order] = soldAdWithDeal();
+        app(LedgerRecipes::class)->refundCommission($order, LedgerActor::system());
+        $order->forceFill(['status' => OrderStatus::CANCELLED, 'cancelled_at' => now()])->save();
+        actingAs($this->admin);
+
+        $this->get(route('admin.ads.show', $ad))
+            ->assertOk()
+            ->assertSee(__('admin.deal.payment.status.reversed'))
+            ->assertSee(__('admin.deal.payment.payout_state.reversed'))
+            ->assertSee(__('admin.deal.ledger.commission_refunded'))
+            ->assertDontSee(__('admin.deal.payment.status.not_charged'));
+    });
+
+    it('labels the seller commission debt as the seller total, outside the order figures', function (): void {
+        [$ad] = soldAdWithDeal();
+        actingAs($this->admin);
+
+        $this->get(route('admin.ads.show', $ad))
+            ->assertOk()
+            ->assertSee(__('admin.deal.payment.seller_debt'));
+    });
+
+    it('shows finance-only staff the order page with the parties, as the statement page does', function (): void {
+        [, $order] = soldAdWithDeal();
+        actingAs(staffWith(['finance.view'], without: ['users.view']));
+
+        $this->get(route('admin.finance.orders.show', $order))
+            ->assertOk()
+            ->assertSee($this->buyer->email)
+            ->assertSee('سارة المهندي')
+            ->assertSee('id="ad-payment-title"', false)
+            ->assertDontSee(route('admin.users.show', $this->buyer), false);
     });
 });
 
 describe('ad filter on the lists', function (): void {
+    it('ignores an ad filter that is not an id', function (): void {
+        soldAdWithDeal();
+        actingAs($this->admin);
+
+        $this->get(route('admin.conversations.index', ['ad' => "x' OR 1=1"]))
+            ->assertOk()
+            ->assertSee('سيارة تويوتا كورولا')
+            ->assertDontSee(__('admin.deal.filtered_by_ad'))
+            ->assertDontSee('name="ad"', false);
+        $this->get(route('admin.offers.index', ['ad' => 'nope']))->assertOk()->assertDontSee(__('admin.deal.filtered_by_ad'));
+    });
+
     it('scopes conversations and offers to one ad and keeps the filter while searching', function (): void {
         [$ad] = soldAdWithDeal();
         $other = $this->makeAd($this->seller, ['title' => 'إعلان آخر مختلف', 'status' => AdStatus::ACTIVE->value]);

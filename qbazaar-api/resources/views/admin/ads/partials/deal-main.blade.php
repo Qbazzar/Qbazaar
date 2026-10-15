@@ -7,6 +7,9 @@
     @elseif ($deal->access->finance)
         <x-admin.form-section id="ad-order" :title="__('admin.deal.order.title')" icon="banknotes">
             <x-admin.empty-state compact icon="banknotes" :message="__('admin.deal.order.none')" />
+            @if ($deal->pastOrders > 0)
+                <p class="text-center text-[13px] text-ink-500">{{ __('admin.deal.order.past_orders', ['count' => $deal->pastOrders]) }}</p>
+            @endif
         </x-admin.form-section>
     @endif
 @endif

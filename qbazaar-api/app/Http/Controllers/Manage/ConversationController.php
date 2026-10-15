@@ -12,6 +12,7 @@ use App\Models\Report;
 use App\Services\Messaging\AdminTranscriptBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ConversationController extends Controller
@@ -21,7 +22,7 @@ class ConversationController extends Controller
     public function index(Request $request): View
     {
         $search = $request->string('q')->toString();
-        $adId = $request->string('ad')->toString();
+        $adId = Str::isUlid($request->string('ad')->toString()) ? $request->string('ad')->toString() : '';
 
         $conversations = Conversation::query()
             ->with(['ad:id,title', 'buyer:id,full_name,email', 'seller:id,full_name,email', 'buyer.avatarMedia', 'seller.avatarMedia'])
@@ -44,6 +45,7 @@ class ConversationController extends Controller
         return view('admin.conversations.index', [
             'conversations' => $conversations,
             'search' => $search,
+            'adId' => $adId,
             'adFilter' => $adId === '' ? null : Ad::withTrashed()->find($adId, ['id', 'title']),
         ]);
     }

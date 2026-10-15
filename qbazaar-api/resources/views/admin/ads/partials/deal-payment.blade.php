@@ -3,7 +3,7 @@
     $order = $deal->order;
     $payment = $deal->payment;
     $money = fn (string $amount): string => \App\Support\Money::format($amount) . ' ' . __('admin.deal.currency');
-    $statusTones = ['pending' => 'warning', 'paid' => 'success', 'refunded' => 'info', 'not_charged' => 'neutral'];
+    $statusTones = ['pending' => 'warning', 'paid' => 'success', 'refunded' => 'info', 'reversed' => 'warning', 'not_charged' => 'neutral'];
     $escrowTones = ['none' => 'neutral', 'held' => 'warning', 'released' => 'success', 'refunded' => 'info'];
     $rows = [
         [__('admin.deal.payment.method'), __('admin.deal.method.' . $order->payment_method->value), false],
@@ -45,9 +45,6 @@
             <p class="mt-1 text-sm font-semibold text-ink-900">{{ __('admin.deal.payment.payout_state.' . $payment->payout) }}</p>
             <p class="mt-1.5 text-xs text-ink-500">
                 {{ __('admin.deal.payment.commission_state.' . ($payment->commissionRefunded ? 'refunded' : ($payment->commissionCharged ? 'charged' : 'none'))) }}
-                @if (\App\Support\Money::isPositive($payment->sellerCommissionDebt))
-                    · {{ __('admin.deal.payment.seller_debt') }} <span dir="ltr">{{ $money($payment->sellerCommissionDebt) }}</span>
-                @endif
             </p>
         </div>
     </div>
@@ -83,4 +80,7 @@
             <x-admin.button variant="secondary" size="sm" icon="exclamation" :href="route('admin.finance.disputes.index')">{{ __('admin.deal.payment.disputes') }}</x-admin.button>
         @endif
     </nav>
+    @if (\App\Support\Money::isPositive($payment->sellerCommissionDebt))
+        <p class="text-[13px] text-ink-500">{{ __('admin.deal.payment.seller_debt') }} <span dir="ltr" class="font-semibold text-ink-700">{{ $money($payment->sellerCommissionDebt) }}</span></p>
+    @endif
 </x-admin.form-section>

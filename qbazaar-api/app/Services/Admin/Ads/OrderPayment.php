@@ -62,18 +62,19 @@ final class OrderPayment
         $refunded = $byType->has(Flow::REFUND->value);
         $escrow = $this->escrowState($received, $released !== null, $refunded);
         $charged = $byType->get(Flow::COMMISSION_CHARGED->value);
+        $reversed = $byType->has(Flow::COMMISSION_REFUNDED->value);
 
         return new PaymentSummary(
-            status: $this->statusOf($order, $received, $refunded),
+            status: $this->statusOf($order, $received, $refunded, $reversed),
             escrow: $escrow,
-            payout: $this->payoutOf($order, $escrow),
+            payout: $this->payoutOf($order, $escrow, $reversed),
             escrowAt: $released === null ? null : CarbonImmutable::instance($released->posted_at),
             escrowActor: $released === null ? null : $this->actorName($released, $actorNames),
             total: $order->total,
             commission: $order->commission_amount,
             sellerNet: Money::subtract($order->total, $order->commission_amount),
             commissionCharged: $charged !== null,
-            commissionRefunded: $byType->has(Flow::COMMISSION_REFUNDED->value),
+            commissionRefunded: $reversed,
             sellerCommissionDebt: $this->commissionDebtOf($order),
             lines: array_values($transactions->map(fn (LedgerTransaction $transaction): PaymentLine => $this->lineOf($transaction, $actorNames))->all()),
         );
@@ -118,20 +119,22 @@ final class OrderPayment
         };
     }
 
-    private function statusOf(Order $order, bool $received, bool $refunded): string
+    private function statusOf(Order $order, bool $received, bool $refunded, bool $reversed): string
     {
         return match (true) {
             $refunded => 'refunded',
+            $reversed => 'reversed',
             $received, $order->status === OrderStatus::COMPLETED => 'paid',
             $order->status === OrderStatus::CANCELLED => 'not_charged',
             default => 'pending',
         };
     }
 
-    private function payoutOf(Order $order, string $escrow): string
+    private function payoutOf(Order $order, string $escrow, bool $reversed): string
     {
         return match (true) {
             $escrow !== 'none' => $escrow,
+            $reversed => 'reversed',
             $order->status === OrderStatus::COMPLETED => 'paid_direct',
             $order->status === OrderStatus::CANCELLED => 'none',
             default => 'pending',

@@ -28,6 +28,7 @@
         @include('admin.ads.partials.deal-timeline', ['deal' => $deal])
 
         <x-slot:side>
+            {{-- Finance staff see both parties' contact details here, as on the user statement page: they need them to chase a payment or a dispute. --}}
             @foreach ($parties as [$id, $title, $party])
                 <x-admin.side-card :id="$id" :title="$title" icon="users"
                                    :link="$party && $canViewUsers ? [__('admin.deal.buyer.open'), route('admin.users.show', $party)] : null">
