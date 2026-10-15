@@ -13,28 +13,41 @@
 
 Swagger UI (`/docs`) is switched off in production; run the API locally or read [the OpenAPI spec](qbazaar-contracts/openapi/v1.yaml).
 
-**Status (2026-10-09):**
+**Status (2026-10-15):** production runs commit `2d6fe00` (includes #272-#275; the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa).
 
-- The MVP backend and the V2 M1 backend gaps are merged.
-- **M3, web on the new design:** fully on the new Figma design and live on qbazaar.qa (PRs #218-#231): exact design colours, fonts Poppins (Latin), Noto Kufi Arabic (Arabic), Montserrat (small labels) and Acme (wordmark), and SEO (favicon, Open Graph/Twitter share images, JSON-LD, sitemap). Remaining: FE-16.7, the Lighthouse/axe audit.
-- **M5, deployment:** production runs on a cPanel VPS behind Cloudflare (Full strict), media on Cloudflare R2, and deploys only through GitHub Actions on a push to `production`.
-- **M2, mobile app:** the API layer is in Qbazaar-mobile PR #24; the tab bar and account hub are merged in #25.
+Live now:
+
+- **API and admin:** the MVP backend, the V2 M1 gaps and the cash order cycle (orders, wallet, settlements, paid promotions). Catalog filters with facet counts, a "recommended" feed (promoted ads plus the last 24 hours) and CMS footer pages (#243-#248). The admin got settings tabs, a TipTap editor, role-aware charts on the home page, a wide page shell and a commission tab (#249-#270).
+- **Web (M3):** the whole site is on the new Figma design (exact colours, Poppins, Noto Kufi Arabic, Montserrat, Acme; SEO). Design-parity phases 1 and 2 are merged: page parity (#237-#241), the automated parity gate (#242, #257), the icon registry and foundation (#254, #256) and the home, catalog, product, seller, account and sell screens (#263, #265, #266, #269).
+- **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`.
+- **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24); the tab bar and account hub are in #25.
+
+Just merged, in the deploy to production (`2d6fe00`): the admin ad **deal panel** (#273), the admin **Revenue and net profit** page (#272), and design-parity phase 3: the copy pass (#274) and the shared components (#275).
+
+Next:
+
+- A full parity-gate re-run (and re-cluster).
+- A small follow-up: the PasswordInput placeholder colour on the account pages, and dropping the unsubstantiated "70%" claim in `post_ad.basic.ad_title_hint`.
+- Web performance part 2 (SSR first results, LCP priority, image loader, lazy map).
+- Mobile M2: login, chat, push, selling and orders on the API.
+- Server M5: backups, monitoring and alerts, a load test.
+- Payments (M7), later.
 
 See [ROADMAP.md](qbazaar-contracts/ROADMAP.md) for the full picture.
 
 ## Progress
 
 <!-- progress:start -->
-**Current phase:** M0 Preparation and alignment · **Overall:** 63% (113/179 tasks)
+**Current phase:** M0 Preparation and alignment · **Overall:** 68% (137/199 tasks)
 
 ```text
 M0   ███████░░░   72% (18/25)   Preparation and alignment
-M1   ██████████   97% (71/73)   Closing the backend gaps
+M1   ██████████   97% (73/75)   Closing the backend gaps
 M1b  ██████████  100% (10/10)   Orders and payments
-M2   ░░░░░░░░░░    0% (0/15)    Connecting the mobile app
-M3   █████████░   90% (10/11)   Web on the new design
-M4   ░░░░░░░░░░    0% (0/15)    Admin additions
-M5   ██░░░░░░░░   22% (4/18)    Deployment on the new server
+M2   ███░░░░░░░   26% (4/15)    Connecting the mobile app
+M3   ████████░░   83% (15/18)   Web on the new design
+M4   ████░░░░░░   42% (11/26)   Admin additions
+M5   ███░░░░░░░   33% (6/18)    Deployment on the new server
 M6   ░░░░░░░░░░    0% (0/5)     Releasing the mobile app
 M7   ░░░░░░░░░░    0% (0/7)     Electronic payment and monetization
 ```
@@ -81,7 +94,7 @@ Needs PHP 8.4 (8.2+ works for development), Composer, Node 20+, MySQL 8, Redis, 
 cd qbazaar-api
 composer install
 cp .env.example .env && php artisan key:generate
-php artisan migrate --seed         # demo data; admin@qbazaar.qa / password (you must change it on first login)
+php artisan migrate --seed         # demo data; seeded admin admin@qbazaar.qa (password: ask the owner; change it on first login)
 npm install && npm run build       # Tailwind assets for /admin
 php artisan serve                  # http://localhost:8000  (/admin, /docs, /api/v1/health)
 
@@ -117,6 +130,10 @@ CI (`.github/workflows/ci.yml`) runs Pint, PHPStan and Pest for the API on every
 
 Scripts, units, runbooks and checklists are in [deploy/README.md](deploy/README.md).
 
+## Admin settings
+
+`/admin/settings` is split into tabs (general, commission, contact, integrations and more). Integration keys (Resend, Twilio, Google, Apple, FCM, Turnstile and the payment gateway) are entered on the Integrations tab. They are stored encrypted in the database, only a super admin can see or change them, and they are never committed to the repo or put in `.env.example`.
+
 ## Design rules
 
 - Colours are the design's exact values and are never darkened.
@@ -136,7 +153,7 @@ The demo data (listings, chats, offers, reports) is built by the demo seeder. Ev
 | Seller | `seller@demo.qbazaar.qa` | Business member with a company profile: posts listings and handles offers |
 | Members | `member01@demo.qbazaar.qa`, `member02@...` | More private and business members with mixed languages and verification states |
 
-All demo accounts share one password. `php artisan qbazaar:demo --fresh --force` generates it randomly on production and prints it once; the owner shares it privately. Staff accounts sign in at the admin panel, members at the web client.
+Password: ask the owner. All demo accounts share one password, and it is never written in this repo. `php artisan qbazaar:demo --fresh --force` generates it randomly on production and prints it once. Staff accounts sign in at the admin panel, members at the web client.
 
 `qbazaar:demo --fresh` wipes and rebuilds the demo data.
 

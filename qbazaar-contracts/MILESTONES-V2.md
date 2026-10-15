@@ -1,6 +1,6 @@
 # QBazaar V2: milestones and tasks
 
-> **Updated:** 2026-09-30 · **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Roadmap:** [`ROADMAP.md`](ROADMAP.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md) · **Mobile gaps:** [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
+> **Updated:** 2026-10-14 · **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Roadmap:** [`ROADMAP.md`](ROADMAP.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md) · **Mobile gaps:** [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
 > The MVP (Sprints 0–12) is archived in [`MILESTONES.md`](MILESTONES.md).
 
 ## How to read this file
@@ -23,15 +23,15 @@
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
 | M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
-| M1 Closing the backend gaps | 14 | 73 | 71 | 2 | Performance batch merged (#199–#203); R2 storage live; left: new-device SMS, Google/Apple (waiting for credentials) |
+| M1 Closing the backend gaps | 14 | 75 | 73 | 2 | Performance batch merged (#199–#203); R2 storage live; left: new-device SMS, Google/Apple (waiting for credentials) |
 | M1b Orders and payments | 14 | 10 | 10 | 0 | Backend done: ledger, orders, checkout, settlements, withdrawals, disputes, promotions, notifications (#207–#212); demo data in progress |
-| M2 Connecting the mobile app | 15 | 15 | 0 | 15 | Waits for M1 |
-| M3 Web on the new design | 16 | 11 | 10 | 1 | Every page is on the new design, orders included (#218, #221–#227); left: Lighthouse and axe reports (FE-16.7) |
-| M4 Admin additions | 17 | 15 | 0 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, AD-17.7 still needs orders and the revenue report |
-| M5 Deployment on the new server | 18 | 18 | 4 | 14 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; left: secrets, backups, alerts, the rest of Cloudflare, tuning |
+| M2 Connecting the mobile app | 15 | 15 | 4 | 11 | API layer, session, repository switch and catalog on the real API are in (Qbazaar-mobile #24); next: login, chat, push, selling, orders |
+| M3 Web on the new design | 16 | 18 | 15 | 3 | Every page is on the new design, orders included (#218, #221–#227); design parity phases 1 and 2 merged (#237–#242, #254, #256, #257, #263, #265, #266, #269); left: parity phase 3 (in progress), a full gate re-run, performance part 2, Lighthouse and axe reports (FE-16.7) |
+| M4 Admin additions | 17 | 26 | 11 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, admin settings, integrations, page shell and dashboard merged (#249–#270); the ad deal panel and the revenue page merged (#272, #273); AD-17.7 still needs its payments pieces |
+| M5 Deployment on the new server | 18 | 18 | 6 | 12 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; Meilisearch, Horizon and Reverb run in production, media on R2; left: backups, alerts, WAF and firewall rules, tuning, the load test |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **179** | **113** | **66** | |
+| **Total** | | **199** | **137** | **62** | |
 
 ---
 
@@ -186,6 +186,15 @@
 | BE-14.2 | FCM push for a new message and for offer events | — | [P0] | Offline recipient gets a push; no push to the sender; test with a fake FCM |
 | BE-14.17 | Counter-offer (one round from each side) | `POST /offers/{id}/counter` | [P1] | A new `countered` state; `offer.countered` event; a limit on the number of rounds |
 
+### Done — catalog and CMS follow-ups (merged 2026-10-11)
+
+> Status: ✅ done. #243 and #246 → BE-14.45 · #244 → BE-14.46
+
+| ID | Task | Endpoint | Priority | Acceptance criteria |
+|---|---|---|---|---|
+| BE-14.45 | Catalog filters with facet counts and favourite categories (the MariaDB reserved word `condition` is quoted in the facet queries, #246) | `GET /ads`, `GET /categories` | [P1] | The web filters show live counts; tests cover the filters and the facet counts |
+| BE-14.46 | Home "recommended" = promoted ads plus ads from the last 24 hours; the CMS footer pages come from the API | `GET /home`, `GET /pages` | [P1] | The home feed and the footer follow the CMS |
+
 ### Security hardening
 
 
@@ -287,12 +296,21 @@
 
 **Exit criteria:** every [P0] flow works on a real device against a staging API, in Arabic and English, with no mock left on the switched paths.
 
+### Done — API layer (Qbazaar-mobile, 2026-10)
+
+> Status: ✅ done. Qbazaar-mobile #24 → MB-15.1, MB-15.2, MB-15.3, MB-15.4 (the tab bar and account hub followed in #25)
+
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | MB-15.1 | HTTP client: base URL from env, envelope, snake↔camel, error mapping, `Accept-Language`, `X-Client-Platform` | [P0] | Unit tests for the mappers; a 422 turns into field errors |
 | MB-15.2 | Session: tokens in `expo-secure-store`, automatic refresh, restore on launch (`/me`) | [P0] | The app remembers the user after a restart; an expired token refreshes without disturbing the user |
 | MB-15.3 | Repository switch `mock` / `api` from the environment | [P0] | One line in `src/repositories/index.ts` |
 | MB-15.4 | Catalog on the API: home, categories, category page, listing, product, search + distance | [P0] | All browse screens run on real data |
+
+### Open
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
 | MB-15.5 | Real login: passwordless registration, login with an email code, SMS code from a new device, Google/Apple (the password fields are removed from the screens) | [P0] | Full login journeys on a device |
 | MB-15.14 | Turnstile in the app's registration and code-request screens (inside a small WebView) and send the token with the request | [P0] | Registration and code requests work with protection on; the widget is invisible to a normal user |
 | MB-15.6 | Messages and offers on the API + realtime via Reverb (`laravel-echo` + `pusher-js`) | [P0] | A new message shows up without refreshing; offers update live |
@@ -337,10 +355,26 @@
 | FE-16.8 | Orders and payments on the web: request/offer cards, checkout (cash), orders, wallet, settlements | [P0] | Same cycle as the app |
 | FE-16.11 | Resize and compress photos in the browser before upload (long side 2048px, quality ~0.8) | [P1] | Large photos upload small and fast; orientation kept, metadata stripped |
 
-### Open
+### Done — design parity (merged October 2026)
+
+> Status: ✅ done. #237–#241 → FE-16.12 · #266 (S3), #263 (S4), #269 (S5), #265 (S6) → FE-16.13 · #242, #257 → FE-16.14 · #254, #256 → FE-16.15 · #245, #247, #248 → FE-16.16
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
+| FE-16.12 | Page parity pass: catalog, product, home, account and sell pages match the original design's behaviour and look | [P0] | Each page checked against its `Qbazaar-front` reference |
+| FE-16.13 | Parity phase 2: home and catalog (S3), product, seller and companies (S4), account and auth (S5), sell, deal and wallet (S6) | [P0] | Reviewed against the reference, every element clicked |
+| FE-16.14 | Automated design-parity gate and its false-positive tuning | [P1] | The gate runs on demand and reports real differences only |
+| FE-16.15 | Foundation: icon registry from the reference SVGs, motion, hover, radii and chrome | [P1] | One icon registry; no lucide icons left in the shared chrome |
+| FE-16.16 | Catalog filters and facet counts on the web, favourite categories, Promotions link in settings, footer columns linked to the CMS pages | [P1] | Filters match the API facets; the footer opens the CMS pages |
+
+### Open
+
+> FE-16.17: copy pass (#274) and shared components (#275) done; full gate re-run + re-cluster pending.
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| FE-16.17 | Parity phase 3: copy pass and shared components, then a full run of the parity gate on every page | [P0] | The gate passes on all pages at 1440/744/390 in both languages |
+| FE-16.18 | Web performance part 2: SSR first results, LCP image priority, image loader, lazy map | [P1] | Lighthouse mobile performance up; no layout shift on the first results |
 | FE-16.7 | RTL + Lighthouse (≥ 90 performance on mobile) + axe with no serious violations | [P1] | Report attached |
 
 ## Sprint 17 — M4 Admin additions (`/admin`)
@@ -350,6 +384,24 @@
 **Entry:** M1 for most tasks; AD-17.7 needs the M1b API (it can start as soon as BE-14.33 and BE-14.39 land).
 
 **Exit criteria:** an admin can run companies, home sections, moderation, reports and payments from the panel, with every action permission-checked and logged.
+
+### Done — admin additions (merged 2026-10-12 to 2026-10-15)
+
+> Status: ✅ done. #249 → AD-17.18 · #250 → AD-17.19 · #251 → AD-17.20 · #252, #260 → AD-17.21 · #253 → AD-17.22 · #255 → AD-17.23 · #258 → AD-17.24 · #259, #261, #262, #264 → AD-17.25 · #267, #268, #270 → AD-17.26 · #273 → AD-17.27 · #272 → AD-17.28
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| AD-17.18 | `/admin/settings` in tabs with a wider grid and proper RTL | [P1] | Every setting group has its own tab |
+| AD-17.19 | User avatars everywhere, localised chat events, the ads list without the ID column | [P2] | — |
+| AD-17.20 | TipTap rich-text editor for CMS pages and help articles | [P1] | Staff edit formatted content without HTML |
+| AD-17.21 | Role-aware admin Home with a chart-based, grid-organised dashboard | [P1] | Each role sees the stats it is allowed to |
+| AD-17.22 | Contact and integration tabs on `/admin/settings`: encrypted keys for Resend, Twilio, Google, Apple, FCM, Turnstile and the payment gateway, visible to super_admin only | [P0] | Keys are stored encrypted and never committed or shown to other roles |
+| AD-17.23 | Self-hosted Noto Kufi Arabic and Poppins in the admin | [P2] | No third-party font requests |
+| AD-17.24 | Category commission card inside the commission tab | [P1] | The commission settings live in one tab |
+| AD-17.25 | Wide page shell and side-column components for every detail and edit page (layout S1–S4) | [P1] | Ads, reports, people, finance, support, content and configuration pages share one shell |
+| AD-17.26 | Needs-attention cards on one row and the layout follow-ups from the S1–S4 reviews | [P2] | — |
+| AD-17.27 | Ad deal panel in the ad page: buyer, order steps, payment and escrow, settlement, chats, offers and a timeline | [P0] | Staff can follow one deal from offer to settlement without leaving the ad |
+| AD-17.28 | "Revenue and net profit" finance page | [P0] | Commission income, promotion income and net profit by period |
 
 ### Moderation and staff tools
 
@@ -413,11 +465,19 @@
 |---|---|---|---|
 | OPS-18.4 | Next.js on systemd behind an Apache proxy; the static prototype moves off the root | [P0] | The real web on the domain |
 
-### Server and runtime
+### Done — runtime and storage (live on production, October 2026)
+
+> Status: ✅ done. OPS-18.3: Meilisearch, Horizon and Reverb run as systemd services in production (`deploy-api.sh` restarts Horizon and Reverb, and runs `scout:sync-index-settings`) · OPS-18.10: media lives on Cloudflare R2 (#161, #217), served from `cdn.qbazaar.qa`
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | OPS-18.3 | Meilisearch + Horizon + Reverb as systemd services + `mod_proxy_wstunnel` for Reverb | [P0] | WebSocket connects from mobile and web |
+| OPS-18.10 | Cloudflare R2: create the bucket and access keys, and set the CORS rules for uploading | [P0] | The keys are in the production `.env` only |
+
+### Server and runtime
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
 | OPS-18.5 | Secrets: Twilio, Firebase, Sentry, Mail | [P0] | A real SMS arrives; a real push arrives |
 
 ### Resilience
@@ -431,7 +491,6 @@
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
-| OPS-18.10 | Cloudflare R2: create the bucket and access keys, and set the CORS rules for uploading | [P0] | The keys are in the production `.env` only |
 | OPS-18.11 | PHP-FPM pool tuning + OPcache/realpath cache + FPM reload in the deploy script + slowlog | [P0] | Pool sized to the server's RAM; documented in deploy/; a deploy reloads FPM |
 | OPS-18.12 | Two Redis roles: queue (noeviction + AOF) and cache (LRU), phpredis instead of predis | [P0] | Cache pressure can never evict queued jobs |
 | OPS-18.13 | MySQL tuning + slow query log + a weekly query digest | [P1] | Settings documented; slow queries reviewed weekly |
@@ -443,6 +502,8 @@
 | OPS-18.9 | Move the domain to Cloudflare: DNS + proxy + SSL "Full (strict)" with an Origin Certificate + WAF and rate-limiting rules + caching static files + a custom domain for R2 images (`cdn.`) + WebSocket for Reverb + the server firewall only accepts Cloudflare IPs + real visitor IPs in Laravel (`TrustProxies`) | [P0] | The site and API go through Cloudflare; the server's IP address doesn't answer directly; the chat works; images come from `cdn.` |
 
 > OPS-18.9 progress (2026-10-06, #217): DNS on Cloudflare with `@`, `www` and `api` proxied; AutoSSL origin certificates for all three hosts (ready for SSL mode Full (strict) in the dashboard); the Reverb WebSocket works through Cloudflare; real visitor IPs reach Laravel (`mod_remoteip` with Cloudflare's ranges, plus `TrustProxies`). Still open: WAF and rate-limit rules, static caching, `cdn.` for R2, and the firewall that only accepts Cloudflare.
+>
+> Update (2026-10-14): SSL mode is Full (strict) and `cdn.qbazaar.qa` serves R2 media. Still open on OPS-18.9: the WAF and rate-limit rules, static caching and the firewall that only accepts Cloudflare.
 
 ## Sprint 19 — M6 Releasing the mobile app
 
