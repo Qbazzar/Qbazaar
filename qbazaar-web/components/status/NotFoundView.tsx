@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { SearchX } from 'lucide-react';
 
 import type { BreadcrumbItem } from '@/components/design-system/Breadcrumb';
 import { buttonVariants } from '@/components/design-system/Button';
+import { SearchXIcon } from '@/components/design-system/icons';
 import { PageShell } from '@/components/design-system/PageShell';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import { t } from '@/lib/i18n/messages';
@@ -24,7 +24,7 @@ export function NotFoundView({ trail = [], heading, description, actions }: NotF
   return (
     <PageShell breadcrumb={[{ label: t('home.breadcrumb'), href: '/' }, ...trail, { label: title }]} title={title}>
       <StatePanel
-        icon={<StateIcon icon={SearchX} tone="muted" />}
+        icon={<StateIcon icon={SearchXIcon} tone="muted" />}
         title={heading ?? t('errors.not_found_heading')}
         description={description ?? t('errors.not_found_body')}
         action={

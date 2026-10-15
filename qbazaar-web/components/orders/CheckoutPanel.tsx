@@ -31,7 +31,7 @@ export function CheckoutPanel({ title, titleId, action, layout = 'section', chil
   if (layout !== 'section') {
     // payment-method.html: an r20 card, its 24 px title 6 px over a divider 20 px below.
     return (
-      <section aria-labelledby={titleId} className={cn(panelClass, 'rounded-[20px]', className)}>
+      <section aria-labelledby={titleId} className={cn(panelClass, 'rounded-[20px] shadow-qb-card-soft', className)}>
         <div className="mx-[clamp(18px,3vw,32px)] flex items-center justify-between gap-4 border-b border-qb-line pt-7 pb-5">
           <h2 id={titleId} className="mb-1.5 font-qb text-qb-h3 font-semibold tracking-normal text-qb-ink">
             {title}

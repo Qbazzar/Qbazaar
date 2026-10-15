@@ -28,12 +28,13 @@ export function AmountField({ label, value, onChange, error, hint, currency = 'Q
   const id = useId();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
+  const currencyText = currencyLabel(currency);
 
   return (
     <div className={cn('font-qb', className)}>
       <label htmlFor={id} className={dealLabelClass}>
         {label}
-        <span className="sr-only"> ({currencyLabel(currency)})</span>
+        <span className="sr-only"> ({currencyText})</span>
       </label>
       <div
         className={cn(
@@ -43,7 +44,7 @@ export function AmountField({ label, value, onChange, error, hint, currency = 'Q
         )}
       >
         <span aria-hidden="true" className="me-2 shrink-0 leading-[normal] text-qb-ink-subtle">
-          {currency}
+          {currencyText}
         </span>
         <input
           id={id}
@@ -57,7 +58,7 @@ export function AmountField({ label, value, onChange, error, hint, currency = 'Q
           aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full min-w-0 bg-transparent px-0.5 py-px font-qb text-qb-body-sm text-qb-black outline-none placeholder:text-qb-placeholder"
+          className="w-full min-w-0 bg-transparent px-0.5 py-px font-qb text-qb-body-sm text-qb-black outline-none placeholder:text-qb-ink-muted"
         />
       </div>
       {hint ? (

@@ -1,7 +1,8 @@
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
-import { Heart } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
+
+import { HeartIcon } from '@/components/design-system/icons';
 
 import { Button } from './Button';
 import { EmptyState } from './EmptyState';
@@ -11,7 +12,7 @@ describe('EmptyState', () => {
   it('shows the heading, description and call to action', () => {
     render(
       <EmptyState
-        icon={<Icon icon={Heart} size="lg" />}
+        icon={<Icon icon={HeartIcon} size="lg" />}
         title="Found something interesting?"
         description="Click the heart on a listing to save it here."
         action={<Button size="sm">Browse Ads</Button>}
@@ -25,14 +26,14 @@ describe('EmptyState', () => {
 
   it('can be the page heading and take the focus', () => {
     const headingRef = createRef<HTMLHeadingElement>();
-    render(<EmptyState icon={<Icon icon={Heart} />} title="Ad not found" headingLevel="h1" headingRef={headingRef} />);
+    render(<EmptyState icon={<Icon icon={HeartIcon} />} title="Ad not found" headingLevel="h1" headingRef={headingRef} />);
 
     headingRef.current?.focus();
     expect(screen.getByRole('heading', { level: 1, name: 'Ad not found' })).toHaveFocus();
   });
 
   it('keeps the icon tile out of the accessibility tree', () => {
-    const { container } = render(<EmptyState icon={<Icon icon={Heart} />} title="No saved searches" headingLevel="h3" />);
+    const { container } = render(<EmptyState icon={<Icon icon={HeartIcon} />} title="No saved searches" headingLevel="h3" />);
     const tile = container.querySelector('svg')?.parentElement;
 
     expect(tile).toHaveAttribute('aria-hidden', 'true');

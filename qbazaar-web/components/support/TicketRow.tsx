@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { ChevronRight, Clock, MessageCircle, MessageSquareText } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
 import { formatLongDate } from '@/components/account/format';
+import { ChatBubbleIcon, ChatSquareIcon, ChevronRightIcon, ClockIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { tPlural } from '@/lib/i18n/plural';
 import type { SupportTicketListItem } from '@/lib/api/types';
@@ -22,7 +22,7 @@ export function TicketRow({ ticket }: { ticket: SupportTicketListItem }) {
         aria-hidden="true"
         className="hidden size-[60px] shrink-0 items-center justify-center rounded-qb-xl border border-qb-line bg-qb-surface text-qb-ink-body shadow-qb-card qb-tablet:flex"
       >
-        <Icon icon={MessageSquareText} size="lg" />
+        <Icon icon={ChatSquareIcon} size="lg" />
       </span>
 
       <div className="min-w-0 flex-1">
@@ -43,17 +43,17 @@ export function TicketRow({ ticket }: { ticket: SupportTicketListItem }) {
         </p>
         <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-qb-caption text-qb-ink-subtle qb-desktop:text-qb-body">
           <li className="flex items-center gap-1.5">
-            <Icon icon={MessageCircle} />
+            <Icon icon={ChatBubbleIcon} />
             {tPlural('support.replies_count', ticket.replies_count)}
           </li>
           <li className="flex items-center gap-1.5">
-            <Icon icon={Clock} />
+            <Icon icon={ClockIcon} />
             <time dateTime={ticket.created_at}>{formatLongDate(ticket.created_at)}</time>
           </li>
         </ul>
       </div>
 
-      <Icon icon={ChevronRight} size="lg" flipInRtl className="shrink-0 text-qb-ink-subtle" />
+      <Icon icon={ChevronRightIcon} size="lg" flipInRtl className="shrink-0 text-qb-ink-subtle" />
     </article>
   );
 }

@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { ChevronRightIcon } from '@/components/design-system/icons';
 import { localized } from '@/lib/i18n/locale';
 import { cn } from '@/lib/utils';
 import type { HelpArticleListItem } from '@/lib/api/types';
@@ -34,7 +34,7 @@ export function HelpArticleCard({ article }: { article: HelpArticleListItem }) {
         ) : null}
       </span>
       <Icon
-        icon={ChevronRight}
+        icon={ChevronRightIcon}
         flipInRtl
         className="text-qb-ink-subtle transition-colors group-hover:text-qb-brand"
       />

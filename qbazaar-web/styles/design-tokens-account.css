@@ -51,6 +51,7 @@
   /* Messages (chat.js) */
   --color-qb-chat-block: #e04a4a; /* "Block" in the "⋯" menu */
   --color-qb-chat-overlay: rgb(30 30 30 / 0.45); /* behind "Block User?" */
+  --color-qb-crop-overlay: rgb(30 30 30 / 0.5); /* behind the photo cropper (cropper.js .qb-crop-back) */
   --color-qb-chat-dialog-body: #787878;
   --shadow-qb-chat-menu: 0 12px 44px 0 rgb(0 0 0 / 0.16);
   --shadow-qb-chat-dialog: 0 24px 64px 0 rgb(0 0 0 / 0.25);

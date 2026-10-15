@@ -2,8 +2,8 @@
  * Help topic page. No Figma frame: parent-category (69:467) with article rows
  * in place of the sub-category tiles.
  */
-import { FileText } from 'lucide-react';
 
+import { FileTextIcon } from '@/components/design-system/icons';
 import { PageShell } from '@/components/design-system/PageShell';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import { BrowseTopicsLink } from '@/components/help/BrowseTopicsLink';
@@ -33,7 +33,7 @@ export function HelpCategoryDetail({ category }: { category: HelpCategoryWithArt
         <p className="mb-8 max-w-[806px] text-qb-body text-qb-ink-muted qb-desktop:text-qb-body-lg">{description}</p>
       ) : null}
       {articles.length === 0 ? (
-        <StatePanel icon={<StateIcon icon={FileText} />} title={t('help.no_articles')} action={<BrowseTopicsLink />} />
+        <StatePanel icon={<StateIcon icon={FileTextIcon} />} title={t('help.no_articles')} action={<BrowseTopicsLink />} />
       ) : (
         <ul aria-label={t('help.articles_in_category')} className="flex flex-col gap-4">
           {articles.map((article) => (

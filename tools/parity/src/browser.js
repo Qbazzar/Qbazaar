@@ -25,8 +25,14 @@ async function proxyApiWithCors(context, config) {
   };
   await context.route(`${config.apiOrigin}/**`, async (route) => {
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    const response = await route.fetch();
-    await route.fulfill({ response, headers: { ...response.headers(), ...cors } });
+    // A page that closes while its request is in flight makes fetch() reject; that must not end the run,
+    // and the error is not printed because Playwright's call log carries the session's Authorization header.
+    try {
+      const response = await route.fetch();
+      await route.fulfill({ response, headers: { ...response.headers(), ...cors } });
+    } catch {
+      await route.abort().catch(() => {});
+    }
   });
 }
 

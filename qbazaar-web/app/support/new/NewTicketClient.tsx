@@ -13,7 +13,6 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CircleCheck, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -21,6 +20,7 @@ import { Button, buttonVariants } from '@/components/design-system/Button';
 import { Card } from '@/components/design-system/Card';
 import { Field } from '@/components/design-system/Field';
 import { Icon } from '@/components/design-system/Icon';
+import { CheckCircleIcon, LoaderCircleIcon } from '@/components/design-system/icons';
 import { Input, Select, Textarea } from '@/components/design-system/Input';
 import { PageShell } from '@/components/design-system/PageShell';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
@@ -198,7 +198,7 @@ export function NewTicketClient() {
           <div className="mt-1 grid grid-cols-2 gap-3 qb-tablet:gap-[22px]">
             {/* aria-disabled rather than disabled keeps keyboard focus on the button while the ticket is sent. */}
             <Button type="submit" aria-disabled={submitting || undefined} className={actionClass}>
-              {submitting ? <Icon icon={LoaderCircle} className="motion-safe:animate-spin" /> : null}
+              {submitting ? <Icon icon={LoaderCircleIcon} className="motion-safe:animate-spin" /> : null}
               {t('support.submit')}
             </Button>
             <Link href="/support" className={cn(buttonVariants({ variant: 'muted' }), actionClass)}>
@@ -219,7 +219,7 @@ function TicketReceived({ ticket }: { ticket: SupportTicket }) {
   return (
     <div ref={ref} tabIndex={-1} role="region" aria-label={t('support.submit_success_title')} className="outline-none">
       <StatePanel
-        icon={<StateIcon icon={CircleCheck} tone="success" />}
+        icon={<StateIcon icon={CheckCircleIcon} tone="success" />}
         title={t('support.submit_success_title')}
         description={
           <>

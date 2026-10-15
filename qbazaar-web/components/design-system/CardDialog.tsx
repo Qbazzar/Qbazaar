@@ -2,13 +2,11 @@
 
 import type { ReactNode } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
-import { X } from 'lucide-react';
 
-import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
 import { focusRing } from './focus-ring';
-import { Icon } from './Icon';
+import { GlyphCloseButton } from './Modal';
 
 export interface CardDialogProps {
   open: boolean;
@@ -36,21 +34,17 @@ export function CardDialog({ open, onOpenChange, title, description, children, w
           className={cn(
             'fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-40px)] w-[calc(100%-40px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto',
             'rounded-[18px] bg-qb-surface p-7 font-qb text-qb-ink shadow-qb-modal',
-            'transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none',
+            // qbFade .2s ease (styles.css:233): fades in rising 8 px, and closes at once.
+            'animate-qb-dialog-enter motion-reduce:animate-none',
             focusRing,
             widthClassName,
           )}
         >
-          <div className="flex items-center justify-between gap-4">
+          <div className={cn('flex items-center justify-between gap-4', description && 'mb-2')}>
             <Dialog.Title className="font-qb text-qb-h4 font-semibold tracking-normal text-qb-ink">{title}</Dialog.Title>
-            <Dialog.Close
-              aria-label={t('ui.close')}
-              className={cn('-me-1 inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-qb-sm text-qb-ink-subtle', focusRing)}
-            >
-              <Icon icon={X} className="size-[22px]" />
-            </Dialog.Close>
+            <GlyphCloseButton />
           </div>
-          {description ? <Dialog.Description className="mt-2 text-qb-caption text-qb-ink-subtle">{description}</Dialog.Description> : null}
+          {description ? <Dialog.Description className="mb-[18px] text-qb-caption text-qb-ink-subtle">{description}</Dialog.Description> : null}
           {children}
         </Dialog.Popup>
       </Dialog.Portal>

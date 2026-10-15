@@ -152,7 +152,7 @@ export function PostAdFlow({ user, ad, breadcrumb }: PostAdFlowProps) {
 
   return (
     <>
-      {breadcrumb ? <Breadcrumb items={breadcrumb} className={formBreadcrumbClass} /> : null}
+      {breadcrumb ? <Breadcrumb items={breadcrumb} separator="guillemet" className={formBreadcrumbClass} /> : null}
       <AdFormView
         title={adId ? t('post_ad.edit_title') : t('post_ad.page_title')}
         seller={seller}

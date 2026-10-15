@@ -105,7 +105,7 @@ export function ReportDialog({ open, onOpenChange, target_type, target_id, onRep
       description={t(`reports.dialog.subtitle_${audience}`)}
       widthClassName="max-w-[480px]"
     >
-      <form onSubmit={onSubmit} noValidate className="mt-[18px]">
+      <form onSubmit={onSubmit} noValidate>
         <fieldset aria-describedby={categoryError ? errorId : undefined}>
           <legend className="sr-only">{t('reports.dialog.heading')}</legend>
           <div className="flex flex-col gap-0.5">

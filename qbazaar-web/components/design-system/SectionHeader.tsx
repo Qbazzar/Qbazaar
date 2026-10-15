@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 
+import { ArrowRightIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 import { focusRing } from './focus-ring';
@@ -35,7 +35,7 @@ export function SectionHeader({ title, subtitle, action, headingLevel: Heading =
           )}
         >
           {action.label}
-          <Icon icon={ArrowRight} size="sm" strokeWidth={1.8} flipInRtl className="size-[18px]" />
+          <Icon icon={ArrowRightIcon} size="sm" strokeWidth={1.8} flipInRtl className="size-[18px]" />
         </Link>
       ) : null}
     </div>

@@ -64,6 +64,7 @@ export function CheckoutView({ orderId }: { orderId: string }) {
     <main className="bg-qb-page font-qb text-qb-ink">
       <div className={cn(pageFrame, 'pt-6 pb-16 qb-tablet:pt-[35px] qb-desktop:pt-16 qb-desktop:pb-24')}>
         <Breadcrumb
+          separator="guillemet"
           items={[
             { label: t('home.breadcrumb'), href: '/' },
             { label: t('orders.checkout.orders'), href: '/account/orders' },

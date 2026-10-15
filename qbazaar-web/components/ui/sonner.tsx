@@ -2,8 +2,8 @@
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { CheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
+import { CheckIcon, InfoCircleIcon, LoaderCircleIcon, WarningTriangleIcon, XCircleFailIcon } from '@/components/design-system/icons';
 import { t } from "@/lib/i18n/messages"
 
 /** As long as the reference's toast stays on screen (chat.js, cropper.js). */
@@ -70,10 +70,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
       richColors
       icons={{
         success: <CheckIcon className={ICON} />,
-        info: <InfoIcon className={ICON} />,
-        warning: <TriangleAlertIcon className={ICON} />,
-        error: <OctagonXIcon className={ICON} />,
-        loading: <Loader2Icon className={`${ICON} animate-spin`} />,
+        info: <InfoCircleIcon className={ICON} />,
+        warning: <WarningTriangleIcon className={ICON} />,
+        error: <XCircleFailIcon className={ICON} />,
+        loading: <LoaderCircleIcon className={`${ICON} animate-spin`} />,
       }}
       style={TOASTER_STYLE}
       toastOptions={{

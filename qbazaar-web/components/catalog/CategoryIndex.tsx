@@ -126,7 +126,7 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
               </li>
             ))}
           </ul>
-          <Pagination page={page} totalPages={totalPages} getHref={pageHref} className="mt-10" />
+          <Pagination page={page} totalPages={totalPages} getHref={pageHref} size="xl" className="mt-10" />
         </>
       )}
     </div>

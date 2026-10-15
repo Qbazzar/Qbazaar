@@ -13,7 +13,7 @@ export type TableTone = 'sales' | 'wallet';
 const CARD: Record<TableTone, { card: string; head: string; title: string; padded: string; inset: string }> = {
   /** sales-overview.html: r20, 28 px by 18 to 32 px padding, the title 4 px over a divider 20 px below. */
   sales: {
-    card: 'rounded-[20px]',
+    card: 'rounded-[20px] shadow-qb-card-soft',
     head: 'gap-3 px-[clamp(18px,3vw,32px)] pt-7 pb-5',
     title: 'mb-1 text-qb-ink',
     padded: 'px-[clamp(18px,3vw,32px)] py-7',

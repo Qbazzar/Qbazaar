@@ -230,7 +230,7 @@ function UploadCloud() {
       <svg width="58" height="44" viewBox="0 0 24 24" className="fill-qb-brand">
         <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
       </svg>
-      <span className="absolute top-[60%] left-1/2 flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-qb-surface bg-qb-success">
+      <span className="absolute top-[60%] left-1/2 flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-qb-surface bg-qb-upload-badge">
         <Icon icon={ArrowUpUploadIcon} size="sm" strokeWidth={3} className="size-3 text-qb-surface" />
       </span>
     </span>
