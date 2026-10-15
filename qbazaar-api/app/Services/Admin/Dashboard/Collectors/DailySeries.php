@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\Admin\Dashboard\DashboardPeriod;
 use App\Support\Money;
+use App\Support\Sql\LocalBucket;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -131,8 +132,6 @@ final class DailySeries
 
     private function dayExpression(string $driver, string $column, int $offsetHours): string
     {
-        return $driver === 'sqlite'
-            ? "date({$column}, '+{$offsetHours} hours')"
-            : "DATE(DATE_ADD({$column}, INTERVAL {$offsetHours} HOUR))";
+        return LocalBucket::expression($driver, $column, $offsetHours);
     }
 }

@@ -207,6 +207,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Finance: settlements, withdrawals, disputes and user statements
         Route::prefix('finance')->name('finance.')->group(function () {
             Route::middleware('permission:finance.view')->group(function () {
+                Route::get('revenue', [Finance\RevenueController::class, 'index'])->name('revenue.index');
+                Route::get('revenue/export', [Finance\RevenueController::class, 'export'])->name('revenue.export');
                 Route::get('settlements', [Finance\SettlementController::class, 'index'])->name('settlements.index');
                 Route::get('settlements/{settlement}/proof', [Finance\SettlementController::class, 'proof'])->name('settlements.proof');
                 Route::get('withdrawals', [Finance\WithdrawalController::class, 'index'])->name('withdrawals.index');
