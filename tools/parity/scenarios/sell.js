@@ -9,7 +9,7 @@ const PICKUP = inventory('addads.shipping.pickup', 'label:has(input[name="shippi
 const DELIVERY = inventory('addads.shipping.delivery', 'label:has(input[name="shipping"][value="delivery"])');
 const PRICE_TYPE = inventory('addads.pricetype.select', '#post-ad-price-type');
 const CITY = inventory('addads.city.select', '#post-ad-locationId');
-const DROPDOWN_PANEL = { ref: '.qb-ddpanel', target: '[role=listbox], [role=menu]' };
+const DROPDOWN_PANEL = { ref: '.qb-ddpanel', target: '[role=listbox], [role=menu], [role=tree]' };
 const CATEGORY_BUTTON = inventory('addads.category.select', 'button:text-is("Select")');
 const CATEGORY_MODAL = inventory('addads.catmodal.panel', '[role=dialog]');
 const PUSH_UP = inventory('addads.highlight.pushup', 'label:has-text("Push")');
