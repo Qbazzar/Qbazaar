@@ -43,10 +43,10 @@ describe('MakeOfferForm', () => {
 
     const suggestion = screen.getByRole('button', { name: 'QAR 905, 5% below the asking price' });
     await userEvent.click(suggestion);
-    expect(screen.getByLabelText(/Your offer/)).toHaveValue('905');
+    expect(screen.getByLabelText(/Your Offer/)).toHaveValue('905');
     expect(suggestion).toHaveAttribute('aria-pressed', 'true');
 
-    await userEvent.click(screen.getByRole('button', { name: 'Send offer' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Send Offer' }));
 
     await waitFor(() => expect(makeOffer).toHaveBeenCalledWith('conv-3', { amount: '905.00', note: null }));
     expect(startConversation).toHaveBeenCalledWith('ad-2');
@@ -56,11 +56,11 @@ describe('MakeOfferForm', () => {
   it('requires an amount within the offer bounds', async () => {
     renderWithClient(<MakeOfferForm ad={ad} />);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Send offer' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Send Offer' }));
     expect(await screen.findByText('Enter an amount.')).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText(/Your offer/), '0.5');
-    await userEvent.click(screen.getByRole('button', { name: 'Send offer' }));
+    await userEvent.type(screen.getByLabelText(/Your Offer/), '0.5');
+    await userEvent.click(screen.getByRole('button', { name: 'Send Offer' }));
     expect(await screen.findByText('The amount must be at least QAR 1.00.')).toBeInTheDocument();
     expect(startConversation).not.toHaveBeenCalled();
   });
@@ -69,8 +69,8 @@ describe('MakeOfferForm', () => {
     vi.mocked(makeOffer).mockRejectedValue(new ApiClientError({ status: 422, code: 'OFFER_005', messageKey: 'x', message: 'Exists' }));
     renderWithClient(<MakeOfferForm ad={ad} />);
 
-    await userEvent.type(screen.getByLabelText(/Your offer/), '900');
-    await userEvent.click(screen.getByRole('button', { name: 'Send offer' }));
+    await userEvent.type(screen.getByLabelText(/Your Offer/), '900');
+    await userEvent.click(screen.getByRole('button', { name: 'Send Offer' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('You already have an open offer on this ad.');
   });

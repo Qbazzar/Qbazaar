@@ -46,7 +46,7 @@ describe('BuyNowForm', () => {
     renderWithClient(<BuyNowForm ad={ad} />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Buy Now' })).toBeInTheDocument();
-    expect(screen.getByText('Message with seller')).toBeInTheDocument();
+    expect(screen.getByText('Message with Seller')).toBeInTheDocument();
     expect(screen.queryByLabelText(/Quantity/)).not.toBeInTheDocument();
 
     await userEvent.type(screen.getByRole('textbox', { name: /Message/ }), 'Pick up tonight?');
