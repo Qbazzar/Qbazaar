@@ -369,7 +369,7 @@
 
 ### Open
 
-> FE-16.17: copy pass done (#274); shared components in progress (fix/parity-shared-needs); full gate re-run pending.
+> FE-16.17: copy pass (#274) and shared components (#275) done; full gate re-run + re-cluster pending.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|

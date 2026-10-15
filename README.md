@@ -13,7 +13,7 @@
 
 Swagger UI (`/docs`) is switched off in production; run the API locally or read [the OpenAPI spec](qbazaar-contracts/openapi/v1.yaml).
 
-**Status (2026-10-14):** production runs commit `b767a3e` (the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa).
+**Status (2026-10-15):** production runs commit `2d6fe00` (includes #272-#275; the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa).
 
 Live now:
 
@@ -22,17 +22,12 @@ Live now:
 - **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`.
 - **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24); the tab bar and account hub are in #25.
 
-Merged to `main`, awaiting the next deploy (production is still `b767a3e`):
-
-- The admin ad **deal panel** (#273): buyer, order steps, payment and escrow, settlement, chats, offers and a timeline.
-- The admin **Revenue and net profit** finance page (#272).
-- Design-parity phase 3 **copy pass** (#274).
-
-In progress: the phase 3 shared components (`fix/parity-shared-needs`).
+Just merged, in the deploy to production (`2d6fe00`): the admin ad **deal panel** (#273), the admin **Revenue and net profit** page (#272), and design-parity phase 3: the copy pass (#274) and the shared components (#275).
 
 Next:
 
-- Deploy the three merged changes, then a full parity-gate re-run on every page.
+- A full parity-gate re-run (and re-cluster).
+- A small follow-up: the PasswordInput placeholder colour on the account pages, and dropping the unsubstantiated "70%" claim in `post_ad.basic.ad_title_hint`.
 - Web performance part 2 (SSR first results, LCP priority, image loader, lazy map).
 - Mobile M2: login, chat, push, selling and orders on the API.
 - Server M5: backups, monitoring and alerts, a load test.
