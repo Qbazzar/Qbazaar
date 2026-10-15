@@ -110,13 +110,46 @@ describe('income statement', function (): void {
             ->and($report->current->totalIncome())->toBe('0.00');
     });
 
-    it('counts goodwill credit as a deduction the platform absorbs', function (): void {
+    it('keeps wallet adjustments out of operating net profit and reports them apart', function (): void {
         revenueCommission($this->seller, '20.00');
         revenueAt('2026-10-12 12:00:00', fn () => $this->fundWallet($this->seller, '8.00'));
 
-        $report = app(RevenueReportService::class)->report(revenueWindow(), true);
+        $current = app(RevenueReportService::class)->report(revenueWindow(), true)->current;
 
-        expect($report->current->absorbed)->toBe('8.00')->and($report->current->netProfit())->toBe('12.00');
+        expect($current->netProfit())->toBe('20.00')
+            ->and($current->totalDeductions())->toBe('0.00')
+            ->and($current->walletAdjustments)->toBe('8.00')
+            ->and($current->netAfterAdjustments())->toBe('12.00');
+    });
+
+    it('does not let demo-style wallet top-ups change operating net profit', function (): void {
+        revenueCommission($this->seller, '20.00');
+        $before = app(RevenueReportService::class)->report(revenueWindow(), true)->current->netProfit();
+
+        Cache::flush();
+        foreach (range(1, 5) as $i) {
+            revenueAt('2026-10-12 12:0' . $i . ':00', fn () => $this->fundWallet($this->seller, '50.00'));
+        }
+        $after = app(RevenueReportService::class)->report(revenueWindow(), true)->current;
+
+        expect($after->netProfit())->toBe($before)->and($after->walletAdjustments)->toBe('250.00');
+    });
+
+    it('shows a net clawback as recovered and never as extra profit', function (): void {
+        revenueCommission($this->seller, '20.00');
+        revenueAt('2026-09-01 10:00:00', fn () => $this->fundWallet($this->seller, '30.00'));
+        revenueAt('2026-10-12 12:00:00', fn () => app(LedgerRecipes::class)->adjustWallet(
+            $this->seller->id,
+            '-5.00',
+            'clawback',
+            new LedgerReference(LedgerReferenceType::ADJUSTMENT, (string) Str::ulid()),
+            LedgerActor::system(),
+        ));
+
+        $current = app(RevenueReportService::class)->report(revenueWindow(), true)->current;
+
+        expect($current->walletAdjustments)->toBe('-5.00')->and($current->netProfit())->toBe('20.00');
+        actingAs($this->admin)->get(route('admin.finance.revenue.index'))->assertOk()->assertSee('تعديلات المحافظ (مسترد)');
     });
 
     it('compares with the previous period and keeps escrow out of income', function (): void {
@@ -238,7 +271,8 @@ describe('csv export', function (): void {
 
         $response->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
         expect($csv)->toStartWith("\xEF\xBB\xBF")
-            ->and(substr_count(trim($csv), "\n"))->toBe(2)
+            ->and(substr_count(trim($csv), "\n"))->toBe(4)
+            ->and($csv)->toContain('35.00')
             ->and($csv)->toContain("'=HYPERLINK")
             ->and($csv)->toContain('10.00')->toContain('25.00');
     });

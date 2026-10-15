@@ -12,7 +12,10 @@ use App\Support\Money;
  * would claim "nothing happened" when the truth is "we do not track it".
  *
  * Income is what the platform earned; deductions reduce it; net profit is the
- * difference. GMV and payouts are shown beside it but are not part of it.
+ * difference (net operating profit). GMV, payouts and wallet adjustments are
+ * shown beside it but are not part of it: an adjustment is a correction of a
+ * user's balance by an admin, not an operating cost, and a clawback must never
+ * raise profit.
  */
 final readonly class IncomeStatement
 {
@@ -25,7 +28,7 @@ final readonly class IncomeStatement
         public array $income,
         public string $refunds,
         public ?string $gatewayFees,
-        public string $absorbed,
+        public string $walletAdjustments,
         public string $payoutsPaid,
     ) {}
 
@@ -46,11 +49,18 @@ final readonly class IncomeStatement
 
     public function totalDeductions(): string
     {
-        return Money::add($this->refunds, $this->gatewayFees ?? Money::ZERO, $this->absorbed);
+        return Money::add($this->refunds, $this->gatewayFees ?? Money::ZERO);
     }
 
+    /** Net operating profit: income minus refunds and gateway fees. Wallet adjustments never enter it. */
     public function netProfit(): string
     {
         return Money::subtract($this->totalIncome(), $this->totalDeductions());
+    }
+
+    /** Operating profit after the net wallet adjustments, for information only. */
+    public function netAfterAdjustments(): string
+    {
+        return Money::subtract($this->netProfit(), $this->walletAdjustments);
     }
 }

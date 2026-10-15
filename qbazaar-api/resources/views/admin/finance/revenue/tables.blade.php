@@ -1,6 +1,7 @@
 <div @class(['grid grid-cols-1 gap-4', 'xl:grid-cols-2' => $revenue->showsSellers()])>
     <section aria-labelledby="revenue-categories" class="grid gap-3">
         <h2 id="revenue-categories" class="text-[15px] font-bold text-ink-900">{{ __('admin.revenue.tables.categories') }}</h2>
+        <p class="-mt-1 text-xs text-ink-500">{{ __('admin.revenue.tables.categories_note') }}</p>
         <x-admin.table
             :caption="__('admin.revenue.tables.categories')"
             :columns="[__('admin.revenue.tables.category'), __('admin.revenue.tables.income'), __('admin.revenue.tables.share')]"

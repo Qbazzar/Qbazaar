@@ -95,9 +95,11 @@ final class RevenuePresenter
         $rows[] = $this->heading('deductions');
         $rows[] = $this->line('refunds', $now->refunds, $before->refunds);
         $rows[] = $this->line('gateway_fees', $now->gatewayFees, $before->gatewayFees);
-        $rows[] = $this->line('absorbed', $now->absorbed, $before->absorbed);
         $rows[] = $this->line('total_deductions', $now->totalDeductions(), $before->totalDeductions(), 'subtotal');
         $rows[] = $this->line('net', $now->netProfit(), $before->netProfit(), 'total');
+        $rows[] = $this->heading('adjustments');
+        $rows[] = $this->adjustmentsLine($now->walletAdjustments, $before->walletAdjustments);
+        $rows[] = $this->line('net_after', $now->netAfterAdjustments(), $before->netAfterAdjustments(), 'subtotal');
 
         return $rows;
     }
@@ -279,6 +281,20 @@ final class RevenuePresenter
             'change' => $recorded && $before !== null ? Trend::between($now, $before)['change'] : false,
             'note' => $recorded ? null : (string) __('admin.revenue.not_recorded_notes.' . $key),
         ];
+    }
+
+    /**
+     * Net wallet adjustments, shown as an amount given out or, when admins took
+     * more back than they gave, as an amount recovered (never a negative cost).
+     *
+     * @return array{key: string, label: string, kind: string, value: string|null, previous: string|null, change: int|null|false, note: string|null}
+     */
+    private function adjustmentsLine(string $now, string $before): array
+    {
+        $key = Money::isNegative($now) ? 'wallet_recovered' : 'wallet_adjustments';
+        $absolute = static fn (string $amount): string => ltrim($amount, '-');
+
+        return $this->line($key, $absolute($now), $absolute($before));
     }
 
     /**

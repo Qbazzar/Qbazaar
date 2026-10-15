@@ -27,14 +27,20 @@ final class RevenueCsvExporter
             $out = fopen('php://output', 'w') ?: throw new RuntimeException('The response stream could not be opened.');
             // The byte-order mark lets Excel read the Arabic headings as UTF-8.
             fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, [__('admin.revenue.export_columns.note')]);
             fputcsv($out, $this->headings());
 
+            $credit = $debit = Money::ZERO;
             foreach ($this->service->exportLines($window, $accountId) as $chunk) {
                 foreach ($chunk as $line) {
                     fputcsv($out, $this->row($line));
+                    $credit = Money::add($credit, $line->credit);
+                    $debit = Money::add($debit, $line->debit);
                 }
                 flush();
             }
+
+            fputcsv($out, $this->totals($credit, $debit));
 
             fclose($out);
         }, $name, ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'no-store']);
@@ -46,6 +52,17 @@ final class RevenueCsvExporter
     private function headings(): array
     {
         return array_map(static fn (string $key): string => __('admin.revenue.export_columns.' . $key), self::COLUMNS);
+    }
+
+    /**
+     * The closing row: income, what was returned, and their difference, which
+     * is the income minus refunds of the statement.
+     *
+     * @return list<string>
+     */
+    private function totals(string $credit, string $debit): array
+    {
+        return [__('admin.revenue.export_columns.totals'), '', '', '', '', '', '', '', $credit, $debit, Money::subtract($credit, $debit)];
     }
 
     /**

@@ -16,8 +16,9 @@ use App\Support\Money;
  *  - revenue account, credit: income, by source;
  *  - revenue account, debit: refunds (commission given back, reversals), or
  *    gateway fees when a `gateway_fee` transaction ever debits it;
- *  - adjustments account, debit minus credit: credit the platform absorbed
- *    (admin corrections that give users money);
+ *  - adjustments account, debit minus credit: net wallet adjustments (positive
+ *    when admins gave users money, negative when they took it back). Reported
+ *    apart from operating profit;
  *  - payouts-payable account, debit by `withdrawal_paid`: payouts released.
  */
 final class IncomeFolder
@@ -37,7 +38,7 @@ final class IncomeFolder
     public function fold(iterable $rows, array $accountTypes, string $gmv, int $orders): IncomeStatement
     {
         $income = IncomeStatement::empty()->income;
-        $refunds = $absorbed = $payouts = $fees = Money::ZERO;
+        $refunds = $adjustments = $payouts = $fees = Money::ZERO;
 
         foreach ($rows as $row) {
             $credit = Money::round((string) $row->credit);
@@ -51,7 +52,7 @@ final class IncomeFolder
                     $type === self::GATEWAY_FEE_TYPE ? $fees = Money::add($fees, $debit) : $refunds = Money::add($refunds, $debit);
                     break;
                 case LedgerAccountType::PLATFORM_ADJUSTMENTS->value:
-                    $absorbed = Money::add($absorbed, Money::subtract($debit, $credit));
+                    $adjustments = Money::add($adjustments, Money::subtract($debit, $credit));
                     break;
                 case LedgerAccountType::PLATFORM_PAYOUTS_PAYABLE->value:
                     $payouts = $type === LedgerTransactionType::WITHDRAWAL_PAID->value ? Money::add($payouts, $debit) : $payouts;
@@ -59,6 +60,6 @@ final class IncomeFolder
             }
         }
 
-        return new IncomeStatement($gmv, $orders, $income, $refunds, self::gatewayFeesRecorded() ? $fees : null, $absorbed, $payouts);
+        return new IncomeStatement($gmv, $orders, $income, $refunds, self::gatewayFeesRecorded() ? $fees : null, $adjustments, $payouts);
     }
 }
