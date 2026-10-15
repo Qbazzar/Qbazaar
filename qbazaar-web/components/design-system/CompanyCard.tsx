@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, type LucideIcon } from 'lucide-react';
 
+import { LocationPinIcon, type IconGlyph } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 import { initialsOf } from './Avatar';
@@ -34,7 +34,7 @@ export interface CompanyCardProps {
   /** Already formatted line under the name, e.g. the city ("Al Wakrah"). */
   meta?: string;
   /** Icon of the meta line; the design's map pin by default. */
-  metaIcon?: LucideIcon;
+  metaIcon?: IconGlyph;
   /** Already formatted, e.g. "12 Ads". */
   count: string;
   headingLevel?: 'h2' | 'h3';
@@ -52,7 +52,7 @@ export function CompanyCard({
   logoUrl,
   toneKey,
   meta,
-  metaIcon = MapPin,
+  metaIcon = LocationPinIcon,
   count,
   headingLevel: Heading = 'h3',
   className,

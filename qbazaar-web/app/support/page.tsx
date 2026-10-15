@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { LifeBuoy, MessageSquare } from 'lucide-react';
 
 import { Icon } from '@/components/design-system/Icon';
+import { ChatSquareIcon, HeadsetSupportIcon } from '@/components/design-system/icons';
 import { LinkTile } from '@/components/design-system/LinkTile';
 import { PageShell } from '@/components/design-system/PageShell';
 import { HelpHero } from '@/components/help/HelpHero';
@@ -41,7 +41,7 @@ export default async function SupportLandingPage() {
         <li>
           <LinkTile
             href="/help"
-            icon={<Icon icon={LifeBuoy} size="lg" />}
+            icon={<Icon icon={HeadsetSupportIcon} size="lg" />}
             title={t('support.browse_help')}
             description={t('support.browse_help_sub')}
           />
@@ -49,7 +49,7 @@ export default async function SupportLandingPage() {
         <li>
           <LinkTile
             href="/support/new"
-            icon={<Icon icon={MessageSquare} size="lg" />}
+            icon={<Icon icon={ChatSquareIcon} size="lg" />}
             title={t('support.new_ticket')}
             description={t('support.new_ticket_sub')}
           />

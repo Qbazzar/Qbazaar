@@ -1,5 +1,5 @@
-import type { LucideIcon } from 'lucide-react';
 
+import { type IconGlyph } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 import { Card } from './Card';
@@ -37,7 +37,7 @@ const ICON_TONES = {
 } as const;
 
 export interface StateIconProps {
-  icon: LucideIcon;
+  icon: IconGlyph;
   /** Grey for search and failures (655:55973), brand for empty lists (376:7817). */
   tone?: keyof typeof ICON_TONES;
   className?: string;

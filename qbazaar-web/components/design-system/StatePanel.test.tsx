@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { SearchX } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
+
+import { SearchXIcon } from '@/components/design-system/icons';
 
 import { Button } from './Button';
 import { Icon } from './Icon';
@@ -10,7 +11,7 @@ describe('StatePanel', () => {
   it('shows the empty state inside the large elevated panel', () => {
     const { container } = render(
       <StatePanel
-        icon={<Icon icon={SearchX} size="lg" />}
+        icon={<Icon icon={SearchXIcon} size="lg" />}
         title="Search Not Found"
         description="We couldn't find anything matching your search."
         action={<Button size="sm">Browse</Button>}
@@ -24,7 +25,7 @@ describe('StatePanel', () => {
   });
 
   it('sets the heading in the design face rather than the base heading font', () => {
-    render(<StatePanel icon={<Icon icon={SearchX} />} title="Nothing here" headingLevel="h3" />);
+    render(<StatePanel icon={<Icon icon={SearchXIcon} />} title="Nothing here" headingLevel="h3" />);
 
     expect(screen.getByRole('heading', { level: 3 }).parentElement).toHaveClass('[&_:is(h2,h3)]:font-qb');
   });
@@ -32,13 +33,13 @@ describe('StatePanel', () => {
 
 describe('StateIcon', () => {
   it('draws the 36 / 40 px glyph in the requested tone, hidden from assistive tech', () => {
-    const { container, rerender } = render(<StateIcon icon={SearchX} tone="muted" />);
+    const { container, rerender } = render(<StateIcon icon={SearchXIcon} tone="muted" />);
     const svg = container.querySelector('svg');
 
     expect(svg).toHaveClass('size-9', 'qb-tablet:size-10', 'text-qb-ink-muted');
     expect(svg).toHaveAttribute('aria-hidden', 'true');
 
-    rerender(<StateIcon icon={SearchX} />);
+    rerender(<StateIcon icon={SearchXIcon} />);
     expect(container.querySelector('svg')).toHaveClass('text-qb-brand');
   });
 });

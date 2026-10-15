@@ -1,12 +1,13 @@
 import type { ComponentProps, ReactNode } from 'react';
-import { ChevronDown } from 'lucide-react';
 
+import { ChevronDownIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 /** Box shared by Input, Select and Textarea (`.qb-field input` in Qbazaar-front). */
 const controlBase = [
   'w-full rounded-qb-md border border-qb-field-border bg-qb-surface font-qb text-qb-body text-qb-ink',
-  'placeholder:text-qb-placeholder outline-none',
+  // The reference styles no ::placeholder outside the auth pages, so Chrome's #757575 shows.
+  'placeholder:text-qb-ink-muted outline-none',
   'focus-visible:border-qb-brand focus-visible:ring-2 focus-visible:ring-qb-brand/20',
   'aria-invalid:border-qb-danger aria-invalid:focus-visible:ring-qb-danger/20',
   'disabled:cursor-not-allowed disabled:border-qb-line disabled:bg-qb-fill disabled:text-qb-ink-subtle',
@@ -55,7 +56,7 @@ export function Select({ className, children, ...props }: SelectProps) {
       <select className={cn(controlBase, 'h-[52px] appearance-none ps-4 pe-11', className)} {...props}>
         {children}
       </select>
-      <ChevronDown
+      <ChevronDownIcon
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 end-4 my-auto size-5 text-qb-ink-subtle"
       />

@@ -70,7 +70,7 @@ export function CatalogHeader({ title, breadcrumb, stats, actions, titleRef, var
   return (
     <header className={cn('font-qb', className)}>
       {breadcrumb?.length ? (
-        <Breadcrumb items={breadcrumb} className={cn('mb-3.5', !breadcrumbOnPhones && 'hidden qb-tablet:block')} />
+        <Breadcrumb items={breadcrumb} separator="guillemet" className={cn('mb-3.5', !breadcrumbOnPhones && 'hidden qb-tablet:block')} />
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">

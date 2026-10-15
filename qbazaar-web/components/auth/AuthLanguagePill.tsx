@@ -8,10 +8,12 @@ import { getLocale, type Locale } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-/** The site's languages with the flag emoji auth.js shows beside each. */
-const LANGUAGES: { locale: Locale; code: string; name: string; flag: string }[] = [
-  { locale: 'en', code: 'EN', name: 'English', flag: '🇬🇧' },
-  { locale: 'ar', code: 'AR', name: 'العربية', flag: '🇶🇦' },
+import { FlagIcon } from './FlagIcon';
+
+/** The site's languages; auth.js shows a flag beside each. */
+const LANGUAGES: { locale: Locale; code: string; name: string }[] = [
+  { locale: 'en', code: 'EN', name: 'English' },
+  { locale: 'ar', code: 'AR', name: 'العربية' },
 ];
 
 /**
@@ -95,7 +97,7 @@ export function AuthLanguagePill() {
         )}
       >
         {/* auth.js writes the code as the pill's own text, between the flag and the caret. */}
-        <span aria-hidden="true">{active.flag}</span>
+        <FlagIcon locale={active.locale} />
         {active.code}
         <span aria-hidden="true" className="text-qb-auth-caret">
           ▾
@@ -136,7 +138,7 @@ export function AuthLanguagePill() {
                   'focus-visible:-outline-offset-2',
                 )}
               >
-                <span aria-hidden="true">{language.flag}</span>
+                <FlagIcon locale={language.locale} />
                 <span>{language.name}</span>
               </button>
             );

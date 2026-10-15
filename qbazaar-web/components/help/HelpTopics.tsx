@@ -1,5 +1,5 @@
-import { LifeBuoy } from 'lucide-react';
 
+import { HeadsetSupportIcon } from '@/components/design-system/icons';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import type { HelpCategory } from '@/lib/api/types';
 import { t } from '@/lib/i18n/messages';
@@ -10,7 +10,7 @@ import { HelpCategoryCard } from './HelpCategoryCard';
 /** Help topics as all-categories tiles: 2 / 3 / 4 columns (185:6576, 536:32620, 621:27193). */
 export function HelpTopics({ categories }: { categories: HelpCategory[] }) {
   if (categories.length === 0) {
-    return <StatePanel icon={<StateIcon icon={LifeBuoy} />} title={t('help.no_categories')} />;
+    return <StatePanel icon={<StateIcon icon={HeadsetSupportIcon} />} title={t('help.no_categories')} />;
   }
 
   return (

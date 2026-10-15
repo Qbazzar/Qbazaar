@@ -4,8 +4,8 @@ import './field-select.css';
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown } from 'lucide-react';
 
+import { ChevronDownIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 import {
@@ -155,7 +155,8 @@ export function FieldSelect({
     if (open && activeId) document.getElementById(activeId)?.scrollIntoView?.({ block: 'nearest' });
   }, [open, activeId]);
 
-  const openPanel = (start: Entry | undefined = chosen ?? top[0]) => {
+  /** `start` null opens with no row lit, as the reference does for a click; undefined starts on the chosen value for the keyboard. */
+  const openPanel = (start: Entry | null | undefined = chosen ?? top[0]) => {
     if (!fieldRef.current) return;
     const next = measure(fieldRef.current);
     setPlacement(next);
@@ -252,7 +253,8 @@ export function FieldSelect({
     },
   });
 
-  const isLit = (entry: Entry) => entry === active || entry === chosen || entry === expanded;
+  // The reference lights only the hovered row; the chosen one is told by aria-selected, and by the keyboard's active row.
+  const isLit = (entry: Entry) => entry === active || entry === expanded;
   const itemRole = nested ? 'treeitem' : 'option';
   /** A tree item says where it sits; the items of a listbox are counted by the browser. */
   const position = (index: number, siblings: Entry[], depth: number) =>
@@ -313,7 +315,7 @@ export function FieldSelect({
         aria-controls={open ? listId : undefined}
         aria-activedescendant={open && activeId ? activeId : undefined}
         disabled={disabled}
-        onClick={() => (open ? close() : openPanel())}
+        onClick={(event) => (open ? close() : openPanel(event.detail === 0 ? undefined : null))}
         onKeyDown={onKeyDown}
         onKeyUp={onKeyUp}
         onBlur={close}
@@ -321,7 +323,7 @@ export function FieldSelect({
         {...aria}
       >
         <span className="min-w-0 flex-1 truncate">{showsPlaceholder ? (placeholder ?? chosen?.label) : chosen?.label}</span>
-        <ChevronDown
+        <ChevronDownIcon
           aria-hidden="true"
           className={cn(
             'pointer-events-none absolute inset-y-0 end-4 my-auto size-5 text-qb-ink-subtle transition-transform duration-[180ms] ease-out motion-reduce:transition-none',

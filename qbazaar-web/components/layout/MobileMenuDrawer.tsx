@@ -3,25 +3,11 @@
 import { useEffect, useId, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Bell,
-  ChartColumn,
-  Heart,
-  House,
-  LayoutGrid,
-  LogOut,
-  MessageCircle,
-  Plus,
-  Search,
-  Settings,
-  Tag,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { BellOutlineIcon, CategoriesDrawerIcon, ChartColumnIcon, HeartDrawerIcon, HomeDrawerIcon, LogOutIcon, MessagesDrawerIcon, MyAdsDrawerIcon, PlusIcon, SearchDrawerIcon, SettingsDrawerIcon, WalletDrawerIcon, type IconGlyph } from '@/components/design-system/icons';
 import { Sheet } from '@/components/design-system/Modal';
 import { useSignOut } from '@/components/account/useSignOut';
 import { t } from '@/lib/i18n/messages';
@@ -32,7 +18,7 @@ import { SiteLogo } from './SiteLogo';
 interface NavItem {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: IconGlyph;
 }
 
 /**
@@ -41,25 +27,25 @@ interface NavItem {
  */
 function navItems(signedIn: boolean): NavItem[] {
   const browsing: NavItem[] = [
-    { href: '/', label: t('layout.menu.home', 'الرئيسية'), icon: House },
-    { href: '/categories', label: t('layout.menu.categories', 'الأقسام'), icon: LayoutGrid },
-    { href: '/account/favorites', label: t('layout.menu.favorites', 'المفضلة'), icon: Heart },
-    { href: '/account/messages', label: t('account.nav.messages', 'الرسائل'), icon: MessageCircle },
+    { href: '/', label: t('layout.menu.home', 'الرئيسية'), icon: HomeDrawerIcon },
+    { href: '/categories', label: t('layout.menu.categories', 'الأقسام'), icon: CategoriesDrawerIcon },
+    { href: '/account/favorites', label: t('layout.menu.favorites', 'المفضلة'), icon: HeartDrawerIcon },
+    { href: '/account/messages', label: t('account.nav.messages', 'الرسائل'), icon: MessagesDrawerIcon },
   ];
   const savedSearches: NavItem = {
     href: '/account/saved-searches',
     label: t('layout.menu.saved_search', 'البحث المحفوظ'),
-    icon: Search,
+    icon: SearchDrawerIcon,
   };
   if (!signedIn) return [...browsing, savedSearches];
   return [
     ...browsing,
-    { href: '/account/notifications', label: t('account.nav.notifications', 'الإشعارات'), icon: Bell },
+    { href: '/account/notifications', label: t('account.nav.notifications', 'الإشعارات'), icon: BellOutlineIcon },
     savedSearches,
-    { href: '/account/ads', label: t('layout.menu.my_ads', 'إعلاناتي'), icon: Tag },
-    { href: '/account/orders', label: t('account.nav.orders', 'طلباتي'), icon: ChartColumn },
-    { href: '/account', label: t('layout.menu.account', 'إعدادات الحساب'), icon: Settings },
-    { href: '/account/wallet', label: t('account.nav.wallet', 'المحفظة'), icon: Wallet },
+    { href: '/account/ads', label: t('layout.menu.my_ads', 'إعلاناتي'), icon: MyAdsDrawerIcon },
+    { href: '/account/orders', label: t('account.nav.orders', 'طلباتي'), icon: ChartColumnIcon },
+    { href: '/account', label: t('layout.menu.account', 'إعدادات الحساب'), icon: SettingsDrawerIcon },
+    { href: '/account/wallet', label: t('account.nav.wallet', 'المحفظة'), icon: WalletDrawerIcon },
   ];
 }
 
@@ -114,7 +100,7 @@ export function MobileMenuDrawer({ open, onOpenChange, signedIn }: MobileMenuDra
         <div className="flex flex-col gap-3 border-t border-qb-line px-5 pt-3.5 pb-[22px]">
           {signedIn ? (
             <Link href="/post-ad" onClick={close} className={cn(buttonVariants({ size: 'lg', fullWidth: true }), footerButton)}>
-              <Icon icon={Plus} strokeWidth={2.2} />
+              <Icon icon={PlusIcon} strokeWidth={2.2} />
               {t('layout.header.add_ad', 'أضف إعلاناً')}
             </Link>
           ) : (
@@ -165,7 +151,7 @@ function SignOutRow() {
   const { signOut, pending } = useSignOut();
   return (
     <button type="button" onClick={signOut} disabled={pending} className={cn(row, focusRing, 'cursor-pointer text-qb-brand hover:bg-qb-hover')}>
-      <Icon icon={LogOut} strokeWidth={1.7} flipInRtl className="size-[21px]" />
+      <Icon icon={LogOutIcon} strokeWidth={1.7} flipInRtl className="size-[21px]" />
       <span className="flex-1 text-start">{t('layout.menu.log_out', 'تسجيل الخروج')}</span>
       <RowChevron />
     </button>

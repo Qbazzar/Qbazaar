@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Copyright } from 'lucide-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { CopyrightIcon } from '@/components/design-system/icons';
 import { siteFrame } from '@/components/design-system/site-frame';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
@@ -66,7 +66,7 @@ export function SiteFooter() {
         <div className="mt-9 flex flex-col items-center gap-3 border-t border-qb-line-strong pt-5 text-center qb-desktop:flex-row qb-desktop:justify-between qb-desktop:text-start">
           <span className="font-qb-brand text-qb-body font-normal text-qb-brand">{t('layout.footer.wordmark', 'Q BAZAAR')}</span>
           <span className="flex items-center gap-2 text-qb-caption font-semibold text-qb-brand">
-            <Icon icon={Copyright} className="size-[18px]" />
+            <Icon icon={CopyrightIcon} className="size-[18px]" />
             {t('layout.footer.copyright', 'كيو بازار. جميع الحقوق محفوظة')}
           </span>
         </div>

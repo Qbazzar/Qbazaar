@@ -9,11 +9,11 @@
  */
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Send } from 'lucide-react';
 import { z } from 'zod';
 
 import { Button } from '@/components/design-system/Button';
 import { Field } from '@/components/design-system/Field';
+import { LoaderCircleIcon, SendIcon } from '@/components/design-system/icons';
 import { Textarea } from '@/components/design-system/Input';
 import { fieldErrorText } from '@/components/auth/FieldError';
 import { useReplyToTicketMutation } from '@/lib/queries/support';
@@ -85,9 +85,9 @@ export function TicketReplyForm({ ticketId, status }: Props) {
       <div className="flex justify-end">
         <Button type="submit" size="sm" disabled={mutation.isPending}>
           {mutation.isPending ? (
-            <Loader2 className="animate-spin" aria-hidden="true" />
+            <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
           ) : (
-            <Send className="rtl:-scale-x-100" aria-hidden="true" />
+            <SendIcon className="rtl:-scale-x-100" aria-hidden="true" />
           )}
           {t('support.send_reply', 'إرسال الرد')}
         </Button>

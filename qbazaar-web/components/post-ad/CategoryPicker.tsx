@@ -7,7 +7,7 @@ import { Button } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
 import { ArrowLeftIcon } from '@/components/design-system/icons';
-import { modalBackdrop } from '@/components/design-system/Modal';
+import { GlyphCloseButton, modalBackdrop } from '@/components/design-system/Modal';
 import type { CategoryNode } from '@/lib/api/types';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -111,9 +111,7 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
           {phoneParent ? <span className="qb-tablet:hidden">{localized(phoneParent.name)}</span> : null}
         </Dialog.Title>
         {/* The reference closes with a 22 px "✕" character, not an icon. */}
-        <Dialog.Close aria-label={t('ui.close')} className={cn('cursor-pointer rounded-qb-xs text-[22px] leading-none text-qb-ink-subtle', focusRing)}>
-          <span aria-hidden="true">✕</span>
-        </Dialog.Close>
+        <GlyphCloseButton />
       </div>
 
       <div

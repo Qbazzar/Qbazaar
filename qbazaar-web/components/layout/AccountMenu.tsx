@@ -2,12 +2,12 @@
 
 import { useEffect, useId, useRef, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
-import { CirclePercent, LogOut, MapPin, Search, Settings, type LucideIcon } from 'lucide-react';
 
 import { useSignOut } from '@/components/account/useSignOut';
 import { Avatar, initialsOf } from '@/components/design-system/Avatar';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
+import { GearIcon, LogOutIcon, MyAdsDrawerIcon, PercentCircleIcon, SearchDrawerIcon, type IconGlyph } from '@/components/design-system/icons';
 import { menuEnter } from '@/components/design-system/menu-enter';
 import { useHoverOpen } from '@/components/design-system/use-hover-open';
 import { t } from '@/lib/i18n/messages';
@@ -87,11 +87,11 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
     enterMenu(inputKind.current === 'key');
   };
 
-  const items: { href: string; label: string; icon: LucideIcon }[] = [
-    { href: '/account/saved-searches', label: t('layout.menu.save_search', 'البحث المحفوظ'), icon: Search },
-    { href: '/account/ads', label: t('layout.menu.my_ads', 'إعلاناتي'), icon: MapPin },
-    { href: '/account/orders', label: t('layout.menu.sales_overview', 'نظرة على المبيعات'), icon: CirclePercent },
-    { href: '/account', label: t('layout.menu.account', 'إعدادات الحساب'), icon: Settings },
+  const items: { href: string; label: string; icon: IconGlyph }[] = [
+    { href: '/account/saved-searches', label: t('layout.menu.save_search', 'البحث المحفوظ'), icon: SearchDrawerIcon },
+    { href: '/account/ads', label: t('layout.menu.my_ads', 'إعلاناتي'), icon: MyAdsDrawerIcon },
+    { href: '/account/orders', label: t('layout.menu.sales_overview', 'نظرة على المبيعات'), icon: PercentCircleIcon },
+    { href: '/account', label: t('layout.menu.account', 'إعدادات الحساب'), icon: GearIcon },
   ];
 
   return (
@@ -162,7 +162,7 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
             ))}
             <li>
               <button type="button" tabIndex={rowTab} onClick={signOut} disabled={pending} className={cn(row, 'text-qb-brand')}>
-                <Icon icon={LogOut} strokeWidth={1.7} flipInRtl />
+                <Icon icon={LogOutIcon} strokeWidth={1.7} flipInRtl />
                 {t('layout.menu.log_out', 'تسجيل الخروج')}
               </button>
             </li>

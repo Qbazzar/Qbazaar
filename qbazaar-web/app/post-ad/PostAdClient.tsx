@@ -23,7 +23,7 @@ export function PostAdClient() {
   if (!user.phone_verified) {
     return (
       <>
-        <Breadcrumb items={breadcrumb} className={formBreadcrumbClass} />
+        <Breadcrumb items={breadcrumb} separator="guillemet" className={formBreadcrumbClass} />
         <h1 className="sr-only">{t('post_ad.page_title')}</h1>
         <PhoneVerificationNotice context="post_ad" />
       </>

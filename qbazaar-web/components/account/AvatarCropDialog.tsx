@@ -54,7 +54,7 @@ export function AvatarCropDialog({
       }}
     >
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-qb-chat-overlay" />
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-qb-crop-overlay" />
         <Dialog.Popup
           className={cn(
             'fixed start-1/2 top-1/2 z-50 max-h-[calc(100dvh-32px)] w-[min(430px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rtl:translate-x-1/2',

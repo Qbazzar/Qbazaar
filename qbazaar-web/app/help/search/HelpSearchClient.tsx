@@ -6,8 +6,8 @@
  * category.html (492:20208, 655:55973) with article rows.
  */
 import { parseAsString, useQueryState } from 'nuqs';
-import { Search } from 'lucide-react';
 
+import { SearchIcon } from '@/components/design-system/icons';
 import { PageShell } from '@/components/design-system/PageShell';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import { BrowseTopicsLink } from '@/components/help/BrowseTopicsLink';
@@ -72,7 +72,7 @@ function SearchResults({ enabled, loading, failed, results, onRetry, retrying }:
   if (!enabled) {
     return (
       <StatePanel
-        icon={<StateIcon icon={Search} tone="muted" />}
+        icon={<StateIcon icon={SearchIcon} tone="muted" />}
         title={t('help.search_prompt_title')}
         description={t('help.search_min_chars')}
         action={<BrowseTopicsLink />}
@@ -87,7 +87,7 @@ function SearchResults({ enabled, loading, failed, results, onRetry, retrying }:
   if (results.length === 0) {
     return (
       <StatePanel
-        icon={<StateIcon icon={Search} tone="muted" />}
+        icon={<StateIcon icon={SearchIcon} tone="muted" />}
         title={t('help.no_results')}
         description={t('help.no_results_hint')}
         action={<BrowseTopicsLink />}
