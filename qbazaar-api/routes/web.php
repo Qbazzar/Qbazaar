@@ -215,6 +215,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::get('disputes', [Finance\DisputeController::class, 'index'])->name('disputes.index');
                 Route::get('promotions', [Finance\PromotionTransferController::class, 'index'])->name('promotions.index');
                 Route::get('users/{user}/statement', [Finance\StatementController::class, 'show'])->name('statements.show');
+                Route::get('orders/{order}', [Finance\OrderController::class, 'show'])->name('orders.show');
             });
             Route::middleware('permission:finance.manage')->group(function () {
                 Route::post('settlements/{settlement}/approve', [Finance\SettlementController::class, 'approve'])->name('settlements.approve');

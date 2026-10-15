@@ -3,6 +3,8 @@
     'search' => null,
     'placeholder' => 'بحث…',
     'filters' => [],
+    // Query parameters a search or filter submit keeps, e.g. the ad a list is scoped to.
+    'carry' => [],
 ])
 
 @php
@@ -11,6 +13,10 @@
 @endphp
 
 <form method="GET" role="search" {{ $attributes->class('flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center') }}>
+    @foreach ($carry as $carryName => $carryValue)
+        <input type="hidden" name="{{ $carryName }}" value="{{ $carryValue }}">
+    @endforeach
+
     <div class="relative w-full sm:w-64">
         <label for="filter-q" class="sr-only">بحث</label>
         <span class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-ink-500">

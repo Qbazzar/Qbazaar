@@ -212,7 +212,8 @@ describe('ads.show', function (): void {
         $withTwentyFive = adPageQueryCount($uri);
 
         expect($withTwentyFive)->toBe($withOne)
-            ->and($withOne)->toBeLessThanOrEqual(14);
+            // 14 for the page itself plus the deal panel's lists (orders, chats with their eager loads, offers).
+            ->and($withOne)->toBeLessThanOrEqual(24);
     });
 });
 

@@ -4,11 +4,14 @@
 @section('heading', 'العروض')
 
 @section('content')
+    @include('admin.partials.ad-filter-chip', ['adId' => $adId, 'adFilter' => $adFilter, 'clearUrl' => route('admin.offers.index')])
+
     <x-admin.page-toolbar>
         <x-admin.filter-bar
             :reset-url="route('admin.offers.index')"
             :search="$search"
             placeholder="بحث بالإعلان أو المشتري…"
+            :carry="$adId !== '' ? ['ad' => $adId] : []"
             :filters="[
                 ['name' => 'status', 'label' => 'الحالة', 'placeholder' => 'كل الحالات', 'value' => $status,
                     'options' => collect($statuses)->mapWithKeys(fn ($case) => [$case->value => $case->label()['ar']])],
