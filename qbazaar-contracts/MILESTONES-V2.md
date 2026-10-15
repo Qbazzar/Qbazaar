@@ -27,11 +27,11 @@
 | M1b Orders and payments | 14 | 10 | 10 | 0 | Backend done: ledger, orders, checkout, settlements, withdrawals, disputes, promotions, notifications (#207–#212); demo data in progress |
 | M2 Connecting the mobile app | 15 | 15 | 4 | 11 | API layer, session, repository switch and catalog on the real API are in (Qbazaar-mobile #24); next: login, chat, push, selling, orders |
 | M3 Web on the new design | 16 | 18 | 15 | 3 | Every page is on the new design, orders included (#218, #221–#227); design parity phases 1 and 2 merged (#237–#242, #254, #256, #257, #263, #265, #266, #269); left: parity phase 3 (in progress), a full gate re-run, performance part 2, Lighthouse and axe reports (FE-16.7) |
-| M4 Admin additions | 17 | 26 | 9 | 17 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, admin settings, integrations, page shell and dashboard merged (#249–#270); in progress: the ad deal panel (AD-17.27) and the revenue page (AD-17.28); AD-17.7 still needs the revenue report |
+| M4 Admin additions | 17 | 26 | 11 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, admin settings, integrations, page shell and dashboard merged (#249–#270); the ad deal panel and the revenue page merged (#272, #273); AD-17.7 still needs its payments pieces |
 | M5 Deployment on the new server | 18 | 18 | 6 | 12 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; Meilisearch, Horizon and Reverb run in production, media on R2; left: backups, alerts, WAF and firewall rules, tuning, the load test |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **199** | **135** | **64** | |
+| **Total** | | **199** | **137** | **62** | |
 
 ---
 
@@ -369,7 +369,7 @@
 
 ### Open
 
-> In progress: FE-16.17 (parity phase 3, branch work on the copy pass and shared components).
+> FE-16.17: copy pass done (#274); shared components in progress (fix/parity-shared-needs); full gate re-run pending.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -385,9 +385,9 @@
 
 **Exit criteria:** an admin can run companies, home sections, moderation, reports and payments from the panel, with every action permission-checked and logged.
 
-### Done — admin additions (merged 2026-10-12 to 2026-10-14)
+### Done — admin additions (merged 2026-10-12 to 2026-10-15)
 
-> Status: ✅ done. #249 → AD-17.18 · #250 → AD-17.19 · #251 → AD-17.20 · #252, #260 → AD-17.21 · #253 → AD-17.22 · #255 → AD-17.23 · #258 → AD-17.24 · #259, #261, #262, #264 → AD-17.25 · #267, #268, #270 → AD-17.26
+> Status: ✅ done. #249 → AD-17.18 · #250 → AD-17.19 · #251 → AD-17.20 · #252, #260 → AD-17.21 · #253 → AD-17.22 · #255 → AD-17.23 · #258 → AD-17.24 · #259, #261, #262, #264 → AD-17.25 · #267, #268, #270 → AD-17.26 · #273 → AD-17.27 · #272 → AD-17.28
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -400,15 +400,9 @@
 | AD-17.24 | Category commission card inside the commission tab | [P1] | The commission settings live in one tab |
 | AD-17.25 | Wide page shell and side-column components for every detail and edit page (layout S1–S4) | [P1] | Ads, reports, people, finance, support, content and configuration pages share one shell |
 | AD-17.26 | Needs-attention cards on one row and the layout follow-ups from the S1–S4 reviews | [P2] | — |
-
-### Open — in progress
-
-> In progress: AD-17.27 (branch `feat/admin-ad-deal-panel`) and AD-17.28 (branch `feat/admin-revenue`). AD-17.28 delivers the revenue report part of AD-17.7.
-
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
 | AD-17.27 | Ad deal panel in the ad page: buyer, order steps, payment and escrow, settlement, chats, offers and a timeline | [P0] | Staff can follow one deal from offer to settlement without leaving the ad |
 | AD-17.28 | "Revenue and net profit" finance page | [P0] | Commission income, promotion income and net profit by period |
+
 ### Moderation and staff tools
 
 | ID | Task | Priority | Acceptance criteria |

@@ -22,14 +22,17 @@ Live now:
 - **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`.
 - **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24); the tab bar and account hub are in #25.
 
-In progress:
+Merged to `main`, awaiting the next deploy (production is still `b767a3e`):
 
-- The admin ad **deal panel** (buyer, order steps, payment and escrow, settlement, chats, offers, timeline) and the admin **Revenue and net profit** finance page.
-- Design-parity **phase 3** (copy pass and shared components).
+- The admin ad **deal panel** (#273): buyer, order steps, payment and escrow, settlement, chats, offers and a timeline.
+- The admin **Revenue and net profit** finance page (#272).
+- Design-parity phase 3 **copy pass** (#274).
+
+In progress: the phase 3 shared components (`fix/parity-shared-needs`).
 
 Next:
 
-- A full parity-gate re-run on every page.
+- Deploy the three merged changes, then a full parity-gate re-run on every page.
 - Web performance part 2 (SSR first results, LCP priority, image loader, lazy map).
 - Mobile M2: login, chat, push, selling and orders on the API.
 - Server M5: backups, monitoring and alerts, a load test.
@@ -40,7 +43,7 @@ See [ROADMAP.md](qbazaar-contracts/ROADMAP.md) for the full picture.
 ## Progress
 
 <!-- progress:start -->
-**Current phase:** M0 Preparation and alignment · **Overall:** 67% (135/199 tasks)
+**Current phase:** M0 Preparation and alignment · **Overall:** 68% (137/199 tasks)
 
 ```text
 M0   ███████░░░   72% (18/25)   Preparation and alignment
@@ -48,7 +51,7 @@ M1   ██████████   97% (73/75)   Closing the backend gaps
 M1b  ██████████  100% (10/10)   Orders and payments
 M2   ███░░░░░░░   26% (4/15)    Connecting the mobile app
 M3   ████████░░   83% (15/18)   Web on the new design
-M4   ███░░░░░░░   34% (9/26)    Admin additions
+M4   ████░░░░░░   42% (11/26)   Admin additions
 M5   ███░░░░░░░   33% (6/18)    Deployment on the new server
 M6   ░░░░░░░░░░    0% (0/5)     Releasing the mobile app
 M7   ░░░░░░░░░░    0% (0/7)     Electronic payment and monetization
