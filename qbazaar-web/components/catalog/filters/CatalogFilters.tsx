@@ -56,7 +56,7 @@ export function FilterSidebar({ onApply, onReset, ...props }: FilterPanelProps) 
  * inside it above the bar, so the sheet itself does not.
  */
 const sheetLayout =
-  'max-h-[86vh] overflow-hidden rounded-t-[22px] border border-qb-line p-0 shadow-qb-sheet *:first:hidden *:last:mt-0 *:last:flex *:last:min-h-0 *:last:flex-col';
+  'max-h-[86vh] overflow-hidden rounded-t-[22px] border border-qb-line p-0 shadow-qb-sheet *:last:mt-0 *:last:flex *:last:min-h-0 *:last:flex-col';
 
 /**
  * The reference's two "Filter" buttons under 1001 px:
@@ -101,6 +101,7 @@ export function FilterSheet({ trigger = 'pill', onApply, onReset, ...props }: Fi
       // The title only names the dialog; the form shows its own "Filter" row.
       heading={<span aria-hidden="true" />}
       showCloseButton={false}
+      showHandle={false}
       className={cn(headingFont, sheetLayout)}
       trigger={
         <button

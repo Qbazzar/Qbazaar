@@ -1,13 +1,14 @@
 import { render, screen } from '@testing-library/react';
-import { ShieldCheck } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
+
+import { ShieldCheckIcon } from '@/components/design-system/icons';
 
 import { Notice } from './Notice';
 
 describe('Notice', () => {
   it('renders the title and body in the chosen tone', () => {
     render(
-      <Notice tone="danger" icon={<ShieldCheck aria-hidden="true" />} title="Limit reached" role="alert">
+      <Notice tone="danger" icon={<ShieldCheckIcon aria-hidden="true" />} title="Limit reached" role="alert">
         Pay your commission to accept new orders.
       </Notice>,
     );

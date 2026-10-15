@@ -60,4 +60,10 @@ describe('Breadcrumb', () => {
     expect(screen.getByRole('navigation', { name: 'مسار التنقل' })).toBeInTheDocument();
     expect([...container.querySelectorAll('bdi')].map((bdi) => bdi.textContent)).toEqual(['الرئيسية', '24/7 plumber']);
   });
+
+  it('draws the single guillemet between crumbs when asked', () => {
+    const { container } = render(<Breadcrumb items={items} separator="guillemet" />);
+
+    expect(Array.from(container.querySelectorAll('[aria-hidden="true"]')).map((node) => node.textContent)).toEqual(['›', '›']);
+  });
 });

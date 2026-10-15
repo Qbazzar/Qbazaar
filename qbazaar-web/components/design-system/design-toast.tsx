@@ -1,5 +1,6 @@
-import { Check } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { CheckToastIcon } from '@/components/design-system/icons';
 
 /** One at a time: a new confirmation replaces the one on screen, as in the reference. */
 const DESIGN_TOAST_ID = 'qb-design-toast';
@@ -24,7 +25,7 @@ export function showDesignToast(message: string): void {
           'qb-tablet:min-h-[62px] qb-tablet:w-fit qb-tablet:px-11 qb-tablet:py-3.5 qb-tablet:text-qb-h5',
         ].join(' ')}
       >
-        <Check aria-hidden="true" className="size-[22px] shrink-0" strokeWidth={2} />
+        <CheckToastIcon aria-hidden="true" className="size-[22px] shrink-0" strokeWidth={2} />
         <span>{message}</span>
       </div>
     ),

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
 
+import { LocationPinSlimIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 import { Badge, Chip } from './Badge';
@@ -105,7 +105,7 @@ export function AdRowCard({
         ) : null}
         {meta ? (
           <p className="mt-auto flex items-center gap-1.5 pt-4 text-qb-label text-qb-ink-subtle qb-tablet:text-qb-caption">
-            <Icon icon={MapPin} size="sm" />
+            <Icon icon={LocationPinSlimIcon} size="sm" />
             <span className="truncate">{meta}</span>
           </p>
         ) : null}

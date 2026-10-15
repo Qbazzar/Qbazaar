@@ -1,7 +1,8 @@
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
-import { Search } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
+
+import { SearchIcon } from '@/components/design-system/icons';
 
 import { Field } from './Field';
 import { Input, Select, Textarea } from './Input';
@@ -46,7 +47,7 @@ describe('Field', () => {
 
 describe('Input, Select, Textarea', () => {
   it('hides the decorative start icon and pads the text on the logical start side', () => {
-    const { container } = render(<Input aria-label="Search" startIcon={<Search />} />);
+    const { container } = render(<Input aria-label="Search" startIcon={<SearchIcon />} />);
 
     expect(screen.getByRole('textbox', { name: 'Search' })).toHaveClass('ps-11');
     expect(container.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
@@ -76,7 +77,7 @@ describe('Input, Select, Textarea', () => {
 
   it('passes a ref to the native control', () => {
     const ref = createRef<HTMLInputElement>();
-    render(<Input aria-label="Phone" ref={ref} startIcon={<Search />} />);
+    render(<Input aria-label="Phone" ref={ref} startIcon={<SearchIcon />} />);
 
     expect(ref.current).toBe(screen.getByRole('textbox', { name: 'Phone' }));
   });

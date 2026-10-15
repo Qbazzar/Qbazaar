@@ -69,7 +69,7 @@ export function AdDealSummary({ ad }: { ad: DealAd }) {
             {verified ? <VerifiedMark className="size-3.5" /> : null}
           </p>
           {verified ? (
-            <span className="flex shrink-0 items-center gap-1 rounded-qb-sm border border-qb-success px-2.5 py-1 text-qb-micro font-medium text-qb-success">
+            <span className="flex shrink-0 items-center gap-1 rounded-qb-sm border border-qb-safe-pay px-2.5 py-1 text-qb-micro font-medium text-qb-safe-pay">
               <Icon icon={ShieldCheckSafepayIcon} size={12} />
               {t('orders.deal.verified')}
             </span>

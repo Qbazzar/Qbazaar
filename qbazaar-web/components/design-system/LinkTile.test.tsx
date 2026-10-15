@@ -1,13 +1,14 @@
 import { render, screen } from '@testing-library/react';
-import { LifeBuoy } from 'lucide-react';
 import { describe, expect, it } from 'vitest';
+
+import { HeadsetSupportIcon } from '@/components/design-system/icons';
 
 import { Icon } from './Icon';
 import { LinkTile } from './LinkTile';
 
 describe('LinkTile', () => {
   it('is one link named by its title and line', () => {
-    render(<LinkTile href="/help/c/buying" icon={<Icon icon={LifeBuoy} />} title="Buying" description="3 articles" />);
+    render(<LinkTile href="/help/c/buying" icon={<Icon icon={HeadsetSupportIcon} />} title="Buying" description="3 articles" />);
     const link = screen.getByRole('link', { name: 'Buying 3 articles' });
 
     expect(link).toHaveAttribute('href', '/help/c/buying');
@@ -15,7 +16,7 @@ describe('LinkTile', () => {
   });
 
   it('keeps the icon square decorative', () => {
-    const { container } = render(<LinkTile href="/support/new" icon={<Icon icon={LifeBuoy} />} title="New ticket" />);
+    const { container } = render(<LinkTile href="/support/new" icon={<Icon icon={HeadsetSupportIcon} />} title="New ticket" />);
     const square = container.querySelector('svg')?.parentElement;
 
     expect(square).toHaveAttribute('aria-hidden', 'true');

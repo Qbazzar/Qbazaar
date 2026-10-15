@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
-import { ChevronDown } from 'lucide-react';
 
+import { ChevronDownIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 import { dropdownPanel } from './dropdown-panel';
@@ -267,7 +267,7 @@ export function SelectMenu({
           </span>
         </span>
         <Icon
-          icon={ChevronDown}
+          icon={ChevronDownIcon}
           className={cn('transition-transform duration-[180ms] ease-out motion-reduce:transition-none', open && 'rotate-180', chevronClassName)}
         />
       </div>

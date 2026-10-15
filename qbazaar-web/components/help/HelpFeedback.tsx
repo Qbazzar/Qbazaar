@@ -1,19 +1,19 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { ThumbsDown, ThumbsUp, type LucideIcon } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
 import { Card } from '@/components/design-system/Card';
 import { Icon } from '@/components/design-system/Icon';
+import { ThumbsDownIcon, ThumbsUpIcon, type IconGlyph } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
 type Vote = 'yes' | 'no';
 
-const OPTIONS: { vote: Vote; icon: LucideIcon; label: string; thanks: string }[] = [
-  { vote: 'yes', icon: ThumbsUp, label: 'help.helpful_yes', thanks: 'help.feedback_thanks_yes' },
-  { vote: 'no', icon: ThumbsDown, label: 'help.helpful_no', thanks: 'help.feedback_thanks_no' },
+const OPTIONS: { vote: Vote; icon: IconGlyph; label: string; thanks: string }[] = [
+  { vote: 'yes', icon: ThumbsUpIcon, label: 'help.helpful_yes', thanks: 'help.feedback_thanks_yes' },
+  { vote: 'no', icon: ThumbsDownIcon, label: 'help.helpful_no', thanks: 'help.feedback_thanks_no' },
 ];
 
 /**

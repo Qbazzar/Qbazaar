@@ -123,6 +123,8 @@
   /* Status */
   --color-qb-success: #1bad07;
   --color-qb-success-soft: #e8ffec;
+  --color-qb-safe-pay: #4caf50; /* the Safe Pay seller pill (buy-now.html, offer.html) */
+  --color-qb-upload-badge: #2eb65a; /* the arrow badge on the add-ads drop zone (add-ads.html) */
   --color-qb-danger: #e64646;
   --color-qb-danger-soft: #ffebeb;
   --color-qb-info: #2b6fdb;
@@ -167,6 +169,7 @@
 
   /* Shadows (Figma effect styles; "card" is the canonical one, 2,212 uses) */
   --shadow-qb-card: 0 4px 40px 0 rgb(161 161 161 / 0.15);
+  --shadow-qb-card-soft: 0 4px 40px 0 rgb(161 161 161 / 0.1); /* sales-overview.html, payment-method.html */
   --shadow-qb-raised: 0 4px 30px 0 rgb(161 161 161 / 0.2);
   --shadow-qb-soft: 0 4px 25px 0 rgb(188 188 188 / 0.1);
   --shadow-qb-hover: 0 4px 40px 0 rgb(161 161 161 / 0.25);

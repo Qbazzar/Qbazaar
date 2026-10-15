@@ -8,11 +8,11 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
 
 import { buttonVariants } from '@/components/design-system/Button';
 import { Icon } from '@/components/design-system/Icon';
 import { focusRing } from '@/components/design-system/focus-ring';
+import { SearchIcon } from '@/components/design-system/icons';
 import { MIN_HELP_QUERY_LENGTH, useHelpSearchQuery } from '@/lib/queries/help';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
@@ -106,7 +106,7 @@ export function HelpSearchBar({ initialQuery = '', hideSuggestions = false, clas
           'qb-tablet:h-14 qb-tablet:gap-3 qb-tablet:pe-2 qb-desktop:ps-[22px]',
         )}
       >
-        <Icon icon={Search} className="size-5 text-qb-ink-muted qb-tablet:size-6" />
+        <Icon icon={SearchIcon} className="size-5 text-qb-ink-muted qb-tablet:size-6" />
         <label htmlFor={inputId} className="sr-only">
           {t('help.search_label')}
         </label>

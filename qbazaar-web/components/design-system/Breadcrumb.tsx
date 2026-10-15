@@ -13,6 +13,8 @@ export interface BreadcrumbItem {
 
 export interface BreadcrumbProps {
   items: BreadcrumbItem[];
+  /** The glyph between crumbs: ">" on most pages, the single guillemet "›" on the catalog, checkout and add-ads trails. */
+  separator?: 'chevron' | 'guillemet';
   className?: string;
 }
 
@@ -27,11 +29,11 @@ const scrollOnPhones =
 /**
  * "Home > Car & Vehicles > Cars" as the reference draws it (typo.css): 20 px
  * #a4adba links that turn orange under the pointer (.qb-nav:hover), the
- * current page in dark 500 and a ">" glyph 8 px either side. Each label is
+ * current page in dark 500 and a ">" glyph (or "›", see `separator`) 8 px either side. Each label is
  * isolated, so a Latin label keeps its order in an Arabic trail and the
  * reverse.
  */
-export function Breadcrumb({ items, className }: BreadcrumbProps) {
+export function Breadcrumb({ items, separator = 'chevron', className }: BreadcrumbProps) {
   return (
     <nav aria-label={t('ui.breadcrumb')} className={cn('font-qb text-qb-h5', className)}>
       <ol className={cn('flex flex-wrap items-center gap-2', scrollOnPhones)}>
@@ -39,10 +41,10 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
           const isCurrent = index === items.length - 1;
           return (
             <li key={`${index}-${item.label}`} className="flex shrink-0 items-center gap-2">
-              {/* Turned by CSS in Arabic: bidi mirroring of a lone ">" is not applied by every browser. */}
+              {/* Turned by CSS in Arabic: bidi mirroring of a lone separator is not applied by every browser. */}
               {index > 0 ? (
                 <span aria-hidden="true" dir="ltr" className="text-qb-breadcrumb rtl:-scale-x-100">
-                  &gt;
+                  {separator === 'guillemet' ? '›' : '>'}
                 </span>
               ) : null}
               {isCurrent || !item.href ? (

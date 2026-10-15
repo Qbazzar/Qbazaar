@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { CircleAlert } from 'lucide-react';
 
 import { Button } from '@/components/design-system/Button';
+import { AlertCircleIcon } from '@/components/design-system/icons';
 import { StateIcon, StatePanel } from '@/components/design-system/StatePanel';
 import { t } from '@/lib/i18n/messages';
 
@@ -17,7 +17,7 @@ interface RetryPanelProps {
 export function RetryPanel({ onRetry, retrying = false, secondaryAction }: RetryPanelProps) {
   return (
     <StatePanel
-      icon={<StateIcon icon={CircleAlert} tone="muted" />}
+      icon={<StateIcon icon={AlertCircleIcon} tone="muted" />}
       title={t('errors.generic_heading')}
       description={t('errors.generic_body')}
       action={

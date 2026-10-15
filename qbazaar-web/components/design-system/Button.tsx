@@ -16,16 +16,16 @@ export const buttonVariants = cva(
   {
     variants: {
       // The reference's .qb-btn keeps its colours under the pointer and dims by 4 % (styles.css:243);
-      // only the orange buttons swap to the darker orange (polish.css:24-28). Nothing changes on
-      // :active, so a pressed button keeps its hover look.
+      // only the orange buttons swap to the darker orange (polish.css:24-28). Tailwind wraps hover: in
+      // (hover: hover), so :active gives a tap on a phone the same dim the reference's hover gives.
       variant: {
         primary: 'bg-qb-brand text-qb-on-brand hover:bg-qb-brand-hover',
-        secondary: 'border border-qb-brand bg-qb-surface text-qb-brand hover:brightness-[.96]',
-        outline: 'border border-qb-line bg-qb-surface text-qb-ink-title hover:brightness-[.96]',
-        soft: 'bg-qb-brand-soft text-qb-brand-on-soft hover:brightness-[.96]',
-        muted: 'bg-qb-fill font-normal text-qb-ink-muted hover:brightness-[.96]',
+        secondary: 'border border-qb-brand bg-qb-surface text-qb-brand hover:brightness-[.96] active:brightness-[.96]',
+        outline: 'border border-qb-line bg-qb-surface text-qb-ink-title hover:brightness-[.96] active:brightness-[.96]',
+        soft: 'bg-qb-brand-soft text-qb-brand-on-soft hover:brightness-[.96] active:brightness-[.96]',
+        muted: 'bg-qb-fill font-normal text-qb-ink-muted hover:brightness-[.96] active:brightness-[.96]',
         ghost: 'font-medium text-qb-ink-muted hover:bg-qb-fill',
-        danger: 'border border-qb-line bg-qb-surface text-qb-danger hover:brightness-[.96]',
+        danger: 'border border-qb-line bg-qb-surface text-qb-danger hover:brightness-[.96] active:brightness-[.96]',
       },
       // Line height 1.15 as every .qb-btn of the reference, so a padding-sized
       // button (h-auto with py) keeps the reference height. A className that

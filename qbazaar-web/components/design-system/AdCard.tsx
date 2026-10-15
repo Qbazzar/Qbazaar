@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
 
+import { LocationPinIcon } from '@/components/design-system/icons';
 import { cn } from '@/lib/utils';
 
 import { Badge, Chip } from './Badge';
@@ -169,7 +169,8 @@ function AdMeta({ location, postedAt, isList }: { location?: string; postedAt?: 
         isList ? 'qb-tablet:text-qb-caption qb-desktop:border-t qb-desktop:border-qb-line qb-desktop:pt-3' : 'border-t border-qb-line pt-3',
       )}
     >
-      <Icon icon={MapPin} size="sm" />
+      {/* The home rail card draws a 15 px pin at stroke 1.6 (app.js recommended card). */}
+      <Icon icon={LocationPinIcon} size={isList ? 16 : 15} {...(isList ? null : { strokeWidth: 1.6 })} />
       {/* The age is worked out again at hydration, when it may have moved on by a minute. */}
       <span className="truncate" suppressHydrationWarning>
         {text}

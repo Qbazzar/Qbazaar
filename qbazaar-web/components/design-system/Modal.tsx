@@ -2,8 +2,8 @@
 
 import type { ReactElement, ReactNode } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
-import { X } from 'lucide-react';
 
+import { CloseIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
@@ -56,7 +56,25 @@ export function ModalCloseButton({ className, glyph }: { className?: string; gly
       aria-label={t('ui.close')}
       className={cn('inline-flex size-10 items-center justify-center rounded-qb-md text-qb-ink hover:bg-qb-fill', focusRing, className)}
     >
-      {glyph ?? <Icon icon={X} size="lg" />}
+      {glyph ?? <Icon icon={CloseIcon} size="lg" />}
+    </Dialog.Close>
+  );
+}
+
+/**
+ * The reference's bare "✕" (22 px, #9e9e9e, line height 1; app.js share, report and category modals).
+ * The glyph keeps that size, and 9 px of padding taken back by a negative margin make the touch target
+ * 40 px without moving anything. It must sit inside a base-ui `Dialog.Popup`.
+ */
+export function GlyphCloseButton({ className }: { className?: string }) {
+  return (
+    <Dialog.Close
+      aria-label={t('ui.close')}
+      className={cn('-m-[9px] shrink-0 cursor-pointer rounded-qb-sm p-[9px] text-[22px] leading-none text-qb-ink-subtle', focusRing, className)}
+    >
+      <span aria-hidden="true" className="block">
+        ✕
+      </span>
     </Dialog.Close>
   );
 }
@@ -120,7 +138,8 @@ const SHEET_SIDES = {
   bottom: {
     popup:
       'inset-x-0 bottom-0 max-h-[90dvh] rounded-t-qb-2xl px-6 pt-3 pb-6 duration-[340ms] data-starting-style:transform-[translateY(106%)] data-ending-style:transform-[translateY(106%)]',
-    backdrop: undefined,
+    // .qb-sheet-back (mobilemenu.js): rgba(20,20,20,.45) fading in over .25 s.
+    backdrop: 'bg-qb-overlay-strong duration-[250ms]',
     header: '',
     close: '-me-2',
     closeGlyph: undefined,
@@ -143,11 +162,13 @@ export interface SheetProps extends DialogShellProps {
   side?: keyof typeof SHEET_SIDES;
   /** Visible content in place of the title (e.g. the logo); the title then names the dialog for screen readers only. */
   heading?: ReactNode;
+  /** The grab bar of a bottom sheet; the reference's filter sheet has none. */
+  showHandle?: boolean;
 }
 
 /** Sheet that slides in from the bottom or the start edge. */
 export function Sheet(props: SheetProps) {
-  const { title, heading, description, children, showCloseButton = true, side = 'bottom', className } = props;
+  const { title, heading, description, children, showCloseButton = true, showHandle = true, side = 'bottom', className } = props;
   const layout = SHEET_SIDES[side];
   return (
     <Shell {...props} backdropClassName={layout.backdrop}>
@@ -160,7 +181,7 @@ export function Sheet(props: SheetProps) {
           className,
         )}
       >
-        {side === 'bottom' ? <div aria-hidden="true" className="mx-auto mb-4 h-1 w-12 shrink-0 rounded-qb-pill bg-qb-line" /> : null}
+        {side === 'bottom' && showHandle ? <div aria-hidden="true" className="mx-auto mb-4 h-1 w-12 shrink-0 rounded-qb-pill bg-qb-line" /> : null}
         <div className={cn('flex items-center justify-between gap-4', layout.header)}>
           <Dialog.Title className={cn('font-qb text-qb-h5 font-medium tracking-normal', heading ? 'sr-only' : null)}>{title}</Dialog.Title>
           {heading}

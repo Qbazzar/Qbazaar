@@ -70,4 +70,13 @@ describe('Pagination', () => {
 
     expect(screen.getByRole('link', { name: 'Page 4' })).toHaveAttribute('aria-current', 'page');
   });
+
+  it('draws the all-categories pager as 44 px r12 cells that dim instead of tinting', () => {
+    render(<Pagination page={3} totalPages={5} getHref={getHref} size="xl" />);
+
+    const cell = screen.getByRole('link', { name: 'Page 4' });
+    expect(cell).toHaveClass('h-11', 'min-w-11', 'rounded-qb-lg', 'hover:brightness-[.96]');
+    expect(cell).not.toHaveClass('hover:bg-qb-hover');
+    expect(screen.getByRole('link', { name: 'Page 3' })).toHaveClass('bg-qb-brand');
+  });
 });

@@ -18,8 +18,8 @@ export const authButtonClass = 'h-14 rounded-qb-lg px-0 text-qb-body leading-[56
 /** The orange `.qb-btn`, #ef6f42 under the pointer and while pressed. */
 export const authSubmitClass = cn(authButtonClass, 'hover:bg-qb-auth-btn-hover');
 
-/** `.qb-field input:focus` only turns the border orange; the design system's ring stays off. */
-export const authInputClass = 'focus-visible:ring-0 aria-invalid:focus-visible:ring-0';
+/** `.qb-field input:focus` only turns the border orange (the design system's ring stays off) and `::placeholder` is #BFBFBF (auth.css:68). */
+export const authInputClass = 'placeholder:text-qb-placeholder focus-visible:ring-0 aria-invalid:focus-visible:ring-0';
 
 /** "You didn't have an account? Signup" line at the bottom of an auth card (`.qb-foot`). */
 export function AuthFooter({ children, className }: { children: ReactNode; className?: string }) {
