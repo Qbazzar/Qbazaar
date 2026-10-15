@@ -207,12 +207,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Finance: settlements, withdrawals, disputes and user statements
         Route::prefix('finance')->name('finance.')->group(function () {
             Route::middleware('permission:finance.view')->group(function () {
+                Route::get('revenue', [Finance\RevenueController::class, 'index'])->name('revenue.index');
+                Route::get('revenue/export', [Finance\RevenueController::class, 'export'])->name('revenue.export');
                 Route::get('settlements', [Finance\SettlementController::class, 'index'])->name('settlements.index');
                 Route::get('settlements/{settlement}/proof', [Finance\SettlementController::class, 'proof'])->name('settlements.proof');
                 Route::get('withdrawals', [Finance\WithdrawalController::class, 'index'])->name('withdrawals.index');
                 Route::get('disputes', [Finance\DisputeController::class, 'index'])->name('disputes.index');
                 Route::get('promotions', [Finance\PromotionTransferController::class, 'index'])->name('promotions.index');
                 Route::get('users/{user}/statement', [Finance\StatementController::class, 'show'])->name('statements.show');
+                Route::get('orders/{order}', [Finance\OrderController::class, 'show'])->name('orders.show');
             });
             Route::middleware('permission:finance.manage')->group(function () {
                 Route::post('settlements/{settlement}/approve', [Finance\SettlementController::class, 'approve'])->name('settlements.approve');

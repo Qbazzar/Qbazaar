@@ -1,4 +1,4 @@
-@props(['slices', 'label', 'caption' => null])
+@props(['slices', 'label', 'caption' => null, 'money' => false])
 
 {{-- Share of a whole as a thin ring with a legend that carries every number,
      so colour is never the only way to read a slice. Hover or focus a legend
@@ -8,6 +8,8 @@
     $slices = array_values($slices);
     $values = array_map(static fn (array $slice): int|float => $slice['value'], $slices);
     $total = array_sum($values);
+    // money: slices hold amounts, which keep their two decimals instead of rounding to whole numbers.
+    $fmt = static fn (int|float $v): string => $money ? \App\Support\Money::format(\App\Support\Money::round((string) $v)) : number_format($v);
     $radius = 42;
     $circumference = 2 * M_PI * $radius;
     $arcs = \App\Support\Charts\Geometry::donut($values, $radius, 2.0);
@@ -16,7 +18,7 @@
 
         return number_format($share, $share > 0 && $share < 10 ? 1 : 0) . '%';
     };
-    $summary = implode('. ', array_map(static fn (array $s): string => $s['label'] . ': ' . number_format($s['value']), $slices));
+    $summary = implode('. ', array_map(static fn (array $s): string => $s['label'] . ': ' . $fmt($s['value']), $slices));
     $mirror = app()->getLocale() === 'ar';
 @endphp
 
@@ -31,18 +33,18 @@
             @endforeach
         </svg>
         <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center" aria-hidden="true">
-            <span data-center-value class="text-2xl leading-none font-extrabold" dir="ltr">{{ number_format($total) }}</span>
+            <span data-center-value class="text-2xl leading-none font-extrabold" dir="ltr">{{ $fmt($total) }}</span>
             <span data-center-label class="mt-1 max-w-20 truncate text-[11px] text-ink-500">{{ $caption }}</span>
         </div>
     </div>
 
     <ul class="grid min-w-40 flex-1 gap-1.5 text-sm">
         @foreach ($slices as $index => $slice)
-            <li tabindex="0" data-legend="{{ $index }}" data-label="{{ $slice['label'] }}" data-value="{{ number_format($slice['value']) }}"
+            <li tabindex="0" data-legend="{{ $index }}" data-label="{{ $slice['label'] }}" data-value="{{ $fmt($slice['value']) }}"
                 class="flex items-center gap-2 rounded-md px-1.5 py-0.5 outline-hidden hover:bg-cream-50 focus-visible:outline-2 focus-visible:outline-coral-600">
                 <span aria-hidden="true" class="size-2.5 shrink-0 rounded-sm" style="background: {{ \App\Support\Charts\Palette::css($slice['tone']) }}"></span>
                 <span class="min-w-0 flex-1 truncate text-ink-700">{{ $slice['label'] }}</span>
-                <span dir="ltr" class="font-bold">{{ number_format($slice['value']) }}</span>
+                <span dir="ltr" class="font-bold">{{ $fmt($slice['value']) }}</span>
                 <span dir="ltr" class="w-10 text-end text-xs text-ink-500">{{ $percent($slice['value']) }}</span>
             </li>
         @endforeach
@@ -53,7 +55,7 @@
         <thead><tr><th scope="col">{{ __('admin.home.status') }}</th><th scope="col">{{ __('admin.home.trends.count') }}</th><th scope="col">%</th></tr></thead>
         <tbody>
             @foreach ($slices as $slice)
-                <tr><th scope="row">{{ $slice['label'] }}</th><td>{{ number_format($slice['value']) }}</td><td>{{ $percent($slice['value']) }}</td></tr>
+                <tr><th scope="row">{{ $slice['label'] }}</th><td>{{ $fmt($slice['value']) }}</td><td>{{ $percent($slice['value']) }}</td></tr>
             @endforeach
         </tbody>
     </table></div>

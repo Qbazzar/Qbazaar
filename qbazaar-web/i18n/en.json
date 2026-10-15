@@ -471,10 +471,10 @@
       "supported": "JPG, PNG, or WEBP. Up to 5 MB.",
       "change": "Change photo",
       "remove": "Remove",
-      "crop_title": "Crop your photo",
-      "crop_subtitle": "Drag to reposition. Use the slider to zoom.",
+      "crop_title": "Update Profile Photo",
+      "crop_subtitle": "Drag to position and zoom — the circle is what everyone will see.",
       "crop_zoom_label": "Zoom",
-      "crop_confirm": "Use this photo",
+      "crop_confirm": "Save Photo",
       "crop_cancel": "Cancel",
       "uploading": "Uploading…",
       "uploaded": "Profile photo updated",
@@ -789,7 +789,7 @@
     },
     "results_heading": "Results",
     "view_all": "View All",
-    "view_more": "View More",
+    "view_more": "Show All",
     "view_less": "View Less",
     "hub": {
       "categories": "Categories"
@@ -823,7 +823,8 @@
       "discover_text": "Browse through different categories and quickly find what you need in one place.",
       "search_label": "Search categories",
       "search_placeholder": "Search categories…",
-      "search_submit": "Search"
+      "search_submit": "Search",
+      "crumb": "Category"
     },
     "view": {
       "label": "View",
@@ -844,7 +845,6 @@
     },
     "filters": {
       "title": "Filter",
-      "sheet_title": "Advanced Filters",
       "open": "Filter",
       "active_suffix": {
         "one": "filter applied",
@@ -857,10 +857,6 @@
       "price": "Price",
       "price_min_label": "Minimum price (QAR)",
       "price_max_label": "Maximum price (QAR)",
-      "price_range": "Price Range (QAR)",
-      "price_range_error": "The maximum price can’t be lower than the minimum.",
-      "city": "City / Region",
-      "all_regions": "All Regions",
       "cities": "Cities",
       "place_in": "{place}, {city}",
       "select_search": "Search the options",
@@ -894,7 +890,8 @@
       "range_between": "{min} – {max}",
       "range_from": "From {min}",
       "range_to": "Up to {max}",
-      "range_error": "The maximum can’t be lower than the minimum."
+      "range_error": "The maximum can’t be lower than the minimum.",
+      "show_results": "Show Results"
     },
     "ads_count": {
       "one": "{count} Ad",
@@ -939,7 +936,7 @@
       "title": "Basic Information",
       "ad_type": "Ad Type",
       "ad_title": "Ad Title",
-      "ad_title_placeholder": "e.g. Clean Mercedes Benz 2020",
+      "ad_title_placeholder": "e.g. Clean Mercedes Benz 2020..",
       "ad_title_hint": "Clear titles increase sales chances by 70%",
       "category": "Category",
       "category_placeholder": "e.g. Fashion & Beauty > Skincare",
@@ -982,7 +979,7 @@
       "note": "Note: By default, we only show the postal code and city. If you want to show the full address, please check the box."
     },
     "photos": {
-      "drop": "Drop images here or click to select files from your device",
+      "drop": "Drop images here Or click to select files from your device",
       "limits": "You can add up to {max} images (Max 12MB per image)",
       "list_label": "Ad photos",
       "photo_label": "Photo {n} of {total}",
@@ -1307,7 +1304,7 @@
       "custom_fields": "Additional details"
     },
     "price": {
-      "fixed": "Fixed price",
+      "fixed": "Fixed Price",
       "negotiable": "Negotiable",
       "free": "Free",
       "contact": "Contact for price",
@@ -1667,27 +1664,27 @@
     "deal": {
       "buy_title": "Buy Now",
       "offer_title": "Make an Offer",
-      "contact_details": "Contact details",
-      "contact_chat": "Message with seller",
+      "contact_details": "Contact Details",
+      "contact_chat": "Message with Seller",
       "quantity": "Quantity",
       "quantity_available": "{count} available",
       "message": "Message",
-      "message_placeholder": "Hi, I'm interested in this item",
+      "message_placeholder": "Hi, I'm interested in this item..",
       "buy_hint": "Let the seller know when you'd like to pick it up or if you have any questions before buying.",
       "offer_hint": "Introduce yourself or explain why you're making this offer. A friendly message helps.",
-      "your_offer": "Your offer",
+      "your_offer": "Your Offer",
       "suggested": "Suggested offers",
       "suggested_label": "{amount}, {percent}% below the asking price",
       "how_it_works": "How it works",
-      "buy_step_1": "Your purchase request is sent securely to the seller.",
-      "buy_step_2": "The seller can confirm or decline the request.",
+      "buy_step_1": "Your purchase request will be sent securely to the seller.",
+      "buy_step_2": "The seller can confirm or reject the request.",
       "buy_step_3": "No payment happens now: you pay the seller in cash at handover.",
-      "offer_step_1": "The seller can accept, reject or make a counter-offer.",
-      "offer_step_2": "The offer isn't binding until both of you agree.",
-      "offer_step_3": "You're notified as soon as the seller answers.",
+      "offer_step_1": "The seller can accept, reject, or send a counter-offer.",
+      "offer_step_2": "This offer is non-binding until both parties agree.",
+      "offer_step_3": "Be ready to complete the purchase once your offer is accepted.",
       "send_request": "Send request",
-      "send_offer": "Send offer",
-      "asking_price": "Asking price:",
+      "send_offer": "Send Offer",
+      "asking_price": "Asking Price:",
       "verified": "Verified",
       "member_since": "Member since {year}",
       "own_ad": "This is your ad, so you can't buy it or make an offer on it.",
@@ -1768,9 +1765,9 @@
       "columns": {
         "item": "Item",
         "date": "Date",
-        "payment": "Payment method",
+        "payment": "Payment Method",
         "status": "Status",
-        "total": "Total"
+        "total": "Amount"
       },
       "empty_purchases": "No purchases yet",
       "empty_purchases_body": "When a seller accepts your request or your offer, the order shows up here.",
@@ -1860,7 +1857,7 @@
     },
     "wallet": {
       "title": "Wallet",
-      "subtitle": "Your balance, the commission you owe and every movement on your account.",
+      "subtitle": "View your wallet balance, manage payment methods, and track your transactions.",
       "balance": "Wallet balance",
       "commission_owed": "Commission owed",
       "withdrawable": "Withdrawable",
@@ -1874,7 +1871,7 @@
       "blocked_body": "You owe {debt}, which reached the limit of {ceiling}. Pay your commission to take orders again.",
       "near_title": "Commission is building up",
       "near_body": "You owe {debt} of the {ceiling} limit. When you reach it, you can't accept new orders until you pay.",
-      "history_title": "Transaction history",
+      "history_title": "Transaction History",
       "history_title_short": "Transactions",
       "filter_label": "Show",
       "filter": {
@@ -1980,8 +1977,8 @@
       "rejected_reason": "Rejected: {reason}"
     },
     "bank": {
-      "title": "Payout accounts",
-      "saved_title": "Saved accounts",
+      "title": "Payment Method",
+      "saved_title": "Saved Payment Method",
       "subtitle": "The bank accounts your withdrawals are paid into. IBANs are stored encrypted and only ever shown masked.",
       "add_title": "Add a bank account",
       "holder": "Account holder name",
@@ -2011,14 +2008,14 @@
       "title": "Promotions",
       "subtitle": "Lift your ads in search and on the home page for a while.",
       "types": {
-        "highlight": "Highlight",
-        "highlight_body": "Your card stands out in lists.",
-        "push_up": "Push up",
-        "push_up_body": "Back to the top of the newest ads.",
-        "gallery": "Gallery",
-        "gallery_body": "Shown in the gallery with a larger photo.",
-        "premium": "Premium",
-        "premium_body": "The strongest lift: top of search and of the home feed."
+        "highlight": "Highlight Points",
+        "highlight_body": "Visibility reaches up to double! Your ad will be highlighted in colors.",
+        "push_up": "Frequent Push up",
+        "push_up_body": "Visibility reaches up to 5x! Your ad will be moved to the top every day for a week.",
+        "gallery": "Image Gallery",
+        "gallery_body": "Visibility reaches up to 15x! Your ad will appear on the main page!",
+        "premium": "Premium Ad",
+        "premium_body": "Visibility reaches up to 10x! Your ad will appear at the top of the list!"
       },
       "duration": {
         "one": "{count} day",
@@ -2304,7 +2301,9 @@
   "impersonate": {
     "loading": "Signing you in…",
     "failed_title": "Couldn't start the session",
-    "failed": "The sign-in link may have expired. Open it again from the admin panel."
+    "failed": "The sign-in link may have expired. Open it again from the admin panel.",
+    "banner": "You're browsing as {name}",
+    "exit": "Exit impersonation"
   },
   "help": {
     "title": "Help center",

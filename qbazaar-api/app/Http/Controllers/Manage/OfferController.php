@@ -6,8 +6,10 @@ namespace App\Http\Controllers\Manage;
 
 use App\Enums\OfferStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Ad;
 use App\Models\Offer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class OfferController extends Controller
@@ -16,9 +18,12 @@ class OfferController extends Controller
     {
         $status = $request->string('status')->toString();
         $search = $request->string('q')->toString();
+        $adId = Str::isUlid($request->string('ad')->toString()) ? $request->string('ad')->toString() : '';
 
         $offers = Offer::query()
             ->with(['ad:id,title', 'buyer:id,full_name', 'seller:id,full_name', 'buyer.avatarMedia', 'seller.avatarMedia'])
+            // Served by offers_ad_created_idx.
+            ->when($adId !== '', fn ($query) => $query->where('ad_id', $adId))
             ->when(
                 in_array($status, array_column(OfferStatus::cases(), 'value'), true),
                 fn ($query) => $query->where('status', $status),
@@ -39,6 +44,8 @@ class OfferController extends Controller
             'status' => $status,
             'search' => $search,
             'statuses' => OfferStatus::cases(),
+            'adId' => $adId,
+            'adFilter' => $adId === '' ? null : Ad::withTrashed()->find($adId, ['id', 'title']),
         ]);
     }
 }
