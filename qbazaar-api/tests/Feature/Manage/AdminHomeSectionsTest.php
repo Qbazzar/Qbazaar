@@ -207,7 +207,7 @@ it('keeps the screen query count flat as picks are added', function (): void {
         pickedAd(HomeSection::BEST_SELLING, $position);
     }
 
-    expect($this->steadyQueryCount($uri))->toBe($few)->toBeLessThanOrEqual(10);
+    expect($this->steadyQueryCount($uri))->toBe($few)->toBeLessThanOrEqual(5);
 });
 
 it('serves the picks from their indexes', function (): void {

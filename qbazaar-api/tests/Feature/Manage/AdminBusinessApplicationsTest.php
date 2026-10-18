@@ -85,7 +85,7 @@ describe('the review queue', function (): void {
         }
         $many = $this->steadyQueryCount($uri);
 
-        expect($many)->toBe($few)->toBeLessThanOrEqual(14);
+        expect($many)->toBe($few)->toBeLessThanOrEqual(6);
     });
 
     it('serves the queue from its index', function (): void {

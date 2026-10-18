@@ -107,7 +107,7 @@ describe('the companies list', function (): void {
             $company->businessProfile()->create(['business_name' => "Shop {$i}"]);
         }
 
-        expect($this->steadyQueryCount($uri))->toBe($few)->toBeLessThanOrEqual(14);
+        expect($this->steadyQueryCount($uri))->toBe($few)->toBeLessThanOrEqual(6);
     });
 
     it('serves the new lookups from indexes', function (): void {
@@ -314,6 +314,6 @@ describe('featured companies', function (): void {
             featuredCompany("Shop {$i}", $i);
         }
 
-        expect($this->steadyQueryCount($uri))->toBe($few)->toBeLessThanOrEqual(10);
+        expect($this->steadyQueryCount($uri))->toBe($few)->toBeLessThanOrEqual(4);
     });
 });
