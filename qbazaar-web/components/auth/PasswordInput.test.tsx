@@ -39,4 +39,17 @@ describe('PasswordInput', () => {
     expect(input).not.toHaveClass('pr-12');
     expect(toggle).toHaveClass('end-3.5');
   });
+
+  it('keeps the standard placeholder colour unless the auth pages ask for theirs', () => {
+    render(
+      <>
+        <PasswordInput aria-label="Plain" />
+        <PasswordInput aria-label="Auth" auth />
+      </>,
+    );
+
+    expect(screen.getByLabelText('Plain')).not.toHaveClass('placeholder:text-qb-placeholder');
+    expect(screen.getByLabelText('Plain')).toHaveClass('placeholder:text-qb-ink-muted');
+    expect(screen.getByLabelText('Auth')).toHaveClass('placeholder:text-qb-placeholder');
+  });
 });

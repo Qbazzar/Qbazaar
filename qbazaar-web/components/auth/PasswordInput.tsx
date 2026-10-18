@@ -8,10 +8,12 @@ import { focusRing } from '@/components/design-system/focus-ring';
 import { t } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
-import { authInputClass } from './AuthFooter';
+import { authFocusClass, authPlaceholderClass } from './AuthFooter';
 
 export interface PasswordInputProps extends Omit<InputProps, 'type' | 'startIcon'> {
   ref?: Ref<HTMLInputElement>;
+  /** The auth pages' #BFBFBF placeholder; everywhere else the standard placeholder stays. */
+  auth?: boolean;
 }
 
 /**
@@ -22,7 +24,7 @@ export interface PasswordInputProps extends Omit<InputProps, 'type' | 'startIcon
  * the 16 px padding of `.qb-field input` on both sides, as the design does, and
  * the typed password always reads left to right.
  */
-export function PasswordInput({ className, ...props }: PasswordInputProps) {
+export function PasswordInput({ className, auth = false, ...props }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -30,7 +32,7 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
       <Input
         type={visible ? 'text' : 'password'}
         dir="ltr"
-        className={cn(authInputClass, 'rtl:placeholder:text-right', className)}
+        className={cn(authFocusClass, auth && authPlaceholderClass, 'rtl:placeholder:text-right', className)}
         {...props}
       />
       <button
