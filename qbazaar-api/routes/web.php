@@ -5,13 +5,17 @@ declare(strict_types=1);
 use App\Http\Controllers\Manage\ActivityController;
 use App\Http\Controllers\Manage\AdController;
 use App\Http\Controllers\Manage\AuthController;
+use App\Http\Controllers\Manage\BusinessApplicationController;
 use App\Http\Controllers\Manage\CategoryController;
 use App\Http\Controllers\Manage\CommissionRateController;
+use App\Http\Controllers\Manage\CompanyController;
 use App\Http\Controllers\Manage\ConversationController;
 use App\Http\Controllers\Manage\DashboardController;
+use App\Http\Controllers\Manage\FeaturedCompanyController;
 use App\Http\Controllers\Manage\Finance;
 use App\Http\Controllers\Manage\HelpArticleController;
 use App\Http\Controllers\Manage\HelpCategoryController;
+use App\Http\Controllers\Manage\HomeSectionController;
 use App\Http\Controllers\Manage\InboxController;
 use App\Http\Controllers\Manage\IntegrationTestController;
 use App\Http\Controllers\Manage\LocationController;
@@ -94,6 +98,37 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('users/{user}/roles', [UserController::class, 'updateRoles'])->middleware('permission:roles.manage')->name('users.roles');
         Route::post('users/{user}/reset-password', [UserController::class, 'sendPasswordReset'])->middleware('permission:users.update')->name('users.reset-password');
         Route::post('users/{user}/impersonate', [UserController::class, 'impersonate'])->middleware('permission:users.impersonate')->name('users.impersonate');
+
+        // ── Companies, business applications and home sections (AD-17.1, AD-17.17, AD-17.2) ──
+        Route::middleware('permission:companies.view')->group(function () {
+            Route::get('companies', [CompanyController::class, 'index'])->name('companies.index');
+            Route::get('companies/featured', [FeaturedCompanyController::class, 'index'])->name('companies.featured.index');
+            Route::get('companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
+            Route::get('business-applications', [BusinessApplicationController::class, 'index'])->name('business-applications.index');
+            Route::get('business-applications/{application}', [BusinessApplicationController::class, 'show'])->name('business-applications.show');
+        });
+        Route::middleware('permission:companies.verify')->group(function () {
+            Route::post('companies/{company}/verify', [CompanyController::class, 'verify'])->name('companies.verify');
+            Route::post('companies/{company}/revoke-verification', [CompanyController::class, 'revokeVerification'])->name('companies.revoke-verification');
+            Route::get('business-applications/{application}/documents/{document}', [BusinessApplicationController::class, 'document'])
+                ->whereNumber('document')
+                ->name('business-applications.document');
+            Route::post('business-applications/{application}/approve', [BusinessApplicationController::class, 'approve'])->name('business-applications.approve');
+            Route::post('business-applications/{application}/reject', [BusinessApplicationController::class, 'reject'])->name('business-applications.reject');
+            Route::post('business-applications/{application}/request-info', [BusinessApplicationController::class, 'requestInfo'])->name('business-applications.request-info');
+        });
+        Route::middleware('permission:companies.feature')->group(function () {
+            Route::put('companies/featured/order', [FeaturedCompanyController::class, 'reorder'])->name('companies.featured.reorder');
+            Route::post('companies/{company}/feature', [CompanyController::class, 'feature'])->name('companies.feature');
+            Route::post('companies/{company}/unfeature', [CompanyController::class, 'unfeature'])->name('companies.unfeature');
+        });
+        Route::middleware('permission:home-sections.manage')->prefix('home-sections')->name('home-sections.')->group(function () {
+            Route::get('/', [HomeSectionController::class, 'index'])->name('index');
+            Route::put('{section}/mode', [HomeSectionController::class, 'updateMode'])->name('mode');
+            Route::post('{section}/items', [HomeSectionController::class, 'storeItem'])->name('items.store');
+            Route::delete('{section}/items/{item}', [HomeSectionController::class, 'destroyItem'])->whereNumber('item')->name('items.destroy');
+            Route::put('{section}/order', [HomeSectionController::class, 'reorder'])->name('order');
+        });
 
         // Roles (read-only)
         Route::get('roles', [RoleController::class, 'index'])->middleware('permission:roles.manage')->name('roles.index');

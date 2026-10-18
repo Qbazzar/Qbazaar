@@ -75,6 +75,17 @@ class CatalogCache
     }
 
     /**
+     * Staff changed what the home screen features: a hand-picked rail, the
+     * featured companies or a verified badge. These are rare admin edits, so
+     * the home feed is dropped and rebuilt on the next read instead of
+     * waiting for the warmer.
+     */
+    public function homeCurationChanged(): void
+    {
+        $this->homeFeed->flush();
+    }
+
+    /**
      * An ad entered or left the public listings (published, approved,
      * expired, sold, removed). The home feed is rebuilt by the unique warm job
      * after a short delay, so a burst of events costs one rebuild instead of

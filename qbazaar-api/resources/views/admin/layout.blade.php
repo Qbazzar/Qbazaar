@@ -28,6 +28,7 @@
             </div>
             <nav aria-label="القائمة الرئيسية" class="flex-1 space-y-4 overflow-y-auto p-4">
                 @php($pendingReviewCount = auth()->user()->can(\App\Listeners\Ads\NotifyAdminsOfPendingAd::REVIEW_PERMISSION) ? app(\App\Services\Ads\PendingReviewCounter::class)->count() : 0)
+                @php($pendingBusinessApplications = auth()->user()->can('companies.view') ? app(\App\Services\Business\BusinessApplicationQueue::class)->pendingCount() : 0)
                 @php($groups = [
                     'عام' => [
                         ['route' => 'admin.dashboard', 'label' => __('admin.navigation.home'), 'match' => 'admin.dashboard', 'icon' => 'home'],
@@ -42,6 +43,8 @@
                     'المستخدمون' => [
                         ['route' => 'admin.users.index', 'label' => 'المستخدمون', 'match' => 'admin.users.*', 'icon' => 'users', 'permission' => 'users.view'],
                         ['route' => 'admin.roles.index', 'label' => 'الأدوار', 'match' => 'admin.roles.*', 'icon' => 'key', 'permission' => 'roles.manage'],
+                        ['route' => 'admin.companies.index', 'label' => __('admin.companies.nav'), 'match' => 'admin.companies.*', 'icon' => 'shield', 'permission' => 'companies.view'],
+                        ['route' => 'admin.business-applications.index', 'label' => __('admin.business_applications.nav'), 'match' => 'admin.business-applications.*', 'icon' => 'inbox', 'permission' => 'companies.view', 'badge' => $pendingBusinessApplications, 'badge_label' => __('admin.business_applications.pending_badge')],
                     ],
                     'المالية' => [
                         ['route' => 'admin.finance.revenue.index', 'label' => __('admin.revenue.nav'), 'match' => 'admin.finance.revenue.*', 'icon' => 'trend', 'permission' => 'finance.view'],
@@ -58,6 +61,7 @@
                     'المحتوى' => [
                         ['route' => 'admin.categories.index', 'label' => 'التصنيفات', 'match' => 'admin.categories.*', 'icon' => 'folder', 'permission' => 'categories.manage'],
                         ['route' => 'admin.locations.index', 'label' => 'المواقع', 'match' => 'admin.locations.*', 'icon' => 'map-pin', 'permission' => 'locations.manage'],
+                        ['route' => 'admin.home-sections.index', 'label' => __('admin.home_sections.nav'), 'match' => 'admin.home-sections.*', 'icon' => 'home', 'permission' => 'home-sections.manage'],
                         ['route' => 'admin.pages.index', 'label' => 'الصفحات', 'match' => 'admin.pages.*', 'icon' => 'document', 'permission' => 'pages.manage'],
                         ['route' => 'admin.help-categories.index', 'label' => 'أقسام المساعدة', 'match' => 'admin.help-categories.*', 'icon' => 'help', 'permission' => 'articles.manage'],
                         ['route' => 'admin.help-articles.index', 'label' => 'مقالات المساعدة', 'match' => 'admin.help-articles.*', 'icon' => 'document', 'permission' => 'articles.manage'],

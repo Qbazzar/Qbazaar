@@ -87,6 +87,14 @@ dataset('admin actions', [
     'mark inbox read' => ['post', '/admin/inbox/read-all', ['super_admin', 'moderator', 'support']],
     'view offer' => ['get', '/admin/offers/{offer}', ['super_admin', 'moderator']],
     'cancel offer' => ['post', '/admin/offers/{offer}/cancel', ['super_admin', 'moderator']],
+
+    // Companies, business applications and home sections (AD-17.1, AD-17.17, AD-17.2)
+    'list companies' => ['get', '/admin/companies', ['super_admin', 'moderator', 'support']],
+    'featured companies' => ['get', '/admin/companies/featured', ['super_admin', 'moderator', 'support']],
+    'verify company' => ['post', '/admin/companies/{user}/verify', ['super_admin', 'moderator']],
+    'feature company' => ['post', '/admin/companies/{user}/feature', ['super_admin', 'moderator']],
+    'business applications' => ['get', '/admin/business-applications', ['super_admin', 'moderator', 'support']],
+    'home sections' => ['get', '/admin/home-sections', ['super_admin', 'moderator']],
 ]);
 
 it('enforces the seeded permissions for every staff role', function (string $role, string $method, string $uri, array $allowed): void {

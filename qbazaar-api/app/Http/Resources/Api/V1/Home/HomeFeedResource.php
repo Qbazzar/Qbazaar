@@ -35,7 +35,7 @@ class HomeFeedResource extends JsonResource
                 ->all(),
             'recommended' => $this->ads($feed->recommended, $request),
             'featured_sellers' => $feed->featuredSellers
-                ->map(fn (User $seller): array => (new SellerCardResource($seller))->toArray($request))
+                ->map(fn (User $seller): array => (new SellerCardResource($seller, isset($feed->featuredSellerIds[$seller->id])))->toArray($request))
                 ->values()
                 ->all(),
             'best_selling' => $this->ads($feed->bestSelling, $request),

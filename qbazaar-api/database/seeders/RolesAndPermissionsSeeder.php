@@ -100,6 +100,13 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Approve settlements, withdrawals and promotion bank transfers, rule on order disputes (super_admin only by default)
         'finance.manage',
+
+        // Companies: the directory and application queue (view), the verified badge and
+        // application decisions (verify), the featured list (feature), home rails (manage)
+        'companies.view',
+        'companies.verify',
+        'companies.feature',
+        'home-sections.manage',
     ];
 
     /**
@@ -129,6 +136,10 @@ class RolesAndPermissionsSeeder extends Seeder
         'conversations.view',
         'notifications.broadcast',
         'moderation-rules.manage',
+        'companies.view',
+        'companies.verify',
+        'companies.feature',
+        'home-sections.manage',
     ];
 
     /**
@@ -144,6 +155,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'support.view',
         'support.reply',
         'notifications.broadcast',
+        'companies.view',
     ];
 
     public function run(): void
