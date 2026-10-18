@@ -5,208 +5,110 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Manage\Catalog\BulkDestroyTaxonomyRequest;
+use App\Http\Requests\Manage\Catalog\SaveCategoryRequest;
+use App\Http\Requests\Manage\Catalog\UpdateTaxonomyStatusRequest;
 use App\Models\Category;
-use App\Services\Catalog\CatalogCache;
+use App\Models\User;
+use App\Services\Admin\Catalog\CategoryTreeBuilder;
+use App\Services\Admin\Catalog\DeleteBlockedNotice;
+use App\Services\Catalog\CategoryFields;
+use App\Services\Catalog\Taxonomy\TaxonomyDeletion;
+use App\Services\Catalog\Taxonomy\TaxonomyKind;
+use App\Services\Catalog\Taxonomy\TaxonomyTreeOptions;
+use App\Services\Catalog\Taxonomy\TaxonomyUsageCounter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use Throwable;
 
 class CategoryController extends Controller
 {
-    public function __construct(private readonly CatalogCache $catalogCache) {}
-
-    public function index(Request $request): View
+    public function index(Request $request, CategoryTreeBuilder $tree): View
     {
-        $search = $request->string('q')->toString();
+        $search = $request->string('q')->trim()->toString();
+        $page = max(1, $request->integer('page', 1));
+        $locale = app()->getLocale();
 
-        $categories = Category::query()
-            ->with('parent')
-            ->when(
-                $search !== '',
-                fn ($query) => $query->where(function ($inner) use ($search): void {
-                    $inner->where('slug', 'like', "%{$search}%")
-                        ->orWhere('name->ar', 'like', "%{$search}%")
-                        ->orWhere('name->en', 'like', "%{$search}%");
-                }),
-            )
-            ->orderBy('order')
-            ->paginate(30)
-            ->withQueryString();
+        $rows = $search === '' ? $tree->tree($page, $locale) : $tree->search($search, $page, $locale);
 
         return view('admin.categories.index', [
-            'categories' => $categories,
+            'rows' => $rows->withQueryString(),
             'search' => $search,
+            'blocked' => DeleteBlockedNotice::fromSession($request->session()),
         ]);
     }
 
-    public function create(): View
+    public function create(TaxonomyTreeOptions $options): View
     {
         return view('admin.categories.form', [
             'category' => new Category,
-            'parents' => $this->parentOptions(),
+            'parents' => $options->for(TaxonomyKind::CATEGORY, null, app()->getLocale()),
+            'usage' => null,
+            'schema' => null,
+            'blocked' => null,
+            'kind' => TaxonomyKind::CATEGORY,
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SaveCategoryRequest $request): RedirectResponse
     {
-        $data = $this->validated($request);
-
-        Category::create($data);
-        $this->flushCache();
+        Category::query()->create($request->categoryData());
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('status', 'تم إنشاء التصنيف بنجاح.');
+            ->with('status', __('admin.catalog.flash.category_created'));
     }
 
-    public function edit(Category $category): View
+    public function edit(Request $request, Category $category, TaxonomyTreeOptions $options, TaxonomyUsageCounter $counter, CategoryFields $fields): View
     {
-        // A side-card figure: if it fails the form still opens and the card says so.
-        rescue(fn () => $category->loadCount(['children', 'ads']));
-
         return view('admin.categories.form', [
             'category' => $category,
-            'parents' => $this->parentOptions($category->id),
+            'parents' => $options->for(TaxonomyKind::CATEGORY, $category->id, app()->getLocale()),
+            // A side-card figure: if it fails the form still opens and the card says so.
+            'usage' => rescue(fn () => $counter->forNode($category)),
+            'schema' => $fields->forCategory($category),
+            'blocked' => DeleteBlockedNotice::fromSession($request->session()),
+            'kind' => TaxonomyKind::CATEGORY,
         ]);
     }
 
-    public function update(Request $request, Category $category): RedirectResponse
+    public function update(SaveCategoryRequest $request, Category $category): RedirectResponse
     {
-        $data = $this->validated($request, $category);
-
-        $category->update($data);
-        $this->flushCache();
+        $category->update($request->categoryData());
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('status', 'تم تحديث التصنيف بنجاح.');
+            ->with('status', __('admin.catalog.flash.category_updated'));
     }
 
-    public function destroy(Category $category): RedirectResponse
+    public function destroy(Category $category, TaxonomyDeletion $deletion): RedirectResponse
     {
-        $category->delete();
-        $this->flushCache();
+        $usage = $deletion->delete($category);
+
+        if ($usage->inUse()) {
+            return back()
+                ->with('error', $usage->blockedMessage(TaxonomyKind::CATEGORY, $category->getLocalizedName(app()->getLocale())))
+                ->with(DeleteBlockedNotice::SESSION_KEY, DeleteBlockedNotice::payload($category, $usage));
+        }
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('status', 'تم حذف التصنيف.');
+            ->with('status', __('admin.catalog.flash.category_deleted'));
     }
 
-    public function bulkDestroy(Request $request): RedirectResponse
+    public function bulkDestroy(BulkDestroyTaxonomyRequest $request, TaxonomyDeletion $deletion): RedirectResponse
     {
-        $data = $request->validate([
-            'ids' => ['required', 'array'],
-            'ids.*' => ['string'],
-        ]);
+        /** @var User $admin */
+        $admin = $request->user();
+        $result = $deletion->deleteMany(TaxonomyKind::CATEGORY, $request->ids(), $admin);
 
-        $count = Category::whereIn('id', $data['ids'])->delete();
-        $this->flushCache();
-
-        return back()->with('status', "تم حذف {$count} عنصراً.");
+        return back()->with($result->hasBlocked() ? 'error' : 'status', $result->message());
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function validated(Request $request, ?Category $category = null): array
+    public function status(UpdateTaxonomyStatusRequest $request, Category $category): RedirectResponse
     {
-        $validated = $request->validate([
-            'name.ar' => ['required', 'string', 'max:255'],
-            'name.en' => ['required', 'string', 'max:255'],
-            'slug' => [
-                'required',
-                'string',
-                'max:64',
-                'regex:/^[A-Za-z0-9_-]+$/',
-                Rule::unique('categories', 'slug')->ignore($category?->id),
-            ],
-            'parent_id' => [
-                'nullable',
-                'string',
-                Rule::exists('categories', 'id'),
-                Rule::notIn(array_filter([$category?->id])),
-            ],
-            'icon' => ['nullable', 'string', 'max:64'],
-            'order' => ['required', 'integer', 'min:0'],
-            'is_active' => ['sometimes', 'boolean'],
-            'custom_fields' => ['nullable', 'string', $this->jsonRule()],
-            'custom_filters' => ['nullable', 'string', $this->jsonRule()],
-        ]);
+        $category->update(['is_active' => $request->active()]);
 
-        return [
-            'name' => ['ar' => $validated['name']['ar'], 'en' => $validated['name']['en']],
-            'slug' => $validated['slug'],
-            'parent_id' => $validated['parent_id'] ?? null,
-            'icon' => $validated['icon'] ?? null,
-            'order' => $validated['order'],
-            'is_active' => $request->boolean('is_active'),
-            'custom_fields' => $this->decodeJson($validated['custom_fields'] ?? null),
-            'custom_filters' => $this->decodeJson($validated['custom_filters'] ?? null),
-        ];
-    }
-
-    /**
-     * Validation closure ensuring a string field holds valid JSON.
-     */
-    private function jsonRule(): callable
-    {
-        return static function (string $attribute, mixed $value, callable $fail): void {
-            if ($value === null || $value === '') {
-                return;
-            }
-
-            json_decode((string) $value, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $fail('يجب أن يكون الحقل :attribute بصيغة JSON صحيحة.');
-            }
-        };
-    }
-
-    /**
-     * @return array<mixed>|null
-     */
-    private function decodeJson(?string $value): ?array
-    {
-        if ($value === null || trim($value) === '') {
-            return null;
-        }
-
-        /** @var array<mixed>|null $decoded */
-        $decoded = json_decode($value, true);
-
-        return $decoded;
-    }
-
-    /**
-     * Build the parent-select options, excluding the record being edited so a
-     * category can't become its own parent.
-     *
-     * @return Collection<int, Category>
-     */
-    private function parentOptions(?string $excludeId = null)
-    {
-        return Category::query()
-            ->when($excludeId !== null, fn ($query) => $query->whereKeyNot($excludeId))
-            ->orderBy('order')
-            ->get();
-    }
-
-    /**
-     * Bulk deletes skip model events, so the catalog caches are flushed here as well as by the observer.
-     */
-    private function flushCache(): void
-    {
-        $this->catalogCache->taxonomyChanged();
-
-        try {
-            Cache::tags(['categories'])->flush();
-        } catch (Throwable) {
-            // Driver doesn't support tags (file / array) — keys expire by TTL.
-        }
+        return back()->with('status', __($request->active() ? 'admin.catalog.flash.category_activated' : 'admin.catalog.flash.category_deactivated'));
     }
 }
