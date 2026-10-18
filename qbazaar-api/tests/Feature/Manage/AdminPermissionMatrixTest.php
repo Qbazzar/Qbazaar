@@ -76,6 +76,13 @@ dataset('admin actions', [
     'finance withdrawals' => ['get', '/admin/finance/withdrawals', ['super_admin']],
     'finance disputes' => ['get', '/admin/finance/disputes', ['super_admin']],
     'finance statement' => ['get', '/admin/finance/users/{user}/statement', ['super_admin']],
+    // Companies, business applications and home sections (AD-17.1, AD-17.17, AD-17.2)
+    'list companies' => ['get', '/admin/companies', ['super_admin', 'moderator', 'support']],
+    'featured companies' => ['get', '/admin/companies/featured', ['super_admin', 'moderator', 'support']],
+    'verify company' => ['post', '/admin/companies/{user}/verify', ['super_admin', 'moderator']],
+    'feature company' => ['post', '/admin/companies/{user}/feature', ['super_admin', 'moderator']],
+    'business applications' => ['get', '/admin/business-applications', ['super_admin', 'moderator', 'support']],
+    'home sections' => ['get', '/admin/home-sections', ['super_admin', 'moderator']],
 ]);
 
 it('enforces the seeded permissions for every staff role', function (string $role, string $method, string $uri, array $allowed): void {

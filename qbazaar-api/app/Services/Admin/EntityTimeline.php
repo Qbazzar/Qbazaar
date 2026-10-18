@@ -42,6 +42,9 @@ final class EntityTimeline
         'force-expire' => 'warning',
         'status_changed' => 'warning',
         'account_deletion_requested' => 'warning',
+        'verify' => 'success',
+        'revoke-verification' => 'danger',
+        'request-info' => 'warning',
     ];
 
     /**

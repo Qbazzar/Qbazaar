@@ -393,6 +393,30 @@ return [
         'account' => [
             'required' => 'This is only available to business accounts.',
         ],
+        'application' => [
+            'open' => 'You already have a business application under review.',
+            'not' => [
+                'open' => 'This application has already been reviewed.',
+            ],
+        ],
+        'already' => [
+            'verified' => 'This account is already verified.',
+            'featured' => 'This company is already featured.',
+        ],
+        'not' => [
+            'verified' => 'This account is not verified.',
+            'featured' => 'This company is not featured.',
+        ],
+        'featured' => [
+            'limit' => 'The featured companies list is full. Remove a company first.',
+        ],
+    ],
+
+    'home' => [
+        'section' => [
+            'full' => 'This section is full. Remove an ad first.',
+            'duplicate' => 'This ad is already in the section.',
+        ],
     ],
 
     'order' => [

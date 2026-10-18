@@ -62,6 +62,20 @@ requested locale.
 | `FOLLOW_001` | Cannot follow yourself | 422 |
 | `FOLLOW_002` | Cannot follow: one of the two users has blocked the other | 403 |
 | `BIZ_001` | Only business accounts can have a business profile | 403 |
+| `BIZ_002` | A business application is already waiting for review (one open application per user) | 422 |
+| `BIZ_003` | The business application was already decided (staff acted on a stale page) | 422 |
+| `BIZ_004` | The account is already a verified business | 422 |
+| `BIZ_005` | The account is not verified, so there is no badge to revoke | 422 |
+| `BIZ_006` | The featured companies list is full (`qbazaar.business.featured_max`) | 422 |
+| `BIZ_007` | The company is already featured (staff acted on a stale page) | 422 |
+| `BIZ_008` | The company is not featured, so there is nothing to remove | 422 |
+
+## Home curation (admin)
+
+| Code | Meaning | HTTP |
+|------|---------|------|
+| `HOME_001` | The home section already holds as many picked ads as it shows | 422 |
+| `HOME_002` | The ad is already picked for this home section | 422 |
 
 ## Categories & Locations (Sprint 3)
 

@@ -1637,6 +1637,71 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /api/v1/account/business-application:
+    get:
+      tags: [Account]
+      summary: The caller's latest business application
+      description: >
+        `data` is null when the caller never applied. Documents are listed
+        without links: they stay on a private disk that only reviewing staff
+        open.
+      operationId: accountBusinessApplicationShow
+      responses:
+        '200':
+          description: The latest application, or null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessApplicationEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Account]
+      summary: Apply to become a verified business, or answer a request for more information
+      description: >
+        Multipart. A first application needs at least one document (PDF,
+        JPEG, PNG or WebP, at most 10 MB each, 5 in all). While staff wait for
+        more information (`can_resubmit`), posting again updates the same
+        application and puts it back in the review queue; added documents
+        join the existing ones. Approval turns the account into a verified
+        business account; every decision is notified (mail, in-app, push).
+      operationId: accountBusinessApplicationSubmit
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [business_name, legal_name, commercial_registration_number]
+              properties:
+                business_name: { type: string, minLength: 2, maxLength: 120 }
+                legal_name: { type: string, minLength: 2, maxLength: 160 }
+                commercial_registration_number: { type: string, maxLength: 40, pattern: '^[A-Za-z0-9\-/]+$' }
+                applicant_note: { type: [string, 'null'], maxLength: 1000 }
+                documents:
+                  type: array
+                  maxItems: 5
+                  items: { type: string, format: binary }
+      responses:
+        '201':
+          description: The submitted application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessApplicationEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: >
+            Validation failed, an application already waits for review
+            (`BIZ_002`) or the account is already verified (`BIZ_004`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
   /api/v1/account/followers/{user}:
     delete:
       tags: [Account]
@@ -3461,11 +3526,13 @@ paths:
   /api/v1/companies:
     get:
       tags: [Users]
-      summary: Directory of active business accounts, most followed first
+      summary: Directory of active business accounts, featured first, then most followed
       description: >
-        Public. Send the Bearer token to get `is_following` for the caller;
-        guests always get false. `q` matches the business name or the account
-        name.
+        Public. The companies staff feature come first, in staff order
+        (`is_featured`), then the rest most followed first; pages run across
+        both as one list. Send the Bearer token to get `is_following` for the
+        caller; guests always get false. `q` matches the business name or the
+        account name, featured matches first.
       operationId: companiesIndex
       security: []
       parameters:
@@ -6048,7 +6115,7 @@ components:
           type: boolean
         business_verified:
           type: boolean
-          description: Placeholder until Phase 2 business-verification ships
+          description: The verified-business badge staff grant, directly or by approving a business application.
         kyc_status:
           type: string
           enum: [none, pending, approved, rejected]
@@ -6324,6 +6391,8 @@ components:
         business_name: { type: string, description: The business profile name, or the account name when none is set. }
         about: { type: [string, 'null'], description: First 160 characters of the business description. }
         avatar_url: { type: [string, 'null'], format: uri }
+        business_verified: { type: boolean, description: The verified-business badge. }
+        is_featured: { type: boolean, description: Featured by staff; featured companies lead the directory in staff order. }
         cover_url: { type: [string, 'null'], format: uri }
         followers_count: { type: integer }
         active_ads_count: { type: integer }
@@ -6331,6 +6400,41 @@ components:
         rating_count: { type: integer }
         is_following: { type: boolean }
         joined_at: { type: string, format: date-time }
+
+    BusinessApplication:
+      type: object
+      required: [id, status, business_name, legal_name, commercial_registration_number, can_resubmit, documents, submitted_at]
+      properties:
+        id: { $ref: '#/components/schemas/ULID' }
+        status: { type: string, enum: [pending, needs_info, approved, rejected] }
+        business_name: { type: string }
+        legal_name: { type: string }
+        commercial_registration_number: { type: string }
+        applicant_note: { type: [string, 'null'] }
+        review_note: { type: [string, 'null'], description: The reason or the request staff sent with their latest decision. }
+        can_resubmit: { type: boolean, description: True while staff wait for more information. }
+        documents:
+          type: array
+          items:
+            type: object
+            required: [id, name, mime_type, size]
+            properties:
+              id: { type: integer }
+              name: { type: string }
+              mime_type: { type: string }
+              size: { type: integer, description: Bytes. }
+        submitted_at: { type: string, format: date-time }
+        reviewed_at: { type: [string, 'null'], format: date-time }
+
+    BusinessApplicationEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              oneOf:
+                - $ref: '#/components/schemas/BusinessApplication'
+                - type: 'null'
 
     CompanyListEnvelope:
       allOf:
@@ -6681,6 +6785,8 @@ components:
         full_name: { type: string }
         avatar_url: { type: [string, 'null'], format: uri }
         account_type: { type: string, enum: [private, business] }
+        business_verified: { type: boolean, description: The verified-business badge. }
+        is_featured: { type: boolean, description: Featured by staff; featured companies lead the rail in staff order. }
         ads_count: { type: integer, description: Active ads of the seller. }
         rating_avg: { type: number, format: float, example: 4.6 }
         rating_count: { type: integer }
@@ -6717,7 +6823,9 @@ components:
         recommended:
           type: array
           description: |
-            "Fresh deals posted in the last 24 hours" (automatic until admin curation lands),
+            "Fresh deals posted in the last 24 hours". When staff run the section by hand
+            (admin "Home sections", manual mode) it holds their picked ads that are still
+            listed, in their order. Otherwise (automatic mode, or no picked ad is listed)
             in this order: active promoted ads first (strongest promotion first), then the
             newest approved ads published within `qbazaar.home.recommended_window_hours`
             (24), newest first. Only when that leaves the rail shorter than
@@ -6726,11 +6834,11 @@ components:
           items: { $ref: '#/components/schemas/AdSummary' }
         featured_sellers:
           type: array
-          description: Active business accounts with the most live ads.
+          description: The companies staff feature (active ones, in staff order), then the active business accounts with the most live ads.
           items: { $ref: '#/components/schemas/SellerCard' }
         best_selling:
           type: array
-          description: Most favourited listed ads.
+          description: Staff's listed picks in their order when the section runs by hand; otherwise the most favourited listed ads.
           items: { $ref: '#/components/schemas/AdSummary' }
         places:
           type: array

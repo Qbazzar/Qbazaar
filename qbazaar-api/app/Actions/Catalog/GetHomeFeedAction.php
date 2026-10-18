@@ -6,11 +6,15 @@ namespace App\Actions\Catalog;
 
 use App\Data\Catalog\HomeFeed;
 use App\Enums\AccountType;
+use App\Enums\HomeSection;
+use App\Enums\HomeSectionMode;
 use App\Enums\UserStatus;
 use App\Models\Ad;
 use App\Models\Location;
 use App\Models\User;
+use App\Services\Business\FeaturedCompanies;
 use App\Services\Catalog\CategoryTree;
+use App\Services\Catalog\HomeSections;
 use App\Services\Catalog\LocationAdCounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,10 +22,13 @@ use Illuminate\Database\Eloquent\Collection;
 /**
  * Everything the home screen shows, gathered in one pass.
  *
- * Until the admin can curate the sections (AD-17.1, AD-17.2) they run in
- * automatic mode: recommended = paid promotions first, then the newest ads of
- * the last 24 hours (topped up with the most viewed); best selling = most favourited; featured sellers =
- * business accounts with the most live ads.
+ * Staff curate the rails in the admin panel. A section in manual mode shows
+ * its hand-picked ads that are still listed, in staff order; in automatic
+ * mode (or when none of its picks is listed any more) it follows the
+ * built-in rule: recommended = paid promotions first, then the newest ads of
+ * the last 24 hours (topped up with the most viewed); best selling = most
+ * favourited. Featured sellers = the companies staff feature, in their
+ * order, then the business accounts with the most live ads.
  */
 class GetHomeFeedAction
 {
@@ -30,18 +37,43 @@ class GetHomeFeedAction
     public function __construct(
         private readonly CategoryTree $categoryTree,
         private readonly LocationAdCounts $placeCounts,
+        private readonly HomeSections $sections,
+        private readonly FeaturedCompanies $featuredCompanies,
     ) {}
 
     public function execute(): HomeFeed
     {
+        $modes = $this->sections->modes();
+        $featured = $this->featuredCompanies->listed();
+
         return new HomeFeed(
             categories: $this->categoryTree->roots(),
-            recommended: $this->recommended(),
-            featuredSellers: $this->featuredSellers(),
-            bestSelling: $this->bestSelling(),
+            recommended: $this->curated(HomeSection::RECOMMENDED, $modes) ?? $this->recommended(),
+            featuredSellers: $this->featuredSellers($featured),
+            bestSelling: $this->curated(HomeSection::BEST_SELLING, $modes) ?? $this->bestSelling(),
             places: $this->places(),
             placeCounts: $this->placeCounts->all(),
+            featuredSellerIds: array_fill_keys($featured->modelKeys(), true),
         );
+    }
+
+    /**
+     * The section's listed picks when staff run it by hand; null hands the
+     * rail to the automatic rule, so it never goes empty because every pick
+     * was sold or expired.
+     *
+     * @param array<string, HomeSectionMode> $modes
+     * @return Collection<int, Ad>|null
+     */
+    private function curated(HomeSection $section, array $modes): ?Collection
+    {
+        if ($modes[$section->value] !== HomeSectionMode::MANUAL) {
+            return null;
+        }
+
+        $ads = $this->sections->curatedAds($section);
+
+        return $ads->isEmpty() ? null : $ads->load(self::AD_RELATIONS);
     }
 
     /**
@@ -149,19 +181,31 @@ class GetHomeFeedAction
     }
 
     /**
+     * The companies staff feature, in their order, then the busiest business
+     * sellers to fill the rail. Relations are loaded once for the whole rail.
+     *
+     * @param Collection<int, User> $featured
      * @return Collection<int, User>
      */
-    private function featuredSellers(): Collection
+    private function featuredSellers(Collection $featured): Collection
     {
-        return User::query()
-            ->where('account_type', AccountType::BUSINESS->value)
-            ->where('status', UserStatus::ACTIVE->value)
-            ->where('active_ads_count', '>', 0)
-            ->orderByDesc('active_ads_count')
-            ->orderBy('id')
-            ->limit((int) config('qbazaar.home.featured_sellers_limit'))
-            ->with('latestListedAd.location')
-            ->get();
+        $limit = (int) config('qbazaar.home.featured_sellers_limit');
+        $rail = $featured->take($limit)->values();
+        $remaining = $limit - $rail->count();
+
+        if ($remaining > 0) {
+            $rail = $rail->concat(User::query()
+                ->where('account_type', AccountType::BUSINESS->value)
+                ->where('status', UserStatus::ACTIVE->value)
+                ->where('active_ads_count', '>', 0)
+                ->whereKeyNot($rail->modelKeys())
+                ->orderByDesc('active_ads_count')
+                ->orderBy('id')
+                ->limit($remaining)
+                ->get());
+        }
+
+        return $rail->load('latestListedAd.location');
     }
 
     /**
