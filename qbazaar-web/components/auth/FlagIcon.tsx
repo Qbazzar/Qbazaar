@@ -7,9 +7,8 @@ import { cn } from '@/lib/utils';
  * The flags of the auth language list as inline SVG. The reference writes them as emoji, which
  * Windows browsers draw as the letters "GB" and "QA"; the drawing looks the same everywhere.
  */
-const FLAGS: Record<Locale, { title: string; shapes: ReactNode }> = {
+const FLAGS: Record<Locale, { shapes: ReactNode }> = {
   en: {
-    title: 'GB',
     shapes: (
       <>
         <rect width="60" height="40" fill="#012169" />
@@ -21,7 +20,6 @@ const FLAGS: Record<Locale, { title: string; shapes: ReactNode }> = {
     ),
   },
   ar: {
-    title: 'QA',
     shapes: (
       <>
         <rect width="60" height="40" fill="#8A1538" />
