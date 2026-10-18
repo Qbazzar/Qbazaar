@@ -450,6 +450,19 @@ return [
         'impersonation_reason_min_length' => 10,
         'impersonation_reason_max_length' => 500,
         'pending_review_count_cache_seconds' => 300,
+
+        // Moderation queue: a pending ad should be reviewed within this many
+        // hours; past the warning share of it the row turns amber, past it red.
+        'moderation_sla_hours' => 24,
+        'moderation_sla_warn_ratio' => 0.75,
+        'review_queue_per_page' => 25,
+
+        // Staff inbox: the bell polls the unread count (cached per person) and
+        // the queue cards are cached once for everyone.
+        'inbox_per_page' => 20,
+        'inbox_poll_seconds' => 60,
+        'inbox_unread_cache_seconds' => 30,
+        'inbox_queue_cache_seconds' => 60,
     ],
 
     /*

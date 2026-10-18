@@ -76,6 +76,14 @@ dataset('admin actions', [
     'finance withdrawals' => ['get', '/admin/finance/withdrawals', ['super_admin']],
     'finance disputes' => ['get', '/admin/finance/disputes', ['super_admin']],
     'finance statement' => ['get', '/admin/finance/users/{user}/statement', ['super_admin']],
+
+    // Moderation tools (AD-17.10)
+    'review queue' => ['get', '/admin/moderation/queue', ['super_admin', 'moderator']],
+    'bulk approve from the queue' => ['post', '/admin/moderation/queue/approve', ['super_admin', 'moderator']],
+    'bulk reject from the queue' => ['post', '/admin/moderation/queue/reject', ['super_admin', 'moderator']],
+    'staff inbox' => ['get', '/admin/inbox', ['super_admin', 'moderator', 'support']],
+    'staff inbox summary' => ['get', '/admin/inbox/summary', ['super_admin', 'moderator', 'support']],
+    'mark inbox read' => ['post', '/admin/inbox/read-all', ['super_admin', 'moderator', 'support']],
 ]);
 
 it('enforces the seeded permissions for every staff role', function (string $role, string $method, string $uri, array $allowed): void {
@@ -104,10 +112,12 @@ it('enforces the seeded permissions for every staff role', function (string $rol
     }
 })->with(['super_admin', 'moderator', 'support'])->with('admin actions');
 
-it('guards every admin route except the dashboard and own profile with a permission', function (): void {
+it('guards every admin route except the dashboard, own profile and own inbox with a permission', function (): void {
     $unguarded = collect(Route::getRoutes()->getRoutes())
         ->filter(fn (RoutingRoute $route): bool => in_array('staff', $route->gatherMiddleware(), true))
         ->reject(fn (RoutingRoute $route): bool => in_array($route->getName(), ['admin.dashboard', 'admin.profile.edit', 'admin.profile.update'], true))
+        // Every staff member reads their own notifications; the work queues inside check their own permissions.
+        ->reject(fn (RoutingRoute $route): bool => Str::startsWith((string) $route->getName(), 'admin.inbox.'))
         ->reject(fn (RoutingRoute $route): bool => collect($route->gatherMiddleware())
             ->contains(fn (mixed $middleware): bool => is_string($middleware) && Str::startsWith($middleware, 'permission:')))
         ->map(fn (RoutingRoute $route): ?string => $route->getName())
