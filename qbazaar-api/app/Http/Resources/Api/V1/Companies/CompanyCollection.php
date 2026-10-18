@@ -12,7 +12,9 @@ use Illuminate\Support\Str;
 
 /**
  * A page of the companies directory. Expects `businessProfile` and the cover
- * media loaded by CompanyDirectory.
+ * media loaded by CompanyDirectory. `is_featured` marks the companies staff
+ * feature, which lead the directory in staff order; `business_verified` is
+ * the verified badge.
  */
 class CompanyCollection extends ResourceCollection
 {
@@ -57,6 +59,8 @@ class CompanyCollection extends ResourceCollection
             'business_name' => $profile->business_name ?? $company->full_name,
             'about' => $profile?->about !== null ? Str::limit($profile->about, self::ABOUT_EXCERPT_LENGTH) : null,
             'avatar_url' => $company->avatar_url,
+            'business_verified' => $company->isVerifiedBusiness(),
+            'is_featured' => $profile?->featured_position !== null,
             'cover_url' => $company->businessCoverUrl(),
             'followers_count' => $company->followers_count,
             'active_ads_count' => $company->active_ads_count,

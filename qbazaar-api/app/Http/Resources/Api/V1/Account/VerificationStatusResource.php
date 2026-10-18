@@ -11,10 +11,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Verification snapshot for the signed-in user.
  *
- * `business_verified` and `kyc_status` are placeholders — the underlying
- * business-verification and KYC workflows ship in Phase 2. Returning the
- * fields now keeps the response contract stable so clients don't break when
- * the real data lands.
+ * `business_verified` is the verified-business badge staff grant (directly
+ * or by approving a business application, see GET /account/business-application).
+ * `kyc_status` is still a placeholder: the KYC workflow ships in Phase 2, and
+ * returning the field now keeps the response contract stable.
  *
  * @mixin User
  */
@@ -28,7 +28,7 @@ class VerificationStatusResource extends JsonResource
         return [
             'email_verified' => (bool) $this->email_verified,
             'phone_verified' => (bool) $this->phone_verified,
-            'business_verified' => false, // TODO Phase 2: wire to business-verifications table
+            'business_verified' => $this->resource->isVerifiedBusiness(),
             'kyc_status' => 'none',       // TODO Phase 2: wire to kyc_status enum on users
         ];
     }

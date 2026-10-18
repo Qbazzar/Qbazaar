@@ -44,7 +44,7 @@ class PublicUserResource extends JsonResource
             'verification_badges' => [
                 'email_verified' => (bool) $this->email_verified,
                 'phone_verified' => (bool) $this->phone_verified,
-                'business_verified' => false, // TODO Phase 2
+                'business_verified' => $this->resource->isVerifiedBusiness(),
             ],
             'ads_count' => (int) $this->active_ads_count,
             'rating_avg' => (float) $this->rating_avg,

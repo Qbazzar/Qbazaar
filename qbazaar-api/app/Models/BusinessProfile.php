@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $website
  * @property string|null $address
  * @property list<array{day: string, closed: bool, open?: string|null, close?: string|null}>|null $opening_hours
+ * @property int|null $featured_position
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property User $user
@@ -51,6 +52,7 @@ class BusinessProfile extends Model
     {
         return [
             'opening_hours' => 'array',
+            'featured_position' => 'integer',
         ];
     }
 

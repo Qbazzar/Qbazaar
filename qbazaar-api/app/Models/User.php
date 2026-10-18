@@ -20,6 +20,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -44,6 +45,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $phone
  * @property string|null $password
  * @property AccountType $account_type
+ * @property Carbon|null $business_verified_at
+ * @property string|null $business_verified_by
+ * @property User|null $businessVerifier
  * @property UserStatus $status
  * @property bool $email_verified
  * @property bool $phone_verified
@@ -108,6 +112,7 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
             'phone_verified' => 'boolean',
             'last_login_at' => 'datetime',
             'deletion_requested_at' => 'datetime',
+            'business_verified_at' => 'datetime',
             'account_type' => AccountType::class,
             'status' => UserStatus::class,
             'language' => Language::class,
@@ -170,6 +175,27 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
     public function businessProfile(): HasOne
     {
         return $this->hasOne(BusinessProfile::class);
+    }
+
+    /**
+     * The verified badge: a business account staff have checked, directly
+     * or by approving its business application.
+     */
+    public function isVerifiedBusiness(): bool
+    {
+        return $this->isBusiness() && $this->business_verified_at !== null;
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function businessVerifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'business_verified_by');
+    }
+
+    /** @return HasMany<BusinessApplication, $this> */
+    public function businessApplications(): HasMany
+    {
+        return $this->hasMany(BusinessApplication::class);
     }
 
     /* ──────────────────────────────────────────────────────────────────

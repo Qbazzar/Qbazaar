@@ -12,12 +12,18 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Compact seller card for the home screen. Contact details are left out on
  * purpose: they follow the privacy settings on the public profile only.
- * Expects `latestListedAd.location` loaded.
+ * Expects `latestListedAd.location` loaded. `is_featured` marks the
+ * companies staff feature, which lead the rail.
  *
  * @mixin User
  */
 class SellerCardResource extends JsonResource
 {
+    public function __construct(User $seller, private readonly bool $featured = false)
+    {
+        parent::__construct($seller);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -28,6 +34,8 @@ class SellerCardResource extends JsonResource
             'full_name' => $this->full_name,
             'avatar_url' => $this->avatar_url,
             'account_type' => $this->account_type->value,
+            'business_verified' => $this->resource->isVerifiedBusiness(),
+            'is_featured' => $this->featured,
             'ads_count' => (int) $this->active_ads_count,
             'rating_avg' => (float) $this->rating_avg,
             'rating_count' => (int) $this->rating_count,
