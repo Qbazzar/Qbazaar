@@ -151,9 +151,12 @@ export function FieldSelect({
     };
   }, [open]);
 
+  // A pointer open lights no row, yet a long list still has to show the chosen one; scrolling it into view does not light it.
+  const chosenId = chosen?.id;
   useEffect(() => {
-    if (open && activeId) document.getElementById(activeId)?.scrollIntoView?.({ block: 'nearest' });
-  }, [open, activeId]);
+    const target = activeId ?? chosenId;
+    if (open && target) document.getElementById(target)?.scrollIntoView?.({ block: 'nearest' });
+  }, [open, activeId, chosenId]);
 
   /** `start` null opens with no row lit, as the reference does for a click; undefined starts on the chosen value for the keyboard. */
   const openPanel = (start: Entry | null | undefined = chosen ?? top[0]) => {
