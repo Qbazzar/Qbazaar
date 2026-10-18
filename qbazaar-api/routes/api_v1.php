@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Account\AccountSummaryController;
 use App\Http\Controllers\Api\V1\Account\AddressController;
 use App\Http\Controllers\Api\V1\Account\BankAccountController;
 use App\Http\Controllers\Api\V1\Account\BlockedUsersController;
+use App\Http\Controllers\Api\V1\Account\BusinessApplicationController;
 use App\Http\Controllers\Api\V1\Account\BusinessProfileController;
 use App\Http\Controllers\Api\V1\Account\ContactChangeController;
 use App\Http\Controllers\Api\V1\Account\DataExportController;
@@ -269,6 +270,13 @@ Route::prefix('account')
         Route::put('/business-profile', [BusinessProfileController::class, 'update'])->name('business-profile.update');
         Route::post('/business-profile/cover', [BusinessProfileController::class, 'uploadCover'])->name('business-profile.cover.store');
         Route::delete('/business-profile/cover', [BusinessProfileController::class, 'removeCover'])->name('business-profile.cover.destroy');
+
+        // Business applications (AD-17.17): apply to become a verified
+        // business, or answer staff's request for more information.
+        Route::get('/business-application', [BusinessApplicationController::class, 'show'])->name('business-application.show');
+        Route::post('/business-application', [BusinessApplicationController::class, 'store'])
+            ->middleware('throttle:uploads')
+            ->name('business-application.store');
 
         // Web-push device tokens (FCM). DELETE takes the token in the body —
         // FCM tokens are too long (and too sensitive) to put in the URL.

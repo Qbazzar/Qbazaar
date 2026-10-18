@@ -19,6 +19,7 @@ final readonly class HomeFeed
      * @param Collection<int, Ad> $bestSelling
      * @param Collection<int, Location> $places
      * @param array<string, array{ads_count: int, today_count: int, own_count: int}> $placeCounts keyed by location id
+     * @param array<string, true> $featuredSellerIds sellers staff feature, keyed by user id
      */
     public function __construct(
         public Collection $categories,
@@ -27,5 +28,6 @@ final readonly class HomeFeed
         public Collection $bestSelling,
         public Collection $places,
         public array $placeCounts,
+        public array $featuredSellerIds = [],
     ) {}
 }

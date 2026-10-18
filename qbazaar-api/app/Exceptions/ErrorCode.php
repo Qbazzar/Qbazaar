@@ -183,6 +183,17 @@ enum ErrorCode: string
     case PROMOTION_ALREADY_OPEN = 'PROMOTION_001';
     case PROMOTION_INVALID_TRANSITION = 'PROMOTION_002';
 
+    // ── Business accounts and home curation (M4) ───────────────────────────
+    case BUSINESS_APPLICATION_OPEN = 'BIZ_002';
+    case BUSINESS_APPLICATION_NOT_OPEN = 'BIZ_003';
+    case BUSINESS_ALREADY_VERIFIED = 'BIZ_004';
+    case BUSINESS_NOT_VERIFIED = 'BIZ_005';
+    case BUSINESS_FEATURED_LIMIT = 'BIZ_006';
+    case BUSINESS_ALREADY_FEATURED = 'BIZ_007';
+    case BUSINESS_NOT_FEATURED = 'BIZ_008';
+    case HOME_SECTION_FULL = 'HOME_001';
+    case HOME_SECTION_DUPLICATE = 'HOME_002';
+
     /**
      * i18n key the client should look up in its translations file.
      * Convention: errors.{snake_case_code}.
@@ -264,6 +275,16 @@ enum ErrorCode: string
             self::PURCHASE_REQUEST_AD_NOT_AVAILABLE,
             self::PURCHASE_QUANTITY_UNAVAILABLE,
             self::CHECKOUT_DELIVERY_UNAVAILABLE => 422,
+
+            self::BUSINESS_APPLICATION_OPEN,
+            self::BUSINESS_APPLICATION_NOT_OPEN,
+            self::BUSINESS_ALREADY_VERIFIED,
+            self::BUSINESS_NOT_VERIFIED,
+            self::BUSINESS_FEATURED_LIMIT,
+            self::BUSINESS_ALREADY_FEATURED,
+            self::BUSINESS_NOT_FEATURED,
+            self::HOME_SECTION_FULL,
+            self::HOME_SECTION_DUPLICATE => 422,
 
             self::AUTH_INVALID_CREDENTIALS,
             self::AUTH_TOKEN_EXPIRED,

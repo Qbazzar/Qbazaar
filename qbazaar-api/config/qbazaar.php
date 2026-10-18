@@ -261,6 +261,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Business accounts — verification, applications, featured companies
+    |--------------------------------------------------------------------------
+    */
+    'business' => [
+        // Commercial registrations and IDs are legal documents: keep them on a
+        // private disk (`local` or the private R2 bucket), never a public one.
+        'documents_disk' => env('BUSINESS_DOCUMENTS_DISK', 'local'),
+        'document_mime_types' => ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'],
+        'document_max_size_kb' => 10_240,
+        'max_documents' => 5,
+        // Featured companies lead the directory and the home screen; the cap
+        // keeps that pinned block (and its one indexed query) small.
+        'featured_max' => 20,
+        'admin_per_page' => 20,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Favorites & Recently Viewed
     |--------------------------------------------------------------------------
     */
