@@ -78,6 +78,22 @@ describe('FieldSelect', () => {
     expect(field()).toHaveClass('text-qb-ink-title');
   });
 
+  it('scrolls the chosen row into view on a pointer open without lighting it', async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    render(<Harness initial="free" />);
+
+    await userEvent.click(field());
+
+    const chosen = screen.getByRole('option', { name: 'Free' });
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView.mock.instances[0]).toBe(chosen);
+    expect(field()).not.toHaveAttribute('aria-activedescendant');
+    expect(chosen).not.toHaveClass('bg-(--color-qb-menu-active)');
+    // @ts-expect-error jsdom has no scrollIntoView; the test installed it
+    delete Element.prototype.scrollIntoView;
+  });
+
   it('moves with the arrow keys, chooses with Enter and closes with Escape', () => {
     const onChange = vi.fn();
     render(<Harness onChange={onChange} />);

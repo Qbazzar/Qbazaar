@@ -167,6 +167,7 @@ export function RegisterForm() {
         >
           {(control) => (
             <PasswordInput
+              auth
               {...control}
               autoComplete="new-password"
               placeholder={t('auth.register.password_placeholder')}

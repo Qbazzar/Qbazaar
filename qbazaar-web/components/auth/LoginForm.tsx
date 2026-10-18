@@ -102,6 +102,7 @@ export function LoginForm({ onDeviceCheck }: LoginFormProps) {
         >
           {(control) => (
             <PasswordInput
+              auth
               {...control}
               autoComplete="current-password"
               placeholder={t('auth.login.password_placeholder')}

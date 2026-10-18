@@ -2,6 +2,7 @@
 // Runner: npm run gate -- --target <url> [--reference <url|path>] [--pages a,b] [--viewports 1440,744,390] [--locale en|ar] [--out <dir>]
 const { buildConfig, NEEDS_LOGIN } = require('./config');
 const browserTools = require('./browser');
+const { proxySummaryLine } = require('./proxy');
 const { selectPages, referenceOnly } = require('./pages');
 const { auditPage } = require('./audit');
 const { Findings } = require('./findings');
@@ -91,7 +92,8 @@ async function main() {
   skipped.push(...env.warnings.map((w) => ({ ...w, reason: `warning: ${w.reason}` })));
   const meta = { target: config.target, reference: config.reference, locale: config.locale, viewports: config.viewports.map((v) => v.width), finishedAt: new Date().toISOString() };
   const totals = writeReports(config.out, { meta, findings: findings.list, accepted: findings.accepted, skipped, referenceOnly: referenceOnly(), compared: summary.compared, coverage: coverage(require('../targets.json'), env.swept) });
-  console.log(`\n${totals.findings} findings -> ${config.out}`);
+  console.log(`\n${proxySummaryLine()}`);
+  console.log(`${totals.findings} findings -> ${config.out}`);
   process.exitCode = totals.findings ? 1 : 0;
 }
 

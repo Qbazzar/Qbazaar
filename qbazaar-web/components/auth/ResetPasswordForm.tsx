@@ -122,6 +122,7 @@ export function ResetPasswordForm() {
         >
           {(control) => (
             <PasswordInput
+              auth
               {...control}
               autoComplete="new-password"
               placeholder={t('auth.reset_password.password_placeholder')}
@@ -138,6 +139,7 @@ export function ResetPasswordForm() {
         >
           {(control) => (
             <PasswordInput
+              auth
               {...control}
               autoComplete="new-password"
               placeholder={t('auth.reset_password.password_confirmation_placeholder')}
