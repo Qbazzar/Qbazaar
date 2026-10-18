@@ -686,6 +686,12 @@ return [
         ],
         'disputes' => [
             'resolved' => 'The ruling has been recorded.',
+            // The ruling form, shared by the disputes list and the offer page.
+            'rule_completed' => 'Complete the sale for the seller',
+            'rule_cancelled' => 'Cancel the sale for the buyer',
+            'note_label' => 'Reason for the ruling (kept with the order)',
+            'note_placeholder' => 'Reason for the ruling',
+            'confirm' => 'Confirm your ruling on this dispute? It cannot be undone.',
         ],
         'review_requested' => [
             'action' => 'Open the review queue',
@@ -1105,6 +1111,9 @@ return [
                 'ban-user' => 'Reported user banned',
                 'sanction' => 'Acted on the reported item',
             ],
+            'offers' => [
+                'cancel' => 'Offer cancelled by staff',
+            ],
             'support' => [
                 'reply' => 'Ticket reply',
                 'status' => 'Ticket status changed',
@@ -1434,6 +1443,60 @@ return [
             'oldest' => 'Oldest :age',
             'overdue' => 'Past the target: :count',
             'clear' => 'Nothing waiting',
+        ],
+    ],
+
+    'offer_admin' => [
+        'open' => 'View details',
+        'crumb' => 'Offer #:id',
+        'title' => 'Offer on ":ad"',
+        'deleted_ad' => 'Deleted ad',
+        'deleted_account' => 'Deleted account',
+        'subtitle' => 'Made on :date',
+        'side_label' => 'Offer actions and parties',
+        'details' => [
+            'title' => 'Offer details',
+            'amount' => 'Amount',
+            'status' => 'Status',
+            'proposed_by' => 'Made by',
+            'round' => 'Negotiation round',
+            'expires_at' => 'Expires at',
+            'decided_at' => 'Decided at',
+            'note' => 'Note from the proposer',
+            'parent' => 'In reply to offer',
+            'buyer' => 'Buyer',
+            'seller' => 'Seller',
+            'open_chat' => 'Open chat',
+            'open_ad' => 'Open ad',
+        ],
+        'parties' => [
+            'title' => 'Parties',
+        ],
+        'cancel' => [
+            'title' => 'Cancel the offer',
+            'intro' => 'Closes the open offer right away and both sides see it in the chat. No money is touched.',
+            'submit' => 'Cancel offer',
+            'confirm' => 'Cancel this open offer? This cannot be undone.',
+        ],
+        'order' => [
+            'title' => 'Order from this offer',
+            'none' => 'No order was placed from this offer.',
+            'status' => 'Order status',
+            'total' => 'Total',
+            'payment' => 'Payment method',
+            'open' => 'Open order',
+        ],
+        'dispute' => [
+            'title' => 'Dispute on the order',
+            'reason' => 'Reported problem',
+            'opened_at' => 'Opened at',
+            'resolution' => 'Ruling',
+            'resolution_note' => 'Reason for the ruling',
+            'resolved_at' => 'Ruled at',
+        ],
+        'history' => 'Offer history',
+        'flash' => [
+            'cancelled' => 'Offer cancelled and both sides notified.',
         ],
     ],
 ];

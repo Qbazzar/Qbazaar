@@ -6,8 +6,14 @@ namespace App\Http\Controllers\Manage;
 
 use App\Enums\OfferStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Manage\Moderation\SanctionRequest;
 use App\Models\Ad;
 use App\Models\Offer;
+use App\Models\User;
+use App\Services\Admin\Offers\OfferDetail;
+use App\Services\Moderation\OfferCancellation;
+use Illuminate\Container\Attributes\CurrentUser;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -47,5 +53,20 @@ class OfferController extends Controller
             'adId' => $adId,
             'adFilter' => $adId === '' ? null : Ad::withTrashed()->find($adId, ['id', 'title']),
         ]);
+    }
+
+    public function show(#[CurrentUser] User $viewer, Offer $offer, OfferDetail $detail): View
+    {
+        return view('admin.offers.show', $detail->forShow($offer, $viewer));
+    }
+
+    /** Close an open offer with a reason; disputes on accepted offers are ruled through the finance flow. */
+    public function cancel(SanctionRequest $request, #[CurrentUser] User $staff, Offer $offer, OfferCancellation $cancellation): RedirectResponse
+    {
+        $cancellation->cancel($staff, $offer, $request->sanction());
+
+        return redirect()
+            ->route('admin.offers.show', $offer)
+            ->with('status', __('admin.offer_admin.flash.cancelled'));
     }
 }

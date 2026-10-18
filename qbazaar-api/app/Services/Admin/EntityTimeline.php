@@ -37,6 +37,7 @@ final class EntityTimeline
         'suspend-ad' => 'danger',
         'ban-user' => 'danger',
         'sanction' => 'danger',
+        'cancel' => 'warning',
         'ad_deleted' => 'danger',
         'deleted' => 'danger',
         'account_deactivated' => 'danger',

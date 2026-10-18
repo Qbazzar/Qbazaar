@@ -246,6 +246,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Read-only surfaces
         Route::get('offers', [OfferController::class, 'index'])->middleware('permission:offers.view')->name('offers.index');
+        Route::get('offers/{offer}', [OfferController::class, 'show'])->middleware('permission:offers.view')->name('offers.show');
+        Route::post('offers/{offer}/cancel', [OfferController::class, 'cancel'])->middleware('permission:offers.manage')->name('offers.cancel');
         Route::get('saved-searches', [SavedSearchController::class, 'index'])->middleware('permission:users.view')->name('saved-searches.index');
         Route::get('notifications', [NotificationController::class, 'index'])->middleware('permission:users.view')->name('notifications.index');
         Route::get('activity', [ActivityController::class, 'index'])->middleware('permission:activity.view')->name('activity.index');

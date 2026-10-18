@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\ReportTarget;
 use App\Models\Ad;
+use App\Models\Offer;
 use App\Models\Report;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -77,13 +78,15 @@ dataset('admin actions', [
     'finance disputes' => ['get', '/admin/finance/disputes', ['super_admin']],
     'finance statement' => ['get', '/admin/finance/users/{user}/statement', ['super_admin']],
 
-    // Moderation tools (AD-17.10)
+    // Moderation tools (AD-17.4, AD-17.10)
     'review queue' => ['get', '/admin/moderation/queue', ['super_admin', 'moderator']],
     'bulk approve from the queue' => ['post', '/admin/moderation/queue/approve', ['super_admin', 'moderator']],
     'bulk reject from the queue' => ['post', '/admin/moderation/queue/reject', ['super_admin', 'moderator']],
     'staff inbox' => ['get', '/admin/inbox', ['super_admin', 'moderator', 'support']],
     'staff inbox summary' => ['get', '/admin/inbox/summary', ['super_admin', 'moderator', 'support']],
     'mark inbox read' => ['post', '/admin/inbox/read-all', ['super_admin', 'moderator', 'support']],
+    'view offer' => ['get', '/admin/offers/{offer}', ['super_admin', 'moderator']],
+    'cancel offer' => ['post', '/admin/offers/{offer}/cancel', ['super_admin', 'moderator']],
 ]);
 
 it('enforces the seeded permissions for every staff role', function (string $role, string $method, string $uri, array $allowed): void {
@@ -96,6 +99,7 @@ it('enforces the seeded permissions for every staff role', function (string $rol
     ]);
 
     $path = strtr($uri, [
+        '{offer}' => str_contains($uri, '{offer}') ? Offer::factory()->create()->id : '',
         '{ad}' => $ad->id,
         '{user}' => $owner->id,
         '{report}' => $report->id,
