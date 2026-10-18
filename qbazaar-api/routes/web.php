@@ -105,8 +105,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('reports/{report}/resolve', [ReportController::class, 'resolve'])->name('reports.resolve');
             Route::post('reports/{report}/dismiss', [ReportController::class, 'dismiss'])->name('reports.dismiss');
             Route::post('reports/{report}/action', [ReportController::class, 'action'])->name('reports.action');
-            Route::post('reports/{report}/suspend-ad', [ReportController::class, 'suspendAd'])->middleware('permission:ads.suspend')->name('reports.suspend-ad');
-            Route::post('reports/{report}/ban-user', [ReportController::class, 'banUser'])->middleware('permission:users.ban')->name('reports.ban-user');
+            // Sanction the reported item and close the report in one step; the chosen
+            // sanction's own permission (ads.suspend, ads.delete, users.ban) is checked by its request.
+            Route::post('reports/{report}/sanction', [ReportController::class, 'sanction'])->name('reports.sanction');
             Route::post('reports/bulk-dismiss', [ReportController::class, 'bulkDismiss'])->name('reports.bulk-dismiss');
         });
 

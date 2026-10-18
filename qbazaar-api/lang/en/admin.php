@@ -1103,6 +1103,7 @@ return [
                 'action' => 'Action taken on report',
                 'suspend-ad' => 'Reported ad suspended',
                 'ban-user' => 'Reported user banned',
+                'sanction' => 'Acted on the reported item',
             ],
             'support' => [
                 'reply' => 'Ticket reply',
@@ -1277,6 +1278,92 @@ return [
             'time' => 'Time',
             'actions' => 'Actions',
             'open_chat' => 'Open chat',
+        ],
+    ],
+
+    // Moderation tools (Sprint 17 M4: AD-17.4, AD-17.5, AD-17.10, AD-17.13)
+    'moderation' => [
+        'reasons' => [
+            'spam' => 'Spam or deliberate repetition',
+            'prohibited_item' => 'Prohibited item or service',
+            'fraud' => 'Fraud or scam attempt',
+            'misleading' => 'Misleading or false information',
+            'offensive' => 'Offensive or inappropriate content',
+            'harassment' => 'Abuse or harassment of users',
+            'duplicate' => 'Duplicate listing',
+            'wrong_category' => 'Wrong category',
+            'other' => 'Other reason',
+        ],
+        'actions' => [
+            'ad_suspended' => 'Suspend the ad',
+            'ad_removed' => 'Remove the ad',
+            'user_suspended' => 'Suspend the account',
+        ],
+        'fields' => [
+            'reason' => 'Reason',
+            'reason_placeholder' => 'Choose a reason',
+            'note' => 'Internal note',
+            'note_placeholder' => 'Details that help the team later…',
+            'note_hint' => 'Stays with the staff and never reaches the user; required with "Other reason". The user only sees the chosen reason, in their language.',
+            'action' => 'Action',
+        ],
+        'validation' => [
+            'reason_required' => 'Choose a reason for this action.',
+            'reason_invalid' => 'Unknown reason.',
+            'note_required' => 'Write a note explaining the reason when you choose "Other reason".',
+            'note_too_long' => 'The note is longer than :max characters.',
+            'action_required' => 'Choose the action to take.',
+        ],
+        'errors' => [
+            'action_unavailable' => 'This action is no longer available on the report. Refresh the page and try again.',
+        ],
+        'flash' => [
+            'report_sanctioned' => '":action" done and the report closed.',
+            'ad_removed' => 'Ad removed.',
+            'ads_removed' => 'Selected ads removed: :count.',
+            'user_suspended' => 'User suspended.',
+        ],
+        'sla' => [
+            'on_time' => 'On time',
+            'due_soon' => 'Due soon',
+            'overdue' => 'Overdue',
+        ],
+        'latest' => [
+            'ad_title' => 'Why the ad is suspended',
+            'user_title' => 'Why the account is suspended',
+            'reason' => 'Reason',
+            'note' => 'Internal note',
+            'by' => 'By',
+            'at' => 'Date',
+            'report' => 'Linked report',
+            'open_report' => 'Open report',
+        ],
+        'report' => [
+            'title' => 'Act on the reported item',
+            'intro' => 'Choose the action and its reason. The action runs and the report closes as "actioned" in one step.',
+            'submit' => 'Act and close the report',
+            'confirm' => 'Run the chosen action on the reported item and close the report? The affected user is told the reason.',
+            'none' => 'No action is available on the reported item: it may already be suspended or removed, or you lack the permission.',
+            'targets' => [
+                'ad_suspended' => 'Suspends the ad and hides it from the site.',
+                'ad_removed' => 'Removes the ad from the site for good.',
+                'user_suspended' => 'Suspends the account and signs it out everywhere.',
+            ],
+        ],
+        'ad' => [
+            'suspend' => 'Suspend ad',
+            'suspend_confirm' => 'Suspend this ad? The seller is told the chosen reason.',
+            'remove' => 'Remove ad',
+            'remove_title' => 'Remove the ad',
+            'remove_confirm' => 'Remove this ad for good? This cannot be undone, and the seller is told the reason.',
+        ],
+        'user' => [
+            'suspend' => 'Suspend user',
+            'suspend_confirm' => 'Suspend this account and sign it out of every device? The owner is told the reason.',
+        ],
+        'bulk' => [
+            'remove' => 'Remove selected',
+            'remove_confirm' => 'Remove the selected ads for good? Their owners are told the chosen reason.',
         ],
     ],
 ];

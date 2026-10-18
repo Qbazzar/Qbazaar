@@ -124,10 +124,12 @@ it('burns every token when an admin suspends the user', function (string $via): 
         'report' => '/admin/reports/' . Report::factory()->create([
             'target_type' => ReportTarget::USER->value,
             'target_id' => $this->user->id,
-        ])->id . '/ban-user',
+        ])->id . '/sanction',
     };
 
-    actingAs($admin)->post($uri)->assertRedirect();
+    actingAs($admin)->post($uri, ['action' => 'user_suspended', 'reason' => 'fraud'])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
 
     expect($this->user->fresh()->status)->toBe(UserStatus::SUSPENDED)
         ->and($this->user->tokens()->count())->toBe(0)

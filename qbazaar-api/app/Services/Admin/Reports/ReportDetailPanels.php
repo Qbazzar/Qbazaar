@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Admin\Reports;
 
 use App\Enums\ReportTarget;
+use App\Enums\SanctionAction;
 use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -12,6 +13,8 @@ use App\Models\Report;
 use App\Models\User;
 use App\Services\Admin\EntityTimeline;
 use App\Services\Admin\TimelineEntry;
+use App\Services\Moderation\ReportSanctions;
+use App\Services\Moderation\ReportTargets;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -36,10 +39,12 @@ final class ReportDetailPanels
     public function __construct(
         private readonly TargetReports $reports,
         private readonly EntityTimeline $timeline,
+        private readonly ReportSanctions $sanctions,
     ) {}
 
     /**
      * target: the reported record, null once it is deleted, false when it failed to load.
+     * sanctionActions: what this staff member can do to the target from here, empty once the report is closed.
      *
      * @return array{
      *     report: Report,
@@ -47,6 +52,7 @@ final class ReportDetailPanels
      *     otherReports: TargetReportSummary|null,
      *     timeline: Collection<int, TimelineEntry>|null,
      *     canReadMessage: bool,
+     *     sanctionActions: list<SanctionAction>,
      * }
      */
     public function forShow(Report $report, User $viewer): array
@@ -54,10 +60,11 @@ final class ReportDetailPanels
         $report->load(['reporter.avatarMedia', 'reviewer.avatarMedia']);
         // A reported private message is read only by those who can act on the report: they need it to decide.
         $canReadMessage = $viewer->can('reports.action');
+        $target = rescue(fn (): ?Model => $this->targetOf($report, $canReadMessage), false);
 
         return [
             'report' => $report,
-            'target' => rescue(fn (): ?Model => $this->targetOf($report, $canReadMessage), false),
+            'target' => $target,
             'canReadMessage' => $canReadMessage,
             'otherReports' => rescue(fn (): TargetReportSummary => $this->reports->for(
                 $report->target_type,
@@ -67,6 +74,12 @@ final class ReportDetailPanels
                 withReporters: true,
             ), null),
             'timeline' => rescue(fn (): Collection => $this->timelineOf($report), null),
+            // Offered from the record the preview already loaded; nothing is offered when it failed to load.
+            'sanctionActions' => $target === false ? [] : rescue(fn (): array => $this->sanctions->availableFor(
+                $report,
+                $viewer,
+                ReportTargets::fromLoaded($report->target_type, $target),
+            ), []),
         ];
     }
 

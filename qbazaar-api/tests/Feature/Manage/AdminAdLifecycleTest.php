@@ -44,7 +44,7 @@ it('refuses admin actions that do not apply to the current status', function (st
     $ad = $this->makeAd($this->seller, ['status' => $status->value]);
 
     $this->from("/admin/ads/{$ad->id}")
-        ->post("/admin/ads/{$ad->id}/{$action}", ['admin_notes' => 'Not allowed'])
+        ->post("/admin/ads/{$ad->id}/{$action}", ['admin_notes' => 'Not allowed', 'reason' => 'spam'])
         ->assertRedirect("/admin/ads/{$ad->id}")
         ->assertSessionHas('error');
 
@@ -63,7 +63,7 @@ it('refuses admin actions that do not apply to the current status', function (st
 it('suspends and restores a live ad', function (): void {
     $ad = $this->makeAd($this->seller, ['status' => AdStatus::ACTIVE->value, 'published_at' => now()]);
 
-    $this->post("/admin/ads/{$ad->id}/suspend")->assertRedirect();
+    $this->post("/admin/ads/{$ad->id}/suspend", ['reason' => 'misleading'])->assertRedirect()->assertSessionHasNoErrors();
     expect($ad->fresh()->status)->toBe(AdStatus::BLOCKED);
 
     $this->post("/admin/ads/{$ad->id}/unsuspend")->assertRedirect();

@@ -185,7 +185,7 @@ it('confirms destructive actions through the dialog instead of window.confirm', 
 
     $this->get("/admin/ads/{$ad->id}")
         ->assertOk()
-        ->assertSee('data-confirm="حذف هذا الإعلان نهائياً؟ لا يمكن التراجع."', false)
+        ->assertSee('data-confirm="' . e(__('admin.moderation.ad.remove_confirm')) . '"', false)
         ->assertDontSee('return confirm(', false);
 });
 

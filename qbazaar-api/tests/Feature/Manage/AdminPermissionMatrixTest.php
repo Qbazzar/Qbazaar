@@ -57,7 +57,7 @@ dataset('admin actions', [
     'list roles' => ['get', '/admin/roles', ['super_admin']],
     'list reports' => ['get', '/admin/reports', ['super_admin', 'moderator', 'support']],
     'dismiss report' => ['post', '/admin/reports/{report}/dismiss', ['super_admin', 'moderator']],
-    'ban reported user' => ['post', '/admin/reports/{userReport}/ban-user', ['super_admin', 'moderator']],
+    'act on reported user' => ['post', '/admin/reports/{userReport}/sanction', ['super_admin', 'moderator']],
     'moderation rules' => ['get', '/admin/moderation-rules', ['super_admin', 'moderator']],
     'create category' => ['post', '/admin/categories', ['super_admin', 'moderator']],
     'locations' => ['get', '/admin/locations', ['super_admin', 'moderator']],

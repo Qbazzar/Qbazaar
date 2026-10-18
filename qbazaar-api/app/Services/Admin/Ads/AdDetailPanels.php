@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Services\Admin\Ads;
 
 use App\Data\Admin\AdDeal\AdTransaction;
+use App\Enums\AdStatus;
 use App\Enums\ReportTarget;
 use App\Models\Ad;
 use App\Models\AdPromotion;
+use App\Models\ModerationSanction;
 use App\Models\User;
 use App\Services\Admin\Reports\TargetReports;
 use App\Services\Admin\Reports\TargetReportSummary;
 use App\Services\Admin\TimelineEntry;
+use App\Services\Moderation\SanctionService;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
@@ -30,6 +33,7 @@ final class AdDetailPanels
         private readonly TargetReports $reports,
         private readonly AdStatusHistory $history,
         private readonly AdTransactionSummary $transaction,
+        private readonly SanctionService $sanctions,
     ) {}
 
     /**
@@ -40,6 +44,7 @@ final class AdDetailPanels
      *     promotions: EloquentCollection<int, AdPromotion>|null,
      *     history: Collection<int, TimelineEntry>|null,
      *     deal: AdTransaction|null,
+     *     sanction: ModerationSanction|null,
      * }
      */
     public function forShow(Ad $ad, User $viewer): array
@@ -65,6 +70,10 @@ final class AdDetailPanels
             'promotions' => rescue(fn (): EloquentCollection => $this->latestPromotions($ad), null),
             'history' => $history,
             'deal' => rescue(fn (): AdTransaction => $this->transaction->forAd($ad, $viewer, $history), null),
+            // Why a suspended ad is suspended; read only when it is.
+            'sanction' => $ad->status === AdStatus::BLOCKED
+                ? rescue(fn (): ?ModerationSanction => $this->sanctions->latestFor($ad), null)
+                : null,
         ];
     }
 

@@ -291,4 +291,41 @@ return [
             'body' => 'لم نتمكن من تأكيد تحويلك بقيمة :price :currency لـ ":title". :reason',
         ],
     ],
+
+    // Staff sanctions, told to the affected user (preset reason only, never the staff note).
+    'moderation' => [
+        'greeting' => 'مرحبًا،',
+        'line_reason' => 'السبب: :reason',
+        'action_help' => 'تواصل مع الدعم',
+        'line_appeal' => 'إن كنت ترى أن القرار خاطئ، تواصل معنا وسنراجعه.',
+        'reasons' => [
+            'spam' => 'محتوى مزعج أو مكرر بشكل مقصود.',
+            'prohibited_item' => 'سلعة أو خدمة لا تسمح بها سياسة QBazaar.',
+            'fraud' => 'اشتباه في احتيال أو محاولة نصب.',
+            'misleading' => 'معلومات مضلِّلة أو غير صحيحة.',
+            'offensive' => 'محتوى مسيء أو غير لائق.',
+            'harassment' => 'إساءة أو مضايقة لمستخدمين آخرين.',
+            'duplicate' => 'إعلان مكرر لإعلان آخر.',
+            'wrong_category' => 'الإعلان في تصنيف غير صحيح.',
+            'other' => 'مخالفة لشروط استخدام QBazaar.',
+        ],
+        'ad_suspended' => [
+            'subject' => 'تم إيقاف إعلانك',
+            'title' => 'تم إيقاف إعلانك',
+            'line_intro' => 'أوقف فريق QBazaar إعلانك ":title"، ولم يعد ظاهرًا في الموقع.',
+            'body' => 'أوقفنا إعلانك ":title". السبب: :reason',
+        ],
+        'ad_removed' => [
+            'subject' => 'تم حذف إعلانك',
+            'title' => 'تم حذف إعلانك',
+            'line_intro' => 'حذف فريق QBazaar إعلانك ":title" من الموقع.',
+            'body' => 'حذفنا إعلانك ":title". السبب: :reason',
+        ],
+        'user_suspended' => [
+            'subject' => 'تم إيقاف حسابك',
+            'title' => 'تم إيقاف حسابك',
+            'line_intro' => 'أوقف فريق QBazaar حسابك، وتم تسجيل خروجك من جميع الأجهزة.',
+            'body' => 'أوقفنا حسابك. السبب: :reason',
+        ],
+    ],
 ];

@@ -34,7 +34,7 @@ function adminEntries(): Builder
 }
 
 it('records an admin mutation with the acting admin as causer', function (): void {
-    actingAs($this->admin)->post("/admin/users/{$this->customer->id}/suspend")->assertRedirect();
+    actingAs($this->admin)->post("/admin/users/{$this->customer->id}/suspend", ['reason' => 'fraud'])->assertRedirect();
 
     $entry = adminEntries()->sole();
 
@@ -56,7 +56,7 @@ it('keeps the owner as causer when users change their own records', function ():
 it('does not record refused or invalid admin requests', function (): void {
     $peer = User::factory()->create(['status' => UserStatus::ACTIVE])->assignRole('super_admin');
 
-    actingAs($this->admin)->post("/admin/users/{$peer->id}/suspend")->assertForbidden();
+    actingAs($this->admin)->post("/admin/users/{$peer->id}/suspend", ['reason' => 'fraud'])->assertForbidden();
     actingAs($this->admin)->post("/admin/users/{$this->customer->id}/impersonate", ['reason' => ''])
         ->assertSessionHasErrors('reason');
 
