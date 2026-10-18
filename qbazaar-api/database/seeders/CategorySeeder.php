@@ -14,9 +14,10 @@ use Illuminate\Support\Facades\Cache;
  * Design notes:
  *  - Source data lives in {@see self::tree()} so the seeder reads top-to-bottom
  *    like the catalogue itself; the writer loops over it and creates rows.
- *  - `custom_fields` / `custom_filters` are defined only for a handful of
- *    high-traffic leaves (Cars / Apartments for Rent / Mobile Phones); other
- *    leaves keep them null until product decides on per-category fields.
+ *  - `custom_fields` are defined only for a handful of high-traffic leaves
+ *    (Cars / Apartments for Rent / Mobile Phones); other leaves keep them null
+ *    until product decides on per-category fields. The search filters are
+ *    the fields flagged `filterable`.
  *  - We `truncate` the table first so re-seeding stays idempotent during
  *    development. Re-seeding production would be a deliberate, manual op.
  */
@@ -41,7 +42,6 @@ class CategorySeeder extends Seeder
                 'order' => $parentOrder,
                 'is_active' => true,
                 'custom_fields' => null,
-                'custom_filters' => null,
             ]);
 
             foreach ($group['children'] as $childOrder => $child) {
@@ -54,7 +54,6 @@ class CategorySeeder extends Seeder
                     'order' => $childOrder,
                     'is_active' => true,
                     'custom_fields' => $child['custom_fields'] ?? null,
-                    'custom_filters' => $child['custom_filters'] ?? null,
                 ]);
             }
         }
@@ -72,7 +71,6 @@ class CategorySeeder extends Seeder
      *         name: array{ar: string, en: string},
      *         icon?: string,
      *         custom_fields?: list<array<string, mixed>>,
-     *         custom_filters?: list<array<string, mixed>>,
      *     }>,
      * }>
      */
@@ -88,7 +86,6 @@ class CategorySeeder extends Seeder
                         'slug' => 'cars',
                         'name' => ['ar' => 'سيارات', 'en' => 'Cars'],
                         'custom_fields' => $this->carsFields(),
-                        'custom_filters' => $this->carsFilters(),
                     ],
                     [
                         'slug' => 'motorcycles',
@@ -113,7 +110,6 @@ class CategorySeeder extends Seeder
                         'slug' => 'apartments-for-rent',
                         'name' => ['ar' => 'شقق للإيجار', 'en' => 'Apartments for Rent'],
                         'custom_fields' => $this->apartmentsFields(),
-                        'custom_filters' => $this->apartmentsFilters(),
                     ],
                     [
                         'slug' => 'apartments-for-sale',
@@ -146,7 +142,6 @@ class CategorySeeder extends Seeder
                         'slug' => 'mobile-phones',
                         'name' => ['ar' => 'هواتف محمولة', 'en' => 'Mobile Phones'],
                         'custom_fields' => $this->mobilePhonesFields(),
-                        'custom_filters' => $this->mobilePhonesFilters(),
                     ],
                     [
                         'slug' => 'computers-and-laptops',
@@ -268,6 +263,7 @@ class CategorySeeder extends Seeder
         return [
             [
                 'key' => 'make',
+                'filterable' => true,
                 'type' => 'select',
                 'required' => true,
                 'options' => ['Toyota', 'Nissan', 'Honda', 'BMW', 'Mercedes', 'Audi', 'Lexus', 'Other'],
@@ -282,6 +278,7 @@ class CategorySeeder extends Seeder
             ],
             [
                 'key' => 'year',
+                'filterable' => true,
                 'type' => 'number',
                 'required' => true,
                 'show_in_card' => true,
@@ -296,6 +293,7 @@ class CategorySeeder extends Seeder
             ],
             [
                 'key' => 'transmission',
+                'filterable' => true,
                 'type' => 'select',
                 'required' => true,
                 'show_in_card' => true,
@@ -308,6 +306,7 @@ class CategorySeeder extends Seeder
             ],
             [
                 'key' => 'fuel_type',
+                'filterable' => true,
                 'type' => 'select',
                 'required' => true,
                 'options' => ['petrol', 'diesel', 'hybrid', 'electric'],
@@ -323,48 +322,12 @@ class CategorySeeder extends Seeder
     }
 
     /** @return list<array<string, mixed>> */
-    private function carsFilters(): array
-    {
-        return [
-            [
-                'key' => 'make',
-                'type' => 'select',
-                'options' => ['Toyota', 'Nissan', 'Honda', 'BMW', 'Mercedes', 'Audi', 'Lexus', 'Other'],
-                'label' => ['ar' => 'الماركة', 'en' => 'Make'],
-            ],
-            [
-                'key' => 'transmission',
-                'type' => 'select',
-                'options' => ['automatic', 'manual'],
-                'label' => ['ar' => 'ناقل الحركة', 'en' => 'Transmission'],
-            ],
-            [
-                'key' => 'fuel_type',
-                'type' => 'select',
-                'options' => ['petrol', 'diesel', 'hybrid', 'electric'],
-                'label' => ['ar' => 'الوقود', 'en' => 'Fuel'],
-            ],
-            [
-                'key' => 'price',
-                'type' => 'range',
-                'options' => null,
-                'label' => ['ar' => 'السعر', 'en' => 'Price'],
-            ],
-            [
-                'key' => 'year',
-                'type' => 'range',
-                'options' => null,
-                'label' => ['ar' => 'سنة الصنع', 'en' => 'Year'],
-            ],
-        ];
-    }
-
-    /** @return list<array<string, mixed>> */
     private function apartmentsFields(): array
     {
         return [
             [
                 'key' => 'bedrooms',
+                'filterable' => true,
                 'type' => 'number',
                 'required' => true,
                 'show_in_card' => true,
@@ -372,6 +335,7 @@ class CategorySeeder extends Seeder
             ],
             [
                 'key' => 'bathrooms',
+                'filterable' => true,
                 'type' => 'number',
                 'required' => true,
                 'show_in_card' => true,
@@ -379,6 +343,7 @@ class CategorySeeder extends Seeder
             ],
             [
                 'key' => 'furnished',
+                'filterable' => true,
                 'type' => 'select',
                 'required' => true,
                 'show_in_card' => true,
@@ -392,46 +357,10 @@ class CategorySeeder extends Seeder
             ],
             [
                 'key' => 'parking',
+                'filterable' => true,
                 'type' => 'boolean',
                 'required' => false,
                 'label' => ['ar' => 'موقف سيارات', 'en' => 'Parking'],
-            ],
-        ];
-    }
-
-    /** @return list<array<string, mixed>> */
-    private function apartmentsFilters(): array
-    {
-        return [
-            [
-                'key' => 'bedrooms',
-                'type' => 'range',
-                'options' => null,
-                'label' => ['ar' => 'غرف النوم', 'en' => 'Bedrooms'],
-            ],
-            [
-                'key' => 'bathrooms',
-                'type' => 'range',
-                'options' => null,
-                'label' => ['ar' => 'الحمامات', 'en' => 'Bathrooms'],
-            ],
-            [
-                'key' => 'furnished',
-                'type' => 'select',
-                'options' => ['furnished', 'semi_furnished', 'unfurnished'],
-                'label' => ['ar' => 'الأثاث', 'en' => 'Furnished'],
-            ],
-            [
-                'key' => 'parking',
-                'type' => 'boolean',
-                'options' => null,
-                'label' => ['ar' => 'موقف سيارات', 'en' => 'Parking'],
-            ],
-            [
-                'key' => 'price',
-                'type' => 'range',
-                'options' => null,
-                'label' => ['ar' => 'السعر', 'en' => 'Price'],
             ],
         ];
     }
@@ -442,6 +371,7 @@ class CategorySeeder extends Seeder
         return [
             [
                 'key' => 'brand',
+                'filterable' => true,
                 'type' => 'select',
                 'required' => true,
                 'show_in_card' => true,
@@ -451,6 +381,7 @@ class CategorySeeder extends Seeder
             ],
             [
                 'key' => 'storage_gb',
+                'filterable' => true,
                 'type' => 'select',
                 'required' => true,
                 'show_in_card' => true,
@@ -459,6 +390,7 @@ class CategorySeeder extends Seeder
             ],
             [
                 'key' => 'condition',
+                'filterable' => true,
                 'type' => 'select',
                 'required' => true,
                 'options' => ['new', 'like_new', 'good', 'fair'],
@@ -469,37 +401,6 @@ class CategorySeeder extends Seeder
                     'fair' => ['ar' => 'مقبول', 'en' => 'Fair'],
                 ],
                 'label' => ['ar' => 'الحالة', 'en' => 'Condition'],
-            ],
-        ];
-    }
-
-    /** @return list<array<string, mixed>> */
-    private function mobilePhonesFilters(): array
-    {
-        return [
-            [
-                'key' => 'brand',
-                'type' => 'select',
-                'options' => ['Apple', 'Samsung', 'Huawei', 'Xiaomi', 'Google', 'OnePlus', 'Other'],
-                'label' => ['ar' => 'الماركة', 'en' => 'Brand'],
-            ],
-            [
-                'key' => 'storage_gb',
-                'type' => 'select',
-                'options' => ['64', '128', '256', '512', '1024'],
-                'label' => ['ar' => 'السعة (جيجا)', 'en' => 'Storage (GB)'],
-            ],
-            [
-                'key' => 'condition',
-                'type' => 'select',
-                'options' => ['new', 'like_new', 'good', 'fair'],
-                'label' => ['ar' => 'الحالة', 'en' => 'Condition'],
-            ],
-            [
-                'key' => 'price',
-                'type' => 'range',
-                'options' => null,
-                'label' => ['ar' => 'السعر', 'en' => 'Price'],
             ],
         ];
     }

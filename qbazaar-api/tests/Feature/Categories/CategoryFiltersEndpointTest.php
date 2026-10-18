@@ -22,8 +22,11 @@ it('returns the filters defined for a category', function (): void {
     $data = $response->json('data');
     expect($data)->toBeArray()->not->toBeEmpty();
 
+    // The filters are the fields flagged filterable; price is a filter of every listing, not a category field.
     $keys = collect($data)->pluck('key')->all();
-    expect($keys)->toContain('make', 'price');
+    expect($keys)->toBe(['make', 'year', 'transmission', 'fuel_type']);
+
+    expect(collect($data)->firstWhere('key', 'year')['type'])->toBe('range');
 
     $make = collect($data)->firstWhere('key', 'make');
     expect($make['label']['ar'])->toBe('الماركة')

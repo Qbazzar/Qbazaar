@@ -100,7 +100,8 @@ it('builds the tree without a query per category', function (): void {
     DB::enableQueryLog();
     getJson('/api/v1/categories/tree')->assertOk();
 
-    expect(count(DB::getQueryLog()))->toBeLessThanOrEqual(3);
+    // The tree, its counters, and the declared custom fields every node's schema is resolved from.
+    expect(count(DB::getQueryLog()))->toBeLessThanOrEqual(4);
 });
 
 it('hides the subtree of an inactive category', function (): void {

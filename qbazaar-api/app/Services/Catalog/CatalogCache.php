@@ -35,6 +35,7 @@ class CatalogCache
         private readonly CategoryAdCounts $categoryCounts,
         private readonly LocationAdCounts $locationCounts,
         private readonly CategorySchema $schema,
+        private readonly CategoryFields $fields,
         private readonly CategoryPageCache $categoryPages,
         private readonly HomeFeedCache $homeFeed,
         private readonly AdFacetCounter $facets,
@@ -50,6 +51,7 @@ class CatalogCache
         $this->locations->flush();
         $this->tree->flush();
         $this->schema->flush();
+        $this->fields->flush();
         $this->categoryCounts->flush();
         $this->locationCounts->flush();
         $this->categoryPages->flush();
