@@ -6,7 +6,7 @@ namespace App\Http\Resources\Api\V1\Reference;
 
 use App\Models\Category;
 use App\Services\Catalog\CategoryAdCounts;
-use App\Services\Catalog\CategoryFieldPresenter;
+use App\Services\Catalog\CategorySchemaPresenter;
 use App\Services\Catalog\CategoryTree;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -46,8 +46,7 @@ class CategoryNodeResource extends JsonResource
             'icon' => $this->icon,
             'order' => $this->order,
             'is_active' => $this->is_active,
-            'custom_fields' => app(CategoryFieldPresenter::class)->present($this->custom_fields, app()->getLocale()),
-            'custom_filters' => $this->custom_filters,
+            ...app(CategorySchemaPresenter::class)->for($this->id, app()->getLocale()),
             'ads_count' => $counts['ads_count'],
             'today_count' => $counts['today_count'],
             'children' => $children,

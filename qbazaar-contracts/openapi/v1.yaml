@@ -6568,7 +6568,11 @@ components:
 
     CategoryFilter:
       type: object
-      required: [key, label, type]
+      description: |
+        One search filter of a category: a custom field the admin marked
+        `filterable`, inherited fields included. Price, condition and the
+        other listing filters apply to every category and are not listed.
+      required: [key, label, type, options, options_labeled, min, max]
       properties:
         key:
           type: string
@@ -6577,16 +6581,42 @@ components:
           $ref: '#/components/schemas/LocalizedString'
         type:
           type: string
-          enum: [select, range, boolean]
+          description: |
+            The control: `select` for select and multiselect fields (match one
+            value, `custom_fields[key]=value`), `range` for number and range
+            fields (`custom_fields[key][min]`/`[max]`), `boolean`, or `text`.
+          enum: [select, range, boolean, text]
         options:
           oneOf:
             - type: array
               items: { type: string }
             - type: 'null'
+        options_labeled:
+          description: The options with their label in the request language, as on `CategoryField`.
+          oneOf:
+            - type: array
+              items:
+                type: object
+                required: [value, label]
+                properties:
+                  value: { type: string }
+                  label: { type: string }
+            - type: 'null'
+        min:
+          type: [number, 'null']
+          description: The field's lower bound, when the admin set one.
+        max:
+          type: [number, 'null']
+          description: The field's upper bound, when the admin set one.
 
     CategoryField:
       type: object
-      required: [key, label, type, required, options_labeled, show_in_card]
+      description: |
+        One custom attribute of ads in a category, set by the admin in the
+        fields editor. A category inherits every field of the categories
+        above it; a sub-category may override a field (same `key`, its own
+        definition) or hide it. Fields come in display order (`sort_order`).
+      required: [key, label, type, required, filterable, sort_order, options, options_labeled, min, max, show_in_card]
       properties:
         key:
           type: string
@@ -6595,9 +6625,25 @@ components:
           $ref: '#/components/schemas/LocalizedString'
         type:
           type: string
-          enum: [text, number, select, boolean, date]
+          description: |
+            `text`, `number`, `select` (one of `options`), `multiselect` (a
+            list of distinct `options`), `boolean`, or `range` (a number
+            between `min` and `max`).
+          enum: [text, number, select, multiselect, boolean, range]
         required:
           type: boolean
+        filterable:
+          type: boolean
+          description: Whether the field is one of the category's search filters (`custom_filters`, `/categories/{slug}/filters`).
+        sort_order:
+          type: integer
+          description: Display position; lower first.
+        min:
+          type: [number, 'null']
+          description: Lowest accepted value of a number or range field.
+        max:
+          type: [number, 'null']
+          description: Highest accepted value of a number or range field.
         options:
           oneOf:
             - type: array
@@ -7085,11 +7131,14 @@ components:
           additionalProperties: true
           nullable: true
           description: |
-            `{key: value}` checked against the category's `custom_fields`:
-            `number` values between -999999999 and 999999999
-            (`qbazaar.ads.custom_field_number_max`); `text` values, and
-            `select` values of a field without options, at most 255
-            characters and without `<` or `>`.
+            `{key: value}` checked against the category's `custom_fields`
+            (inherited fields included): `number` and `range` values between
+            -999999999 and 999999999 (`qbazaar.ads.custom_field_number_max`)
+            and within the field's `min`/`max`; `select` values among its
+            `options`; `multiselect` values as a list of distinct `options`;
+            `boolean` values as booleans; `text` values, and `select` values
+            of a field without options, at most 255 characters and without
+            `<` or `>`.
 
     UpdateAdRequest:
       type: object
@@ -7115,11 +7164,14 @@ components:
           additionalProperties: true
           nullable: true
           description: |
-            `{key: value}` checked against the category's `custom_fields`:
-            `number` values between -999999999 and 999999999
-            (`qbazaar.ads.custom_field_number_max`); `text` values, and
-            `select` values of a field without options, at most 255
-            characters and without `<` or `>`.
+            `{key: value}` checked against the category's `custom_fields`
+            (inherited fields included): `number` and `range` values between
+            -999999999 and 999999999 (`qbazaar.ads.custom_field_number_max`)
+            and within the field's `min`/`max`; `select` values among its
+            `options`; `multiselect` values as a list of distinct `options`;
+            `boolean` values as booleans; `text` values, and `select` values
+            of a field without options, at most 255 characters and without
+            `<` or `>`.
 
     ReorderImagesRequest:
       type: object

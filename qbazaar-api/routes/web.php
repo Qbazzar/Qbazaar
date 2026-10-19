@@ -7,6 +7,7 @@ use App\Http\Controllers\Manage\AdController;
 use App\Http\Controllers\Manage\AuthController;
 use App\Http\Controllers\Manage\BusinessApplicationController;
 use App\Http\Controllers\Manage\CategoryController;
+use App\Http\Controllers\Manage\CategoryFieldController;
 use App\Http\Controllers\Manage\CommissionRateController;
 use App\Http\Controllers\Manage\CompanyController;
 use App\Http\Controllers\Manage\ConversationController;
@@ -172,7 +173,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('moderation-rules/bulk-destroy', [ModerationRuleController::class, 'bulkDestroy'])->name('moderation-rules.bulk-destroy');
         });
 
-        // Categories (CRUD)
+        // Categories (tree, CRUD, safe delete, fields editor)
         Route::middleware('permission:categories.manage')->group(function () {
             Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
             Route::get('categories/create', [CategoryController::class, 'create'])->name('categories.create');
@@ -181,9 +182,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
             Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
             Route::post('categories/bulk-destroy', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
+            Route::patch('categories/{category}/status', [CategoryController::class, 'status'])->name('categories.status');
+
+            // Fields editor: per-category custom attributes, inherited down the tree
+            Route::get('categories/{category}/fields', [CategoryFieldController::class, 'index'])->name('categories.fields.index');
+            Route::get('categories/{category}/fields/create', [CategoryFieldController::class, 'create'])->name('categories.fields.create');
+            Route::post('categories/{category}/fields', [CategoryFieldController::class, 'store'])->name('categories.fields.store');
+            Route::get('categories/{category}/fields/{field}/edit', [CategoryFieldController::class, 'edit'])->where('field', '[A-Za-z0-9_]{1,64}')->name('categories.fields.edit');
+            Route::put('categories/{category}/fields/{field}', [CategoryFieldController::class, 'update'])->where('field', '[A-Za-z0-9_]{1,64}')->name('categories.fields.update');
+            Route::delete('categories/{category}/fields/{field}', [CategoryFieldController::class, 'destroy'])->where('field', '[A-Za-z0-9_]{1,64}')->name('categories.fields.destroy');
+            Route::post('categories/{category}/fields/{field}/hide', [CategoryFieldController::class, 'hide'])->where('field', '[A-Za-z0-9_]{1,64}')->name('categories.fields.hide');
         });
 
-        // Locations (CRUD)
+        // Locations (CRUD, safe delete)
         Route::middleware('permission:locations.manage')->group(function () {
             Route::get('locations', [LocationController::class, 'index'])->name('locations.index');
             Route::get('locations/create', [LocationController::class, 'create'])->name('locations.create');
@@ -192,6 +203,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('locations/{location}', [LocationController::class, 'update'])->name('locations.update');
             Route::delete('locations/{location}', [LocationController::class, 'destroy'])->name('locations.destroy');
             Route::post('locations/bulk-destroy', [LocationController::class, 'bulkDestroy'])->name('locations.bulk-destroy');
+            Route::patch('locations/{location}/status', [LocationController::class, 'status'])->name('locations.status');
         });
 
         // CMS Pages (CRUD)

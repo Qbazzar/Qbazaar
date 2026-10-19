@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Catalog;
 
+use App\Enums\CategoryFieldType;
 use App\Models\Ad;
 use App\Rules\NoMarkup;
 use Illuminate\Container\Attributes\Scoped;
@@ -13,15 +14,19 @@ use Illuminate\Support\Str;
  * The "spec chips" of a listing card: the ad's condition, then the values of
  * the category fields flagged `show_in_card`, in the category's order and in
  * the requested language. Which fields count is decided by that flag alone,
- * set per category in its custom-field definitions. Reads only the ad and
- * its loaded category.
+ * set per category in its custom-field definitions (inherited ones
+ * included, {@see CategoryFields}). Reads only the ad, its loaded category
+ * and the cached schema, so a page of cards costs no query.
  */
 #[Scoped]
 class AdSpecChips
 {
     private const CONDITION_KEY = 'condition';
 
-    public function __construct(private readonly CategoryFieldPresenter $fields) {}
+    public function __construct(
+        private readonly CategoryFieldPresenter $fields,
+        private readonly CategoryFields $schema,
+    ) {}
 
     /**
      * @return list<array{key: string, label: string, value: string}>
@@ -40,8 +45,8 @@ class AdSpecChips
 
         $values = $ad->custom_fields ?? [];
 
-        foreach ($ad->category->custom_fields ?? [] as $field) {
-            $chip = is_array($field) ? $this->fieldChip($field, $values, $locale) : null;
+        foreach ($this->schema->forCategory($ad->category)->definitions() as $field) {
+            $chip = $this->fieldChip($field, $values, $locale);
 
             if ($chip !== null) {
                 $chips[$chip['key']] ??= $chip;
@@ -66,17 +71,42 @@ class AdSpecChips
             return null;
         }
 
-        $value = $values[$key] ?? null;
+        $display = $this->displayValue($field, $values[$key] ?? null, $locale);
 
-        if (! is_scalar($value) || $value === '' || NoMarkup::isFoundIn($value)) {
+        if ($display === null) {
             return null;
         }
 
         return [
             'key' => $key,
             'label' => $this->fields->label($field, $locale),
-            'value' => Str::limit($this->display($field, $value, $locale), (int) config('qbazaar.cards.spec_chip_max_length'), '…'),
+            'value' => Str::limit($display, (int) config('qbazaar.cards.spec_chip_max_length'), '…'),
         ];
+    }
+
+    /**
+     * A multiselect value is a list; its chip joins the chosen options.
+     *
+     * @param array<string, mixed> $field
+     */
+    private function displayValue(array $field, mixed $value, string $locale): ?string
+    {
+        if (is_array($value) && $field['type'] !== CategoryFieldType::MULTISELECT->value) {
+            return null;
+        }
+
+        $parts = is_array($value) ? array_values($value) : [$value];
+        $shown = [];
+
+        foreach ($parts as $part) {
+            if (! is_scalar($part) || $part === '' || NoMarkup::isFoundIn($part)) {
+                return null;
+            }
+
+            $shown[] = $this->display($field, $part, $locale);
+        }
+
+        return $shown === [] ? null : implode($locale === 'ar' ? '، ' : ', ', $shown);
     }
 
     /**
@@ -85,7 +115,7 @@ class AdSpecChips
     private function display(array $field, string|int|float|bool $value, string $locale): string
     {
         return match ($field['type'] ?? null) {
-            'select' => $this->fields->optionLabel($field, $value, $locale),
+            'select', 'multiselect' => $this->fields->optionLabel($field, $value, $locale),
             'boolean' => (string) trans(filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'catalog.yes' : 'catalog.no', [], $locale),
             default => (string) $value,
         };

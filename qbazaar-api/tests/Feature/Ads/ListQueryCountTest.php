@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Ad;
+use App\Models\Category;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -62,6 +63,21 @@ it('lists ads with a constant number of queries and the first image only', funct
 
     expect($moreAds)->toBe($fewAds)
         ->and($listed['primary_image']['id'])->toBe($first->getMedia('images')->sortBy('order_column')->first()?->id);
+});
+
+it('lists ads with the same number of queries whether their categories are top-level or nested', function (): void {
+    $seller = User::factory()->create();
+    $topLevel = Category::query()->whereNull('parent_id')->value('id');
+    $nested = Category::query()->whereNotNull('parent_id')->value('id');
+
+    Ad::factory()->active()->create(['user_id' => $seller->id, 'category_id' => $topLevel]);
+    getJson('/api/v1/ads')->assertOk();
+    $topLevelOnly = queriesDuring(fn () => getJson('/api/v1/ads')->assertOk());
+
+    Ad::factory()->active()->create(['user_id' => $seller->id, 'category_id' => $nested]);
+    $withNested = queriesDuring(fn () => getJson('/api/v1/ads')->assertOk());
+
+    expect($withNested)->toBe($topLevelOnly);
 });
 
 it('loads the inbox with a constant number of queries and correct unread counts', function (): void {

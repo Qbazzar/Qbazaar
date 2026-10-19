@@ -6,29 +6,39 @@ namespace App\Http\Controllers\Manage;
 
 use App\Enums\LocationType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Manage\Catalog\BulkDestroyTaxonomyRequest;
+use App\Http\Requests\Manage\Catalog\SaveLocationRequest;
+use App\Http\Requests\Manage\Catalog\UpdateTaxonomyStatusRequest;
 use App\Models\Location;
-use App\Services\Catalog\CatalogCache;
+use App\Models\User;
+use App\Services\Admin\Catalog\DeleteBlockedNotice;
+use App\Services\Catalog\Taxonomy\TaxonomyDeletion;
+use App\Services\Catalog\Taxonomy\TaxonomyKind;
+use App\Services\Catalog\Taxonomy\TaxonomyTreeOptions;
+use App\Services\Catalog\Taxonomy\TaxonomyUsageCounter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Enum;
 use Illuminate\View\View;
 
 class LocationController extends Controller
 {
-    public function __construct(private readonly CatalogCache $catalogCache) {}
+    private const STATUSES = ['active', 'inactive'];
 
     public function index(Request $request): View
     {
         $search = $request->string('q')->toString();
         $type = $request->string('type')->toString();
+        $status = $request->string('status')->toString();
 
         $locations = Location::query()
-            ->with('parent')
+            ->with('parent:id,slug,name')
             ->when(
                 in_array($type, array_column(LocationType::cases(), 'value'), true),
                 fn ($query) => $query->where('type', $type),
+            )
+            ->when(
+                in_array($status, self::STATUSES, true),
+                fn ($query) => $query->where('is_active', $status === 'active'),
             )
             ->when(
                 $search !== '',
@@ -47,127 +57,83 @@ class LocationController extends Controller
             'search' => $search,
             'type' => $type,
             'types' => LocationType::cases(),
+            'status' => $status,
+            'statuses' => self::STATUSES,
+            'blocked' => DeleteBlockedNotice::fromSession($request->session()),
         ]);
     }
 
-    public function create(): View
+    public function create(TaxonomyTreeOptions $options): View
     {
         return view('admin.locations.form', [
             'location' => new Location,
-            'parents' => $this->parentOptions(),
+            'parents' => $options->for(TaxonomyKind::LOCATION, null, app()->getLocale()),
             'types' => LocationType::cases(),
+            'usage' => null,
+            'blocked' => null,
+            'kind' => TaxonomyKind::LOCATION,
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SaveLocationRequest $request): RedirectResponse
     {
-        Location::create($this->validated($request));
-        $this->flushCache();
+        Location::query()->create($request->locationData());
 
         return redirect()
             ->route('admin.locations.index')
-            ->with('status', 'تم إنشاء الموقع بنجاح.');
+            ->with('status', __('admin.catalog.flash.location_created'));
     }
 
-    public function edit(Location $location): View
+    public function edit(Request $request, Location $location, TaxonomyTreeOptions $options, TaxonomyUsageCounter $counter): View
     {
-        // A side-card figure: if it fails the form still opens and the card says so.
-        rescue(fn () => $location->loadCount(['children', 'ads']));
-
         return view('admin.locations.form', [
             'location' => $location,
-            'parents' => $this->parentOptions($location->id),
+            'parents' => $options->for(TaxonomyKind::LOCATION, $location->id, app()->getLocale()),
             'types' => LocationType::cases(),
+            // A side-card figure: if it fails the form still opens and the card says so.
+            'usage' => rescue(fn () => $counter->forNode($location)),
+            'blocked' => DeleteBlockedNotice::fromSession($request->session()),
+            'kind' => TaxonomyKind::LOCATION,
         ]);
     }
 
-    public function update(Request $request, Location $location): RedirectResponse
+    public function update(SaveLocationRequest $request, Location $location): RedirectResponse
     {
-        $location->update($this->validated($request, $location));
-        $this->flushCache();
+        $location->update($request->locationData());
 
         return redirect()
             ->route('admin.locations.index')
-            ->with('status', 'تم تحديث الموقع بنجاح.');
+            ->with('status', __('admin.catalog.flash.location_updated'));
     }
 
-    public function destroy(Location $location): RedirectResponse
+    public function destroy(Location $location, TaxonomyDeletion $deletion): RedirectResponse
     {
-        $location->delete();
-        $this->flushCache();
+        $usage = $deletion->delete($location);
+
+        if ($usage->inUse()) {
+            return back()
+                ->with('error', $usage->blockedMessage(TaxonomyKind::LOCATION, $location->getLocalizedName(app()->getLocale())))
+                ->with(DeleteBlockedNotice::SESSION_KEY, DeleteBlockedNotice::payload($location, $usage));
+        }
 
         return redirect()
             ->route('admin.locations.index')
-            ->with('status', 'تم حذف الموقع.');
+            ->with('status', __('admin.catalog.flash.location_deleted'));
     }
 
-    public function bulkDestroy(Request $request): RedirectResponse
+    public function bulkDestroy(BulkDestroyTaxonomyRequest $request, TaxonomyDeletion $deletion): RedirectResponse
     {
-        $data = $request->validate([
-            'ids' => ['required', 'array'],
-            'ids.*' => ['string'],
-        ]);
+        /** @var User $admin */
+        $admin = $request->user();
+        $result = $deletion->deleteMany(TaxonomyKind::LOCATION, $request->ids(), $admin);
 
-        $count = Location::whereIn('id', $data['ids'])->delete();
-        $this->flushCache();
-
-        return back()->with('status', "تم حذف {$count} عنصراً.");
+        return back()->with($result->hasBlocked() ? 'error' : 'status', $result->message());
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function validated(Request $request, ?Location $location = null): array
+    public function status(UpdateTaxonomyStatusRequest $request, Location $location): RedirectResponse
     {
-        $validated = $request->validate([
-            'name.ar' => ['required', 'string', 'max:255'],
-            'name.en' => ['required', 'string', 'max:255'],
-            'slug' => [
-                'required',
-                'string',
-                'max:64',
-                'regex:/^[A-Za-z0-9_-]+$/',
-                Rule::unique('locations', 'slug')->ignore($location?->id),
-            ],
-            'type' => ['required', new Enum(LocationType::class)],
-            'parent_id' => [
-                'nullable',
-                'string',
-                Rule::exists('locations', 'id'),
-                Rule::notIn(array_filter([$location?->id])),
-            ],
-            'lat' => ['nullable', 'numeric', 'between:-90,90'],
-            'lng' => ['nullable', 'numeric', 'between:-180,180'],
-            'order' => ['required', 'integer', 'min:0'],
-        ]);
+        $location->update(['is_active' => $request->active()]);
 
-        return [
-            'name' => ['ar' => $validated['name']['ar'], 'en' => $validated['name']['en']],
-            'slug' => $validated['slug'],
-            'type' => $validated['type'],
-            'parent_id' => $validated['parent_id'] ?? null,
-            'lat' => $validated['lat'] ?? null,
-            'lng' => $validated['lng'] ?? null,
-            'order' => $validated['order'],
-        ];
-    }
-
-    /**
-     * @return Collection<int, Location>
-     */
-    private function parentOptions(?string $excludeId = null)
-    {
-        return Location::query()
-            ->when($excludeId !== null, fn ($query) => $query->whereKeyNot($excludeId))
-            ->orderBy('order')
-            ->get();
-    }
-
-    /**
-     * Bulk deletes skip model events, so the catalog caches are flushed here as well as by the observer.
-     */
-    private function flushCache(): void
-    {
-        $this->catalogCache->taxonomyChanged();
+        return back()->with('status', __($request->active() ? 'admin.catalog.flash.location_activated' : 'admin.catalog.flash.location_deactivated'));
     }
 }

@@ -17,13 +17,14 @@ class LocationHierarchy extends CachedHierarchy
 
     protected function load(): array
     {
-        $parents = Location::query()
-            ->toBase()
-            ->pluck('parent_id', 'id')
-            ->map(fn (mixed $parentId): ?string => $parentId !== null ? (string) $parentId : null)
-            ->all();
+        $parents = [];
+        $active = [];
 
-        /** @var array<string, string|null> $parents */
-        return ['parents' => $parents, 'active' => []];
+        foreach (Location::query()->toBase()->get(['id', 'parent_id', 'is_active']) as $row) {
+            $parents[(string) $row->id] = $row->parent_id !== null ? (string) $row->parent_id : null;
+            $active[(string) $row->id] = (bool) $row->is_active;
+        }
+
+        return ['parents' => $parents, 'active' => $active];
     }
 }

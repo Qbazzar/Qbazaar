@@ -18,6 +18,7 @@ return [
         'failed' => 'The given data was invalid.',
         'no_markup' => 'The :attribute may not contain < or > characters.',
         'category_not_selectable' => 'Choose an active sub-category that has no further sub-categories.',
+        'location_not_selectable' => 'This location is not available right now. Choose another one.',
         'iban' => 'This IBAN is not valid. Check the full number as it appears on your bank statement.',
     ],
 
