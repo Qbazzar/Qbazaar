@@ -30,8 +30,8 @@ use Spatie\Permission\PermissionRegistrar;
  *     in one seeder means we have one source of truth and one place to
  *     extend when a new admin feature ships.
  *
- * The admin guard is `web` because Filament authenticates against the same
- * session/cookie stack as a regular Laravel web app. Sanctum tokens are for
+ * The admin guard is `web` because the admin panel authenticates against the
+ * same session/cookie stack as a regular Laravel web app. Sanctum tokens are for
  * the public mobile/web API only.
  */
 class RolesAndPermissionsSeeder extends Seeder

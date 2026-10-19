@@ -16,7 +16,7 @@ use App\Enums\Contracts\Badgeable;
  *
  * Only PENDING is mutable from the user's side (they can't transition, but
  * the duplicate-report guard relies on PENDING vs terminal). Admin
- * transitions are gated by the Sprint 11 Filament resource.
+ * transitions happen in the admin panel's reports queue (/admin/reports).
  */
 enum ReportStatus: string implements Badgeable
 {

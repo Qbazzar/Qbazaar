@@ -656,8 +656,8 @@ Route::prefix('account/notifications')
 
 // ── Sprint 10 — Reports ─────────────────────────────────────────────────────
 //   POST /reports — file an abuse report. Single endpoint; admin-side
-//   listing/inspection ships in Sprint 11's Filament resource (intentionally
-//   not surfaced in the public API).
+//   listing/inspection lives in the admin panel (intentionally not surfaced
+//   in the public API).
 Route::post('/reports', [ReportsController::class, 'store'])
     ->middleware(['auth:sanctum', 'active.user', 'throttle:api'])
     ->name('api.v1.reports.store');
@@ -712,7 +712,7 @@ Route::prefix('help')->name('api.v1.help.')->middleware('throttle:api')->group(f
 // ── Sprint 12 — Support Tickets ────────────────────────────────────────────
 // POST /support/tickets accepts anon submissions; the auth-only endpoints
 // under /account/support/* manage the caller's tickets + replies. Admin
-// staff workflow lives in Filament (Sprint 11 admin panel).
+// staff workflow lives in the admin panel (/admin/support).
 Route::post('/support/tickets', [SupportController::class, 'store'])
     ->middleware(['throttle:api', 'turnstile'])
     ->name('api.v1.support.tickets.store');

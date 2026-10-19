@@ -13,7 +13,7 @@ use App\Models\User;
  * account" — so the policy ultimately reduces to "are you the owner?". We
  * still ship it as a proper Policy so:
  *   - controllers stay declarative (`$this->authorize('manage', $user)`),
- *   - the same rule can be reused by Filament / future admin actions,
+ *   - the same rule can be reused by admin panel actions,
  *   - sensitive ops (deactivate, delete-request, data export) refuse to run
  *     against a different user even if a misconfigured route ever forwards
  *     a stale `User` instance.

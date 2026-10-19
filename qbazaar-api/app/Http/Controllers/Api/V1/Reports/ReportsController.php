@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
  *
  * Single endpoint by design — there is intentionally no `index` or `show`
  * surfaced to the public API. Listing/inspection is admin-only and lives
- * in Sprint 11's Filament resource. Surfacing a listing here would leak
+ * in the admin panel's reports queue. Surfacing a listing here would leak
  * the rate of incoming reports to abusers.
  *
  * @group Reports

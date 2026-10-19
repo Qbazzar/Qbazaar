@@ -23,9 +23,9 @@ declare(strict_types=1);
 | The `enabled` flag is honoured by ModerateAdAction so a kill-switch is
 | one .env tweak away if a regex misfires in production.
 |
-| NOTE: The banned-word list is intentionally non-exhaustive. Sprint 11
-| (Filament admin) will move this list to an admin-editable DB table; for
-| now the static array seeds the same logic so the contract stays stable.
+| NOTE: The banned-word list is intentionally non-exhaustive. The admin
+| panel edits the live list in the moderation_rules table; this static
+| array seeds the same logic so the contract stays stable.
 */
 
 return [
