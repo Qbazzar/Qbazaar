@@ -13,24 +13,29 @@
 
 Swagger UI (`/docs`) is switched off in production; run the API locally or read [the OpenAPI spec](qbazaar-contracts/openapi/v1.yaml).
 
-**Status (2026-10-15):** production runs commit `2d6fe00` (includes #272-#275; the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa).
+**Status (2026-10-19):** production runs commit `cd74b2e` (being deployed on 2026-10-19; the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa). It includes the whole admin M4 batch (#276-#280).
 
 Live now:
 
-- **API and admin:** the MVP backend, the V2 M1 gaps and the cash order cycle (orders, wallet, settlements, paid promotions). Catalog filters with facet counts, a "recommended" feed (promoted ads plus the last 24 hours) and CMS footer pages (#243-#248). The admin got settings tabs, a TipTap editor, role-aware charts on the home page, a wide page shell and a commission tab (#249-#270).
-- **Web (M3):** the whole site is on the new Figma design (exact colours, Poppins, Noto Kufi Arabic, Montserrat, Acme; SEO). Design-parity phases 1 and 2 are merged: page parity (#237-#241), the automated parity gate (#242, #257), the icon registry and foundation (#254, #256) and the home, catalog, product, seller, account and sell screens (#263, #265, #266, #269).
+- **API and admin:** the MVP backend, the V2 M1 gaps and the cash order cycle (orders, wallet, settlements, paid promotions). Catalog filters with facet counts, a "recommended" feed and CMS footer pages (#243-#248). The admin has settings tabs, a TipTap editor, role-aware charts, a wide page shell, the ad deal panel and the revenue page (#249-#273). The M4 batch adds:
+  - companies, business applications and verification, featured companies, and manual or automatic home sections;
+  - one category tree with a per-category fields editor, and safe category and location deletes;
+  - acting from a report, mandatory sanction reasons with notifications, a staff inbox and bell, a FIFO queue with SLA and bulk actions, and offer and dispute handling;
+  - staff 2FA, conversation access with a stated reason, a broadcast composer, a permission matrix editor, and follow and message stats on the dashboard;
+  - payment settings (commission, debt ceiling, promotion prices) and an orders list.
+- **Web (M3):** the whole site is on the new Figma design (exact colours, Poppins, Noto Kufi Arabic, Montserrat, Acme; SEO). Design-parity phases 1 and 2 are merged, and phase 3 has its copy pass and shared components (#274, #275).
 - **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`.
 - **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24); the tab bar and account hub are in #25.
 
-Just merged, in the deploy to production (`2d6fe00`): the admin ad **deal panel** (#273), the admin **Revenue and net profit** page (#272), and design-parity phase 3: the copy pass (#274) and the shared components (#275).
+**Admin security:** `super_admin` accounts must enrol in 2FA (TOTP) on their next login. Keep the recovery codes somewhere safe. Reading a conversation transcript in the admin needs a stated reason, and every access is logged.
 
 Next:
 
-- A full parity-gate re-run (and re-cluster).
-- A small follow-up: the PasswordInput placeholder colour on the account pages, and dropping the unsubstantiated "70%" claim in `post_ad.basic.ad_title_hint`.
 - Web performance part 2 (SSR first results, LCP priority, image loader, lazy map).
-- Mobile M2: login, chat, push, selling and orders on the API.
-- Server M5: backups, monitoring and alerts, a load test.
+- The parity-gate re-run and the final round.
+- Mobile M2 (app and API): login, chat, push, selling and orders.
+- Server M5: backups first, then monitoring and alerts, tuning and a load test.
+- M6: the store release.
 - Payments (M7), later.
 
 See [ROADMAP.md](qbazaar-contracts/ROADMAP.md) for the full picture.
@@ -38,7 +43,7 @@ See [ROADMAP.md](qbazaar-contracts/ROADMAP.md) for the full picture.
 ## Progress
 
 <!-- progress:start -->
-**Current phase:** M0 Preparation and alignment · **Overall:** 68% (137/199 tasks)
+**Current phase:** M0 Preparation and alignment · **Overall:** 76% (152/199 tasks)
 
 ```text
 M0   ███████░░░   72% (18/25)   Preparation and alignment
@@ -46,7 +51,7 @@ M1   ██████████   97% (73/75)   Closing the backend gaps
 M1b  ██████████  100% (10/10)   Orders and payments
 M2   ███░░░░░░░   26% (4/15)    Connecting the mobile app
 M3   ████████░░   83% (15/18)   Web on the new design
-M4   ████░░░░░░   42% (11/26)   Admin additions
+M4   ██████████  100% (26/26)   Admin additions
 M5   ███░░░░░░░   33% (6/18)    Deployment on the new server
 M6   ░░░░░░░░░░    0% (0/5)     Releasing the mobile app
 M7   ░░░░░░░░░░    0% (0/7)     Electronic payment and monetization

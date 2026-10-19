@@ -1,6 +1,6 @@
 # QBazaar V2: milestones and tasks
 
-> **Updated:** 2026-10-14 · **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Roadmap:** [`ROADMAP.md`](ROADMAP.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md) · **Mobile gaps:** [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
+> **Updated:** 2026-10-19 · **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Roadmap:** [`ROADMAP.md`](ROADMAP.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md) · **Mobile gaps:** [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
 > The MVP (Sprints 0–12) is archived in [`MILESTONES.md`](MILESTONES.md).
 
 ## How to read this file
@@ -26,12 +26,12 @@
 | M1 Closing the backend gaps | 14 | 75 | 73 | 2 | Performance batch merged (#199–#203); R2 storage live; left: new-device SMS, Google/Apple (waiting for credentials) |
 | M1b Orders and payments | 14 | 10 | 10 | 0 | Backend done: ledger, orders, checkout, settlements, withdrawals, disputes, promotions, notifications (#207–#212); demo data in progress |
 | M2 Connecting the mobile app | 15 | 15 | 4 | 11 | API layer, session, repository switch and catalog on the real API are in (Qbazaar-mobile #24); next: login, chat, push, selling, orders |
-| M3 Web on the new design | 16 | 18 | 15 | 3 | Every page is on the new design, orders included (#218, #221–#227); design parity phases 1 and 2 merged (#237–#242, #254, #256, #257, #263, #265, #266, #269); left: parity phase 3 (in progress), a full gate re-run, performance part 2, Lighthouse and axe reports (FE-16.7) |
-| M4 Admin additions | 17 | 26 | 11 | 15 | Admin components done (#210); finance queues and promotion confirmation landed with #211/#212, admin settings, integrations, page shell and dashboard merged (#249–#270); the ad deal panel and the revenue page merged (#272, #273); AD-17.7 still needs its payments pieces |
+| M3 Web on the new design | 16 | 18 | 15 | 3 | Every page is on the new design, orders included (#218, #221–#227); design parity phases 1 and 2 merged (#237–#242, #254, #256, #257, #263, #265, #266, #269); left: copy pass and shared components merged (#274–#276); left: a full gate re-run (in progress), performance part 2, Lighthouse and axe reports (FE-16.7) |
+| M4 Admin additions | 17 | 26 | 26 | 0 | Every M4 task is done (#249–#280): settings, page shell, dashboard, deal panel, revenue page, companies and business verification, home sections, category tree and fields editor, moderation tools, staff inbox and queue, staff 2FA, conversation access with a reason, broadcasts and permission matrix; the gateway-dependent payments work waits for M7 |
 | M5 Deployment on the new server | 18 | 18 | 6 | 12 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; Meilisearch, Horizon and Reverb run in production, media on R2; left: backups, alerts, WAF and firewall rules, tuning, the load test |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **199** | **137** | **62** | |
+| **Total** | | **199** | **152** | **47** | |
 
 ---
 
@@ -385,9 +385,9 @@
 
 **Exit criteria:** an admin can run companies, home sections, moderation, reports and payments from the panel, with every action permission-checked and logged.
 
-### Done — admin additions (merged 2026-10-12 to 2026-10-15)
+### Done — admin additions (merged 2026-10-12 to 2026-10-19)
 
-> Status: ✅ done. #249 → AD-17.18 · #250 → AD-17.19 · #251 → AD-17.20 · #252, #260 → AD-17.21 · #253 → AD-17.22 · #255 → AD-17.23 · #258 → AD-17.24 · #259, #261, #262, #264 → AD-17.25 · #267, #268, #270 → AD-17.26 · #273 → AD-17.27 · #272 → AD-17.28
+> Status: ✅ done. #249 → AD-17.18 · #250 → AD-17.19 · #251 → AD-17.20 · #252, #260 → AD-17.21 · #253 → AD-17.22 · #255 → AD-17.23 · #258 → AD-17.24 · #259, #261, #262, #264 → AD-17.25 · #267, #268, #270 → AD-17.26 · #273 → AD-17.27 · #272 → AD-17.28 · #277 → AD-17.1, AD-17.17, AD-17.2 · #278 → AD-17.5, AD-17.13, AD-17.10, AD-17.4 · #279 → AD-17.3, AD-17.12 · #280 → AD-17.14, AD-17.11, AD-17.15, AD-17.16, AD-17.6, AD-17.7
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
@@ -402,42 +402,21 @@
 | AD-17.26 | Needs-attention cards on one row and the layout follow-ups from the S1–S4 reviews | [P2] | — |
 | AD-17.27 | Ad deal panel in the ad page: buyer, order steps, payment and escrow, settlement, chats, offers and a timeline | [P0] | Staff can follow one deal from offer to settlement without leaving the ad |
 | AD-17.28 | "Revenue and net profit" finance page | [P0] | Commission income, promotion income and net profit by period |
-
-### Moderation and staff tools
-
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
+| AD-17.1 | Companies: verify a business account, featured companies with an order | [P0] | Shows up in `/home` and `/companies` |
+| AD-17.2 | Home sections: choose/order recommended and best selling (or automatic mode) | [P1] | `/home` respects the setting |
+| AD-17.3 | Unified category tree + fields per category (fields editor) | [P0] | Every category has a clear attribute schema |
+| AD-17.4 | Handle an offer from the panel (cancel/resolve a dispute) | [P2] | Logged in the activity log |
+| AD-17.5 | Act directly from a report (suspend the ad/ban the user from the report screen) | [P1] | One button with a confirmation |
+| AD-17.6 | Follow and message stats on the dashboard | [P2] | — |
+| AD-17.7 | Payments section in the admin panel (non-gateway parts): platform settings (commission, debt ceiling, promotion prices), orders, settlement/withdrawal queue with approve/reject, disputes, revenue report | [P0] | The admin changes the commission and it applies to the next order; approving a settlement updates the seller's wallet |
 | AD-17.10 | Staff notification bell/inbox + FIFO moderation queue with SLA + bulk approve/reject | [P1] | Fixes audit finding ADM-08 (DOCS/AUDIT-2026-09-30.md) |
-| AD-17.13 | Mandatory sanction reasons + AdSuspended/UserSuspended notifications | [P1] | Fixes audit finding ADM-11 (DOCS/AUDIT-2026-09-30.md) |
 | AD-17.11 | conversations.view permission with reason, logging, pagination | [P1] | Fixes audit finding ADM-09 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.12 | Safe category/location delete (usage check or deactivate) | [P1] | Fixes audit finding ADM-10 (DOCS/AUDIT-2026-09-30.md) |
+| AD-17.13 | Mandatory sanction reasons + AdSuspended/UserSuspended notifications | [P1] | Fixes audit finding ADM-11 (DOCS/AUDIT-2026-09-30.md) |
 | AD-17.14 | Staff 2FA | [P1] | Fixes audit finding ADM-03 (DOCS/AUDIT-2026-09-30.md) |
 | AD-17.15 | Broadcast composer, permission matrix editor, route-protect /admin/roles | [P2] | Fixes audit finding ADM-12 (DOCS/AUDIT-2026-09-30.md) |
 | AD-17.16 | Admin i18n flash strings, remove Filament comments, mutation tests | [P2] | Fixes audit finding ARCH-13 (DOCS/AUDIT-2026-09-30.md) |
-
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| AD-17.5 | Act directly from a report (suspend the ad/ban the user from the report screen) | [P1] | One button with a confirmation |
-| AD-17.4 | Handle an offer from the panel (cancel/resolve a dispute) | [P2] | Logged in the activity log |
-| AD-17.6 | Follow and message stats on the dashboard | [P2] | — |
-
-### Catalog, companies and home
-
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| AD-17.3 | Unified category tree + fields per category (fields editor) | [P0] | Every category has a clear attribute schema |
-| AD-17.1 | Companies: verify a business account, featured companies with an order | [P0] | Shows up in `/home` and `/companies` |
-| AD-17.2 | Home sections: choose/order recommended and best selling (or automatic mode) | [P1] | `/home` respects the setting |
-
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| AD-17.12 | Safe category/location delete (usage check or deactivate) | [P1] | Fixes audit finding ADM-10 (DOCS/AUDIT-2026-09-30.md) |
 | AD-17.17 | Business applications and verification flow | [P1] | Fixes audit finding PRD-11 (DOCS/AUDIT-2026-09-30.md) |
-
-### Payments
-
-| ID | Task | Priority | Acceptance criteria |
-|---|---|---|---|
-| AD-17.7 | Payments section in the admin panel: platform settings (commission, debt ceiling, promotion prices), orders, settlement/withdrawal queue with approve/reject, disputes, revenue report | [P0] | The admin changes the commission and it applies to the next order; approving a settlement updates the seller's wallet |
 
 ## Sprint 18 — M5 Deployment on the new server
 
