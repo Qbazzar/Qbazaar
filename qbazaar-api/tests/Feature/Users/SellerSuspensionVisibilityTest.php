@@ -39,7 +39,7 @@ beforeEach(function (): void {
 
 function suspendSeller(User $admin, User $seller): void
 {
-    actingAs($admin)->post("/admin/users/{$seller->id}/suspend")->assertRedirect();
+    actingAs($admin)->post("/admin/users/{$seller->id}/suspend", ['reason' => 'fraud'])->assertRedirect()->assertSessionHasNoErrors();
     app('auth')->forgetGuards();
 }
 

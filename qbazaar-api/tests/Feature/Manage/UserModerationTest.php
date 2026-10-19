@@ -64,7 +64,9 @@ it('suspends the reported user from the reports queue through the same rules', f
         'target_id' => $customer->id,
     ]);
 
-    actingAs($this->moderator)->post("/admin/reports/{$report->id}/ban-user")->assertRedirect();
+    actingAs($this->moderator)->post("/admin/reports/{$report->id}/sanction", ['action' => 'user_suspended', 'reason' => 'harassment'])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
 
     expect($customer->fresh()->status)->toBe(UserStatus::SUSPENDED)
         ->and($customer->tokens()->count())->toBe(0)
@@ -78,7 +80,7 @@ it('refuses to suspend higher-ranked staff from the reports queue', function ():
         'target_id' => $superAdmin->id,
     ]);
 
-    actingAs($this->moderator)->post("/admin/reports/{$report->id}/ban-user")->assertForbidden();
+    actingAs($this->moderator)->post("/admin/reports/{$report->id}/sanction", ['action' => 'user_suspended', 'reason' => 'harassment'])->assertForbidden();
 
     expect($superAdmin->fresh()->status)->toBe(UserStatus::ACTIVE)
         ->and($report->fresh()->status)->toBe(ReportStatus::PENDING);

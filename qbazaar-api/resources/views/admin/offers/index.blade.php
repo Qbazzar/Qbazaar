@@ -28,7 +28,9 @@
     >
         @foreach ($offers as $offer)
             <x-admin.table.row>
-                <x-admin.table.cell primary>{{ \Illuminate\Support\Str::limit($offer->ad?->title ?? '—', 40) }}</x-admin.table.cell>
+                <x-admin.table.cell primary>
+                    <a href="{{ route('admin.offers.show', $offer) }}" class="font-semibold hover:text-coral-700" title="{{ __('admin.offer_admin.open') }}">{{ \Illuminate\Support\Str::limit($offer->ad?->title ?? '—', 40) }}</a>
+                </x-admin.table.cell>
                 <x-admin.table.cell label="من (مشتري)" class="text-ink-700"><x-admin.user :user="$offer->buyer" /></x-admin.table.cell>
                 <x-admin.table.cell label="إلى (بائع)" class="text-ink-700"><x-admin.user :user="$offer->seller" /></x-admin.table.cell>
                 <x-admin.table.cell label="المبلغ" class="font-semibold tabular-nums">{{ number_format((float) $offer->amount, 2) }} {{ $offer->currency ?: 'QAR' }}</x-admin.table.cell>

@@ -6,6 +6,7 @@ namespace App\Services\Ads;
 
 use App\Data\Moderation\ModerationResult;
 use App\Enums\AdStatus;
+use App\Enums\SanctionReason;
 use App\Events\Ads\AdApproved;
 use App\Events\Ads\AdExpired;
 use App\Events\Ads\AdRejected;
@@ -57,15 +58,19 @@ class AdLifecycleService
         }, from: AdStatus::PENDING);
     }
 
-    public function reject(Ad $ad, string $notes): Ad
+    /**
+     * @param SanctionReason|null $reason the preset reason the seller is told, when staff picked one
+     */
+    public function reject(Ad $ad, string $notes, ?SanctionReason $reason = null): Ad
     {
-        return $this->transition($ad, AdStatus::REJECTED, function (Ad $locked) use ($notes): Closure {
+        return $this->transition($ad, AdStatus::REJECTED, function (Ad $locked) use ($notes, $reason): Closure {
             $this->apply($locked, AdStatus::REJECTED, [
                 'published_at' => null,
                 'expires_at' => null,
             ]);
 
-            $result = ModerationResult::rejected(['admin_manual'], ['admin_notes' => $notes]);
+            $details = ['admin_notes' => $notes] + ($reason !== null ? ['reason' => $reason->value] : []);
+            $result = ModerationResult::rejected(['admin_manual'], $details);
 
             return fn () => AdRejected::dispatch($locked, $result);
         });

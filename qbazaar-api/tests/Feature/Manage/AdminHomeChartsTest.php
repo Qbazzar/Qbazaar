@@ -135,7 +135,7 @@ it('renders waiting queues as linked cards and empty ones as a clear list', func
 
     actingAs(chartStaff('moderator'))->get(route('admin.dashboard'))
         ->assertOk()
-        ->assertSee(route('admin.ads.index', ['status' => 'pending'], false), false)
+        ->assertSee(route('admin.moderation.queue', [], false), false)
         ->assertSee(__('admin.home.attention.severity.critical'))
         ->assertSee(__('admin.home.attention.clear_items'));
 });

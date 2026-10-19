@@ -11,6 +11,7 @@ use App\Events\Ads\AdPublished;
 use App\Events\Ads\AdRejected;
 use App\Events\Ads\AdRenewed;
 use App\Events\Ads\AdSubmittedForReview;
+use App\Events\Ads\AdSuspended;
 use App\Events\Messaging\MessageSent;
 use App\Events\Offers\OfferAccepted;
 use App\Events\Offers\OfferCountered;
@@ -33,6 +34,7 @@ use App\Events\PurchaseRequests\PurchaseRequestPaid;
 use App\Events\PurchaseRequests\PurchaseRequestRejected;
 use App\Events\PurchaseRequests\PurchaseRequestUpdated;
 use App\Events\Reports\ReportCreated;
+use App\Events\Users\UserSuspended;
 use App\Listeners\Ads\NotifyAdminsOfPendingAd;
 use App\Listeners\Ads\NotifyFavoritersOfPriceDrop;
 use App\Listeners\Ads\NotifyFollowersOfNewAd;
@@ -49,6 +51,7 @@ use App\Listeners\PurchaseRequests\SendPurchaseRequestInboxNotifications;
 use App\Listeners\PurchaseRequests\SendPurchaseRequestPushNotifications;
 use App\Listeners\Reports\NotifyModeratorsOfReport;
 use App\Listeners\Search\NotifySavedSearchMatches;
+use App\Listeners\Users\NotifySanctionedUser;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Event;
@@ -117,4 +120,6 @@ it('wires each event to its listeners', function (string $event, array $listener
     'PurchaseRequestRejected' => [PurchaseRequestRejected::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
     'PurchaseRequestCancelled' => [PurchaseRequestCancelled::class, [SendPurchaseRequestPushNotifications::class, SendPurchaseRequestInboxNotifications::class]],
     'PurchaseRequestPaid' => [PurchaseRequestPaid::class, [SendPurchaseRequestPushNotifications::class]],
+    'AdSuspended' => [AdSuspended::class, [NotifySanctionedUser::class]],
+    'UserSuspended' => [UserSuspended::class, [NotifySanctionedUser::class]],
 ]);

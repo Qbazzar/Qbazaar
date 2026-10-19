@@ -313,4 +313,41 @@ return [
             'body' => 'We could not confirm your transfer of :price :currency for ":title". :reason',
         ],
     ],
+
+    // Staff sanctions, told to the affected user (preset reason only, never the staff note).
+    'moderation' => [
+        'greeting' => 'Hello,',
+        'line_reason' => 'Reason: :reason',
+        'action_help' => 'Contact support',
+        'line_appeal' => 'If you think this decision is wrong, contact us and we will review it.',
+        'reasons' => [
+            'spam' => 'Spam or deliberately repeated content.',
+            'prohibited_item' => 'An item or service QBazaar does not allow.',
+            'fraud' => 'Suspected fraud or a scam attempt.',
+            'misleading' => 'Misleading or false information.',
+            'offensive' => 'Offensive or inappropriate content.',
+            'harassment' => 'Abuse or harassment of other users.',
+            'duplicate' => 'A duplicate of another listing.',
+            'wrong_category' => 'The listing is in the wrong category.',
+            'other' => 'A breach of the QBazaar terms of use.',
+        ],
+        'ad_suspended' => [
+            'subject' => 'Your ad was suspended',
+            'title' => 'Your ad was suspended',
+            'line_intro' => 'The QBazaar team suspended your ad ":title", and it is no longer shown on the site.',
+            'body' => 'We suspended your ad ":title". Reason: :reason',
+        ],
+        'ad_removed' => [
+            'subject' => 'Your ad was removed',
+            'title' => 'Your ad was removed',
+            'line_intro' => 'The QBazaar team removed your ad ":title" from the site.',
+            'body' => 'We removed your ad ":title". Reason: :reason',
+        ],
+        'user_suspended' => [
+            'subject' => 'Your account was suspended',
+            'title' => 'Your account was suspended',
+            'line_intro' => 'The QBazaar team suspended your account, and you were signed out of every device.',
+            'body' => 'We suspended your account. Reason: :reason',
+        ],
+    ],
 ];

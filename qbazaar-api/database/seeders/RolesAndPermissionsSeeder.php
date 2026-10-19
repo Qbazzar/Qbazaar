@@ -60,6 +60,8 @@ class RolesAndPermissionsSeeder extends Seeder
         'ads.suspend',
         'ads.feature',
         'offers.view',
+        // Cancel an open offer from the panel
+        'offers.manage',
 
         // Taxonomy
         'categories.manage',
@@ -124,6 +126,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'ads.suspend',
         'ads.feature',
         'offers.view',
+        'offers.manage',
         'categories.manage',
         'locations.manage',
         'reports.view',

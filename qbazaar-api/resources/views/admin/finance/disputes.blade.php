@@ -32,14 +32,7 @@
                 <x-admin.table.cell label="فُتح في" secondary class="text-ink-500"><span dir="ltr">{{ $order->disputed_at?->format('Y-m-d H:i') }}</span></x-admin.table.cell>
                 <x-admin.table.actions class="max-md:flex-wrap">
                     @if ($canManage)
-                        <form method="POST" action="{{ route('admin.finance.disputes.resolve', $order) }}" data-confirm="تثبيت قرارك في هذا النزاع؟ لا يمكن التراجع عنه." data-confirm-tone="primary" class="w-full space-y-2 md:w-64">
-                            @csrf
-                            <x-admin.textarea name="note" :id="'note-' . $order->id" label="سبب القرار (يُحفظ مع الطلب)" label-hidden placeholder="سبب القرار" :rows="2" required minlength="5" maxlength="1000" />
-                            <div class="flex flex-wrap gap-2">
-                                <x-admin.button variant="success" size="sm" name="resolution" value="completed">إتمام البيع لصالح البائع</x-admin.button>
-                                <x-admin.button variant="danger" size="sm" name="resolution" value="cancelled">إلغاء البيع لصالح المشتري</x-admin.button>
-                            </div>
-                        </form>
+                        @include('admin.finance.partials.dispute-ruling-form', ['order' => $order])
                     @endif
                 </x-admin.table.actions>
             </x-admin.table.row>

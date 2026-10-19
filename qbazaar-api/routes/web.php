@@ -16,6 +16,7 @@ use App\Http\Controllers\Manage\Finance;
 use App\Http\Controllers\Manage\HelpArticleController;
 use App\Http\Controllers\Manage\HelpCategoryController;
 use App\Http\Controllers\Manage\HomeSectionController;
+use App\Http\Controllers\Manage\InboxController;
 use App\Http\Controllers\Manage\IntegrationTestController;
 use App\Http\Controllers\Manage\LocationController;
 use App\Http\Controllers\Manage\ModerationRuleController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Manage\OfferController;
 use App\Http\Controllers\Manage\PageController;
 use App\Http\Controllers\Manage\ProfileController;
 use App\Http\Controllers\Manage\ReportController;
+use App\Http\Controllers\Manage\ReviewQueueController;
 use App\Http\Controllers\Manage\RoleController;
 use App\Http\Controllers\Manage\SavedSearchController;
 use App\Http\Controllers\Manage\SettingController;
@@ -140,9 +142,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('reports/{report}/resolve', [ReportController::class, 'resolve'])->name('reports.resolve');
             Route::post('reports/{report}/dismiss', [ReportController::class, 'dismiss'])->name('reports.dismiss');
             Route::post('reports/{report}/action', [ReportController::class, 'action'])->name('reports.action');
-            Route::post('reports/{report}/suspend-ad', [ReportController::class, 'suspendAd'])->middleware('permission:ads.suspend')->name('reports.suspend-ad');
-            Route::post('reports/{report}/ban-user', [ReportController::class, 'banUser'])->middleware('permission:users.ban')->name('reports.ban-user');
+            // Sanction the reported item and close the report in one step; the chosen
+            // sanction's own permission (ads.suspend, ads.delete, users.ban) is checked by its request.
+            Route::post('reports/{report}/sanction', [ReportController::class, 'sanction'])->name('reports.sanction');
             Route::post('reports/bulk-dismiss', [ReportController::class, 'bulkDismiss'])->name('reports.bulk-dismiss');
+        });
+
+        // Moderation tools: FIFO review queue with bulk approve / reject (AD-17.10)
+        Route::get('moderation/queue', [ReviewQueueController::class, 'index'])->middleware('permission:ads.approve')->name('moderation.queue');
+        Route::post('moderation/queue/approve', [ReviewQueueController::class, 'approve'])->middleware('permission:ads.approve')->name('moderation.queue.approve');
+        Route::post('moderation/queue/reject', [ReviewQueueController::class, 'reject'])->middleware('permission:ads.reject')->name('moderation.queue.reject');
+
+        // Staff inbox: each staff member's own bell, like their profile (AD-17.10)
+        Route::prefix('inbox')->name('inbox.')->group(function () {
+            Route::get('/', [InboxController::class, 'index'])->name('index');
+            Route::get('summary', [InboxController::class, 'summary'])->name('summary');
+            Route::post('read-all', [InboxController::class, 'readAll'])->name('read-all');
+            Route::post('{notification}/open', [InboxController::class, 'open'])->whereUuid('notification')->name('open');
         });
 
         // Moderation rules (CRUD)
@@ -265,6 +281,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Read-only surfaces
         Route::get('offers', [OfferController::class, 'index'])->middleware('permission:offers.view')->name('offers.index');
+        Route::get('offers/{offer}', [OfferController::class, 'show'])->middleware('permission:offers.view')->name('offers.show');
+        Route::post('offers/{offer}/cancel', [OfferController::class, 'cancel'])->middleware('permission:offers.manage')->name('offers.cancel');
         Route::get('saved-searches', [SavedSearchController::class, 'index'])->middleware('permission:users.view')->name('saved-searches.index');
         Route::get('notifications', [NotificationController::class, 'index'])->middleware('permission:users.view')->name('notifications.index');
         Route::get('activity', [ActivityController::class, 'index'])->middleware('permission:activity.view')->name('activity.index');

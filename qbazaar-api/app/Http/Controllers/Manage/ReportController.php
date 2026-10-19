@@ -5,17 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Manage;
 
 use App\Actions\Reports\ResolveReportAction;
-use App\Enums\AdStatus;
 use App\Enums\ReportCategory;
 use App\Enums\ReportStatus;
-use App\Enums\ReportTarget;
 use App\Http\Controllers\Controller;
-use App\Models\Ad;
+use App\Http\Requests\Manage\Moderation\SanctionFromReportRequest;
 use App\Models\Report;
 use App\Models\User;
 use App\Services\Admin\Reports\ReportDetailPanels;
-use App\Services\Ads\AdLifecycleService;
-use App\Services\Users\UserModerationService;
+use App\Services\Moderation\ReportSanctions;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -113,38 +110,23 @@ class ReportController extends Controller
         return back()->with('status', "تم رفض {$count} بلاغاً.");
     }
 
-    /** Suspend the reported ad, then mark the report actioned. */
-    public function suspendAd(Report $report, AdLifecycleService $lifecycle): RedirectResponse
-    {
-        abort_unless($report->target_type === ReportTarget::AD, 404);
-
-        $ad = Ad::find($report->target_id);
-        if ($ad !== null && $ad->status === AdStatus::ACTIVE) {
-            $lifecycle->block($ad);
-        }
-
-        $this->transition($report, ReportStatus::ACTIONED, 'تم إيقاف الإعلان المُبلَّغ عنه.');
-
-        return back()->with('status', 'تم إيقاف الإعلان واتخاذ إجراء على البلاغ.');
-    }
-
-    /** Suspend the reported user, then mark the report actioned. */
-    public function banUser(
+    /**
+     * Sanction the report's target (suspend or remove the ad, suspend the
+     * account) with a reason, and close the report as actioned, in one step.
+     */
+    public function sanction(
+        SanctionFromReportRequest $request,
         #[CurrentUser]
         User $actor,
         Report $report,
-        UserModerationService $moderation,
+        ReportSanctions $sanctions,
     ): RedirectResponse {
-        abort_unless($report->target_type === ReportTarget::USER, 404);
+        $action = $request->action();
+        $sanctions->apply($actor, $report, $action, $request->sanction());
 
-        $user = User::find($report->target_id);
-        if ($user !== null) {
-            $moderation->suspend($actor, $user);
-        }
-
-        $this->transition($report, ReportStatus::ACTIONED, 'تم إيقاف المستخدم المُبلَّغ عنه.');
-
-        return back()->with('status', 'تم إيقاف المستخدم واتخاذ إجراء على البلاغ.');
+        return redirect()
+            ->route('admin.reports.show', $report)
+            ->with('status', __('admin.moderation.flash.report_sanctioned', ['action' => $action->label()]));
     }
 
     private function transition(Report $report, ReportStatus $status, ?string $notes = null): void

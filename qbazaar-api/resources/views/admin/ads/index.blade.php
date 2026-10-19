@@ -16,7 +16,11 @@
         />
     </x-admin.page-toolbar>
 
-    <x-admin.bulk-bar :action="route('admin.ads.bulk-destroy')" label="حذف المحدد" confirm="حذف الإعلانات المحددة نهائياً؟" />
+    @can('ads.delete')
+        <x-admin.bulk-bar :action="route('admin.ads.bulk-destroy')" :label="__('admin.moderation.bulk.remove')" :confirm="__('admin.moderation.bulk.remove_confirm')">
+            <x-admin.sanction-fields prefix="bulk-remove" class="md:grid-cols-2" />
+        </x-admin.bulk-bar>
+    @endcan
 
     <x-admin.table
         caption="الإعلانات"
