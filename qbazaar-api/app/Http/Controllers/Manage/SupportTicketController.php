@@ -108,7 +108,7 @@ class SupportTicketController extends Controller
 
         $replyAsStaff($ticket, $staff, $data['body']);
 
-        return back()->with('status', 'تم إرسال الرد');
+        return back()->with('status', __('admin.flash.support_replied'));
     }
 
     public function updateStatus(Request $request, SupportTicket $ticket, ChangeTicketStatusAction $changeStatus): RedirectResponse
@@ -119,7 +119,7 @@ class SupportTicketController extends Controller
 
         $changeStatus($ticket, SupportTicketStatus::from($data['status']));
 
-        return back()->with('status', 'تم تحديث حالة التذكرة');
+        return back()->with('status', __('admin.flash.support_status_updated'));
     }
 
     /** Assign the ticket to the current staff member. */
@@ -127,6 +127,6 @@ class SupportTicketController extends Controller
     {
         $ticket->forceFill(['assigned_to' => auth()->id()])->save();
 
-        return back()->with('status', 'تم إسناد التذكرة إليك');
+        return back()->with('status', __('admin.flash.support_assigned'));
     }
 }

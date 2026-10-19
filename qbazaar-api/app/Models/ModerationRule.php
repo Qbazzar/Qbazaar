@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * A single moderation rule row, editable from the Filament admin panel.
+ * A single moderation rule row, editable from the admin panel.
  *
  *  - Cache invalidation lives here (not on the resource pages) so any code
  *    path that mutates a rule — seeder, console command, future API — keeps

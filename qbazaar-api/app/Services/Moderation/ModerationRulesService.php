@@ -18,7 +18,7 @@ use Throwable;
  *
  * Storage layering (Sprint 11):
  *   1. The banned-words and blocked-domains lists live in the
- *      `moderation_rules` table, editable from the Filament admin panel.
+ *      `moderation_rules` table, editable from the admin panel.
  *   2. Reads are cached for 1h (see {@see ModerationRule::CACHE_TTL_SECONDS})
  *      so the publish hot-path stays a single Redis hit on warm caches.
  *   3. If the table is empty OR the lookup errors (e.g. an in-test DB hasn't

@@ -39,7 +39,11 @@
                             </a>
                         </x-admin.table.cell>
                         <x-admin.table.cell :label="__('admin.deal.conversations.last_message')" class="text-ink-700">
-                            <span class="line-clamp-2 break-words">{{ $row->excerpt ?? __('admin.deal.conversations.no_messages') }}</span>
+                            @if ($row->privateExcerpt)
+                                <span class="text-ink-500">{{ __('admin.deal.conversations.private_message') }}</span>
+                            @else
+                                <span class="line-clamp-2 break-words">{{ $row->excerpt ?? __('admin.deal.conversations.no_messages') }}</span>
+                            @endif
                         </x-admin.table.cell>
                         <x-admin.table.cell :label="__('admin.deal.conversations.state')">
                             <span class="flex flex-wrap justify-end gap-1.5 md:justify-start">

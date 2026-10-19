@@ -39,6 +39,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -213,6 +214,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'idempotent' => Idempotent::class,
             'staff' => EnsureStaff::class,
             'permission' => PermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
             'turnstile' => VerifyTurnstile::class,
         ]);
 

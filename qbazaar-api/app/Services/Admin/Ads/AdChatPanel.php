@@ -86,7 +86,8 @@ final class AdChatPanel
 
         return new ConversationRow(
             conversation: $conversation,
-            excerpt: $this->renderer->preview($conversation, app()->getLocale()),
+            excerpt: $this->renderer->eventPreview($conversation, app()->getLocale()),
+            privateExcerpt: $this->renderer->isUserWritten($conversation),
             unread: (int) $sides->sum('unread_count'),
             hiddenByBuyer: $hidden($conversation->buyer_id),
             hiddenBySeller: $hidden($conversation->seller_id),

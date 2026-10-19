@@ -6,6 +6,9 @@
 @section('content')
     <x-admin.page-toolbar>
         <x-admin.filter-bar :reset-url="route('admin.roles.index')" :search="$search" placeholder="بحث بالاسم…" />
+        <x-slot:actions>
+            <x-admin.button :href="route('admin.roles.permissions.edit')" icon="key" variant="secondary">{{ __('admin.permission_matrix.open') }}</x-admin.button>
+        </x-slot:actions>
     </x-admin.page-toolbar>
 
     <x-admin.table

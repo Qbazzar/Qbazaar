@@ -64,7 +64,7 @@ class ModerationRuleController extends Controller
 
         return redirect()
             ->route('admin.moderation-rules.index')
-            ->with('status', 'تمت إضافة القاعدة.');
+            ->with('status', __('admin.flash.rule_created'));
     }
 
     public function edit(ModerationRule $rule): View
@@ -82,7 +82,7 @@ class ModerationRuleController extends Controller
 
         return redirect()
             ->route('admin.moderation-rules.index')
-            ->with('status', 'تم تحديث القاعدة.');
+            ->with('status', __('admin.flash.rule_updated'));
     }
 
     public function destroy(ModerationRule $rule): RedirectResponse
@@ -91,7 +91,7 @@ class ModerationRuleController extends Controller
 
         return redirect()
             ->route('admin.moderation-rules.index')
-            ->with('status', 'تم حذف القاعدة.');
+            ->with('status', __('admin.flash.rule_deleted'));
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -103,7 +103,7 @@ class ModerationRuleController extends Controller
 
         $count = ModerationRule::whereIn('id', $data['ids'])->delete();
 
-        return back()->with('status', "تم حذف {$count} عنصراً.");
+        return back()->with('status', __('admin.flash.items_deleted', ['count' => $count]));
     }
 
     /**

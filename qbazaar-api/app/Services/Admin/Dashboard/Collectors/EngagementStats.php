@@ -6,6 +6,7 @@ namespace App\Services\Admin\Dashboard\Collectors;
 
 use App\Models\Conversation;
 use App\Models\Favorite;
+use App\Models\Follow;
 use App\Models\Message;
 use App\Models\Offer;
 use App\Models\PurchaseRequest;
@@ -14,8 +15,9 @@ use App\Services\Admin\Dashboard\DashboardAccess;
 use App\Services\Admin\Dashboard\DashboardWindow;
 
 /**
- * Rows created per window in the chat, offer and bookmark tables. Each is one
- * ranged count on its `created_at` index (see the dashboard index migration).
+ * Rows created per window in the chat, offer, bookmark and follow tables. Each
+ * is one ranged count on its `created_at` index (see the dashboard index
+ * migrations).
  */
 final class EngagementStats
 {
@@ -27,6 +29,7 @@ final class EngagementStats
         'purchase_requests_new' => [PurchaseRequest::class, DashboardAccess::OFFERS],
         'favorites_new' => [Favorite::class, DashboardAccess::CONTENT],
         'saved_searches_new' => [SavedSearch::class, DashboardAccess::USERS],
+        'follows_new' => [Follow::class, DashboardAccess::USERS],
     ];
 
     /**

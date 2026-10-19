@@ -78,6 +78,13 @@ dataset('admin actions', [
     'finance disputes' => ['get', '/admin/finance/disputes', ['super_admin']],
     'finance statement' => ['get', '/admin/finance/users/{user}/statement', ['super_admin']],
 
+    // Staff security, broadcasts and payments (AD-17.7, AD-17.14, AD-17.15).
+    'finance orders' => ['get', '/admin/finance/orders', ['super_admin']],
+    'reset staff two-factor' => ['delete', '/admin/users/{user}/two-factor', ['super_admin']],
+    'permission matrix' => ['get', '/admin/roles/permissions', ['super_admin']],
+    'broadcasts' => ['get', '/admin/broadcasts', ['super_admin', 'moderator', 'support']],
+    'send broadcast' => ['post', '/admin/broadcasts', ['super_admin', 'moderator', 'support']],
+
     // Moderation tools (AD-17.4, AD-17.10)
     'review queue' => ['get', '/admin/moderation/queue', ['super_admin', 'moderator']],
     'bulk approve from the queue' => ['post', '/admin/moderation/queue/approve', ['super_admin', 'moderator']],
@@ -139,6 +146,8 @@ it('guards every admin route except the dashboard, own profile and own inbox wit
     $unguarded = collect(Route::getRoutes()->getRoutes())
         ->filter(fn (RoutingRoute $route): bool => in_array('staff', $route->gatherMiddleware(), true))
         ->reject(fn (RoutingRoute $route): bool => in_array($route->getName(), ['admin.dashboard', 'admin.profile.edit', 'admin.profile.update'], true))
+        // Every staff member manages their own two-factor sign-in (AD-17.14).
+        ->reject(fn (RoutingRoute $route): bool => Str::startsWith((string) $route->getName(), 'admin.profile.two-factor.'))
         // Every staff member reads their own notifications; the work queues inside check their own permissions.
         ->reject(fn (RoutingRoute $route): bool => Str::startsWith((string) $route->getName(), 'admin.inbox.'))
         ->reject(fn (RoutingRoute $route): bool => collect($route->gatherMiddleware())

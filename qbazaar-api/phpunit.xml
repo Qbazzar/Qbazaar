@@ -47,5 +47,8 @@
              make every issued code identical and break the "distinct codes" and
              "old code is burnt" assertions. -->
         <env name="OTP_FIXED_CODE" value=""/>
+        <!-- Admin tests sign staff in with actingAs(); the two-factor tests
+             switch enrolment enforcement back on explicitly. -->
+        <env name="ADMIN_TWO_FACTOR_ENFORCED" value="false"/>
     </php>
 </phpunit>

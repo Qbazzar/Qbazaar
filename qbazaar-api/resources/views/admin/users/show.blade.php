@@ -14,6 +14,7 @@
         'wallet' => 'المحفظة',
     ];
     $tabItems = collect($tabs)->mapWithKeys(fn (string $key): array => [$key => ['label' => $tabLabels[$key]]])->all();
+    $tabUrls = collect($tabs)->mapWithKeys(fn (string $key): array => [$key => route('admin.users.show', [$user, 'tab' => $key])])->all();
 @endphp
 
 @section('content')
@@ -49,19 +50,18 @@
         {{-- min-w-0: the scrolling tab strip must not widen the grid column on phones. --}}
         <x-admin.tabs :tabs="$tabItems" id="user-tabs" label="أقسام ملف المستخدم" :active="$activeTab" class="min-w-0">
             @foreach ($tabs as $key)
-                @php($tabUrl = route('admin.users.show', [$user, 'tab' => $key]))
                 <x-admin.tab-panel tabs="user-tabs" :id="$key" :data-qb-lazy="$key === $activeTab ? null : route('admin.users.tab', [$user, $key])">
                     @if ($key === $activeTab)
                         @include($panelView, ['user' => $user, ...$panel])
                     @else
                         {{-- Fetched when the tab opens; without scripts the link reloads the page on that tab. --}}
                         <div class="rounded-2xl border border-ink-200 bg-cream-100 p-6">
-                            <a href="{{ $tabUrl }}" data-qb-lazy-fallback class="text-sm font-semibold text-coral-700 hover:underline">عرض {{ $tabLabels[$key] }}</a>
+                            <a href="{{ $tabUrls[$key] }}" data-qb-lazy-fallback class="text-sm font-semibold text-coral-700 hover:underline">عرض {{ $tabLabels[$key] }}</a>
                             <x-admin.skeleton lines="5" avatar hidden data-qb-lazy-skeleton />
                         </div>
                         <template data-qb-lazy-error>
                             <div class="rounded-2xl border border-ink-200 bg-cream-100">
-                                <x-admin.error-state :retry-url="$tabUrl" />
+                                <x-admin.error-state :retry-url="$tabUrls[$key]" />
                             </div>
                         </template>
                     @endif
@@ -138,6 +138,22 @@
                         </fieldset>
                         <x-admin.button icon="key" block class="mt-4">حفظ الأدوار</x-admin.button>
                     </form>
+                @endif
+
+                @if ($staffTwoFactorEnabled !== null)
+                    <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-ink-200 pt-4" id="staff-two-factor">
+                        <p class="text-[13px] text-ink-700">
+                            {{ __('admin.two_factor.page.title') }}:
+                            <x-admin.badge :tone="$staffTwoFactorEnabled ? 'success' : 'neutral'">{{ $staffTwoFactorEnabled ? __('admin.two_factor.states.enabled') : __('admin.two_factor.states.disabled') }}</x-admin.badge>
+                        </p>
+                        @if ($staffTwoFactorEnabled)
+                            <form method="POST" action="{{ route('admin.users.two-factor.destroy', $user) }}" data-confirm="{{ __('admin.two_factor.reset.confirm') }}">
+                                @csrf
+                                @method('DELETE')
+                                <x-admin.button variant="danger-ghost" size="sm" icon="refresh">{{ __('admin.two_factor.reset.submit') }}</x-admin.button>
+                            </form>
+                        @endif
+                    </div>
                 @endif
             </x-admin.side-card>
 

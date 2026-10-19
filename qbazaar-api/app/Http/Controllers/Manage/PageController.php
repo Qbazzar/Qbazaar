@@ -58,7 +58,7 @@ class PageController extends Controller
 
         return redirect()
             ->route('admin.pages.index')
-            ->with('status', 'تم إنشاء الصفحة بنجاح.');
+            ->with('status', __('admin.flash.page_created'));
     }
 
     public function edit(Page $page): View
@@ -75,7 +75,7 @@ class PageController extends Controller
 
         return redirect()
             ->route('admin.pages.index')
-            ->with('status', 'تم تحديث الصفحة بنجاح.');
+            ->with('status', __('admin.flash.page_updated'));
     }
 
     public function destroy(Page $page): RedirectResponse
@@ -86,7 +86,7 @@ class PageController extends Controller
 
         return redirect()
             ->route('admin.pages.index')
-            ->with('status', 'تم حذف الصفحة.');
+            ->with('status', __('admin.flash.page_deleted'));
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -99,7 +99,7 @@ class PageController extends Controller
         $count = Page::whereIn('id', $data['ids'])->delete();
         $this->flushCache();
 
-        return back()->with('status', "تم حذف {$count} عنصراً.");
+        return back()->with('status', __('admin.flash.items_deleted', ['count' => $count]));
     }
 
     /**

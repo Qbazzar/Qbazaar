@@ -177,6 +177,12 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
         return $this->hasOne(BusinessProfile::class);
     }
 
+    /** @return HasOne<StaffTwoFactor, $this> */
+    public function staffTwoFactor(): HasOne
+    {
+        return $this->hasOne(StaffTwoFactor::class);
+    }
+
     /**
      * The verified badge: a business account staff have checked, directly
      * or by approving its business application.

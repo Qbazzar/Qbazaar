@@ -481,6 +481,42 @@ return [
         'inbox_poll_seconds' => 60,
         'inbox_unread_cache_seconds' => 30,
         'inbox_queue_cache_seconds' => 60,
+
+        // Staff two-factor sign-in (TOTP). Enforced roles must enrol before
+        // any other admin page opens; every other staff member may opt in.
+        'two_factor' => [
+            'enforce' => (bool) env('ADMIN_TWO_FACTOR_ENFORCED', true),
+            'enforced_roles' => ['super_admin'],
+            'issuer' => env('ADMIN_TWO_FACTOR_ISSUER', 'QBazaar Admin'),
+            'window' => 1,
+            'challenge_ttl_minutes' => 5,
+            'max_attempts' => 5,
+            'lockout_seconds' => 900,
+            'trusted_browser_days' => 30,
+            'recovery_codes' => 8,
+        ],
+
+        // Opening a private conversation needs a written reason; the grant
+        // covers every page of that transcript for this long.
+        'conversation_access' => [
+            'reason_min_length' => 10,
+            'reason_max_length' => 500,
+            'grant_minutes' => 30,
+            'max_grants_per_session' => 50,
+            'log_list_limit' => 5,
+        ],
+
+        // Staff broadcasts: who may send how often, and how fast the fan-out
+        // reaches the notifications queue (one chunk per spacing interval).
+        'broadcasts' => [
+            'max_per_hour' => 3,
+            'max_per_day' => 10,
+            'chunk_size' => 500,
+            'chunk_spacing_seconds' => 10,
+            'title_max_length' => 120,
+            'body_max_length' => 1000,
+            'history_per_page' => 15,
+        ],
     ],
 
     /*

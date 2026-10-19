@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Manage;
 
 use App\Actions\Admin\LoginStaffAction;
+use App\Enums\StaffLoginOutcome;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 /**
- * Session authentication for the custom /manage panel. Uses the stateful web
+ * Session authentication for the custom /admin panel. Uses the stateful web
  * guard (cookie session) — distinct from the Sanctum token guard the public
  * API uses. Only active staff are allowed past the login gate.
  */
@@ -34,7 +35,11 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $loginStaff->execute($request, $credentials['email'], $credentials['password'], $request->boolean('remember'));
+        $outcome = $loginStaff->execute($request, $credentials['email'], $credentials['password'], $request->boolean('remember'));
+
+        if ($outcome === StaffLoginOutcome::TWO_FACTOR_REQUIRED) {
+            return redirect()->route('admin.two-factor.challenge');
+        }
 
         return redirect()->intended(route('admin.dashboard'));
     }

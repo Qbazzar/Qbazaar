@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Manage;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Admin\TwoFactor\StaffTwoFactorService;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,12 +20,16 @@ use Illuminate\View\View;
  */
 class ProfileController extends Controller
 {
-    public function edit(Request $request): View
+    public function edit(Request $request, StaffTwoFactorService $twoFactor): View
     {
         /** @var User $user */
         $user = $request->user();
 
-        return view('admin.profile.edit', ['user' => $user->loadMissing(['roles', 'avatarMedia'])]);
+        return view('admin.profile.edit', [
+            'user' => $user->loadMissing(['roles', 'avatarMedia']),
+            'twoFactorEnabled' => $twoFactor->isEnabled($user),
+            'twoFactorRequired' => $twoFactor->isRequired($user),
+        ]);
     }
 
     public function update(Request $request): RedirectResponse
@@ -58,6 +63,6 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return back()->with('status', 'تم تحديث بياناتك.');
+        return back()->with('status', __('admin.flash.profile_updated'));
     }
 }

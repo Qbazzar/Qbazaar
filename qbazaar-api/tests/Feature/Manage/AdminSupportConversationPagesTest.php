@@ -20,8 +20,9 @@ use function Pest\Laravel\actingAs;
 use Spatie\Permission\Models\Role;
 use Tests\Concerns\CountsPageQueries;
 use Tests\Concerns\CreatesAds;
+use Tests\Concerns\OpensConversations;
 
-uses(RefreshDatabase::class, CreatesAds::class, CountsPageQueries::class);
+uses(RefreshDatabase::class, CreatesAds::class, CountsPageQueries::class, OpensConversations::class);
 
 beforeEach(function (): void {
     Storage::fake('public');
@@ -200,6 +201,7 @@ describe('conversations.show', function (): void {
     it('renders in the shell for every role that can open conversations, with one h1 and the #250 transcript', function (string $role): void {
         giveConversationHistory($this->conversation, 2);
         actingAs(User::factory()->create()->assignRole($role));
+        $this->openConversation($this->conversation);
 
         $html = $this->get(route('admin.conversations.show', $this->conversation))
             ->assertOk()
@@ -221,6 +223,7 @@ describe('conversations.show', function (): void {
         giveConversationHistory($this->conversation, 1);
         Role::findByName('support', 'web')->syncPermissions(['conversations.view']);
         actingAs(User::factory()->create()->assignRole('support'));
+        $this->openConversation($this->conversation);
 
         $this->get(route('admin.conversations.show', $this->conversation))
             ->assertOk()
@@ -235,6 +238,7 @@ describe('conversations.show', function (): void {
         giveConversationHistory($this->conversation, 7);
         Report::factory()->create(['target_type' => ReportTarget::AD->value, 'target_id' => $this->ad->id]);
         actingAs($this->admin);
+        $this->openConversation($this->conversation);
 
         $html = $this->get(route('admin.conversations.show', $this->conversation))->assertOk()->getContent();
 
@@ -245,6 +249,7 @@ describe('conversations.show', function (): void {
     it('shows an empty state for a conversation whose ad was deleted', function (): void {
         $this->ad->delete();
         actingAs($this->admin);
+        $this->openConversation($this->conversation);
 
         $this->get(route('admin.conversations.show', $this->conversation->refresh()))
             ->assertOk()
@@ -254,6 +259,7 @@ describe('conversations.show', function (): void {
 
     it('keeps the query count flat with 1 or 25 messages and reports', function (): void {
         actingAs($this->admin);
+        $this->openConversation($this->conversation);
         $uri = route('admin.conversations.show', $this->conversation);
 
         giveConversationHistory($this->conversation, 1);
@@ -262,6 +268,7 @@ describe('conversations.show', function (): void {
         giveConversationHistory($this->conversation, 24);
         $many = $this->steadyQueryCount($uri);
 
-        expect($many)->toBe($few)->toBeLessThanOrEqual(14);
+        // 14 for the transcript, plus the access log card (AD-17.11): openings, their staff, avatars.
+        expect($many)->toBe($few)->toBeLessThanOrEqual(17);
     });
 });

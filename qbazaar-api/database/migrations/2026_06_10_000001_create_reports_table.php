@@ -23,8 +23,8 @@ return new class extends Migration
      *    not delete the historical audit trail — set null instead.
      *  - Three indexes serve the three known access patterns:
      *      1. (target_type, target_id, status) — "is this target currently
-     *         reported?" check used by the duplicate guard and the future
-     *         Filament moderation queue.
+     *         reported?" check used by the duplicate guard and the admin
+     *         moderation queue.
      *      2. (reporter_id, created_at) — list / rate-limit "what have I
      *         reported recently?".
      *      3. (status, created_at) — admin queue scrolls newest-pending.

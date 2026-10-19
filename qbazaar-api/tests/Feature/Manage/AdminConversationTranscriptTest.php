@@ -19,8 +19,9 @@ use Illuminate\Support\Facades\Storage;
 use function Pest\Laravel\actingAs;
 
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\OpensConversations;
 
-uses(RefreshDatabase::class);
+uses(RefreshDatabase::class, OpensConversations::class);
 
 beforeEach(function (): void {
     Storage::fake('public');
@@ -30,6 +31,7 @@ beforeEach(function (): void {
     $this->admin = User::factory()->create()->assignRole('super_admin');
     actingAs($this->admin);
     $this->conversation = Conversation::factory()->create();
+    $this->openConversation($this->conversation);
 });
 
 function say(Conversation $conversation, string $senderId, string $body, array $extra = []): Message
@@ -215,6 +217,7 @@ it('hides the user and ad links from staff without users.view and ads.view', fun
     $c->update(['ad_id' => Ad::factory()->active()->create()->id]);
     Role::findByName('moderator', 'web')->revokePermissionTo(['users.view', 'ads.view']);
     actingAs(User::factory()->create()->assignRole('moderator'));
+    $this->openConversation($c);
 
     $this->get("/admin/conversations/{$c->id}")
         ->assertOk()

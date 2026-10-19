@@ -13,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * Admin-only fields (reviewed_by / reviewed_at / admin_notes) are
  * intentionally omitted — even the reporter doesn't see them, only the
- * Sprint 11 Filament UI does.
+ * admin panel does.
  *
  * @mixin Report
  */

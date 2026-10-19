@@ -69,14 +69,14 @@ class ReportController extends Controller
     {
         $this->transition($report, ReportStatus::REVIEWED);
 
-        return back()->with('status', 'تم تعليم البلاغ كمراجَع.');
+        return back()->with('status', __('admin.flash.report_resolved'));
     }
 
     public function dismiss(Report $report): RedirectResponse
     {
         $this->transition($report, ReportStatus::DISMISSED);
 
-        return back()->with('status', 'تم رفض البلاغ.');
+        return back()->with('status', __('admin.flash.report_dismissed'));
     }
 
     public function action(Request $request, Report $report): RedirectResponse
@@ -87,7 +87,7 @@ class ReportController extends Controller
 
         $this->transition($report, ReportStatus::ACTIONED, $data['admin_notes']);
 
-        return back()->with('status', 'تم اتخاذ إجراء على البلاغ.');
+        return back()->with('status', __('admin.flash.report_actioned'));
     }
 
     /** Bulk-dismiss the selected pending reports. */
@@ -107,7 +107,7 @@ class ReportController extends Controller
                 $count++;
             });
 
-        return back()->with('status', "تم رفض {$count} بلاغاً.");
+        return back()->with('status', __('admin.flash.reports_dismissed', ['count' => $count]));
     }
 
     /**

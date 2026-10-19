@@ -576,7 +576,7 @@ class Ad extends Model implements HasMedia
 
     /**
      * Plain-array form of the image list, ordered by display order.
-     * Lives here (rather than on the resource) so admin / Filament screens
+     * Lives here (rather than on the resource) so the admin panel's screens
      * can render the same payload without re-implementing the mapping.
      *
      * Delegates each row to {@see MediaResource} so the URL semantics

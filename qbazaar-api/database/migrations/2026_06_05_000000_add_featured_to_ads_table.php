@@ -15,8 +15,7 @@ return new class extends Migration
      * the featured-feed query can pull the latest dozen without a sort + extra
      * filter step. The column defaults to false so existing rows stay opt-out.
      *
-     * Filament admin (Sprint 11) will expose the toggle; until then operators
-     * flip rows manually with `Ad::query()->whereIn(...)->update(['featured' => true])`.
+     * The admin panel exposes the toggle on the ad page.
      */
     public function up(): void
     {

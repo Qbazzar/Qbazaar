@@ -96,7 +96,7 @@ class AdController extends Controller
 
         return redirect()
             ->route('admin.ads.show', $ad)
-            ->with('status', 'تم حفظ تعديلات الإعلان.');
+            ->with('status', __('admin.flash.ad_updated'));
     }
 
     /** @return array<string, string> */
@@ -155,14 +155,14 @@ class AdController extends Controller
     {
         $featured = $toggleFeatured($ad);
 
-        return back()->with('status', $featured ? 'تم تمييز الإعلان.' : 'تم إلغاء تمييز الإعلان.');
+        return back()->with('status', __($featured ? 'admin.flash.ad_featured' : 'admin.flash.ad_unfeatured'));
     }
 
     public function forceExpire(Ad $ad): RedirectResponse
     {
         $this->lifecycle->expire($ad);
 
-        return back()->with('status', 'تم إنهاء الإعلان.');
+        return back()->with('status', __('admin.flash.ad_expired'));
     }
 
     public function destroy(SanctionRequest $request, #[CurrentUser] User $actor, Ad $ad, SanctionService $sanctions): RedirectResponse

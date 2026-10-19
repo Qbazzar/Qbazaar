@@ -50,6 +50,32 @@ class ChatMessageRenderer
     }
 
     /**
+     * The preview of a platform event (an offer sent, an order placed) without
+     * the proposer's own note, or null when the last message is user-written:
+     * staff read people's own words only after stating why (AD-17.11).
+     */
+    public function eventPreview(Conversation $conversation, ?string $locale = null): ?string
+    {
+        if ($conversation->last_message_preview === null || $this->isUserWritten($conversation)) {
+            return null;
+        }
+
+        $params = $conversation->last_message_params ?? [];
+        unset($params['note']);
+
+        return Str::limit(
+            $this->render($conversation->last_message_key, $params, $conversation->last_message_preview, $locale),
+            self::PREVIEW_LENGTH,
+        );
+    }
+
+    public function isUserWritten(Conversation $conversation): bool
+    {
+        return $conversation->last_message_preview !== null
+            && ($conversation->last_message_key === null || ChatMessageKey::tryFrom($conversation->last_message_key) === null);
+    }
+
+    /**
      * @param array<string, mixed> $params
      * @return array<string, string>
      */

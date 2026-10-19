@@ -44,6 +44,20 @@
                 @endif
             </x-admin.side-card>
 
+            <x-admin.side-card :title="__('admin.two_factor.page.title')" icon="shield" id="side-two-factor"
+                               :link="[__('admin.two_factor.page.manage'), route('admin.profile.two-factor.show')]">
+                <x-admin.meta-list>
+                    <x-admin.meta-item :label="__('admin.two_factor.page.state')">
+                        <x-admin.badge :tone="$twoFactorEnabled ? 'success' : ($twoFactorRequired ? 'warning' : 'neutral')">
+                            {{ $twoFactorEnabled ? __('admin.two_factor.states.enabled') : __('admin.two_factor.states.disabled') }}
+                        </x-admin.badge>
+                    </x-admin.meta-item>
+                    <x-admin.meta-item :label="__('admin.two_factor.page.policy')">
+                        {{ $twoFactorRequired ? __('admin.two_factor.page.policy_required') : __('admin.two_factor.page.policy_optional') }}
+                    </x-admin.meta-item>
+                </x-admin.meta-list>
+            </x-admin.side-card>
+
             <x-admin.side-card title="النشاط" icon="clock" id="side-activity">
                 <x-admin.meta-list>
                     <x-admin.meta-item label="آخر دخول" ltr>{{ optional($user->last_login_at)->format('Y-m-d H:i') ?? '—' }}</x-admin.meta-item>
