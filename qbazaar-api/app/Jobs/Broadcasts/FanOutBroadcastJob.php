@@ -15,6 +15,10 @@ use Throwable;
  * Splits a staff broadcast's audience into delayed delivery chunks. Not
  * retried: a broadcast that is already sending is never fanned out twice,
  * so a failure is reported on the history page instead.
+ *
+ * The fan-out only reads user ids and queues chunk jobs (one keyset query
+ * per 500 accounts), so it stays well inside a timeout below the
+ * notifications queue's retry_after.
  */
 class FanOutBroadcastJob implements ShouldQueue
 {
@@ -22,7 +26,10 @@ class FanOutBroadcastJob implements ShouldQueue
 
     public int $tries = 1;
 
-    public int $timeout = 600;
+    /** A single try leaves no retry to wait for. */
+    public int $backoff = 0;
+
+    public int $timeout = 120;
 
     public function __construct(public readonly string $broadcastId)
     {
