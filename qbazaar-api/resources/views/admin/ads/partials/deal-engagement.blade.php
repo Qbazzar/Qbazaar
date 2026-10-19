@@ -94,6 +94,8 @@
                             <time dir="ltr" datetime="{{ $offer->created_at->toIso8601String() }}" title="{{ $offer->created_at->format('Y-m-d H:i') }}">{{ $offer->created_at->diffForHumans() }}</time>
                         </x-admin.table.cell>
                         <x-admin.table.actions>
+                            {{-- The offers section only shows to staff with offers.view, which also opens the offer page. --}}
+                            <x-admin.icon-button :href="route('admin.offers.show', $offer)" icon="eye" :label="__('admin.offer_admin.open')" />
                             @if ($deal->access->conversations)
                                 <x-admin.icon-button :href="route('admin.conversations.show', $offer->conversation_id)" icon="chat" :label="__('admin.deal.offers.open_chat')" />
                             @endif

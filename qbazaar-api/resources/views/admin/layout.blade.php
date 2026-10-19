@@ -32,9 +32,11 @@
                 @php($groups = [
                     'عام' => [
                         ['route' => 'admin.dashboard', 'label' => __('admin.navigation.home'), 'match' => 'admin.dashboard', 'icon' => 'home'],
+                        ['route' => 'admin.inbox.index', 'label' => __('admin.inbox.nav'), 'match' => 'admin.inbox.*', 'icon' => 'bell'],
                     ],
                     'الإشراف' => [
-                        ['route' => 'admin.ads.index', 'label' => 'الإعلانات', 'match' => 'admin.ads.*', 'icon' => 'tag', 'permission' => 'ads.view', 'badge' => $pendingReviewCount, 'badge_label' => __('admin.ad_review.pending_badge')],
+                        ['route' => 'admin.ads.index', 'label' => 'الإعلانات', 'match' => 'admin.ads.*', 'icon' => 'tag', 'permission' => 'ads.view'],
+                        ['route' => 'admin.moderation.queue', 'label' => __('admin.review_queue.nav'), 'match' => 'admin.moderation.*', 'icon' => 'clock', 'permission' => 'ads.approve', 'badge' => $pendingReviewCount, 'badge_label' => __('admin.ad_review.pending_badge')],
                         ['route' => 'admin.reports.index', 'label' => 'البلاغات', 'match' => 'admin.reports.*', 'icon' => 'flag', 'permission' => 'reports.view'],
                         ['route' => 'admin.moderation-rules.index', 'label' => 'قواعد الإشراف', 'match' => 'admin.moderation-rules.*', 'icon' => 'shield', 'permission' => 'moderation-rules.manage'],
                     ],
@@ -121,6 +123,11 @@
                 <div class="flex shrink-0 items-center gap-3">
                     @php($me = auth()->user())
                     @php($meName = $me?->full_name ?? $me?->email ?? '')
+                    @if ($me)
+                        <x-admin.staff-bell :unread="app(\App\Services\Admin\Inbox\StaffInbox::class)->unreadCount($me)"
+                                            :href="route('admin.inbox.index')" :summary-url="route('admin.inbox.summary')"
+                                            :poll-seconds="(int) config('qbazaar.admin.inbox_poll_seconds')" />
+                    @endif
                     <a href="{{ route('admin.profile.edit') }}" class="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition hover:bg-cream-200" title="حسابي">
                         <span class="flex size-8 items-center justify-center rounded-full bg-coral-soft text-sm font-bold text-coral-700" aria-hidden="true">
                             {{ mb_strtoupper(mb_substr($meName, 0, 1)) ?: 'Q' }}

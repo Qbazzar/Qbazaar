@@ -159,7 +159,7 @@ class DashboardStatsService
         $items = [];
 
         if ($has(DashboardAccess::REVIEW)) {
-            $items[] = ['key' => 'pending_ads', 'amount' => null, 'href' => route('admin.ads.index', ['status' => 'pending'], false)] + $pending;
+            $items[] = ['key' => 'pending_ads', 'amount' => null, 'href' => route('admin.moderation.queue', [], false)] + $pending;
         }
         $sources = [
             [DashboardAccess::MODERATION, 'open_reports', fn (): array => $this->queues->reports()],

@@ -94,9 +94,9 @@ it('renders in the page shell for every role that can open reports, with the act
         expect($html)->not->toContain($needle);
     }
 })->with([
-    'super_admin' => ['super_admin', ['id="report-moderation-title"', '/resolve"', '/suspend-ad"'], []],
-    'moderator' => ['moderator', ['id="report-moderation-title"', '/resolve"', '/suspend-ad"'], []],
-    'support' => ['support', ['id="report-reporter-title"', 'id="report-history-title"'], ['id="report-moderation-title"', '/resolve"', '/suspend-ad"']],
+    'super_admin' => ['super_admin', ['id="report-moderation-title"', '/resolve"', '/sanction"'], []],
+    'moderator' => ['moderator', ['id="report-moderation-title"', '/resolve"', '/sanction"'], []],
+    'support' => ['support', ['id="report-reporter-title"', 'id="report-history-title"'], ['id="report-moderation-title"', '/resolve"', '/sanction"']],
 ]);
 
 it('previews each kind of reported record', function (ReportTarget $type, Closure $makeTarget, string $expected): void {

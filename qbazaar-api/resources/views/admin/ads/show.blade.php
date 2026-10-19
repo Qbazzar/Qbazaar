@@ -35,6 +35,7 @@
         'unsuspend' => $ad->status === \App\Enums\AdStatus::BLOCKED && $staff->can('ads.suspend'),
         'feature' => $staff->can('ads.feature'),
         'expire' => $isActive && $staff->can('ads.suspend'),
+        'remove' => $staff->can('ads.delete'),
     ];
     $otherAdsTotal = max(0, ($seller?->ads_count ?? 0) - 1);
     $since = $ad->published_at ? 'نُشر في ' . $ad->published_at->format('Y-m-d') : 'أُنشئ في ' . $ad->created_at->format('Y-m-d');
@@ -69,8 +70,8 @@
                 @if ($publicUrl)
                     <x-admin.menu.divider />
                 @endif
-                <x-admin.menu.item :action="route('admin.ads.destroy', $ad)" method="DELETE" icon="trash" danger
-                                   confirm="حذف هذا الإعلان نهائياً؟ لا يمكن التراجع.">حذف الإعلان</x-admin.menu.item>
+                {{-- Removal needs a reason, so the menu opens the form in the moderation card. --}}
+                <x-admin.menu.item href="#ad-remove" icon="trash" danger>{{ __('admin.moderation.ad.remove') }}</x-admin.menu.item>
             @endcan
         </x-slot:menu>
 
@@ -195,10 +196,8 @@
                         @endif
 
                         @if ($moderation['suspend'])
-                            <form method="POST" action="{{ route('admin.ads.suspend', $ad) }}">
-                                @csrf
-                                <x-admin.button variant="danger" icon="ban" block>إيقاف الإعلان</x-admin.button>
-                            </form>
+                            <x-admin.sanction-form id="ad-suspend" prefix="ad-suspend" :action="route('admin.ads.suspend', $ad)"
+                                                   :label="__('admin.moderation.ad.suspend')" :confirm="__('admin.moderation.ad.suspend_confirm')" />
                         @endif
 
                         @if ($moderation['unsuspend'])
@@ -224,8 +223,17 @@
                                 <x-admin.button variant="secondary" icon="clock" block>إنهاء الصلاحية</x-admin.button>
                             </form>
                         @endif
+
+                        @if ($moderation['remove'])
+                            <x-admin.sanction-form id="ad-remove" prefix="ad-remove" method="DELETE" icon="trash" :action="route('admin.ads.destroy', $ad)"
+                                                   :label="__('admin.moderation.ad.remove')" :confirm="__('admin.moderation.ad.remove_confirm')" />
+                        @endif
                     </div>
                 </x-admin.side-card>
+            @endif
+
+            @if ($sanction)
+                @include('admin.partials.sanction-card', ['sanction' => $sanction, 'title' => __('admin.moderation.latest.ad_title'), 'id' => 'ad-sanction'])
             @endif
 
             <x-admin.side-card id="ad-seller" title="البائع" icon="users"

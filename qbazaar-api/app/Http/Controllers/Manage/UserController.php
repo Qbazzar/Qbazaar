@@ -9,11 +9,13 @@ use App\Actions\Admin\SyncUserRolesAction;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Manage\ImpersonateUserRequest;
+use App\Http\Requests\Manage\Moderation\SanctionRequest;
 use App\Http\Requests\Manage\UpdateUserRolesRequest;
 use App\Models\User;
 use App\Services\Admin\EntityTimeline;
 use App\Services\Admin\StaffHierarchy;
 use App\Services\Admin\UserDetailTabs;
+use App\Services\Moderation\SanctionService;
 use App\Services\Users\UserModerationService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
@@ -71,6 +73,7 @@ class UserController extends Controller
         User $user,
         UserDetailTabs $tabs,
         EntityTimeline $timeline,
+        SanctionService $sanctions,
     ): View {
         $user->load(['roles', 'avatarMedia']);
         $user->loadCount('ads');
@@ -90,6 +93,8 @@ class UserController extends Controller
             'panelView' => $tabs->view($activeTab),
             // The audit trail names staff members, so it follows the activity log's own permission.
             'timeline' => $actor->can('activity.view') ? rescue(fn () => $timeline->forSubject($user)) : null,
+            // Why a suspended account is suspended; read only when it is.
+            'sanction' => $user->status === UserStatus::SUSPENDED ? rescue(fn () => $sanctions->latestFor($user)) : null,
         ]);
     }
 
@@ -101,11 +106,11 @@ class UserController extends Controller
         return view($tabs->view($tab), ['user' => $user, ...$tabs->panel($tab, $user)]);
     }
 
-    public function suspend(#[CurrentUser] User $actor, User $user, UserModerationService $moderation): RedirectResponse
+    public function suspend(SanctionRequest $request, #[CurrentUser] User $actor, User $user, SanctionService $sanctions): RedirectResponse
     {
-        $moderation->suspend($actor, $user);
+        $sanctions->suspendUser($actor, $user, $request->sanction());
 
-        return back()->with('status', 'تم إيقاف المستخدم.');
+        return back()->with('status', __('admin.moderation.flash.user_suspended'));
     }
 
     public function activate(#[CurrentUser] User $actor, User $user, UserModerationService $moderation): RedirectResponse

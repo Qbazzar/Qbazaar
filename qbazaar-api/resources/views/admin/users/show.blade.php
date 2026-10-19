@@ -87,18 +87,22 @@
 
                 @if ($canManageUser)
                     @can('users.ban')
-                        <form method="POST" class="mt-4"
-                              action="{{ $user->status === \App\Enums\UserStatus::SUSPENDED ? route('admin.users.activate', $user) : route('admin.users.suspend', $user) }}">
-                            @csrf
-                            @if ($user->status === \App\Enums\UserStatus::SUSPENDED)
+                        @if ($user->status === \App\Enums\UserStatus::SUSPENDED)
+                            <form method="POST" class="mt-4" action="{{ route('admin.users.activate', $user) }}">
+                                @csrf
                                 <x-admin.button variant="success" icon="check" block>تفعيل المستخدم</x-admin.button>
-                            @else
-                                <x-admin.button variant="danger" icon="ban" block>إيقاف المستخدم</x-admin.button>
-                            @endif
-                        </form>
+                            </form>
+                        @else
+                            <x-admin.sanction-form class="mt-4" id="user-suspend" prefix="user-suspend" :action="route('admin.users.suspend', $user)"
+                                                   :label="__('admin.moderation.user.suspend')" :confirm="__('admin.moderation.user.suspend_confirm')" />
+                        @endif
                     @endcan
                 @endif
             </x-admin.side-card>
+
+            @if ($sanction)
+                @include('admin.partials.sanction-card', ['sanction' => $sanction, 'title' => __('admin.moderation.latest.user_title'), 'id' => 'side-sanction'])
+            @endif
 
             <x-admin.side-card title="الأدوار" icon="key" id="side-roles">
                 @if ($assignedRoles === [])

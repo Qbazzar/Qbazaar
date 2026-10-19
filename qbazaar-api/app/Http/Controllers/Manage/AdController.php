@@ -9,6 +9,8 @@ use App\Enums\AdStatus;
 use App\Enums\Condition;
 use App\Enums\PriceType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Manage\Moderation\BulkSanctionAdsRequest;
+use App\Http\Requests\Manage\Moderation\SanctionRequest;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Models\Location;
@@ -16,10 +18,10 @@ use App\Models\User;
 use App\Rules\NoMarkup;
 use App\Services\Admin\Ads\AdDetailPanels;
 use App\Services\Ads\AdLifecycleService;
+use App\Services\Moderation\SanctionService;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\View\View;
@@ -135,9 +137,9 @@ class AdController extends Controller
         return back()->with('status', __('admin.actions.ad_rejected'));
     }
 
-    public function suspend(Ad $ad): RedirectResponse
+    public function suspend(SanctionRequest $request, #[CurrentUser] User $actor, Ad $ad, SanctionService $sanctions): RedirectResponse
     {
-        $this->lifecycle->block($ad);
+        $sanctions->suspendAd($actor, $ad, $request->sanction());
 
         return back()->with('status', __('admin.actions.ad_suspended'));
     }
@@ -163,28 +165,22 @@ class AdController extends Controller
         return back()->with('status', 'تم إنهاء الإعلان.');
     }
 
-    public function destroy(Ad $ad): RedirectResponse
+    public function destroy(SanctionRequest $request, #[CurrentUser] User $actor, Ad $ad, SanctionService $sanctions): RedirectResponse
     {
-        $ad->delete();
+        $sanctions->removeAd($actor, $ad, $request->sanction());
 
         return redirect()
             ->route('admin.ads.index')
-            ->with('status', 'تم حذف الإعلان.');
+            ->with('status', __('admin.moderation.flash.ad_removed'));
     }
 
-    public function bulkDestroy(Request $request): RedirectResponse
+    public function bulkDestroy(BulkSanctionAdsRequest $request, #[CurrentUser] User $actor, SanctionService $sanctions): RedirectResponse
     {
-        $data = $request->validate([
-            'ids' => ['required', 'array', 'max:' . config('qbazaar.admin.bulk_action_max')],
-            'ids.*' => ['required', 'string', 'ulid'],
-        ]);
-
         // A mass query delete skips model events, leaving the ads searchable and
-        // unlogged; deleting each model matches the single-delete path.
-        $ads = Ad::query()->with('user')->whereIn('id', $data['ids'])->get();
-        DB::transaction(fn () => $ads->each->delete());
-        $count = $ads->count();
+        // unlogged; the service deletes each model, as on the single-delete path.
+        $ads = Ad::query()->with('user')->whereIn('id', $request->adIds())->get();
+        $count = $sanctions->removeAds($actor, $ads, $request->sanction());
 
-        return back()->with('status', "تم حذف {$count} إعلاناً.");
+        return back()->with('status', __('admin.moderation.flash.ads_removed', ['count' => $count]));
     }
 }

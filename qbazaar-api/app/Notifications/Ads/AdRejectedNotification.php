@@ -7,6 +7,7 @@ namespace App\Notifications\Ads;
 use App\Data\Moderation\ModerationResult;
 use App\Enums\Language;
 use App\Enums\NotificationTopic;
+use App\Enums\SanctionReason;
 use App\Models\Ad;
 use App\Models\User;
 use App\Notifications\Concerns\DeliversOnNotificationsQueue;
@@ -98,6 +99,12 @@ class AdRejectedNotification extends Notification implements ShouldQueue
      */
     private function localisedReasons(string $locale): array
     {
+        // A staff rejection with a preset reason says exactly that; the internal note never reaches the seller.
+        $staffReason = SanctionReason::tryFrom((string) ($this->result->details['reason'] ?? ''));
+        if ($staffReason !== null) {
+            return [$staffReason->userLabel($locale)];
+        }
+
         $lines = [];
         foreach ($this->result->flags as $flag) {
             $key = 'messages.ad_notifications.rejected.reasons.' . $flag;

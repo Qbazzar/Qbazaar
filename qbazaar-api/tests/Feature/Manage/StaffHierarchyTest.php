@@ -31,7 +31,7 @@ it('refuses account actions on staff of equal or higher rank', function (string 
     $target = userWithRole($targetRole);
     actingAs(userWithRole($actorRole));
 
-    $this->post("/admin/users/{$target->id}/suspend")->assertForbidden();
+    $this->post("/admin/users/{$target->id}/suspend", ['reason' => 'spam'])->assertForbidden();
 
     expect($target->fresh()->status)->toBe(UserStatus::ACTIVE);
 })->with([
@@ -44,7 +44,7 @@ it('lets staff act on lower-ranked accounts', function (string $actorRole, ?stri
     $target = userWithRole($targetRole);
     actingAs(userWithRole($actorRole));
 
-    $this->post("/admin/users/{$target->id}/suspend")->assertRedirect();
+    $this->post("/admin/users/{$target->id}/suspend", ['reason' => 'spam'])->assertRedirect()->assertSessionHasNoErrors();
 
     expect($target->fresh()->status)->toBe(UserStatus::SUSPENDED);
 })->with([
@@ -57,7 +57,7 @@ it('refuses staff acting on their own account', function (string $action): void 
     $admin = userWithRole('super_admin');
     actingAs($admin);
 
-    $this->post("/admin/users/{$admin->id}/{$action}", ['roles' => []])->assertForbidden();
+    $this->post("/admin/users/{$admin->id}/{$action}", ['roles' => [], 'reason' => 'spam'])->assertForbidden();
 
     expect($admin->fresh()->hasRole('super_admin'))->toBeTrue()
         ->and($admin->fresh()->status)->toBe(UserStatus::ACTIVE);
@@ -102,7 +102,7 @@ it('refuses banning a higher-ranked account through a report', function (): void
     ]);
     actingAs(userWithRole('moderator'));
 
-    $this->post("/admin/reports/{$report->id}/ban-user")->assertForbidden();
+    $this->post("/admin/reports/{$report->id}/sanction", ['action' => 'user_suspended', 'reason' => 'spam'])->assertForbidden();
 
     expect($superAdmin->fresh()->status)->toBe(UserStatus::ACTIVE);
 });

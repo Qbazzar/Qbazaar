@@ -218,18 +218,31 @@
                             <x-admin.button variant="success" icon="check" block>تم اتخاذ إجراء</x-admin.button>
                         </form>
 
-                        @if ($targetType === ReportTarget::AD && $staff->can('ads.suspend'))
-                            <form method="POST" action="{{ route('admin.reports.suspend-ad', $report) }}" data-confirm="إيقاف الإعلان المُبلَّغ عنه وإغلاق البلاغ؟">
-                                @csrf
-                                <x-admin.button variant="danger" icon="ban" block>إيقاف الإعلان المُبلَّغ عنه</x-admin.button>
-                            </form>
-                        @endif
-
-                        @if ($targetType === ReportTarget::USER && $staff->can('users.ban'))
-                            <form method="POST" action="{{ route('admin.reports.ban-user', $report) }}" data-confirm="إيقاف المستخدم المُبلَّغ عنه وإغلاق البلاغ؟">
-                                @csrf
-                                <x-admin.button variant="danger" icon="ban" block>إيقاف المستخدم المُبلَّغ عنه</x-admin.button>
-                            </form>
+                        {{-- One button: the chosen sanction runs and the report closes as actioned in the same step. --}}
+                        @if ($sanctionActions !== [])
+                            <x-admin.sanction-form id="report-sanction" prefix="report-sanction" :action="route('admin.reports.sanction', $report)"
+                                                   :label="__('admin.moderation.report.title')" :submit="__('admin.moderation.report.submit')"
+                                                   :confirm="__('admin.moderation.report.confirm')" :intro="__('admin.moderation.report.intro')">
+                                <fieldset class="grid gap-2">
+                                    <legend class="mb-1.5 text-sm font-semibold text-ink-700">{{ __('admin.moderation.fields.action') }}<span class="ms-0.5 text-danger-700" aria-hidden="true">*</span></legend>
+                                    @foreach ($sanctionActions as $sanctionAction)
+                                        <label class="flex cursor-pointer items-start gap-2.5 rounded-xl border border-ink-200 bg-cream-50 px-3 py-2 transition has-checked:border-coral-600 has-checked:bg-coral-soft">
+                                            <input type="radio" name="action" value="{{ $sanctionAction->value }}" required
+                                                   @checked(old('action') === $sanctionAction->value || (count($sanctionActions) === 1 && old('action') === null))
+                                                   class="mt-1 size-4 shrink-0 accent-coral-600">
+                                            <span class="grid gap-0.5">
+                                                <span class="text-sm font-semibold text-ink-900">{{ $sanctionAction->label() }}</span>
+                                                <span class="text-xs text-ink-500">{{ __('admin.moderation.report.targets.' . $sanctionAction->value) }}</span>
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                    @error('action')
+                                        <p class="text-xs font-semibold text-danger-700">{{ $message }}</p>
+                                    @enderror
+                                </fieldset>
+                            </x-admin.sanction-form>
+                        @elseif ($targetType !== ReportTarget::CONVERSATION)
+                            <p class="text-xs leading-relaxed text-ink-500">{{ __('admin.moderation.report.none') }}</p>
                         @endif
                     </div>
                 </x-admin.side-card>

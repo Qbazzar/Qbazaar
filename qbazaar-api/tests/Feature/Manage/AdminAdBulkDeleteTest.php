@@ -29,7 +29,7 @@ it('deletes the selected ads through the model', function (): void {
     $selected = [$this->makeAd($owner), $this->makeAd($owner)];
     $untouched = $this->makeAd($owner);
 
-    $this->post('/admin/ads/bulk-destroy', ['ids' => array_map(fn (Ad $ad): string => $ad->id, $selected)])
+    $this->post('/admin/ads/bulk-destroy', ['ids' => array_map(fn (Ad $ad): string => $ad->id, $selected), 'reason' => 'spam'])
         ->assertRedirect()
         ->assertSessionHasNoErrors();
 
@@ -45,7 +45,7 @@ it('deletes the selected ads through the model', function (): void {
 it('rejects ids that are not ULIDs', function (): void {
     $ad = $this->makeAd(User::factory()->create());
 
-    $this->post('/admin/ads/bulk-destroy', ['ids' => [$ad->id, '1 OR 1=1']])
+    $this->post('/admin/ads/bulk-destroy', ['ids' => [$ad->id, '1 OR 1=1'], 'reason' => 'spam'])
         ->assertSessionHasErrors('ids.1');
 
     expect(Ad::query()->whereKey($ad->id)->exists())->toBeTrue();
@@ -55,7 +55,7 @@ it('caps how many ads one request can delete', function (): void {
     config(['qbazaar.admin.bulk_action_max' => 1]);
     $owner = User::factory()->create();
 
-    $this->post('/admin/ads/bulk-destroy', ['ids' => [$this->makeAd($owner)->id, $this->makeAd($owner)->id]])
+    $this->post('/admin/ads/bulk-destroy', ['ids' => [$this->makeAd($owner)->id, $this->makeAd($owner)->id], 'reason' => 'spam'])
         ->assertSessionHasErrors('ids');
 
     expect(Ad::query()->count())->toBe(2);
