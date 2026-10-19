@@ -30,8 +30,7 @@ it('serves edited custom fields and filters right after a category change', func
     getJson('/api/v1/categories/cars/filters')->assertOk();
 
     $this->cars->update([
-        'custom_fields' => [['key' => 'trim', 'type' => 'text', 'label' => ['ar' => 'الفئة', 'en' => 'Trim'], 'required' => false]],
-        'custom_filters' => [['key' => 'trim', 'type' => 'text', 'label' => ['ar' => 'الفئة', 'en' => 'Trim']]],
+        'custom_fields' => [['key' => 'trim', 'type' => 'text', 'label' => ['ar' => 'الفئة', 'en' => 'Trim'], 'required' => false, 'filterable' => true]],
     ]);
 
     expect(getJson('/api/v1/categories/cars/fields')->assertOk()->json('data.*.key'))->toBe(['trim'])

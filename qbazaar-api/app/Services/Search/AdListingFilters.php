@@ -98,10 +98,20 @@ class AdListingFilters
 
             match (true) {
                 is_array($value) => $this->range($query, $column, $value),
-                is_string($value) && $value !== '' => $query->where($column, $value),
+                is_string($value) && $value !== '' => $this->equals($query, $column, $value),
                 default => null,
             };
         }
+    }
+
+    /**
+     * A multiselect field stores a list, which matches when it holds the value.
+     *
+     * @param Builder<Ad> $query
+     */
+    private function equals(Builder $query, string $column, string $value): void
+    {
+        $query->where(fn (Builder $q) => $q->where($column, $value)->orWhereJsonContains($column, $value));
     }
 
     /**

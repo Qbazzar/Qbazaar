@@ -83,6 +83,12 @@ class Category extends Model
         return $this->hasMany(Ad::class);
     }
 
+    /** @return HasMany<SavedSearch, $this> */
+    public function savedSearches(): HasMany
+    {
+        return $this->hasMany(SavedSearch::class);
+    }
+
     /**
      * Restrict a query to active categories only.
      *

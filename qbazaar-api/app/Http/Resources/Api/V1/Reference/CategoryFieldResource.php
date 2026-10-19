@@ -5,23 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Resources\Api\V1\Reference;
 
 use App\Services\Catalog\CategoryFieldPresenter;
+use App\Services\Catalog\CategoryFields;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Custom-field definition used when posting an ad inside a given category
- * (e.g. Cars → make, model, year). Source is the JSON entry stored on
- * `categories.custom_fields`; select labels follow {@see CategoryFieldPresenter}.
+ * (e.g. Cars → make, model, year), inherited fields included. Source is a
+ * canonical definition from {@see CategoryFields}; select labels follow
+ * {@see CategoryFieldPresenter}.
  *
- * @property array{
- *     key?: string,
- *     label?: array{ar?: string, en?: string},
- *     type?: string,
- *     required?: bool,
- *     options?: array<int, mixed>|null,
- *     option_labels?: array<string, array{ar?: string, en?: string}>,
- *     show_in_card?: bool,
- * } $resource
+ * @property array<string, mixed> $resource
  */
 class CategoryFieldResource extends JsonResource
 {
@@ -40,8 +34,12 @@ class CategoryFieldResource extends JsonResource
             'label' => $data['label'] ?? ['ar' => '', 'en' => ''],
             'type' => (string) ($data['type'] ?? 'text'),
             'required' => (bool) ($data['required'] ?? false),
+            'filterable' => (bool) ($data['filterable'] ?? false),
+            'sort_order' => (int) ($data['sort_order'] ?? 0),
             'options' => $data['options'] ?? null,
             'options_labeled' => $presented['options_labeled'],
+            'min' => $data['min'] ?? null,
+            'max' => $data['max'] ?? null,
             'show_in_card' => $presented['show_in_card'],
         ];
     }

@@ -214,6 +214,7 @@ class GetHomeFeedAction
     private function places(): Collection
     {
         return Location::query()
+            ->active()
             ->whereNull('parent_id')
             ->orderBy('order')
             ->get();

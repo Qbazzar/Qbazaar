@@ -102,6 +102,15 @@ dataset('admin actions', [
     'feature company' => ['post', '/admin/companies/{user}/feature', ['super_admin', 'moderator']],
     'business applications' => ['get', '/admin/business-applications', ['super_admin', 'moderator', 'support']],
     'home sections' => ['get', '/admin/home-sections', ['super_admin', 'moderator']],
+
+    // Category tree, fields editor and safe taxonomy deletes (AD-17.3, AD-17.12)
+    'category tree' => ['get', '/admin/categories', ['super_admin', 'moderator']],
+    'category fields' => ['get', '/admin/categories/{category}/fields', ['super_admin', 'moderator']],
+    'add category field' => ['post', '/admin/categories/{category}/fields', ['super_admin', 'moderator']],
+    'category status' => ['patch', '/admin/categories/{category}/status', ['super_admin', 'moderator']],
+    'delete category in use' => ['delete', '/admin/categories/{category}', ['super_admin', 'moderator']],
+    'location status' => ['patch', '/admin/locations/{location}/status', ['super_admin', 'moderator']],
+    'delete location in use' => ['delete', '/admin/locations/{location}', ['super_admin', 'moderator']],
 ]);
 
 it('enforces the seeded permissions for every staff role', function (string $role, string $method, string $uri, array $allowed): void {
@@ -119,6 +128,8 @@ it('enforces the seeded permissions for every staff role', function (string $rol
         '{user}' => $owner->id,
         '{report}' => $report->id,
         '{userReport}' => $userReport->id,
+        '{category}' => $ad->category_id,
+        '{location}' => $ad->location_id,
     ]);
 
     actingAs(staffMember($role));

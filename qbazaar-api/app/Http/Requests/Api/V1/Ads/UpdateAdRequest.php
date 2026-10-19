@@ -10,6 +10,7 @@ use App\Http\Requests\Api\V1\Ads\Concerns\ValidatesListingDetails;
 use App\Models\Ad;
 use App\Models\Category;
 use App\Rules\SelectableCategory;
+use App\Rules\SelectableLocation;
 use App\Services\Ads\CustomFieldsValidator;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -26,6 +27,9 @@ use Illuminate\Validation\ValidationException;
 class UpdateAdRequest extends FormRequest
 {
     use ValidatesListingDetails;
+
+    /** @var array{category_id: string|null, location_id: string|null}|null */
+    private ?array $currentPlacement = null;
 
     public function authorize(): bool
     {
@@ -52,7 +56,7 @@ class UpdateAdRequest extends FormRequest
     {
         return [
             'category_id' => ['sometimes', 'bail', 'ulid', new SelectableCategory($this->currentCategoryId())],
-            'location_id' => ['sometimes', 'ulid', 'exists:locations,id'],
+            'location_id' => ['sometimes', 'bail', 'ulid', new SelectableLocation($this->currentPlacement()['location_id'])],
             'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'title' => ['sometimes', ...$this->titleRules()],
@@ -114,15 +118,30 @@ class UpdateAdRequest extends FormRequest
 
     private function currentCategoryId(): ?string
     {
-        $adId = $this->route('id');
+        return $this->currentPlacement()['category_id'];
+    }
 
-        if (! is_string($adId) || $adId === '') {
-            return null;
+    /**
+     * The category and location the ad is filed under now, read in one query:
+     * an edit may resubmit either even after the admin deactivated it.
+     *
+     * @return array{category_id: string|null, location_id: string|null}
+     */
+    private function currentPlacement(): array
+    {
+        if ($this->currentPlacement !== null) {
+            return $this->currentPlacement;
         }
 
-        $categoryId = Ad::query()->whereKey($adId)->value('category_id');
+        $adId = $this->route('id');
+        $row = is_string($adId) && $adId !== ''
+            ? Ad::query()->whereKey($adId)->toBase()->first(['category_id', 'location_id'])
+            : null;
 
-        return is_string($categoryId) ? $categoryId : null;
+        return $this->currentPlacement = [
+            'category_id' => is_string($row?->category_id) ? $row->category_id : null,
+            'location_id' => is_string($row?->location_id) ? $row->location_id : null,
+        ];
     }
 
     /**

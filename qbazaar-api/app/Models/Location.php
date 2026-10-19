@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\LocationType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $lat
  * @property string|null $lng
  * @property int $order
+ * @property bool $is_active
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Location|null $parent
@@ -35,6 +37,11 @@ class Location extends Model
     /** @var string */
     protected $keyType = 'string';
 
+    /** @var array<string, mixed> */
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     /** @var list<string> */
     protected $fillable = [
         'parent_id',
@@ -44,6 +51,7 @@ class Location extends Model
         'lat',
         'lng',
         'order',
+        'is_active',
     ];
 
     /**
@@ -55,6 +63,7 @@ class Location extends Model
             'name' => 'array',
             'type' => LocationType::class,
             'order' => 'integer',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -74,6 +83,27 @@ class Location extends Model
     public function ads(): HasMany
     {
         return $this->hasMany(Ad::class);
+    }
+
+    /** @return HasMany<SavedSearch, $this> */
+    public function savedSearches(): HasMany
+    {
+        return $this->hasMany(SavedSearch::class);
+    }
+
+    /** @return HasMany<UserAddress, $this> */
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
+    /**
+     * @param Builder<Location> $query
+     * @return Builder<Location>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
     }
 
     public function getLocalizedName(string $locale): string

@@ -213,10 +213,13 @@ it('backfills criteria and alert switches for existing saved searches', function
 
     $migration = require database_path('migrations/2026_10_01_200500_add_alert_criteria_to_saved_searches_table.php');
     $widenedIndex = require database_path('migrations/2026_10_02_100000_widen_saved_search_alert_index.php');
+    $usageIndexes = require database_path('migrations/2026_10_18_1_000002_add_taxonomy_usage_indexes_to_saved_searches_table.php');
+    $usageIndexes->down();
     $widenedIndex->down();
     $migration->down();
     $migration->up();
     $widenedIndex->up();
+    $usageIndexes->up();
 
     $row = SavedSearch::query()->findOrFail($id);
 

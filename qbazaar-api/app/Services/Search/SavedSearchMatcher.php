@@ -124,6 +124,13 @@ class SavedSearchMatcher
             return true;
         }
 
-        return is_scalar($actual) && mb_strtolower((string) $actual) === mb_strtolower($expected);
+        // A multiselect value is a list, which matches when it holds the expected value.
+        foreach (is_array($actual) ? $actual : [$actual] as $value) {
+            if (is_scalar($value) && mb_strtolower((string) $value) === mb_strtolower($expected)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

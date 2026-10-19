@@ -2,85 +2,105 @@
 
 @php($editing = $category->exists)
 
-@section('title', $editing ? 'تعديل تصنيف' : 'تصنيف جديد')
-@section('heading', $editing ? 'تعديل تصنيف' : 'تصنيف جديد')
-
-@php($jsonFlags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+@section('title', $editing ? __('admin.catalog.categories.edit_title') : __('admin.catalog.categories.new'))
+@section('heading', $editing ? __('admin.catalog.categories.edit_title') : __('admin.catalog.categories.new'))
 
 @section('content')
     <x-admin.page
-        :title="$editing ? 'تعديل التصنيف' : 'تصنيف جديد'"
+        :title="$editing ? __('admin.catalog.categories.edit_heading') : __('admin.catalog.categories.new')"
         :crumbs="array_filter([
-            ['التصنيفات', route('admin.categories.index')],
+            [__('admin.catalog.categories.title'), route('admin.categories.index')],
             $editing ? $category->getLocalizedName('ar') : null,
-            $editing ? 'تعديل' : 'تصنيف جديد',
+            $editing ? __('admin.catalog.edit') : __('admin.catalog.categories.new'),
         ])"
         :form="$editing ? [route('admin.categories.update', $category), 'PUT'] : [route('admin.categories.store')]"
         :cancel="route('admin.categories.index')"
-        :submit="$editing ? 'حفظ التغييرات' : 'إنشاء'"
+        :submit="$editing ? __('admin.catalog.save_changes') : __('admin.catalog.create')"
     >
         @if ($editing)
             <x-slot:badges>
-                <x-admin.badge :tone="$category->is_active ? 'success' : 'neutral'">{{ $category->is_active ? 'مفعّل' : 'معطّل' }}</x-admin.badge>
+                <x-admin.badge :tone="$category->is_active ? 'success' : 'neutral'">{{ $category->is_active ? __('admin.catalog.status.active') : __('admin.catalog.status.inactive') }}</x-admin.badge>
             </x-slot:badges>
+
+            <x-slot:actions>
+                <x-admin.button variant="secondary" :href="route('admin.categories.fields.index', $category)" icon="adjustments" class="max-sm:hidden">{{ __('admin.catalog.categories.manage_fields') }}</x-admin.button>
+            </x-slot:actions>
 
             <x-slot:menu>
                 @if ($category->is_active)
                     <x-admin.menu.item :href="rtrim((string) config('qbazaar.web_url'), '/') . '/c/' . $category->slug" icon="external" target="_blank" rel="noopener">
-                        عرض في الموقع <span class="sr-only">{{ __('admin.shell.opens_new_tab') }}</span>
+                        {{ __('admin.catalog.categories.view_on_site') }} <span class="sr-only">{{ __('admin.shell.opens_new_tab') }}</span>
                     </x-admin.menu.item>
                     <x-admin.menu.divider />
                 @endif
-                <x-admin.menu.item danger icon="trash" :action="route('admin.categories.destroy', $category)" method="DELETE" confirm="هل أنت متأكد من حذف هذا التصنيف؟">
-                    حذف التصنيف
+                <x-admin.menu.item icon="adjustments" :href="route('admin.categories.fields.index', $category)">
+                    {{ __('admin.catalog.categories.manage_fields') }}
+                </x-admin.menu.item>
+                <x-admin.menu.item :icon="$category->is_active ? 'ban' : 'check'" :action="route('admin.categories.status', $category)" method="PATCH"
+                    :fields="['is_active' => $category->is_active ? '0' : '1']"
+                    :confirm="$category->is_active ? __('admin.catalog.categories.confirm_deactivate') : null">
+                    {{ $category->is_active ? __('admin.catalog.categories.deactivate') : __('admin.catalog.categories.activate') }}
+                </x-admin.menu.item>
+                <x-admin.menu.divider />
+                <x-admin.menu.item danger icon="trash" :action="route('admin.categories.destroy', $category)" method="DELETE" :confirm="__('admin.catalog.categories.confirm_delete')">
+                    {{ __('admin.catalog.categories.delete') }}
                 </x-admin.menu.item>
             </x-slot:menu>
         @endif
 
-        <x-admin.form-section title="الأسماء" description="يظهر الاسم للمستخدمين بلغة الواجهة التي يختارونها." cols="2">
-            <x-admin.input name="name[ar]" label="الاسم (عربي)" :value="old('name.ar', $category->name['ar'] ?? '')" required />
-            <x-admin.input name="name[en]" label="الاسم (إنجليزي)" :value="old('name.en', $category->name['en'] ?? '')" dir="ltr" required />
-        </x-admin.form-section>
+        @if ($blocked)
+            <x-slot:lead>
+                @include('admin.catalog.delete-blocked', ['notice' => $blocked])
+            </x-slot:lead>
+        @endif
 
-        <x-admin.form-section title="إعدادات متقدمة (JSON)" description="مخطط الحقول والمرشحات المخصصة. اتركه فارغًا أو أدخل JSON صحيح.">
-            <x-admin.textarea name="custom_fields" label="الحقول المخصصة (custom_fields)" rows="12" dir="ltr" input-class="font-mono text-xs leading-relaxed"
-                hint="مفاتيح اختيارية لكل حقل: show_in_card: true لعرض قيمته على بطاقة الإعلان، و option_labels لأسماء خيارات القائمة بالشكل { القيمة: { ar, en } }."
-                :value="old('custom_fields', $category->custom_fields !== null ? json_encode($category->custom_fields, $jsonFlags) : '')" />
-            <x-admin.textarea name="custom_filters" label="المرشحات المخصصة (custom_filters)" rows="10" dir="ltr" input-class="font-mono text-xs leading-relaxed"
-                :value="old('custom_filters', $category->custom_filters !== null ? json_encode($category->custom_filters, $jsonFlags) : '')" />
+        <x-admin.form-section :title="__('admin.catalog.sections.names')" :description="__('admin.catalog.sections.names_hint')" cols="2">
+            <x-admin.input name="name[ar]" :label="__('admin.catalog.attributes.name_ar')" :value="old('name.ar', $category->name['ar'] ?? '')" required />
+            <x-admin.input name="name[en]" :label="__('admin.catalog.attributes.name_en')" :value="old('name.en', $category->name['en'] ?? '')" dir="ltr" required />
         </x-admin.form-section>
 
         <x-slot:side>
-            <x-admin.side-card title="التنظيم">
+            <x-admin.side-card :title="__('admin.catalog.sections.organisation')">
                 <div class="grid gap-4">
-                    <x-admin.select name="parent_id" label="التصنيف الأب">
-                        <option value="">— بدون —</option>
+                    <x-admin.select name="parent_id" :label="__('admin.catalog.attributes.parent_category')" :hint="__('admin.catalog.categories.parent_hint')">
+                        <option value="">{{ __('admin.catalog.no_parent') }}</option>
                         @foreach ($parents as $parent)
-                            <option value="{{ $parent->id }}" @selected(old('parent_id', $category->parent_id) === $parent->id)>
-                                {{ $parent->getLocalizedName(app()->getLocale()) }}
+                            <option value="{{ $parent['id'] }}" @selected(old('parent_id', $category->parent_id) === $parent['id'])>
+                                {{ str_repeat('— ', $parent['depth']) . $parent['label'] }}
                             </option>
                         @endforeach
                     </x-admin.select>
-                    <x-admin.input name="slug" label="المعرّف (slug)" :value="old('slug', $category->slug)" dir="ltr" required
-                        hint="أحرف لاتينية وأرقام و - و _ فقط، ويظهر في رابط التصنيف." />
-                    <x-admin.input name="icon" label="الأيقونة (Lucide)" :value="old('icon', $category->icon)" dir="ltr" />
-                    <x-admin.input name="order" type="number" label="الترتيب" :value="old('order', $category->order ?? 0)" min="0" required />
-                    <x-admin.checkbox name="is_active" label="مفعّل" :checked="old('is_active', $editing ? $category->is_active : true)" />
+                    <x-admin.input name="slug" :label="__('admin.catalog.attributes.slug')" :value="old('slug', $category->slug)" dir="ltr" required
+                        :hint="__('admin.catalog.categories.slug_hint')" />
+                    <x-admin.input name="icon" :label="__('admin.catalog.attributes.icon')" :value="old('icon', $category->icon)" dir="ltr" />
+                    <x-admin.input name="order" type="number" :label="__('admin.catalog.attributes.order')" :value="old('order', $category->order ?? 0)" min="0" required />
+                    <x-admin.checkbox name="is_active" :label="__('admin.catalog.status.active')" :checked="old('is_active', $editing ? $category->is_active : true)" />
                 </div>
             </x-admin.side-card>
 
             @if ($editing)
-                <x-admin.side-card title="بيانات التصنيف">
+                <x-admin.side-card :title="__('admin.catalog.categories.fields_card')" icon="adjustments" :link="[__('admin.catalog.categories.manage_fields'), route('admin.categories.fields.index', $category)]">
                     <x-admin.meta-list>
-                        @if (isset($category->children_count, $category->ads_count))
-                            <x-admin.meta-item label="التصنيفات الفرعية">{{ number_format($category->children_count) }}</x-admin.meta-item>
-                            <x-admin.meta-item label="الإعلانات المرتبطة">{{ number_format($category->ads_count) }}</x-admin.meta-item>
-                        @endif
-                        <x-admin.meta-item label="المعرّف الداخلي" ltr>{{ $category->id }}</x-admin.meta-item>
-                        <x-admin.meta-item label="تاريخ الإنشاء" ltr>{{ $category->created_at?->format('Y-m-d H:i') }}</x-admin.meta-item>
-                        <x-admin.meta-item label="آخر تعديل" ltr>{{ $category->updated_at?->format('Y-m-d H:i') }}</x-admin.meta-item>
+                        <x-admin.meta-item :label="__('admin.catalog.categories.own_fields')">{{ number_format($schema->countDeclaredBy($category->id)) }}</x-admin.meta-item>
+                        <x-admin.meta-item :label="__('admin.catalog.categories.inherited_fields')">{{ number_format($schema->count() - $schema->countDeclaredBy($category->id)) }}</x-admin.meta-item>
                     </x-admin.meta-list>
-                    @unless (isset($category->children_count, $category->ads_count))
+                </x-admin.side-card>
+
+                <x-admin.side-card :title="__('admin.catalog.categories.details_card')">
+                    <x-admin.meta-list>
+                        @if ($usage)
+                            <x-admin.meta-item :label="__('admin.catalog.categories.children')">{{ number_format($usage->children) }}</x-admin.meta-item>
+                            <x-admin.meta-item :label="__('admin.catalog.linked_ads')">{{ number_format($usage->ads) }}</x-admin.meta-item>
+                            <x-admin.meta-item :label="__('admin.catalog.saved_searches')">{{ number_format($usage->savedSearches) }}</x-admin.meta-item>
+                        @endif
+                        <x-admin.meta-item :label="__('admin.catalog.internal_id')" ltr>{{ $category->id }}</x-admin.meta-item>
+                        <x-admin.meta-item :label="__('admin.catalog.created_at')" ltr>{{ $category->created_at?->format('Y-m-d H:i') }}</x-admin.meta-item>
+                        <x-admin.meta-item :label="__('admin.catalog.updated_at')" ltr>{{ $category->updated_at?->format('Y-m-d H:i') }}</x-admin.meta-item>
+                    </x-admin.meta-list>
+                    @if ($usage?->inUse())
+                        <p class="mt-3 border-t border-ink-200 pt-3 text-xs text-ink-500">{{ __('admin.catalog.delete.in_use_hint', ['usage' => $usage->summary($kind)]) }}</p>
+                    @endif
+                    @unless ($usage)
                         <x-admin.error-state class="mt-3 border-t border-ink-200" :retry-url="request()->fullUrl()" />
                     @endunless
                 </x-admin.side-card>

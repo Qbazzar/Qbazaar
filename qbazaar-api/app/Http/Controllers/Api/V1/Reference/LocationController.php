@@ -38,7 +38,7 @@ class LocationController extends Controller
         $roots = Cache::remember(
             CatalogCache::LOCATION_TREE_KEY,
             self::QATAR_TTL,
-            fn () => $assembler->nest(Location::query()->orderBy('order')->get()),
+            fn () => $assembler->nest(Location::query()->active()->orderBy('order')->get()),
         );
 
         // Map to plain arrays — see CategoryController::tree for the rationale.

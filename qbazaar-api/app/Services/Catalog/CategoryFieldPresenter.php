@@ -57,6 +57,21 @@ class CategoryFieldPresenter
     }
 
     /**
+     * A search filter from {@see CategoryFields::filters()}, with its select
+     * options labelled the same way as the field's.
+     *
+     * @param array<string, mixed> $filter
+     * @return array<string, mixed>
+     */
+    public function filter(array $filter, string $locale): array
+    {
+        $presented = $this->field($filter, $locale);
+        unset($presented['show_in_card']);
+
+        return $presented;
+    }
+
+    /**
      * Whether the field's value is one of the spec chips on listing cards.
      * Read leniently because admins type this JSON by hand: "false" is false.
      *
