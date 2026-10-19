@@ -53,11 +53,20 @@ class CategoryFields
     public function forCategory(Category $category): ResolvedFields
     {
         $id = (string) $category->getKey();
-        $ancestors = $category->exists ? array_slice($this->hierarchy->pathTo($id), 0, -1) : [];
+        $own = ['id' => $id, 'fields' => $category->custom_fields];
+
+        if (! $category->exists) {
+            return $this->inheritance->resolve([$own]);
+        }
+
+        // Read even for a top-level category, so a page of cards costs the
+        // same queries whether its categories are nested or not.
+        $declared = $this->declared();
+        $ancestors = array_slice($this->hierarchy->pathTo($id), 0, -1);
 
         return $this->inheritance->resolve([
-            ...array_map(fn (string $ancestorId): array => ['id' => $ancestorId, 'fields' => $this->declared()[$ancestorId] ?? null], $ancestors),
-            ['id' => $id, 'fields' => $category->custom_fields],
+            ...array_map(static fn (string $ancestorId): array => ['id' => $ancestorId, 'fields' => $declared[$ancestorId] ?? null], $ancestors),
+            $own,
         ]);
     }
 
