@@ -160,3 +160,30 @@ it('keeps the transcript query count flat as the access log grows', function ():
 
     $this->get($uri)->assertSee(__('admin.conversation_access.log_count', ['count' => 13]));
 });
+
+it('keeps people\'s own words out of the ad deal panel but still names platform events', function (): void {
+    actingAs(accessStaff('super_admin'));
+    $this->conversation->forceFill([
+        'last_message_preview' => 'secret-transcript-line',
+        'last_message_key' => null,
+        'last_message_at' => now(),
+    ])->save();
+
+    $this->get(route('admin.ads.show', $this->conversation->ad_id))
+        ->assertOk()
+        ->assertSee('id="ad-conversations-title"', false)
+        ->assertSee(__('admin.deal.conversations.private_message'))
+        ->assertDontSee('secret-transcript-line');
+
+    $this->conversation->forceFill([
+        'last_message_preview' => 'Offer: 200 QAR',
+        'last_message_key' => 'offer.made',
+        'last_message_params' => ['amount' => '200', 'currency' => 'QAR', 'note' => 'secret-offer-note'],
+    ])->save();
+
+    $this->get(route('admin.ads.show', $this->conversation->ad_id))
+        ->assertOk()
+        ->assertSee(__('chat.offer.made', ['amount' => '200', 'currency' => 'QAR']))
+        ->assertDontSee('secret-offer-note')
+        ->assertDontSee(__('admin.deal.conversations.private_message'));
+});

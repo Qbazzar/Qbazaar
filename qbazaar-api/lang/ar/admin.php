@@ -1763,6 +1763,7 @@ return [
             'state' => 'الحالة',
             'last_activity' => 'آخر نشاط',
             'no_messages' => 'لا رسائل بعد',
+            'private_message' => 'رسالة خاصة، تظهر بعد ذكر سبب فتح المحادثة',
             'unread' => ':count غير مقروءة',
             'hidden_buyer' => 'مخفية عند المشتري',
             'hidden_seller' => 'مخفية عند البائع',

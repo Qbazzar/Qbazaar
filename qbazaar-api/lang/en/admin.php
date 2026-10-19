@@ -1822,6 +1822,7 @@ return [
             'state' => 'Status',
             'last_activity' => 'Last activity',
             'no_messages' => 'No messages yet',
+            'private_message' => 'Private message, shown once you give a reason to open the chat',
             'unread' => ':count unread',
             'hidden_buyer' => 'Hidden by the buyer',
             'hidden_seller' => 'Hidden by the seller',
