@@ -39,6 +39,7 @@
         @include('admin.dashboard.kpis')
         @include('admin.dashboard.attention')
         @include('admin.dashboard.charts')
+        @include('admin.dashboard.engagement')
         @include('admin.dashboard.breakdowns')
         @include('admin.dashboard.activity')
         @include('admin.dashboard.health')

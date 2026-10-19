@@ -52,7 +52,7 @@ class HelpCategoryController extends Controller
 
         return redirect()
             ->route('admin.help-categories.index')
-            ->with('status', 'تم إنشاء القسم بنجاح.');
+            ->with('status', __('admin.flash.help_category_created'));
     }
 
     public function edit(HelpCategory $help_category): View
@@ -73,7 +73,7 @@ class HelpCategoryController extends Controller
 
         return redirect()
             ->route('admin.help-categories.index')
-            ->with('status', 'تم تحديث القسم بنجاح.');
+            ->with('status', __('admin.flash.help_category_updated'));
     }
 
     public function destroy(HelpCategory $help_category): RedirectResponse
@@ -83,7 +83,7 @@ class HelpCategoryController extends Controller
 
         return redirect()
             ->route('admin.help-categories.index')
-            ->with('status', 'تم حذف القسم.');
+            ->with('status', __('admin.flash.help_category_deleted'));
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -96,7 +96,7 @@ class HelpCategoryController extends Controller
         $count = HelpCategory::whereIn('id', $data['ids'])->delete();
         $this->flushCache();
 
-        return back()->with('status', "تم حذف {$count} عنصراً.");
+        return back()->with('status', __('admin.flash.items_deleted', ['count' => $count]));
     }
 
     /**

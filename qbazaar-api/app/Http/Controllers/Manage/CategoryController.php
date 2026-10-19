@@ -60,7 +60,7 @@ class CategoryController extends Controller
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('status', 'تم إنشاء التصنيف بنجاح.');
+            ->with('status', __('admin.flash.category_created'));
     }
 
     public function edit(Category $category): View
@@ -83,7 +83,7 @@ class CategoryController extends Controller
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('status', 'تم تحديث التصنيف بنجاح.');
+            ->with('status', __('admin.flash.category_updated'));
     }
 
     public function destroy(Category $category): RedirectResponse
@@ -93,7 +93,7 @@ class CategoryController extends Controller
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('status', 'تم حذف التصنيف.');
+            ->with('status', __('admin.flash.category_deleted'));
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -106,7 +106,7 @@ class CategoryController extends Controller
         $count = Category::whereIn('id', $data['ids'])->delete();
         $this->flushCache();
 
-        return back()->with('status', "تم حذف {$count} عنصراً.");
+        return back()->with('status', __('admin.flash.items_deleted', ['count' => $count]));
     }
 
     /**
@@ -162,7 +162,7 @@ class CategoryController extends Controller
             json_decode((string) $value, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                $fail('يجب أن يكون الحقل :attribute بصيغة JSON صحيحة.');
+                $fail('admin.validation.invalid_json')->translate();
             }
         };
     }

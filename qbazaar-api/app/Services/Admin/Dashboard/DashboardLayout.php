@@ -38,6 +38,16 @@ final class DashboardLayout
         ['tile' => 'users_business', 'of' => 'users', 'tone' => 'violet', 'icon' => 'users'],
     ];
 
+    /**
+     * Engagement trends (AD-17.6), each on its own axis because messages
+     * outnumber new chats and follows by an order of magnitude.
+     */
+    private const array ENGAGEMENT = [
+        ['series' => 'messages', 'tile' => 'messages_new', 'tone' => 'slate'],
+        ['series' => 'conversations', 'tile' => 'conversations_new', 'tone' => 'aqua'],
+        ['series' => 'follows', 'tile' => 'follows_new', 'tone' => 'violet'],
+    ];
+
     /** @var Collection<string, array<string, mixed>> */
     private readonly Collection $tiles;
 
@@ -108,6 +118,36 @@ final class DashboardLayout
         }
 
         return $this->tiles->reject(static fn (array $tile, string $key): bool => in_array($key, $shown, true));
+    }
+
+    /**
+     * One small chart per engagement series the staff member may see, with
+     * the period's figure from the matching tile.
+     *
+     * @return list<array{key: string, label: string, value: string|null, change: int|null|false, series: list<array<string, mixed>>}>
+     */
+    public function engagementCharts(): array
+    {
+        $charts = [];
+
+        foreach (self::ENGAGEMENT as $def) {
+            $points = $this->stats['series'][$def['series']] ?? null;
+            if ($points === null) {
+                continue;
+            }
+
+            $label = (string) __('admin.home.engagement.' . $def['series']);
+            $tile = $this->tiles->get($def['tile']);
+            $charts[] = [
+                'key' => $def['series'],
+                'label' => $label,
+                'value' => $tile !== null ? $this->format($tile) : null,
+                'change' => $tile !== null && array_key_exists('change', $tile) ? $tile['change'] : false,
+                'series' => [['label' => $label, 'tone' => $def['tone'], 'field' => 'count', 'points' => $points]],
+            ];
+        }
+
+        return $charts;
     }
 
     /**

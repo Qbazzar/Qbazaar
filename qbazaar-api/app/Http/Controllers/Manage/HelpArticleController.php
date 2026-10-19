@@ -62,7 +62,7 @@ class HelpArticleController extends Controller
 
         return redirect()
             ->route('admin.help-articles.index')
-            ->with('status', 'تم إنشاء المقال بنجاح.');
+            ->with('status', __('admin.flash.article_created'));
     }
 
     public function edit(HelpArticle $help_article): View
@@ -80,7 +80,7 @@ class HelpArticleController extends Controller
 
         return redirect()
             ->route('admin.help-articles.index')
-            ->with('status', 'تم تحديث المقال بنجاح.');
+            ->with('status', __('admin.flash.article_updated'));
     }
 
     public function destroy(HelpArticle $help_article): RedirectResponse
@@ -90,7 +90,7 @@ class HelpArticleController extends Controller
 
         return redirect()
             ->route('admin.help-articles.index')
-            ->with('status', 'تم حذف المقال.');
+            ->with('status', __('admin.flash.article_deleted'));
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -103,7 +103,7 @@ class HelpArticleController extends Controller
         $count = HelpArticle::whereIn('id', $data['ids'])->delete();
         $this->flushCache();
 
-        return back()->with('status', "تم حذف {$count} عنصراً.");
+        return back()->with('status', __('admin.flash.items_deleted', ['count' => $count]));
     }
 
     /**

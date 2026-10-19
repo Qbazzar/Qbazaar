@@ -9,9 +9,9 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Fired when an admin manually approves a PENDING ad from the admin panel. Kept as a separate event from {@see AdPublished} so
- * notifications / activity logs can distinguish "auto-approved" vs.
- * "manually approved by reviewer".
+ * Fired when an admin manually approves a PENDING ad from the admin panel.
+ * Kept as a separate event from {@see AdPublished} so notifications and
+ * activity logs can tell "auto-approved" from "manually approved by reviewer".
  */
 class AdApproved
 {

@@ -48,6 +48,7 @@
                     ],
                     'المالية' => [
                         ['route' => 'admin.finance.revenue.index', 'label' => __('admin.revenue.nav'), 'match' => 'admin.finance.revenue.*', 'icon' => 'trend', 'permission' => 'finance.view'],
+                        ['route' => 'admin.finance.orders.index', 'label' => __('admin.orders_admin.nav'), 'match' => 'admin.finance.orders.*', 'icon' => 'banknotes', 'permission' => 'finance.view'],
                         ['route' => 'admin.finance.settlements.index', 'label' => 'تسويات العمولة', 'match' => 'admin.finance.settlements.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
                         ['route' => 'admin.finance.withdrawals.index', 'label' => 'طلبات السحب', 'match' => 'admin.finance.withdrawals.*', 'icon' => 'banknotes', 'permission' => 'finance.manage'],
                         ['route' => 'admin.finance.disputes.index', 'label' => 'نزاعات الطلبات', 'match' => 'admin.finance.disputes.*', 'icon' => 'flag', 'permission' => 'finance.manage'],
@@ -57,6 +58,7 @@
                         ['route' => 'admin.conversations.index', 'label' => 'المحادثات', 'match' => 'admin.conversations.*', 'icon' => 'chat', 'permission' => 'conversations.view'],
                         ['route' => 'admin.support.index', 'label' => 'الدعم الفني', 'match' => 'admin.support.*', 'icon' => 'lifebuoy', 'permission' => 'support.view'],
                         ['route' => 'admin.offers.index', 'label' => 'العروض', 'match' => 'admin.offers.*', 'icon' => 'banknotes', 'permission' => 'offers.view'],
+                        ['route' => 'admin.broadcasts.index', 'label' => __('admin.broadcasts.nav'), 'match' => 'admin.broadcasts.*', 'icon' => 'bell', 'permission' => 'notifications.broadcast'],
                     ],
                     'المحتوى' => [
                         ['route' => 'admin.categories.index', 'label' => 'التصنيفات', 'match' => 'admin.categories.*', 'icon' => 'folder', 'permission' => 'categories.manage'],

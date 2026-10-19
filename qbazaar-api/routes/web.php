@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Manage\ActivityController;
 use App\Http\Controllers\Manage\AdController;
 use App\Http\Controllers\Manage\AuthController;
+use App\Http\Controllers\Manage\BroadcastController;
 use App\Http\Controllers\Manage\BusinessApplicationController;
 use App\Http\Controllers\Manage\CategoryController;
 use App\Http\Controllers\Manage\CommissionRateController;
@@ -27,10 +28,14 @@ use App\Http\Controllers\Manage\ProfileController;
 use App\Http\Controllers\Manage\ReportController;
 use App\Http\Controllers\Manage\ReviewQueueController;
 use App\Http\Controllers\Manage\RoleController;
+use App\Http\Controllers\Manage\RolePermissionController;
 use App\Http\Controllers\Manage\SavedSearchController;
 use App\Http\Controllers\Manage\SettingController;
 use App\Http\Controllers\Manage\SupportTicketController;
+use App\Http\Controllers\Manage\TwoFactorChallengeController;
+use App\Http\Controllers\Manage\TwoFactorController;
 use App\Http\Controllers\Manage\UserController;
+use App\Http\Controllers\Manage\UserTwoFactorController;
 use App\Http\Middleware\AuditAdminMutations;
 use App\Http\Middleware\EnsureApiDocsEnabled;
 use App\Services\Admin\UserDetailTabs;
@@ -54,12 +59,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('login.attempt');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
+    // Staff two-factor sign-in (AD-17.14): the code prompt between the password
+    // and the panel. Reached before sign-in; wrong codes are limited per account.
+    Route::get('two-factor-challenge', [TwoFactorChallengeController::class, 'create'])->name('two-factor.challenge');
+    Route::post('two-factor-challenge', [TwoFactorChallengeController::class, 'store'])->name('two-factor.verify');
+
     Route::middleware(['staff', AuditAdminMutations::class])->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         // Signed-in staff manage their own account.
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+
+        // Staff two-factor sign-in (AD-17.14): each staff member manages their own.
+        Route::get('profile/two-factor', [TwoFactorController::class, 'show'])->name('profile.two-factor.show');
+        Route::post('profile/two-factor', [TwoFactorController::class, 'store'])->name('profile.two-factor.store');
+        Route::post('profile/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('profile.two-factor.confirm');
+        Route::post('profile/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('profile.two-factor.recovery-codes');
+        Route::delete('profile/two-factor', [TwoFactorController::class, 'destroy'])->name('profile.two-factor.destroy');
+        Route::delete('users/{user}/two-factor', [UserTwoFactorController::class, 'destroy'])->middleware('permission:roles.manage')->name('users.two-factor.destroy');
 
         // Ads
         Route::middleware('permission:ads.view')->group(function () {
@@ -130,8 +148,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('{section}/order', [HomeSectionController::class, 'reorder'])->name('order');
         });
 
-        // Roles (read-only)
-        Route::get('roles', [RoleController::class, 'index'])->middleware('permission:roles.manage')->name('roles.index');
+        // Roles and the permission matrix (AD-17.15): super_admin only, by role as
+        // well as permission, so a role granted roles.manage can never edit itself.
+        Route::middleware(['permission:roles.manage', 'role:super_admin'])->group(function () {
+            Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+            Route::get('roles/permissions', [RolePermissionController::class, 'edit'])->name('roles.permissions.edit');
+            Route::put('roles/permissions', [RolePermissionController::class, 'update'])->name('roles.permissions.update');
+        });
+
+        // Broadcast notifications to a segment of users (AD-17.15): queued and
+        // capped per sender.
+        Route::middleware('permission:notifications.broadcast')->group(function () {
+            Route::get('broadcasts', [BroadcastController::class, 'index'])->name('broadcasts.index');
+            Route::post('broadcasts', [BroadcastController::class, 'store'])->name('broadcasts.store');
+        });
 
         // Reports (moderation queue)
         Route::middleware('permission:reports.view')->group(function () {
@@ -235,10 +265,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('support/{ticket}/assign', [SupportTicketController::class, 'assignToMe'])->name('support.assign');
         });
 
-        // Conversations (read-only)
+        // Conversations (read-only). A transcript opens only after a stated,
+        // logged reason (AD-17.11).
         Route::middleware('permission:conversations.view')->group(function () {
             Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
             Route::get('conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
+            Route::post('conversations/{conversation}/access', [ConversationController::class, 'access'])->name('conversations.access');
         });
 
         // Platform settings
@@ -266,6 +298,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::get('disputes', [Finance\DisputeController::class, 'index'])->name('disputes.index');
                 Route::get('promotions', [Finance\PromotionTransferController::class, 'index'])->name('promotions.index');
                 Route::get('users/{user}/statement', [Finance\StatementController::class, 'show'])->name('statements.show');
+                Route::get('orders', [Finance\OrderController::class, 'index'])->name('orders.index');
                 Route::get('orders/{order}', [Finance\OrderController::class, 'show'])->name('orders.show');
             });
             Route::middleware('permission:finance.manage')->group(function () {

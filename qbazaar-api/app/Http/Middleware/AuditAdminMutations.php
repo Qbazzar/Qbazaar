@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AuditAdminMutations
 {
-    private const REDACTED_INPUT = ['_token', '_method', 'password', 'password_confirmation', 'current_password'];
+    private const REDACTED_INPUT = ['_token', '_method', 'password', 'password_confirmation', 'current_password', 'code', 'recovery_code'];
 
     private const MAX_VALUE_LENGTH = 500;
 

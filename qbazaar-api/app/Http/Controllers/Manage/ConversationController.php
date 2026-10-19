@@ -6,11 +6,16 @@ namespace App\Http\Controllers\Manage;
 
 use App\Enums\ReportTarget;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Manage\Conversations\OpenConversationRequest;
 use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\Report;
+use App\Models\User;
+use App\Services\Admin\Conversations\ConversationAccessService;
 use App\Services\Messaging\AdminTranscriptBuilder;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -50,8 +55,18 @@ class ConversationController extends Controller
         ]);
     }
 
-    public function show(Request $request, Conversation $conversation, AdminTranscriptBuilder $transcript): View
-    {
+    /**
+     * The transcript, once this session has stated a reason for opening it
+     * (AD-17.11); until then, the reason form.
+     */
+    public function show(
+        Request $request,
+        #[CurrentUser]
+        User $staff,
+        Conversation $conversation,
+        AdminTranscriptBuilder $transcript,
+        ConversationAccessService $access,
+    ): View {
         $conversation->load([
             'ad:id,title,price,currency,status',
             'ad.primaryImage',
@@ -60,6 +75,13 @@ class ConversationController extends Controller
             'buyer.avatarMedia',
             'seller.avatarMedia',
         ]);
+
+        if (! $access->hasGrant($request, $staff, $conversation)) {
+            return view('admin.conversations.access', [
+                'conversation' => $conversation,
+                'page' => $request->integer('page') ?: null,
+            ]);
+        }
 
         // Long threads open on their newest page; older pages stay one click away.
         $perPage = 100;
@@ -81,7 +103,23 @@ class ConversationController extends Controller
             'reports' => $request->user()?->can('reports.view')
                 ? rescue(fn () => $this->reportsOn($conversation))
                 : null,
+            'access' => $access->summaryFor($conversation),
         ]);
+    }
+
+    /** Records why the staff member opens the conversation, then shows it. */
+    public function access(
+        OpenConversationRequest $request,
+        #[CurrentUser]
+        User $staff,
+        Conversation $conversation,
+        ConversationAccessService $access,
+    ): RedirectResponse {
+        $access->grant($request, $staff, $conversation, $request->reason());
+
+        return redirect()
+            ->route('admin.conversations.show', array_filter(['conversation' => $conversation, 'page' => $request->page()]))
+            ->with('status', __('admin.conversation_access.flash.granted'));
     }
 
     /**

@@ -14,6 +14,7 @@ use App\Services\Admin\Dashboard\Collectors\Breakdowns;
 use App\Services\Admin\Dashboard\Collectors\DailySeries;
 use App\Services\Admin\Dashboard\Collectors\EngagementStats;
 use App\Services\Admin\Dashboard\Collectors\FinanceStats;
+use App\Services\Admin\Dashboard\Collectors\FollowStats;
 use App\Services\Admin\Dashboard\Collectors\RecentActivity;
 use App\Services\Admin\Dashboard\Collectors\SystemHealth;
 use App\Services\Admin\Dashboard\Collectors\UserStats;
@@ -35,7 +36,8 @@ class DashboardStatsService
 
     public const int HEALTH_TTL_SECONDS = 60;
 
-    private const string KEY_PREFIX = 'admin:dashboard:v2:';
+    // v3: follow and conversation series and the most-followed list (AD-17.6).
+    private const string KEY_PREFIX = 'admin:dashboard:v3:';
 
     public function __construct(
         private readonly WarmedCache $cache,
@@ -48,6 +50,7 @@ class DashboardStatsService
         private readonly Breakdowns $breakdowns,
         private readonly RecentActivity $recent,
         private readonly SystemHealth $health,
+        private readonly FollowStats $follows,
     ) {}
 
     /**
@@ -190,6 +193,8 @@ class DashboardStatsService
             'ads' => $has(DashboardAccess::CONTENT) ? $this->series->ads($now) : [],
             'orders' => $has(DashboardAccess::FINANCE) ? $this->series->orders($now) : [],
             'messages' => $has(DashboardAccess::CONVERSATIONS) ? $this->series->messages($now) : [],
+            'conversations' => $has(DashboardAccess::CONVERSATIONS) ? $this->series->conversations($now) : [],
+            'follows' => $has(DashboardAccess::USERS) ? $this->series->follows($now) : [],
             'revenue' => $has(DashboardAccess::FINANCE) ? $this->series->revenue($now) : [],
         ]);
     }
@@ -228,6 +233,7 @@ class DashboardStatsService
             'tickets' => [DashboardAccess::SUPPORT, fn (): array => $this->recent->tickets()],
             'signups' => [DashboardAccess::USERS, fn (): array => $this->recent->signups()],
             'orders' => [DashboardAccess::FINANCE, fn (): array => $this->recent->orders()],
+            'top_followed' => [DashboardAccess::USERS, fn (): array => $this->follows->topBusinesses()],
         ];
 
         $recent = [];

@@ -14,6 +14,7 @@ use App\Http\Requests\Manage\UpdateUserRolesRequest;
 use App\Models\User;
 use App\Services\Admin\EntityTimeline;
 use App\Services\Admin\StaffHierarchy;
+use App\Services\Admin\TwoFactor\StaffTwoFactorService;
 use App\Services\Admin\UserDetailTabs;
 use App\Services\Moderation\SanctionService;
 use App\Services\Users\UserModerationService;
@@ -73,6 +74,7 @@ class UserController extends Controller
         User $user,
         UserDetailTabs $tabs,
         EntityTimeline $timeline,
+        StaffTwoFactorService $twoFactor,
         SanctionService $sanctions,
     ): View {
         $user->load(['roles', 'avatarMedia']);
@@ -87,6 +89,8 @@ class UserController extends Controller
             'roles' => $canManageRoles ? Role::orderBy('name')->get() : collect(),
             'canManageUser' => $canManageUser,
             'canManageRoles' => $canManageRoles,
+            // Only staff have a two-factor credential, and only a senior colleague may clear it.
+            'staffTwoFactorEnabled' => $canManageRoles && $user->isStaff() ? $twoFactor->isEnabled($user) : null,
             'tabs' => $tabs->visibleTo($actor),
             'activeTab' => $activeTab,
             'panel' => $tabs->panel($activeTab, $user),
@@ -117,7 +121,7 @@ class UserController extends Controller
     {
         $moderation->activate($actor, $user);
 
-        return back()->with('status', 'تم تفعيل المستخدم.');
+        return back()->with('status', __('admin.flash.user_activated'));
     }
 
     /** Email the user a password-reset link (self-service recovery on their behalf). */
@@ -127,7 +131,7 @@ class UserController extends Controller
 
         Password::broker()->sendResetLink(['email' => $user->email]);
 
-        return back()->with('status', 'تم إرسال رابط إعادة تعيين كلمة المرور للمستخدم.');
+        return back()->with('status', __('admin.flash.password_reset_sent'));
     }
 
     /**
@@ -168,6 +172,6 @@ class UserController extends Controller
     ): RedirectResponse {
         $syncRoles->execute($actor, $user, $request->roles());
 
-        return back()->with('status', 'تم تحديث أدوار المستخدم.');
+        return back()->with('status', __('admin.flash.roles_updated'));
     }
 }

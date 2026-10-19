@@ -224,7 +224,8 @@ it('keeps a fixed number of queries however many rows there are', function (): v
     $few = $queries();
     $seed(12);
 
-    expect($queries())->toBe($few)->and($few)->toBeLessThanOrEqual(47);
+    // 47, plus the follow tile, the follow and new-chat series and the most-followed list (AD-17.6).
+    expect($queries())->toBe($few)->and($few)->toBeLessThanOrEqual(51);
 });
 
 it('caches per period and per permission set', function (): void {
@@ -236,7 +237,7 @@ it('caches per period and per permission set', function (): void {
     $service->forUser($admin, DashboardPeriod::MONTH);
     $service->forUser($moderator, DashboardPeriod::WEEK);
 
-    $keys = collect(['7d', '30d'])->map(fn (string $p): string => 'admin:dashboard:v2:' . $p . ':' . md5(implode(',', DashboardAccess::sectionsFor($admin))));
+    $keys = collect(['7d', '30d'])->map(fn (string $p): string => 'admin:dashboard:v3:' . $p . ':' . md5(implode(',', DashboardAccess::sectionsFor($admin))));
     expect(Cache::has($keys[0]))->toBeTrue()->and(Cache::has($keys[1]))->toBeTrue();
     expect(DashboardAccess::sectionsFor($moderator))->not->toBe(DashboardAccess::sectionsFor($admin));
 });

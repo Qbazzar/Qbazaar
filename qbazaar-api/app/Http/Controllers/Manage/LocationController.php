@@ -66,7 +66,7 @@ class LocationController extends Controller
 
         return redirect()
             ->route('admin.locations.index')
-            ->with('status', 'تم إنشاء الموقع بنجاح.');
+            ->with('status', __('admin.flash.location_created'));
     }
 
     public function edit(Location $location): View
@@ -88,7 +88,7 @@ class LocationController extends Controller
 
         return redirect()
             ->route('admin.locations.index')
-            ->with('status', 'تم تحديث الموقع بنجاح.');
+            ->with('status', __('admin.flash.location_updated'));
     }
 
     public function destroy(Location $location): RedirectResponse
@@ -98,7 +98,7 @@ class LocationController extends Controller
 
         return redirect()
             ->route('admin.locations.index')
-            ->with('status', 'تم حذف الموقع.');
+            ->with('status', __('admin.flash.location_deleted'));
     }
 
     public function bulkDestroy(Request $request): RedirectResponse
@@ -111,7 +111,7 @@ class LocationController extends Controller
         $count = Location::whereIn('id', $data['ids'])->delete();
         $this->flushCache();
 
-        return back()->with('status', "تم حذف {$count} عنصراً.");
+        return back()->with('status', __('admin.flash.items_deleted', ['count' => $count]));
     }
 
     /**

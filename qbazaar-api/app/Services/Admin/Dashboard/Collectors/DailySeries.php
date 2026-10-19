@@ -6,6 +6,8 @@ namespace App\Services\Admin\Dashboard\Collectors;
 
 use App\Enums\OrderStatus;
 use App\Models\Ad;
+use App\Models\Conversation;
+use App\Models\Follow;
 use App\Models\Message;
 use App\Models\Order;
 use App\Models\User;
@@ -54,6 +56,22 @@ final class DailySeries
     public function messages(CarbonImmutable $now): array
     {
         return $this->counts(Message::query(), $now);
+    }
+
+    /**
+     * @return list<array{date: string, count: int}>
+     */
+    public function conversations(CarbonImmutable $now): array
+    {
+        return $this->counts(Conversation::query(), $now);
+    }
+
+    /**
+     * @return list<array{date: string, count: int}>
+     */
+    public function follows(CarbonImmutable $now): array
+    {
+        return $this->counts(Follow::query(), $now);
     }
 
     /**

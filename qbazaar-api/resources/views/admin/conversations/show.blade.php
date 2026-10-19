@@ -106,6 +106,21 @@
                 </x-admin.meta-list>
             </x-admin.side-card>
 
+            <x-admin.side-card :title="__('admin.conversation_access.log_title')" icon="shield" id="side-access-log">
+                <p class="mb-3 text-xs text-ink-500">{{ __('admin.conversation_access.log_count', ['count' => number_format($access['total'])]) }}</p>
+                <ul class="grid gap-3">
+                    @foreach ($access['recent'] as $entry)
+                        <li class="min-w-0">
+                            <div class="flex items-center justify-between gap-3">
+                                <x-admin.user :user="$entry->staff" size="xs" :fallback="__('admin.conversation_access.deleted_account')" />
+                                <span class="shrink-0 text-xs text-ink-500" dir="ltr">{{ $entry->created_at->format('Y-m-d H:i') }}</span>
+                            </div>
+                            <p class="mt-1 text-[13px] break-words text-ink-700">{{ $entry->reason }}</p>
+                        </li>
+                    @endforeach
+                </ul>
+            </x-admin.side-card>
+
             @can('reports.view')
                 <x-admin.side-card title="البلاغات على المحادثة" icon="flag" id="side-reports"
                                    :link="['عرض الكل', route('admin.reports.index', ['q' => $conversation->id])]">

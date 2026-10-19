@@ -62,6 +62,18 @@ enum OrderStatus: string
         };
     }
 
+    /** The admin badge tone, as the order page and the deal panel colour it. */
+    public function badgeTone(): string
+    {
+        return match ($this) {
+            self::CREATED => 'neutral',
+            self::AWAITING_HANDOVER => 'info',
+            self::COMPLETED => 'success',
+            self::CANCELLED => 'danger',
+            self::DISPUTED => 'warning',
+        };
+    }
+
     /**
      * @return list<string>
      */
