@@ -63,7 +63,7 @@ export function CompanyDirectoryCard({ href, name, logoUrl, toneKey, meta, count
         {logoUrl ? <Image src={logoUrl} alt="" fill sizes="56px" className="object-cover" /> : initialsOf(name)}
       </span>
       <h2 className="mt-3 w-full text-qb-body font-medium tracking-normal break-words text-qb-ink">
-        <Link href={href} dir="auto" className="outline-none after:absolute after:inset-0">
+        <Link prefetch={false} href={href} dir="auto" className="outline-none after:absolute after:inset-0">
           {name}
         </Link>
       </h2>
