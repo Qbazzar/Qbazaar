@@ -19,8 +19,12 @@ interface AdRowProps {
   desktop: 'grid' | 'list';
   /** Ads shown from 601 px (`grid`) or 1001 px (`list`); the swipeable row always holds all of them. */
   desktopLimit?: number;
+  /** The first row of the page: its first cards load at once, the first one with high priority (the LCP image). */
+  leading?: boolean;
   ref?: Ref<HTMLUListElement>;
 }
+
+const EAGER_CARDS = 2;
 
 const LAYOUTS = {
   grid: {
@@ -40,14 +44,14 @@ const LAYOUTS = {
 } as const;
 
 /** A row of listing cards that scrolls sideways on small screens (parent-category.html, the search's "Recommended for you"). */
-export function AdRow({ ads, label, desktop, desktopLimit = ads.length, ref }: AdRowProps) {
+export function AdRow({ ads, label, desktop, desktopLimit = ads.length, leading = false, ref }: AdRowProps) {
   const layout = LAYOUTS[desktop];
   return (
     <ul ref={ref} aria-label={label} className={layout.list}>
       {ads.map((ad, index) => (
         <li key={ad.id} className={cn(layout.item, index >= desktopLimit && layout.hidden)}>
           {desktop === 'grid' ? (
-            <CatalogAdCard ad={ad} layout="tile" />
+            <CatalogAdCard ad={ad} layout="tile" eager={leading && index < EAGER_CARDS} priority={leading && index === 0} />
           ) : (
             // The row becomes a column of list cards on desktop (655:55973); CSS shows one of the two.
             <>
