@@ -22,6 +22,7 @@ export interface LinkTileProps {
 export function LinkTile({ href, icon, title, description, className }: LinkTileProps) {
   return (
     <Link
+      prefetch={false}
       href={href}
       className={cn(
         'flex h-full min-h-[120px] flex-col rounded-qb-xl border border-qb-line bg-qb-surface px-[17px] pt-[18px] pb-4 font-qb shadow-qb-card transition-shadow duration-200 hover:shadow-qb-hover motion-reduce:transition-none',

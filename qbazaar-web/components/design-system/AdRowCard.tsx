@@ -76,7 +76,7 @@ export function AdRowCard({
       <div className="flex min-w-0 flex-1 flex-col p-4 qb-tablet:px-4 qb-tablet:pt-7 qb-tablet:pb-5 qb-desktop:px-6 qb-desktop:pt-[30px]">
         <div className="flex items-start justify-between gap-4">
           <Heading className="line-clamp-2 min-w-0 text-qb-body leading-[1.25] font-medium tracking-normal text-qb-ink-body qb-desktop:text-qb-h5">
-            <Link href={href} dir="auto" className="outline-none after:absolute after:inset-0">
+            <Link prefetch={false} href={href} dir="auto" className="outline-none after:absolute after:inset-0">
               {title}
             </Link>
           </Heading>

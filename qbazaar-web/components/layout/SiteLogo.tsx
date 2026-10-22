@@ -16,6 +16,8 @@ export function SiteLogo({ width, height, eager = false, className }: SiteLogoPr
       width={width}
       height={height}
       alt=""
+      // An SVG has no sizes to choose from.
+      unoptimized
       loading={eager ? 'eager' : 'lazy'}
       className={className}
     />

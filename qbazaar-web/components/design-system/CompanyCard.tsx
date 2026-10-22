@@ -69,7 +69,7 @@ export function CompanyCard({
     >
       <CompanyLogo name={name} logoUrl={logoUrl} toneKey={toneKey} />
       <Heading className="mt-2 w-full truncate text-qb-caption font-semibold tracking-normal text-qb-ink-title qb-tablet:mt-4 qb-tablet:text-qb-body qb-tablet:font-medium">
-        <Link href={href} className="outline-none after:absolute after:inset-0">
+        <Link prefetch={false} href={href} className="outline-none after:absolute after:inset-0">
           {name}
         </Link>
       </Heading>

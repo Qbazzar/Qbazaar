@@ -45,7 +45,7 @@ export function ListingResults({ ads, view, isLoading, isFetching = false, empty
     >
       {ads.map((ad, index) => (
         <li key={ad.id}>
-          <CatalogAdCard ad={ad} layout={view === 'grid' ? 'grid' : 'row'} eager={index < EAGER_CARDS} />
+          <CatalogAdCard ad={ad} layout={view === 'grid' ? 'grid' : 'row'} eager={index < EAGER_CARDS} priority={index === 0} />
         </li>
       ))}
     </ul>
