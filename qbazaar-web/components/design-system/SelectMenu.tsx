@@ -33,9 +33,11 @@ export interface SelectMenuProps {
   className?: string;
   /** Classes of the field itself. */
   fieldClassName?: string;
-  /** Size of the label and the chosen value. */
+  /** Classes of the text box of the label or the chosen value, e.g. how wide it may grow. */
   textClassName?: string;
+  /** Classes of the field while it shows the label. */
   placeholderClassName?: string;
+  /** Classes of the field once a value is chosen. */
   valueClassName?: string;
   chevronClassName?: string;
 }
@@ -255,16 +257,17 @@ export function SelectMenu({
         onKeyDown={onKeyDown}
         onFocus={onIntent}
         onBlur={() => setOpen(false)}
-        className={cn('flex w-full cursor-pointer items-center justify-between', fieldClassName)}
+        className={cn('flex w-full cursor-pointer items-center justify-between', fieldClassName, chosen ? valueClassName : placeholderClassName)}
       >
-        {/* The hidden copy of the label keeps the field at least as wide as the label; a longer choice is cut short. */}
+        {/*
+          The hidden copy of the shown text keeps it whole, so the chevron gives way first, as in the reference;
+          past the text's max width (textClassName) a long choice is cut short.
+        */}
         <span className={cn('grid flex-1 text-start whitespace-nowrap', textClassName)}>
           <span aria-hidden="true" className="invisible col-start-1 row-start-1">
-            {label}
-          </span>
-          <span className={cn('col-start-1 row-start-1 w-0 min-w-full truncate', chosen ? valueClassName : placeholderClassName)}>
             {chosen ? chosen.option.label : label}
           </span>
+          <span className="col-start-1 row-start-1 w-0 min-w-full truncate">{chosen ? chosen.option.label : label}</span>
         </span>
         <Icon
           icon={ChevronDownIcon}
