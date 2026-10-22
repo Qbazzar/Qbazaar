@@ -646,6 +646,7 @@
     "profile": {
       "joined": "Member since {date}",
       "tabs": {
+        "ads": "Ads",
         "company_ads": "Ads ({count})",
         "about_us": "About us",
         "legal": "Legal Info"
