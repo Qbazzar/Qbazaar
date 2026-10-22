@@ -35,13 +35,47 @@ function pairTexts(refRows, targetRows) {
   return { pairs, unmatchedRef };
 }
 
-/** Descendants are matched by key (text, nth svg, nth input, nth image). */
+// Text-like inputs are one family: a design's email field may be a plain text input on the other side.
+const INPUT_FAMILY = { email: 'text', tel: 'text', search: 'text', url: 'text', number: 'text' };
+const familyOf = (input) => INPUT_FAMILY[input.inputType] || input.inputType;
+
+/**
+ * Inputs pair by the field they stand for (same label), then by type family in document order: a form with fields
+ * the reference lacks (sign-up's full name and phone) still pairs its terms checkbox with the checkbox, not with
+ * whatever input comes third.
+ */
+function pairInputs(refInputs, targetInputs) {
+  const twins = new Map();
+  const free = [...targetInputs];
+  const take = (ref, match) => {
+    const index = free.findIndex(match);
+    if (index < 0) return;
+    twins.set(ref, free[index]);
+    free.splice(index, 1);
+  };
+  for (const ref of refInputs) if (ref.field) take(ref, (t) => t.field === ref.field && familyOf(t) === familyOf(ref));
+  for (const ref of refInputs) if (!twins.has(ref)) take(ref, (t) => familyOf(t) === familyOf(ref));
+  return twins;
+}
+
+/** Descendants are matched by key (text, nth svg, nth image); inputs by field and type, placeholders with their input. */
 function pairDescendants(refUnit, targetUnit) {
   const byKey = new Map(targetUnit.descendants.map((d) => [d.key, d]));
+  const inputsOf = (unit) => unit.descendants.filter((d) => d.kind === 'input');
+  // Captures without input types (older reads) keep pairing inputs by their order.
+  const typed = inputsOf(refUnit).every((d) => d.inputType) && inputsOf(targetUnit).every((d) => d.inputType);
+  const twins = typed ? pairInputs(inputsOf(refUnit), inputsOf(targetUnit)) : new Map();
+  const twinKeyOf = new Map([...twins].map(([ref, target]) => [ref.key, target.key]));
+  const counterpart = (ref) => {
+    if (!typed) return byKey.get(ref.key);
+    if (ref.kind === 'input') return twins.get(ref);
+    if (ref.kind === 'placeholder' && ref.of) return targetUnit.descendants.find((d) => d.kind === 'placeholder' && d.of === twinKeyOf.get(ref.of));
+    return byKey.get(ref.key);
+  };
   const pairs = [];
   const missing = [];
   for (const ref of refUnit.descendants) {
-    const target = byKey.get(ref.key);
+    const target = counterpart(ref);
     if (target) pairs.push({ ref, target }); else missing.push(ref);
   }
   return { pairs, missing };
@@ -62,4 +96,21 @@ function referenceOnlyText(text, pageDef, rules = referenceText.rules) {
     && (!rule.loginPages || Boolean(pageDef.login))) || null;
 }
 
-module.exports = { pairTexts, pairDescendants, isUserData, referenceOnlyText };
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * The reference copy with the owner's kept strings put in the target's words (reference-text.json rules that give
+ * targetTexts): the n-th occurrence of a kept string becomes the n-th target wording (the last one repeats).
+ */
+function withKeptCopy(text, pageDef, rules = referenceText.rules) {
+  let out = String(text);
+  for (const rule of rules.filter((r) => r.targetTexts && (!r.pages || r.pages.includes(pageDef.id)))) {
+    for (const kept of rule.texts) {
+      let n = 0;
+      out = out.replace(new RegExp(escapeRegExp(kept), 'g'), () => rule.targetTexts[Math.min(n++, rule.targetTexts.length - 1)]);
+    }
+  }
+  return out;
+}
+
+module.exports = { pairTexts, pairDescendants, pairInputs, isUserData, referenceOnlyText, withKeptCopy };

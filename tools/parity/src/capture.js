@@ -38,7 +38,7 @@ class Probe {
   }
 
   read(selector, options = {}) {
-    return this.page.evaluate(inpage.readUnit, { selector, descendants: Boolean(options.descendants) });
+    return this.page.evaluate(inpage.readUnit, { selector, descendants: Boolean(options.descendants), hop: Boolean(options.hop) });
   }
 
   async withState(selector, state, readFn) {
@@ -120,6 +120,9 @@ class Probe {
         const cls = [...el.classList].slice(0, 2).join('.');
         return el.tagName.toLowerCase() + (cls ? `.${cls}` : '');
       };
+      // A screen fade runs on the wrapper of the page's content: wide, and tall or holding the main content (a page
+      // whose live data is short, an empty result list, is still the page).
+      const holdsMain = (el) => el.matches('main') || (el.parentElement && el.parentElement.matches('main')) || Boolean(el.querySelector('main'));
       for (const el of document.querySelectorAll('*')) {
         for (const raw of getComputedStyle(el).animationName.split(',')) {
           const name = raw.trim();
@@ -127,7 +130,7 @@ class Probe {
           const r = el.getBoundingClientRect();
           const use = uses.get(name) || { name, count: 0, sample: describe(el), pageLevel: false };
           use.count++;
-          use.pageLevel = use.pageLevel || (r.width >= innerWidth * 0.9 && r.height >= innerHeight * 0.5);
+          use.pageLevel = use.pageLevel || (r.width >= innerWidth * 0.9 && (r.height >= innerHeight * 0.5 || holdsMain(el)));
           uses.set(name, use);
         }
       }

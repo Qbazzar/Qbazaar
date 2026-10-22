@@ -4,6 +4,7 @@ const { diffStyles, canonicalValue } = require('./compare');
 const { FOCUS_RULE, applyFocusPolicy, designedChanges, isUserAgentRing } = require('./focus');
 const { pairDescendants, isUserData } = require('./matching');
 const { compareIcon, pairIcons } = require('./icons');
+const { arabicFontRule, flagRule } = require('./accepted');
 const { diffImages, cropOf } = require('./pixels');
 const path = require('path');
 const fs = require('fs');
@@ -23,13 +24,23 @@ function transformDelta(before, after) {
   return `matrix(${f[0]}, ${f[1]}, ${f[2]}, ${f[3]}, ${Math.round((f[4] - b[4]) * 10) / 10}, ${Math.round((f[5] - b[5]) * 10) / 10})`;
 }
 
-// The prototype's template engine wraps interpolated values in span.sc-interp. When that wrapper sits in a chip (a
-// city pill), the chip is the box a person sees: box properties come from the chip on both sides (inpage chipOf).
-function chipView(ref, target) {
-  if (!ref || !target || !(ref.templateWrapper && ref.chip)) return [ref, target];
-  const merge = (node) => (node.chip ? { ...node, rect: node.chip.rect, styles: { ...node.styles, ...node.chip.styles } } : node);
-  return [merge(ref), merge(target)];
+// Both sides carry text in elements that draw nothing themselves: the prototype's template engine wraps every
+// interpolated value in span.sc-interp, the target wraps labels in spans. Box properties (margin, padding, border,
+// background, cursor, size, transition) are read from the box that owns the text (inpage ownerBox), on each side.
+// When only one side writes its text itself, the other side's typography is read from the one visible element that
+// writes it (inpage textCarrierOf: a combobox around its label, not the invisible sizer next to it).
+function ownerView(ref, target) {
+  if (!ref || !target) return [ref, target];
+  const boxed = (node) => (node.box ? { ...node, rect: node.box.rect, styles: { ...node.styles, ...node.box.styles } } : node);
+  const written = (node, other) => (!node.ownText && other.ownText && node.textCarrier
+    ? { ...node, ownText: true, styles: { ...node.styles, ...node.textCarrier.styles } } : node);
+  const [r, t] = [boxed(ref), boxed(target)];
+  return [written(r, t), written(t, r)];
 }
+
+// Icons of a unit: its own svgs, plus the roots named in `extra` (the reference's phone header bar is pinned outside
+// <header>), plus glyphs drawn with CSS when the unit asks for them (the prototype's phone burger).
+const iconScope = (selector, extra) => (extra ? { selector, extra } : selector);
 
 const withDelta = (base, forced) => ({ ...forced, styles: { ...forced.styles, transform: transformDelta(base.styles.transform, forced.styles.transform) } });
 
@@ -67,11 +78,22 @@ class UnitComparer {
     this.findings.accept(rule, { ...this.base, component, state: this.stateLabel || state, property: d.property, ref: d.ref, target: d.target });
   }
 
+  // An owner-accepted difference: Arabic text in Noto Kufi, or a property the unit's spec accepts (sign-up's taller card).
+  acceptedRule(component, d) {
+    const root = Boolean(this.unit) && component === this.unit.name;
+    const font = arabicFontRule(root ? `${component} ${this.unitText || ''}` : component, d);
+    if (font) return font;
+    const accepted = root && this.unit.accepted;
+    return accepted && accepted.properties.includes(d.property) ? accepted.rule : null;
+  }
+
   // A state only reports what differs beyond the default: repeating a default diff per state is noise.
   emitDiffs(component, state, diffs) {
     for (const d of diffs) {
       // The browser's own focus ring on a focused reference element is not a design decision.
       if (d.property === 'outline' && isUserAgentRing(d.ref)) { this.accept(FOCUS_RULE, component, state, d); continue; }
+      const rule = this.acceptedRule(component, d);
+      if (rule) { this.accept(rule, component, state, d); continue; }
       // Focus rings follow one site-wide rule, so they are reported once, not per control.
       const subject = d.property === 'outline' && state === 'focus-visible' ? 'focus-ring' : component;
       const key = UnitComparer.diffKey(this.dedupe, subject, d);
@@ -90,9 +112,11 @@ class UnitComparer {
   async compare(unit) {
     this.dedupe = unit.dedupeKey || null;
     this.unitNote = unit.note || null;
-    const options = { descendants: unit.descendants !== false };
-    const [ref, target] = chipView(...(await Promise.all([this.ref.read(unit.refSel, options), this.target.read(unit.tgtSel, options)])));
+    this.unit = unit;
+    const options = { descendants: unit.descendants !== false, hop: Boolean(unit.hop) };
+    const [ref, target] = ownerView(...(await Promise.all([this.ref.read(unit.refSel, options), this.target.read(unit.tgtSel, options)])));
     if (!ref || !target) return;
+    this.unitText = `${ref.text || ''} ${target.text || ''}`;
     this.resting = unit.statesOnly ? this.restingDiffs(unit, ref, target) : null;
     if (!unit.statesOnly) {
       await this.compareRoot(unit, ref, target);
@@ -117,7 +141,10 @@ class UnitComparer {
     const [a, b] = await Promise.all([this.ref.renderedFonts(unit.refSel), this.target.renderedFonts(unit.tgtSel)]);
     // An unstyled native control renders the browser's Arial: the same user-agent default diffStyles skips.
     if (ref.native && a === 'Arial') return;
-    if (a && b && a !== b) this.emit({ component: unit.name, property: 'rendered-font', ref: a, target: b });
+    if (!a || !b || a === b) return;
+    const d = { property: 'rendered-font', ref: a, target: b };
+    const rule = this.acceptedRule(unit.name, d);
+    if (rule) this.accept(rule, unit.name, 'default', d); else this.emit({ component: unit.name, ...d });
   }
 
   async sourceFor(selector, property) {
@@ -128,13 +155,15 @@ class UnitComparer {
 
   childDiffs(unit, ref, target) {
     const { pairs, missing } = pairDescendants(ref, target);
-    const diffs = pairs.map((pair) => {
-      const [r, t] = chipView(pair.ref, pair.target);
+    // A language flag is the accepted flag difference, counted once, not a glyph whose box is compared.
+    const flags = pairs.filter((p) => p.ref.kind === 'icon' && (p.ref.flag || p.target.flag));
+    const diffs = pairs.filter((p) => !flags.includes(p)).map((pair) => {
+      const [r, t] = ownerView(pair.ref, pair.target);
       const fixed = unit.fixedSize || (r.kind === 'icon') || (r.kind === 'input');
       const options = { fixedSize: fixed && r.kind !== 'text', skip: r.kind === 'icon' ? ['width', 'height'] : [], sameBox: sameBox(r.rect, t.rect), motion: false, ownText: r.ownText || t.ownText, kind: r.kind, refNative: r.native };
       return { key: r.key.replace(/#\d+$/, ''), diffs: diffStyles(r.styles, t.styles, options) };
     });
-    return { diffs, missing };
+    return { diffs, missing, flags: flags.map((p) => ({ key: p.ref.key.replace(/#\d+$/, ''), rule: flagRule(p.ref.flag, p.target.flag) })) };
   }
 
   // A text inside a component is compared in its states only (the component compares it at rest). Its states still
@@ -159,26 +188,41 @@ class UnitComparer {
   }
 
   compareChildren(unit, ref, target, state) {
-    const { diffs, missing } = this.childDiffs(unit, ref, target);
+    const { diffs, missing, flags } = this.childDiffs(unit, ref, target);
     for (const child of diffs) {
       if (state === 'default') for (const d of child.diffs) this.covered.add(UnitComparer.coverKey(child.key, d));
       this.emitDiffs(`${unit.name} > ${child.key}`, state, child.diffs);
     }
     if (state !== 'default') return;
+    for (const f of flags) this.accept(f.rule, `${unit.name} > ${f.key}`, state, { property: 'flag', ref: 'reference flag', target: 'target flag' });
     for (const m of missing) {
       if (m.kind === 'text' && isUserData(m.key.slice(2))) continue;
+      if (m.flag) { this.accept(flagRule(m.flag, null), `${unit.name} > ${m.key.replace(/#\d+$/, '')}`, state, { property: 'missing-descendant', ref: 'flag', target: 'absent' }); continue; }
       this.emit({ component: `${unit.name} > ${m.key.replace(/#\d+$/, '')}`, category: 'missing', severity: m.kind === 'text' ? 'medium' : 'low',
         property: 'missing-descendant', ref: m.kind, target: 'absent', note: `${m.kind} ${m.key} exists in the reference component but not in the target one` });
     }
   }
 
   async compareIcons(unit) {
-    const [refIcons, tgtIcons] = await Promise.all([
-      this.ref.page.evaluate(inpage.rasteriseIcons, unit.refSel),
-      this.target.page.evaluate(inpage.rasteriseIcons, unit.tgtSel),
+    const [refScope, tgtScope] = [iconScope(unit.refSel, unit.refExtra), iconScope(unit.tgtSel, unit.targetExtra)];
+    const drawn = (probe, scope) => (unit.countDrawn ? probe.page.evaluate(inpage.countDrawnIcons, scope) : 0);
+    const [refAll, tgtAll, refDrawn, tgtDrawn] = await Promise.all([
+      this.ref.page.evaluate(inpage.rasteriseIcons, refScope),
+      this.target.page.evaluate(inpage.rasteriseIcons, tgtScope),
+      drawn(this.ref, refScope),
+      drawn(this.target, tgtScope),
     ]);
-    if (refIcons.length !== tgtIcons.length) {
-      this.emit({ component: unit.name, category: 'icons', severity: 'medium', property: 'icon-count', ref: String(refIcons.length), target: String(tgtIcons.length) });
+    // Language flags are the accepted flag difference: counted once, kept out of the glyph count and pairing.
+    const [refFlags, tgtFlags] = [refAll.filter((i) => i.flag), tgtAll.filter((i) => i.flag)];
+    if (refFlags.length || tgtFlags.length) {
+      this.accept(flagRule(refFlags.length ? refFlags[0].flag : null, tgtFlags.length ? tgtFlags[0].flag : null), unit.name, 'default',
+        { property: 'flag', ref: `${refFlags.length} flag svg`, target: `${tgtFlags.length} flag svg` });
+    }
+    const [refIcons, tgtIcons] = [refAll.filter((i) => !i.flag), tgtAll.filter((i) => !i.flag)];
+    const [refCount, tgtCount] = [refIcons.length + refDrawn, tgtIcons.length + tgtDrawn];
+    if (refCount !== tgtCount) {
+      const drawnNote = refDrawn || tgtDrawn ? { note: `counts include glyphs drawn with CSS: reference ${refDrawn}, target ${tgtDrawn}` } : {};
+      this.emit({ component: unit.name, category: 'icons', severity: 'medium', property: 'icon-count', ref: String(refCount), target: String(tgtCount), ...drawnNote });
     }
     for (const { ref, target, index } of pairIcons(refIcons, tgtIcons)) {
       if (!target) continue;
@@ -190,8 +234,8 @@ class UnitComparer {
   async compareStates(unit, ref, target) {
     for (const state of unit.states || DEFAULT_STATES) {
       const full = state === 'hover';
-      const read = (probe, sel) => probe.withState(sel, state, () => probe.read(sel, { descendants: full }));
-      const [r, t] = chipView(...(await Promise.all([read(this.ref, unit.refSel), read(this.target, unit.tgtSel)])));
+      const read = (probe, sel) => probe.withState(sel, state, () => probe.read(sel, { descendants: full, hop: Boolean(unit.hop) }));
+      const [r, t] = ownerView(...(await Promise.all([read(this.ref, unit.refSel), read(this.target, unit.tgtSel)])));
       if (!r || !t) continue;
       const [rd, td] = [withDelta(ref, r), withDelta(target, t)];
       const diffs = diffStyles(rd.styles, td.styles, { ...this.rootOptions(unit, r, t), motion: false, transform: 'full' });
@@ -227,10 +271,14 @@ class UnitComparer {
     fs.writeFileSync(path.join(dir, `${slug}-target.png`), b);
     const result = diffImages(a, b, path.join(dir, `${slug}-diff.png`));
     if (result.ratio < 0.02) return;
+    if (unit.accepted && unit.accepted.properties.includes('pixel-mismatch')) {
+      this.accept(unit.accepted.rule, unit.name, 'default', { property: 'pixel-mismatch', ref: result.size.ref.join('x'), target: result.size.target.join('x') });
+      return;
+    }
     this.emit({ component: unit.name, category: 'pixels', severity: result.ratio > 0.15 ? 'high' : 'medium', property: 'pixel-mismatch',
       ref: `${result.size.ref.join('x')}`, target: `${result.size.target.join('x')}`, mismatch: Math.round(result.ratio * 1000) / 10,
       diff: path.relative(outDir, path.join(dir, `${slug}-diff.png`)) });
   }
 }
 
-module.exports = { UnitComparer, chipView };
+module.exports = { UnitComparer, ownerView };

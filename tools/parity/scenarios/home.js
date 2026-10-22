@@ -4,8 +4,9 @@ const { scenario, click, hover, press, observe, motion, stay } = require('./dsl'
 // The target's fields are comboboxes whose label carries the choice ("Distance: +10 km").
 const CATEGORY_FIELD = { ref: '[data-qbsel=cat]', target: 'form[role=search] [role=combobox][aria-label^="Choose Category"], form[role=search] [data-field=category]' };
 const DISTANCE_FIELD = { ref: '[data-qbsel=dist]', target: 'form[role=search] [role=combobox][aria-label^="Distance"], form[role=search] [data-field=distance]' };
-// The target's category field opens a tree (role=tree) whose branches open a group on hover; distance opens a listbox.
-const PANEL = { ref: '.qb-ddpanel', target: '[role=tree], [role=listbox], [role=menu], [data-dropdown-panel]' };
+// The target's category field opens a tree (role=tree) whose branches open a group on hover; distance opens a listbox
+// inside the panel box (white, r16, 6px padding), which is what the prototype's .qb-ddpanel draws.
+const PANEL = { ref: '.qb-ddpanel', target: '[role=tree], div:has(> [role=listbox]), [role=menu], [data-dropdown-panel]' };
 const SUBMENU = { ref: '.qb-ddsub.open', target: '[role=tree] [role=group], [role=listbox] [role=listbox], [role=menu] [role=menu], [data-dropdown-sub]' };
 const RECOMMENDED = { ref: '#recTrack', target: 'ul[aria-label="Recommended for you"]' };
 const SLIDER_NEXT = { ref: '#recTrack ~ .qb-slide-next, .qb-slide-host:has(#recTrack) .qb-slide-next', target: 'button[aria-label="Next"]' };

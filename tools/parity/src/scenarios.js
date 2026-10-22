@@ -4,6 +4,11 @@ const { openSide, closeSide } = require('./sides');
 const { UnitComparer } = require('./unit');
 const { recordSequence, compareSequences } = require('./motion');
 const { selectPages } = require('./pages');
+const { withKeptCopy } = require('./matching');
+
+// The prototype ignores Escape; the target closes dialogs, drawers and panels on it (keyboard access, accepted).
+const ESCAPE_RULE = 'escape-key';
+const KEPT_COPY_RULE = 'copy-5';
 
 const SETTLE_MS = 400;
 const STEP_TIMEOUT_MS = 6000;
@@ -116,11 +121,17 @@ class ScenarioRun {
     return this.env.findings.add({ ...this.base, state: `scenario:${this.definition.id}`, ...extra });
   }
 
+  accept(rule, extra) {
+    this.env.findings.accept(rule, { ...this.base, ...extra });
+  }
+
   async step(step) {
     if (step.type === 'observe') return this.observe(step);
     if (step.type === 'motion') return this.motion(step);
     if (step.type === 'route') return this.route(step);
     if (step.type === 'stay') return this.stay(step);
+    // What is observed right after Escape is where the target may close and the prototype stay open.
+    this.afterEscape = step.type === 'press' && step.key === 'Escape';
     for (const side of [this.sides.reference, this.sides.target]) {
       try {
         await runStepWithRetry(side, step);
@@ -168,7 +179,9 @@ class ScenarioRun {
       return true;
     }
     if (!ref.count || !target.count) {
-      this.emit({ component, category: 'behaviour', severity: 'high', property: 'exists', ref: ref.count ? 'visible' : 'not visible', target: target.count ? 'visible' : 'not visible', note: step.selector.ref + ' vs ' + step.selector.target });
+      const exists = { component, property: 'exists', ref: ref.count ? 'visible' : 'not visible', target: target.count ? 'visible' : 'not visible' };
+      if (this.afterEscape && ref.count) { this.accept(ESCAPE_RULE, exists); return true; }
+      this.emit({ ...exists, category: 'behaviour', severity: 'high', note: step.selector.ref + ' vs ' + step.selector.target });
       return true;
     }
     this.compareFacts(component, step, ref, target);
@@ -178,13 +191,25 @@ class ScenarioRun {
     return true;
   }
 
+  // A copy difference that is only an accepted one: the observation's own rule (what.accepted.text reduces both copies
+  // to what the rule leaves to compare, the language list's heading), or the owner's kept strings (reference-text.json).
+  acceptedCopyRule(step, refText, refCopy, targetCopy) {
+    const accepted = step.what.accepted;
+    if (accepted && accepted.text && accepted.text(refCopy) === accepted.text(targetCopy)) return accepted.rule;
+    return copyOf(withKeptCopy(refText, { id: this.definition.page }), step.what.textMask) === targetCopy ? KEPT_COPY_RULE : null;
+  }
+
   compareFacts(component, step, ref, target) {
     const [refCopy, targetCopy] = [copyOf(ref.text, step.what.textMask), copyOf(target.text, step.what.textMask)];
     if (step.what.text && step.what.text !== 'skip' && refCopy !== targetCopy) {
-      this.emit({ component, category: 'behaviour', severity: 'medium', property: 'text', ref: refCopy, target: targetCopy });
+      const text = { component, property: 'text', ref: refCopy, target: targetCopy };
+      const rule = this.acceptedCopyRule(step, ref.text, refCopy, targetCopy);
+      if (rule) this.accept(rule, text); else this.emit({ ...text, category: 'behaviour', severity: 'medium' });
     }
     if (step.what.count && ref.count !== target.count) {
-      this.emit({ component, category: 'behaviour', severity: 'medium', property: 'count', ref: String(ref.count), target: String(target.count) });
+      const count = { component, property: 'count', ref: String(ref.count), target: String(target.count) };
+      if (step.what.accepted && step.what.accepted.count) this.accept(step.what.accepted.rule, count);
+      else this.emit({ ...count, category: 'behaviour', severity: 'medium' });
     }
     for (const attr of OBSERVED_ATTRIBUTES) {
       const [a, b] = [ref.attributes[attr], target.attributes[attr]];
@@ -253,4 +278,4 @@ async function runScenario(env, definition, viewport) {
   }
 }
 
-module.exports = { runScenario, copyOf };
+module.exports = { runScenario, copyOf, ScenarioRun };
