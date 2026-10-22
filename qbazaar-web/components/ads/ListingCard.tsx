@@ -76,7 +76,8 @@ export function ListingCard({ ad, variant, favorited = false, headingLevel: Head
   return (
     <article
       className={cn(
-        'relative flex h-full flex-col overflow-hidden rounded-qb-xl border border-qb-line bg-qb-surface font-qb',
+        // The whole card opens the ad, so it points like the reference's .qb-card.
+        'relative flex h-full cursor-pointer flex-col overflow-hidden rounded-qb-xl border border-qb-line bg-qb-surface font-qb',
         cardHover,
         'has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-qb-brand-active has-[a:focus-visible]:outline-solid',
         className,
