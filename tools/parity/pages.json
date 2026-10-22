@@ -8,7 +8,8 @@
     { "id": "index", "reference": "index.html", "route": "/" },
     { "id": "all-categories", "reference": "all-categories.html", "route": "/categories" },
     { "id": "parent-category", "reference": "parent-category.html", "route": "/c/vehicles" },
-    { "id": "category", "reference": "category.html", "route": "/c/cars", "aliases": ["/search", "/ads"] },
+    { "id": "category", "reference": "category.html", "route": "/c/cars", "aliases": ["/search", "/ads"],
+      "liveData": { "items": "main ul[aria-label] > li > article", "elements": ["ca.list.card", "ca.list.fav"], "what": "live ads in this category" } },
     { "id": "product", "reference": "product.html", "route": "/ads/{ad}" },
     { "id": "seller", "reference": "seller.html", "route": "/u/{privateSeller}", "aliases": ["/p/"] },
     { "id": "seller-individual", "reference": "seller-individual.html", "route": "/u/{privateSeller}" },
@@ -20,21 +21,20 @@
     { "id": "wallet", "reference": "wallet.html", "route": "/account/wallet", "login": true },
     { "id": "messages", "reference": "messages.html", "route": "/account/messages", "login": true },
     { "id": "notifications", "reference": "notifications.html", "route": "/account/notifications", "login": true },
-    { "id": "wishlist", "reference": "wishlist.html", "route": "/account/favorites", "login": true },
-    { "id": "saved-search", "reference": "saved-search.html", "route": "/account/saved-searches", "login": true },
+    { "id": "wishlist", "reference": "wishlist.html", "route": "/account/favorites", "login": true,
+      "liveData": { "items": "main article", "elements": ["wishlist.card", "wishlist.clear"], "what": "saved ads on the demo account" } },
+    { "id": "saved-search", "reference": "saved-search.html", "route": "/account/saved-searches", "login": true,
+      "liveData": { "items": "main article", "elements": ["ss.viewResult", "ss.notif.on", "ss.notif.track", "ss.notif.knob"], "what": "saved searches on the demo account" } },
     { "id": "sales-overview", "reference": "sales-overview.html", "route": "/account/orders", "login": true },
     { "id": "payment-method", "reference": "payment-method.html", "route": "/account/wallet/bank-accounts", "login": true },
     { "id": "buy-now", "reference": "buy-now.html", "route": "/ads/{ad}/buy", "login": true },
     { "id": "offer", "reference": "offer.html", "route": "/ads/{ad}/offer", "login": true },
     { "id": "enter-number", "reference": "enter-number.html", "route": "/verify-otp" },
-    { "id": "verify-identity", "reference": "verify-identity.html", "route": "/account/verification", "login": true },
     { "id": "login", "reference": "login.html", "route": "/login" },
     { "id": "signup", "reference": "signup.html", "route": "/register" },
     { "id": "signup-verify", "reference": "signup-verify.html", "route": "/verify-otp?phone=%2B97455512345&intro=1" },
-    { "id": "enter-code", "reference": "enter-code.html", "route": "/verify-otp" },
     { "id": "forgot-password", "reference": "forgot-password.html", "route": "/forgot-password" },
-    { "id": "new-password", "reference": "new-password.html", "route": "/reset-password?email=reviewer%40example.com&token=preview" },
-    { "id": "send-code", "reference": "send-code.html", "route": "/verify-email" }
+    { "id": "new-password", "reference": "new-password.html", "route": "/reset-password?email=reviewer%40example.com&token=preview" }
   ],
   "referenceOnly": [
     { "reference": "users.html", "note": "Followers / following list: no Next.js route yet (FE-16.6)" },
@@ -46,6 +46,9 @@
     { "reference": "auth.html", "note": "Legacy page that redirects to login.html" },
     { "reference": "account.html#billing", "note": "Billing Info panel: no Next.js route yet (FE-16.8)" },
     { "reference": "account.html#marketplace", "note": "Marketplace Info panel: no Next.js route yet (FE-16.4)" },
-    { "reference": "account.html#edit-email", "note": "Edit Email / Edit Number panels: no Next.js route yet (FE-16.4)" }
+    { "reference": "account.html#edit-email", "note": "Edit Email / Edit Number panels: no Next.js route yet (FE-16.4)" },
+    { "reference": "enter-code.html", "note": "The code step of /verify-otp?phone=...: opening it sends a one-time code through the live API, so the gate does not open it (S5 shared-needs); the OTP boxes are compared by the signup-otp-boxes scenario against a local target" },
+    { "reference": "verify-identity.html", "note": "The same code step as enter-code.html (/verify-otp?phone=...), which sends a one-time code on open; /account/verification is the identity-documents screen, a different page" },
+    { "reference": "send-code.html", "note": "The sent state of /forgot-password after a submit, which mails a reset link; /verify-email is the landing of the signed email link, a different page" }
   ]
 }

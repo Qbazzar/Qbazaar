@@ -8,6 +8,7 @@ const { compareKeyframes } = require('./motion');
 const componentsFile = require('../components.json');
 const targetsFile = require('../targets.json');
 const { loadStreams } = require('./spec');
+const { liveDataRule, liveDataReason } = require('./pages');
 
 const INTERACTIVE_CAP = 40;
 const TEXT_CAP = 250;
@@ -55,6 +56,7 @@ function componentUnits(components, found, config, width) {
       name: ref.id.replace(/~0$/, ''), refSel: `[data-pgc="${ref.id}"]`, tgtSel: `[data-pgc="${ref.id}"]`,
       fixedSize: spec.fixedSize, overlay: spec.overlay, mask: spec.mask, icons: spec.icons !== false,
       states: spec.interactive ? states : false, pixel: spec.pixel !== false,
+      refExtra: spec.refExtra, targetExtra: spec.targetExtra, countDrawn: Boolean(spec.countDrawn), accepted: spec.accepted,
     });
   }
   const refNames = new Set(found.refFound.map((f) => f.name));
@@ -79,7 +81,8 @@ function textUnits(pairs, config, width) {
       units.push({ name, refSel: `[data-pgi="${ref.id}"]`, tgtSel: `[data-pgi="${target.id}"]`, states,
         statesOnly: ref.inComponent || target.inComponent, icons: !ref.inComponent });
     } else if (!ref.inComponent && !target.inComponent) {
-      units.push({ name, refSel: `[data-pgt="${ref.id}"]`, tgtSel: `[data-pgt="${target.id}"]`, descendants: false, states: false });
+      // A plain text's box (margin, padding, border) belongs to the element that owns the text (unit.js ownerView).
+      units.push({ name, refSel: `[data-pgt="${ref.id}"]`, tgtSel: `[data-pgt="${target.id}"]`, descendants: false, states: false, hop: true });
     }
   }
   return { units, interactiveMismatch };
@@ -90,7 +93,7 @@ function reportUnmatchedTexts(unmatched, emit, accept, pageDef) {
     // Links inside content cards carry data (category and place names), so only headings and chrome count.
     if (isUserData(row.text) || !(HEADING.test(row.tag) || (row.interactive && row.chrome))) continue;
     const demo = referenceOnlyText(row.text, pageDef);
-    if (demo) { accept(`reference-${demo.id}`, { component: `text:${row.key}`, property: 'missing-text', ref: row.text, target: 'absent' }); continue; }
+    if (demo) { accept(demo.accepted || `reference-${demo.id}`, { component: `text:${row.key}`, property: 'missing-text', ref: row.text, target: 'absent' }); continue; }
     emit({ component: `text:${row.key}`, category: 'missing', severity: 'medium', property: 'missing-text', ref: row.text, target: 'absent',
       note: `"${row.text}" (${row.tag}) is on the reference page but not on the target page` });
   }
@@ -124,7 +127,12 @@ async function auditPage(env, pageDef, viewport) {
     const components = componentsFor(pageDef.id).filter((c) => !(c.guestOnly && pageDef.login));
     const found = await markUnits(refSide, targetSide, components);
     const comps = componentUnits(components, found, config, viewport.width);
-    for (const m of comps.missing) emit({ component: m.name, category: 'missing', severity: 'high', property: 'missing-component', ref: m.spec.ref, target: 'not found', note: `component ${m.name} is on the reference but its target selector (${m.spec.target}) matches nothing visible` });
+    for (const m of comps.missing) {
+      // A card of a live list (pages.json liveData) is missing when the list is empty: data, not design.
+      const live = liveDataRule(pageDef.id, m.name);
+      if (live) { env.warnings.push({ what: `component ${m.name} on ${pageDef.id}@${viewport.width}`, reason: liveDataReason(live) }); continue; }
+      emit({ component: m.name, category: 'missing', severity: 'high', property: 'missing-component', ref: m.spec.ref, target: 'not found', note: `component ${m.name} is on the reference but its target selector (${m.spec.target}) matches nothing visible` });
+    }
     const [refRows, tgtRows] = await Promise.all([refSide.page.evaluate(inpage.collectTexts), targetSide.page.evaluate(inpage.collectTexts)]);
     const { pairs, unmatchedRef } = pairTexts(refRows, tgtRows);
     reportUnmatchedTexts(unmatchedRef, emit, accept, pageDef);
@@ -143,4 +151,4 @@ async function auditPage(env, pageDef, viewport) {
   }
 }
 
-module.exports = { auditPage };
+module.exports = { auditPage, componentsFor };

@@ -3,7 +3,7 @@
 const { openSide, closeSide } = require('./sides');
 const { open: browserOpen, ensureBrowser } = require('./browser');
 const { navigationFlows } = require('./spec');
-const { selectPages } = require('./pages');
+const { selectPages, liveDataRule, lacksLiveData, liveDataReason } = require('./pages');
 const { NEEDS_LOGIN } = require('./config');
 
 // A click that navigates is read once the URL changes (a server-rendered page can take a few seconds on live);
@@ -19,13 +19,37 @@ const TARGET_BURGER = 'button[aria-label="Open menu"]';
 const TARGET_DRAWER = '[role=dialog]';
 // The prototype's mobile drawer (assets/mobilemenu.js) shows the signed-in demo user's menu.
 const REFERENCE_DRAWER = '.qb-mdrawer, .qb-mnav';
-// Clicking these saves something for the signed-in user (a saved search), so they only run against a local target.
-const WRITING_FLOWS = new Set(['ca.pill.save', 'pc.pill.save', 'ca.circle.search']);
+// Clicking these writes for the signed-in user, so they only run against a local target: what each one would do.
+const WRITING_FLOWS = new Map([
+  ['ca.pill.save', 'saves a search'], ['pc.pill.save', 'saves a search'], ['ca.circle.search', 'saves a search'],
+  ['seller.message', 'starts a conversation with the seller'], ['sellerInd.send-message', 'starts a conversation with the seller'],
+  ['sellerOrg.message', 'starts a conversation with the company'],
+  ['offer.btn.send', 'sends an offer'], ['buynow.btn.send', 'sends a purchase request'],
+]);
+// Social sign-in hands the visitor to the identity provider; the prototype skips it and jumps to index.html.
+const OAUTH = /\.social\./;
 // Logging out would revoke the run's shared session, so a logout control is checked for presence, never clicked.
 const LOGOUT = /^log ?out\b/;
+// The prototype sends every category crumb to its one generic page (all-categories.html); the target sends it to that
+// category's own page. For a crumb, any category page is the same destination.
+const CATEGORY_PAGES = ['all-categories', 'parent-category', 'category'];
 
 const isDrawerFlow = (flow) => /^chrome\.drawer\./.test(flow.element) || /qb-mdrawer|qb-mnav/.test(flow.refSelector);
 const isCrumbFlow = (flow) => /\.crumb\./.test(flow.element);
+
+/**
+ * The prototype numbers its template nodes per layout, so an inventory selector can name another control at another
+ * width (the account hub at 390 px). The inventory describes the control with its label in quotes; a reference element
+ * that shares no word with any of those labels is not the control the flow is about.
+ */
+function namesAnotherControl(component, text) {
+  const words = (s) => new Set(String(s).toLowerCase().match(/[a-z]{3,}/g) || []);
+  // Only labels with a word to compare count: initials ("FA") or figures say nothing about which control it is.
+  const labels = (String(component || '').match(/"([^"]+)"/g) || []).map(words).filter((w) => w.size);
+  if (!labels.length || !text) return false;
+  const said = words(text);
+  return !labels.some((label) => [...label].some((w) => said.has(w)));
+}
 
 // Runs in the reference page: what the element says, where it lives, and which twin it is.
 function describeReferenceElement({ selector, drawerSelector, crumb }) {
@@ -138,7 +162,14 @@ async function checkFlow(env, flow, { description, target, viewport }) {
   if (!dest) return `${flow.element} -> ${flow.to}.html: destination has no target route`;
   if (!description) return `${flow.element}: not visible on ${flow.page} at ${viewport.width}`;
   if (description.text.includes('@')) return `${flow.element}: its label is user data (${flow.page})`;
-  if (WRITING_FLOWS.has(flow.element) && !env.config.localTarget) return `${flow.element}: clicking it saves data for the demo user, runs only against a local target`;
+  if (OAUTH.test(flow.element)) return `${flow.element}: hands the visitor to the identity provider (OAuth), which the prototype skips`;
+  if (WRITING_FLOWS.has(flow.element) && !env.config.localTarget) return `${flow.element}: clicking it ${WRITING_FLOWS.get(flow.element)} for the demo user, runs only against a local target`;
+  if (namesAnotherControl(flow.component, description.text)) {
+    env.warnings.push({ what: `flow ${flow.element} on ${flow.page}@${viewport.width}`, reason: `its inventory selector names "${description.text}" at this width, not the control described as ${flow.component}` });
+    return null;
+  }
+  const live = liveDataRule(flow.page, flow.element);
+  if (live && (await lacksLiveData(target.page, live))) return `${flow.element}: ${liveDataReason(live)}`;
   const said = description.text || description.label || flow.element;
   const found = await locateOnTarget(target, description, dest);
   if (!found) {
@@ -151,7 +182,8 @@ async function checkFlow(env, flow, { description, target, viewport }) {
     return null;
   }
   const reached = await clickAndRead(target);
-  if (!routeMatches(reached.pathname, dest)) {
+  const destinations = isCrumbFlow(flow) && CATEGORY_PAGES.includes(flow.to) ? CATEGORY_PAGES.map(destination) : [dest];
+  if (!destinations.some((d) => routeMatches(reached.pathname, d))) {
     env.findings.add({ ...base, severity: 'high', property: 'route', ref: `${flow.to}.html -> ${dest.path}`, target: reached.pathname, note: `${flow.element} ("${said}")` });
   }
   await browserOpen(target.page, target.landed.url);
@@ -226,4 +258,4 @@ async function runFlows(env, skipped) {
   }
 }
 
-module.exports = { runFlows, groupFlows, isDrawerFlow, isCrumbFlow, routeMatches };
+module.exports = { runFlows, groupFlows, isDrawerFlow, isCrumbFlow, routeMatches, namesAnotherControl, CATEGORY_PAGES };

@@ -1,5 +1,5 @@
 // Auth pages (assets/auth.js): password eye, language pill, OTP boxes.
-const { scenario, click, type, press, observe } = require('./dsl');
+const { scenario, click, type, press, observe, languageList } = require('./dsl');
 
 const PASSWORD = { ref: 'input#pw', target: 'input[name="password"]' };
 const EYE = { ref: '.qb-eye', target: 'button[aria-label="Show or hide password"]' };
@@ -29,7 +29,7 @@ module.exports = [
     steps: [
       observe('pill', LANGUAGE_PILL, { text: 'skip', crop: true }),
       click(LANGUAGE_PILL),
-      observe('language-panel', LANGUAGE_PANEL, { crop: true, count: true }),
+      observe('language-panel', LANGUAGE_PANEL, { crop: true, count: true, accepted: languageList }),
     ],
   }),
   scenario({

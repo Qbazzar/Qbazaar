@@ -1,5 +1,5 @@
 {
-  "$comment": "Texts the prototype shows only because of its demo state or its sample data. A missing-text finding is not raised for them; each skip is counted under 'Accepted differences'. 'pages' limits a rule to those page ids, 'loginPages' to pages that need the demo login.",
+  "$comment": "Texts the prototype shows only because of its demo state or its sample data, and the copy the owner kept on purpose. A missing-text finding is not raised for them; each skip is counted under 'Accepted differences' (rule 'reference-<id>', or 'accepted' when given). 'pages' limits a rule to those page ids, 'loginPages' to pages that need the demo login. 'targetTexts' gives the target's wording of a kept string, so scenario copy that differs only by it is accepted too.",
   "rules": [
     {
       "id": "demo-state",
@@ -46,6 +46,51 @@
       "texts": ["Farah Alzinati", "Neutrogena Cream"],
       "pages": ["messages"],
       "reason": "Sample chat partner and ad; the target shows the demo account's own conversations."
+    },
+    {
+      "id": "sample-data",
+      "texts": ["Features & Extras"],
+      "pages": ["product"],
+      "reason": "The sample ad lists features; the target renders the block only for an ad that has features (components/ads/AdSpecs.tsx), and the live ad the gate opens has none."
+    },
+    {
+      "id": "copy-5",
+      "accepted": "copy-5",
+      "texts": ["Sales Overview"],
+      "targetTexts": ["My orders"],
+      "reason": "orders.list.title: the page lists purchases and sales, so the owner kept \"My orders\" (PR #274, decision of 2026-10-15)."
+    },
+    {
+      "id": "copy-5",
+      "accepted": "copy-5",
+      "texts": ["Transaction History"],
+      "targetTexts": ["Your purchases", "Your sales"],
+      "pages": ["sales-overview"],
+      "reason": "orders.list.caption_purchases / caption_sales: one caption per list keeps the buyer and seller views apart (PR #274)."
+    },
+    {
+      "id": "copy-5",
+      "accepted": "copy-5",
+      "texts": ["A reasonable offer increases your chance of acceptance by 70%."],
+      "targetTexts": ["Introduce yourself or explain why you're making this offer. A friendly message helps."],
+      "pages": ["offer"],
+      "reason": "orders.deal.offer_hint: the reference claims an unsubstantiated 70% (PR #274)."
+    },
+    {
+      "id": "copy-5",
+      "accepted": "copy-5",
+      "texts": ["No payment will be processed at this stage."],
+      "targetTexts": ["No payment happens now: you pay the seller in cash at handover."],
+      "pages": ["buy-now"],
+      "reason": "orders.deal.buy_step_3 keeps the cash-at-handover fact the reference drops (PR #274)."
+    },
+    {
+      "id": "copy-5",
+      "accepted": "copy-5",
+      "texts": ["e.g. Clean Mercedes Benz 2020.."],
+      "targetTexts": ["Describe the condition, what's included and why you're selling"],
+      "pages": ["add-ads"],
+      "reason": "post_ad.basic.description_placeholder: the reference repeats the title example in the description (PR #274)."
     }
   ]
 }
