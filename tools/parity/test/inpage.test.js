@@ -73,6 +73,23 @@ test('a wrapper that only adds a margin keeps the box\'s place: its margin is th
   assert.equal(tgt.box.styles.padding, '10px 20px 10px 20px');
 });
 
+test('a label spaced by its own margin and one spaced by the form\'s gap leave the same space', async (t) => {
+  if (!needsChrome(t)) return;
+  const form = (gap) => `
+    <form id="ref" style="padding:20px"><input style="display:block;height:40px"><label style="display:block;margin:18px 0 8px">Email</label><input style="display:block;height:40px"></form>
+    <form id="tgt" style="padding:20px;display:flex;flex-direction:column;gap:${gap}px"><input style="height:40px"><div style="display:flex;flex-direction:column;gap:8px"><label>Email</label><input style="height:40px"></div></form>`;
+  const read = async () => ['#ref', '#tgt'].map(async (s) => textOf(await page.evaluate(inpage.readUnit, { selector: s, descendants: true }), 't:email'));
+  await page.setContent(html(form(18)));
+  const [r, s] = await Promise.all(await read());
+  assert.equal(r.styles['margin-space'], '18px 8px');
+  assert.equal(s.styles['margin-space'], '18px 8px');
+  assert.deepEqual(diffStyles(r.styles, s.styles, { kind: 'text', ownText: true }).map((d) => d.property), []);
+  // The form really spaces the label less: the margin difference is reported.
+  await page.setContent(html(form(12)));
+  const [r2, s2] = await Promise.all(await read());
+  assert.deepEqual(diffStyles(r2.styles, s2.styles, { kind: 'text', ownText: true }).map((d) => d.property), ['margin']);
+});
+
 test('an invisible sizer is not a text: the combobox reads its visible label', async (t) => {
   if (!needsChrome(t)) return;
   await page.setContent(html(`

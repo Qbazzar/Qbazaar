@@ -45,6 +45,27 @@ test('a text in a template wrapper is measured with the box that owns it, on eac
   assert.deepEqual(diffStyles(...ownerView(refWide, targetWide).map((n) => n.styles), { kind: 'text', ownText: true }), []);
 });
 
+// The hop reads list items' own margins: a staggered row of pills sets them by place, and sample cities sit in
+// another order on the target.
+test('list items compare margins only at the same place in their list', async () => {
+  const { placesDiffer } = require('../src/unit');
+  const pill = (index, margin) => ({ key: 't:lusail#0', kind: 'text', rect: rect(90, 53), ownText: true, styles: styles({ margin: `${margin}px 0px 0px 0px`, 'margin-flow': `${margin}px 12px 0px 0px` }), place: { index, count: 9 } });
+  assert.equal(placesDiffer(pill(1, 8), pill(2, 0)), true);
+  assert.equal(placesDiffer(pill(2, 8), pill(2, 0)), false);
+  assert.equal(placesDiffer({ place: { index: 0, count: 2 } }, { place: { index: 1, count: 2 } }), false);
+  const findings = new Findings();
+  const probe = (node) => unitProbe({ descendants: [node] });
+  // Lusail second in the reference row, third on the target: its margin is the pattern's, not the pill's.
+  await new UnitComparer({ ref: probe(pill(1, 8)), target: probe(pill(2, 0)), findings, base: BASE })
+    .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
+  assert.deepEqual(findings.list, []);
+  // At the same place the margins are compared.
+  const same = new Findings();
+  await new UnitComparer({ ref: probe(pill(2, 8)), target: probe(pill(2, 0)), findings: same, base: BASE })
+    .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
+  assert.deepEqual(same.list.map((f) => f.property), ['margin']);
+});
+
 // G-hidden-sizer-pairing: a combobox whose label sits in a span next to an invisible sizer.
 test('a box that writes its text through one element is read with that element\'s typography', () => {
   const ref = { rect: rect(210, 52), styles: styles({ color: 'rgb(189, 189, 189)', 'font-size': '20px', padding: '10px 14px 10px 14px' }), ownText: true, descendants: [] };

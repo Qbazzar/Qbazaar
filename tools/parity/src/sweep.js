@@ -41,7 +41,8 @@ function describeElement({ selector, roleSelector }) {
   const box = el.getBoundingClientRect();
   // A wrapper around a field (a label holding a glyph and an input) has no text of its own: the target finds it
   // through the field it holds.
-  const field = el.matches('input, textarea, select') ? null : el.querySelector('input, textarea, select');
+  const fields = el.matches('input, textarea, select') ? [] : [...el.querySelectorAll('input, textarea, select')];
+  const field = fields.length === 1 ? fields[0] : null;
   // Selected: an ARIA state, or the one sibling painted apart from its peers (the prototype's current page chip).
   const paint = (n) => getComputedStyle(n).backgroundColor;
   const siblings = el.parentElement ? [...el.parentElement.children].filter((n) => n !== el && n.tagName === el.tagName) : [];
@@ -200,6 +201,14 @@ async function compareAfterClick(ctx, name, note) {
   comparer.stateLabel = null;
 }
 
+/** Reopens a side whose page navigated away; false when it cannot get back to its page. */
+async function stayOnPage(side) {
+  const path = (url) => new URL(url).pathname;
+  if (path(side.page.url()) === path(side.landed.url)) return true;
+  await browserOpen(side.page, side.landed.url).catch(() => {});
+  return path(side.page.url()) === path(side.landed.url);
+}
+
 async function sweepPage(env, pageDef, width, skipped) {
   const viewport = env.config.viewports.find((v) => v.width === width);
   const elements = candidates(pageDef, width, coveredIds());
@@ -211,6 +220,13 @@ async function sweepPage(env, pageDef, width, skipped) {
   const ctx = { seen: new Set(), reference, target, comparer, base, skipped, states: width >= 1000 ? ['hover', 'focus-visible', 'active'] : ['focus-visible', 'active'] };
   try {
     for (const element of elements) {
+      // An earlier click can leave the page (a link twin, a session that ran out and sent the target to /login):
+      // every element is compared on its own page, never on wherever the last click went.
+      const back = await Promise.all([reference, target].map(stayOnPage));
+      if (back.includes(false)) {
+        skipped.push({ what: `inventory sweep ${pageDef.id}@${width}`, reason: `the target left ${new URL(target.landed.url).pathname} (now ${target.page.url()}) and did not come back; the remaining elements were not compared` });
+        break;
+      }
       try {
         await sweepElement(env, ctx, element);
       } catch (error) {
@@ -238,4 +254,4 @@ async function runSweep(env, skipped) {
   }
 }
 
-module.exports = { runSweep, findTwin };
+module.exports = { runSweep, findTwin, describeElement };

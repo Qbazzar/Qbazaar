@@ -42,6 +42,11 @@ function ownerView(ref, target) {
 // <header>), plus glyphs drawn with CSS when the unit asks for them (the prototype's phone burger).
 const iconScope = (selector, extra) => (extra ? { selector, extra } : selector);
 
+// A list item's margin follows its place in the list (a staggered row of pills): a text that sits at another place in
+// its list on the other side (sample data in another order) has no margin to compare with.
+const LIST_MIN = 3;
+const placesDiffer = (r, t) => Boolean(r.place && t.place) && r.place.count >= LIST_MIN && t.place.count >= LIST_MIN && r.place.index !== t.place.index;
+
 const withDelta = (base, forced) => ({ ...forced, styles: { ...forced.styles, transform: transformDelta(base.styles.transform, forced.styles.transform) } });
 
 class UnitComparer {
@@ -127,7 +132,7 @@ class UnitComparer {
   }
 
   rootOptions(unit, ref, target) {
-    return { ...unit, sameBox: sameBox(ref.rect, target.rect), ownText: ref.ownText || target.ownText, cursor: Array.isArray(unit.states), refNative: ref.native };
+    return { ...unit, sameBox: sameBox(ref.rect, target.rect), ownText: ref.ownText || target.ownText, cursor: Array.isArray(unit.states), refNative: ref.native, skip: placesDiffer(ref, target) ? ['margin'] : [] };
   }
 
   async compareRoot(unit, ref, target) {
@@ -160,7 +165,7 @@ class UnitComparer {
     const diffs = pairs.filter((p) => !flags.includes(p)).map((pair) => {
       const [r, t] = ownerView(pair.ref, pair.target);
       const fixed = unit.fixedSize || (r.kind === 'icon') || (r.kind === 'input');
-      const options = { fixedSize: fixed && r.kind !== 'text', skip: r.kind === 'icon' ? ['width', 'height'] : [], sameBox: sameBox(r.rect, t.rect), motion: false, ownText: r.ownText || t.ownText, kind: r.kind, refNative: r.native };
+      const options = { fixedSize: fixed && r.kind !== 'text', skip: [...(r.kind === 'icon' ? ['width', 'height'] : []), ...(placesDiffer(r, t) ? ['margin'] : [])], sameBox: sameBox(r.rect, t.rect), motion: false, ownText: r.ownText || t.ownText, kind: r.kind, refNative: r.native };
       return { key: r.key.replace(/#\d+$/, ''), diffs: diffStyles(r.styles, t.styles, options) };
     });
     return { diffs, missing, flags: flags.map((p) => ({ key: p.ref.key.replace(/#\d+$/, ''), rule: flagRule(p.ref.flag, p.target.flag) })) };
@@ -281,4 +286,4 @@ class UnitComparer {
   }
 }
 
-module.exports = { UnitComparer, ownerView };
+module.exports = { UnitComparer, ownerView, placesDiffer };

@@ -151,4 +151,4 @@ async function auditPage(env, pageDef, viewport) {
   }
 }
 
-module.exports = { auditPage };
+module.exports = { auditPage, componentsFor };

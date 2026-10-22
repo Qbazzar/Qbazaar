@@ -4,9 +4,11 @@ const { scenario, click, hover, press, observe, motion, stay } = require('./dsl'
 // The target's fields are comboboxes whose label carries the choice ("Distance: +10 km").
 const CATEGORY_FIELD = { ref: '[data-qbsel=cat]', target: 'form[role=search] [role=combobox][aria-label^="Choose Category"], form[role=search] [data-field=category]' };
 const DISTANCE_FIELD = { ref: '[data-qbsel=dist]', target: 'form[role=search] [role=combobox][aria-label^="Distance"], form[role=search] [data-field=distance]' };
-// The target's category field opens a tree (role=tree) whose branches open a group on hover; distance opens a listbox
-// inside the panel box (white, r16, 6px padding), which is what the prototype's .qb-ddpanel draws.
-const PANEL = { ref: '.qb-ddpanel', target: '[role=tree], div:has(> [role=listbox]), [role=menu], [data-dropdown-panel]' };
+// The target's category field opens a tree (role=tree) whose branches open a group on hover; distance opens a listbox.
+// Each sits in the panel box (white, r16, 6px padding) the prototype's .qb-ddpanel draws, inside its own field's group.
+const panelOf = (label, role) => `form[role=search] div:has(> [role=combobox][aria-label^="${label}"]) div:has(> [role=${role}]), [data-dropdown-panel]`;
+const CATEGORY_PANEL = { ref: '.qb-ddpanel', target: panelOf('Choose Category', 'tree') };
+const DISTANCE_PANEL = { ref: '.qb-ddpanel', target: panelOf('Distance', 'listbox') };
 const SUBMENU = { ref: '.qb-ddsub.open', target: '[role=tree] [role=group], [role=listbox] [role=listbox], [role=menu] [role=menu], [data-dropdown-sub]' };
 const RECOMMENDED = { ref: '#recTrack', target: 'ul[aria-label="Recommended for you"]' };
 const SLIDER_NEXT = { ref: '#recTrack ~ .qb-slide-next, .qb-slide-host:has(#recTrack) .qb-slide-next', target: 'button[aria-label="Next"]' };
@@ -20,7 +22,7 @@ module.exports = [
     steps: [
       click(CATEGORY_FIELD),
       // The category names are data: the prototype's sample tree against the live one from the API.
-      observe('panel', PANEL, { crop: true, count: true, text: 'skip' }),
+      observe('panel', CATEGORY_PANEL, { crop: true, count: true, text: 'skip' }),
       stay('open-does-not-navigate'),
       hover({ ref: '.qb-dditem:has(.qb-ddchev)', target: '[role=tree] [role=treeitem][aria-expanded], [role=option]:has([data-chevron])' }),
       observe('submenu', SUBMENU, { crop: true, count: true, text: 'skip' }),
@@ -32,7 +34,7 @@ module.exports = [
     id: 'home-hero-category-panel-motion',
     page: 'index',
     viewports: [1440],
-    steps: [motion('panel-open', PANEL, click(CATEGORY_FIELD))],
+    steps: [motion('panel-open', CATEGORY_PANEL, click(CATEGORY_FIELD))],
   }),
   scenario({
     id: 'home-hero-distance',
@@ -41,7 +43,7 @@ module.exports = [
     steps: [
       click(DISTANCE_FIELD),
       stay('open-does-not-navigate'),
-      observe('panel', PANEL, { crop: true, count: true }),
+      observe('panel', DISTANCE_PANEL, { crop: true, count: true }),
       click({ ref: '.qb-ddpanel .qb-dditem:nth-child(3)', target: '[role=listbox] [role=option]:nth-child(3)' }),
       observe('field-after-choice', DISTANCE_FIELD, { crop: true }),
     ],
@@ -53,10 +55,10 @@ module.exports = [
     steps: [
       click(CATEGORY_FIELD),
       press('Escape'),
-      observe('closed-by-escape', PANEL, { text: 'skip' }),
+      observe('closed-by-escape', CATEGORY_PANEL, { text: 'skip' }),
       click(DISTANCE_FIELD),
       click({ ref: 'h1', target: 'h1' }),
-      observe('closed-by-outside-click', PANEL, { text: 'skip' }),
+      observe('closed-by-outside-click', DISTANCE_PANEL, { text: 'skip' }),
     ],
   }),
   scenario({

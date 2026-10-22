@@ -1,7 +1,7 @@
 // Site chrome behaviours: language menus, mobile drawer, footer accordion, account menu
 // (assets/mobilemenu.js and the engine header; inventory ids chrome.*).
 const { scenario, click, clickAt, hover, press, scrollTo, observe, motion, languageList } = require('./dsl');
-const { inventory } = require('./spec');
+const { inventory, refOf } = require('./spec');
 
 const LANG_BUTTON_DESKTOP = { ref: 'header button[title="Language"]', target: 'button[aria-label="Language"]' };
 const LANG_PANEL_DESKTOP = { ref: 'header button[title="Language"] + div', target: 'div.absolute.top-full.z-50' };
@@ -17,6 +17,8 @@ const FOOTER_TITLE = { ref: 'footer .qb-facc > h3', target: 'footer summary' };
 // sweep would pair both with the nearest summary.
 const FOOTER_COLUMN = inventory('chrome.footer.accordion', 'footer details');
 const FOOTER_LINKS = inventory('chrome.footer.links', 'footer details[open] ul');
+// The inventories name the same column and link list again per width and per open state.
+['chrome.footer.accordion@744', 'chrome.footer.accordion@390', 'chrome.footer.links.open'].forEach(refOf);
 
 module.exports = [
   scenario({

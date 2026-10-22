@@ -133,6 +133,30 @@ function readUnit({ selector, descendants, hop }) {
     return margin.map((v) => `${Math.round(v * 100) / 100}px`).join(' ');
   };
 
+  // The space laid out above and below an element: the distance to the content before and after it, found among its
+  // siblings and then its ancestors' siblings, or to the inner edge of the first ancestor that paints or pads that side.
+  // A margin on one side and a parent's gap or a neighbour's margin on the other leave the same space (compare.js).
+  const spaceAround = (el) => {
+    const r = el.getBoundingClientRect();
+    const side = (top) => {
+      for (let node = el; node.parentElement && node !== document.body; node = node.parentElement) {
+        const parent = node.parentElement;
+        const near = [...parent.children].filter((c) => c !== node && inFlow(c)).map((c) => c.getBoundingClientRect())
+          .filter((b) => (top ? b.bottom <= r.top + 0.5 : b.top >= r.bottom - 0.5)).map((b) => (top ? b.bottom : b.top));
+        if (near.length) return top ? r.top - Math.max(...near) : Math.min(...near) - r.bottom;
+        const ps = getComputedStyle(parent);
+        const pb = parent.getBoundingClientRect();
+        const border = parseFloat(top ? ps.borderTopWidth : ps.borderBottomWidth) || 0;
+        if (border || parseFloat(top ? ps.paddingTop : ps.paddingBottom) || ps.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+          return top ? r.top - (pb.top + border) : pb.bottom - border - r.bottom;
+        }
+      }
+      return null;
+    };
+    const [above, below] = [side(true), side(false)];
+    return above === null || below === null ? 'unknown' : `${Math.round(above * 100) / 100}px ${Math.round(below * 100) / 100}px`;
+  };
+
   const styles = (el, pseudo) => {
     const s = getComputedStyle(el, pseudo || null);
     const g = (p) => canon(s.getPropertyValue(p));
@@ -151,6 +175,7 @@ function readUnit({ selector, descendants, hop }) {
       padding: quad(s, ['padding-top', 'padding-right', 'padding-bottom', 'padding-left']),
       margin: quad(s, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']),
       'margin-flow': pseudo ? quad(s, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']) : flowMargin(el, s),
+      'margin-space': pseudo || !inFlow(el) ? 'unknown' : spaceAround(el),
       gap: `${g('row-gap')} ${g('column-gap')}`, width: g('width'), height: g('height'),
       display: g('display'), visibility: g('visibility'), 'z-index': g('z-index'),
       'transition-property': g('transition-property'), 'transition-duration': g('transition-duration'),
@@ -181,7 +206,7 @@ function readUnit({ selector, descendants, hop }) {
   // box). The climb stops at a control, at the unit's own root (already compared as itself) and at the body.
   // unit.js boxView reads the box properties from there, on each side; text properties stay on the text element.
   const BOX_PROPS = ['background-color', 'background-image', 'border-width', 'border-style', 'border-color', 'border-radius', 'box-shadow',
-    'padding', 'margin', 'margin-flow', 'gap', 'cursor', 'width', 'height', 'display', 'outline-width', 'outline-style', 'outline-color', 'outline-offset',
+    'padding', 'margin', 'margin-flow', 'margin-space', 'gap', 'cursor', 'width', 'height', 'display', 'outline-width', 'outline-style', 'outline-color', 'outline-offset',
     'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay'];
   const CONTROL = 'a, button, summary, label, select, input, textarea, [role=button], [role=tab], [role=link], [role=menuitem], [role=option], [role=combobox], [role=switch], [role=checkbox], [role=radio]';
   const paintsBox = (s) => s.backgroundColor !== 'rgba(0, 0, 0, 0)' || s.backgroundImage !== 'none' || s.boxShadow !== 'none'
@@ -211,14 +236,19 @@ function readUnit({ selector, descendants, hop }) {
       && !parent.matches(CONTROL) && !paintsBox(getComputedStyle(parent)) && padless(getComputedStyle(parent)); parent = parent.parentElement) node = parent;
     return node;
   };
-  const MARGIN_PROPS = ['margin', 'margin-flow'];
+  const MARGIN_PROPS = ['margin', 'margin-flow', 'margin-space'];
+  // Where a box sits among the boxes of its list: a staggered row of pills sets each margin by place (unit.js).
+  const placeOf = (node) => {
+    const items = node.parentElement ? [...node.parentElement.children].filter((c) => c.getBoundingClientRect().width > 0) : [];
+    return { index: items.indexOf(node), count: items.length };
+  };
   const boxView = (el, stopAt) => {
     const owner = ownerBox(el, stopAt);
     const item = shownText(el) ? flowItemOf(owner, shownText(el), stopAt) : owner;
-    if (owner === el && item === el) return {};
+    if (owner === el && item === el) return { place: placeOf(el) };
     const [ownerStyles, itemStyles] = [styles(owner), item === owner ? null : styles(item)];
     const pick = (p) => [p, itemStyles && MARGIN_PROPS.includes(p) ? itemStyles[p] : ownerStyles[p]];
-    return { box: { tag: owner.tagName.toLowerCase(), rect: rectOf(owner), styles: Object.fromEntries(BOX_PROPS.map(pick)) } };
+    return { place: placeOf(item), box: { tag: owner.tagName.toLowerCase(), rect: rectOf(owner), styles: Object.fromEntries(BOX_PROPS.map(pick)) } };
   };
   // Hidden on purpose: a sizer span kept invisible to reserve a combobox's width is not what a person reads.
   const hidden = (el) => getComputedStyle(el).visibility === 'hidden';
