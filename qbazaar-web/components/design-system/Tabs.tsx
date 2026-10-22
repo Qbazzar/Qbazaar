@@ -43,7 +43,7 @@ const scrollOnPhonesClass =
 const listClassName: Record<TabsVariant, string> = {
   pill: 'flex flex-wrap gap-3 qb-desktop:gap-4',
   // 28 px apart on a 1 px #ededed rule; a long row wraps, as the reference's flex-wrap does.
-  underline: 'flex flex-wrap gap-7 border-b border-qb-line',
+  underline: 'flex flex-wrap gap-7 border-b border-qb-line leading-[normal]',
 };
 
 export function TabList({
