@@ -48,7 +48,9 @@ const VIEW_ORDER: ViewMode[] = ['list', 'grid'];
 
 /**
  * Two separate 44 px `.qb-btn` squares, list first: the chosen view's icon is
- * dark, the other light grey; both dim under the pointer.
+ * dark, the other light grey. Only the other one dims under the pointer: the
+ * chosen one is the reference's orange-styled button, whose hover polish.css
+ * sets to no filter.
  */
 function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (next: ViewMode) => void }) {
   return (
@@ -61,8 +63,8 @@ function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (next: Vie
           aria-label={t(`catalog.view.${mode}`)}
           onClick={() => onChange(mode)}
           className={cn(
-            'qb-motion inline-flex size-11 cursor-pointer items-center justify-center rounded-qb-lg border border-qb-line bg-qb-surface hover:brightness-[.96] motion-reduce:transition-none',
-            value === mode ? 'text-qb-ink' : 'text-(--color-qb-toggle-off)',
+            'qb-motion inline-flex size-11 cursor-pointer items-center justify-center rounded-qb-lg border border-qb-line bg-qb-surface motion-reduce:transition-none',
+            value === mode ? 'text-qb-ink' : 'text-(--color-qb-toggle-off) hover:brightness-[.96]',
             focusRing,
           )}
         >

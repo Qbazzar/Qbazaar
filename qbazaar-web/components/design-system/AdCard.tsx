@@ -54,8 +54,9 @@ const FAVORITE_AREA = {
 /**
  * Listing card of the home sliders (grid) and the category list (list). The
  * title link is stretched over the whole card, so the card is one tab stop and
- * the favourite button is not nested inside a link. The favourite comes after
- * the title in the DOM, so the tab order reaches the ad before its button.
+ * the favourite button is not nested inside a link. As in the reference card,
+ * the heart on the photo comes before the text in the DOM, so the tab order
+ * follows what the eye reads first: the photo's heart, then the title.
  */
 export function AdCard(props: AdCardProps) {
   const { layout = 'grid', favorite, className } = props;
@@ -72,6 +73,12 @@ export function AdCard(props: AdCardProps) {
       )}
     >
       <AdMedia {...props} isList={isList} />
+      {favorite ? (
+        <div className={cn('pointer-events-none absolute z-10', FAVORITE_AREA[layout])}>
+          {/* Tailwind 4 leaves buttons with the default cursor; the design's heart shows the pointer. */}
+          <div className="pointer-events-auto absolute end-3 top-3 [&>button:enabled]:cursor-pointer">{favorite}</div>
+        </div>
+      ) : null}
       <div className={cn('flex min-w-0 flex-1 flex-col p-4', isList && 'qb-tablet:py-6 qb-desktop:p-0')}>
         <AdHeading {...props} isList={isList} />
         {isList && props.description ? (
@@ -80,12 +87,6 @@ export function AdCard(props: AdCardProps) {
         <AdTags tags={props.tags} isList={isList} />
         <AdMeta location={props.location} postedAt={props.postedAt} isList={isList} />
       </div>
-      {favorite ? (
-        <div className={cn('pointer-events-none absolute z-10', FAVORITE_AREA[layout])}>
-          {/* Tailwind 4 leaves buttons with the default cursor; the design's heart shows the pointer. */}
-          <div className="pointer-events-auto absolute end-3 top-3 [&>button:enabled]:cursor-pointer">{favorite}</div>
-        </div>
-      ) : null}
     </article>
   );
 }

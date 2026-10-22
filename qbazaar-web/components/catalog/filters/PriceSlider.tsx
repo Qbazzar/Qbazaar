@@ -51,7 +51,8 @@ export function PriceSlider({ min, max, onChange }: PriceSliderProps) {
 
   return (
     <DirectionProvider direction={dirFor(locale)}>
-      <Slider.Root value={indices} min={0} max={LAST_STOP} step={1} onValueChange={change} className="pt-1.5">
+      {/* category.html: the track 16 px under "Price", its handles centred on it, the prices 12 px under the track and 22 px over the next group. */}
+      <Slider.Root value={indices} min={0} max={LAST_STOP} step={1} onValueChange={change}>
         <Slider.Control className="flex h-4 cursor-pointer touch-none items-center select-none">
           <Slider.Track className="h-[5px] w-full rounded-qb-sm bg-(--color-qb-range-track)">
             <Slider.Indicator className="h-full bg-qb-brand" />
@@ -66,7 +67,7 @@ export function PriceSlider({ min, max, onChange }: PriceSliderProps) {
             ))}
           </Slider.Track>
         </Slider.Control>
-        <div aria-hidden="true" className="relative mt-2.5 h-5 font-qb text-qb-caption font-medium whitespace-nowrap text-qb-ink">
+        <div aria-hidden="true" className="relative mt-[5px] mb-1 h-5 font-qb text-qb-caption font-medium whitespace-nowrap text-qb-ink">
           {indices.map((stop, index) => (
             <span
               key={index}

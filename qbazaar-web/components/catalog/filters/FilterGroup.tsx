@@ -11,16 +11,18 @@ interface FilterGroupProps {
   children: (headingId: string) => ReactNode;
   /** The price group has no toggle in the design. */
   collapsible?: boolean;
+  /** Classes of the heading, e.g. the price title's own 12 px bottom margin. */
+  headingClassName?: string;
   /** Classes of the body under the heading. */
   bodyClassName?: string;
 }
 
 /**
  * One section of the filter card (category.html aside): a 16 px / 500 heading
- * with the grey "−" (or "+" while closed) at its end, 14 px over its options,
- * between hairlines.
+ * at Poppins' normal line height, with the grey "−" (or "+" while closed) at
+ * its end, 14 px over its options, between hairlines.
  */
-export function FilterGroup({ title, children, collapsible = true, bodyClassName }: FilterGroupProps) {
+export function FilterGroup({ title, children, collapsible = true, headingClassName, bodyClassName }: FilterGroupProps) {
   const id = useId();
   const [open, setOpen] = useState(true);
   const headingId = `${id}-heading`;
@@ -28,7 +30,8 @@ export function FilterGroup({ title, children, collapsible = true, bodyClassName
 
   return (
     <section className="border-t border-qb-line py-[18px] first:border-t-0 first:pt-0">
-      <h3 className="font-qb text-qb-body leading-normal font-medium tracking-normal text-qb-ink">
+      {/* Without a toggle the title is the heading's own text, as the reference's "Price" with its own bottom margin. */}
+      <h3 id={collapsible ? undefined : headingId} className={cn('font-qb text-qb-body font-medium tracking-normal text-qb-ink', headingClassName)}>
         {collapsible ? (
           <button
             type="button"
@@ -44,7 +47,7 @@ export function FilterGroup({ title, children, collapsible = true, bodyClassName
             </span>
           </button>
         ) : (
-          <span id={headingId}>{title}</span>
+          title
         )}
       </h3>
       <div id={bodyId} hidden={!open} className={cn('mt-3.5', bodyClassName)}>
