@@ -13,15 +13,10 @@ const nextConfig: NextConfig = {
     }));
   },
   images: {
-    // The media CDN serves Laravel's fixed conversions and cannot resize, so
-    // the loader picks one of them by width. Nothing goes through
-    // `/_next/image`, which keeps image work off the Node server.
-    loader: "custom",
-    loaderFile: "./lib/images/cdn-loader.ts",
-    // The loader has two usable widths (medium to 750 px, large above), so a
-    // longer list would only repeat the same two URLs in every `srcset`.
-    deviceSizes: [750, 1080],
-    imageSizes: [],
+    // Disabled until the production storage host (S3/CDN/Laravel /storage) is
+    // finalised. Once known, switch to `remotePatterns` and remove this flag
+    // to re-enable Next.js image optimisation.
+    unoptimized: true,
   },
 };
 
