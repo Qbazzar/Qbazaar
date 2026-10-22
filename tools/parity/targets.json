@@ -24,6 +24,6 @@
   "product.send-message": { "target": "aside button:has-text(\"Send Message\")", "fixedSize": true },
   "product.share": { "target": "button:text-is(\"Share Ad\")", "fixedSize": true },
   "product.report": { "target": "button:text-is(\"Report Ad\")", "fixedSize": true },
-  "product.more-card": { "target": "section.mt-8 ul > li > article", "all": true },
-  "product.view-all": { "target": "section.mt-8 a:has-text(\"View all\")" }
+  "product.more-card": { "target": "section:has(a[href^=\"/u/\"]) > ul > li > article", "all": true },
+  "product.view-all": { "target": "section:has(> ul) a[href^=\"/u/\"]:has-text(\"View all\")" }
 }
