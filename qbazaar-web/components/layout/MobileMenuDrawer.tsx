@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { buttonVariants } from '@/components/design-system/Button';
 import { focusRing } from '@/components/design-system/focus-ring';
 import { Icon } from '@/components/design-system/Icon';
-import { BellOutlineIcon, CategoriesDrawerIcon, ChartColumnIcon, HeartDrawerIcon, HomeDrawerIcon, LogOutIcon, MessagesDrawerIcon, MyAdsDrawerIcon, PlusIcon, SearchDrawerIcon, SettingsDrawerIcon, WalletDrawerIcon, type IconGlyph } from '@/components/design-system/icons';
+import { BellOutlineIcon, CategoriesDrawerIcon, HeartDrawerIcon, HomeDrawerIcon, LogOutIcon, MessagesDrawerIcon, MyAdsDrawerIcon, PercentCircleIcon, PlusIcon, SearchDrawerIcon, SettingsDrawerIcon, WalletDrawerIcon, type IconGlyph } from '@/components/design-system/icons';
 import { Sheet } from '@/components/design-system/Modal';
 import { useSignOut } from '@/components/account/useSignOut';
 import { t } from '@/lib/i18n/messages';
@@ -43,7 +43,8 @@ function navItems(signedIn: boolean): NavItem[] {
     { href: '/account/notifications', label: t('account.nav.notifications', 'الإشعارات'), icon: BellOutlineIcon },
     savedSearches,
     { href: '/account/ads', label: t('layout.menu.my_ads', 'إعلاناتي'), icon: MyAdsDrawerIcon },
-    { href: '/account/orders', label: t('account.nav.orders', 'طلباتي'), icon: ChartColumnIcon },
+    // The reference's "Sales Overview" row draws the percent circle (mobilemenu.js I.chart), as the avatar menu does.
+    { href: '/account/orders', label: t('account.nav.orders', 'طلباتي'), icon: PercentCircleIcon },
     { href: '/account', label: t('layout.menu.account', 'إعدادات الحساب'), icon: SettingsDrawerIcon },
     { href: '/account/wallet', label: t('account.nav.wallet', 'المحفظة'), icon: WalletDrawerIcon },
   ];
@@ -100,7 +101,8 @@ export function MobileMenuDrawer({ open, onOpenChange, signedIn }: MobileMenuDra
         <div className="flex flex-col gap-3 border-t border-qb-line px-5 pt-3.5 pb-[22px]">
           {signedIn ? (
             <Link href="/post-ad" onClick={close} className={cn(buttonVariants({ size: 'lg', fullWidth: true }), footerButton)}>
-              <Icon icon={PlusIcon} strokeWidth={2.2} />
+              {/* The reference's plus keeps 6 px of its own beside the button's gap. */}
+              <Icon icon={PlusIcon} strokeWidth={2.2} className="me-1.5" />
               {t('layout.header.add_ad', 'أضف إعلاناً')}
             </Link>
           ) : (
