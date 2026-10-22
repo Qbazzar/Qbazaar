@@ -401,6 +401,7 @@ export function LocationSection({ cities }: { cities: readonly Location[] }) {
             aria-required
             onChange={(locationId) => update({ locationId: locationId || null }, 'locationId')}
             className={selectSize}
+            rowClassName="font-medium"
             {...describedBy('locationId', errors.locationId)}
           />
           <FieldError name="locationId" message={errors.locationId} />
