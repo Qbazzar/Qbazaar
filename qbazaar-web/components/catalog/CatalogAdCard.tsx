@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useImageFallback } from '@/hooks/useImageFallback';
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { Badge, Chip } from '@/components/design-system/Badge';
 import { cardHover } from '@/components/design-system/card-hover';
@@ -192,7 +193,8 @@ function CardTitle({ ad, className }: { ad: AdSummary; className: string }) {
 
 function AdPhoto({ ad, layout, eager, priority }: { ad: AdSummary; layout: CatalogCardLayout; eager: boolean; priority: boolean }) {
   const image = ad.primary_image;
-  const url = image ? image.sizes.medium || image.url : null;
+  // A missing medium falls back to the large size, then the original (null on listings).
+  const { src: url, onError } = useImageFallback([image?.sizes.medium, image?.sizes.large, image?.url]);
   if (!url) {
     return <span className="flex size-full items-center justify-center text-qb-micro text-qb-ink-subtle">{t('media.no_image', 'بدون صورة')}</span>;
   }
@@ -204,6 +206,7 @@ function AdPhoto({ ad, layout, eager, priority }: { ad: AdSummary; layout: Catal
       sizes={IMAGE_SIZES[layout]}
       loading={eager || priority ? 'eager' : 'lazy'}
       fetchPriority={priority ? 'high' : undefined}
+      onError={onError}
       className="object-cover"
     />
   );

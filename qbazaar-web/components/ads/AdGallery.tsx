@@ -9,6 +9,8 @@
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import Image from 'next/image';
+
+import { useImageFallback } from '@/hooks/useImageFallback';
 import useEmblaCarousel from 'embla-carousel-react';
 
 import { focusRing } from '@/components/design-system/focus-ring';
@@ -40,6 +42,31 @@ function prefersReducedMotion(): boolean {
 function slideLabel(current: number, total: number): string {
   const locale = getLocale();
   return t('ads.detail.slide', { current: formatNumber(current, locale), total: formatNumber(total, locale) });
+}
+
+interface GalleryImageProps {
+  media: Media;
+  alt: string;
+  index: number;
+}
+
+/** One slide's photo: the large size, then the medium one, then the original when a file is missing. */
+function GalleryImage({ media, alt, index }: GalleryImageProps) {
+  const { src, onError } = useImageFallback([media.sizes.large, media.sizes.medium, media.url]);
+  if (!src) return null;
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={slideSizes}
+      preload={index === 0}
+      fetchPriority={index === 0 ? 'high' : undefined}
+      loading={index === 1 ? 'eager' : undefined}
+      onError={onError}
+      className="object-cover"
+    />
+  );
 }
 
 export function AdGallery({ images, alt, favorite, className }: AdGalleryProps) {
@@ -77,15 +104,10 @@ export function AdGallery({ images, alt, favorite, className }: AdGalleryProps) 
                 inert={index !== selected}
                 className="relative h-full min-w-0 flex-[0_0_100%]"
               >
-                <Image
-                  src={media.sizes.large || media.url}
+                <GalleryImage
+                  media={media}
                   alt={`${alt} — ${index + 1}`}
-                  fill
-                  sizes={slideSizes}
-                  preload={index === 0}
-                  fetchPriority={index === 0 ? 'high' : undefined}
-                  loading={index === 1 ? 'eager' : undefined}
-                  className="object-cover"
+                  index={index}
                 />
               </div>
             ))}

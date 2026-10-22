@@ -21,6 +21,7 @@ import type { FilterGroupKey } from '@/components/catalog/filters/FilterPanel';
 import { filterableFields } from '@/components/catalog/filters/CustomFieldFilters';
 import { AD_TYPES, CONDITIONS, SELLER_TYPES, SHIPPING_OPTIONS, countActiveFilters, sanePriceRange, type FilterValues } from '@/components/catalog/filters/filter-values';
 import { SORT_MODES, VIEW_MODES } from '@/components/catalog/listing-query';
+import { SEARCH_PER_PAGE } from '@/components/catalog/page-size';
 import { ListingResults } from '@/components/catalog/ListingResults';
 import { ListingToolbar } from '@/components/catalog/ListingToolbar';
 import { LoadError } from '@/components/catalog/LoadError';
@@ -40,7 +41,6 @@ import { useSearchQuery } from '@/lib/queries/search';
 import { findCategoryBySlug } from '@/store/categories';
 import type { SearchQueryParams } from '@/lib/api/types';
 
-const PER_PAGE = 24;
 const NO_GEO = { lat: null, lng: null, radius_km: null };
 
 /**
@@ -115,7 +115,7 @@ export function SearchClient() {
     return params;
   }, [urlState, customFields, geo, priceMin, priceMax]);
 
-  const { data, isLoading, isFetching, isPlaceholderData, isError, error, refetch } = useSearchQuery({ ...searchFilters, page: urlState.page, per_page: PER_PAGE });
+  const { data, isLoading, isFetching, isPlaceholderData, isError, error, refetch } = useSearchQuery({ ...searchFilters, page: urlState.page, per_page: SEARCH_PER_PAGE });
 
   const filters: FilterValues = {
     keyword: urlState.q,

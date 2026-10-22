@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { adKeys } from '@/lib/queries/ads-keys';
 import { searchKeys } from '@/lib/queries/search-keys';
 
-import { listingSeedParams, searchSeedParams } from './catalog-seed';
+import { categoryHubSeed, listingSeed, listingSeedParams, searchSeed, searchSeedParams } from './catalog-seed';
 
 describe('searchSeedParams', () => {
   it('seeds the plain search with the page size the client asks for', () => {
@@ -64,5 +64,35 @@ describe('listingSeedParams', () => {
 
   it.each([['a filter', { condition: 'new' }], ['a keyword', { q: 'car' }], ['a stray category', { category: 'x' }]])('leaves %s to the client', (_, bag) => {
     expect(listingSeedParams(bag, 'cat-1')).toBeNull();
+  });
+});
+
+describe('seeds when the API fails', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const failures: Array<[string, () => Promise<Response>]> = [
+    ['rejects', () => Promise.reject(new Error('network down'))],
+    ['aborts', () => Promise.reject(new DOMException('timed out', 'TimeoutError'))],
+    ['answers 500', () => Promise.resolve(new Response('{}', { status: 500 }))],
+  ];
+
+  it.each(failures)('returns undefined when the fetch %s', async (_, respond) => {
+    vi.stubGlobal('fetch', vi.fn(respond));
+
+    await expect(searchSeed({ q: 'car' }, 'en')).resolves.toBeUndefined();
+    await expect(listingSeed({}, 'cat-1', 'en')).resolves.toBeUndefined();
+    await expect(categoryHubSeed('electronics', 'en')).resolves.toBeUndefined();
+  });
+
+  it('gives each seed its own short timeout and the page language', async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response('{}', { status: 500 })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await searchSeed({ q: 'car' }, 'ar');
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toContain('lang=ar');
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect((init.headers as Record<string, string>)['Accept-Language']).toBe('ar');
   });
 });

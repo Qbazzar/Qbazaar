@@ -33,6 +33,8 @@ export type ApiCachePolicy = number | 'no-store';
 interface ApiFetchOptions {
   /** Sent as `Accept-Language`, for lists the API translates by header rather than by `?lang=`. */
   language?: string;
+  /** Overrides the default API_TIMEOUT_MS for a fetch that blocks a page render. */
+  timeoutMs?: number;
 }
 
 /**
@@ -46,7 +48,7 @@ export async function fetchApiJson<T>(path: string, cachePolicy: ApiCachePolicy,
     const res = await fetch(`${apiOrigin()}${path}`, {
       headers: { Accept: 'application/json', ...(options.language ? { 'Accept-Language': options.language } : {}) },
       ...(cachePolicy === 'no-store' ? { cache: 'no-store' as const } : { next: { revalidate: cachePolicy } }),
-      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+      signal: AbortSignal.timeout(options.timeoutMs ?? API_TIMEOUT_MS),
     });
 
     if (!res.ok) return null;

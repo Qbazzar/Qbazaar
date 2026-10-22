@@ -3,6 +3,7 @@ import 'server-only';
 import { QueryClient, dehydrate, type DehydratedState, type QueryKey } from '@tanstack/react-query';
 
 import type { ResolvedCategory } from '@/components/catalog/resolved-category';
+import { SEARCH_PER_PAGE } from '@/components/catalog/page-size';
 import { SORT_MODES, hasListingParams, parseListingQuery } from '@/components/catalog/listing-query';
 import type { AdSummary, CategoryPage, Location, PaginatedResponse, SearchQueryParams, SearchResponse, SortMode } from '@/lib/api/types';
 import type { Locale } from '@/lib/i18n/locale';
@@ -25,8 +26,12 @@ import { fetchApiData, fetchApiJson } from '@/lib/seo';
 
 export type SeedParams = Record<string, string | string[] | undefined>;
 
-/** The results of the search page; the client asks for the same count. */
-export const SEARCH_PER_PAGE = 24;
+/**
+ * The seeds block the page's first byte, so each gets a short budget of its
+ * own instead of the 5 s of the SEO fetches; past it the client loads the
+ * results as before.
+ */
+const SEED_TIMEOUT_MS = 1500;
 
 /** The API caches a category page for two minutes. */
 const CATEGORY_PAGE_REVALIDATE_SECONDS = 120;
@@ -110,7 +115,7 @@ export async function searchSeed(bag: SeedParams, locale: Locale): Promise<Dehyd
   const params = searchSeedParams(bag);
   if (!params) return undefined;
 
-  const data = await fetchApiJson<SearchResponse>(`/api/v1/search?${queryString(params)}`, 'no-store', { language: locale });
+  const data = await fetchApiJson<SearchResponse>(`/api/v1/search?${queryString({ ...params, lang: locale })}`, 'no-store', { language: locale, timeoutMs: SEED_TIMEOUT_MS });
   return dehydrated([{ key: searchKeys.result(params), data }]);
 }
 
@@ -129,13 +134,13 @@ export async function listingSeed(bag: SeedParams, categoryId: string | undefine
   const params = listingSeedParams(bag, categoryId);
   if (!params) return undefined;
 
-  const data = await fetchApiJson<PaginatedResponse<AdSummary>>(`/api/v1/ads?${queryString(params)}`, LISTING_REVALIDATE_SECONDS, { language: locale });
+  const data = await fetchApiJson<PaginatedResponse<AdSummary>>(`/api/v1/ads?${queryString({ ...params, lang: locale })}`, LISTING_REVALIDATE_SECONDS, { language: locale, timeoutMs: SEED_TIMEOUT_MS });
   return dehydrated([{ key: adKeys.list(params), data }]);
 }
 
 /** The sections of a parent category's overview: the guest copy, a signed-in viewer's own key loads by itself. */
 export async function categoryHubSeed(slug: string, locale: Locale): Promise<DehydratedState | undefined> {
-  const data = await fetchApiData<CategoryPage>(`/api/v1/categories/${encodeURIComponent(slug)}?lang=${locale}`, CATEGORY_PAGE_REVALIDATE_SECONDS);
+  const data = await fetchApiData<CategoryPage>(`/api/v1/categories/${encodeURIComponent(slug)}?lang=${locale}`, CATEGORY_PAGE_REVALIDATE_SECONDS, { timeoutMs: SEED_TIMEOUT_MS });
   return dehydrated([{ key: categoryKeys.page(slug, 'guest'), data }]);
 }
 
