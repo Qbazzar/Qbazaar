@@ -172,6 +172,34 @@ Third round, from the live re-run of the tuned gate:
 - **Sweep.** The prototype numbers its template nodes per layout, so an inventory id can name an icon at another width; such elements, and ones
   the prototype re-rendered before the compare, are listed as warnings instead of being compared.
 
+Fourth round (Track G), from the re-run of 2026-10-21 (831 of its 1,977 findings were the gate's own):
+
+- **The box that owns a text.** Both sides carry text in elements that draw nothing themselves (the prototype's
+  `span.sc-interp`, the target's label spans). A text's margin, padding, border, background, cursor, size and transition are
+  read from the first box around it that holds the same visible text (a footer heading's `h3`, a tile label's `div`, the
+  button around a dropdown's label), on each side; plain text units climb too. Its typography stays on the text element.
+  When only one side writes its text itself, the other side's typography is read from the one visible element that writes it.
+- **Invisible sizers** (a `visibility: hidden` copy of a combobox label that reserves its width) are not texts, descendants or icons.
+- **Keyframes** compare by their frames with the sheet's spacing dropped (`opacity:0` in a minified build is `opacity: 0`).
+- **Header icons.** At phone and tablet widths the prototype pins its header icons outside `<header>` (`#qb-mglobe`,
+  `#qb-mbell`) and draws the burger in CSS; `components.json` names those roots (`refExtra`) and counts CSS-drawn glyphs
+  (`countDrawn`). Language flags never count as glyphs.
+- **Inputs** pair by the field they stand for (label), then by type in order; a placeholder goes with its input. A wrapper
+  around a field (the inbox search label) pairs with the target's box around the same field; a page chip pairs with a target
+  chip in the same state (the prototype's current page is 3, the target's 1).
+- **Live data.** `pages.json` `liveData` names the inventory elements that exist only when the target lists data (the
+  category's ads, the demo account's saved ads and searches); with an empty list they are listed under "Skipped", not as findings.
+- **Flows.** Social sign-in (OAuth) is not followed; clicks that start a conversation, send an offer or a purchase request run
+  only against a local target; a category crumb may land on any category page (the prototype sends every one to
+  all-categories.html); an inventory selector that names another control at a width (template numbering) is a warning.
+- **Auth steps that write.** enter-code and verify-identity are the code step of `/verify-otp?phone=…`, which sends a code on
+  open, and send-code is the sent state of `/forgot-password` after a submit: they are reference-only pages.
+- **Accepted differences** (one row each in "Accepted differences"): `arabic-font` (Arabic text in Noto Kufi Arabic),
+  `svg-flags` (SVG flags, and the language list's own languages), `auth-static-pill` (the static pill of the auth pages that do
+  not load auth.js), `copy-5` (the five strings kept in PR #274, listed in `reference-text.json` with the target's wording),
+  `escape-key` (an observation right after Escape where the target closed and the prototype stayed open) and
+  `signup-extra-fields` (`components.json` `accepted` on sign-up's card: its height and crop).
+
 ## CI
 
 CI can run the gate against the GitHub Pages reference (`--reference https://qbazzar.github.io/Qbazaar-front/`) and a built `next start` target
