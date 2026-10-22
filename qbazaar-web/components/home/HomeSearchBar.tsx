@@ -57,7 +57,8 @@ const distanceFlex = 'flex-[1_0.7667_120px]';
  * reference: there the "Choose Category" chevron has no room left at all from tablet width up.
  */
 const fieldIcon = 'size-5 shrink text-qb-icon-faint';
-const chevron = fieldIcon;
+/** The select chevrons take the field's colour, so they turn #333 with the chosen value. */
+const chevron = 'size-5 shrink';
 
 /** The radius steps of the design's Distance list, after "All Qatar". */
 const DISTANCES_KM = [5, 10, 20, 30, 50, 100, 150, 200] as const;
