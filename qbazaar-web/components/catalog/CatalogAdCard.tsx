@@ -105,8 +105,8 @@ const LAYOUTS = {
 /**
  * Listing card of the catalog pages, set to the reference's card templates
  * and their typo.css overrides at every width. The title link is stretched
- * over the card, so the card is one tab stop; the favourite on the photo
- * comes after it in the DOM and sits above it.
+ * over the card, so the card is one tab stop; the favourite sits above it on
+ * the photo, which leads the DOM as in the reference.
  */
 export function CatalogAdCard({ ad, layout, eager = false, priority = false, className }: CatalogAdCardProps) {
   const locale = getLocale();
@@ -121,6 +121,26 @@ export function CatalogAdCard({ ad, layout, eager = false, priority = false, cla
 
   return (
     <article className={cn(card, styles.card, className)}>
+      {/* The photo and its heart come first, as in the reference card: the heart is the first tab stop and its icon precedes the pin. */}
+      <div className={cn('relative shrink-0 overflow-hidden bg-qb-line', styles.media)}>
+        <AdPhoto ad={ad} layout={layout} eager={eager} priority={priority} />
+        {hasInlinePrice ? (
+          <RowPhotoTag price={price} promoted={layout === 'row' && Boolean(ad.promotion)} gridFromDesktop={gridFromDesktop} />
+        ) : (
+          <PhotoTag className="inline-flex">{price}</PhotoTag>
+        )}
+        <div className="absolute end-3 top-3 z-10">
+          <FavoriteButton
+            adId={ad.id}
+            adTitle={ad.title}
+            // The reference's static white heart: no transition and no hover colour.
+            className={cn(
+              'size-[30px] cursor-pointer rounded-[15px] bg-qb-surface text-qb-ink-muted shadow-qb-soft ring-0 backdrop-blur-none transition-none hover:text-qb-ink-muted focus-visible:ring-qb-brand-active [&_svg]:stroke-[1.5] [&_svg]:transition-none',
+              styles.heart,
+            )}
+          />
+        </div>
+      </div>
       <div className={cn('min-w-0', styles.body)}>
         {/* The title and the description each take the direction, and so the alignment, of their own words. */}
         {hasInlinePrice ? (
@@ -155,27 +175,6 @@ export function CatalogAdCard({ ad, layout, eager = false, priority = false, cla
             </span>
           </p>
         ) : null}
-      </div>
-
-      {/* Shown first, but after the title link in the DOM, so the heart on the photo is the second tab stop. */}
-      <div className={cn('relative order-first shrink-0 overflow-hidden bg-qb-line', styles.media)}>
-        <AdPhoto ad={ad} layout={layout} eager={eager} priority={priority} />
-        {hasInlinePrice ? (
-          <RowPhotoTag price={price} promoted={layout === 'row' && Boolean(ad.promotion)} gridFromDesktop={gridFromDesktop} />
-        ) : (
-          <PhotoTag className="inline-flex">{price}</PhotoTag>
-        )}
-        <div className="absolute end-3 top-3 z-10">
-          <FavoriteButton
-            adId={ad.id}
-            adTitle={ad.title}
-            // The reference's static white heart: no transition and no hover colour.
-            className={cn(
-              'size-[30px] cursor-pointer rounded-[15px] bg-qb-surface text-qb-ink-muted shadow-qb-soft ring-0 backdrop-blur-none transition-none hover:text-qb-ink-muted focus-visible:ring-qb-brand-active [&_svg]:stroke-[1.5] [&_svg]:transition-none',
-              styles.heart,
-            )}
-          />
-        </div>
       </div>
     </article>
   );

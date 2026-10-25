@@ -144,7 +144,9 @@ function useSlotsFit(places: readonly Place[]) {
 // Arabic mirrors the tilts along with the positions (--flip). The scattered slots need about 1280 px.
 const collage = 'relative mx-auto flex max-w-[1400px] flex-wrap justify-center gap-3 py-1.5 [--flip:1] rtl:[--flip:-1]';
 const scatteredCollage = 'min-[1280px]:block min-[1280px]:h-[200px] min-[1280px]:py-0';
-const slot = 'rotate-[calc(var(--tilt)*var(--flip))]';
+// A flex box, so the pill fills its slot: in the wrapped rows the reference's pills stretch to the row's height
+// less their own top margin (53, 50 or 45 px), and the scattered slots keep the pill's own 45 px.
+const slot = 'flex rotate-[calc(var(--tilt)*var(--flip))]';
 const scatteredSlot =
   'min-[1280px]:absolute min-[1280px]:start-(--slot-x) min-[1280px]:top-(--slot-y) min-[1280px]:mt-0 min-[1280px]:-translate-x-1/2 min-[1280px]:[--tilt:var(--slot-tilt)] rtl:min-[1280px]:translate-x-1/2';
 
@@ -178,7 +180,8 @@ export function HomeCityTags() {
             prefetch={false}
             href={`/search?location_slug=${encodeURIComponent(place.slug)}`}
             aria-label={t('home.cities.browse_aria', { city: place.label }, `تصفح الإعلانات في ${place.label}`)}
-            className={cn(pill, 'transition-[filter] duration-150 hover:brightness-[0.96] motion-reduce:transition-none', focusRing)}
+            // A `.qb-btn` of the reference: the shared polish transition and the 4 % dim under the pointer.
+            className={cn(pill, 'qb-motion hover:brightness-[0.96] motion-reduce:transition-none', focusRing)}
           >
             {place.label}
           </Link>

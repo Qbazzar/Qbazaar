@@ -135,7 +135,8 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
         );
       case 'price':
         return (
-          <FilterGroup key={key} title={t('catalog.filters.price', 'السعر')} collapsible={false} bodyClassName="mt-2.5">
+          // category.html: "Price" keeps 12 px under itself; the track's own 16 px top margin swallows it.
+          <FilterGroup key={key} title={t('catalog.filters.price', 'السعر')} collapsible={false} headingClassName="mb-3" bodyClassName="mt-0">
             {() => <PriceSlider min={draft.priceMin} max={draft.priceMax} onChange={(next) => patch(next)} />}
           </FilterGroup>
         );
@@ -254,10 +255,11 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
     </button>
   );
   const titleText = t('catalog.filters.title', 'الفلتر');
-  const titleClass = 'font-qb text-qb-h3 leading-normal font-medium tracking-normal text-qb-ink';
+  const titleClass = 'font-qb text-qb-h3 font-medium tracking-normal text-qb-ink';
 
   const titleId = `${id}-title`;
-  // The card's button keeps the pale orange of category.html, without the disabled fade, until there is something to apply.
+  // category.html's Apply Filter is always the pale orange (#F49E7E), a `.qb-btn` that only dims by 4 % under the
+  // pointer or a press; it is marked disabled for assistive tech while there is nothing to apply.
   const card = (
     <>
       <div className="mb-[22px] flex items-center justify-between gap-4">
@@ -284,10 +286,7 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
         type="submit"
         fullWidth
         aria-disabled={!canApply || undefined}
-        className={cn(
-          'mt-3.5 h-auto rounded-qb-lg p-3.5 font-medium aria-disabled:pointer-events-auto aria-disabled:opacity-100',
-          !canApply && 'bg-(--color-qb-brand-pale) hover:bg-(--color-qb-brand-pale) hover:brightness-[.96]',
-        )}
+        className="mt-3.5 h-auto rounded-qb-lg bg-(--color-qb-brand-pale) p-3.5 font-medium hover:bg-(--color-qb-brand-pale) hover:brightness-[.96] active:brightness-[.96] aria-disabled:pointer-events-auto aria-disabled:opacity-100"
       >
         {t('catalog.filters.apply', 'تطبيق الفلتر')}
       </Button>
