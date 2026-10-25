@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { diffStyles, canonicalValue } = require('../src/compare');
 const { applyFocusPolicy, designedChanges } = require('../src/focus');
 const { Findings } = require('../src/findings');
-const { UnitComparer, chipView } = require('../src/unit');
+const { UnitComparer, ownerView } = require('../src/unit');
 const { referenceOnlyText, pairTexts } = require('../src/matching');
 const { compareKeyframes } = require('../src/motion');
 const { unmirroredPairs } = require('../src/rtl');
@@ -168,18 +168,17 @@ test('a text that appears twice pairs by where it sits, not by document order', 
 });
 
 test('a template wrapper in a chip compares the chips on both sides', () => {
-  const node = (styles, extra = {}) => ({ rect: { x: 0, y: 0, w: 50, h: 20 }, styles, ...extra });
+  const node = (styles, extra = {}) => ({ rect: { x: 0, y: 0, w: 50, h: 20 }, styles, ownText: true, ...extra });
   const pill = { 'background-color': 'rgb(255, 255, 255)', padding: '10px 20px 10px 20px' };
   const bare = { 'background-color': 'rgba(0, 0, 0, 0)', padding: '0px 0px 0px 0px', color: 'rgb(0, 0, 0)' };
-  const ref = node(bare, { templateWrapper: true, chip: { rect: { x: 0, y: 0, w: 90, h: 45 }, styles: pill } });
-  const [r, t] = chipView(ref, node({ ...pill, color: 'rgb(0, 0, 0)' }));
+  const ref = node(bare, { templateWrapper: true, box: { tag: 'button', rect: { x: 0, y: 0, w: 90, h: 45 }, styles: pill } });
+  const [r, t] = ownerView(ref, node({ ...pill, color: 'rgb(0, 0, 0)' }));
   assert.equal(r.styles['background-color'], 'rgb(255, 255, 255)');
   assert.equal(r.styles.color, 'rgb(0, 0, 0)');
   assert.equal(r.rect.w, 90);
   assert.equal(t.styles.padding, '10px 20px 10px 20px');
-  // Without a template wrapper on the reference nothing moves, so other pairings keep their values.
-  const plain = node(bare, { chip: { rect: ref.chip.rect, styles: pill } });
-  assert.equal(chipView(plain, plain)[0].styles['background-color'], 'rgba(0, 0, 0, 0)');
+  // A side whose text owns its box keeps its own values.
+  assert.equal(ownerView(node(bare), node(bare))[0].styles['background-color'], 'rgba(0, 0, 0, 0)');
 });
 
 // Third round: what the live re-run of the tuned gate still showed.
