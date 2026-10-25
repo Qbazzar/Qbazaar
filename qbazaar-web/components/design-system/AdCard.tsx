@@ -127,7 +127,7 @@ function MediaLabels({ price, badge, isList }: { price?: string; badge?: string;
 
 function AdHeading({ href, title, price, headingLevel: Heading = 'h3', isList }: PartProps) {
   const link = (
-    <Link href={href} dir="auto" className="outline-none after:absolute after:inset-0">
+    <Link prefetch={false} href={href} dir="auto" className="outline-none after:absolute after:inset-0">
       {title}
     </Link>
   );

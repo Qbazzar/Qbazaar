@@ -42,6 +42,7 @@ function TreeNode({ node, depth, activeSlug }: NodeProps) {
     return (
       <li>
         <Link
+          prefetch={false}
           href={`/c/${node.slug}`}
           className={rowClass}
           style={{ paddingInlineStart: `${depth * 12 + 8}px` }}
@@ -66,6 +67,7 @@ function TreeNode({ node, depth, activeSlug }: NodeProps) {
           <ChevronLeftIcon className="size-4 shrink-0 transition-transform group-open:-rotate-90 rtl:rotate-180 rtl:group-open:rotate-90" />
           <DynamicIcon name={node.icon} className="size-4 shrink-0" />
           <Link
+            prefetch={false}
             href={`/c/${node.slug}`}
             className="flex-1 truncate hover:underline"
             onClick={(e) => e.stopPropagation()}

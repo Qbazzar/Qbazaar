@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useImageFallback } from '@/hooks/useImageFallback';
 import { FavoriteButton } from '@/components/ads/FavoriteButton';
 import { Badge, Chip } from '@/components/design-system/Badge';
 import { cardHover } from '@/components/design-system/card-hover';
@@ -30,6 +31,8 @@ interface CatalogAdCardProps {
   layout: CatalogCardLayout;
   /** First cards of the page load eagerly so they are not late for LCP. */
   eager?: boolean;
+  /** The card whose photo is the page's LCP: fetched ahead of everything else. */
+  priority?: boolean;
   className?: string;
 }
 
@@ -105,7 +108,7 @@ const LAYOUTS = {
  * over the card, so the card is one tab stop; the favourite sits above it on
  * the photo, which leads the DOM as in the reference.
  */
-export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogAdCardProps) {
+export function CatalogAdCard({ ad, layout, eager = false, priority = false, className }: CatalogAdCardProps) {
   const locale = getLocale();
   const place = useQatarPlace(ad.location_slug);
   const styles = LAYOUTS[layout];
@@ -120,7 +123,7 @@ export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogA
     <article className={cn(card, styles.card, className)}>
       {/* The photo and its heart come first, as in the reference card: the heart is the first tab stop and its icon precedes the pin. */}
       <div className={cn('relative shrink-0 overflow-hidden bg-qb-line', styles.media)}>
-        <AdPhoto ad={ad} layout={layout} eager={eager} />
+        <AdPhoto ad={ad} layout={layout} eager={eager} priority={priority} />
         {hasInlinePrice ? (
           <RowPhotoTag price={price} promoted={layout === 'row' && Boolean(ad.promotion)} gridFromDesktop={gridFromDesktop} />
         ) : (
@@ -180,20 +183,32 @@ export function CatalogAdCard({ ad, layout, eager = false, className }: CatalogA
 function CardTitle({ ad, className }: { ad: AdSummary; className: string }) {
   return (
     <h3 dir="auto" className={cn('min-w-0 font-qb tracking-normal', className)}>
-      <Link href={`/ads/${ad.id}`} className="outline-none after:absolute after:inset-0 after:z-1">
+      <Link prefetch={false} href={`/ads/${ad.id}`} className="outline-none after:absolute after:inset-0 after:z-1">
         {ad.title}
       </Link>
     </h3>
   );
 }
 
-function AdPhoto({ ad, layout, eager }: { ad: AdSummary; layout: CatalogCardLayout; eager: boolean }) {
+function AdPhoto({ ad, layout, eager, priority }: { ad: AdSummary; layout: CatalogCardLayout; eager: boolean; priority: boolean }) {
   const image = ad.primary_image;
-  const url = image ? image.sizes.medium || image.url : null;
+  // A missing medium falls back to the large size, then the original (null on listings).
+  const { src: url, onError } = useImageFallback([image?.sizes.medium, image?.sizes.large, image?.url]);
   if (!url) {
     return <span className="flex size-full items-center justify-center text-qb-micro text-qb-ink-subtle">{t('media.no_image', 'بدون صورة')}</span>;
   }
-  return <Image src={url} alt="" fill sizes={IMAGE_SIZES[layout]} loading={eager ? 'eager' : 'lazy'} className="object-cover" />;
+  return (
+    <Image
+      src={url}
+      alt=""
+      fill
+      sizes={IMAGE_SIZES[layout]}
+      loading={eager || priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : undefined}
+      onError={onError}
+      className="object-cover"
+    />
+  );
 }
 
 function PhotoTag({ className, children }: { className: string; children: string }) {

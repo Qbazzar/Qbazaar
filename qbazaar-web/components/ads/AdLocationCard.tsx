@@ -1,8 +1,9 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useId } from 'react';
+import { useId, type ComponentProps } from 'react';
 
+import { useOnceVisible } from '@/hooks/useOnceVisible';
 import { Icon } from '@/components/design-system/Icon';
 import { LocationPinIcon } from '@/components/design-system/icons';
 import { t } from '@/lib/i18n/messages';
@@ -10,11 +11,19 @@ import { cn } from '@/lib/utils';
 
 import { detailCard, detailCardMain, detailCardTitle } from './detail-card';
 
+const mapPlaceholder = 'mt-4 h-[220px] rounded-qb-lg bg-qb-fill';
+
 // Leaflet touches `window` at import time, so the read-only map loads client-only.
 const MapView = dynamic(() => import('@/components/locations/MapView').then((module) => module.MapView), {
   ssr: false,
-  loading: () => <div className="mt-4 h-[220px] rounded-qb-lg bg-qb-fill" />,
+  loading: () => <div className={mapPlaceholder} />,
 });
+
+/** The map's code and tiles are fetched when the card nears the screen, not with the page. */
+function LazyMap(props: ComponentProps<typeof MapView>) {
+  const [ref, visible] = useOnceVisible<HTMLDivElement>();
+  return visible ? <MapView {...props} /> : <div ref={ref} className={mapPlaceholder} />;
+}
 
 interface AdLocationCardProps {
   locationName: string;
@@ -41,7 +50,7 @@ export function AdLocationCard({ locationName, latitude, longitude }: AdLocation
         {locationName}
       </p>
       {hasPin ? (
-        <MapView
+        <LazyMap
           lat={latitude}
           lng={longitude}
           label={t('ads.detail.map_label', { place: locationName })}

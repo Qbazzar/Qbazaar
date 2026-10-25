@@ -50,8 +50,8 @@ export function CategoryHub({ sections = [], isLoading }: CategoryHubProps) {
 
   return (
     <div className="flex flex-col gap-[34px]">
-      {before.map((section) => (
-        <AdSection key={section.category.id} section={section} />
+      {before.map((section, index) => (
+        <AdSection key={section.category.id} section={section} leading={index === 0} />
       ))}
       {filled.length === 0 ? (
         <EmptyState
@@ -68,7 +68,7 @@ export function CategoryHub({ sections = [], isLoading }: CategoryHubProps) {
   );
 }
 
-function AdSection({ section }: { section: CategorySection }) {
+function AdSection({ section, leading = false }: { section: CategorySection; leading?: boolean }) {
   const id = useId();
   const name = localized(section.category.name);
   return (
@@ -79,6 +79,7 @@ function AdSection({ section }: { section: CategorySection }) {
         </h2>
         {/* The reference's orange `.qb-nav` link, whose arrow is text. */}
         <Link
+          prefetch={false}
           href={`/c/${section.category.slug}`}
           className={cn('qb-motion flex shrink-0 items-center gap-[5px] font-qb text-qb-caption font-medium text-qb-brand hover:text-qb-brand motion-reduce:transition-none', focusRing)}
         >
@@ -88,7 +89,7 @@ function AdSection({ section }: { section: CategorySection }) {
           </span>
         </Link>
       </div>
-      <AdRow ads={section.ads} label={name} desktop="grid" desktopLimit={ROW_CARDS} />
+      <AdRow ads={section.ads} label={name} desktop="grid" desktopLimit={ROW_CARDS} leading={leading} />
     </section>
   );
 }
