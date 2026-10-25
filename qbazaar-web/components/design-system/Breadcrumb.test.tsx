@@ -58,7 +58,7 @@ describe('Breadcrumb', () => {
     const { container } = render(<Breadcrumb items={[{ label: 'الرئيسية', href: '/' }, { label: '24/7 plumber' }]} />);
 
     expect(screen.getByRole('navigation', { name: 'مسار التنقل' })).toBeInTheDocument();
-    expect([...container.querySelectorAll('bdi')].map((bdi) => bdi.textContent)).toEqual(['الرئيسية', '24/7 plumber']);
+    expect([...container.querySelectorAll('li > [dir="auto"]')].map((label) => label.textContent)).toEqual(['الرئيسية', '24/7 plumber']);
   });
 
   it('draws the single guillemet between crumbs when asked', () => {

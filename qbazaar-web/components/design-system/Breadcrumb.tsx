@@ -47,13 +47,14 @@ export function Breadcrumb({ items, separator = 'chevron', className }: Breadcru
                   {separator === 'guillemet' ? '›' : '>'}
                 </span>
               ) : null}
+              {/* dir="auto" isolates each label as <bdi> would, and keeps the text on the link itself. */}
               {isCurrent || !item.href ? (
-                <span aria-current={isCurrent ? 'page' : undefined} className={isCurrent ? 'font-medium text-qb-ink' : 'text-qb-breadcrumb'}>
-                  <bdi>{item.label}</bdi>
+                <span dir="auto" aria-current={isCurrent ? 'page' : undefined} className={isCurrent ? 'font-medium text-qb-ink' : 'text-qb-breadcrumb'}>
+                  {item.label}
                 </span>
               ) : (
-                <Link href={item.href} className={cn('qb-motion text-qb-breadcrumb hover:text-qb-brand', focusRing)}>
-                  <bdi>{item.label}</bdi>
+                <Link href={item.href} dir="auto" className={cn('qb-motion text-qb-breadcrumb hover:text-qb-brand', focusRing)}>
+                  {item.label}
                 </Link>
               )}
             </li>

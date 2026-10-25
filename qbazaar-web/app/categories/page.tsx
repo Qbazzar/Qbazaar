@@ -41,7 +41,7 @@ export default async function CategoriesIndexPage({ searchParams }: PageProps) {
       </div>
       <section aria-labelledby="discover-categories" className={cn(siteFrame, 'pt-[clamp(24px,4vw,44px)] pb-10')}>
         <div className="mx-auto max-w-[820px] text-center">
-          <h2 id="discover-categories" className="font-qb text-[clamp(28px,4vw,40px)] leading-normal font-semibold tracking-normal text-qb-ink">
+          <h2 id="discover-categories" className="font-qb text-[clamp(28px,4vw,40px)] leading-[normal] font-semibold tracking-normal text-qb-ink">
             {t('catalog.index.discover_start', 'اكتشف')} <span className="text-qb-brand">{t('catalog.index.discover_accent', 'الأقسام')}</span>
           </h2>
           <p className="mt-3.5 text-[clamp(15px,2vw,18px)] text-qb-ink-faint">
