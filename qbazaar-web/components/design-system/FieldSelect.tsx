@@ -36,6 +36,8 @@ export interface FieldSelectProps {
   disabled?: boolean;
   /** Classes of the field: its size and text. */
   className?: string;
+  /** Classes added to every row of the open card, e.g. the medium weight the design gives city names (typo.js). */
+  rowClassName?: string;
   'aria-labelledby'?: string;
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
@@ -88,6 +90,7 @@ export function FieldSelect({
   parentLabel,
   disabled,
   className,
+  rowClassName,
   ...aria
 }: FieldSelectProps) {
   const baseId = useId();
@@ -270,7 +273,7 @@ export function FieldSelect({
       role={itemRole}
       aria-selected={entry === chosen}
       {...position(index, siblings, depth)}
-      className={cn(panel.row, isLit(entry) && panel.activeRow)}
+      className={cn(panel.row, rowClassName, isLit(entry) && panel.activeRow)}
       {...rowHandlers(entry)}
     >
       <span className="min-w-0 truncate">{entry.label}</span>
@@ -291,7 +294,7 @@ export function FieldSelect({
         {...position(index, siblings, 1)}
         className="relative"
       >
-        <div className={cn(panel.row, isLit(entry) && panel.activeRow)} {...rowHandlers(entry)}>
+        <div className={cn(panel.row, rowClassName, isLit(entry) && panel.activeRow)} {...rowHandlers(entry)}>
           <span className="min-w-0 truncate">{entry.label}</span>
           <span aria-hidden="true" className={panel.caret}>
             ›
@@ -337,24 +340,25 @@ export function FieldSelect({
       {open && placement
         ? createPortal(
             // Pressing in the card keeps the focus on the field, so the field's blur does not close it before the click.
+            // The list itself is the card, as `.qb-ddpanel` holds its rows; the wrapper only places it.
             <div
               ref={panelRef}
               style={placement.style}
               onMouseDown={(event) => event.preventDefault()}
-              className={cn(panel.card, 'absolute z-50 max-w-[calc(100vw-2rem)] text-start font-qb')}
+              className="absolute z-50 max-w-[calc(100vw-2rem)] text-start font-qb"
             >
-              {drilled ? (
-                <div role="presentation" className={panel.heading} onClick={() => leave(drilled.children[0])}>
-                  <span aria-hidden="true">‹</span>
-                  {drilled.label}
-                </div>
-              ) : null}
               <ul
                 id={listId}
                 role={nested ? 'tree' : 'listbox'}
                 aria-label={label}
-                className={cn(!nested && 'max-h-[412px] overflow-y-auto')}
+                className={cn(panel.card, !nested && 'max-h-[424px] overflow-y-auto')}
               >
+                {drilled ? (
+                  <li role="presentation" className={panel.heading} onClick={() => leave(drilled.children[0])}>
+                    <span aria-hidden="true">‹</span>
+                    {drilled.label}
+                  </li>
+                ) : null}
                 {shownRows.map(renderRow)}
               </ul>
             </div>,

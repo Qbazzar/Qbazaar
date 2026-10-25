@@ -127,8 +127,8 @@ function NotificationsList({
   return (
     <>
       <div className="mb-[22px] flex items-center justify-between gap-3">
-        {/* As in the design only the box toggles; it carries the name, so the caption is not read twice. */}
-        <div className="flex items-center gap-3 text-qb-body-lg text-qb-ink-body">
+        {/* The design's <label> row: the caption toggles the box too. The box carries the name, so the caption is not read twice. */}
+        <label className="flex cursor-pointer items-center gap-3 text-qb-body-lg text-qb-ink-body has-disabled:cursor-not-allowed">
           <SelectCheckbox
             checked={allSelected}
             disabled={items.length === 0}
@@ -136,7 +136,7 @@ function NotificationsList({
             aria-label={t('notifications.select_all')}
           />
           <span aria-hidden="true">{t('notifications.select_all')}</span>
-        </div>
+        </label>
         {visibleSelected.length > 0 ? (
           // Overlaps the row's margins, so the list does not move when the buttons appear.
           <div className="-my-2.5 flex items-center gap-3">
