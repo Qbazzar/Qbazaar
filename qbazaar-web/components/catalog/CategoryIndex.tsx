@@ -80,29 +80,33 @@ export function CategoryIndex({ page: requestedPage }: { page: number }) {
 
   return (
     <div className="font-qb">
-      {/* The reference boxes the form and leaves the input bare inside it; the box shows the keyboard focus. */}
-      <form
-        role="search"
-        onSubmit={submit}
-        className="mx-auto mt-7 mb-10 flex max-w-[820px] items-center gap-3 rounded-[14px] border border-qb-line bg-qb-surface p-1.5 ps-[18px] shadow-(--shadow-qb-search-box) has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active has-[input:focus-visible]:outline-solid"
-      >
+      {/* The reference's centred 820 px block keeps the 40 px under the search; the form only has its 28 px above. */}
+      <div className="mx-auto mb-10 max-w-[820px]">
         <label htmlFor="category-search" className="sr-only">
           {t('catalog.index.search_label', 'ابحث في الأقسام')}
         </label>
-        <Icon icon={SearchIcon} size={20} className="text-qb-icon-faint" />
-        <input
-          id="category-search"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t('catalog.index.search_placeholder', 'ابحث في الأقسام…')}
-          autoComplete="off"
-          className="w-full min-w-0 bg-transparent px-0.5 py-px font-qb text-qb-body text-qb-ink outline-none placeholder:text-qb-ink-muted [&::-webkit-search-cancel-button]:appearance-none"
-        />
-        <Button type="submit" className="h-auto rounded-qb-md px-[30px] py-3">
-          {t('catalog.index.search_submit', 'بحث')}
-        </Button>
-      </form>
+        {/* The reference boxes the form and leaves the input bare inside it; the box shows the keyboard focus. */}
+        <form
+          role="search"
+          onSubmit={submit}
+          className="mt-7 flex items-center gap-3 rounded-[14px] border border-qb-line bg-qb-surface p-1.5 ps-[18px] shadow-(--shadow-qb-search-box) has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-qb-brand-active has-[input:focus-visible]:outline-solid"
+        >
+          <Icon icon={SearchIcon} size={20} className="text-qb-icon-faint" />
+          <input
+            id="category-search"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('catalog.index.search_placeholder', 'ابحث في الأقسام…')}
+            autoComplete="off"
+            className="w-full min-w-0 bg-transparent px-0.5 py-px font-qb text-qb-body text-qb-ink outline-none placeholder:text-qb-ink-muted [&::-webkit-search-cancel-button]:hidden"
+          />
+          {/* A tap darkens it as the reference's plain :hover does on touch screens. */}
+          <Button type="submit" className="h-auto rounded-qb-md px-[30px] py-3 active:bg-qb-brand-hover">
+            {t('catalog.index.search_submit', 'بحث')}
+          </Button>
+        </form>
+      </div>
 
       {isLoading ? (
         <div aria-busy="true" className={grid}>

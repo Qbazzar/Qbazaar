@@ -60,19 +60,20 @@ const sheetLayout =
 
 /**
  * The reference's two "Filter" buttons under 1001 px:
- * - `pill`: the listing's `.qb-filter-btn` (category.html): funnel first, 600, a soft shadow, #fafafa under the pointer.
+ * - `pill`: the listing's `.qb-filter-btn` (category.html): funnel first, 600 at the `.qb-btn` line height, a soft
+ *   shadow, #fafafa under the pointer; mobilemenu.js gives it no pointer cursor.
  * - `row`: the parent category's `.qb-cp-row .btn` (parent-category.html): text first, the filter lines after it, no hover.
  */
 const TRIGGERS = {
   pill: {
     button:
-      'gap-2 rounded-qb-md px-[18px] py-2.5 text-qb-label leading-normal font-semibold text-qb-ink-title shadow-(--shadow-qb-filter-btn) qb-motion hover:bg-qb-hover motion-reduce:transition-none',
+      'gap-2 rounded-qb-md px-[18px] py-2.5 text-qb-label leading-[1.15] font-semibold text-qb-ink-title shadow-(--shadow-qb-filter-btn) qb-motion hover:bg-qb-hover motion-reduce:transition-none',
     icon: FunnelIcon,
     iconSize: 15,
     iconFirst: true,
   },
   row: {
-    button: 'gap-2 rounded-qb-lg px-4 py-[11px] text-qb-caption leading-normal font-medium text-qb-ink',
+    button: 'cursor-pointer gap-2 rounded-qb-lg px-4 py-[11px] text-qb-caption leading-normal font-medium text-qb-ink',
     icon: FilterLinesIcon,
     iconSize: 16,
     iconFirst: false,
@@ -106,7 +107,7 @@ export function FilterSheet({ trigger = 'pill', onApply, onReset, ...props }: Fi
       trigger={
         <button
           type="button"
-          className={cn('inline-flex shrink-0 cursor-pointer items-center border border-qb-line bg-qb-surface font-qb whitespace-nowrap', look.button, focusRing)}
+          className={cn('inline-flex shrink-0 items-center border border-qb-line bg-qb-surface font-qb whitespace-nowrap', look.button, focusRing)}
         >
           {look.iconFirst ? icon : null}
           <span>{t('catalog.filters.open', 'فلتر')}</span>

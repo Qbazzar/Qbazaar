@@ -27,9 +27,9 @@ import { cn } from '@/lib/utils';
 /**
  * The reference's square fields (the bar is the rounded box): 10 × 14 px padding. Under 1001 px every
  * field may shrink to nothing (responsive.css `form > * { min-width: 0 }`); from 1001 px each keeps the
- * reference's minimum width.
+ * reference's minimum width. Their line height is Poppins' normal one, as in the reference.
  */
-const field = 'flex min-w-0 items-center gap-2 px-3.5 py-2.5';
+const field = 'flex min-w-0 items-center gap-2 px-3.5 py-2.5 leading-[normal]';
 /**
  * The field in use gets its own ring, next to the brand border of the whole bar. Forced-colors mode drops
  * the ring (a shadow), so outline-hidden draws an outline there instead.
@@ -38,19 +38,27 @@ const typingRing = 'focus-within:ring-2 focus-within:ring-qb-brand-active focus-
 const choiceRing = 'outline-none focus-visible:ring-2 focus-visible:ring-qb-brand-active focus-visible:ring-inset focus-visible:outline-hidden';
 /**
  * Typed text and the keyword placeholder are 16 px at every width, the placeholder in the browser's
- * #757575; the 1.5 line height (Poppins' normal) stays in Arabic too, where the taller Arabic face would
- * otherwise make the bar taller. The 1 × 2 px padding is the browser's own, so the field is 27 px tall.
+ * #757575. The line is the 25 px that Poppins' normal line height gives 16 px text, fixed so the taller
+ * Arabic face does not make the bar taller. With the browser's own 1 × 2 px padding the field is 27 px tall.
  */
 const input =
-  'w-full min-w-0 bg-transparent px-0.5 py-px text-qb-body leading-[1.5] text-qb-ink outline-none placeholder:text-qb-ink-muted [&::-webkit-search-cancel-button]:hidden';
-/** The select labels (.qb-hlabel): 14 px on tablets, 20 px from 1001 px. */
+  'w-full min-w-0 bg-transparent px-0.5 py-px text-qb-body leading-[25px] text-qb-ink outline-none placeholder:text-qb-ink-muted [&::-webkit-search-cancel-button]:hidden';
+/** The select labels (.qb-hlabel): 14 px on tablets, 20 px from 1001 px, set on the field as the reference does. */
 const choiceLabel = 'text-qb-caption leading-[1.5] qb-desktop:text-qb-h5';
+/**
+ * The reference pads each select field itself, so under 1001 px it shrinks in proportion to its basis less
+ * that 28 px of padding (132 and 92 px). Here the padding sits on the field inside the flex item, and these
+ * shrink factors give the item the same weight.
+ */
+const categoryFlex = 'flex-[1_0.825_160px]';
+const distanceFlex = 'flex-[1_0.7667_120px]';
 /**
  * The field icons are 20 px boxes (22 for the magnifier) that give way first when a field is narrow, as in the
  * reference: there the "Choose Category" chevron has no room left at all from tablet width up.
  */
 const fieldIcon = 'size-5 shrink text-qb-icon-faint';
-const chevron = fieldIcon;
+/** The select chevrons take the field's colour, so they turn #333 with the chosen value. */
+const chevron = 'size-5 shrink';
 
 /** The radius steps of the design's Distance list, after "All Qatar". */
 const DISTANCES_KM = [5, 10, 20, 30, 50, 100, 150, 200] as const;
@@ -199,12 +207,12 @@ export function HomeSearchBar() {
   };
 
   return (
-    <div className="mx-auto mt-7 w-full max-w-[1000px] font-qb">
-      {/* The form is the reference's rounded white bar; the error line sits under it. */}
+    <div className="w-full font-qb">
+      {/* The form is the reference's rounded white bar, 28 px under the title and centred; the error line sits under it. */}
       <form
         role="search"
         onSubmit={submit}
-        className="flex w-full items-stretch rounded-qb-xl border border-qb-line bg-qb-surface/97 py-1.5 ps-1 pe-1.5 shadow-qb-card has-[input:focus-visible,[role=combobox]:focus-visible]:border-qb-brand qb-tablet:ps-2.5 qb-desktop:flex-wrap qb-desktop:p-2"
+        className="mx-auto mt-7 flex w-full max-w-[1000px] items-stretch gap-0 rounded-qb-xl border border-qb-line bg-qb-surface/97 py-1.5 ps-1 pe-1.5 shadow-qb-card has-[input:focus-visible,[role=combobox]:focus-visible]:border-qb-brand qb-tablet:ps-2.5 qb-desktop:flex-wrap qb-desktop:p-2"
       >
         <label className={cn(field, typingRing, 'flex-[2_1_200px] gap-2.5 qb-desktop:min-w-[150px]')}>
           <Icon icon={SearchIcon} size={22} className="shrink text-qb-icon-faint" />
@@ -226,17 +234,19 @@ export function HomeSearchBar() {
           onChange={(option) => setCategory(option.value)}
           onIntent={() => setCategoriesWanted(true)}
           loadingLabel={t('common.loading', 'جارٍ التحميل…')}
-          className="hidden min-w-0 flex-[1_1_160px] qb-tablet:flex qb-desktop:min-w-[150px]"
-          fieldClassName={cn(field, choiceRing)}
+          className={cn('hidden min-w-0 qb-tablet:flex qb-desktop:min-w-[150px]', categoryFlex)}
+          fieldClassName={cn(field, choiceRing, choiceLabel)}
           {...CHOICE_TEXT}
         />
         <Divider />
         {/* The reference's "Location" reads #bdbdbd like the select labels, at the 16 px of typed text. */}
         <TabletField className={cn('relative flex-[1_1_130px] text-qb-icon-faint qb-desktop:min-w-[120px]', typingRing)}>
-          <Icon icon={LocationPinIcon} className={fieldIcon} />
+          {/* The reference's pin sits beside a short "Location" word, so it keeps its 20 px wherever the field has room. */}
+          <Icon icon={LocationPinIcon} className={cn(fieldIcon, 'qb-desktop:shrink-0')} />
           <AutocompleteInput
             ref={locationRef}
-            className={cn(input, 'placeholder:text-qb-icon-faint')}
+            // The reference's "Location" is plain text beside the pin, without an input's 2 px side padding.
+            className={cn(input, 'px-0 placeholder:text-qb-icon-faint')}
             placeholder={t('home.search.location', 'الموقع')}
             aria-label={t('home.search.location', 'الموقع')}
             aria-invalid={locationError === 'unknown' || undefined}
@@ -259,8 +269,8 @@ export function HomeSearchBar() {
             setDistance(option.value);
             setLocationError(null);
           }}
-          className="hidden min-w-0 flex-[1_1_120px] qb-tablet:flex qb-desktop:min-w-[110px]"
-          fieldClassName={cn(field, choiceRing)}
+          className={cn('hidden min-w-0 qb-tablet:flex qb-desktop:min-w-[110px]', distanceFlex)}
+          fieldClassName={cn(field, choiceRing, choiceLabel)}
           {...CHOICE_TEXT}
         />
         <button
@@ -272,7 +282,7 @@ export function HomeSearchBar() {
         </button>
       </form>
       {locationError ? (
-        <p id={errorId} role="alert" className="mt-2 text-qb-caption text-qb-danger">
+        <p id={errorId} role="alert" className="mx-auto mt-2 max-w-[1000px] text-qb-caption text-qb-danger">
           {LOCATION_ERRORS[locationError]()}
         </p>
       ) : null}
@@ -280,9 +290,13 @@ export function HomeSearchBar() {
   );
 }
 
-/** The label and chosen-value look of both selects (selects.js setValue: the choice turns #333, same size and weight). */
+/**
+ * The label and chosen-value look of both selects (selects.js setValue: the field turns #333, same size and
+ * weight). As in the reference the text never gives way to the chevron, and may run into the field's end
+ * padding before a long choice is cut short.
+ */
 const CHOICE_TEXT = {
-  textClassName: choiceLabel,
+  textClassName: 'max-w-[calc(100%+14px)]',
   placeholderClassName: 'text-qb-icon-faint',
   valueClassName: 'text-qb-ink-title',
   chevronClassName: chevron,
@@ -293,6 +307,7 @@ function TabletField({ className, children }: { className?: string; children: Re
   return <div className={cn(field, 'hidden qb-tablet:flex', className)}>{children}</div>;
 }
 
+/** The reference's 1 px rule, which gives way with the fields when the bar is short of room. */
 function Divider() {
-  return <span aria-hidden="true" className="my-2 hidden w-px shrink-0 bg-qb-line qb-tablet:block" />;
+  return <span aria-hidden="true" className="my-2 hidden w-px bg-qb-line qb-tablet:block" />;
 }
