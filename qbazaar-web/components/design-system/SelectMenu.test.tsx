@@ -92,7 +92,7 @@ describe('SelectMenu', () => {
     expect(onChange).toHaveBeenCalledWith({ value: 'boats', label: 'Boats' });
     expect(screen.queryByRole('tree')).toBeNull();
     expect(field()).toHaveTextContent('Boats');
-    expect(screen.getByText('Boats')).toHaveClass('chosen');
+    expect(field()).toHaveClass('chosen');
     expect(field()).toHaveFocus();
   });
 

@@ -70,7 +70,7 @@ describe('CatalogAdCard', () => {
     const { rerender } = render(<CatalogAdCard ad={ad} layout="grid" />);
     expect(screen.getByText(ad.summary as string)).toHaveClass('qb-desktop:line-clamp-2', 'qb-desktop:text-qb-label', 'text-qb-ink-faint');
     expect(screen.getByRole('heading', { level: 3 })).toHaveClass('qb-desktop:text-qb-body', 'qb-desktop:font-medium', 'qb-desktop:text-qb-ink-title');
-    const [beside, onPhoto] = screen.getAllByText('QAR 287,000');
+    const [onPhoto, beside] = screen.getAllByText('QAR 287,000');
     expect(beside).toHaveClass('qb-desktop:hidden');
     expect(onPhoto).toHaveClass('qb-desktop:inline-flex', 'text-qb-micro', 'font-medium');
     expect(screen.queryByText('Top Ad')).not.toBeInTheDocument();
@@ -80,13 +80,15 @@ describe('CatalogAdCard', () => {
     expect(screen.getByRole('heading', { level: 3 })).toHaveClass('line-clamp-2', 'text-qb-body-sm', 'text-qb-ink-title');
   });
 
-  it('keeps the favourite after the card link, as its own control', () => {
-    render(<CatalogAdCard ad={ad} layout="tile" />);
+  it('puts the favourite on the photo before the card link, as its own control', () => {
+    const { container } = render(<CatalogAdCard ad={ad} layout="tile" />);
     const link = screen.getByRole('link', { name: 'BMW 320d Touring' });
     const favorite = screen.getByRole('button', { name: 'Save 01abc' });
 
     expect(link).toHaveAttribute('href', '/ads/01abc');
-    expect(link.compareDocumentPosition(favorite) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(link.compareDocumentPosition(favorite) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
     expect(link.contains(favorite)).toBe(false);
+    // The reference card draws the heart before the location pin.
+    expect(container.querySelector('button, svg')).toBe(favorite);
   });
 });

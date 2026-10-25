@@ -43,10 +43,12 @@ export function CatalogStats({ items, separator = '•', className }: CatalogSta
 /**
  * all-categories.html titles its page smaller (clamp 28-40 px) than the
  * listing pages (clamp 30-44 px), and sets its counters 2 px further down.
+ * The title keeps Poppins' normal line height; it follows the size, which
+ * would otherwise drop it from the class list.
  */
 const VARIANTS = {
-  index: { title: 'text-[clamp(28px,4vw,40px)]', stats: 'mt-2.5' },
-  listing: { title: 'text-[clamp(30px,5vw,44px)]', stats: 'mt-2' },
+  index: { title: 'text-[clamp(28px,4vw,40px)] leading-[normal]', stats: 'mt-2.5' },
+  listing: { title: 'text-[clamp(30px,5vw,44px)] leading-[normal]', stats: 'mt-2' },
 } as const;
 
 export interface CatalogHeaderProps {
@@ -77,7 +79,7 @@ export function CatalogHeader({ title, breadcrumb, stats, actions, titleRef, var
           <h1
             ref={titleRef}
             tabIndex={titleRef ? -1 : undefined}
-            className={cn('font-qb leading-normal font-semibold tracking-normal break-words text-qb-ink', look.title)}
+            className={cn('font-qb font-semibold tracking-normal break-words text-qb-ink', look.title)}
           >
             {title}
           </h1>

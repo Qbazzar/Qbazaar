@@ -24,15 +24,19 @@ describe('AdCard', () => {
     expect(screen.getByRole('heading', { level: 3, name: ad.title })).toBeInTheDocument();
   });
 
-  it('keeps the favourite button outside the link and after it in the tab order', () => {
-    render(<AdCard {...ad} favorite={<button type="button">Save</button>} />);
+  it('keeps the favourite button outside the link and before the text, as the reference card', () => {
+    const { container } = render(<AdCard {...ad} favorite={<button type="button">Save</button>} />);
     const favorite = screen.getByRole('button', { name: 'Save' });
     const link = screen.getByRole('link', { name: ad.title });
+    const [heart, pin] = container.querySelectorAll('svg, button');
 
     expect(favorite.closest('a')).toBeNull();
     expect(favorite.parentElement).toHaveClass('end-3', 'top-3');
     expect(favorite.parentElement?.parentElement).toHaveClass('z-10', 'pointer-events-none');
-    expect(link.compareDocumentPosition(favorite) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(link.compareDocumentPosition(favorite) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+    // The heart precedes the location pin, so the icons read in the reference's order.
+    expect(heart).toBe(favorite);
+    expect(pin?.tagName.toLowerCase()).toBe('svg');
   });
 
   it('puts the price on the photo in the grid layout', () => {
