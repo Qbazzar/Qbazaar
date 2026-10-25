@@ -23,34 +23,50 @@ interface SellerReviewsProps {
   userId: string;
   ratingAvg: number;
   ratingCount: number;
+  /** Under a "Reviews" tab the heading is only read out, not shown a second time. */
+  titleHidden?: boolean;
   className?: string;
 }
 
 const row = cardVariants({ large: true, elevated: true, padding: 'none' });
 
-export function SellerReviews({ userId, ratingAvg, ratingCount, className }: SellerReviewsProps) {
+export function SellerReviews({ userId, ratingAvg, ratingCount, titleHidden = false, className }: SellerReviewsProps) {
   const locale = getLocale();
   const titleId = useId();
   const { data, isPending } = useUserReviewsQuery(userId, ratingCount > 0);
   const reviews = data?.data ?? [];
 
+  const title = (
+    <h2
+      id={titleId}
+      className={titleHidden ? 'sr-only' : 'text-qb-body-lg font-medium tracking-normal text-qb-ink-title qb-tablet:text-qb-h4'}
+    >
+      {t('reviews.title')}
+    </h2>
+  );
+  const summary =
+    ratingCount > 0 ? (
+      <p className="flex items-center gap-2 text-qb-caption text-qb-ink-subtle">
+        <span className="text-qb-body-lg font-semibold text-qb-ink">{formatRating(ratingAvg, locale)}</span>
+        <RatingStars value={ratingAvg} />
+        <span>{tPlural('reviews.count', ratingCount, locale)}</span>
+      </p>
+    ) : null;
+  // Without a visible heading or summary, nothing sits above the list to keep it apart from.
+  const hasHeader = !titleHidden || summary !== null;
+
   return (
     <section aria-labelledby={titleId} className={cn('font-qb', className)}>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 id={titleId} className="text-qb-body-lg font-medium tracking-normal text-qb-ink-title qb-tablet:text-qb-h4">
-          {t('reviews.title')}
-        </h2>
-        {ratingCount > 0 ? (
-          <p className="flex items-center gap-2 text-qb-caption text-qb-ink-subtle">
-            <span className="text-qb-body-lg font-semibold text-qb-ink">{formatRating(ratingAvg, locale)}</span>
-            <RatingStars value={ratingAvg} />
-            <span>{tPlural('reviews.count', ratingCount, locale)}</span>
-          </p>
-        ) : null}
-      </div>
+      {titleHidden ? title : null}
+      {hasHeader ? (
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          {titleHidden ? null : title}
+          {summary}
+        </div>
+      ) : null}
 
       {ratingCount === 0 ? (
-        <p className={cn(row, 'mt-4 p-6 text-qb-caption text-qb-ink-subtle')}>{t('reviews.empty')}</p>
+        <p className={cn(row, hasHeader && 'mt-4', 'p-6 text-qb-caption text-qb-ink-subtle')}>{t('reviews.empty')}</p>
       ) : isPending ? (
         <div aria-busy="true" className="mt-4 flex flex-col gap-4">
           <span className="sr-only">{t('common.loading')}</span>
