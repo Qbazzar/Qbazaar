@@ -25,5 +25,11 @@
   "product.share": { "target": "button:text-is(\"Share Ad\")", "fixedSize": true },
   "product.report": { "target": "button:text-is(\"Report Ad\")", "fixedSize": true },
   "product.more-card": { "target": "section:has(a[href^=\"/u/\"]) > ul > li > article", "all": true },
-  "product.view-all": { "target": "section:has(> ul) a[href^=\"/u/\"]:has-text(\"View all\")" }
+  "product.view-all": { "target": "section:has(> ul) a[href^=\"/u/\"]:has-text(\"View all\")" },
+  "seller.tabs": { "target": "[role=tablist]" },
+  "seller.tab.selected": { "target": "[role=tab][aria-selected=\"true\"]" },
+  "seller.tab": { "target": "[role=tab][aria-selected=\"false\"]" },
+  "sellerOrg.tabs": { "target": "[role=tablist]" },
+  "sellerOrg.tab.selected": { "target": "[role=tab][aria-selected=\"true\"]" },
+  "sellerOrg.tab": { "target": "[role=tab][aria-selected=\"false\"]" }
 }

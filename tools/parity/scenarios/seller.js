@@ -1,7 +1,9 @@
 // Seller page tabs (seller-organization.html; tb.select in the engine).
 const { scenario, click, observe } = require('./dsl');
 
-const tab = (label) => ({ ref: `span:text-is("${label}")`, target: `[role=tab]:has-text("${label}")` });
+// The prototype's tab is the 120 px flex span; its label sits in the template's inner span.sc-interp, which
+// span:text-is() would pick and which has no box of its own.
+const tab = (label) => ({ ref: `span[style*="flex: 1 1 120px"]:has-text("${label}")`, target: `[role=tab]:has-text("${label}")` });
 
 module.exports = [
   scenario({
