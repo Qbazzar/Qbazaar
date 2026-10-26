@@ -6,6 +6,7 @@
  * hook also syncs the result into the shared Zustand store so non-query
  * consumers (server-friendly helpers, breadcrumb lookup) can stay in sync.
  */
+import { categoryKeys } from './categories-keys';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import {
@@ -30,15 +31,6 @@ const FIVE_MIN = 5 * 60 * 1000;
 // The API caches each category page for two minutes.
 const TWO_MIN = 2 * 60 * 1000;
 
-export const categoryKeys = {
-  all: ['categories'] as const,
-  tree: () => [...categoryKeys.all, 'tree'] as const,
-  main: () => [...categoryKeys.all, 'main'] as const,
-  // `is_favorited` belongs to the viewer, so a guest's cached page is never shown to the account that logs in.
-  page: (slug: string, viewer: string) => [...categoryKeys.all, 'page', slug, viewer] as const,
-  stats: (slug: string) => [...categoryKeys.all, 'stats', slug] as const,
-  fields: (slug: string) => [...categoryKeys.all, 'fields', slug] as const,
-};
 
 /**
  * Fetch the full category tree (categories + nested children) and mirror
@@ -110,3 +102,5 @@ export function useCategoryFieldsQuery(
     staleTime: HOUR,
   });
 }
+
+export { categoryKeys };

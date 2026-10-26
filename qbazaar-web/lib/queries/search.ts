@@ -10,6 +10,7 @@
  * - Saved searches: 5m staleTime. The list is small and rarely changes; the
  *   mutations invalidate it surgically.
  */
+import { searchKeys } from './search-keys';
 import {
   useMutation,
   useQuery,
@@ -37,15 +38,6 @@ import type {
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 
-export const searchKeys = {
-  all: ['search'] as const,
-  results: () => [...searchKeys.all, 'results'] as const,
-  result: (params: SearchQueryParams) =>
-    [...searchKeys.results(), params] as const,
-  suggestions: () => [...searchKeys.all, 'suggestions'] as const,
-  suggestion: (q: string) => [...searchKeys.suggestions(), q] as const,
-  saved: () => [...searchKeys.all, 'saved'] as const,
-};
 
 // ── Queries ────────────────────────────────────────────────────────────────
 
@@ -161,3 +153,5 @@ export function useSavedSearchAlertsMutation(): UseMutationResult<
     },
   });
 }
+
+export { searchKeys };

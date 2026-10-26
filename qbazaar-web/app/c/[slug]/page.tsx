@@ -1,7 +1,9 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { HydrationBoundary } from '@tanstack/react-query';
 
 import type { CategoryNode } from '@/lib/api/types';
+import { categorySeed, fetchPlaces, type SeedParams } from '@/lib/catalog-seed';
 import { localized } from '@/lib/i18n/locale';
 import { t } from '@/lib/i18n/messages';
 import { resolveServerLocale } from '@/lib/i18n/server';
@@ -12,10 +14,12 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { CatalogPageSkeleton } from '@/components/catalog/CatalogPageSkeleton';
 import { resolveCategoryPath } from '@/components/catalog/resolved-category';
 import { ResultsFocusProvider } from '@/components/catalog/results-focus';
+import { QatarPlacesProvider } from '@/components/locations/QatarPlacesProvider';
 import { CategoryDetailClient } from './CategoryDetailClient';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<SeedParams>;
 }
 
 /**
@@ -44,14 +48,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 /**
  * Category page — `/c/{slug}`. The server resolves the category for the
  * title, the breadcrumb JSON-LD and the first paint of the header; the
- * listing itself is a client island over the existing queries.
+ * listing itself is a client island over the existing queries, seeded with
+ * the first page of results so the first HTML already holds the cards.
  */
-export default async function CategoryDetailPage({ params }: PageProps) {
-  const { slug } = await params;
-  await resolveServerLocale();
+export default async function CategoryDetailPage({ params, searchParams }: PageProps) {
+  const [{ slug }, bag, locale] = await Promise.all([params, searchParams, resolveServerLocale()]);
 
   const path = await findPath(slug);
   const category = path ? resolveCategoryPath(path) : null;
+  const [seed, places] = await Promise.all([category ? categorySeed(bag, category, locale) : undefined, fetchPlaces()]);
 
   const breadcrumb = breadcrumbJsonLd([
     { name: t('brand.name', 'QBazaar'), path: '/' },
@@ -63,9 +68,13 @@ export default async function CategoryDetailPage({ params }: PageProps) {
     <>
       <JsonLd data={breadcrumb} />
       <Suspense fallback={<CatalogPageSkeleton title={category?.trail.at(-1)?.name} />}>
-        <ResultsFocusProvider>
-          <CategoryDetailClient slug={slug} initial={category} />
-        </ResultsFocusProvider>
+        <QatarPlacesProvider places={places ?? undefined}>
+          <HydrationBoundary state={seed}>
+            <ResultsFocusProvider>
+              <CategoryDetailClient slug={slug} initial={category} />
+            </ResultsFocusProvider>
+          </HydrationBoundary>
+        </QatarPlacesProvider>
       </Suspense>
     </>
   );

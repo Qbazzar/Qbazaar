@@ -11,6 +11,7 @@
  * Every mutation invalidates the keys it touches so list ⇄ detail stay
  * consistent without manual cache surgery in callers.
  */
+import { adKeys } from './ads-keys';
 import {
   useMutation,
   useQuery,
@@ -47,17 +48,6 @@ import type {
 
 const MINUTE = 60 * 1000;
 
-export const adKeys = {
-  all: ['ads'] as const,
-  lists: () => [...adKeys.all, 'list'] as const,
-  list: (params: ListAdsParams) => [...adKeys.lists(), params] as const,
-  details: () => [...adKeys.all, 'detail'] as const,
-  detail: (id: string) => [...adKeys.details(), id] as const,
-  myLists: () => [...adKeys.all, 'mine'] as const,
-  myList: (params: MyAdsParams) => [...adKeys.myLists(), params] as const,
-  similar: (id: string) => [...adKeys.all, 'similar', id] as const,
-  featured: () => [...adKeys.all, 'featured'] as const,
-};
 
 // ── Queries ────────────────────────────────────────────────────────────────
 
@@ -260,3 +250,5 @@ export function useRenewAdMutation(): UseMutationResult<
     },
   });
 }
+
+export { adKeys };

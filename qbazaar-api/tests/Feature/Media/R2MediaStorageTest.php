@@ -135,3 +135,22 @@ it('writes a downscaled original back to the private disk', function (): void {
         ->and([$stored[0], $stored[1]])->toBe([16, 16])
         ->and($media->refresh()->size)->toBe(Storage::disk('r2')->size($media->getPathRelativeToRoot()));
 });
+
+it('offers the medium and large urls only as a pair', function (): void {
+    $media = ($this->addAdImage)()->refresh();
+    $sizes = (new MediaResource($media))->toArray(request())['sizes'];
+
+    expect($sizes['medium'])->not->toContain('signature=')
+        ->and($sizes['large'])->not->toContain('signature=');
+
+    $generated = $media->getGeneratedConversions()->toArray();
+    unset($generated['large']);
+    $media->generated_conversions = $generated;
+    $media->save();
+
+    $sizes = (new MediaResource($media->refresh()))->toArray(request())['sizes'];
+
+    expect($sizes['medium'])->toContain('signature=')
+        ->and($sizes['large'])->toBe($sizes['medium'])
+        ->and($sizes['thumbnail'])->not->toContain('signature=');
+});

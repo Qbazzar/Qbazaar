@@ -95,7 +95,7 @@ export function ListingCard({ ad, variant, favorited = false, headingLevel: Head
 
       <div className="flex flex-1 flex-col p-4">
         <Heading className={cn('line-clamp-2 font-qb font-medium tracking-normal text-qb-ink', look.title)}>
-          <Link href={`/ads/${ad.id}`} dir="auto" className="outline-none after:absolute after:inset-0">
+          <Link prefetch={false} href={`/ads/${ad.id}`} dir="auto" className="outline-none after:absolute after:inset-0">
             {ad.title}
           </Link>
         </Heading>
