@@ -19,9 +19,14 @@ interface SellerTabsProps {
 export function SellerTabs({ ads, reviews }: SellerTabsProps) {
   return (
     <Tabs defaultValue="ads" variant="underline">
+      {/* Each label sits in its own span, as the reference's interpolated text does. */}
       <TabList>
-        <Tab value="ads">{t('users.profile.tabs.ads')}</Tab>
-        <Tab value="reviews">{t('reviews.title')}</Tab>
+        <Tab value="ads">
+          <span>{t('users.profile.tabs.ads')}</span>
+        </Tab>
+        <Tab value="reviews">
+          <span>{t('reviews.title')}</span>
+        </Tab>
       </TabList>
       <TabPanel value="ads">{ads}</TabPanel>
       <TabPanel value="reviews">{reviews}</TabPanel>
