@@ -106,7 +106,7 @@ function FooterColumnBlock({ column }: { column: FooterColumn }) {
     <ul className={cn('flex flex-col gap-4', className)}>
       {column.links.map((link) => (
         <li key={link.href + link.label}>
-          <Link href={link.href} className={linkClass}>
+          <Link prefetch={false} href={link.href} className={linkClass}>
             {link.label}
           </Link>
         </li>

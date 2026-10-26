@@ -62,6 +62,7 @@ export function Pagination({ page, totalPages, getHref, size = 'md', className }
         {paginationRange(current, totalPages).map((number) => (
           <li key={number}>
             <Link
+              prefetch={false}
               href={getHref(number)}
               aria-label={t('ui.pagination.page', { page: number })}
               aria-current={number === current ? 'page' : undefined}
@@ -103,7 +104,7 @@ function Step({ href, disabled, label, icon, className, hover }: StepProps): Rea
   }
   return (
     <li>
-      <Link href={href} aria-label={label} className={cn(className, focusRing, hover)}>
+      <Link prefetch={false} href={href} aria-label={label} className={cn(className, focusRing, hover)}>
         {glyph}
       </Link>
     </li>

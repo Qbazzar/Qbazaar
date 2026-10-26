@@ -30,7 +30,7 @@ function IconBox({ icon, className }: { icon?: string | null; className?: string
 /** Category card of all-categories.html: the same 22 px card at every width. */
 export function CategoryCard({ href, name, count, icon, className }: CategoryTileProps) {
   return (
-    <Link href={href} className={cn(tileBase, 'flex-col gap-4 rounded-qb-xl p-[22px]', className)}>
+    <Link prefetch={false} href={href} className={cn(tileBase, 'flex-col gap-4 rounded-qb-xl p-[22px]', className)}>
       <IconBox icon={icon} className="rounded-qb-lg" />
       <span className="min-w-0">
         <span className="mb-1.5 block truncate text-[17px] leading-normal font-medium text-qb-ink">{name}</span>{' '}
@@ -48,6 +48,7 @@ export function CategoryCard({ href, name, count, icon, className }: CategoryTil
 export function SubcategoryTile({ href, name, count, className }: Omit<CategoryTileProps, 'icon'>) {
   return (
     <Link
+      prefetch={false}
       href={href}
       className={cn(tileBase, 'items-center gap-3.5 rounded-[14px] p-4 leading-[1.15] hover:brightness-[.96]', className)}
     >
