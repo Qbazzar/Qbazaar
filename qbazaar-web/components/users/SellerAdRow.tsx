@@ -56,7 +56,7 @@ export function SellerAdRow({ ad, headingLevel: Heading = 'h3', className }: Sel
       <div className="flex min-w-[220px] flex-[2_1_280px] flex-col">
         <div className="mb-3.5 flex items-start justify-between gap-3.5">
           <Heading className="min-w-0 text-qb-h4 font-medium tracking-normal text-qb-ink-title">
-            <Link href={`/ads/${ad.id}`} dir="auto" className="outline-none after:absolute after:inset-0">
+            <Link prefetch={false} href={`/ads/${ad.id}`} dir="auto" className="outline-none after:absolute after:inset-0">
               {ad.title}
             </Link>
           </Heading>

@@ -27,18 +27,28 @@ export function apiOrigin(): string {
   return (process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL).replace(/\/+$/, '');
 }
 
+/** How long a server fetch may be reused: seconds, or `'no-store'` for a request that must not be cached. */
+export type ApiCachePolicy = number | 'no-store';
+
+interface ApiFetchOptions {
+  /** Sent as `Accept-Language`, for lists the API translates by header rather than by `?lang=`. */
+  language?: string;
+  /** Overrides the default API_TIMEOUT_MS for a fetch that blocks a page render. */
+  timeoutMs?: number;
+}
+
 /**
  * Server-only fetch against the public API. Returns `null` on any failure,
  * including no answer within API_TIMEOUT_MS, so a missing sitemap entry / OG
  * tag / first render degrades gracefully instead of 500-ing or stalling the
  * route.
  */
-async function fetchApiJson<T>(path: string, revalidateSeconds: number): Promise<T | null> {
+export async function fetchApiJson<T>(path: string, cachePolicy: ApiCachePolicy, options: ApiFetchOptions = {}): Promise<T | null> {
   try {
     const res = await fetch(`${apiOrigin()}${path}`, {
-      headers: { Accept: 'application/json' },
-      next: { revalidate: revalidateSeconds },
-      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+      headers: { Accept: 'application/json', ...(options.language ? { 'Accept-Language': options.language } : {}) },
+      ...(cachePolicy === 'no-store' ? { cache: 'no-store' as const } : { next: { revalidate: cachePolicy } }),
+      signal: AbortSignal.timeout(options.timeoutMs ?? API_TIMEOUT_MS),
     });
 
     if (!res.ok) return null;
@@ -53,8 +63,9 @@ async function fetchApiJson<T>(path: string, revalidateSeconds: number): Promise
 export async function fetchApiData<T>(
   path: string,
   revalidateSeconds = 3600,
+  options: ApiFetchOptions = {},
 ): Promise<T | null> {
-  const json = await fetchApiJson<{ success?: boolean; data?: T }>(path, revalidateSeconds);
+  const json = await fetchApiJson<{ success?: boolean; data?: T }>(path, revalidateSeconds, options);
 
   return json?.data ?? null;
 }

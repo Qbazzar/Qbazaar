@@ -87,6 +87,7 @@ export function HomeCategoryStrip({ initialFeed }: { initialFeed?: HomeFeed }) {
       {data.categories.slice(0, TILE_COUNT).map((cat, index) => (
         <li key={cat.id}>
           <Link
+            prefetch={false}
             ref={index === 0 ? firstTileRef : undefined}
             href={`/c/${cat.slug}`}
             className={cn(

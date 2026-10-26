@@ -45,22 +45,43 @@ class MediaResource extends JsonResource
     public function toArray(Request $request): array
     {
         $storage = app(MediaStorage::class);
+        $sizes = $this->sizes($storage);
 
         return [
             'id' => $this->resource->getKey(),
             'collection' => $this->resource->collection_name,
             'url' => $this->includeOriginal ? $storage->signedOriginalUrl($this->resource) : null,
-            'sizes' => [
-                'thumbnail' => $storage->conversionUrl($this->resource, 'thumbnail'),
-                'medium' => $storage->conversionUrl($this->resource, 'medium'),
-                'large' => $storage->conversionUrl($this->resource, 'large'),
-                'original_webp' => $storage->conversionUrl($this->resource, 'original_webp'),
-            ],
+            'sizes' => $sizes,
             'blurhash' => $this->resource->getCustomProperty('blurhash'),
             'width' => $this->resource->getCustomProperty('width'),
             'height' => $this->resource->getCustomProperty('height'),
             'order' => (int) ($this->resource->order_column ?? 0),
             'size_bytes' => (int) $this->resource->size,
         ];
+    }
+
+    /**
+     * The web picks between `medium` and `large` by width and may name one
+     * from the other's URL, so both CDN files must exist or neither is
+     * offered: with one still queued (or failed), both fall back to the
+     * signed original.
+     *
+     * @return array<string, string>
+     */
+    private function sizes(MediaStorage $storage): array
+    {
+        $sizes = [];
+        foreach (['thumbnail', 'medium', 'large', 'original_webp'] as $conversion) {
+            $sizes[$conversion] = $storage->conversionUrl($this->resource, $conversion);
+        }
+
+        $pairReady = $this->resource->hasGeneratedConversion('medium') && $this->resource->hasGeneratedConversion('large');
+        if (! $pairReady) {
+            $original = $storage->signedOriginalUrl($this->resource);
+            $sizes['medium'] = $original;
+            $sizes['large'] = $original;
+        }
+
+        return $sizes;
     }
 }
