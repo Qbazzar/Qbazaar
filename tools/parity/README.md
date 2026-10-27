@@ -197,6 +197,10 @@ Fourth round (Track G), from the re-run of 2026-10-21 (831 of its 1,977 findings
   on live). send-code is the sent state of `/forgot-password`, compared by the `forgot-password-sent` scenario (local only,
   the submit mails a link). verify-identity is reference-only: its counterpart is the new-device step of `/login`, which
   only the API's new-device check shows.
+- **A session that runs out.** A signed-in page that lands on `/login` lost the demo session mid-run (the API rotates
+  refresh tokens), not the page: the gate signs in again and reopens it once. If that sign-in fails as well the page,
+  scenario, flow group or sweep is listed under "Skipped"; if the fresh session still lands on `/login`, the page is reported
+  once as `page-unavailable` instead of comparing the login form with it.
 - **Accepted differences** (one row each in "Accepted differences"): `arabic-font` (Arabic text in Noto Kufi Arabic),
   `svg-flags` (SVG flags, and the language list's own languages), `auth-static-pill` (the static pill of the auth pages that do
   not load auth.js), `copy-5` (the five strings kept in PR #274, listed in `reference-text.json` with the target's wording),

@@ -305,3 +305,53 @@ test('auth steps that send a code or a mail run only against a local target, liv
   assert.equal(liveDataRule('saved-search', 'ss.crumb.home'), null);
   assert.equal(liveDataRule('index', 'ca.list.card'), null);
 });
+
+// A signed-in page that lands on /login lost the demo session: sign in again and reopen, never compare the login form.
+test('a signed-in page bounced to /login signs in again once; a failed sign-in is a skip, not findings', async () => {
+  const browserTools = require('../src/browser');
+  const { Probe } = require('../src/capture');
+  const { openSide, onLoginPage, SessionLostError } = require('../src/sides');
+  assert.ok(onLoginPage('https://qbazaar.qa/login?next=%2Fpost-ad'));
+  assert.ok(onLoginPage('https://qbazaar.qa/ar/login'));
+  assert.ok(!onLoginPage('https://qbazaar.qa/post-ad'));
+  assert.ok(!onLoginPage('https://qbazaar.qa/login-help'));
+  assert.equal(new SessionLostError().skipReason, new SessionLostError().message);
+
+  const saved = { newContext: browserTools.newContext, open: browserTools.open, loginDemo: browserTools.loginDemo, attach: Probe.attach };
+  let signIns = 0;
+  let freshState = { cookies: ['fresh'] };
+  // The stale state lands on /login, the fresh one on the page.
+  browserTools.newContext = async (_browser, _config, _viewport, { storageState }) => ({ newPage: async () => ({ storageState }), close: async () => {} });
+  browserTools.open = async (page, url) => ({ status: 200, url: page.storageState && page.storageState.cookies[0] === 'fresh' ? url : 'https://qbazaar.qa/login' });
+  browserTools.loginDemo = async () => { signIns += 1; return freshState; };
+  Probe.attach = async () => ({});
+  const pageDef = { id: 'add-ads', reference: 'add-ads.html', route: '/post-ad', login: true };
+  const viewport = { width: 1440, height: 900 };
+  try {
+    const env = { browser: {}, config: { target: 'https://qbazaar.qa', reference: 'file:///ref/', locale: 'en' }, storageState: { cookies: ['stale'] } };
+    const side = await openSide(env, 'target', pageDef, viewport);
+    assert.equal(signIns, 1);
+    assert.equal(side.landed.url, 'https://qbazaar.qa/post-ad');
+    assert.equal(side.loggedIn, true);
+    assert.ok(!side.sessionLost);
+    assert.deepEqual(env.storageState, freshState);
+
+    // The sign-in fails too: the side is marked, the state is dropped (later signed-in pages are skipped).
+    freshState = null;
+    env.storageState = { cookies: ['stale'] };
+    const lost = await openSide(env, 'target', pageDef, viewport);
+    assert.equal(signIns, 2);
+    assert.equal(lost.sessionLost, true);
+    assert.equal(lost.loggedIn, false);
+    assert.equal(env.storageState, null);
+
+    // The login page itself and the reference side never sign in again.
+    env.storageState = { cookies: ['stale'] };
+    await openSide(env, 'target', { id: 'login', reference: 'login.html', route: '/login', login: false }, viewport);
+    await openSide(env, 'reference', pageDef, viewport);
+    assert.equal(signIns, 2);
+  } finally {
+    Object.assign(browserTools, { newContext: saved.newContext, open: saved.open, loginDemo: saved.loginDemo });
+    Probe.attach = saved.attach;
+  }
+});

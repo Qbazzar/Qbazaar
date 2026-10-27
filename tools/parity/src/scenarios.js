@@ -1,6 +1,6 @@
 // Behaviour scenarios: the same steps run in lockstep on the reference and the target, and every
 // observation is compared (existence, text, attributes, styles, a screenshot crop, motion, routes).
-const { openSide, closeSide } = require('./sides');
+const { openSide, closeSide, SessionLostError } = require('./sides');
 const { UnitComparer } = require('./unit');
 const { recordSequence, compareSequences } = require('./motion');
 const { selectPages } = require('./pages');
@@ -271,6 +271,7 @@ async function runScenario(env, definition, viewport) {
   };
   const run = new ScenarioRun(env, definition, viewport, sides);
   try {
+    if (sides.target.sessionLost) throw new SessionLostError();
     for (const step of definition.steps) if ((await run.step(step)) === false) break;
   } finally {
     await closeSide(env, sides.reference);

@@ -1,7 +1,7 @@
 // Inventory sweep: every interactive element of the reference behaviour inventories that no scenario, flow or
 // mapped component covers is paired with its twin on the target (same text, same label, same role and order)
 // and compared in every state. Elements that change state when clicked are clicked on both sides and compared again.
-const { openSide, closeSide } = require('./sides');
+const { openSide, closeSide, SESSION_LOST } = require('./sides');
 const { UnitComparer } = require('./unit');
 const { loadStreams, navigationFlows, usedIds } = require('./spec');
 const { loadScenarios } = require('../scenarios');
@@ -219,6 +219,7 @@ async function sweepPage(env, pageDef, width, skipped) {
   const comparer = new UnitComparer({ ref: reference.probe, target: target.probe, findings: env.findings, base, nameIcon: env.nameIcon });
   const ctx = { seen: new Set(), reference, target, comparer, base, skipped, states: width >= 1000 ? ['hover', 'focus-visible', 'active'] : ['focus-visible', 'active'] };
   try {
+    if (target.sessionLost) { skipped.push({ what: `inventory sweep ${pageDef.id}@${width}`, reason: SESSION_LOST }); return; }
     for (const element of elements) {
       // An earlier click can leave the page (a link twin, a session that ran out and sent the target to /login):
       // every element is compared on its own page, never on wherever the last click went.

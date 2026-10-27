@@ -1,5 +1,5 @@
 // Audits one reference page against its target route at one viewport.
-const { openSide, closeSide } = require('./sides');
+const { openSide, closeSide, onLoginPage, SessionLostError } = require('./sides');
 const inpage = require('./inpage');
 const { markComponents } = require('./marking');
 const { UnitComparer } = require('./unit');
@@ -120,7 +120,9 @@ async function auditPage(env, pageDef, viewport) {
   const refSide = await openSide(env, 'reference', pageDef, viewport);
   const targetSide = await openSide(env, 'target', pageDef, viewport);
   try {
-    if (targetSide.landed.status >= 400 || (!pageDef.login && /\/login/.test(targetSide.landed.url) && !/login/.test(pageDef.id))) {
+    if (targetSide.sessionLost) throw new SessionLostError();
+    // A signed-in page that still lands on /login after a fresh sign-in is unavailable to its user: one finding.
+    if (targetSide.landed.status >= 400 || (onLoginPage(targetSide.landed.url) && !/login/.test(pageDef.id))) {
       emit({ component: 'page', category: 'missing', severity: 'high', property: 'page-unavailable', ref: 'renders', target: `HTTP ${targetSide.landed.status} at ${targetSide.landed.url}` });
       return;
     }

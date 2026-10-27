@@ -39,7 +39,7 @@ async function runScenarios(env, pages, skipped) {
         console.log('done');
       } catch (error) {
         console.log(`failed: ${error.message}`);
-        skipped.push({ what: `scenario ${scenario.id} @${width}`, reason: `run failed: ${error.message.split(String.fromCharCode(10))[0]}` });
+        skipped.push({ what: `scenario ${scenario.id} @${width}`, reason: error.skipReason || `run failed: ${error.message.split(String.fromCharCode(10))[0]}` });
       }
     }
   }
@@ -80,7 +80,7 @@ async function main() {
           console.log(`${findings.list.filter((f) => f.page === pageDef.id && f.viewport === width).length} findings`);
         } catch (error) {
           console.log(`failed: ${error.message}`);
-          skipped.push({ what: `${pageDef.id} @${width}`, reason: `capture failed: ${error.message}` });
+          skipped.push({ what: `${pageDef.id} @${width}`, reason: error.skipReason || `capture failed: ${error.message}` });
         }
       }
     }

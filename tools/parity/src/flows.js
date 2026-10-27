@@ -1,6 +1,6 @@
 // Prototype flows: clicking an element on a reference page lands on a reference page; the matching
 // element on the target must land on the route that page maps to.
-const { openSide, closeSide } = require('./sides');
+const { openSide, closeSide, SESSION_LOST } = require('./sides');
 const { open: browserOpen, ensureBrowser } = require('./browser');
 const { navigationFlows } = require('./spec');
 const { selectPages, writeSkipReason, liveDataRule, lacksLiveData, liveDataReason } = require('./pages');
@@ -217,6 +217,7 @@ async function runGroup(env, group) {
   const target = await openSide(env, 'target', { ...pageDef, login }, viewport);
   const skipped = [];
   try {
+    if (target.sessionLost) return [{ what: `flows ${pageDef.id}@${width}`, reason: SESSION_LOST }];
     for (const flow of flows) skipped.push(...(await runFlowWithRetry(env, flow, { reference, target, viewport })));
   } finally {
     await closeSide(env, reference).catch(() => {});
