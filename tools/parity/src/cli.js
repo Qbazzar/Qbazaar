@@ -3,7 +3,7 @@
 const { buildConfig, NEEDS_LOGIN } = require('./config');
 const browserTools = require('./browser');
 const { proxySummaryLine } = require('./proxy');
-const { selectPages, referenceOnly } = require('./pages');
+const { selectPages, referenceOnly, writeSkipReason } = require('./pages');
 const { auditPage } = require('./audit');
 const { Findings } = require('./findings');
 const { writeReports } = require('./report');
@@ -69,7 +69,8 @@ async function main() {
   const env = { browser, config, findings, summary, storageState, outDir: config.out, nameIcon, warnings: [], swept: new Set() };
   try {
     for (const pageDef of config.skipPages ? [] : pages) {
-      if (pageDef.login && !storageState) { skipped.push({ what: pageDef.id, reason: NEEDS_LOGIN }); continue; }
+      const reason = writeSkipReason(pageDef, config) || (pageDef.login && !storageState ? NEEDS_LOGIN : null);
+      if (reason) { skipped.push({ what: pageDef.id, reason }); continue; }
       for (const width of pageDef.viewports) {
         const viewport = config.viewports.find((v) => v.width === width);
         process.stdout.write(`${pageDef.id} @${width} ... `);

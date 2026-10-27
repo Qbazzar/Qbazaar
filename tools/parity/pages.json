@@ -33,6 +33,8 @@
     { "id": "login", "reference": "login.html", "route": "/login" },
     { "id": "signup", "reference": "signup.html", "route": "/register" },
     { "id": "signup-verify", "reference": "signup-verify.html", "route": "/verify-otp?phone=%2B97455512345&intro=1" },
+    { "id": "enter-code", "reference": "enter-code.html", "route": "/verify-otp?phone=%2B97455512345",
+      "writes": "opening the code step sends a one-time code through the API (S5 shared-needs)" },
     { "id": "forgot-password", "reference": "forgot-password.html", "route": "/forgot-password" },
     { "id": "new-password", "reference": "new-password.html", "route": "/reset-password?email=reviewer%40example.com&token=preview" }
   ],
@@ -47,8 +49,7 @@
     { "reference": "account.html#billing", "note": "Billing Info panel: no Next.js route yet (FE-16.8)" },
     { "reference": "account.html#marketplace", "note": "Marketplace Info panel: no Next.js route yet (FE-16.4)" },
     { "reference": "account.html#edit-email", "note": "Edit Email / Edit Number panels: no Next.js route yet (FE-16.4)" },
-    { "reference": "enter-code.html", "note": "The code step of /verify-otp?phone=...: opening it sends a one-time code through the live API, so the gate does not open it (S5 shared-needs); the OTP boxes are compared by the signup-otp-boxes scenario against a local target" },
-    { "reference": "verify-identity.html", "note": "The same code step as enter-code.html (/verify-otp?phone=...), which sends a one-time code on open; /account/verification is the identity-documents screen, a different page" },
-    { "reference": "send-code.html", "note": "The sent state of /forgot-password after a submit, which mails a reset link; /verify-email is the landing of the signed email link, a different page" }
+    { "reference": "verify-identity.html", "note": "The code step after a password sign-in: on the target it is the new-device step of /login, shown only when the API holds a sign-in at its new-device check, so no route opens it; its layout (enter-code without the Edit link) is compared on enter-code against a local target. /account/verification is the identity-documents screen, a different page" },
+    { "reference": "send-code.html", "note": "The sent state of /forgot-password after a submit, which mails a reset link: compared by the forgot-password-sent scenario against a local target. /verify-email is the landing of the signed email link, a different page" }
   ]
 }

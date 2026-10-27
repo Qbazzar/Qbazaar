@@ -192,8 +192,11 @@ Fourth round (Track G), from the re-run of 2026-10-21 (831 of its 1,977 findings
 - **Flows.** Social sign-in (OAuth) is not followed; clicks that start a conversation, send an offer or a purchase request run
   only against a local target; a category crumb may land on any category page (the prototype sends every one to
   all-categories.html); an inventory selector that names another control at a width (template numbering) is a warning.
-- **Auth steps that write.** enter-code and verify-identity are the code step of `/verify-otp?phone=…`, which sends a code on
-  open, and send-code is the sent state of `/forgot-password` after a submit: they are reference-only pages.
+- **Auth steps that write.** enter-code is the code step of `/verify-otp?phone=…`, which sends a code on open: its
+  `pages.json` entry carries `writes`, so pages, flows and the sweep open it only on a local target (listed under "Skipped"
+  on live). send-code is the sent state of `/forgot-password`, compared by the `forgot-password-sent` scenario (local only,
+  the submit mails a link). verify-identity is reference-only: its counterpart is the new-device step of `/login`, which
+  only the API's new-device check shows.
 - **Accepted differences** (one row each in "Accepted differences"): `arabic-font` (Arabic text in Noto Kufi Arabic),
   `svg-flags` (SVG flags, and the language list's own languages), `auth-static-pill` (the static pill of the auth pages that do
   not load auth.js), `copy-5` (the five strings kept in PR #274, listed in `reference-text.json` with the target's wording),

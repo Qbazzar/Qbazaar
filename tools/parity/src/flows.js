@@ -3,7 +3,7 @@
 const { openSide, closeSide } = require('./sides');
 const { open: browserOpen, ensureBrowser } = require('./browser');
 const { navigationFlows } = require('./spec');
-const { selectPages, liveDataRule, lacksLiveData, liveDataReason } = require('./pages');
+const { selectPages, writeSkipReason, liveDataRule, lacksLiveData, liveDataReason } = require('./pages');
 const { NEEDS_LOGIN } = require('./config');
 
 // A click that navigates is read once the URL changes (a server-rendered page can take a few seconds on live);
@@ -250,7 +250,8 @@ async function runFlows(env, skipped) {
   const { config } = env;
   if (config.locale === 'ar' || (config.only && !config.only.includes('flows'))) return;
   for (const group of groupFlows(config, selectPages(config))) {
-    if (group.login && !env.storageState) { skipped.push({ what: `flows ${group.pageDef.id}@${group.width}`, reason: NEEDS_LOGIN }); continue; }
+    const reason = writeSkipReason(group.pageDef, config) || (group.login && !env.storageState ? NEEDS_LOGIN : null);
+    if (reason) { skipped.push({ what: `flows ${group.pageDef.id}@${group.width}`, reason }); continue; }
     process.stdout.write(`flows ${group.pageDef.id} @${group.width} login=${group.login} (${group.flows.length}) ... `);
     await ensureBrowser(env);
     skipped.push(...(await runGroup(env, group)));

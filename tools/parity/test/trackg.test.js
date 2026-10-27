@@ -9,7 +9,8 @@ const { pairDescendants, referenceOnlyText, withKeptCopy } = require('../src/mat
 const { compareKeyframes } = require('../src/motion');
 const { arabicFontRule, flagRule } = require('../src/accepted');
 const { namesAnotherControl, routeMatches, CATEGORY_PAGES } = require('../src/flows');
-const { selectPages, referenceOnly, liveDataRule } = require('../src/pages');
+const { selectPages, referenceOnly, writeSkipReason, liveDataRule } = require('../src/pages');
+const { loadScenarios } = require('../scenarios');
 const { copyOf } = require('../src/scenarios');
 const { languageList } = require('../scenarios/dsl');
 
@@ -283,12 +284,22 @@ test('flows: category crumbs reach any category page, template drift is not a mi
 });
 
 // G-auth-page-mapping and live data.
-test('auth steps that send a code or a mail are reference-only, live-data elements are named per page', () => {
+test('auth steps that send a code or a mail run only against a local target, live-data elements are named per page', () => {
   const ids = selectPages({ pages: null, viewports: [{ width: 1440 }] }).map((p) => p.id);
-  for (const id of ['enter-code', 'verify-identity', 'send-code']) {
+  // enter-code is the code step of /verify-otp, which sends a one-time code on open: compared on a local target only.
+  const [enterCode] = selectPages({ pages: ['enter-code'], viewports: [{ width: 1440 }] });
+  assert.equal(enterCode.route, '/verify-otp?phone=%2B97455512345');
+  assert.match(writeSkipReason(enterCode, { localTarget: false }), /runs only against a local target/);
+  assert.equal(writeSkipReason(enterCode, { localTarget: true }), null);
+  assert.equal(writeSkipReason(selectPages({ pages: ['login'], viewports: [{ width: 1440 }] })[0], { localTarget: false }), null);
+  // send-code is the sent state of /forgot-password (a scenario that submits), verify-identity has no route of its own.
+  for (const id of ['verify-identity', 'send-code']) {
     assert.ok(!ids.includes(id));
     assert.ok(referenceOnly().some((r) => r.reference === `${id}.html`));
   }
+  const sentScenario = loadScenarios().find((s) => s.id === 'forgot-password-sent');
+  assert.equal(sentScenario.page, 'forgot-password');
+  assert.equal(sentScenario.writes, true);
   assert.equal(selectPages({ pages: ['signup-verify'], viewports: [{ width: 1440 }] })[0].route, '/verify-otp?phone=%2B97455512345&intro=1');
   assert.equal(liveDataRule('saved-search', 'ss.notif.on').items, 'main article');
   assert.equal(liveDataRule('saved-search', 'ss.crumb.home'), null);

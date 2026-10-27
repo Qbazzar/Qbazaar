@@ -6,6 +6,10 @@ const EYE = { ref: '.qb-eye', target: 'button[aria-label="Show or hide password"
 const LANGUAGE_PILL = { ref: '.qb-lang', target: 'header button[aria-label]' };
 const LANGUAGE_PANEL = { ref: '.qb-langpanel', target: 'header div.absolute, [role=listbox], [role=menu]' };
 const OTP_BOXES = { ref: '.qb-otp input', target: 'input[autocomplete="one-time-code"], input[inputmode="numeric"]' };
+const EMAIL = 'input[type="email"]';
+const SEND = { ref: 'form .qb-btn', target: 'form button[type="submit"]' };
+// send-code.html is the prototype's page after the reset form's submit; the target shows that state in place.
+const sent = (ref, target) => ({ ref: `.qb-card ${ref}`, target: `[role="status"] ${target}` });
 
 module.exports = [
   scenario({
@@ -44,6 +48,22 @@ module.exports = [
       press('Backspace'),
       press('Backspace'),
       observe('focus-back-on-backspace', { ref: '.qb-otp input:focus', target: 'input[inputmode="numeric"]:focus' }, { text: 'skip', styles: false }),
+    ],
+  }),
+  scenario({
+    id: 'forgot-password-sent',
+    page: 'forgot-password',
+    viewports: [1440, 390],
+    // Submitting mails a reset link through the API.
+    writes: true,
+    steps: [
+      type(EMAIL, 'reviewer@example.com'),
+      click(SEND),
+      observe('sent-heading', sent('h1', 'h1')),
+      // The address is the one typed, the prototype's is a sample.
+      observe('sent-address', sent('.qb-sub', 'p'), { text: 'skip' }),
+      observe('sent-tips', sent('ul', 'ul')),
+      observe('resend', sent('.qb-btn', '> button'), { crop: true }),
     ],
   }),
 ];

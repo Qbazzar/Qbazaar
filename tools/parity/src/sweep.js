@@ -5,7 +5,7 @@ const { openSide, closeSide } = require('./sides');
 const { UnitComparer } = require('./unit');
 const { loadStreams, navigationFlows, usedIds } = require('./spec');
 const { loadScenarios } = require('../scenarios');
-const { selectPages, liveDataRule, lacksLiveData, liveDataReason } = require('./pages');
+const { selectPages, writeSkipReason, liveDataRule, lacksLiveData, liveDataReason } = require('./pages');
 const targets = require('../targets.json');
 const { NEEDS_LOGIN } = require('./config');
 const { open: browserOpen, ensureBrowser } = require('./browser');
@@ -244,7 +244,8 @@ async function runSweep(env, skipped) {
   const { config } = env;
   if (config.skipInventory || config.locale === 'ar') return;
   for (const pageDef of selectPages(config)) {
-    if (pageDef.login && !env.storageState) { skipped.push({ what: `inventory sweep ${pageDef.id}`, reason: NEEDS_LOGIN }); continue; }
+    const reason = writeSkipReason(pageDef, config) || (pageDef.login && !env.storageState ? NEEDS_LOGIN : null);
+    if (reason) { skipped.push({ what: `inventory sweep ${pageDef.id}`, reason }); continue; }
     for (const width of pageDef.viewports) {
       process.stdout.write(`inventory ${pageDef.id} @${width} ... `);
       await ensureBrowser(env);
