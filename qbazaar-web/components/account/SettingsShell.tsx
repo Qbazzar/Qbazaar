@@ -31,12 +31,13 @@ export function SettingsShell({ children }: { children: ReactNode }) {
         <aside className="hidden shrink-0 rounded-qb-xl border border-qb-line bg-qb-surface p-4 qb-tablet:block qb-tablet:w-[210px] qb-desktop:w-auto qb-desktop:max-w-[320px] qb-desktop:min-w-[240px] qb-desktop:flex-[1_1_260px]">
           <SettingsSidebar pathname={pathname} />
         </aside>
-        <div className="flex min-w-0 flex-1 flex-col gap-5 qb-desktop:min-w-[300px] qb-desktop:flex-[3_1_460px]">
+        {/* The page is the column's only box from the tablet up; on phones the pill sits 12 px + the row's 24 px gap above it (mobilemenu.js). */}
+        <div className="flex min-w-0 flex-1 flex-col gap-6 qb-desktop:min-w-[300px] qb-desktop:flex-[3_1_460px]">
           {isHub ? null : (
             <Link
               href={ACCOUNT_HUB_PATH}
               className={cn(
-                'mt-0.5 mb-1 inline-flex items-center gap-2 self-start rounded-qb-md border border-qb-line bg-qb-surface px-[15px] py-[9px] text-qb-label font-semibold text-qb-ink-title qb-tablet:hidden',
+                'mt-0.5 mb-3 inline-flex items-center gap-2 self-start rounded-qb-md border border-qb-line bg-qb-surface px-[15px] py-[9px] text-qb-label font-semibold text-qb-ink-title qb-tablet:hidden',
                 focusRing,
               )}
             >

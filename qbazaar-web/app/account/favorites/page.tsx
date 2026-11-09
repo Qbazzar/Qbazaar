@@ -45,7 +45,7 @@ export default function FavoritesPage() {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-qb-gutter py-[clamp(20px,4vw,40px)] font-qb text-qb-ink">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-[clamp(28px,4vw,40px)] font-semibold tracking-normal text-qb-ink">{t('favorites.wishlist_title')}</h1>
+        <h1 className="text-[clamp(28px,4vw,40px)] leading-[normal] font-semibold tracking-normal text-qb-ink">{t('favorites.wishlist_title')}</h1>
         {ads.length ? (
           <button
             type="button"
