@@ -46,6 +46,8 @@ describe('TextBreadcrumb', () => {
     const { container } = render(<TextBreadcrumb items={[{ label: 'الرئيسية', href: '/' }, { label: '24/7 plumber' }]} />);
 
     expect(screen.getByRole('navigation', { name: 'مسار التنقل' })).toBeInTheDocument();
-    expect([...container.querySelectorAll('bdi')].map((bdi) => bdi.textContent)).toEqual(['الرئيسية', '24/7 plumber']);
+    const link = screen.getByRole('link', { name: 'الرئيسية' });
+    expect(link).toHaveAttribute('dir', 'auto');
+    expect([...container.querySelectorAll('bdi')].map((bdi) => bdi.textContent)).toEqual(['24/7 plumber']);
   });
 });

@@ -64,7 +64,8 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
 
         <section aria-labelledby="companies-search-title">
           <div className="mx-auto max-w-[760px] text-center">
-            <h2 id="companies-search-title" className="text-[clamp(28px,4vw,42px)] font-bold tracking-normal text-qb-ink">
+            {/* The font's own "normal" line height, as the title's: 44 px at 744, where 1.5 would give 44.64. */}
+            <h2 id="companies-search-title" className="text-[clamp(28px,4vw,42px)] leading-[normal] font-bold tracking-normal text-qb-ink">
               {t('companies.hero')}
             </h2>
             <p className="mt-4 text-qb-body-sm leading-[1.55] text-qb-ink-subtle qb-desktop:text-qb-body-lg">{t('companies.subtitle')}</p>

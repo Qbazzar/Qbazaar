@@ -95,7 +95,7 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
 
   return (
     <>
-      <div className="flex items-center gap-3 border-b border-qb-line px-5 py-4 qb-tablet:px-[26px] qb-tablet:py-[22px]">
+      <div className="flex items-center gap-3 border-b border-qb-line px-[26px] py-[22px]">
         {phoneParent ? (
           <button
             type="button"
@@ -133,7 +133,7 @@ function PickerBody({ tree, value, onSelect }: Omit<CategoryPickerProps, 'open' 
         ))}
       </div>
 
-      <div className="flex justify-end border-t border-qb-line px-5 py-4 qb-tablet:px-[26px] qb-tablet:py-[18px]">
+      <div className="flex justify-end border-t border-qb-line px-[26px] py-[18px]">
         <Button
           size="sm"
           disabled={!leaf}

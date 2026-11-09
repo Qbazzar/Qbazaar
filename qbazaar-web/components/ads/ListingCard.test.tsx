@@ -43,6 +43,8 @@ describe('ListingCard', () => {
 
     expect(screen.getByRole('link', { name: 'Toyota Land Cruiser' })).toHaveAttribute('href', '/ads/01abc');
     expect(screen.getByText('QAR 285,000')).toHaveClass('bg-qb-brand');
+    // The whole card is the link, so the pointer shows over all of it.
+    expect(screen.getByRole('article')).toHaveClass('cursor-pointer');
   });
 
   it('has no heart and no spec chips under "Another Ads From Seller"', () => {

@@ -32,7 +32,7 @@ export function AccountPageFrame({ breadcrumb, title, description, actions, chil
       {title ? (
         <div className="mb-[30px] flex flex-wrap items-center justify-between gap-5">
           <div className="min-w-0">
-            <h1 className="text-[length:clamp(30px,5vw,48px)] font-semibold tracking-normal text-qb-ink">{title}</h1>
+            <h1 className="text-[length:clamp(30px,5vw,48px)] leading-[normal] font-semibold tracking-normal text-qb-ink">{title}</h1>
             {description ? (
               <p dir="auto" className="mt-2 text-start text-qb-caption font-medium text-qb-ink-subtle">
                 {description}

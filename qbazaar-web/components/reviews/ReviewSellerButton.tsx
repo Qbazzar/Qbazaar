@@ -94,13 +94,13 @@ export function ReviewSellerButton({ adId, sellerId, className }: ReviewSellerBu
 
   return (
     <>
+      {/* Plain text: product.html's seller card draws eight icons and this entry is not one of them. */}
       <Button
         variant="ghost"
         size="sm"
         onClick={openDialog}
         className={cn('font-normal text-qb-ink-subtle hover:text-qb-ink', className)}
       >
-        <StarIcon aria-hidden />
         {t('reviews.rate_seller')}
       </Button>
       <Modal open={open} onOpenChange={setOpen} showCloseButton title={t('reviews.rate_seller')}>

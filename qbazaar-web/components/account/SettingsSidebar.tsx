@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 
 import { focusRing } from '@/components/design-system/focus-ring';
@@ -14,17 +15,20 @@ import { useSignOut } from './useSignOut';
  * Settings menu of account.html (`.qb-navitem`): grey rows 4 px apart that
  * slide 5 px and tint on hover (background and transform over .18 s), the
  * current one an orange pill, then the "Log Out" `.qb-btn` under a line.
+ * A pressed row turns orange at once, as the reference's does, instead of
+ * once its page has loaded; the route takes over as soon as it changes.
  */
 export function SettingsSidebar({ pathname }: { pathname: string }) {
   const { signOut, pending } = useSignOut();
-  const current = settingsSectionFor(pathname);
+  const [pressed, setPressed] = useState<{ from: string; item: AccountNavItem } | null>(null);
+  const current = pressed?.from === pathname ? pressed.item : settingsSectionFor(pathname);
 
   return (
     <nav aria-label={t('account.nav.settings')}>
       <ul className="flex flex-col">
         {SETTINGS_NAV.map((item) => (
           <li key={item.href}>
-            <SidebarLink item={item} active={item === current} />
+            <SidebarLink item={item} active={item === current} onPress={() => setPressed({ from: pathname, item })} />
           </li>
         ))}
       </ul>
@@ -44,11 +48,17 @@ export function SettingsSidebar({ pathname }: { pathname: string }) {
   );
 }
 
-function SidebarLink({ item, active }: { item: AccountNavItem; active: boolean }) {
+function SidebarLink({ item, active, onPress }: { item: AccountNavItem; active: boolean; onPress: () => void }) {
   const ItemIcon = item.icon;
+  // A link row leaves the shell and a modified click opens another tab, so neither lights the row here.
+  const handleClick = (event: MouseEvent) => {
+    if (item.link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    onPress();
+  };
   return (
     <Link
       href={item.href}
+      onClick={handleClick}
       aria-current={active ? 'page' : undefined}
       className={cn(
         'mb-1 flex items-center gap-3 rounded-qb-lg px-4 py-3.5 text-qb-body-sm transition-[background,transform] duration-[180ms] ease-[ease] motion-reduce:transition-none',
