@@ -35,8 +35,10 @@ export function TextBreadcrumb({ items, className }: BreadcrumbProps) {
                   <bdi>{item.label}</bdi>
                 </span>
               ) : (
-                <Link href={item.href} className={cn('qb-motion text-qb-breadcrumb hover:text-qb-brand', focusRing)}>
-                  <bdi>{item.label}</bdi>
+                // dir="auto" isolates the label as <bdi> would and keeps the text on the link, the element
+                // that carries the hover transition, as the reference's .qb-nav span does.
+                <Link href={item.href} dir="auto" className={cn('qb-motion text-qb-breadcrumb hover:text-qb-brand', focusRing)}>
+                  {item.label}
                 </Link>
               )}
             </li>

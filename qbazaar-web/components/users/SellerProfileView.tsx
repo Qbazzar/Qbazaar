@@ -2,9 +2,10 @@
 
 /**
  * Public seller page. Private sellers get the profile card beside their ads
- * as rows (seller-individual.html); business accounts the company layout:
+ * as rows (seller-individual.html), with their reviews behind seller.html's
+ * underline "Ads / Reviews" tabs; business accounts the company layout:
  * grey band, cover, company card, the Info sidebar and the Ads / About us /
- * Legal Info tabs (seller-organization.html). Reviews follow the ads.
+ * Legal Info tabs (seller-organization.html), the reviews under them.
  */
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -29,6 +30,7 @@ import { CompanyTabs, type CompanyTab } from './CompanyTabs';
 import { FollowButton } from './FollowButton';
 import { SellerListings } from './SellerListings';
 import { SellerProfileCard } from './SellerProfileCard';
+import { SellerTabs } from './SellerTabs';
 import { sellerDisplayName } from './SellerBadges';
 
 interface SellerProfileViewProps {
@@ -77,10 +79,6 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
     </>
   );
 
-  const reviews = (
-    <SellerReviews userId={profile.id} ratingAvg={profile.rating_avg} ratingCount={profile.rating_count} className="mt-10" />
-  );
-
   if (isBusiness) {
     const business = profile.business_profile;
     // 124 x 43 / 147 x 43: 15 px / 500 with 17 px icons and 26 px side padding.
@@ -110,7 +108,7 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
               defaultTab={defaultTab}
               ads={<SellerListings userId={profile.id} sellerName={name} layout="grid" />}
             />
-            {reviews}
+            <SellerReviews userId={profile.id} ratingAvg={profile.rating_avg} ratingCount={profile.rating_count} className="mt-10" />
           </div>
         </div>
       </main>
@@ -145,13 +143,22 @@ export function SellerProfileView({ profile, locale, viewerStateKnown, defaultTa
             secondaryActions={secondaryActions}
             className="qb-desktop:w-[356px] qb-desktop:shrink-0"
           />
-          <div className="flex min-w-0 flex-1 flex-col gap-[18px]">
-            <div>
-              <h2 className="text-qb-h4 font-medium tracking-normal text-qb-ink-title">{t('users.profile.active_listings')}</h2>
-              <p className="mt-1 text-qb-body text-qb-ink-label">{tPlural('users.profile.ads_available', profile.ads_count, locale)}</p>
-            </div>
-            <SellerListings userId={profile.id} sellerName={name} layout="rows" />
-            {reviews}
+          {/* Stacked under the card, the bar keeps seller.html's 26 px to the block above it. */}
+          <div className="min-w-0 flex-1 max-qb-desktop:mt-0.5">
+            <SellerTabs
+              ads={
+                <div className="flex flex-col gap-[18px]">
+                  <div>
+                    <h2 className="text-qb-h4 font-medium tracking-normal text-qb-ink-title">{t('users.profile.active_listings')}</h2>
+                    <p className="mt-1 text-qb-body text-qb-ink-label">{tPlural('users.profile.ads_available', profile.ads_count, locale)}</p>
+                  </div>
+                  <SellerListings userId={profile.id} sellerName={name} layout="rows" />
+                </div>
+              }
+              reviews={
+                <SellerReviews userId={profile.id} ratingAvg={profile.rating_avg} ratingCount={profile.rating_count} titleHidden />
+              }
+            />
           </div>
         </div>
       </div>

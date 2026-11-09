@@ -50,6 +50,12 @@ describe('ReviewSellerButton', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('is a plain text entry, without an icon of its own', () => {
+    renderButton();
+
+    expect(screen.getByRole('button', { name: 'Rate the seller' }).querySelector('svg')).toBeNull();
+  });
+
   it('is hidden from the seller', () => {
     useAuthStore.setState({ user: { id: 'seller' } as User, accessToken: 'AT', isHydrated: true });
     renderButton();
