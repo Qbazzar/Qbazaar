@@ -63,7 +63,8 @@ module.exports = [
     login: true,
     steps: [
       click(CITY),
-      observe('panel', DROPDOWN_PANEL, { crop: true, count: true }),
+      // The prototype lists sample cities; the target lists the API's locations, so the names are data.
+      observe('panel', DROPDOWN_PANEL, { crop: true, count: true, text: 'skip' }),
       clickAt(30, 600),
       observe('closed-by-outside-click', DROPDOWN_PANEL, { text: 'skip', styles: false }),
     ],
@@ -75,7 +76,9 @@ module.exports = [
     login: true,
     steps: [
       click(CATEGORY_BUTTON),
-      observe('modal-open', CATEGORY_MODAL, { crop: true }),
+      // Category and subcategory names are the prototype's sample tree and the API's live tree: only the modal's
+      // own copy (title, column heads, action) is compared.
+      observe('modal-open', CATEGORY_MODAL, { crop: true, textMask: (copy) => (copy.match(/Select Category|Subcategory|Category|\bAdd\b/g) || []).join(' ') }),
       press('Escape'),
       observe('closed-by-escape', CATEGORY_MODAL, { text: 'skip', styles: false }),
     ],

@@ -25,7 +25,7 @@ function navigationFlows() {
       const key = `${page}|${flow.element}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      flows.push({ page: pageIdOf(page), element: flow.element, refSelector: element.refSelector, to: pageIdOf(flow.to), viewports: element.viewports || [1440] });
+      flows.push({ page: pageIdOf(page), element: flow.element, component: element.component, refSelector: element.refSelector, to: pageIdOf(flow.to), viewports: element.viewports || [1440] });
     }
   }
   return flows;

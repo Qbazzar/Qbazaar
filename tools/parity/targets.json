@@ -14,7 +14,7 @@
   "ca.toolbar": { "target": "main div.mb-8" },
   "ca.sort": { "target": "main select" },
   "ca.viewToggle": { "target": "div[role=group]" },
-  "ca.list.card": { "target": "ul[aria-label] > li", "all": true },
+  "ca.list.card": { "target": "ul[aria-label] > li > article", "all": true },
   "product.gallery": { "target": "section[aria-label^=\"Photos of\"]", "fixedSize": true },
   "product.title-card": { "target": "main section.border:nth-of-type(1)" },
   "product.seller-card": { "target": "section[aria-label=Seller]" },

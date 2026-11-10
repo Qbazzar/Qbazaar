@@ -37,9 +37,20 @@ function samplePng() {
   return PNG.sync.write(png);
 }
 
+/**
+ * A language list (accepted svg-flags difference): the target draws SVG flags and lists the languages it ships, each
+ * in its own script, where the prototype lists nine with emoji flags. The heading is still compared; the rows and
+ * their count are counted under the accepted rule.
+ */
+const languageList = {
+  rule: 'svg-flags',
+  text: (copy) => (String(copy).match(/choose your language/i) || ['(no heading)'])[0].toLowerCase(),
+  count: true,
+};
+
 function scenario(definition) {
   const defaults = { viewports: [1440, 390], writes: false, login: false, steps: [] };
   return { ...defaults, ...definition };
 }
 
-module.exports = { scenario, click, clickAt, hover, type, upload, chooseFile, press, wait, scrollTo, observe, motion, expectRoute, stay };
+module.exports = { scenario, click, clickAt, hover, type, upload, chooseFile, press, wait, scrollTo, observe, motion, expectRoute, stay, languageList };

@@ -6,7 +6,9 @@ const { inventory, refOf } = require('./spec');
 const NAV_ROW = (label, href) => ({ ref: `${refOf('acct.nav.account')}:has-text("${label}")`, target: `nav a[href="${href}"]` });
 const MODAL = { ref: '[style*="position: fixed"][style*="z-index: 120"] > div', target: '[role=dialog]' };
 const EDIT_NAME = inventory('acct.profile.editName', 'button:has-text("Edit"):near(:text("Full name"))');
-const MODAL_CLOSE = inventory('acct.modal.close', '[role=dialog] button[aria-label="Close"]');
+// The inventory names the name modal's ×; every other modal draws its own × (another template node), so any modal's
+// × closes whichever modal is open.
+const MODAL_CLOSE = { ref: `${refOf('acct.modal.close')}, ${MODAL.ref} span.qb-btn:text-is("×")`, target: '[role=dialog] button[aria-label="Close"]' };
 // The target's Edit buttons carry the field in their accessible name ("Edit Email"); :near() also caught the nav's "Email Message".
 const EDIT_EMAIL = inventory('acct.account.editEmail', 'main button:has-text("Edit"):has-text("Email")');
 const EDIT_PASSWORD = inventory('acct.account.editPassword', 'main button:has-text("Edit"):has-text("Password")');
@@ -132,7 +134,8 @@ module.exports = [
       click(CHAT_MENU_BUTTON),
       observe('menu-open', CHAT_MENU, { crop: true, count: true }),
       click(inventory('msg.menu.block', '[role=menuitem]:has-text("Block")')),
-      observe('block-dialog', inventory('msg.block.backdrop', '[role=dialog]'), { crop: true }),
+      // The dialog box itself (assets/chat.js .qb-blk), not the dimmed backdrop around it, pairs with [role=dialog].
+      observe('block-dialog', { ref: '.qb-blk', target: '[role=dialog]' }, { crop: true }),
       press('Escape'),
       observe('block-closed-by-escape', inventory('msg.block.backdrop', '[role=dialog]'), { text: 'skip', styles: false }),
     ],
@@ -144,6 +147,9 @@ module.exports = [
     login: true,
     steps: [
       click(THREAD(0)),
+      // The composer's box (r14 label) is on the target only once a conversation is open, so it is compared here,
+      // not by the inventory sweep of the page as it loads.
+      observe('composer-box', inventory('msg.composer', 'label:has(> textarea)'), { text: 'skip', crop: true }),
       click(COMPOSER),
       observe('composer-focused', COMPOSER, { text: 'skip', focus: true, crop: true }),
     ],

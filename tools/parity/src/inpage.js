@@ -3,12 +3,20 @@
 
 function collectTexts() {
   const norm = (t) => (t || '').trim().replace(/\s+/g, ' ');
+  // A closed sheet or drawer stays in the page, pinned and moved out of the viewport (the reference's filter sheet
+  // sits translated below the screen); what it holds is not on screen until it opens.
+  const pinnedOffscreen = (el, r) => {
+    for (let node = el; node && node !== document.body; node = node.parentElement) {
+      if (getComputedStyle(node).position === 'fixed') return r.top >= innerHeight || r.bottom <= 0 || r.left >= innerWidth || r.right <= 0;
+    }
+    return false;
+  };
   const visible = (el) => {
     const r = el.getBoundingClientRect();
     if (!r.width || !r.height || r.bottom + scrollY <= 0 || r.right <= 0 || r.left >= innerWidth) return false;
     const s = getComputedStyle(el);
     if (s.clip === 'rect(0px, 0px, 0px, 0px)' || s.clipPath === 'inset(50%)') return false;
-    return s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) !== 0;
+    return s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) !== 0 && !pinnedOffscreen(el, r);
   };
   const INTERACTIVE = 'button,a,[role=button],[role=tab],[role=menuitem],[role=option],summary,label';
   const rows = [];
@@ -48,7 +56,7 @@ function collectTexts() {
   return rows;
 }
 
-function readUnit({ selector, descendants }) {
+function readUnit({ selector, descendants, hop }) {
   const root = document.querySelector(selector);
   if (!root) return null;
   const lineHeights = new Map();
@@ -125,6 +133,30 @@ function readUnit({ selector, descendants }) {
     return margin.map((v) => `${Math.round(v * 100) / 100}px`).join(' ');
   };
 
+  // The space laid out above and below an element: the distance to the content before and after it, found among its
+  // siblings and then its ancestors' siblings, or to the inner edge of the first ancestor that paints or pads that side.
+  // A margin on one side and a parent's gap or a neighbour's margin on the other leave the same space (compare.js).
+  const spaceAround = (el) => {
+    const r = el.getBoundingClientRect();
+    const side = (top) => {
+      for (let node = el; node.parentElement && node !== document.body; node = node.parentElement) {
+        const parent = node.parentElement;
+        const near = [...parent.children].filter((c) => c !== node && inFlow(c)).map((c) => c.getBoundingClientRect())
+          .filter((b) => (top ? b.bottom <= r.top + 0.5 : b.top >= r.bottom - 0.5)).map((b) => (top ? b.bottom : b.top));
+        if (near.length) return top ? r.top - Math.max(...near) : Math.min(...near) - r.bottom;
+        const ps = getComputedStyle(parent);
+        const pb = parent.getBoundingClientRect();
+        const border = parseFloat(top ? ps.borderTopWidth : ps.borderBottomWidth) || 0;
+        if (border || parseFloat(top ? ps.paddingTop : ps.paddingBottom) || ps.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+          return top ? r.top - (pb.top + border) : pb.bottom - border - r.bottom;
+        }
+      }
+      return null;
+    };
+    const [above, below] = [side(true), side(false)];
+    return above === null || below === null ? 'unknown' : `${Math.round(above * 100) / 100}px ${Math.round(below * 100) / 100}px`;
+  };
+
   const styles = (el, pseudo) => {
     const s = getComputedStyle(el, pseudo || null);
     const g = (p) => canon(s.getPropertyValue(p));
@@ -143,6 +175,7 @@ function readUnit({ selector, descendants }) {
       padding: quad(s, ['padding-top', 'padding-right', 'padding-bottom', 'padding-left']),
       margin: quad(s, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']),
       'margin-flow': pseudo ? quad(s, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']) : flowMargin(el, s),
+      'margin-space': pseudo || !inFlow(el) ? 'unknown' : spaceAround(el),
       gap: `${g('row-gap')} ${g('column-gap')}`, width: g('width'), height: g('height'),
       display: g('display'), visibility: g('visibility'), 'z-index': g('z-index'),
       'transition-property': g('transition-property'), 'transition-duration': g('transition-duration'),
@@ -166,31 +199,91 @@ function readUnit({ selector, descendants }) {
   // A label inside an unstyled native button inherits the browser's control font, so it counts as the control.
   const nativeKind = (el) => (isToggle(el) ? 'toggle' : el.closest('button, input, select, textarea') ? 'control' : null);
 
-  // A chip: the parent box drawn around a box-less inline wrapper that holds all of its text (a city pill around the
-  // prototype's <span class="sc-interp">). The comparer reads box properties there when the reference text sits in a
-  // template wrapper (unit.js chipView). A chip that is the unit itself is already compared as the root.
+  // The box that owns a text. Both sides carry text in elements that draw no box of their own: the prototype's
+  // template engine wraps every interpolated value in <span class="sc-interp">, the target wraps labels in spans.
+  // Climbing through such carriers to the parent that holds exactly the same text reaches the element whose margin,
+  // padding, border, background and cursor a person sees (a footer heading, a tile label, a city pill, a select's
+  // box). The climb stops at a control, at the unit's own root (already compared as itself) and at the body.
+  // unit.js boxView reads the box properties from there, on each side; text properties stay on the text element.
   const BOX_PROPS = ['background-color', 'background-image', 'border-width', 'border-style', 'border-color', 'border-radius', 'box-shadow',
-    'padding', 'width', 'height', 'display', 'outline-width', 'outline-style', 'outline-color', 'outline-offset',
+    'padding', 'margin', 'margin-flow', 'margin-space', 'gap', 'cursor', 'width', 'height', 'display', 'outline-width', 'outline-style', 'outline-color', 'outline-offset',
     'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay'];
-  const paintsBox = (s) => s.backgroundColor !== 'rgba(0, 0, 0, 0)' || s.backgroundImage !== 'none'
+  const CONTROL = 'a, button, summary, label, select, input, textarea, [role=button], [role=tab], [role=link], [role=menuitem], [role=option], [role=combobox], [role=switch], [role=checkbox], [role=radio]';
+  const paintsBox = (s) => s.backgroundColor !== 'rgba(0, 0, 0, 0)' || s.backgroundImage !== 'none' || s.boxShadow !== 'none'
     || [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].some((w) => parseFloat(w) > 0);
-  const boxless = (s) => s.display === 'inline' && !paintsBox(s) && [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].every((p) => parseFloat(p) === 0);
-  const chipOf = (el) => {
-    const parent = el.parentElement;
-    if (!parent || parent === document.body || parent === root || !norm(el.textContent) || !boxless(getComputedStyle(el))) return null;
-    if (norm(parent.textContent) !== norm(el.textContent) || !paintsBox(getComputedStyle(parent))) return null;
-    const [r, p] = [el.getBoundingClientRect(), parent.getBoundingClientRect()];
-    return p.height <= r.height * 2 + 48 && p.width <= r.width + 160 ? parent : null;
+  const spaceless = (s) => [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft, s.marginTop, s.marginRight, s.marginBottom, s.marginLeft]
+    .every((v) => parseFloat(v) === 0);
+  const carrier = (el) => !el.matches(CONTROL) && !paintsBox(getComputedStyle(el)) && spaceless(getComputedStyle(el));
+  // What a person reads in an element: an invisible sizer that repeats the label does not make its parent say more.
+  const shownText = (el) => norm(typeof el.innerText === 'string' ? el.innerText : el.textContent);
+  const ownerBox = (el, stopAt) => {
+    const text = shownText(el);
+    if (!text) return el;
+    let node = el;
+    while (carrier(node)) {
+      const parent = node.parentElement;
+      if (!parent || parent === document.body || parent === stopAt || shownText(parent) !== text) break;
+      node = parent;
+    }
+    return node;
   };
-  const chipView = (el) => {
-    const chip = chipOf(el);
-    if (!chip) return {};
-    const chipStyles = styles(chip);
-    return { chip: { rect: rectOf(chip), styles: Object.fromEntries(BOX_PROPS.map((p) => [p, chipStyles[p]])) } };
+  // The item that keeps the box's place in its row or column: a wrapper around the box that adds only a margin (the
+  // target's <li> around a city pill link carries the pill's stagger) holds the margins the reference sets on the box.
+  const padless = (s) => [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].every((v) => parseFloat(v) === 0);
+  const flowItemOf = (owner, text, stopAt) => {
+    let node = owner;
+    for (let parent = node.parentElement; parent && parent !== document.body && parent !== stopAt && shownText(parent) === text
+      && !parent.matches(CONTROL) && !paintsBox(getComputedStyle(parent)) && padless(getComputedStyle(parent)); parent = parent.parentElement) node = parent;
+    return node;
   };
+  const MARGIN_PROPS = ['margin', 'margin-flow', 'margin-space'];
+  // Where a box sits among the boxes of its list: a staggered row of pills sets each margin by place (unit.js).
+  const placeOf = (node) => {
+    const items = node.parentElement ? [...node.parentElement.children].filter((c) => c.getBoundingClientRect().width > 0) : [];
+    return { index: items.indexOf(node), count: items.length };
+  };
+  const boxView = (el, stopAt) => {
+    const owner = ownerBox(el, stopAt);
+    const item = shownText(el) ? flowItemOf(owner, shownText(el), stopAt) : owner;
+    if (owner === el && item === el) return { place: placeOf(el) };
+    const [ownerStyles, itemStyles] = [styles(owner), item === owner ? null : styles(item)];
+    const pick = (p) => [p, itemStyles && MARGIN_PROPS.includes(p) ? itemStyles[p] : ownerStyles[p]];
+    return { place: placeOf(item), box: { tag: owner.tagName.toLowerCase(), rect: rectOf(owner), styles: Object.fromEntries(BOX_PROPS.map(pick)) } };
+  };
+  // Hidden on purpose: a sizer span kept invisible to reserve a combobox's width is not what a person reads.
+  const hidden = (el) => getComputedStyle(el).visibility === 'hidden';
+  // A root that draws no text of its own but holds one visible text element (a combobox around its label) draws its
+  // text with that element's typography.
+  const TEXT_PROPS = ['color', 'font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'text-transform', 'text-decoration-line'];
+  const ownTextOf = (el) => norm([...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' '));
+  const textCarrierOf = (el) => {
+    if (hasOwnText(el)) return null;
+    const writers = [...el.querySelectorAll('*')].filter((n) => !n.closest('svg') && ownTextOf(n) && !hidden(n) && n.getBoundingClientRect().width > 0);
+    return writers.length === 1 ? writers[0] : null;
+  };
+  const textView = (el) => {
+    const writer = textCarrierOf(el);
+    if (!writer) return {};
+    const writerStyles = styles(writer);
+    return { textCarrier: { tag: writer.tagName.toLowerCase(), styles: Object.fromEntries(TEXT_PROPS.map((p) => [p, writerStyles[p]])) } };
+  };
+  // A language flag: the target draws SVG flags (60x40) and the reference's auth pages without auth.js keep a static
+  // 15px rect in the pill; both are the owner-accepted flag difference, not a glyph to match.
+  const LANGUAGE = '.qb-lang, [aria-label^="language" i], [aria-haspopup][aria-label*="language" i]';
+  const isFlag = (svg) => {
+    if (!svg.closest(LANGUAGE)) return false;
+    const vb = svg.viewBox && svg.viewBox.baseVal;
+    if (vb && vb.width && Math.abs(vb.width / vb.height - 1.5) < 0.01) return 'flag';
+    const shapes = [...svg.children];
+    return shapes.length === 1 && shapes[0].tagName.toLowerCase() === 'rect' ? 'static' : false;
+  };
+  const inputType = (el) => (el.tagName === 'INPUT' ? el.type : el.tagName.toLowerCase());
+  // The field an input stands for, as a person reads it: its label, else its accessible name or placeholder.
+  const fieldOf = (el) => norm((el.labels && el.labels[0] && el.labels[0].innerText) || el.getAttribute('aria-label') || el.placeholder || el.name || '')
+    .toLowerCase().slice(0, 40);
   const templateWrapper = (el) => el.classList.contains('sc-interp');
-  const describe = (el, key, kind) => ({ key, kind, tag: el.tagName.toLowerCase(), native: nativeKind(el), templateWrapper: templateWrapper(el), rect: rectOf(el), styles: styles(el), ownText: hasOwnText(el), ...chipView(el) });
-  const out = { rect: rectOf(root), styles: styles(root), ownText: hasOwnText(root), tag: root.tagName.toLowerCase(), native: nativeKind(root), templateWrapper: templateWrapper(root), text: norm(root.textContent).slice(0, 80), descendants: [], ...chipView(root) };
+  const describe = (el, key, kind) => ({ key, kind, tag: el.tagName.toLowerCase(), native: nativeKind(el), templateWrapper: templateWrapper(el), rect: rectOf(el), styles: styles(el), ownText: hasOwnText(el), ...boxView(el, root) });
+  const out = { rect: rectOf(root), styles: styles(root), ownText: hasOwnText(root), tag: root.tagName.toLowerCase(), native: nativeKind(root), templateWrapper: templateWrapper(root), text: norm(root.textContent).slice(0, 80), descendants: [], ...(hop ? boxView(root, null) : {}), ...textView(root) };
   if (!descendants) return out;
 
   const counters = {};
@@ -201,12 +294,12 @@ function readUnit({ selector, descendants }) {
     const tag = el.tagName.toLowerCase();
     if (el.closest('svg') && tag !== 'svg') continue;
     const r = el.getBoundingClientRect();
-    if (!r.width || !r.height) continue;
-    if (tag === 'svg') { out.descendants.push(describe(el, `svg#${nth('svg')}`, 'icon')); continue; }
+    if (!r.width || !r.height || hidden(el)) continue;
+    if (tag === 'svg') { out.descendants.push({ ...describe(el, `svg#${nth('svg')}`, 'icon'), flag: isFlag(el) }); continue; }
     if (tag === 'input' || tag === 'textarea') {
       const i = nth('input');
-      out.descendants.push(describe(el, `input#${i}`, 'input'));
-      if (el.placeholder) out.descendants.push({ key: `placeholder#${i}`, kind: 'placeholder', rect: rectOf(el), styles: styles(el, '::placeholder'), ownText: true });
+      out.descendants.push({ ...describe(el, `input#${i}`, 'input'), inputType: inputType(el), field: fieldOf(el) });
+      if (el.placeholder) out.descendants.push({ key: `placeholder#${i}`, kind: 'placeholder', of: `input#${i}`, rect: rectOf(el), styles: styles(el, '::placeholder'), ownText: true });
       continue;
     }
     if (tag === 'img') { out.descendants.push(describe(el, `img#${nth('img')}`, 'image')); continue; }
@@ -220,12 +313,27 @@ function readUnit({ selector, descendants }) {
   return out;
 }
 
-// Rasterises each svg of a unit to a 48x48 ink mask so glyphs can be compared across sides.
-async function rasteriseIcons(selector) {
+// Rasterises each svg of a unit to a 48x48 ink mask so glyphs can be compared across sides. `scope` is a selector,
+// or { selector, extra } where `extra` names more roots whose icons belong to the unit (the reference's phone header
+// bar is pinned outside <header>). Hidden svgs (a desktop icon set kept in the DOM at phone widths) are not counted.
+async function rasteriseIcons(scope) {
+  const { selector, extra } = typeof scope === 'string' ? { selector: scope } : scope;
   const root = document.querySelector(selector);
   if (!root) return [];
-  const svgs = [...root.querySelectorAll('svg')]
-    .filter((s) => !s.parentElement.closest('svg') && s.getBoundingClientRect().width > 0).slice(0, 40);
+  const roots = [root, ...(extra ? [...document.querySelectorAll(extra)].filter((n) => !root.contains(n)) : [])];
+  const shown = (s) => { const r = s.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(s).visibility !== 'hidden'; };
+  const svgs = roots.flatMap((r) => [...r.querySelectorAll('svg')])
+    .filter((s) => !s.parentElement.closest('svg') && shown(s)).slice(0, 40);
+  // A language flag (the target's 60x40 SVG flags, the reference's static rect in the auth pill) is the accepted flag
+  // difference, compared by the language scenarios, not as a glyph.
+  const LANGUAGE = '.qb-lang, [aria-label^="language" i], [aria-haspopup][aria-label*="language" i]';
+  const isFlag = (svg) => {
+    if (!svg.closest(LANGUAGE)) return false;
+    const vb = svg.viewBox && svg.viewBox.baseVal;
+    if (vb && vb.width && Math.abs(vb.width / vb.height - 1.5) < 0.01) return 'flag';
+    const shapes = [...svg.children];
+    return shapes.length === 1 && shapes[0].tagName.toLowerCase() === 'rect' ? 'static' : false;
+  };
   const canvas = document.createElement('canvas');
   canvas.width = 48; canvas.height = 48;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -265,13 +373,31 @@ async function rasteriseIcons(selector) {
     const rawPaint = style.stroke !== 'none' && strokeUser ? style.stroke : getComputedStyle(svg.querySelector('[fill]:not([fill=none])') || svg).fill;
     const paint = /^(oklab|oklch|lab|lch|color)\(/.test(rawPaint) ? toRgb(rawPaint) : rawPaint;
     results.push({
-      index, bits, ink: paint, width: rect.width, height: rect.height, strokeUser,
+      index, bits, ink: paint, width: rect.width, height: rect.height, strokeUser, flag: isFlag(svg),
       stroke: Math.round(strokeUser * scale * 100) / 100,
       viewBox: vb ? `${vb.width}x${vb.height}` : null,
       d: [...svg.querySelectorAll('path')].map((p) => p.getAttribute('d')).join(' ').slice(0, 4000),
     });
   }
   return results;
+}
+
+// Icons drawn with CSS instead of an svg: a control with no text, svg or image whose inner boxes paint the glyph (the
+// reference's phone burger is three bars drawn by a span and its ::before/::after). Counted with the svgs so a burger
+// drawn in CSS on one side and as an svg on the other is the same number of icons.
+function countDrawnIcons(scope) {
+  const { selector, extra } = typeof scope === 'string' ? { selector: scope } : scope;
+  const root = document.querySelector(selector);
+  if (!root) return 0;
+  const roots = [root, ...(extra ? [...document.querySelectorAll(extra)].filter((n) => !root.contains(n)) : [])];
+  const CONTROL = 'a, button, [role=button]';
+  const shown = (n) => { const r = n.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(n).visibility !== 'hidden'; };
+  const paints = (s) => s.backgroundColor !== 'rgba(0, 0, 0, 0)' || [s.borderTopWidth, s.borderBottomWidth].some((w) => parseFloat(w) > 0);
+  const drawn = (control) => !(control.innerText || '').trim() && !control.querySelector('svg, img') && shown(control)
+    && [...control.querySelectorAll('*')].some((n) => shown(n) && n.getBoundingClientRect().width <= 32
+      && (paints(getComputedStyle(n)) || paints(getComputedStyle(n, '::before'))));
+  const controls = roots.flatMap((r) => [...(r.matches(CONTROL) ? [r] : []), ...r.querySelectorAll(CONTROL)]);
+  return controls.filter(drawn).length;
 }
 
 function clearMarks(attrs) {
@@ -288,4 +414,4 @@ function markAncestors({ selector, id }) {
   return true;
 }
 
-module.exports = { collectTexts, readUnit, rasteriseIcons, clearMarks, markAncestors };
+module.exports = { collectTexts, readUnit, rasteriseIcons, countDrawnIcons, clearMarks, markAncestors };

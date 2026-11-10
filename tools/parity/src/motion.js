@@ -5,11 +5,18 @@ const SAMPLE_MS = 25;
 const DURATION_TOLERANCE_MS = 80;
 const CURVE_TOLERANCE = 0.2;
 
+// A keyframe step's declarations as drawn: a minified build (opacity:0) and a source sheet (opacity: 0) say the same,
+// so spacing is dropped and the declarations re-sorted once it is gone.
 function canonDeclarations(text) {
   return text
     .replace(/#([0-9a-f])([0-9a-f])([0-9a-f])\b/g, '#$1$1$2$2$3$3')
     .replace(/rgba?\([^)]+\)/g, (m) => toHex(m).toLowerCase())
-    .replace(/\s*,\s*/g, ',');
+    .replace(/\s*,\s*/g, ',')
+    .split(';')
+    .map((declaration) => declaration.trim().replace(/\s*:\s*/, ':').replace(/\s*\(\s*/g, '(').replace(/\s*\)/g, ')'))
+    .filter(Boolean)
+    .sort()
+    .join(';');
 }
 
 const canonSteps = (steps) => Object.fromEntries(Object.entries(steps).map(([k, v]) => [k, canonDeclarations(v)]));

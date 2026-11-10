@@ -3,7 +3,9 @@
     "header": {
       "ref": "header",
       "target": "header",
-      "fixedSize": true
+      "fixedSize": true,
+      "refExtra": "#qb-mglobe, #qb-mbell, #qb-burger",
+      "countDrawn": true
     },
     "header-add-ads": {
       "ref": "header .qb-hcluster > button.qb-btn:first-child",
@@ -112,7 +114,16 @@
       }
     },
     "signup": {
-      "$extends": "login"
+      "$extends": "login",
+      "auth-card": {
+        "ref": "main .qb-card",
+        "target": "main > div",
+        "fixedSize": true,
+        "accepted": {
+          "rule": "signup-extra-fields",
+          "properties": ["height", "pixel-mismatch"]
+        }
+      }
     },
     "forgot-password": {
       "$extends": "login"

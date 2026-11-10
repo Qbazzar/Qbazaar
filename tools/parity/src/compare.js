@@ -146,6 +146,16 @@ function userAgentDefault(property, refValue, refNative) {
 const sameFlowSpace = (ref, tgt) => Boolean(ref['margin-flow'] && tgt['margin-flow'])
   && sameLists(pxList(ref['margin-flow']), pxList(tgt['margin-flow']), SIZE_TOLERANCE);
 
+// A vertical margin on one side and a gap or a neighbour's margin on the other leave the same space above and below
+// the element as laid out (inpage spaceAround): the same pixels. A horizontal margin difference still counts.
+const known = (space) => Boolean(space) && space !== 'unknown';
+const sameLaidOutSpace = (ref, tgt) => {
+  if (!known(ref['margin-space']) || !known(tgt['margin-space'])) return false;
+  const [a, b] = [pxList(ref.margin), pxList(tgt.margin)];
+  if (Math.abs(a[1] - b[1]) > SIZE_TOLERANCE || Math.abs(a[3] - b[3]) > SIZE_TOLERANCE) return false;
+  return sameLists(pxList(ref['margin-space']), pxList(tgt['margin-space']), SIZE_TOLERANCE);
+};
+
 /** The value a property is compared by, so two spellings of the same drawing read as one. */
 function canonicalValue(property, value) {
   const text = String(value);
@@ -155,7 +165,7 @@ function canonicalValue(property, value) {
   return text;
 }
 
-const SKIPPED = new Set(['margin-flow', 'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay',
+const SKIPPED = new Set(['margin-flow', 'margin-space', 'transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay',
   'animation-name', 'animation-duration', 'animation-timing-function', 'animation-iteration-count', 'animation-delay']);
 
 /** Returns [{ property, ref, target }] for every property that differs beyond tolerance. */
@@ -175,7 +185,7 @@ function diffStyles(refRaw, tgtRaw, options = {}) {
     // Same box, same content: a different padding or gap draws the same pixels.
     if (options.sameBox && (property === 'padding' || property === 'gap' || property === 'line-height')) continue;
     if (userAgentDefault(property, ref[property], options.refNative)) continue;
-    if (property === 'margin' && sameFlowSpace(ref, tgt)) continue;
+    if (property === 'margin' && (sameFlowSpace(ref, tgt) || sameLaidOutSpace(ref, tgt))) continue;
     if (!sameValue(property, ref[property], tgt[property], options)) diffs.push({ property, ref: ref[property], target: tgt[property] });
   }
   if (options.motion === false) return diffs;
