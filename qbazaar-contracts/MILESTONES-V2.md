@@ -453,6 +453,8 @@
 | OPS-18.3 | Meilisearch + Horizon + Reverb as systemd services + `mod_proxy_wstunnel` for Reverb | [P0] | WebSocket connects from mobile and web |
 | OPS-18.10 | Cloudflare R2: create the bucket and access keys, and set the CORS rules for uploading | [P0] | The keys are in the production `.env` only |
 
+> Prepared in the repo (2026-11-11), not yet applied: config files, scripts and an ordered runbook with a rollback per step for OPS-18.5, 18.7, 18.8, 18.11–18.18 and the rest of 18.9 ([DOCS/M5-LAUNCH-RUNBOOK.md](../DOCS/M5-LAUNCH-RUNBOOK.md)). Each task stays open until its runbook step has run on the server and its acceptance check passes.
+
 ### Server and runtime
 
 | ID | Task | Priority | Acceptance criteria |
