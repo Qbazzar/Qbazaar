@@ -48,23 +48,33 @@ test('a text in a template wrapper is measured with the box that owns it, on eac
 
 // The hop reads list items' own margins: a staggered row of pills sets them by place, and sample cities sit in
 // another order on the target.
-test('list items compare margins only at the same place in their list', async () => {
-  const { placesDiffer } = require('../src/unit');
-  const pill = (index, margin) => ({ key: 't:lusail#0', kind: 'text', rect: rect(90, 53), ownText: true, styles: styles({ margin: `${margin}px 0px 0px 0px`, 'margin-flow': `${margin}px 12px 0px 0px` }), place: { index, count: 9 } });
+test('a list item at another place in its list has its margin counted under list-place, at the same place compared', async () => {
+  const { placesDiffer, listPlaceRule } = require('../src/accepted');
+  const pill = (index, margin, extra = {}) => ({ key: 't:lusail#0', kind: 'text', rect: rect(90, 53), ownText: true, styles: styles({ margin: `${margin}px 0px 0px 0px`, 'margin-flow': `${margin}px 12px 0px 0px`, ...extra }), place: { index, count: 9 } });
   assert.equal(placesDiffer(pill(1, 8), pill(2, 0)), true);
   assert.equal(placesDiffer(pill(2, 8), pill(2, 0)), false);
   assert.equal(placesDiffer({ place: { index: 0, count: 2 } }, { place: { index: 1, count: 2 } }), false);
+  assert.equal(listPlaceRule(pill(1, 8), pill(2, 0), { property: 'margin' }), 'list-place');
+  assert.equal(listPlaceRule(pill(1, 8), pill(2, 0), { property: 'padding' }), null);
   const findings = new Findings();
   const probe = (node) => unitProbe({ descendants: [node] });
-  // Lusail second in the reference row, third on the target: its margin is the pattern's, not the pill's.
+  // Lusail second in the reference row, third on the target: its margin is the pattern's, counted, not dropped.
   await new UnitComparer({ ref: probe(pill(1, 8)), target: probe(pill(2, 0)), findings, base: BASE })
     .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
   assert.deepEqual(findings.list, []);
+  assert.deepEqual(findings.accepted.map((a) => [a.rule, a.count, a.examples[0].component, a.examples[0].ref, a.examples[0].target]),
+    [['list-place', 1, 'city-pills > t:lusail', '8px 0px 0px 0px', '0px 0px 0px 0px']]);
+  // Only the margin follows the place: the pill's colour at another place is still a finding.
+  const coloured = new Findings();
+  await new UnitComparer({ ref: probe(pill(1, 8)), target: probe(pill(2, 0, { color: 'rgb(0, 0, 0)' })), findings: coloured, base: BASE })
+    .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
+  assert.deepEqual(coloured.list.map((f) => f.property), ['color']);
   // At the same place the margins are compared.
   const same = new Findings();
   await new UnitComparer({ ref: probe(pill(2, 8)), target: probe(pill(2, 0)), findings: same, base: BASE })
     .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
   assert.deepEqual(same.list.map((f) => f.property), ['margin']);
+  assert.deepEqual(same.accepted, []);
 });
 
 // G-hidden-sizer-pairing: a combobox whose label sits in a span next to an invisible sizer.
@@ -166,17 +176,43 @@ test('language flags are counted under their accepted rule, the static auth pill
 
 test('Arabic text in Noto Kufi Arabic is accepted, Latin text in it is not', async () => {
   const kufi = { property: 'rendered-font', ref: 'Segoe UI', target: 'Noto Kufi Arabic' };
-  assert.equal(arabicFontRule('text:العربية', kufi), 'arabic-font');
-  assert.equal(arabicFontRule('text:english', kufi), null);
-  assert.equal(arabicFontRule('text:العربية', { property: 'color', ref: 'a', target: 'Noto Kufi' }), null);
+  assert.equal(arabicFontRule('العربية', kufi), 'arabic-font');
+  assert.equal(arabicFontRule('English', kufi), null);
+  assert.equal(arabicFontRule('العربية', { property: 'color', ref: 'a', target: 'Noto Kufi' }), null);
   // Through the comparer: an Arabic language row's font is accepted, its colour is not.
-  const row = (extra) => ({ rect: rect(), tag: 'button', text: 'العربية', ownText: true, styles: styles(extra), descendants: [] });
+  const row = (extra) => ({ rect: rect(), tag: 'button', text: 'العربية', ownText: true, ownCopy: 'العربية', styles: styles(extra), descendants: [] });
   const findings = new Findings();
   const probe = (node, font) => ({ ...unitProbe(node), renderedFonts: async () => font });
   await new UnitComparer({ ref: probe(row({ color: 'rgb(75, 75, 75)' }), 'Segoe UI'), target: probe(row({ color: 'rgb(33, 33, 33)' }), 'Noto Kufi Arabic'), findings, base: BASE })
     .compare({ name: 'text:العربية', refSel: 'a', tgtSel: 'a', icons: false, states: false, descendants: false });
   assert.deepEqual(findings.list.map((f) => f.property), ['color']);
   assert.equal(findings.accepted[0].rule, 'arabic-font');
+});
+
+// The rule reads the text an element writes itself and the font it asks for first, never the text of a whole unit.
+test('a Latin text in a container that also holds Arabic is still compared, and so is a Latin font ahead of Noto Kufi', async () => {
+  const rendered = (ref, target) => ({ property: 'rendered-font', ref, target });
+  const family = (target) => ({ property: 'font-family', ref: 'Segoe UI, sans-serif', target });
+  assert.equal(arabicFontRule('English العربية', rendered('Segoe UI', 'Noto Kufi Arabic')), null);
+  // Digits next to Arabic letters stay in the reference's Latin font; a font only the target drew is a finding.
+  assert.equal(arabicFontRule('منذ 3 أيام', rendered('Poppins + Segoe UI', 'Noto Kufi Arabic + Poppins')), 'arabic-font');
+  assert.equal(arabicFontRule('منذ 3 أيام', rendered('Arial + Segoe UI', 'Noto Kufi Arabic + Poppins')), null);
+  assert.equal(arabicFontRule('العربية', family('"notoKufiArabic", poppins, sans-serif')), 'arabic-font');
+  assert.equal(arabicFontRule('العربية', family('montserrat, notoKufiArabic, "montserrat Fallback", sans-serif')), null);
+
+  // A language panel: its own heading is Latin, its rows are English and Arabic.
+  const text = (copy, font) => ({ key: `t:${copy.toLowerCase()}#0`, kind: 'text', rect: rect(), ownText: true, ownCopy: copy, styles: styles({ 'font-family': font }) });
+  const panel = (font, rows) => ({ text: 'Choose your language English العربية', ownText: true, ownCopy: 'Choose your language', styles: styles({ 'font-family': font }), descendants: rows });
+  const ref = panel('Poppins, sans-serif', [text('English', 'Poppins, sans-serif'), text('العربية', 'Segoe UI, sans-serif')]);
+  const target = panel('montserrat, notoKufiArabic, sans-serif', [text('English', 'notoKufiArabic, poppins, sans-serif'), text('العربية', 'notoKufiArabic, poppins, sans-serif')]);
+  const probe = (node, font) => ({ ...unitProbe(node), renderedFonts: async () => font });
+  const findings = new Findings();
+  await new UnitComparer({ ref: probe(ref, 'Poppins'), target: probe(target, 'Montserrat + Noto Kufi Arabic'), findings, base: BASE })
+    .compare({ name: 'language-panel', refSel: 'a', tgtSel: 'a', icons: false, states: false });
+  assert.deepEqual(findings.list.map((f) => [f.component, f.property]), [
+    ['language-panel', 'font-family'], ['language-panel', 'rendered-font'], ['language-panel > t:english', 'font-family'],
+  ]);
+  assert.deepEqual(findings.accepted.map((a) => [a.rule, a.count, a.examples[0].component]), [['arabic-font', 1, 'language-panel > t:العربية']]);
 });
 
 test('a component can accept named properties: sign-up\'s card is taller for its two extra fields', async () => {

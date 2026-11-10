@@ -110,6 +110,20 @@ test('an invisible sizer is not a text: the combobox reads its visible label', a
   assert.equal(unit.textCarrier.styles['font-size'], '20px');
 });
 
+// The arabic-font rule reads the text an element writes itself (accepted.js), never the text of its descendants.
+test('own copy: a container reports its own text, its rows theirs, a label carrier the text it writes', async (t) => {
+  if (!needsChrome(t)) return;
+  await page.setContent(html(`
+    <div id="panel">Choose your language<button>English</button><button><span>العربية</span></button></div>`));
+  const unit = await page.evaluate(inpage.readUnit, { selector: '#panel', descendants: true });
+  assert.match(unit.text, /English.*العربية/);
+  assert.equal(unit.ownCopy, 'Choose your language');
+  assert.deepEqual(unit.descendants.filter((d) => d.kind === 'text').map((d) => d.ownCopy), ['English', 'العربية']);
+  const row = await page.evaluate(inpage.readUnit, { selector: '#panel button:last-child', descendants: false });
+  assert.equal(row.ownCopy, '');
+  assert.equal(row.textCarrier.ownCopy, 'العربية');
+});
+
 test('icons: hidden svgs are left out, extra roots and CSS-drawn glyphs count, flags are named', async (t) => {
   if (!needsChrome(t)) return;
   const glyph = '<svg width="21" height="21" viewBox="0 0 24 24"><path d="M3 3h18v18H3z" stroke="#333" fill="none"/></svg>';

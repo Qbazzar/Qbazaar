@@ -255,6 +255,7 @@ function readUnit({ selector, descendants, hop }) {
   // A root that draws no text of its own but holds one visible text element (a combobox around its label) draws its
   // text with that element's typography.
   const TEXT_PROPS = ['color', 'font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'text-transform', 'text-decoration-line'];
+  // The text an element writes itself, not its descendants' (ownCopy: the arabic-font rule reads it, accepted.js).
   const ownTextOf = (el) => norm([...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' '));
   const textCarrierOf = (el) => {
     if (hasOwnText(el)) return null;
@@ -265,7 +266,7 @@ function readUnit({ selector, descendants, hop }) {
     const writer = textCarrierOf(el);
     if (!writer) return {};
     const writerStyles = styles(writer);
-    return { textCarrier: { tag: writer.tagName.toLowerCase(), styles: Object.fromEntries(TEXT_PROPS.map((p) => [p, writerStyles[p]])) } };
+    return { textCarrier: { tag: writer.tagName.toLowerCase(), ownCopy: ownTextOf(writer).slice(0, 80), styles: Object.fromEntries(TEXT_PROPS.map((p) => [p, writerStyles[p]])) } };
   };
   // A language flag: the target draws SVG flags (60x40) and the reference's auth pages without auth.js keep a static
   // 15px rect in the pill; both are the owner-accepted flag difference, not a glyph to match.
@@ -282,8 +283,8 @@ function readUnit({ selector, descendants, hop }) {
   const fieldOf = (el) => norm((el.labels && el.labels[0] && el.labels[0].innerText) || el.getAttribute('aria-label') || el.placeholder || el.name || '')
     .toLowerCase().slice(0, 40);
   const templateWrapper = (el) => el.classList.contains('sc-interp');
-  const describe = (el, key, kind) => ({ key, kind, tag: el.tagName.toLowerCase(), native: nativeKind(el), templateWrapper: templateWrapper(el), rect: rectOf(el), styles: styles(el), ownText: hasOwnText(el), ...boxView(el, root) });
-  const out = { rect: rectOf(root), styles: styles(root), ownText: hasOwnText(root), tag: root.tagName.toLowerCase(), native: nativeKind(root), templateWrapper: templateWrapper(root), text: norm(root.textContent).slice(0, 80), descendants: [], ...(hop ? boxView(root, null) : {}), ...textView(root) };
+  const describe = (el, key, kind) => ({ key, kind, tag: el.tagName.toLowerCase(), native: nativeKind(el), templateWrapper: templateWrapper(el), rect: rectOf(el), styles: styles(el), ownText: hasOwnText(el), ownCopy: ownTextOf(el).slice(0, 80), ...boxView(el, root) });
+  const out = { rect: rectOf(root), styles: styles(root), ownText: hasOwnText(root), tag: root.tagName.toLowerCase(), native: nativeKind(root), templateWrapper: templateWrapper(root), text: norm(root.textContent).slice(0, 80), ownCopy: ownTextOf(root).slice(0, 80), descendants: [], ...(hop ? boxView(root, null) : {}), ...textView(root) };
   if (!descendants) return out;
 
   const counters = {};
