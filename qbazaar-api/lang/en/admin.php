@@ -583,7 +583,6 @@ return [
         'report_actioned' => 'Report marked as actioned.',
         'ban_applied' => 'User banned.',
         'unban_applied' => 'User unbanned.',
-        'suspend' => 'Suspend',
         'unsuspend' => 'Reactivate',
         'ad_suspended' => 'Ad suspended.',
         'ad_unsuspended' => 'Ad reactivated.',

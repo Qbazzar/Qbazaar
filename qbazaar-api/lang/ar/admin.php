@@ -524,7 +524,6 @@ return [
         'report_actioned' => 'تم تسجيل إجراء على البلاغ.',
         'ban_applied' => 'تم حظر المستخدم.',
         'unban_applied' => 'تم رفع الحظر عن المستخدم.',
-        'suspend' => 'إيقاف',
         'unsuspend' => 'إعادة تفعيل',
         'ad_suspended' => 'تم إيقاف الإعلان.',
         'ad_unsuspended' => 'تمت إعادة تفعيل الإعلان.',
