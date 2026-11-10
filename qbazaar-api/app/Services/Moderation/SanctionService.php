@@ -8,6 +8,8 @@ use App\Data\Moderation\SanctionReasonInput;
 use App\Enums\SanctionAction;
 use App\Events\Ads\AdSuspended;
 use App\Events\Users\UserSuspended;
+use App\Exceptions\DomainException;
+use App\Exceptions\ErrorCode;
 use App\Models\Ad;
 use App\Models\ModerationSanction;
 use App\Models\Report;
@@ -15,7 +17,6 @@ use App\Models\User;
 use App\Services\Admin\AdminAuditLogger;
 use App\Services\Ads\AdLifecycleService;
 use App\Services\Users\UserModerationService;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -45,12 +46,28 @@ class SanctionService
         });
     }
 
+    /**
+     * The ad is read again on its locked row, so when two staff remove it at
+     * once the second is refused instead of sanctioning the seller twice.
+     */
     public function removeAd(User $staff, Ad $ad, SanctionReasonInput $input, ?Report $report = null): ModerationSanction
     {
         return DB::transaction(function () use ($staff, $ad, $input, $report): ModerationSanction {
-            $ad->delete();
+            /** @var Ad|null $locked */
+            $locked = Ad::query()->whereKey($ad->getKey())->lockForUpdate()->first();
 
-            return $this->record($staff, SanctionAction::AD_REMOVED, $ad, $input, $report);
+            if ($locked === null) {
+                throw new DomainException(ErrorCode::AD_NOT_FOUND, (string) __('admin.moderation.errors.ad_already_removed'));
+            }
+
+            if ($ad->relationLoaded('user')) {
+                $locked->setRelation('user', $ad->user);
+            }
+
+            $locked->delete();
+            $ad->setRawAttributes($locked->getAttributes(), true);
+
+            return $this->record($staff, SanctionAction::AD_REMOVED, $locked, $input, $report);
         });
     }
 
@@ -59,15 +76,20 @@ class SanctionService
      * one insert; the deletes stay per model so search and the activity log
      * see each one, as on the single-delete path.
      *
-     * @param Collection<int, Ad> $ads bounded by the caller (bulk_action_max)
+     * The selection is read on locked rows, so an ad another staff member
+     * removed meanwhile is skipped rather than sanctioned twice.
+     *
+     * @param list<string> $adIds bounded by the caller (bulk_action_max)
+     * @return int how many ads this call removed
      */
-    public function removeAds(User $staff, Collection $ads, SanctionReasonInput $input): int
+    public function removeAds(User $staff, array $adIds, SanctionReasonInput $input): int
     {
-        if ($ads->isEmpty()) {
+        if ($adIds === []) {
             return 0;
         }
 
-        DB::transaction(function () use ($staff, $ads, $input): void {
+        return DB::transaction(function () use ($staff, $adIds, $input): int {
+            $ads = Ad::query()->with('user')->whereKey($adIds)->lockForUpdate()->get();
             $removals = [];
             foreach ($ads as $ad) {
                 $removals[] = [$ad, $this->newSanction($staff, SanctionAction::AD_REMOVED, $ad, $input, null)];
@@ -84,9 +106,9 @@ class SanctionService
                 $this->audit($staff, $sanction, $ad, $input);
                 AdSuspended::dispatch($ad, $sanction);
             }
-        });
 
-        return $ads->count();
+            return $ads->count();
+        });
     }
 
     public function suspendUser(User $staff, User $user, SanctionReasonInput $input, ?Report $report = null): ModerationSanction

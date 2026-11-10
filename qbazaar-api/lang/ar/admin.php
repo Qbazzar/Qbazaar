@@ -2056,11 +2056,13 @@ return [
         ],
         'errors' => [
             'action_unavailable' => 'لم يعد هذا الإجراء متاحاً على البلاغ. حدّث الصفحة وحاول مجدداً.',
+            'ad_already_removed' => 'حذف موظف آخر هذا الإعلان مسبقاً.',
         ],
         'flash' => [
             'report_sanctioned' => 'تم تنفيذ «:action» وإغلاق البلاغ.',
             'ad_removed' => 'تم حذف الإعلان.',
             'ads_removed' => 'تم حذف الإعلانات المحددة: :count.',
+            'ads_already_removed' => 'تُركت :count لأنها حُذفت مسبقاً.',
             'user_suspended' => 'تم إيقاف المستخدم.',
         ],
         'sla' => [

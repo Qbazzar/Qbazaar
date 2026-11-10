@@ -2115,11 +2115,13 @@ return [
         ],
         'errors' => [
             'action_unavailable' => 'This action is no longer available on the report. Refresh the page and try again.',
+            'ad_already_removed' => 'Another staff member already removed this ad.',
         ],
         'flash' => [
             'report_sanctioned' => '":action" done and the report closed.',
             'ad_removed' => 'Ad removed.',
             'ads_removed' => 'Selected ads removed: :count.',
+            'ads_already_removed' => ':count were left alone because they were already removed.',
             'user_suspended' => 'User suspended.',
         ],
         'sla' => [

@@ -74,12 +74,16 @@ class BulkAdReview
     }
 
     /**
+     * The sellers come with the selection, so telling each one about their ad
+     * costs no query of its own.
+     *
      * @param list<string> $adIds
      * @return Collection<int, Ad>
      */
     private function pendingAmong(array $adIds): Collection
     {
         return Ad::query()
+            ->with('user')
             ->whereIn('id', $adIds)
             ->where('status', AdStatus::PENDING->value)
             ->orderBy('submitted_at')
