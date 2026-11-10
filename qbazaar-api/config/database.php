@@ -183,12 +183,16 @@ return [
             'max_retries' => 0,
         ],
 
+        // Production runs the cache on its own Redis server (allkeys-lru) so
+        // cache pressure can never evict queued jobs, sessions or locks on
+        // the `default` one (noeviction). Each REDIS_CACHE_* falls back to the
+        // shared value, so one server with two databases still works.
         'cache' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'username' => env('REDIS_USERNAME'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', '6379'),
+            'url' => env('REDIS_CACHE_URL', env('REDIS_URL')),
+            'host' => env('REDIS_CACHE_HOST', env('REDIS_HOST', '127.0.0.1')),
+            'username' => env('REDIS_CACHE_USERNAME', env('REDIS_USERNAME')),
+            'password' => env('REDIS_CACHE_PASSWORD', env('REDIS_PASSWORD')),
+            'port' => env('REDIS_CACHE_PORT', env('REDIS_PORT', '6379')),
             'database' => env('REDIS_CACHE_DB', '1'),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
