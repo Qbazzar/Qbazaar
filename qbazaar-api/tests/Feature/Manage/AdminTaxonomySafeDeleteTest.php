@@ -307,3 +307,37 @@ it('moves neither a category nor a location under its own branch', function (str
     expect($html)->not->toContain('<option value="' . $grandchild->id . '"')
         ->and($html)->not->toContain('<option value="' . $root->id . '"');
 })->with(['categories', 'locations']);
+
+it('deletes a parent together with the children selected with it', function (string $resource): void {
+    $isCategory = $resource === 'categories';
+    $parent = $isCategory ? safeDeleteCategory() : safeDeleteLocation();
+    $child = $isCategory ? safeDeleteCategory($parent) : safeDeleteLocation($parent);
+    $grandchild = $isCategory ? safeDeleteCategory($child) : safeDeleteLocation($child);
+    actingAs($this->admin);
+
+    $this->post(route("admin.{$resource}.bulk-destroy"), ['ids' => [$grandchild->id, $parent->id, $child->id]])
+        ->assertSessionHas('status', 'حُذفت 3 عناصر.');
+
+    expect($parent::query()->whereKey([$parent->id, $child->id, $grandchild->id])->count())->toBe(0)
+        ->and(Activity::query()->where('event', "admin.{$resource}.bulk-destroy")->sole()->properties['kept'])->toBe([]);
+})->with(['categories', 'locations']);
+
+it('keeps a parent whose child stays, because it is in use or not selected', function (): void {
+    $parent = safeDeleteCategory();
+    $usedChild = safeDeleteCategory($parent);
+    safeDeleteAd(['category_id' => $usedChild->id]);
+
+    $otherParent = safeDeleteCategory();
+    $selectedChild = safeDeleteCategory($otherParent);
+    $unselectedChild = safeDeleteCategory($otherParent);
+    actingAs($this->admin);
+
+    $this->post(route('admin.categories.bulk-destroy'), ['ids' => [$parent->id, $usedChild->id, $otherParent->id, $selectedChild->id]])
+        ->assertSessionHas('error');
+
+    expect(Category::query()->whereKey($parent->id)->exists())->toBeTrue()
+        ->and(Category::query()->whereKey($usedChild->id)->exists())->toBeTrue()
+        ->and(Category::query()->whereKey($otherParent->id)->exists())->toBeTrue()
+        ->and(Category::query()->whereKey($unselectedChild->id)->exists())->toBeTrue()
+        ->and(Category::query()->whereKey($selectedChild->id)->exists())->toBeFalse();
+});
