@@ -96,6 +96,73 @@ paths:
                       version: 1.0.0
                       timestamp: '2026-05-20T10:00:00.000Z'
 
+  /api/v1/health/ready:
+    get:
+      tags: [Health]
+      summary: Readiness check for uptime monitors
+      description: |
+        Checks the API's dependencies, each with a short timeout: the
+        database, the queue Redis and the cache (critical), and Meilisearch,
+        the scheduler heartbeat and the Horizon workers (background). 200 with
+        `ok`, or `degraded` when only a background check fails; 503 with
+        `down` when a critical one fails. An ops endpoint: the body is the bare
+        report, not the success envelope, and it is never cached. A check
+        reads `disabled` where this deployment does not use that dependency.
+      operationId: healthReady
+      security: []
+      responses:
+        '200':
+          description: The API can serve requests
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessReport'
+              examples:
+                ok:
+                  value:
+                    status: ok
+                    checks:
+                      database: ok
+                      redis: ok
+                      cache: ok
+                      search: ok
+                      scheduler: ok
+                      workers: ok
+                degraded:
+                  value:
+                    status: degraded
+                    checks:
+                      database: ok
+                      redis: ok
+                      cache: ok
+                      search: fail
+                      scheduler: ok
+                      workers: ok
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          description: A critical dependency is down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessReport'
+              examples:
+                down:
+                  value:
+                    status: down
+                    checks:
+                      database: fail
+                      redis: ok
+                      cache: ok
+                      search: ok
+                      scheduler: stale
+                      workers: ok
+
   # ──────────────────────────────────────────────────────────────────────────
   # Auth (Sprint 1)
   # ──────────────────────────────────────────────────────────────────────────
@@ -5494,6 +5561,20 @@ components:
                 timestamp:
                   type: string
                   format: date-time
+
+    ReadinessReport:
+      type: object
+      required: [status, checks]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, down]
+        checks:
+          type: object
+          description: One entry per dependency
+          additionalProperties:
+            type: string
+            enum: [ok, fail, stale, unknown, disabled]
 
     # ── Auth (Sprint 1) ──────────────────────────────────────────────
     User:

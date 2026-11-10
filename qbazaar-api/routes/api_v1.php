@@ -56,6 +56,7 @@ use App\Http\Controllers\Api\V1\Orders\OrderController;
 use App\Http\Controllers\Api\V1\Promotions\PromotionController;
 use App\Http\Controllers\Api\V1\PublicSettingsController;
 use App\Http\Controllers\Api\V1\PurchaseRequests\PurchaseRequestController;
+use App\Http\Controllers\Api\V1\ReadinessController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
@@ -73,6 +74,7 @@ use App\Http\Controllers\Api\V1\Users\UserAdsController;
 use App\Http\Controllers\Api\V1\Wallet\SettlementController;
 use App\Http\Controllers\Api\V1\Wallet\WalletController;
 use App\Http\Controllers\Api\V1\Wallet\WithdrawalController;
+use App\Http\Middleware\ApiResponseWrapper;
 use App\Http\Middleware\EnsureApiDocsEnabled;
 use App\Http\Middleware\EnsurePasswordLoginEnabled;
 use Illuminate\Http\JsonResponse;
@@ -112,6 +114,14 @@ Route::get('/health', function (): JsonResponse {
         'timestamp' => now()->toIso8601String(),
     ]);
 })->name('api.v1.health');
+
+// Dependency checks for uptime monitors: 200 ok/degraded, 503 down
+// (deploy/README.md "Health checks and alerts"). Its own bare body, so the
+// envelope wrapper is skipped.
+Route::get('/health/ready', ReadinessController::class)
+    ->middleware('throttle:api')
+    ->withoutMiddleware(ApiResponseWrapper::class)
+    ->name('api.v1.health.ready');
 
 // ────────────────────────────────────────────────────────────────────────────
 // OpenAPI raw spec — served from qbazaar-contracts/openapi/v1.yaml so the spec

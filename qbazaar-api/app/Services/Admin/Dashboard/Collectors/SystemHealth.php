@@ -101,7 +101,7 @@ final class SystemHealth
     private function scheduler(CarbonImmutable $now): array
     {
         $last = $this->heartbeat->lastRun();
-        $fresh = $last !== null && $last->diffInSeconds($now, true) <= SchedulerHeartbeat::STALE_AFTER_SECONDS;
+        $fresh = $last !== null && $this->heartbeat->isFresh($last, $now);
 
         return ['status' => $last === null ? 'unknown' : ($fresh ? 'ok' : 'stale'), 'last_run' => $last?->toIso8601String()];
     }
