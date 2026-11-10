@@ -19,6 +19,7 @@ use App\Models\Ad;
 use App\Models\Order;
 use App\Models\User;
 use Database\Seeders\Demo\Catalog\Phrases;
+use Database\Seeders\Demo\Content\DesignManifest;
 use Illuminate\Support\Carbon;
 
 /**
@@ -41,6 +42,7 @@ final class OrderJourney
         private readonly ReportOrderProblemAction $reportProblem,
         private readonly ResolveOrderDisputeAction $resolveDispute,
         private readonly CreateReviewAction $createReview,
+        private readonly DesignManifest $design,
     ) {}
 
     public function run(DemoContext $context, Order $order, Ad $ad, User $buyer, OrderOutcome $outcome, Carbon $placedAt, Fulfillment $fulfillment): void
@@ -98,9 +100,10 @@ final class OrderJourney
     private function review(DemoContext $context, Ad $ad, User $buyer, Carbon $handoverAt): void
     {
         $rating = $context->random->pick([5, 5, 5, 4, 4, 3, 2]);
+        $text = $this->design->reviewText($rating, $buyer->language->value) ?? Phrases::REVIEWS[$rating][$buyer->language->value];
         $context->clock->at(
             $handoverAt->copy()->addHours($context->random->int(2, 30)),
-            fn () => $this->createReview->execute($buyer, $ad, $rating, Phrases::REVIEWS[$rating][$buyer->language->value]),
+            fn () => $this->createReview->execute($buyer, $ad, $rating, $text),
         );
     }
 

@@ -4,20 +4,28 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Demo;
 
+use App\Actions\Account\UploadAvatarAction;
+use App\Actions\Social\ReplaceBusinessCoverAction;
 use App\Jobs\ProcessAdImagesJob;
 use App\Models\Ad;
+use App\Models\User;
 use App\Services\Media\UploadedFileNamer;
+use Database\Seeders\Demo\Content\DesignManifest;
 use Illuminate\Http\UploadedFile;
+use RuntimeException;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
- * Puts locally drawn photos through the same Media Library path as real
- * uploads, so conversions, BlurHash and perceptual hashes are produced by
- * the production jobs on whichever queue connection the run chose.
+ * Puts the design's photos (and a few locally drawn ones for receipts) through
+ * the same Media Library path as real uploads, so conversions, BlurHash and
+ * perceptual hashes are produced by the production jobs on whichever queue
+ * connection the run chose. Design files are copied before upload because
+ * Media Library moves what it is given.
  */
 final class DemoMedia
 {
-    private const array COVER_SIZE = [1600, 600];
+    /** Custom property that marks a photo as one of the design's, holding its manifest key. */
+    public const string DESIGN_PROPERTY = 'design_image';
 
     private const array CHAT_PHOTO_SIZE = [900, 900];
 
@@ -26,6 +34,7 @@ final class DemoMedia
     public function __construct(
         private readonly PlaceholderImages $images,
         private readonly UploadedFileNamer $fileNamer,
+        private readonly DesignManifest $design,
     ) {}
 
     public function useConnection(string $connection): void
@@ -34,17 +43,19 @@ final class DemoMedia
     }
 
     /**
+     * @param list<string> $imageKeys design photo keys, in display order
      * @return int number of photos attached
      */
-    public function attachListingPhotos(Ad $ad, string $color, string $caption, int $count): int
+    public function attachDesignPhotos(Ad $ad, array $imageKeys): int
     {
         $mediaIds = [];
 
-        foreach ($this->images->series($color, $caption, $count) as $path) {
-            $photo = $this->upload($path);
+        foreach ($imageKeys as $key) {
+            $photo = $this->designFile($key);
 
             $mediaIds[] = (string) $ad->addMedia($photo)
                 ->usingFileName($this->fileNamer->nameFor($photo))
+                ->withCustomProperties([self::DESIGN_PROPERTY => $key])
                 ->toMediaCollection('images')
                 ->getKey();
         }
@@ -54,9 +65,70 @@ final class DemoMedia
         return count($mediaIds);
     }
 
-    public function coverPhoto(string $caption): UploadedFile
+    /**
+     * Makes the ad's gallery exactly these design photos, in this order.
+     * The gallery is left alone when it already is, so reruns cost nothing.
+     *
+     * @param list<string> $imageKeys
+     * @return bool whether the gallery changed
+     */
+    public function syncDesignPhotos(Ad $ad, array $imageKeys): bool
     {
-        return $this->upload($this->images->draw('#8A1538', $caption, self::COVER_SIZE));
+        if ($this->designKeysOf($ad->getMedia('images')) === $imageKeys) {
+            return false;
+        }
+
+        $ad->clearMediaCollection('images');
+        $ad->unsetRelation('media');
+        $this->attachDesignPhotos($ad, $imageKeys);
+
+        return true;
+    }
+
+    public function syncAvatar(User $user, string $imageKey): bool
+    {
+        if ($user->getFirstMedia('avatar')?->getCustomProperty(self::DESIGN_PROPERTY) === $imageKey) {
+            return false;
+        }
+
+        $media = app(UploadAvatarAction::class)->execute($user, $this->designFile($imageKey));
+        $media->setCustomProperty(self::DESIGN_PROPERTY, $imageKey)->save();
+        $user->unsetRelation('media');
+
+        return true;
+    }
+
+    public function syncCover(User $user, string $imageKey): bool
+    {
+        if ($user->getFirstMedia(User::BUSINESS_COVER_COLLECTION)?->getCustomProperty(self::DESIGN_PROPERTY) === $imageKey) {
+            return false;
+        }
+
+        $media = app(ReplaceBusinessCoverAction::class)->upload($user, $this->designFile($imageKey));
+        $media->setCustomProperty(self::DESIGN_PROPERTY, $imageKey)->save();
+        $user->unsetRelation('media');
+
+        return true;
+    }
+
+    /**
+     * @param iterable<Media> $media
+     * @return list<string|null> the design key of each photo, null for photos that are not the design's
+     */
+    public function designKeysOf(iterable $media): array
+    {
+        $keys = [];
+
+        foreach ($media as $item) {
+            $keys[] = $item->getCustomProperty(self::DESIGN_PROPERTY);
+        }
+
+        return $keys;
+    }
+
+    public function designChatPhoto(string $imageKey): UploadedFile
+    {
+        return $this->designFile($imageKey);
     }
 
     public function chatPhoto(string $color, string $caption): UploadedFile
@@ -72,6 +144,17 @@ final class DemoMedia
     public function cleanUp(): void
     {
         $this->images->cleanUp();
+    }
+
+    private function designFile(string $imageKey): UploadedFile
+    {
+        $copy = tempnam(sys_get_temp_dir(), 'qb-design-');
+
+        if ($copy === false || ! copy($this->design->imagePath($imageKey), $copy)) {
+            throw new RuntimeException("Could not copy design image [{$imageKey}] to the temp directory.");
+        }
+
+        return new UploadedFile($copy, $imageKey . '.jpg', 'image/jpeg', null, true);
     }
 
     private function upload(string $path): UploadedFile
