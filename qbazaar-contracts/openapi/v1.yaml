@@ -4132,8 +4132,14 @@ paths:
       summary: Review the seller of an ad
       description: |
         A buyer may review the ad's seller once per ad, and only after a closed
-        deal (an accepted offer on that ad). A concurrent double-submit is
-        answered with REVIEW_ALREADY_EXISTS, never a 500.
+        deal: an offer of theirs on that ad was accepted. The checks run in
+        this order: own ad (`REVIEW_003`), no accepted offer (`REVIEW_001`),
+        already reviewed (`REVIEW_002`). A concurrent double-submit is also
+        answered with `REVIEW_002`, never a 500. The new review counts towards
+        the seller's `rating_avg` and `rating_count`.
+
+        Planned (BE-20.7, M7): eligibility moves from an accepted offer to a
+        completed order; the request and the response stay the same.
       operationId: reviewsCreate
       parameters:
         - in: path
@@ -4145,11 +4151,12 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [rating]
-              properties:
-                rating: { type: integer, minimum: 1, maximum: 5 }
-                comment: { type: [string, 'null'], description: 'Up to `qbazaar.reviews.comment_max_length` characters.' }
+              $ref: '#/components/schemas/CreateReviewRequest'
+            examples:
+              withComment:
+                value:
+                  rating: 5
+                  comment: Smooth handover, exactly as described.
       responses:
         '201':
           description: Review created
@@ -4159,23 +4166,25 @@ paths:
                 $ref: '#/components/schemas/ReviewEnvelope'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: REVIEW_NOT_ELIGIBLE — no accepted offer on this ad
+          description: '`REVIEW_001` (no accepted offer of yours on this ad) or `AUTH_002` (account not active)'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
         '404':
-          description: AD_NOT_FOUND
+          description: '`AD_NOT_FOUND`'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
         '422':
-          description: REVIEW_OWN_AD / REVIEW_ALREADY_EXISTS / VALIDATION_FAILED
+          description: '`REVIEW_003` (own ad), `REVIEW_002` (already reviewed) or `VALIDATION_FAILED`'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/users/{user}/reviews:
     get:
@@ -4184,7 +4193,9 @@ paths:
       description: |
         Public, newest first, 15 per page. Reviews stay listed after the ad or
         the reviewer's account is deleted; `ad` and `reviewer` then describe
-        the deleted record.
+        the deleted record. An unknown user id is an empty page, not a 404.
+        The seller's average and count are `rating_avg` and `rating_count` on
+        the public profile.
       operationId: reviewsIndex
       security: []
       parameters:
@@ -4195,7 +4206,7 @@ paths:
         - in: query
           name: page
           required: false
-          schema: { type: integer, minimum: 1 }
+          schema: { type: integer, minimum: 1, default: 1 }
       responses:
         '200':
           description: Paginated reviews
@@ -4203,6 +4214,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReviewListEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Orders and wallet (M1b, BE-14.35 / BE-14.36 / BE-14.38)
@@ -8605,9 +8618,20 @@ components:
           properties:
             data: { $ref: '#/components/schemas/Report' }
 
+    # ─── Reviews (CT-13.2) ──────────────────────────────────────────
+    CreateReviewRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment:
+          type: [string, 'null']
+          maxLength: 1000
+          description: Optional; at most `qbazaar.reviews.comment_max_length` characters (1000).
+
     Review:
       type: object
-      required: [id, rating, comment, created_at]
+      required: [id, rating, comment, created_at, reviewer, ad]
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         rating: { type: integer, minimum: 1, maximum: 5 }
@@ -8615,13 +8639,15 @@ components:
         created_at: { type: string, format: date-time }
         reviewer:
           type: object
+          description: Who wrote the review; still filled after their account is deleted.
           required: [id, full_name, avatar_url]
           properties:
             id: { $ref: '#/components/schemas/ULID' }
             full_name: { type: string }
-            avatar_url: { type: [string, 'null'] }
+            avatar_url: { type: [string, 'null'], format: uri }
         ad:
           type: object
+          description: The ad the review is about; still filled after the ad is deleted.
           required: [id, title]
           properties:
             id: { $ref: '#/components/schemas/ULID' }
