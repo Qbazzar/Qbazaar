@@ -55,6 +55,7 @@ final class DemoHomeCurator
         }
 
         $ads = Ad::query()
+            ->whereIn('user_id', User::query()->select('id')->where('email', 'like', '%@' . DemoOptions::EMAIL_DOMAIN))
             ->whereIn('title', $this->featuredTitles())
             ->where('status', AdStatus::ACTIVE->value)
             ->orderByDesc('price')

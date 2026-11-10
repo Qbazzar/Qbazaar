@@ -33,7 +33,7 @@ final class DemoContentRefresher
     private const int CHUNK = 100;
 
     /** Tables whose rows point at an ad and must outlive it. */
-    private const array DEPENDENT_TABLES = ['orders', 'offers', 'conversations', 'purchase_requests', 'reviews', 'ad_promotions'];
+    private const array DEPENDENT_TABLES = ['orders', 'offers', 'conversations', 'purchase_requests', 'reviews', 'ad_promotions', 'home_section_items'];
 
     public function __construct(
         private readonly DesignManifest $design,
@@ -50,13 +50,14 @@ final class DemoContentRefresher
         $dryRun = $options->dryRun;
         $report = new RefreshReport;
         $touched = [];
+        $removed = [];
         $this->media->useConnection((string) config('queue.default'));
 
-        Ad::withoutSyncingToSearch(function () use ($options, $dryRun, $report, &$touched): void {
+        Ad::withoutSyncingToSearch(function () use ($options, $dryRun, $report, &$touched, &$removed): void {
             $owners = $this->updateAccounts($report, $dryRun);
-            $this->retireOldAds($report, $dryRun, $touched);
+            $this->retireOldAds($report, $dryRun, $touched, $removed);
             $this->writeDesignAds($owners, $report, $dryRun, $touched);
-            $this->renew($options, $report, $touched);
+            $this->renew($options, $report, $touched, $removed);
 
             if ($options->curateHome) {
                 ['ads' => $report->homeAdsCurated, 'companies' => $report->companiesFeatured] = $this->homeCurator->curate($dryRun);
@@ -74,10 +75,11 @@ final class DemoContentRefresher
 
     /**
      * @param list<string> $touched
+     * @param list<string> $removed ads a dry run would delete, which must not be counted as renewed
      */
-    private function renew(RefreshOptions $options, RefreshReport $report, array &$touched): void
+    private function renew(RefreshOptions $options, RefreshReport $report, array &$touched, array $removed): void
     {
-        $renewal = $this->renewer->renew($options->dryRun, $options->days, $options->reviveExpired, restagger: true);
+        $renewal = $this->renewer->renew($options->dryRun, $options->days, $options->reviveExpired, restagger: true, exclude: $removed);
 
         $report->adsExtended = $renewal['extended'];
         $report->adsRevived = $renewal['revived'];
@@ -120,20 +122,21 @@ final class DemoContentRefresher
 
     /**
      * @param list<string> $touched
+     * @param list<string> $removed
      */
-    private function retireOldAds(RefreshReport $report, bool $dryRun, array &$touched): void
+    private function retireOldAds(RefreshReport $report, bool $dryRun, array &$touched, array &$removed): void
     {
         $designTitles = $this->designTitles();
 
         Ad::query()
             ->whereIn('user_id', $this->demoUserIds())
             ->with(['media', 'category:id,slug'])
-            ->chunkById(self::CHUNK, function (Collection $ads) use ($designTitles, $report, $dryRun, &$touched): void {
+            ->chunkById(self::CHUNK, function (Collection $ads) use ($designTitles, $report, $dryRun, &$touched, &$removed): void {
                 $old = $ads->reject(fn (Ad $ad): bool => isset($designTitles[$ad->title]) || $this->hasOnlyDesignPhotos($ad));
                 $blocked = $this->dependentAdIds($old->map(static fn (Ad $ad): string => $ad->id)->values()->all());
 
                 $this->keepWithDesignPhotos($old->filter(fn (Ad $ad): bool => isset($blocked[$ad->id])), $report, $dryRun, $touched);
-                $this->remove($old->reject(fn (Ad $ad): bool => isset($blocked[$ad->id])), $report, $dryRun);
+                $this->remove($old->reject(fn (Ad $ad): bool => isset($blocked[$ad->id])), $report, $dryRun, $removed);
             });
     }
 
@@ -173,25 +176,52 @@ final class DemoContentRefresher
 
     /**
      * @param Collection<int, Ad> $ads
+     * @param list<string> $removed
      */
-    private function remove(Collection $ads, RefreshReport $report, bool $dryRun): void
+    private function remove(Collection $ads, RefreshReport $report, bool $dryRun, array &$removed): void
     {
-        $report->placeholderAdsRemoved += $ads->count();
+        foreach ($ads as $ad) {
+            if ($dryRun) {
+                $report->placeholderAdsRemoved++;
+                $removed[] = $ad->id;
 
-        if ($dryRun || $ads->isEmpty()) {
-            return;
+                continue;
+            }
+
+            $this->removeIfStillUnused($ad) ? $report->placeholderAdsRemoved++ : $report->adsKeptForHistory++;
         }
+    }
 
-        $this->search->forget($ads);
-        $ids = $ads->pluck('id')->all();
+    /**
+     * Deleting cascades to chats, reviews and favourites, so each ad is checked again under
+     * its row lock, in the same transaction that hides it: something a real user attached
+     * since the chunk was read keeps the ad. Files and the row go only after the commit,
+     * for ads confirmed unused, so a rolled back unit never loses photos.
+     */
+    private function removeIfStillUnused(Ad $ad): bool
+    {
+        $hidden = DB::transaction(function () use ($ad): bool {
+            $locked = Ad::query()->whereKey($ad->id)->lockForUpdate()->first();
 
-        DB::transaction(function () use ($ids): void {
-            DB::table('favorites')->whereIn('ad_id', $ids)->delete();
-            DB::table('recently_viewed')->whereIn('ad_id', $ids)->delete();
+            if ($locked === null || $this->dependentAdIds([$ad->id]) !== []) {
+                return false;
+            }
+
+            DB::table('favorites')->where('ad_id', $ad->id)->delete();
+            DB::table('recently_viewed')->where('ad_id', $ad->id)->delete();
+
+            return (bool) $locked->delete();
         });
 
-        // One by one: the model event is what deletes the photo files.
-        $ads->each(static fn (Ad $ad): ?bool => $ad->forceDelete());
+        if (! $hidden) {
+            return false;
+        }
+
+        // The model event of a forced delete is what removes the photo files.
+        $ad->forceDelete();
+        $this->search->forget(new Collection([$ad]));
+
+        return true;
     }
 
     /**

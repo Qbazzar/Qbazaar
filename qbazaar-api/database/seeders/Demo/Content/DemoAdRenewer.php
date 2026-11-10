@@ -34,9 +34,10 @@ final class DemoAdRenewer
     /**
      * @param bool $reviveExpired bring expired ads back to live
      * @param bool $restagger move publication dates to the last days (design ads get the age the design shows)
+     * @param list<string> $exclude ads to leave out, e.g. those a dry run reported as removed
      * @return array{extended: int, revived: int, ids: list<string>} ids of the ads that changed (or would)
      */
-    public function renew(bool $dryRun, int $days, bool $reviveExpired, bool $restagger): array
+    public function renew(bool $dryRun, int $days, bool $reviveExpired, bool $restagger, array $exclude = []): array
     {
         $result = ['extended' => 0, 'revived' => 0, 'ids' => []];
         $statuses = $reviveExpired ? [AdStatus::ACTIVE, AdStatus::EXPIRED] : [AdStatus::ACTIVE];
@@ -44,6 +45,7 @@ final class DemoAdRenewer
 
         Ad::query()
             ->whereIn('user_id', User::query()->select('id')->where('email', 'like', '%@' . DemoOptions::EMAIL_DOMAIN))
+            ->whereNotIn('id', $exclude)
             ->whereIn('status', array_map(static fn (AdStatus $status): string => $status->value, $statuses))
             ->chunkById(self::CHUNK, function (Collection $ads) use ($dryRun, $days, $restagger, $designAges, &$result): void {
                 foreach ($ads as $ad) {
