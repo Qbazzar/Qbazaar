@@ -1,0 +1,83 @@
+{
+  "_comment": "QBazaar Cloudflare rules (OPS-18.18, OPS-18.9), reviewed source of truth. One key per Rulesets API phase; each array is the `rules` body of PUT /zones/{zone_id}/rulesets/phases/{phase}/entrypoint. That PUT REPLACES every rule in the phase, so back up the current phase first (deploy/cloudflare/README.md). The dashboard steps in the README produce the same rules. Hosts assume API_HOST=api.qbazaar.qa, WEB_HOST=qbazaar.qa and the R2 custom domain cdn.qbazaar.qa.",
+
+  "http_request_firewall_custom": [
+    {
+      "description": "Block probes for files this stack never serves (PHP outside Laravel's front controller, dotfiles, vendor, WordPress)",
+      "expression": "(http.host in {\"qbazaar.qa\" \"www.qbazaar.qa\" \"api.qbazaar.qa\"} and ((ends_with(lower(http.request.uri.path), \".php\") and http.request.uri.path ne \"/index.php\") or starts_with(http.request.uri.path, \"/.env\") or starts_with(http.request.uri.path, \"/.git\") or starts_with(http.request.uri.path, \"/vendor/\") or starts_with(lower(http.request.uri.path), \"/wp-\") or starts_with(lower(http.request.uri.path), \"/xmlrpc\")))",
+      "action": "block",
+      "enabled": true
+    },
+    {
+      "description": "Only GET and HEAD reach the media host",
+      "expression": "(http.host eq \"cdn.qbazaar.qa\" and not http.request.method in {\"GET\" \"HEAD\" \"OPTIONS\"})",
+      "action": "block",
+      "enabled": true
+    },
+    {
+      "description": "Optional: challenge the admin panel from outside the expected countries (log first; add your own country codes)",
+      "expression": "(http.host eq \"api.qbazaar.qa\" and starts_with(http.request.uri.path, \"/admin\") and not ip.src.country in {\"QA\"})",
+      "action": "managed_challenge",
+      "enabled": false
+    }
+  ],
+
+  "http_ratelimit": [
+    {
+      "description": "Sign-in, sign-up and code endpoints: 20 POSTs per 10 s per IP (each OTP send costs an SMS)",
+      "expression": "(http.host eq \"api.qbazaar.qa\" and http.request.method eq \"POST\" and starts_with(http.request.uri.path, \"/api/v1/auth/\"))",
+      "action": "block",
+      "ratelimit": {
+        "characteristics": ["cf.colo.id", "ip.src"],
+        "period": 10,
+        "requests_per_period": 20,
+        "mitigation_timeout": 10
+      },
+      "enabled": true
+    },
+    {
+      "description": "Pro plan and up: search and image uploads, 100 requests per 60 s per IP",
+      "expression": "(http.host eq \"api.qbazaar.qa\" and (starts_with(http.request.uri.path, \"/api/v1/search\") or (http.request.method eq \"POST\" and starts_with(http.request.uri.path, \"/api/v1/ads/\") and ends_with(http.request.uri.path, \"/images\"))))",
+      "action": "block",
+      "ratelimit": {
+        "characteristics": ["cf.colo.id", "ip.src"],
+        "period": 60,
+        "requests_per_period": 100,
+        "mitigation_timeout": 60
+      },
+      "enabled": false
+    }
+  ],
+
+  "http_request_cache_settings": [
+    {
+      "description": "cdn.: R2 media, cached at the edge; objects set their own Cache-Control (conversions: 1 year, immutable)",
+      "expression": "(http.host eq \"cdn.qbazaar.qa\")",
+      "action": "set_cache_settings",
+      "action_parameters": {
+        "cache": true,
+        "edge_ttl": { "mode": "respect_origin" },
+        "browser_ttl": { "mode": "respect_origin" }
+      },
+      "enabled": true
+    },
+    {
+      "description": "Next.js build assets: content-hashed, cached a year",
+      "expression": "(http.host eq \"qbazaar.qa\" and starts_with(http.request.uri.path, \"/_next/static/\"))",
+      "action": "set_cache_settings",
+      "action_parameters": {
+        "cache": true,
+        "edge_ttl": { "mode": "override_origin", "default": 31536000 },
+        "browser_ttl": { "mode": "respect_origin" }
+      },
+      "enabled": true
+    },
+    {
+      "description": "API answers vary by token and Accept-Language, which the edge ignores: never cache them, except /storage files",
+      "expression": "(http.host eq \"api.qbazaar.qa\" and not starts_with(http.request.uri.path, \"/storage/\"))",
+      "action": "set_cache_settings",
+      "action_parameters": { "cache": false },
+      "enabled": true
+    }
+  ]
+}
