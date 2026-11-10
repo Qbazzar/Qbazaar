@@ -227,6 +227,13 @@ return [
         'spec_chip_max_length' => 40,
     ],
 
+    'demo' => [
+        // Demo accounts (@demo.qbazaar.qa) only. Off unless a demo site turns it on:
+        // then `demo:keep-alive` runs daily and renews their ads before they expire.
+        'keep_alive' => (bool) env('DEMO_KEEP_ALIVE', false),
+        'keep_alive_days' => (int) env('DEMO_KEEP_ALIVE_DAYS', 60),
+    ],
+
     'home' => [
         // Safety net only: the warmer (every catalog.warm_every_minutes) and the
         // ad listing events rebuild the feed. Kept short because "recommended"

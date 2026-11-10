@@ -105,6 +105,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // Half an hour after the ads sweep so the ad-status invariants the
         // offer rules depend on (offers belong to ACTIVE ads) have already
         // settled when offers are flipped to EXPIRED.
+        // Demo sites only: renews the ads of demo accounts before they expire.
+        $schedule->command('demo:keep-alive', ['--force' => true])
+            ->dailyAt('04:00')
+            ->timezone('Asia/Qatar')
+            ->name('demo.keep-alive')
+            ->withoutOverlapping()
+            ->when(fn (): bool => (bool) config('qbazaar.demo.keep_alive'));
+
         $schedule->job(new ExpireOldOffersJob)
             ->hourlyAt(30)
             ->name('offers.expire-old');
