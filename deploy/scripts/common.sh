@@ -1,3 +1,6 @@
+# shellcheck shell=bash
+# Variables set here are read by the scripts that source this file.
+# shellcheck disable=SC2034
 # Shared setup for deploy-api.sh and deploy-web.sh (sourced, not run).
 #
 # Settings come from, in order of precedence:
@@ -6,7 +9,7 @@
 #   3. the defaults below, which match the current production server
 #
 # Keys: API_HOST, WEB_HOST, REPO_DIR, PHP_BIN_DIR, DEPLOY_BRANCH, HEALTH_HOST,
-# HEALTH_URL. See deploy/README.md "Server settings file".
+# HEALTH_URL, FPM_SERVICE. See deploy/README.md "Server settings file".
 
 load_deploy_env() {
     local file="${DEPLOY_ENV_FILE:-$HOME/.qbazaar-deploy.env}" key value
@@ -25,6 +28,7 @@ WEB_HOST="${WEB_HOST:-qbazaar.qa}"
 REPO_DIR="${REPO_DIR:-$HOME/qbazaar}"
 PHP_BIN_DIR="${PHP_BIN_DIR:-/opt/cpanel/ea-php84/root/usr/bin}"
 BRANCH="${DEPLOY_BRANCH:-production}"
+FPM_SERVICE="${FPM_SERVICE:-ea-php84-php-fpm}"
 
 # cPanel: put the ea-php84 CLI binary + composer first so bare `php`/`composer`
 # resolve to the 8.4 CLI SAPI in the minimal non-login PATH that GitHub
