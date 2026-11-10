@@ -44,4 +44,13 @@ async function lacksLiveData(page, rule) {
 
 const liveDataReason = (rule) => `the target page shows no ${rule.what} to compare it with (live data, not a design difference)`;
 
-module.exports = { selectPages, referenceOnly, writeSkipReason, liveDataRule, lacksLiveData, liveDataReason, ids: pagesFile.ids };
+/**
+ * Why a live-data element is not compared on this target page: the page lists none of the items it needs. Null when
+ * it is compared: with items on the page, an element the target cannot show is a real gap.
+ */
+async function liveDataSkipReason(page, pageId, elementId) {
+  const rule = liveDataRule(pageId, elementId);
+  return rule && (await lacksLiveData(page, rule)) ? liveDataReason(rule) : null;
+}
+
+module.exports = { selectPages, referenceOnly, writeSkipReason, liveDataRule, liveDataSkipReason, ids: pagesFile.ids };

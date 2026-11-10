@@ -342,6 +342,32 @@ test('auth steps that send a code or a mail run only against a local target, liv
   assert.equal(liveDataRule('index', 'ca.list.card'), null);
 });
 
+// The page audit's missing cards: the category's ad card is a liveData element, skipped only while the list is empty.
+test('a live-data component is a warning while the target lists no items, and a finding once it lists some', async () => {
+  const { componentsFor, componentUnits, reportMissingComponents } = require('../src/audit');
+  const { liveDataSkipReason } = require('../src/pages');
+  const found = { refFound: [{ id: 'ca.list.card~0', name: 'ca.list.card', index: 0 }], tgtFound: [] };
+  const { missing } = componentUnits(componentsFor('category'), found, {}, 1440);
+  assert.deepEqual(missing.map((m) => m.name), ['ca.list.card']);
+  const run = async (listsItems) => {
+    const env = { warnings: [] };
+    const emitted = [];
+    await reportMissingComponents(env, { evaluate: async () => listsItems }, { page: 'category', viewport: 1440 }, missing, (f) => emitted.push(f));
+    return { warnings: env.warnings, emitted };
+  };
+  const empty = await run(false);
+  assert.deepEqual(empty.emitted, []);
+  assert.deepEqual(empty.warnings.map((w) => w.what), ['component ca.list.card on category@1440']);
+  assert.match(empty.warnings[0].reason, /live ads in this category/);
+  const listed = await run(true);
+  assert.deepEqual(listed.warnings, []);
+  assert.deepEqual(listed.emitted.map((f) => [f.component, f.property, f.severity]), [['ca.list.card', 'missing-component', 'high']]);
+  // An element no liveData rule names never asks the page.
+  let asked = false;
+  assert.equal(await liveDataSkipReason({ evaluate: async () => { asked = true; return false; } }, 'index', 'ca.list.card'), null);
+  assert.equal(asked, false);
+});
+
 // A signed-in page that lands on /login lost the demo session: sign in again and reopen, never compare the login form.
 test('a signed-in page bounced to /login signs in again once; a failed sign-in is a skip, not findings', async () => {
   const browserTools = require('../src/browser');
