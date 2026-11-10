@@ -1,0 +1,30 @@
+# QBazaar: the cache Redis (OPS-18.12), 127.0.0.1:6380, config in
+# deploy/redis/cache.conf. The queue Redis stays the distribution's
+# redis.service on 6379.
+# Install (as root), DOCS/M5-LAUNCH-RUNBOOK.md step 5:
+#   cp deploy/systemd/redis-cache.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now redis-cache
+[Unit]
+Description=Redis cache for QBazaar (allkeys-lru, no persistence)
+After=network.target
+Before=qbazaar-horizon.service qbazaar-scheduler.service
+
+[Service]
+Type=notify
+User=redis
+Group=redis
+ExecStart=/usr/bin/redis-server /etc/redis/qbazaar-cache.conf
+Restart=always
+RestartSec=2
+LimitNOFILE=10240
+# Creates /var/lib/redis-cache owned by redis.
+StateDirectory=redis-cache
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/redis-cache /var/log/redis
+
+[Install]
+WantedBy=multi-user.target

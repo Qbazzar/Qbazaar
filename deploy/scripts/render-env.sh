@@ -94,7 +94,19 @@ render_api() {
     set_kv "$out" SESSION_SECURE_COOKIE "$secure"
     set_kv "$out" REDIS_CLIENT phpredis
     set_kv "$out" REDIS_PASSWORD "$(secret redis_password)"
+    render_redis_cache "$out"
     render_api_services "$out"
+}
+
+# The cache Redis (OPS-18.12, deploy/redis/cache.conf), once REDIS_CACHE_PORT
+# is in the settings file and its password in $SECRETS_DIR/redis_cache_password.
+# Until then the cache shares the queue server (REDIS_CACHE_DB).
+render_redis_cache() {
+    local out="$1"
+    [[ -n "${REDIS_CACHE_PORT:-}" ]] || return 0
+    set_kv "$out" REDIS_CACHE_HOST 127.0.0.1
+    set_kv "$out" REDIS_CACHE_PORT "$REDIS_CACHE_PORT"
+    set_kv "$out" REDIS_CACHE_PASSWORD "$(secret redis_cache_password)"
 }
 
 render_api_services() {

@@ -1,0 +1,20 @@
+# QBazaar: Meilisearch resource limits and daily snapshots (OPS-18.15).
+#
+# Lines to add to /etc/meilisearch.toml, which also holds the master key and
+# so is not in the repo. Install (root), DOCS/M5-LAUNCH-RUNBOOK.md step 7:
+#   cp -p /etc/meilisearch.toml /root/meilisearch.toml.bak-$(date +%F)
+#   grep -E '^(max_indexing|schedule_snapshot)' /etc/meilisearch.toml   # must print nothing: a key twice stops Meilisearch
+#   grep -v '^#' ~qbazaar/qbazaar/deploy/meilisearch/limits.toml >> /etc/meilisearch.toml
+#   sed -i "s/^max_indexing_threads = .*/max_indexing_threads = $(( $(nproc) > 2 ? $(nproc) / 2 : 1 ))/" /etc/meilisearch.toml
+#   systemctl restart meilisearch   # search answers empty for a few seconds
+#
+# Indexing is the only memory-hungry work Meilisearch does; searching reads
+# the memory-mapped index. These caps make a full `scout:import` slower, not
+# the site.
+max_indexing_memory = "768 MiB"
+# About half the vCPUs (the sed above fills it in from nproc).
+max_indexing_threads = 1
+# One snapshot a day in snapshot_dir (/var/lib/meilisearch/snapshots); each
+# replaces the last. backup.sh copies it off-site and meili-restore-test.sh
+# proves it loads.
+schedule_snapshot = 86400
