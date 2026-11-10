@@ -161,3 +161,27 @@ it('renders the matrix with a fixed number of queries as roles are added', funct
 
     expect($this->steadyQueryCount($uri))->toBe($few);
 });
+
+it('keeps the matrix edits when the roles seeder runs again', function (): void {
+    actingAs($this->admin);
+    $matrix = currentMatrix();
+    $matrix['support'][] = 'conversations.view';
+    $matrix['moderator'] = array_values(array_diff($matrix['moderator'], ['ads.feature']));
+    $this->put(route('admin.roles.permissions.update'), ['permissions' => $matrix])->assertSessionHasNoErrors();
+
+    $this->seed(RolesAndPermissionsSeeder::class);
+
+    expect(rolePermissions('support'))->toContain('conversations.view')
+        ->and(rolePermissions('moderator'))->not->toContain('ads.feature')
+        ->and(rolePermissions('super_admin'))->toBe(Permission::query()->pluck('name')->sort()->values()->all());
+});
+
+it('gives a role the seeder creates its default permissions', function (): void {
+    Role::findByName('support', 'web')->delete();
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->seed(RolesAndPermissionsSeeder::class);
+
+    expect(rolePermissions('support'))->toContain('support.reply', 'companies.view')
+        ->not->toContain('companies.verify');
+});
