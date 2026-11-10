@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\Auth\ResetPasswordAction;
 use App\Enums\UserStatus;
 use App\Models\StaffTwoFactor;
 use App\Models\User;
@@ -12,6 +13,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 
 use function Pest\Laravel\actingAs;
 
@@ -61,7 +63,7 @@ describe('enrolment', function (): void {
 
         $this->get(route('admin.profile.two-factor.show'))->assertOk()->assertSee(__('admin.two_factor.setup.start'));
 
-        $this->post(route('admin.profile.two-factor.store'))->assertRedirect(route('admin.profile.two-factor.show'));
+        $this->post(route('admin.profile.two-factor.store'), ['current_password' => 'correct-horse'])->assertRedirect(route('admin.profile.two-factor.show'));
         $secret = StaffTwoFactor::query()->findOrFail($user->id)->secret;
 
         $this->get(route('admin.profile.two-factor.show'))
@@ -87,7 +89,7 @@ describe('enrolment', function (): void {
     it('refuses a wrong first code and stays pending', function (): void {
         $user = tfaStaff();
         actingAs($user);
-        $this->post(route('admin.profile.two-factor.store'));
+        $this->post(route('admin.profile.two-factor.store'), ['current_password' => 'correct-horse']);
 
         $this->post(route('admin.profile.two-factor.confirm'), ['code' => '000000'])
             ->assertSessionHasErrors(['code' => __('admin.two_factor.errors.invalid_code')]);
@@ -97,7 +99,7 @@ describe('enrolment', function (): void {
 
     it('validates the confirmation code field', function (mixed $code): void {
         actingAs(tfaStaff());
-        $this->post(route('admin.profile.two-factor.store'));
+        $this->post(route('admin.profile.two-factor.store'), ['current_password' => 'correct-horse']);
 
         $this->post(route('admin.profile.two-factor.confirm'), ['code' => $code])->assertSessionHasErrors('code');
     })->with(['empty' => [''], 'too long' => [str_repeat('1', 17)], 'array' => [['1']]]);
@@ -108,7 +110,7 @@ describe('enrolment', function (): void {
         $secret = StaffTwoFactor::query()->findOrFail($user->id)->secret;
         actingAs($user);
 
-        $this->post(route('admin.profile.two-factor.store'))
+        $this->post(route('admin.profile.two-factor.store'), ['current_password' => 'correct-horse'])
             ->assertSessionHasErrors(['code' => __('admin.two_factor.errors.already_enabled')]);
 
         expect(StaffTwoFactor::query()->findOrFail($user->id)->secret)->toBe($secret);
@@ -122,6 +124,55 @@ describe('enrolment', function (): void {
 
         expect($raw)->not->toBe(StaffTwoFactor::query()->findOrFail($user->id)->secret)
             ->and(strlen($raw))->toBeGreaterThan(40);
+    });
+
+    it('asks for the password before starting the setup', function (string $role, array $payload): void {
+        $user = tfaStaff($role);
+        actingAs($user);
+
+        $this->get(route('admin.profile.two-factor.show'))->assertOk()->assertSee('name="current_password"', false);
+
+        $this->post(route('admin.profile.two-factor.store'), $payload)->assertSessionHasErrors('current_password');
+
+        expect(StaffTwoFactor::query()->whereKey($user->id)->exists())->toBeFalse();
+    })->with(['super_admin', 'moderator', 'support'])->with([
+        'no password' => [[]],
+        'wrong password' => [['current_password' => 'wrong']],
+    ]);
+
+    it('shows and confirms the key only within the window the password opened', function (): void {
+        $user = tfaStaff();
+        actingAs($user);
+        $this->post(route('admin.profile.two-factor.store'), ['current_password' => 'correct-horse']);
+        $staleSecret = StaffTwoFactor::query()->findOrFail($user->id)->secret;
+
+        // Within the window the same session restarts without typing the password again.
+        $this->post(route('admin.profile.two-factor.store'))->assertSessionHasNoErrors();
+        $secret = StaffTwoFactor::query()->findOrFail($user->id)->secret;
+        expect($secret)->not->toBe($staleSecret);
+
+        $this->travel((int) config('qbazaar.admin.two_factor.password_confirm_minutes') + 1)->minutes();
+
+        $this->get(route('admin.profile.two-factor.show'))
+            ->assertOk()
+            ->assertDontSee(trim(chunk_split($secret, 4, ' ')))
+            ->assertDontSee('otpauth://totp/', false)
+            ->assertSee(__('admin.two_factor.setup.resume_intro'))
+            ->assertSee(__('admin.two_factor.states.pending'));
+
+        $this->post(route('admin.profile.two-factor.confirm'), ['code' => tfaCode($user)])
+            ->assertSessionHasErrors(['current_password' => __('admin.two_factor.errors.password_expired')]);
+        $this->post(route('admin.profile.two-factor.store'))->assertSessionHasErrors('current_password');
+        expect(StaffTwoFactor::query()->findOrFail($user->id)->isConfirmed())->toBeFalse();
+
+        // The password opens a new window with a fresh key.
+        $this->post(route('admin.profile.two-factor.store'), ['current_password' => 'correct-horse'])->assertSessionHasNoErrors();
+        $freshSecret = StaffTwoFactor::query()->findOrFail($user->id)->secret;
+        $this->get(route('admin.profile.two-factor.show'))->assertSee(trim(chunk_split($freshSecret, 4, ' ')));
+        $this->post(route('admin.profile.two-factor.confirm'), ['code' => tfaCode($user)])->assertSessionHasNoErrors();
+
+        expect($freshSecret)->not->toBe($secret)
+            ->and(StaffTwoFactor::query()->findOrFail($user->id)->isConfirmed())->toBeTrue();
     });
 });
 
@@ -261,6 +312,33 @@ describe('trusted browsers', function (): void {
         $this->assertGuest();
     });
 
+    it('stops trusting the browser once the password changes, from the profile or through a reset link', function (string $how): void {
+        $user = tfaStaff();
+        tfaEnable($user);
+        $this->travel(31)->seconds();
+
+        tfaPassword($this);
+        $trust = $this->post(route('admin.two-factor.verify'), ['code' => tfaCode($user), 'trust_browser' => '1'])
+            ->getCookie(TrustedBrowser::COOKIE)->getValue();
+
+        if ($how === 'profile') {
+            $this->put(route('admin.profile.update'), [
+                'full_name' => $user->full_name,
+                'email' => $user->email,
+                'password' => 'battery-staple-horse',
+                'password_confirmation' => 'battery-staple-horse',
+            ])->assertSessionHasNoErrors();
+        } else {
+            app(ResetPasswordAction::class)->execute($user->email, Password::broker()->createToken($user), 'battery-staple-horse');
+        }
+        $this->post(route('admin.logout'));
+
+        $this->withCookie(TrustedBrowser::COOKIE, $trust);
+        $this->post('/admin/login', ['email' => 'tfa@qbazaar.qa', 'password' => 'battery-staple-horse'])
+            ->assertRedirect(route('admin.two-factor.challenge'));
+        $this->assertGuest();
+    })->with(['profile', 'reset link']);
+
     it('ignores a trust cookie minted for another staff member', function (): void {
         $owner = tfaStaff('moderator', 'owner@qbazaar.qa');
         tfaEnable($owner);
@@ -392,7 +470,7 @@ describe('resetting a colleague', function (): void {
 it('never writes codes or passwords into the audit log', function (): void {
     $user = tfaStaff();
     actingAs($user);
-    $this->post(route('admin.profile.two-factor.store'));
+    $this->post(route('admin.profile.two-factor.store'), ['current_password' => 'correct-horse']);
     $code = tfaCode($user);
     $this->post(route('admin.profile.two-factor.confirm'), ['code' => $code]);
     $this->post(route('admin.profile.two-factor.recovery-codes'), ['current_password' => 'correct-horse']);

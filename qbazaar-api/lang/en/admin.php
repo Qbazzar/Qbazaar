@@ -778,6 +778,7 @@ return [
             'not_enabled' => 'Two-factor sign-in is not on for this account.',
             'invalid_code' => 'The code is wrong or has expired.',
             'challenge_expired' => 'The code prompt expired. Please sign in again.',
+            'password_expired' => 'The setup was not finished in time. Enter your password again to get a new key.',
         ],
         'flash' => [
             'started' => 'Add the key to your authenticator app, then enter a code to confirm.',
@@ -812,12 +813,13 @@ return [
             'required_hint' => 'The rest of the panel stays closed until the setup is finished.',
             'how_title' => 'How it works',
             'how_apps' => 'Works with any TOTP authenticator app, such as Google Authenticator, Microsoft Authenticator or 1Password.',
-            'how_trust' => 'You can remember a trusted browser for :days days; changing the setup revokes it.',
+            'how_trust' => 'You can remember a trusted browser for :days days; changing the setup or your password revokes it.',
             'how_lost' => 'If you lose your phone and your recovery codes, ask a more senior admin to reset it.',
         ],
         'setup' => [
             'title' => 'Turn on two-factor sign-in',
             'intro' => 'You will need an authenticator app on your phone. Once on, every sign-in asks for a fresh code.',
+            'resume_intro' => 'The setup you started was not finished in time. Enter your password to get a new key and continue.',
             'start' => 'Start setup',
             'step_key' => 'Step 1: add the key to the app',
             'step_key_hint' => 'In your authenticator app choose add account, then enter a setup key manually, and paste this key.',

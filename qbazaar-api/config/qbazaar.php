@@ -496,6 +496,9 @@ return [
             'lockout_seconds' => 900,
             'trusted_browser_days' => 30,
             'recovery_codes' => 8,
+            // Setup starts with the password; the new key stays visible and
+            // confirmable this long before the password is asked again.
+            'password_confirm_minutes' => 15,
         ],
 
         // Opening a private conversation needs a written reason; the grant
