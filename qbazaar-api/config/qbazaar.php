@@ -275,6 +275,8 @@ return [
         // keeps that pinned block (and its one indexed query) small.
         'featured_max' => 20,
         'admin_per_page' => 20,
+        // Shorter company searches are ignored: one character matches nearly every row.
+        'admin_search_min_length' => 2,
     ],
 
     /*

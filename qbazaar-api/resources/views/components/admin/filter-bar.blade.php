@@ -5,6 +5,8 @@
     'filters' => [],
     // Query parameters a search or filter submit keeps, e.g. the ad a list is scoped to.
     'carry' => [],
+    // Shortest search the list runs; shorter terms are not sent.
+    'minLength' => null,
 ])
 
 @php
@@ -23,6 +25,7 @@
             <x-admin.icon name="search" class="size-[18px]" />
         </span>
         <input id="filter-q" type="search" name="q" value="{{ $search }}" placeholder="{{ $placeholder }}"
+               @if ($minLength) minlength="{{ $minLength }}" @endif
                class="{{ $controlClasses }} ps-10 pe-4">
     </div>
 

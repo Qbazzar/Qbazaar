@@ -1351,6 +1351,7 @@ return [
         'applications' => [
             'title' => 'Business applications',
             'empty' => 'This account never applied.',
+            'notes_reviewers_only' => 'Review notes are shown only to staff who can verify companies.',
         ],
         'account' => [
             'title' => 'Account',
@@ -1374,6 +1375,7 @@ return [
         'pending_badge' => 'applications waiting for review',
         'status_filter' => 'Filter by application status',
         'search_placeholder' => 'Search by business, legal name or CR number…',
+        'search_placeholder_name' => 'Search by business name…',
         'empty' => 'No applications with this status.',
         'open' => 'View application',
         'deleted_account' => 'Deleted account',
@@ -1396,6 +1398,7 @@ return [
             'legal_name' => 'Legal name',
             'registration' => 'Commercial registration (CR) number',
             'applicant_note' => 'Note from the applicant',
+            'reviewers_only' => 'The legal name, CR number and notes are shown only to staff who can verify companies.',
         ],
         'documents' => [
             'title' => 'Documents',
