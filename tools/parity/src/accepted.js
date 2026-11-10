@@ -31,7 +31,8 @@ function arabicFontRule(ownText, diff) {
 }
 
 // A list item's margin follows its place in the list (a staggered row of pills): an item that sits at another place
-// in its list on the other side (sample data in another order) keeps the margin of that place, not its own.
+// in its list on the other side (sample data in another order) keeps the margin of that place, not its own. Only the
+// lists components.json names in placeLists give their items a place (inpage.js), so no other margin gets here.
 const LIST_MIN = 3;
 const placesDiffer = (r, t) => Boolean(r.place && t.place) && r.place.count >= LIST_MIN && t.place.count >= LIST_MIN && r.place.index !== t.place.index;
 

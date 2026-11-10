@@ -1,4 +1,9 @@
 {
+  "placeLists": {
+    "note": "Lists whose items take their margin from their place in the list: the home page's Find Places pills, staggered by nth-child below 1000 px on the reference, with sample cities in another order than the target's. Only an item of one of these lists that sits at another place on the other side has its margin counted under list-place (accepted.js); every other margin is compared.",
+    "reference": [".qb-places"],
+    "target": ["section[aria-labelledby=\"home-places\"] ul"]
+  },
   "shared": {
     "header": {
       "ref": "header",

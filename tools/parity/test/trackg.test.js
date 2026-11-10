@@ -75,6 +75,27 @@ test('a list item at another place in its list has its margin counted under list
     .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
   assert.deepEqual(same.list.map((f) => f.property), ['margin']);
   assert.deepEqual(same.accepted, []);
+  // A box outside the placeLists has no place (inpage.js): a divider at another index in its card is compared.
+  const divider = (index) => ({ ...pill(index, index ? 22 : 0), key: 't:or continue with#0', place: null });
+  const card = new Findings();
+  await new UnitComparer({ ref: probe(divider(3)), target: probe(divider(0)), findings: card, base: BASE })
+    .compare({ name: 'auth-card', refSel: 'a', tgtSel: 'a', icons: false, states: false });
+  assert.deepEqual(card.list.map((f) => [f.component, f.property]), [['auth-card > t:or continue with', 'margin']]);
+  assert.deepEqual(card.accepted, []);
+});
+
+// The places opt in per side: each probe hands its side's lists to the in-page reader, and only the city pills are listed.
+test('only the lists components.json names in placeLists give their items a place, on each side', async () => {
+  const { Probe } = require('../src/capture');
+  const { placeLists } = require('../components.json');
+  assert.deepEqual([placeLists.reference, placeLists.target], [['.qb-places'], ['section[aria-labelledby="home-places"] ul']]);
+  const sent = [];
+  const page = { evaluate: async (fn, arg) => { sent.push(arg); return null; } };
+  await new Probe(page, null, 'reference').read('a', { descendants: true, hop: true });
+  await new Probe(page, null, 'target').read('a');
+  await new Probe(page, null, 'elsewhere').read('a');
+  assert.deepEqual(sent.map((a) => a.placeLists), [placeLists.reference, placeLists.target, []]);
+  assert.deepEqual(sent.map((a) => [a.descendants, a.hop]), [[true, true], [false, false], [false, false]]);
 });
 
 // G-hidden-sizer-pairing: a combobox whose label sits in a span next to an invisible sizer.

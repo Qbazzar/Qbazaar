@@ -73,6 +73,24 @@ test('a wrapper that only adds a margin keeps the box\'s place: its margin is th
   assert.equal(tgt.box.styles.padding, '10px 20px 10px 20px');
 });
 
+// Only a list components.json names (placeLists) sets margins by place; a divider among a card's boxes has no place,
+// so its margin is always compared (accepted.js listPlaceRule).
+test('a box has a place only in a list that placeLists names', async (t) => {
+  if (!needsChrome(t)) return;
+  const pill = (name, margin = 0) => `<span class="qb-btn" style="margin-top:${margin}px;padding:10px 20px;background:#fff">${name}</span>`;
+  await page.setContent(html(`
+    <div id="pills" style="display:flex;gap:12px">${pill('Doha')}${pill('Lusail', 8)}${pill('Al Khor', 3)}</div>
+    <div id="card"><input><input><p style="margin:22px 0 4px">or continue with</p><button>Google</button></div>`));
+  const listed = await page.evaluate(inpage.readUnit, { selector: '#pills', descendants: true, placeLists: ['#pills'] });
+  assert.deepEqual(textOf(listed, 't:lusail').place, { index: 1, count: 3 });
+  const unlisted = await page.evaluate(inpage.readUnit, { selector: '#pills', descendants: true });
+  assert.equal(textOf(unlisted, 't:lusail').place, null);
+  const card = await page.evaluate(inpage.readUnit, { selector: '#card', descendants: true, placeLists: ['#pills'] });
+  assert.equal(textOf(card, 't:or continue with').place, null);
+  const divider = await page.evaluate(inpage.readUnit, { selector: '#card p', descendants: false, hop: true, placeLists: ['#pills'] });
+  assert.equal(divider.place, null);
+});
+
 test('a label spaced by its own margin and one spaced by the form\'s gap leave the same space', async (t) => {
   if (!needsChrome(t)) return;
   const form = (gap) => `

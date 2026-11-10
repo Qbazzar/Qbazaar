@@ -237,9 +237,12 @@ Fourth round (Track G), from the re-run of 2026-10-21 (831 of its 1,977 findings
 
 Fifth round, from the review of Track G (every rule narrower, nothing dropped without a row under "Accepted differences"):
 
-- **List places.** A list item (in a list of three or more) that sits at another place on the other side keeps the margin
-  of that place (the staggered home city pills). Its margin difference is counted under `list-place`, no longer skipped
-  in silence; its other properties, and the margins of items at the same place, are still compared.
+- **List places.** Only the lists `components.json` names in `placeLists` (per side: the home page's Find Places pills,
+  staggered by `nth-child` below 1000 px) give their items a place. An item of such a list (three or more) that sits at
+  another place on the other side keeps the margin of that place: its margin difference is counted under `list-place`,
+  no longer skipped in silence; its other properties, and the margins of items at the same place, are still compared.
+  Every other box has no place, so its margin is always compared: the first live check showed the old rule also hid the
+  login card's "or continue with" margin (`22px 0 4px` against `0`), a divider at another index among the card's boxes.
 - **Arabic font.** `arabic-font` reads the text the element writes itself (`ownCopy`), not the text of the whole unit, and
   that text must be Arabic with no Latin letter: a Latin heading in a panel that also lists العربية is compared. A
   `font-family` difference counts only when Noto Kufi leads the target's stack (a Latin font ahead of it is a Latin font

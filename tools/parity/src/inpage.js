@@ -56,7 +56,7 @@ function collectTexts() {
   return rows;
 }
 
-function readUnit({ selector, descendants, hop }) {
+function readUnit({ selector, descendants, hop, placeLists = [] }) {
   const root = document.querySelector(selector);
   if (!root) return null;
   const lineHeights = new Map();
@@ -237,9 +237,13 @@ function readUnit({ selector, descendants, hop }) {
     return node;
   };
   const MARGIN_PROPS = ['margin', 'margin-flow', 'margin-space'];
-  // Where a box sits among the boxes of its list: a staggered row of pills sets each margin by place (unit.js).
+  // Where a box sits among the boxes of its list: a staggered row of pills sets each margin by place (accepted.js).
+  // Only the lists components.json names in placeLists do that; a box anywhere else has no place, so its margin is
+  // always compared.
   const placeOf = (node) => {
-    const items = node.parentElement ? [...node.parentElement.children].filter((c) => c.getBoundingClientRect().width > 0) : [];
+    const list = node.parentElement;
+    if (!list || !placeLists.some((s) => list.matches(s))) return null;
+    const items = [...list.children].filter((c) => c.getBoundingClientRect().width > 0);
     return { index: items.indexOf(node), count: items.length };
   };
   const boxView = (el, stopAt) => {
