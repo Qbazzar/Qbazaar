@@ -15,6 +15,9 @@ use Database\Seeders\Demo\DemoOptions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Throwable;
 
 /**
  * Brings the demo accounts of an existing database in line with the design:
@@ -54,6 +57,7 @@ final class DemoContentRefresher
         $this->media->useConnection((string) config('queue.default'));
 
         Ad::withoutSyncingToSearch(function () use ($options, $dryRun, $report, &$touched, &$removed): void {
+            $this->purgeTrashedAds($report, $dryRun);
             $owners = $this->updateAccounts($report, $dryRun);
             $this->retireOldAds($report, $dryRun, $touched, $removed);
             $this->writeDesignAds($owners, $report, $dryRun, $touched);
@@ -188,7 +192,11 @@ final class DemoContentRefresher
                 continue;
             }
 
-            $this->removeIfStillUnused($ad) ? $report->placeholderAdsRemoved++ : $report->adsKeptForHistory++;
+            match ($this->removeIfStillUnused($ad)) {
+                'removed' => $report->placeholderAdsRemoved++,
+                'failed' => $report->adsPurgeFailed++,
+                default => $report->adsKeptForHistory++,
+            };
         }
     }
 
@@ -197,8 +205,10 @@ final class DemoContentRefresher
      * its row lock, in the same transaction that hides it: something a real user attached
      * since the chunk was read keeps the ad. Files and the row go only after the commit,
      * for ads confirmed unused, so a rolled back unit never loses photos.
+     *
+     * @return 'removed'|'kept'|'failed' failed: the ad is hidden but its purge did not finish
      */
-    private function removeIfStillUnused(Ad $ad): bool
+    private function removeIfStillUnused(Ad $ad): string
     {
         $hidden = DB::transaction(function () use ($ad): bool {
             $locked = Ad::query()->whereKey($ad->id)->lockForUpdate()->first();
@@ -207,21 +217,64 @@ final class DemoContentRefresher
                 return false;
             }
 
-            DB::table('favorites')->where('ad_id', $ad->id)->delete();
-            DB::table('recently_viewed')->where('ad_id', $ad->id)->delete();
-
             return (bool) $locked->delete();
         });
 
         if (! $hidden) {
-            return false;
+            return 'kept';
         }
 
-        // The model event of a forced delete is what removes the photo files.
-        $ad->forceDelete();
-        $this->search->forget(new Collection([$ad]));
+        return $this->purge($ad->id) ? 'removed' : 'failed';
+    }
 
-        return true;
+    /**
+     * Finishes what an interrupted removal left behind: demo-owned ads that are soft-deleted
+     * but still hold their photos and row, and are not needed by anything else.
+     */
+    private function purgeTrashedAds(RefreshReport $report, bool $dryRun): void
+    {
+        Ad::onlyTrashed()
+            ->whereIn('user_id', $this->demoUserIds())
+            ->chunkById(self::CHUNK, function (Collection $ads) use ($report, $dryRun): void {
+                $blocked = $this->dependentAdIds($ads->map(static fn (Ad $ad): string => $ad->id)->values()->all());
+
+                foreach ($ads->reject(fn (Ad $ad): bool => isset($blocked[$ad->id])) as $ad) {
+                    if ($dryRun) {
+                        $report->trashedAdsPurged++;
+                    } else {
+                        $this->purge($ad->id) ? $report->trashedAdsPurged++ : $report->adsPurgeFailed++;
+                    }
+                }
+            });
+    }
+
+    /**
+     * Removes the files, the row and the search entry of a soft-deleted ad. The delete events
+     * already ran when it was hidden (they decrement the seller's counter and write the
+     * activity entry), so they are not run a second time. A failure, such as a storage
+     * outage, is logged and left for the next run instead of aborting this one.
+     */
+    private function purge(string $adId): bool
+    {
+        try {
+            $trashed = Ad::onlyTrashed()->with('media')->find($adId);
+
+            if ($trashed === null) {
+                return true;
+            }
+
+            DB::table('favorites')->where('ad_id', $adId)->delete();
+            DB::table('recently_viewed')->where('ad_id', $adId)->delete();
+            $trashed->media->each(static fn (Media $media): ?bool => $media->delete());
+            Ad::withoutEvents(static fn (): ?bool => $trashed->forceDelete());
+            $this->search->forget(new Collection([$trashed]));
+
+            return true;
+        } catch (Throwable $failure) {
+            Log::warning('demo:refresh-content could not purge a deleted demo ad; the next run retries.', ['ad' => $adId, 'error' => $failure->getMessage()]);
+
+            return false;
+        }
     }
 
     /**

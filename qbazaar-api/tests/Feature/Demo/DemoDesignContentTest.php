@@ -410,3 +410,65 @@ it('leaves the e-mail, password and language of a demo account alone when it tak
     expect($after->only(['email', 'password', 'language']))->toBe($before)
         ->and($after->full_name)->toBe('Farah Alzinati');
 });
+
+it('counts a removed placeholder ad out of the seller once and logs one deletion for it', function (): void {
+    $owner = demoOwner();
+    $placeholders = Ad::factory()->active()->count(2)->create(['user_id' => $owner->id]);
+    $kept = Ad::factory()->active()->create(['user_id' => $owner->id, 'title' => 'Legacy ad with a chat']);
+    Conversation::factory()->create(['ad_id' => $kept->id, 'seller_id' => $owner->id]);
+
+    expect(User::query()->findOrFail($owner->id)->active_ads_count)->toBe(3);
+
+    app(DemoContentRefresher::class)->run(new RefreshOptions);
+
+    expect(User::query()->findOrFail($owner->id)->active_ads_count)->toBe(1)
+        ->and(DB::table('activity_log')->where('event', 'ad_deleted')->whereIn('subject_id', $placeholders->modelKeys())->count())->toBe(2);
+});
+
+it('survives a failed purge, hides the ad meanwhile and finishes the job on the next run', function (): void {
+    $owner = demoOwner();
+    $ad = Ad::factory()->active()->create(['user_id' => $owner->id]);
+    $ad->addMedia(UploadedFile::fake()->image('grey.jpg', 40, 40))->toMediaCollection('images');
+    $failures = 0;
+
+    Media::deleting(function () use (&$failures): void {
+        if ($failures++ === 0) {
+            throw new RuntimeException('Storage went away.');
+        }
+    });
+
+    $first = app(DemoContentRefresher::class)->run(new RefreshOptions);
+
+    expect($first->adsPurgeFailed)->toBe(1)
+        ->and($first->placeholderAdsRemoved)->toBe(0)
+        ->and(Ad::query()->whereKey($ad->id)->exists())->toBeFalse()
+        ->and(Ad::onlyTrashed()->whereKey($ad->id)->exists())->toBeTrue();
+
+    $dry = app(DemoContentRefresher::class)->run(new RefreshOptions(dryRun: true));
+
+    expect($dry->trashedAdsPurged)->toBe(1)
+        ->and(Ad::onlyTrashed()->whereKey($ad->id)->exists())->toBeTrue();
+
+    $engine = Mockery::mock(Engine::class);
+    $engine->expects('delete');
+    $engine->allows('update');
+    app(EngineManager::class)->extend('meilisearch', fn () => $engine);
+    config(['scout.driver' => 'meilisearch', 'scout.queue' => false]);
+
+    $second = app(DemoContentRefresher::class)->run(new RefreshOptions);
+
+    expect($second->trashedAdsPurged)->toBe(1)
+        ->and(Ad::withTrashed()->whereKey($ad->id)->exists())->toBeFalse()
+        ->and(Media::query()->where('model_id', $ad->id)->exists())->toBeFalse();
+});
+
+it('does not purge a soft-deleted demo ad that something still depends on', function (): void {
+    $owner = demoOwner();
+    $ad = Ad::factory()->active()->create(['user_id' => $owner->id]);
+    Conversation::factory()->create(['ad_id' => $ad->id, 'seller_id' => $owner->id]);
+    $ad->delete();
+
+    app(DemoContentRefresher::class)->run(new RefreshOptions);
+
+    expect(Ad::onlyTrashed()->whereKey($ad->id)->exists())->toBeTrue();
+});

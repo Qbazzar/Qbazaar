@@ -19,6 +19,10 @@ final class RefreshReport
 
     public int $adsKeptForHistory = 0;
 
+    public int $trashedAdsPurged = 0;
+
+    public int $adsPurgeFailed = 0;
+
     public int $adsKeptPhotosSwapped = 0;
 
     public int $designAdsCreated = 0;
@@ -47,6 +51,8 @@ final class RefreshReport
             ['Design sellers without a demo account', $this->accountsMissing],
             ['Demo accounts updated (name, avatar, profile, cover)', $this->accountsUpdated],
             ['Old placeholder ads removed (in a dry run: to remove)', $this->placeholderAdsRemoved],
+            ['Soft-deleted demo ads purged (in a dry run: to purge)', $this->trashedAdsPurged],
+            ['Ads whose purge failed (left for the next run)', $this->adsPurgeFailed],
             ['Old ads kept (orders, offers, chats or other users depend on them)', $this->adsKeptForHistory],
             ['  of which got design photos', $this->adsKeptPhotosSwapped],
             ['Design ads created (in a dry run: to create)', $this->designAdsCreated],
