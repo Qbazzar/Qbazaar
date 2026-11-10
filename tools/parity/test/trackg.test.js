@@ -307,6 +307,35 @@ test('scenarios: copy that differs only by a kept string or a language list is a
   assert.deepEqual(real.list.map((f) => f.property), ['text']);
 });
 
+test('scenarios: only the first observation after Escape may find the target closed', async () => {
+  const { press, observe } = require('../scenarios/dsl');
+  const modal = { ref: '.modal', target: '[role=dialog]' };
+  const hidden = { text: 'skip', styles: false };
+  const twice = await runSteps([press('Escape'), observe('closed-by-escape', modal, hidden), observe('still-open', modal, hidden)]);
+  assert.deepEqual(twice.accepted.map((a) => [a.rule, a.count]), [['escape-key', 1]]);
+  assert.deepEqual(twice.list.map((f) => [f.component, f.property, f.ref, f.target]), [['scenario:x:still-open', 'exists', 'visible', 'not visible']]);
+});
+
+test('scenarios: the language list accepts fewer rows than the reference, never more, and keeps its heading', async () => {
+  const { observe, languageList } = require('../scenarios/dsl');
+  const rows = { ref: '.modal', target: '[role=dialog]' };
+  const counted = { count: true, text: 'skip', styles: false, accepted: languageList };
+  const fewer = await runSteps([observe('option-rows', rows, counted)], { refCount: 9, targetCount: 2 });
+  assert.deepEqual(fewer.list, []);
+  assert.deepEqual(fewer.accepted.map((a) => [a.rule, a.examples[0].property, a.examples[0].ref, a.examples[0].target]), [['svg-flags', 'count', '9', '2']]);
+  const more = await runSteps([observe('option-rows', rows, counted)], { refCount: 2, targetCount: 3 });
+  assert.deepEqual(more.list.map((f) => [f.property, f.ref, f.target]), [['count', '2', '3']]);
+  assert.deepEqual(more.accepted, []);
+  // A count rule left as a plain flag accepts nothing.
+  const flag = await runSteps([observe('option-rows', rows, { ...counted, accepted: { ...languageList, count: true } })], { refCount: 9, targetCount: 2 });
+  assert.deepEqual(flag.list.map((f) => f.property), ['count']);
+  // The heading is still compared next to an accepted count.
+  const renamed = await runSteps([observe('panel', rows, { count: true, styles: false, accepted: languageList })], {
+    refCount: 9, targetCount: 2, refText: 'Choose your language English Arabic', targetText: 'Pick a language English',
+  });
+  assert.deepEqual(renamed.list.map((f) => f.property), ['text']);
+});
+
 // G-flows-mapping.
 test('flows: category crumbs reach any category page, template drift is not a missing control', () => {
   const destinations = selectPages({ pages: CATEGORY_PAGES, viewports: [{ width: 1440 }] }).map((p) => ({ path: p.route.split('?')[0], aliases: p.aliases }));
