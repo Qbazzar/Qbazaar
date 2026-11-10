@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: QBazaar API
-  version: 1.0.0
+  version: 1.1.0
   description: |
     REST API for QBazaar — Qatar's friendly classifieds marketplace.
 
@@ -10,6 +10,27 @@ info:
 
     See [error-codes.md](../error-codes.md) for the full error catalog,
     and [events/messages.yaml](../events/messages.yaml) for WebSocket events.
+
+    **v1.1** documents every endpoint the API serves today, M1, M1b and M4
+    included, with request and response schemas that follow the Laravel
+    FormRequests and Resources. Nullable fields use the OpenAPI 3.1 form
+    (`type: [string, 'null']`).
+
+    **`x-status`:** an operation marked `x-status: planned` is designed but
+    not built yet; clients can build against the Prism mock, but the
+    Laravel API answers 404 until it ships. An operation without `x-status`
+    is live. No operation is planned in v1.1. The one route left out on
+    purpose is `GET /api/v1/auth/password-reset/verify`, an internal signed
+    link target behind the password-reset mail.
+
+    **Rate limits:** apart from `/health`, `/openapi.yaml`,
+    `POST /auth/logout` and the signed `GET /auth/verify-email/{id}/{hash}`
+    link, every endpoint is throttled: by the general `api` limiter
+    (`qbazaar.api.requests_per_minute` per user,
+    `qbazaar.api.guest_requests_per_minute` per IP for guests), by a
+    stricter one (auth, OTP, uploads, chat, offers, publishing), or by
+    both. A throttled call gets 429 `RATE_LIMIT_EXCEEDED` with a
+    `Retry-After` header, whether or not the operation lists a 429.
   contact:
     name: Ahmed Jaber
     email: ahmedjaberdev@gmail.com
@@ -35,6 +56,8 @@ tags:
     description: Marketplace category tree, dynamic filters and fields
   - name: Locations
     description: Qatar regions and districts
+  - name: Home
+    description: The home screen's sections in one request
   - name: Uploads
     description: Image uploads with multi-size conversions
   - name: Ads
@@ -43,10 +66,14 @@ tags:
     description: Meilisearch-powered keyword + filter search
   - name: Favorites
     description: Save / unsave ads
+  - name: RecentlyViewed
+    description: View tracking and the caller's recently viewed ads
   - name: Conversations
     description: Chat threads between buyer and seller
   - name: Messages
     description: Messages within a conversation
+  - name: Realtime
+    description: Reverb (Pusher protocol) channel authorization for the WebSocket events
   - name: Offers
     description: Price offers attached to ads / conversations
   - name: Purchase requests
@@ -95,6 +122,74 @@ paths:
                       status: ok
                       version: 1.0.0
                       timestamp: '2026-05-20T10:00:00.000Z'
+
+  /api/v1/openapi.yaml:
+    get:
+      tags: [Health]
+      summary: This OpenAPI document
+      description: |
+        Serves `qbazaar-contracts/openapi/v1.yaml` as it is, for Swagger UI at
+        `/docs` and `/swagger`. Only answers when `qbazaar.api_docs_enabled`
+        is on (off in production); otherwise 404.
+      operationId: openapiDocument
+      security: []
+      responses:
+        '200':
+          description: The spec, cached for 60 seconds
+          content:
+            application/yaml:
+              schema: { type: string }
+        '404':
+          description: API docs are turned off on this server
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Realtime (Reverb channel authorization, BE-13.2)
+  # ──────────────────────────────────────────────────────────────────────────
+  /api/v1/broadcasting/auth:
+    post:
+      tags: [Realtime]
+      summary: Authorize a private Reverb channel subscription
+      description: |
+        Pusher-protocol channel authorization for Bearer clients (web and
+        mobile). Laravel Echo and pusher-js call it with the `socket_id` they
+        got from Reverb and the channel they want to join. The private
+        channels and who may join them are in
+        [events/messages.yaml](../events/messages.yaml). The reply is the raw
+        Pusher body, not the `{success, data}` envelope. The framework also
+        answers `GET` on this path with the same handler; clients use `POST`.
+      operationId: broadcastingAuth
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChannelAuthRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelAuthRequest'
+      responses:
+        '200':
+          description: The caller may join the channel
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [auth]
+                properties:
+                  auth:
+                    type: string
+                    description: '`<app key>:<HMAC signature>` for the Pusher subscribe frame.'
+                    example: 'qbazaar-key:2f1c9a...'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller may not join this channel, or the account is not active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Auth (Sprint 1)
@@ -249,7 +344,19 @@ paths:
     post:
       tags: [Auth]
       summary: Revoke the current access token
+      description: |
+        Revokes the access token and the refresh token of its session. Send
+        `refresh_token` as well to revoke that one too (for example a refresh
+        token the client still holds from before a rotation).
       operationId: authLogout
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token: { type: string, description: Optional refresh token to revoke along with the access token. }
       responses:
         '204':
           description: Logged out
@@ -2035,7 +2142,7 @@ paths:
   # ──────────────────────────────────────────────────────────────────────────
   /api/v1/categories/tree:
     get:
-      tags: [Reference]
+      tags: [Categories]
       summary: Full active category tree (top-level + children)
       operationId: categoriesTree
       security: []
@@ -2081,10 +2188,12 @@ paths:
                             created_at: '2026-05-23T12:00:00+00:00'
                             updated_at: '2026-05-23T12:00:00+00:00'
                             children: []
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/categories/main:
     get:
-      tags: [Reference]
+      tags: [Categories]
       summary: Top-level categories only (no children)
       operationId: categoriesMain
       security: []
@@ -2095,10 +2204,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CategoryListEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/categories/{slug}/stats:
     get:
-      tags: [Reference]
+      tags: [Categories]
       summary: Live ad counters for a category, descendants included
       description: Cached for up to `qbazaar.catalog.counts_cache_seconds` and flushed when an ad is published, expires or changes status, category or location.
       operationId: categoriesStats
@@ -2133,7 +2244,7 @@ paths:
 
   /api/v1/categories/{slug}:
     get:
-      tags: [Reference]
+      tags: [Categories]
       summary: Category page with one section of newest ads per active child
       description: |
         Each section holds up to 6 of the newest listed ads filed under that
@@ -2171,7 +2282,7 @@ paths:
 
   /api/v1/home:
     get:
-      tags: [Reference]
+      tags: [Home]
       summary: Every home-screen section in one request
       description: |
         The payload is the same for every visitor of a language (card chips
@@ -2192,10 +2303,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HomeFeedEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/categories/{slug}/filters:
     get:
-      tags: [Reference]
+      tags: [Categories]
       summary: Filter definitions for a category's search controls
       operationId: categoriesFilters
       security: []
@@ -2221,7 +2334,7 @@ paths:
 
   /api/v1/categories/{slug}/fields:
     get:
-      tags: [Reference]
+      tags: [Categories]
       summary: Custom field definitions used when posting an ad in this category
       operationId: categoriesFields
       security: []
@@ -2247,7 +2360,7 @@ paths:
 
   /api/v1/locations/qatar:
     get:
-      tags: [Reference]
+      tags: [Locations]
       summary: Qatar location tree (cities + districts)
       operationId: locationsQatar
       security: []
@@ -2279,6 +2392,8 @@ paths:
                             lat: null
                             lng: null
                             children: []
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Ads (Sprint 4 + 5 — Wave A)
@@ -2354,6 +2469,7 @@ paths:
                     data:
                       - id: 01HM3XQV0AAAAAAAAAAAAAAAAA
                         title: Mountain bike for sale
+                        summary: Lightly used, new brakes and tyres, frame size M.
                         price: 750.00
                         price_formatted: 750.00 QAR
                         price_type: fixed
@@ -2473,15 +2589,7 @@ paths:
       operationId: adsPublish
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
-        - name: X-Idempotency-Key
-          in: header
-          required: false
-          description: >
-            16–128 chars, `[A-Za-z0-9_-]`. Same key replays the cached
-            response for 24 hours. Recommended: a fresh ULID per attempt.
-          schema:
-            type: string
-            example: 01J9YV3P5Q7AABBCCDDEEFFGG
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -2513,6 +2621,10 @@ paths:
                     success: true
                     data:
                       id: 01HM3XQV0AAAAAAAAAAAAAAAAA
+                      title: Mountain bike for sale
+                      description: Lightly used, new brakes and tyres, frame size M. Pickup in Al Sadd.
+                      price_type: fixed
+                      currency: QAR
                       status: pending
                       published_at: null
                       expires_at: null
@@ -2565,6 +2677,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FeaturedAdsResponse'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/ads/{id}/similar:
     get:
@@ -2756,12 +2870,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ReorderImagesRequest'
       responses:
-        '200':
-          description: Images reordered
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdEnvelope'
+        '204':
+          description: Images reordered; fetch the ad again for the new order.
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -2773,7 +2883,7 @@ paths:
       summary: Delete a single ad image
       operationId: mediaDestroy
       parameters:
-        - { name: media, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - { name: media, in: path, required: true, schema: { type: integer, minimum: 1 } }
       responses:
         '204': { description: Image removed }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -2793,7 +2903,7 @@ paths:
       operationId: mediaOriginal
       security: []
       parameters:
-        - { name: media, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - { name: media, in: path, required: true, schema: { type: integer, minimum: 1 } }
         - { name: expires, in: query, required: true, schema: { type: integer } }
         - { name: signature, in: query, required: true, schema: { type: string } }
       responses:
@@ -2928,6 +3038,7 @@ paths:
                     data:
                       - id: 01HM3XQV0AAAAAAAAAAAAAAAAA
                         title: Mountain bike for sale
+                        summary: Lightly used, new brakes and tyres, frame size M.
                         price: 750.00
                         price_formatted: 750.00 QAR
                         price_type: fixed
@@ -2993,6 +3104,8 @@ paths:
                   value:
                     success: true
                     data: ['Mountain bike', 'Mountain trekking gear']
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/account/saved-searches:
     get:
@@ -3314,7 +3427,7 @@ paths:
           schema: { type: string, maxLength: 64 }
           description: Stable opaque session id for anonymous viewers.
       responses:
-        '204': { description: View recorded, throttled, or silent no-op }
+        '204': { description: 'View recorded, throttled, or silent no-op' }
         '404':
           description: AD_NOT_FOUND
           content:
@@ -3497,8 +3610,12 @@ paths:
   /api/v1/users/{user}/ads:
     get:
       tags: [Users]
-      summary: Public list of a user's active ads (stub until Sprint 5)
-      description: '`meta.total` is the seller''s stored count of active ads.'
+      summary: Public list of a user's active ads
+      description: |
+        Active ads only, latest published first, 20 per page. `meta.total` is
+        the seller's stored count of active ads. Send the Bearer token to get
+        `is_favorited` for the caller. A user who is not active is a 404
+        (`USER_NOT_FOUND`).
       operationId: usersAds
       security: [{}, {bearerAuth: []}]
       parameters:
@@ -3515,13 +3632,15 @@ paths:
             default: 1
       responses:
         '200':
-          description: Paginated ads (empty stub)
+          description: A page of the seller's active ads
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+                $ref: '#/components/schemas/PaginatedAdSummaryEnvelope'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/companies:
     get:
@@ -3534,7 +3653,7 @@ paths:
         caller; guests always get false. `q` matches the business name or the
         account name, featured matches first.
       operationId: companiesIndex
-      security: []
+      security: [{}, {bearerAuth: []}]
       parameters:
         - { name: q, in: query, schema: { type: string, maxLength: 100 } }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
@@ -4711,6 +4830,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PromotionOfferListEnvelope' }
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/ads/{id}/promotions:
     post:
@@ -5367,14 +5488,13 @@ components:
           description: Human-readable fallback in the requested locale
           example: Invalid credentials
         details:
-          oneOf:
-            - type: 'null'
-            - type: object
-              additionalProperties:
-                type: array
-                items:
-                  type: string
-          description: Field-level validation errors keyed by field name
+          type: [object, 'null']
+          additionalProperties: true
+          description: |
+            `VALIDATION_FAILED`: the field errors, a list of messages per
+            field name. Other codes may carry context values instead, such
+            as `order_id`, `amount` or `email`; null when there is nothing
+            to add.
         request_id:
           type: string
           description: Correlation id for log lookups
@@ -5382,22 +5502,34 @@ components:
 
     PaginationMeta:
       type: object
+      description: |
+        Page lists fill `current_page`, `total` and `last_page`; cursor lists
+        (orders, wallet statement, settlements, withdrawals, promotions,
+        followers and following) fill `next_cursor` and `prev_cursor` and leave the page
+        counters null.
       properties:
         current_page:
-          type: integer
+          type: [integer, 'null']
           example: 1
         per_page:
           type: integer
           example: 20
         total:
-          type: integer
+          type: [integer, 'null']
           example: 156
+        last_page:
+          type: [integer, 'null']
+          example: 8
         has_more:
-          type: boolean
+          type: [boolean, 'null']
           example: true
         next_cursor:
           type: [string, 'null']
           description: For cursor-based endpoints; null on the last page
+          example: null
+        prev_cursor:
+          type: [string, 'null']
+          description: For cursor-based endpoints; null on the first page
           example: null
 
     # ─── Primitives ────────────────────────────────────────────────
@@ -5442,39 +5574,39 @@ components:
                 contact:
                   type: object
                   properties:
-                    support_email: { type: string, format: email, nullable: true }
-                    phone: { type: string, nullable: true, description: E.164, example: '+97444000000' }
-                    whatsapp: { type: string, nullable: true, description: E.164 }
+                    support_email: { type: [string, 'null'], format: email }
+                    phone: { type: [string, 'null'], description: E.164, example: '+97444000000' }
+                    whatsapp: { type: [string, 'null'], description: E.164 }
                     address:
                       type: object
                       properties:
-                        ar: { type: string, nullable: true }
-                        en: { type: string, nullable: true }
+                        ar: { type: [string, 'null'] }
+                        en: { type: [string, 'null'] }
                     working_hours:
                       type: object
                       properties:
-                        ar: { type: string, nullable: true }
-                        en: { type: string, nullable: true }
+                        ar: { type: [string, 'null'] }
+                        en: { type: [string, 'null'] }
                 social:
                   type: object
                   description: https links; null when not set
                   properties:
-                    instagram: { type: string, format: uri, nullable: true }
-                    x: { type: string, format: uri, nullable: true }
-                    facebook: { type: string, format: uri, nullable: true }
-                    tiktok: { type: string, format: uri, nullable: true }
-                    snapchat: { type: string, format: uri, nullable: true }
-                    youtube: { type: string, format: uri, nullable: true }
-                    linkedin: { type: string, format: uri, nullable: true }
+                    instagram: { type: [string, 'null'], format: uri }
+                    x: { type: [string, 'null'], format: uri }
+                    facebook: { type: [string, 'null'], format: uri }
+                    tiktok: { type: [string, 'null'], format: uri }
+                    snapchat: { type: [string, 'null'], format: uri }
+                    youtube: { type: [string, 'null'], format: uri }
+                    linkedin: { type: [string, 'null'], format: uri }
                 analytics:
                   type: object
                   properties:
-                    ga4_measurement_id: { type: string, nullable: true, example: G-ABCD123456 }
+                    ga4_measurement_id: { type: [string, 'null'], example: G-ABCD123456 }
                 antibot:
                   type: object
                   properties:
                     turnstile_enabled: { type: boolean }
-                    turnstile_site_key: { type: string, nullable: true }
+                    turnstile_site_key: { type: [string, 'null'] }
 
     HealthResponse:
       allOf:
@@ -5494,6 +5626,19 @@ components:
                 timestamp:
                   type: string
                   format: date-time
+
+    ChannelAuthRequest:
+      type: object
+      required: [socket_id, channel_name]
+      properties:
+        socket_id:
+          type: string
+          description: The connection id Reverb sent in `pusher:connection_established`.
+          example: '123456.7890123'
+        channel_name:
+          type: string
+          description: The private channel to join, with its `private-` prefix.
+          example: private-conversation.01HMZK3N8Q6V5W4X3Y2Z1A0B9C
 
     # ── Auth (Sprint 1) ──────────────────────────────────────────────
     User:
@@ -6255,7 +6400,7 @@ components:
 
     PublicProfile:
       type: object
-      required: [id, full_name, account_type, joined_at, verification_badges, ads_count]
+      required: [id, full_name, avatar_url, account_type, business_name, joined_at, verification_badges, ads_count, rating_avg, rating_count, followers_count, following_count]
       properties:
         id:
           $ref: '#/components/schemas/ULID'
@@ -6301,6 +6446,13 @@ components:
         ads_count:
           type: integer
           example: 0
+        rating_avg:
+          type: number
+          description: Average review rating (0 when there are no reviews).
+          example: 4.5
+        rating_count:
+          type: integer
+          example: 8
         followers_count:
           type: integer
           example: 12
@@ -6388,7 +6540,7 @@ components:
       required: [id, business_name, followers_count, active_ads_count, is_following]
       properties:
         id: { $ref: '#/components/schemas/ULID' }
-        business_name: { type: string, description: The business profile name, or the account name when none is set. }
+        business_name: { type: string, description: 'The business profile name, or the account name when none is set.' }
         about: { type: [string, 'null'], description: First 160 characters of the business description. }
         avatar_url: { type: [string, 'null'], format: uri }
         business_verified: { type: boolean, description: The verified-business badge. }
@@ -6938,8 +7090,8 @@ components:
       type: object
       properties:
         url: { type: string, format: uri }
-        width: { type: integer, nullable: true }
-        height: { type: integer, nullable: true }
+        width: { type: [integer, 'null'] }
+        height: { type: [integer, 'null'] }
 
     MediaSizes:
       type: object
@@ -6953,12 +7105,11 @@ components:
     Media:
       type: object
       properties:
-        id: { $ref: '#/components/schemas/ULID' }
+        id: { type: integer, description: 'Media id, as taken by the image reorder and delete endpoints.' }
         collection: { type: string, example: images }
         url:
-          type: string
+          type: [string, 'null']
           format: uri
-          nullable: true
           description: |
             Temporary signed URL for the original-resolution file
             (GET /media/{media}/original). Expires 24-25h after issue,
@@ -6969,9 +7120,9 @@ components:
             public URLs, served from `MEDIA_CDN_URL` (the cdn. host) when set,
             with `Cache-Control: public, max-age=31536000, immutable`.
         sizes: { $ref: '#/components/schemas/MediaSizes' }
-        blurhash: { type: string, nullable: true }
-        width: { type: integer, nullable: true }
-        height: { type: integer, nullable: true }
+        blurhash: { type: [string, 'null'] }
+        width: { type: [integer, 'null'] }
+        height: { type: [integer, 'null'] }
         order: { type: integer }
         size_bytes: { type: integer }
 
@@ -7011,8 +7162,8 @@ components:
               key: { type: string, example: transmission }
               label: { type: string, example: ناقل الحركة }
               value: { type: string, example: أوتوماتيك }
-        price: { type: number, nullable: true }
-        price_formatted: { type: string, nullable: true, example: '750.00 QAR' }
+        price: { type: [number, 'null'] }
+        price_formatted: { type: [string, 'null'], example: '750.00 QAR' }
         price_type: { $ref: '#/components/schemas/PriceType' }
         currency: { type: string, example: QAR }
         status: { $ref: '#/components/schemas/AdStatus' }
@@ -7024,9 +7175,9 @@ components:
           description: The strongest active paid promotion, for the badge or card style; null when none.
         ad_type: { $ref: '#/components/schemas/AdType' }
         shipping: { $ref: '#/components/schemas/AdShipping' }
-        primary_image: { $ref: '#/components/schemas/Media', nullable: true }
-        category_slug: { type: string, nullable: true }
-        location_slug: { type: string, nullable: true }
+        primary_image: { oneOf: [{ $ref: '#/components/schemas/Media' }, { type: 'null' }] }
+        category_slug: { type: [string, 'null'] }
+        location_slug: { type: [string, 'null'] }
         views_count: { type: integer }
         favorites_count: { type: integer }
         is_favorited:
@@ -7035,8 +7186,8 @@ components:
         conversations_count:
           type: integer
           description: Conversations opened on the ad. Only present on `GET /api/v1/account/ads`.
-        published_at: { type: string, format: date-time, nullable: true }
-        expires_at: { type: string, format: date-time, nullable: true }
+        published_at: { type: [string, 'null'], format: date-time }
+        expires_at: { type: [string, 'null'], format: date-time }
         created_at: { type: string, format: date-time }
 
     Ad:
@@ -7045,14 +7196,12 @@ components:
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         user_id: { $ref: '#/components/schemas/ULID' }
-        category_id: { $ref: '#/components/schemas/ULID' }
-        location_id: { $ref: '#/components/schemas/ULID' }
         title: { type: string, minLength: 5, maxLength: 120 }
         description: { type: string, minLength: 20, maxLength: 5000 }
-        price: { type: number, nullable: true }
+        price: { type: [number, 'null'] }
         price_type: { $ref: '#/components/schemas/PriceType' }
         currency: { type: string, example: QAR }
-        condition: { $ref: '#/components/schemas/Condition', nullable: true }
+        condition: { oneOf: [{ $ref: '#/components/schemas/Condition' }, { type: 'null' }] }
         ad_type: { $ref: '#/components/schemas/AdType' }
         shipping: { $ref: '#/components/schemas/AdShipping' }
         shipping_fee:
@@ -7061,33 +7210,38 @@ components:
             - type: 'null'
           description: What the seller charges for delivery; null is free. Only used when `shipping` is `delivery`.
         quantity: { type: integer, minimum: 1, description: Units the ad offers; a "Buy Now" request may ask for up to this many. }
-        postal_code: { type: string, nullable: true, maxLength: 10 }
+        postal_code: { type: [string, 'null'], maxLength: 10 }
         street:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: Always null for other viewers unless `show_full_address` is true; the seller always sees it.
         show_full_address: { type: boolean }
+        latitude: { type: [number, 'null'], minimum: -90, maximum: 90, description: The pin the seller dropped; null when none. }
+        longitude: { type: [number, 'null'], minimum: -180, maximum: 180 }
         status: { $ref: '#/components/schemas/AdStatus' }
+        status_label:
+          description: The status in both languages, for the owner's badge.
+          allOf:
+            - $ref: '#/components/schemas/LocalizedString'
         is_reserved: { type: boolean, description: 'The seller holds this active ad for a buyer ("Reserved" badge).' }
         promotion:
           oneOf:
             - $ref: '#/components/schemas/PromotionType'
             - type: 'null'
           description: The strongest active paid promotion, for the badge or card style; null when none.
-        reserved_at: { type: string, format: date-time, nullable: true }
+        reserved_at: { type: [string, 'null'], format: date-time }
         custom_fields:
-          type: object
+          type: [object, 'null']
           additionalProperties: true
-          nullable: true
         views_count: { type: integer }
         favorites_count: { type: integer }
         is_favorited:
           type: boolean
           description: Whether the caller (identified by an optional Bearer token) saved this ad. Always false for guests.
-        category_slug: { type: string, nullable: true }
-        location_slug: { type: string, nullable: true }
         user:
-          description: The seller. On `GET /api/v1/ads/{id}` it also carries `location`, the city or area the seller sells from.
+          description: |
+            The seller. On `GET /api/v1/ads/{id}` it also carries `location`, the
+            city or area the seller sells from. `is_following` and
+            `business_profile` are only on the public-profile endpoint.
           allOf:
             - $ref: '#/components/schemas/PublicProfile'
         category:
@@ -7101,8 +7255,8 @@ components:
         images:
           type: array
           items: { $ref: '#/components/schemas/Media' }
-        published_at: { type: string, format: date-time, nullable: true }
-        expires_at: { type: string, format: date-time, nullable: true }
+        published_at: { type: [string, 'null'], format: date-time }
+        expires_at: { type: [string, 'null'], format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 
@@ -7114,22 +7268,23 @@ components:
           allOf: [{ $ref: '#/components/schemas/ULID' }]
           description: Must be an active leaf category whose ancestors are all active; anything else is a 422 on `category_id`.
         location_id: { $ref: '#/components/schemas/ULID' }
+        latitude: { type: [number, 'null'], minimum: -90, maximum: 90, description: Optional map pin. }
+        longitude: { type: [number, 'null'], minimum: -180, maximum: 180 }
         title: { type: string, minLength: 5, maxLength: 120 }
         description: { type: string, minLength: 20, maxLength: 5000 }
-        price: { type: number, nullable: true, minimum: 0, maximum: 9999999 }
+        price: { type: [number, 'null'], minimum: 0, maximum: 9999999 }
         price_type: { $ref: '#/components/schemas/PriceType' }
-        condition: { $ref: '#/components/schemas/Condition', nullable: true }
+        condition: { oneOf: [{ $ref: '#/components/schemas/Condition' }, { type: 'null' }] }
         ad_type: { allOf: [{ $ref: '#/components/schemas/AdType' }], default: offering }
         shipping: { allOf: [{ $ref: '#/components/schemas/AdShipping' }], default: pickup_only }
         shipping_fee: { type: [number, 'null'], minimum: 0, maximum: 10000, multipleOf: 0.01, description: 'Delivery fee in QAR; null is free.' }
         quantity: { type: integer, minimum: 1, maximum: 999, default: 1 }
-        postal_code: { type: string, nullable: true, maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
-        street: { type: string, nullable: true, maxLength: 255 }
+        postal_code: { type: [string, 'null'], maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
+        street: { type: [string, 'null'], maxLength: 255 }
         show_full_address: { type: boolean, description: 'Show the street to everyone. Default false: only the postal code and city are public.' }
         custom_fields:
-          type: object
+          type: [object, 'null']
           additionalProperties: true
-          nullable: true
           description: |
             `{key: value}` checked against the category's `custom_fields`
             (inherited fields included): `number` and `range` values between
@@ -7145,24 +7300,25 @@ components:
       properties:
         title: { type: string, minLength: 5, maxLength: 120 }
         description: { type: string, minLength: 20, maxLength: 5000 }
-        price: { type: number, nullable: true, minimum: 0, maximum: 9999999 }
+        price: { type: [number, 'null'], minimum: 0, maximum: 9999999 }
         price_type: { $ref: '#/components/schemas/PriceType' }
-        condition: { $ref: '#/components/schemas/Condition', nullable: true }
+        condition: { oneOf: [{ $ref: '#/components/schemas/Condition' }, { type: 'null' }] }
         category_id:
           allOf: [{ $ref: '#/components/schemas/ULID' }]
           description: Same rule as on create (active leaf); resubmitting the ad's current category is always accepted.
         location_id: { $ref: '#/components/schemas/ULID' }
+        latitude: { type: [number, 'null'], minimum: -90, maximum: 90 }
+        longitude: { type: [number, 'null'], minimum: -180, maximum: 180 }
         ad_type: { $ref: '#/components/schemas/AdType' }
         shipping: { $ref: '#/components/schemas/AdShipping' }
         shipping_fee: { type: [number, 'null'], minimum: 0, maximum: 10000, multipleOf: 0.01, description: 'Delivery fee in QAR; null is free.' }
         quantity: { type: integer, minimum: 1, maximum: 999, default: 1 }
-        postal_code: { type: string, nullable: true, maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
-        street: { type: string, nullable: true, maxLength: 255 }
+        postal_code: { type: [string, 'null'], maxLength: 10, pattern: '^[0-9A-Za-z -]+$' }
+        street: { type: [string, 'null'], maxLength: 255 }
         show_full_address: { type: boolean, description: 'Show the street to everyone. Default false: only the postal code and city are public.' }
         custom_fields:
-          type: object
+          type: [object, 'null']
           additionalProperties: true
-          nullable: true
           description: |
             `{key: value}` checked against the category's `custom_fields`
             (inherited fields included): `number` and `range` values between
@@ -7179,8 +7335,8 @@ components:
       properties:
         order:
           type: array
-          description: Ordered list of media ULIDs — index 0 is the primary image.
-          items: { $ref: '#/components/schemas/ULID' }
+          description: Ordered list of media ids (`Media.id`) — index 0 is the primary image.
+          items: { type: integer }
 
     AdEnvelope:
       allOf:
@@ -7283,9 +7439,8 @@ components:
       allOf:
         - $ref: '#/components/schemas/PaginationMeta'
         - type: object
-          description: '`facets` is absent on the `ids` lookup of `GET /ads`.'
+          description: '`facets` is only on `GET /ads`, and absent on its `ids` lookup.'
           properties:
-            last_page: { type: integer, example: 8 }
             facets: { $ref: '#/components/schemas/AdFacets' }
 
     SearchFacets:
@@ -7311,8 +7466,8 @@ components:
             required: [label, min]
             properties:
               label: { type: string }
-              min: { type: number, nullable: true }
-              max: { type: number, nullable: true }
+              min: { type: [number, 'null'] }
+              max: { type: [number, 'null'] }
 
     SearchResultsEnvelope:
       allOf:
@@ -7436,9 +7591,8 @@ components:
           required: [favorited_at]
           properties:
             favorited_at:
-              type: string
+              type: [string, 'null']
               format: date-time
-              nullable: true
               description: When the caller favourited this ad.
 
     PaginatedFavoritedAdSummaryEnvelope:
@@ -7507,21 +7661,19 @@ components:
         buyer_id: { $ref: '#/components/schemas/ULID' }
         seller_id: { $ref: '#/components/schemas/ULID' }
         other_participant:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/PublicProfile'
-          nullable: true
+            - type: 'null'
           description: The participant who is NOT the caller. Null when the caller is anonymous.
         last_message_preview:
-          type: string
-          nullable: true
+          type: [string, 'null']
           maxLength: 160
           description: Rendered in the reader's language when the last message is a keyed bubble.
         last_message_key: { $ref: '#/components/schemas/ChatMessageKey' }
         last_message_params: { $ref: '#/components/schemas/ChatMessageParams' }
         last_message_at:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
         unread_count:
           type: integer
           minimum: 0
@@ -7534,25 +7686,23 @@ components:
       properties:
         id: { $ref: '#/components/schemas/ULID' }
         ad:
-          type: object
-          nullable: true
+          type: [object, 'null']
           required: [id, title, thumb_url]
           properties:
             id: { $ref: '#/components/schemas/ULID' }
             title: { type: string }
-            thumb_url: { type: string, format: uri, nullable: true }
+            thumb_url: { type: [string, 'null'], format: uri }
         other_participant:
-          type: object
-          nullable: true
+          type: [object, 'null']
           required: [id, full_name, avatar_thumb]
           properties:
             id: { $ref: '#/components/schemas/ULID' }
             full_name: { type: string }
-            avatar_thumb: { type: string, format: uri, nullable: true }
-        last_message_preview: { type: string, nullable: true, maxLength: 160 }
+            avatar_thumb: { type: [string, 'null'], format: uri }
+        last_message_preview: { type: [string, 'null'], maxLength: 160 }
         last_message_key: { $ref: '#/components/schemas/ChatMessageKey' }
         last_message_params: { $ref: '#/components/schemas/ChatMessageParams' }
-        last_message_at: { type: string, format: date-time, nullable: true }
+        last_message_at: { type: [string, 'null'], format: date-time }
         unread_count: { type: integer, minimum: 0 }
         created_at: { type: string, format: date-time }
 
@@ -7571,36 +7721,34 @@ components:
         params: { $ref: '#/components/schemas/ChatMessageParams' }
         type: { $ref: '#/components/schemas/MessageType' }
         read_at:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
           description: Null while unread; set the moment the recipient hits /read.
         created_at: { type: string, format: date-time }
         sender:
-          type: object
-          nullable: true
-          required: [id, full_name, avatar_thumb]
+          type: [object, 'null']
+          required: [id, full_name, avatar_thumb_url]
           properties:
             id: { $ref: '#/components/schemas/ULID' }
             full_name: { type: string }
-            avatar_thumb: { type: string, format: uri, nullable: true }
+            avatar_thumb_url: { type: [string, 'null'], format: uri }
         media:
           oneOf:
             - $ref: '#/components/schemas/ChatImage'
             - type: 'null'
           description: Only present when `type === "image"`.
         offer:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/Offer'
-          nullable: true
+            - type: 'null'
           description: |
             Only present when `type === "offer"` AND the server eager-loads
             the relation (every Sprint 9 endpoint does; broadcast frames
             omit it to keep the WebSocket payload small).
         purchase_request:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/PurchaseRequest'
-          nullable: true
+            - type: 'null'
           description: Only present when `type === "purchase_request"`; the card's current state.
 
     StartConversationRequest:
@@ -7726,8 +7874,7 @@ components:
               required: [next_cursor, limit]
               properties:
                 next_cursor:
-                  type: string
-                  nullable: true
+                  type: [string, 'null']
                   description: ULID of the last message on this page — pass back as `before` for the next page.
                 limit:
                   type: integer
@@ -7787,18 +7934,18 @@ components:
           enum: [buyer, seller]
           description: The side that made this proposal; the other side responds to it.
         parent_offer_id:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/ULID'
-          nullable: true
+            - type: 'null'
           description: For a counter-offer, the offer it answers.
         counter_round:
           type: integer
           minimum: 0
           description: 0 for the opening offer, then +1 for each counter-offer.
         message_id:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/ULID'
-          nullable: true
+            - type: 'null'
           description: The chat bubble that introduced the offer; nullable if the message was later removed by moderation.
         amount:
           type: string
@@ -7810,20 +7957,18 @@ components:
           maxLength: 3
           example: QAR
         note:
-          type: string
-          nullable: true
+          type: [string, 'null']
           maxLength: 280
         status: { $ref: '#/components/schemas/OfferStatus' }
         expires_at: { type: string, format: date-time }
-        accepted_at: { type: string, format: date-time, nullable: true }
-        rejected_at: { type: string, format: date-time, nullable: true }
-        withdrawn_at: { type: string, format: date-time, nullable: true }
-        countered_at: { type: string, format: date-time, nullable: true }
+        accepted_at: { type: [string, 'null'], format: date-time }
+        rejected_at: { type: [string, 'null'], format: date-time }
+        withdrawn_at: { type: [string, 'null'], format: date-time }
+        countered_at: { type: [string, 'null'], format: date-time }
         created_at: { type: string, format: date-time }
         viewer_role:
-          type: string
-          nullable: true
-          enum: [buyer, seller]
+          type: [string, 'null']
+          enum: [buyer, seller, null]
           description: |
             Computed from the request user. `null` on the broadcast
             payload (no request context) — clients re-derive it from
@@ -7839,9 +7984,8 @@ components:
           maximum: 9999999
           description: Offered price in the conversation's currency (QAR for MVP). Capped at the highest price an ad can be listed for.
         note:
-          type: string
+          type: [string, 'null']
           maxLength: 280
-          nullable: true
 
     OfferEnvelope:
       allOf:
@@ -8429,9 +8573,8 @@ components:
         target_id:   { $ref: '#/components/schemas/ULID' }
         category:    { $ref: '#/components/schemas/ReportCategory' }
         description:
-          type: string
+          type: [string, 'null']
           maxLength: 1000
-          nullable: true
           description: Optional free-text context for the moderator.
 
     Report:
@@ -8449,8 +8592,7 @@ components:
             ar: { type: string }
             en: { type: string }
         description:
-          type: string
-          nullable: true
+          type: [string, 'null']
         status: { $ref: '#/components/schemas/ReportStatus' }
         created_at:
           type: string
@@ -8517,8 +8659,7 @@ components:
           description: FQCN of the notification class (e.g. App\Notifications\Ads\AdApprovedNotification).
           example: App\Notifications\Ads\AdApprovedNotification
         category:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: |
             Short discriminator surfaced from the notification's data payload
             (e.g. ad.approved, account.data_export_ready, ad.price_changed,
@@ -8527,27 +8668,22 @@ components:
             dismissed) in `data` and never names the sanction taken.
           example: ad.approved
         title:
-          type: string
-          nullable: true
+          type: [string, 'null']
         body:
-          type: string
-          nullable: true
+          type: [string, 'null']
         cta_url:
-          type: string
+          type: [string, 'null']
           format: uri
-          nullable: true
         icon:
-          type: string
-          nullable: true
+          type: [string, 'null']
           description: lucide icon name the FE should render.
         data:
           type: object
           additionalProperties: true
           description: Full payload as persisted on the database channel. Treat unknown keys as forward-compatible.
         read_at:
-          type: string
+          type: [string, 'null']
           format: date-time
-          nullable: true
         created_at:
           type: string
           format: date-time
