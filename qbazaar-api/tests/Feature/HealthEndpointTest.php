@@ -70,6 +70,7 @@ it('still reports 503 with cache=fail when the cache store is down', function ()
             throw new RuntimeException('cache host secret.internal:6379 refused');
         }
 
+        /** @param array<int, string> $keys */
         public function many(array $keys): never
         {
             throw new RuntimeException('down');
@@ -80,6 +81,7 @@ it('still reports 503 with cache=fail when the cache store is down', function ()
             throw new RuntimeException('down');
         }
 
+        /** @param array<string, mixed> $values */
         public function putMany(array $values, $seconds): never
         {
             throw new RuntimeException('down');
