@@ -13,7 +13,7 @@
 
 Swagger UI (`/docs`) is switched off in production; run the API locally or read [the OpenAPI spec](qbazaar-contracts/openapi/v1.yaml).
 
-**Status (2026-11-11):** production runs commit `837f1d0` (the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa). It includes the whole admin M4 batch, the final design-parity rounds, web performance part 2 and the design-based demo data.
+**Status (2026-11-11):** production runs commit `761344e` (the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa). It includes the whole admin M4 batch, the final design-parity rounds, web performance part 2 and the design-based demo data.
 
 Live now:
 
@@ -26,7 +26,7 @@ Live now:
 - **Web (M3):** the whole site is on the new Figma design (exact colours, Poppins, Noto Kufi Arabic, Montserrat, Acme; SEO). Design parity phases 1 to 3 are merged (final rounds #283-#285, gate fixes #286 and #288), and web performance part 2 (server-rendered first results, LCP priority, lazy map) is in #282.
 - **Demo data:** the demo content now follows the original design: 32 listings with the design photos, titles, prices and sellers, curated home rail and featured companies (#287). It was refreshed on production on 2026-11-11, and the placeholder ads are gone.
 - **Contract:** OpenAPI v1.1 validates and covers every live route, and CI lints it (#290).
-- **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`. The launch-readiness work (runbook, backups, health check, tuning files) is prepared in PR #292 and waits for the server steps; none of it is applied yet.
+- **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`. The launch-readiness work (runbook, configs, backup and restore scripts, the `/api/v1/health/ready` endpoint, k6 load test) is merged in #292; the OPS tasks stay open until the owner applies each runbook step on the server.
 - **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24, tab bar and account hub #25). Passwordless sign-in, the new-device SMS check and Turnstile are merged (#26); Google/Apple sign-in is not wired yet.
 
 **Admin security:** `super_admin` accounts must enrol in 2FA (TOTP) on their next login. Keep the recovery codes somewhere safe. Reading a conversation transcript in the admin needs a stated reason, and every access is logged.
@@ -34,7 +34,7 @@ Live now:
 Next:
 
 - Mobile M2 (app and API): chat, push, selling and orders, then Google/Apple sign-in once the credentials exist.
-- Server M5: apply the runbook steps from #292 (backups first, then monitoring and alerts, tuning and a load test).
+- Server M5: apply the runbook steps from DOCS/M5-LAUNCH-RUNBOOK.md (#292) (backups first, then monitoring and alerts, tuning and a load test).
 - Web: a clean parity-gate run on every page, a repeat Lighthouse run, and the axe report.
 - M6: the store release.
 - Payments (M7), later.

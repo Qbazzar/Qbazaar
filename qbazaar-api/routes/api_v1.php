@@ -56,6 +56,7 @@ use App\Http\Controllers\Api\V1\Orders\OrderController;
 use App\Http\Controllers\Api\V1\Promotions\PromotionController;
 use App\Http\Controllers\Api\V1\PublicSettingsController;
 use App\Http\Controllers\Api\V1\PurchaseRequests\PurchaseRequestController;
+use App\Http\Controllers\Api\V1\ReadinessController;
 use App\Http\Controllers\Api\V1\Recents\RecentViewController;
 use App\Http\Controllers\Api\V1\Reference\CategoryController;
 use App\Http\Controllers\Api\V1\Reference\LocationController;
@@ -73,8 +74,10 @@ use App\Http\Controllers\Api\V1\Users\UserAdsController;
 use App\Http\Controllers\Api\V1\Wallet\SettlementController;
 use App\Http\Controllers\Api\V1\Wallet\WalletController;
 use App\Http\Controllers\Api\V1\Wallet\WithdrawalController;
+use App\Http\Middleware\ApiResponseWrapper;
 use App\Http\Middleware\EnsureApiDocsEnabled;
 use App\Http\Middleware\EnsurePasswordLoginEnabled;
+use App\Http\Middleware\ThrottleHealthProbe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -112,6 +115,15 @@ Route::get('/health', function (): JsonResponse {
         'timestamp' => now()->toIso8601String(),
     ]);
 })->name('api.v1.health');
+
+// Dependency checks for uptime monitors: 200 ok/degraded, 503 down
+// (deploy/README.md "Health checks and alerts"). Its own bare body, so the
+// envelope wrapper is skipped. The throttle fails open: a dead cache must
+// still reach the controller to be reported as 503.
+Route::get('/health/ready', ReadinessController::class)
+    ->middleware(ThrottleHealthProbe::class)
+    ->withoutMiddleware(ApiResponseWrapper::class)
+    ->name('api.v1.health.ready');
 
 // ────────────────────────────────────────────────────────────────────────────
 // OpenAPI raw spec — served from qbazaar-contracts/openapi/v1.yaml so the spec

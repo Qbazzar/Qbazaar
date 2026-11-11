@@ -1,0 +1,20 @@
+# /etc/cron.d/qbazaar-ops — root jobs for backups and reports (OPS-18.7,
+# OPS-18.13, OPS-18.15). Installed by deploy/scripts/install-ops.sh, which
+# also puts the scripts in /usr/local/lib/qbazaar-ops (root-owned: cron never
+# runs a file the deploy user can edit). Times are Qatar time; the Laravel
+# pruning jobs run 03:00–04:00, so backups start after them.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CRON_TZ=Asia/Qatar
+MAILTO=""
+
+# Daily database + config backup, off-site copy and media mirror.
+30 4 * * * root /usr/local/lib/qbazaar-ops/backup.sh >> /var/log/qbazaar/backup.log 2>&1
+
+# Weekly slow query digest, Monday morning.
+15 6 * * 1 root /usr/local/lib/qbazaar-ops/mysql-slow-digest.sh >> /var/log/qbazaar/slow-digest.log 2>&1
+
+# Monthly restore tests. Enable once a manual run has shown how long they
+# take; they write as much as the database and the search index hold.
+# 0 5 3 * * root /usr/local/lib/qbazaar-ops/restore-test.sh >> /var/log/qbazaar/restore-test.log 2>&1
+# 30 5 3 * * root /usr/local/lib/qbazaar-ops/meili-restore-test.sh >> /var/log/qbazaar/restore-test.log 2>&1

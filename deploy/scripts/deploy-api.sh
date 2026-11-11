@@ -8,7 +8,8 @@
 #  - The API_HOST docroot points at qbazaar-api/public (cPanel)
 #  - PHP 8.4 CLI + Composer; MySQL, Redis and Meilisearch running
 #  - systemd units qbazaar-horizon / qbazaar-reverb exist, and the deploy user
-#    has a sudoers drop-in allowing `systemctl restart` of them (no password).
+#    has a sudoers drop-in allowing `systemctl restart` of them and
+#    `systemctl reload` of PHP-FPM (deploy/sudoers/qbazaar-deploy).
 
 set -euo pipefail
 shopt -s inherit_errexit
@@ -29,6 +30,25 @@ if [[ -f artisan ]]; then
 fi
 cleanup() { [[ -f "$API_DIR/artisan" ]] && ( cd "$API_DIR" && php artisan up || true ); }
 trap cleanup EXIT
+
+# PHP-FPM keeps the compiled code in OPcache. With
+# opcache.validate_timestamps=0 (deploy/php/zz-qbazaar-opcache.ini) the new
+# release only runs after a reload, so a failed reload must fail the deploy.
+# Until that ini is installed a failed reload is only a warning. `sudo -n`
+# never prompts: without the sudoers entry it fails at once.
+reload_php_fpm() {
+    local validate
+    if sudo -n systemctl reload "$FPM_SERVICE"; then
+        return 0
+    fi
+    validate=$(php -r '$v = ini_get("opcache.validate_timestamps"); echo $v === false ? "unknown" : (int) $v;')
+    if [[ "$validate" == "0" ]]; then
+        echo "PHP-FPM reload failed while opcache.validate_timestamps=0: the previous release would keep running."
+        echo "Fix the sudoers entry (deploy/sudoers/qbazaar-deploy), then as root: systemctl reload $FPM_SERVICE"
+        return 1
+    fi
+    echo "WARN: PHP-FPM was not reloaded (validate_timestamps=$validate, so PHP still picks up the new files)."
+}
 
 log "composer install --no-dev --optimize-autoloader"
 composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
@@ -51,6 +71,9 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache || true
+
+log "Reloading PHP-FPM ($FPM_SERVICE)"
+reload_php_fpm
 
 # Best effort: a Meilisearch hiccup must not fail a release whose database is
 # already migrated (the API answers an empty search page, never a 500, until the

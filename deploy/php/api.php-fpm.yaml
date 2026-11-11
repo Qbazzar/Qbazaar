@@ -1,0 +1,42 @@
+# QBazaar: PHP-FPM pool for the API vhost (OPS-18.11).
+#
+# cPanel's default pool (pm=ondemand, max_children=5, max_requests=20) lets
+# five slow requests block the API and restarts every worker after 20
+# requests. These values fit the 7.7 GB box; the memory budget behind them is
+# in deploy/README.md "PHP-FPM pool". Re-size after launch with
+# deploy/scripts/fpm-pool-size.sh.
+#
+# Install (root), DOCS/M5-LAUNCH-RUNBOOK.md step 4:
+#   . ~qbazaar/.qbazaar-deploy.env
+#   f=/var/cpanel/userdata/qbazaar/$API_HOST.php-fpm.yaml
+#   [ -f "$f" ] && cp -p "$f" "$f.bak-$(date +%F)"
+#   install -m 644 ~qbazaar/qbazaar/deploy/php/api.php-fpm.yaml "$f"
+#   /scripts/php_fpm_config --rebuild --domain="$API_HOST"
+#   /scripts/restartsrv_apache_php_fpm
+# Then check the generated pool shows every value below:
+#   grep -E '^(pm|request_|slowlog|php_admin)' /opt/cpanel/ea-php84/root/etc/php-fpm.d/$API_HOST.conf
+#
+# Keys with a `pm_` prefix are the ones WHM's MultiPHP Manager edits. The
+# others use cPanel's explicit {name, value} form, so the directive name
+# reaches the pool file exactly as written.
+---
+_is_present: 1
+pm: dynamic
+# About 80 MB RSS per worker (shared OPcache excluded): 12 x 80 MB = 1 GB; raise after scripts/fpm-pool-size.sh.
+pm_max_children: 12
+pm_start_servers: 4
+pm_min_spare_servers: 4
+pm_max_spare_servers: 8
+# Recycles a worker after 1000 requests instead of 20; bounds slow leaks.
+pm_max_requests: 1000
+pm_process_idle_timeout: 10
+# An upload batch (up to 105 MB, deploy/README.md "Upload body size") streams
+# through the worker; nothing else should come near this.
+request_terminate_timeout: { name: 'request_terminate_timeout', value: 120s }
+# Stack traces of requests slower than 5 s, read weekly with the slow queries.
+# The FPM master writes it as root, so it lives in ea-php84's root-owned log
+# folder (rotated by ea-php84's logrotate), never in a folder the deploy user
+# could point elsewhere with a symlink.
+request_slowlog_timeout: { name: 'request_slowlog_timeout', value: 5s }
+slowlog: { name: 'slowlog', value: /opt/cpanel/ea-php84/root/usr/var/log/php-fpm/api-slow.log }
+php_admin_value_memory_limit: { name: 'php_admin_value[memory_limit]', value: 256M }

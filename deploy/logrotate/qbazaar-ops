@@ -1,0 +1,12 @@
+# /etc/logrotate.d/qbazaar-ops — logs of the root ops jobs. Installed by
+# deploy/scripts/install-ops.sh. The PHP-FPM slowlog sits in ea-php84's own
+# log folder and is rotated by its logrotate file.
+/var/log/qbazaar/*.log {
+    weekly
+    rotate 8
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0600 root root
+}

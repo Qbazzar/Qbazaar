@@ -1,0 +1,45 @@
+# QBazaar: MariaDB 10.11 tuning and slow query log (OPS-18.13).
+#
+# Sized for the 7.7 GB box shared with PHP-FPM, Horizon, Meilisearch, Redis
+# and Next.js (budget in deploy/README.md "MariaDB"). Names are MariaDB's:
+# MySQL-only settings such as innodb_redo_log_capacity do not apply.
+#
+# Install (root), DOCS/M5-LAUNCH-RUNBOOK.md step 6:
+#   install -m 644 ~qbazaar/qbazaar/deploy/mariadb/zz-qbazaar.cnf /etc/my.cnf.d/zz-qbazaar.cnf
+#   my_print_defaults --mysqld | tail -25      # these lines must come last
+# Most values are dynamic: the runbook applies them with SET GLOBAL, so no
+# restart is needed; the file makes them survive the next one.
+# Rollback: delete the file; SET GLOBAL the old values (saved by the runbook).
+#
+# Do not add skip-name-resolve: cPanel grants the app user @localhost, and the
+# app connects over TCP to 127.0.0.1, which then no longer matches.
+
+[mysqld]
+# The working set (ads, media, messages, users) fits; raise it with the data.
+innodb_buffer_pool_size = 1280M
+innodb_log_file_size = 256M
+innodb_log_buffer_size = 16M
+# 1 = every commit is on disk. The wallet ledger and orders need that; do
+# not trade it for speed.
+innodb_flush_log_at_trx_commit = 1
+innodb_flush_method = O_DIRECT
+# NVMe VPS storage.
+innodb_io_capacity = 1000
+innodb_io_capacity_max = 2000
+
+# PHP-FPM 12 + Horizon up to 14 + scheduler, Reverb, cron and the admin tools.
+max_connections = 150
+thread_cache_size = 32
+table_open_cache = 2000
+table_definition_cache = 1400
+tmp_table_size = 64M
+max_heap_table_size = 64M
+
+# Slow queries, summarised weekly by deploy/scripts/mysql-slow-digest.sh.
+slow_query_log = ON
+slow_query_log_file = /var/lib/mysql/qbazaar-slow.log
+long_query_time = 0.5
+log_slow_admin_statements = ON
+# Too noisy on small lookup tables; the weekly digest finds the real misses.
+log_queries_not_using_indexes = OFF
+log_slow_verbosity = query_plan

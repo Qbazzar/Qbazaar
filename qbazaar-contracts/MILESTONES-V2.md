@@ -28,7 +28,7 @@
 | M2 Connecting the mobile app | 15 | 15 | 4 | 11 | API layer, session, repository switch and catalog on the real API are in (Qbazaar-mobile #24); passwordless sign-in, new-device SMS and Turnstile merged (Qbazaar-mobile #26, MB-15.5 and MB-15.14 stay open until Google/Apple and a device check); next: chat, push, selling, orders |
 | M3 Web on the new design | 16 | 18 | 15 | 3 | Every page is on the new design, orders included (#218, #221–#227); design parity phases 1 and 2 merged (#237–#242, #254, #256, #257, #263, #265, #266, #269), then phase 3: copy pass and shared components (#274–#276) and the final rounds F1 to F3 (#283–#285, #291); the gate itself was fixed (#286, #288); web performance part 2 merged (#282); left: a clean gate run on every page (FE-16.17), a measured mobile Lighthouse gain (FE-16.18) and the Lighthouse and axe reports (FE-16.7) |
 | M4 Admin additions | 17 | 26 | 26 | 0 | Every M4 task is done (#249–#280): settings, page shell, dashboard, deal panel, revenue page, companies and business verification, home sections, category tree and fields editor, moderation tools, staff inbox and queue, staff 2FA, conversation access with a reason, broadcasts and permission matrix; the gateway-dependent payments work waits for M7 |
-| M5 Deployment on the new server | 18 | 18 | 6 | 12 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; Meilisearch, Horizon and Reverb run in production, media on R2; the repo side of the rest is prepared in the open PR #292 (runbook, backup and health scripts, tuning files), but nothing in it has been applied on the server, so none of those tasks count as done; left: backups, alerts, WAF and firewall rules, tuning, the load test, real SMS and push |
+| M5 Deployment on the new server | 18 | 18 | 6 | 12 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; Meilisearch, Horizon and Reverb run in production, media on R2; the repo side of the rest is merged in #292 (runbook, configs, backup and restore scripts, the health/ready endpoint, k6), but nothing in it has been applied on the server, so none of those tasks count as done; left: backups, alerts, WAF and firewall rules, tuning, the load test, real SMS and push |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
 | **Total** | | **199** | **154** | **45** | |
@@ -432,7 +432,7 @@
 
 ## Sprint 18 — M5 Deployment on the new server
 
-**Goal:** the whole system (API, web, workers, search, WebSocket) running natively on the new cPanel VPS (`srv1977263.hstgr.cloud`, no Docker) behind Cloudflare, deployed from GitHub Actions. Production runs there since 2026-10-05 under temporary sslip.io hosts ([`deploy/NEW-SERVER-RUNBOOK.md`](../deploy/NEW-SERVER-RUNBOOK.md)); the old `fleeteye` server is retired.
+**Goal:** the whole system (API, web, workers, search, WebSocket) running natively on the new cPanel VPS (`<server-hostname>`, no Docker) behind Cloudflare, deployed from GitHub Actions. Production runs there since 2026-10-05 under temporary sslip.io hosts ([`deploy/NEW-SERVER-RUNBOOK.md`](../deploy/NEW-SERVER-RUNBOOK.md)); the old `fleeteye` server is retired.
 
 **Entry:** M1–M4 feature-complete. The domain must be decided before OPS-18.9 (V2-PLAN §2.6); `.qa` domains are bought from a Qatari registrar and their DNS moved to Cloudflare.
 
@@ -464,6 +464,8 @@
 |---|---|---|---|
 | OPS-18.3 | Meilisearch + Horizon + Reverb as systemd services + `mod_proxy_wstunnel` for Reverb | [P0] | WebSocket connects from mobile and web |
 | OPS-18.10 | Cloudflare R2: create the bucket and access keys, and set the CORS rules for uploading | [P0] | The keys are in the production `.env` only |
+
+> Prepared in the repo (2026-11-11), not yet applied: config files, scripts and an ordered runbook with a rollback per step for OPS-18.5, 18.7, 18.8, 18.11–18.18 and the rest of 18.9 ([DOCS/M5-LAUNCH-RUNBOOK.md](../DOCS/M5-LAUNCH-RUNBOOK.md)). Each task stays open until its runbook step has run on the server and its acceptance check passes.
 
 ### Server and runtime
 

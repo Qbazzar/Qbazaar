@@ -1275,4 +1275,4 @@ Live tracking has been collapsed into the per-sprint tables above and the
 - FCM push notifications (needs Firebase project + `device_tokens` table)
 - pHash dedup for ad images
 - Dedicated Filament resources for Pages / Help / Support (admin can use tinker / DB tooling for now)
-- VPS deploy linking — waiting on `sudo` for `sanad` at 147.79.115.44
+- VPS deploy linking — waiting on `sudo` for `sanad` at <SERVER_IPV4>

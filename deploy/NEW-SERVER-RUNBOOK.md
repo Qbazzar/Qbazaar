@@ -1,19 +1,19 @@
-# New server: first-time setup (srv1977263, Mumbai, 2026-10-06)
+# New server: first-time setup (<server-hostname>, Mumbai, 2026-10-06)
 
 How the current production server was set up, in order, so it can be repeated or audited. Day-to-day deploys are in [README.md](README.md); promoting a release is in [DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md).
 
 | | |
 |---|---|
-| Server | Hostinger VPS `srv1977263.hstgr.cloud` in Mumbai, `187.126.119.228`, AlmaLinux 9.8, cPanel/WHM 11.138, 7.7 GB RAM |
+| Server | Hostinger VPS `<server-hostname>` in Mumbai, `<SERVER_IPV4>`, AlmaLinux 9.8, cPanel/WHM 11.138, 7.7 GB RAM (real hostname and IPv4: private ops notes or the Hostinger panel) |
 | cPanel user | `qbazaar` (bash shell), clone at `/home/qbazaar/qbazaar` on `production` |
 | Web | `https://qbazaar.qa` (account main domain, proxied to Next.js on `127.0.0.1:3000`); `www.qbazaar.qa` answers 301 to the apex |
 | API + admin | `https://api.qbazaar.qa` (subdomain, docroot `/home/qbazaar/qbazaar/qbazaar-api/public`), WebSocket `wss://api.qbazaar.qa/app` |
-| DNS + proxy | Cloudflare (`decker`/`tara.ns.cloudflare.com`); `A` records `@`, `www`, `api` → `187.126.119.228`, all proxied |
+| DNS + proxy | Cloudflare (`decker`/`tara.ns.cloudflare.com`); `A` records `@`, `www`, `api` → `<SERVER_IPV4>`, all proxied |
 | TLS | AutoSSL (Let's Encrypt) on the origin for `qbazaar.qa`, `www` and `api`; Cloudflare SSL mode Full (strict) |
 | Database | MariaDB 10.11 (cPanel default; the code needs MySQL 8 or MariaDB ≥ 10.6), database and user `qbazaar_app` |
 | Secrets | `/root/qbazaar-secrets/` (root, 700) and the two `.env` files (600). Nothing secret is in the repo. |
 
-The box was first built on 2026-10-05 in Kuala Lumpur (`187.53.139.138`) on temporary sslip.io names, then reinstalled in Mumbai for latency and rebuilt with this runbook directly on the real domain.
+The box was first built on 2026-10-05 in Kuala Lumpur (`<OLD_SERVER_IPV4>`) on temporary sslip.io names, then reinstalled in Mumbai for latency and rebuilt with this runbook directly on the real domain.
 
 ## 1. Account and domains (root)
 
@@ -98,7 +98,7 @@ A dedicated ed25519 key: the public half is `keys/github-actions.pub` and is in 
 ```bash
 ssh-keygen -q -t ed25519 -N "" -C github-actions-deploy@qbazaar.qa -f ./id
 gh secret set DEPLOY_SSH_KEY < ./id
-printf '187.126.119.228' | gh secret set DEPLOY_HOST
+printf '<SERVER_IPV4>' | gh secret set DEPLOY_HOST
 printf '22' | gh secret set DEPLOY_PORT
 printf 'qbazaar' | gh secret set DEPLOY_USER
 rm ./id
