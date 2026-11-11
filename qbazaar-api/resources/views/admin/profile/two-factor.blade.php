@@ -75,9 +75,13 @@
             </form>
         @else
             <x-admin.form-section :title="__('admin.two_factor.setup.title')" icon="shield" id="section-start"
-                                  :description="__('admin.two_factor.setup.intro')">
-                <form method="POST" action="{{ route('admin.profile.two-factor.store') }}">
+                                  :description="$pending ? __('admin.two_factor.setup.resume_intro') : __('admin.two_factor.setup.intro')">
+                <form method="POST" action="{{ route('admin.profile.two-factor.store') }}"
+                      @class(['grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end' => ! $passwordConfirmed])>
                     @csrf
+                    @unless ($passwordConfirmed)
+                        <x-admin.input name="current_password" id="start-password" type="password" :label="__('admin.two_factor.fields.current_password')" required autocomplete="current-password" />
+                    @endunless
                     <x-admin.button icon="shield">{{ __('admin.two_factor.setup.start') }}</x-admin.button>
                 </form>
             </x-admin.form-section>
@@ -87,8 +91,8 @@
             <x-admin.side-card :title="__('admin.two_factor.page.status')" icon="shield" id="side-status">
                 <x-admin.meta-list>
                     <x-admin.meta-item :label="__('admin.two_factor.page.state')">
-                        <x-admin.badge :tone="$enabled ? 'success' : ($secret !== null ? 'warning' : 'neutral')">
-                            {{ $enabled ? __('admin.two_factor.states.enabled') : ($secret !== null ? __('admin.two_factor.states.pending') : __('admin.two_factor.states.disabled')) }}
+                        <x-admin.badge :tone="$enabled ? 'success' : ($pending ? 'warning' : 'neutral')">
+                            {{ $enabled ? __('admin.two_factor.states.enabled') : ($pending ? __('admin.two_factor.states.pending') : __('admin.two_factor.states.disabled')) }}
                         </x-admin.badge>
                     </x-admin.meta-item>
                     <x-admin.meta-item :label="__('admin.two_factor.page.policy')">

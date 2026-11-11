@@ -5,12 +5,14 @@ declare(strict_types=1);
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\User;
+use App\Services\Admin\AdminAuditLogger;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 
 use function Pest\Laravel\actingAs;
 
+use Spatie\Activitylog\Models\Activity;
 use Tests\Concerns\CountsPageQueries;
 
 uses(RefreshDatabase::class, CountsPageQueries::class);
@@ -198,3 +200,32 @@ it('keeps the location list within its query budget as locations grow', function
     // the total + the page + the parents of the page in one eager load
     expect($many)->toBe($few)->toBeLessThanOrEqual(4);
 });
+
+it('audits creating, editing, switching and deleting a category or a location, naming the row and the change', function (string $resource): void {
+    $isCategory = $resource === 'categories';
+    $form = $isCategory ? validCategoryForm() : validLocationForm();
+    $slug = $form['slug'];
+    $staff = taxonomyFormStaff('moderator');
+    actingAs($staff);
+
+    $this->post(route("admin.{$resource}.store"), $form)->assertSessionHasNoErrors();
+    $node = $isCategory ? Category::query()->where('slug', $slug)->sole() : Location::query()->where('slug', $slug)->sole();
+
+    $this->put(route("admin.{$resource}.update", $node), [...$form, 'order' => 9])->assertSessionHasNoErrors();
+    $this->patch(route("admin.{$resource}.status", $node), ['is_active' => '0'])->assertSessionHas('status');
+    $this->delete(route("admin.{$resource}.destroy", $node))->assertSessionHas('status');
+
+    $entries = Activity::query()->where('log_name', AdminAuditLogger::LOG_NAME)->oldest('id')->get();
+
+    expect($entries->pluck('event')->all())->toBe([
+        "admin.{$resource}.store",
+        "admin.{$resource}.update",
+        "admin.{$resource}.status",
+        "admin.{$resource}.destroy",
+    ])
+        ->and($entries->every(fn (Activity $entry): bool => $entry->causer_id === $staff->id && $entry->subject_id === $node->id))->toBeTrue()
+        ->and($entries[0]->properties['attributes']['slug'])->toBe($slug)
+        ->and($entries[1]->properties['changes'])->toBe(['order' => ['from' => 1, 'to' => 9]])
+        ->and($entries[2]->properties['changes'])->toBe(['is_active' => ['from' => true, 'to' => false]])
+        ->and($entries[3]->properties['slug'])->toBe($slug);
+})->with(['categories', 'locations']);

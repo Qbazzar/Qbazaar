@@ -40,7 +40,8 @@
             @endif
         </x-admin.form-section>
 
-        <x-admin.form-section :title="__('admin.companies.applications.title')" icon="inbox" id="company-applications">
+        <x-admin.form-section :title="__('admin.companies.applications.title')" icon="inbox" id="company-applications"
+                              :description="$canVerify ? null : __('admin.companies.applications.notes_reviewers_only')">
             @forelse ($applications as $application)
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-ink-200 pb-3 last:border-0 last:pb-0">
                     <div class="min-w-0">
@@ -51,7 +52,7 @@
                                 · {{ __('admin.business_applications.reviewed_by', ['name' => $application->reviewer->full_name ?: $application->reviewer->email]) }}
                             @endif
                         </p>
-                        @if ($application->review_note)
+                        @if ($canVerify && $application->review_note)
                             <p class="mt-1 text-xs text-ink-700">{{ $application->review_note }}</p>
                         @endif
                     </div>

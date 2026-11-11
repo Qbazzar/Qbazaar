@@ -1,0 +1,2725 @@
+{
+ "version": 1,
+ "source": "q-bazaar HTML design: assets/app.js sample data, assets/photos.js photo pools, images/",
+ "images": {
+  "cars-porsche-macan": {
+   "file": "cars-porsche-macan.jpg",
+   "design_sources": [
+    "eb6f51d826083a7052e4dd75dd6261aa5fda0746",
+    "011f32fd21a0e3bdee1e3a4abf3127afca213ee9"
+   ]
+  },
+  "re-living-room": {
+   "file": "re-living-room.jpg",
+   "design_sources": [
+    "0e0a3a052b56e2a39cbc64640db1252a71f5bd15",
+    "025be941190b33e0db4af28a8a862547df04ad4a"
+   ]
+  },
+  "re-villa-pool-palms": {
+   "file": "re-villa-pool-palms.jpg",
+   "design_sources": [
+    "beec81364133f8b4c47f0a7d2f5a5561e989a6d4",
+    "092c2bfdc9e5c3ac6492b12068fbaf10c41c7c1e"
+   ]
+  },
+  "bike-mountain": {
+   "file": "bike-mountain.jpg",
+   "design_sources": [
+    "09b90279d544ee9e88aee3e5da5b303f33543eb9",
+    "7a9ae6acd2998e37c09f1b7a7182a0e800556b06"
+   ]
+  },
+  "moto-sport": {
+   "file": "moto-sport.jpg",
+   "design_sources": [
+    "0b0d148018a4da73eb8db154f817d7250344478b",
+    "505f80c5de65b4093e205d62177c940076205150"
+   ]
+  },
+  "cars-lexus-is": {
+   "file": "cars-lexus-is.jpg",
+   "design_sources": [
+    "c5a0d09c5fa526301c5ea78523d2ff9d28989bb3",
+    "0b22d32b03f53d29e1c2c58945ab28de160b420f"
+   ]
+  },
+  "avatar-sara": {
+   "file": "avatar-sara.jpg",
+   "design_sources": [
+    "0bccb2028ab053b71f5a901962376a5c9f34d735"
+   ]
+  },
+  "re-bedroom": {
+   "file": "re-bedroom.jpg",
+   "design_sources": [
+    "0ddb702d51e12eddce5e81f173757c3afeefdd06",
+    "c73582d77e916f42ad47f91aaa0fa53a7fbe5ff8"
+   ]
+  },
+  "beauty-hydro-boost-box": {
+   "file": "beauty-hydro-boost-box.jpg",
+   "design_sources": [
+    "0e61e9a73417c33d21fe4954d2ed5396299705d5"
+   ]
+  },
+  "re-key-handover": {
+   "file": "re-key-handover.jpg",
+   "design_sources": [
+    "e9ffdf647df8047be345c2f1d5dee73d295d7595",
+    "0f65d147a56df50d69ba4b31dabadaadfbadd8ee"
+   ]
+  },
+  "re-villa-pool-modern": {
+   "file": "re-villa-pool-modern.jpg",
+   "design_sources": [
+    "9acad4d4db5b64b56fdc28137905644c83cd61f8",
+    "12a7ea1f4573b584ca624d9347e9686bcc881b6c"
+   ]
+  },
+  "re-white-tower": {
+   "file": "re-white-tower.jpg",
+   "design_sources": [
+    "16958ccd16d7a53642d25315c306de2f911a7761"
+   ]
+  },
+  "re-villa-pool-terrace": {
+   "file": "re-villa-pool-terrace.jpg",
+   "design_sources": [
+    "1c7cd0d43ac52539187f171b89da111bf46c4a5a",
+    "3a53ccb5396ab8bb91ff861746660fe228e76cd1"
+   ]
+  },
+  "cars-bmw-320d": {
+   "file": "cars-bmw-320d.jpg",
+   "design_sources": [
+    "22ecaea2d2f56ad324a31fdc8fab001581d8b867",
+    "ccd5f9d5557aae86045da7e2e66cf3563fef4410"
+   ]
+  },
+  "re-white-villa": {
+   "file": "re-white-villa.jpg",
+   "design_sources": [
+    "2d9d04169d45efb334e4442dd13c93902c835c61",
+    "260ca465308f6541a21877616c88ff200f78d4b1"
+   ]
+  },
+  "cars-golf-r": {
+   "file": "cars-golf-r.jpg",
+   "design_sources": [
+    "85ac1d222d209065636a4e36a4e7bf4df72cca98",
+    "27611ef521ddebaf2bcd3f6e97d6ada3d362b478"
+   ]
+  },
+  "re-skyscrapers": {
+   "file": "re-skyscrapers.jpg",
+   "design_sources": [
+    "27818fa4969bee43da5aad1592313fa48ef98f13",
+    "8632fb7f8127a23dd118cb05d4f6fc5c02fb9a5f"
+   ]
+  },
+  "logo-awning-store": {
+   "file": "logo-awning-store.jpg",
+   "design_sources": [
+    "c9ac7079659b2c0b05b08ce4c2f7c23245c18b95",
+    "27d069ffb73d67046aafa72e0280ed90e245e10f"
+   ]
+  },
+  "moto-vespa": {
+   "file": "moto-vespa.jpg",
+   "design_sources": [
+    "b55a21a5f8154e2c26ca66e09e6f8ca689f93326",
+    "2b00665ff1bac9c6def3e797fea053d5e6cebbb9"
+   ]
+  },
+  "avatar-farah": {
+   "file": "avatar-farah.jpg",
+   "design_sources": [
+    "366367bab41291218f97152c0f5bbcd059024889"
+   ]
+  },
+  "re-house-garden": {
+   "file": "re-house-garden.jpg",
+   "design_sources": [
+    "3d1c590edfdbdfba6103fd1745420e5f273970ad",
+    "d02c59a45891daa33aba85d525c1ca8880e17a98"
+   ]
+  },
+  "re-office-for-lease": {
+   "file": "re-office-for-lease.jpg",
+   "design_sources": [
+    "5252d7470b1bd211503ce79be1143f74eca1361b",
+    "40cafef780d6baa20e2042f4afee34c011ccecbb"
+   ]
+  },
+  "beauty-hydrate-treat": {
+   "file": "beauty-hydrate-treat.jpg",
+   "design_sources": [
+    "c18d9b087e59b5a5078930c09771fee304790aa4",
+    "bdc26fb40f68b9740c83fd3ad43637d9d4c3f7b1",
+    "423239c1ed7210c0a02b8b13b3da515fb8d628fb"
+   ]
+  },
+  "cars-hymer-camper": {
+   "file": "cars-hymer-camper.jpg",
+   "design_sources": [
+    "43ddca7d7398af1e884695d44a2320ced88920d2",
+    "f1142f67df96301ada25850079a8c01cba9bb38c"
+   ]
+  },
+  "re-house-dusk": {
+   "file": "re-house-dusk.jpg",
+   "design_sources": [
+    "de64414ae68af3bbd743acd889f7940e566f4d73",
+    "449cd27971b6771d0043b8aca20d100b71d903e8"
+   ]
+  },
+  "parts-tires": {
+   "file": "parts-tires.jpg",
+   "design_sources": [
+    "84e421e6edb7f3d844f43ead8731277361a091cf",
+    "459477f85ae75bf61b1e2d3c74279e4022f7636a"
+   ]
+  },
+  "cars-audi-rs5": {
+   "file": "cars-audi-rs5.jpg",
+   "design_sources": [
+    "489bc874f9affa58263147291a56d6a12b07963f",
+    "846c6ac03f17e7e378fab73e9e64a2ba5786f6ca"
+   ]
+  },
+  "cars-amg-grey": {
+   "file": "cars-amg-grey.jpg",
+   "design_sources": [
+    "99f556ce26d3e4d3a65e3d04aa5c730b8883789d",
+    "48d9262f54bb5a24366c51d5dedb7343d4db99b5"
+   ]
+  },
+  "re-villa-dark": {
+   "file": "re-villa-dark.jpg",
+   "design_sources": [
+    "4c241ee538bb82f1fb0c19803139335123d88357",
+    "8e2677e7c6644aea3a857a4967c85d8c8d00c3e1"
+   ]
+  },
+  "re-office-corridor": {
+   "file": "re-office-corridor.jpg",
+   "design_sources": [
+    "9eb1617c4ba04ed3b9dd01e5cbee20f858a02453",
+    "4d2341f75a52547f67d3f3313422e52f98b140b1"
+   ]
+  },
+  "cars-mercedes-c-sunset": {
+   "file": "cars-mercedes-c-sunset.jpg",
+   "design_sources": [
+    "4d4411643d33f30d1a034a91013f6a99e3ee3023",
+    "a7e85c998cda6eb9bbd88ff053075af7d37e661d"
+   ]
+  },
+  "avatar-chris": {
+   "file": "avatar-chris.jpg",
+   "design_sources": [
+    "4f4beed1af9787679d65b6b918e7c424606c5f4f"
+   ]
+  },
+  "cars-corolla": {
+   "file": "cars-corolla.jpg",
+   "design_sources": [
+    "5118a13417d81158d6c5eb9ee04e73252f4c20da",
+    "6bd3faad8c34cc137413e686a3717a97a3d7da55"
+   ]
+  },
+  "cars-airstream": {
+   "file": "cars-airstream.jpg",
+   "design_sources": [
+    "5652fe1f047453328cb4c08e0705e8350cd01832",
+    "a834239f794db6efb572f484ce339b14d15ebfc8"
+   ]
+  },
+  "beauty-jar": {
+   "file": "beauty-jar.jpg",
+   "design_sources": [
+    "5961db245a294f674e2f0ecdd9bebe56999d53e5"
+   ]
+  },
+  "cars-audi-a4": {
+   "file": "cars-audi-a4.jpg",
+   "design_sources": [
+    "68f332eba823fe028f078588ce7b8744ad3329e6",
+    "5c8d217eaca5aa2773e4232f4eac629cac9ed2c9"
+   ]
+  },
+  "avatar-jaden": {
+   "file": "avatar-jaden.jpg",
+   "design_sources": [
+    "6284aa0c4a9f54c146ab2b3c6fcccdffeda89f16"
+   ]
+  },
+  "parts-brembo": {
+   "file": "parts-brembo.jpg",
+   "design_sources": [
+    "638e815ec79fbd592c848a4e069335c5a48c93c7",
+    "88a8d8d7850d03f8e40a70bc1049b526cb7fd3cb"
+   ]
+  },
+  "cars-mercedes-white": {
+   "file": "cars-mercedes-white.jpg",
+   "design_sources": [
+    "67d3916d455bca3fbc244303f9400d616696aa14",
+    "6450a9c29c19da43c6cb80b1a187d70c18e4bfa2"
+   ]
+  },
+  "parts-philips-bulb": {
+   "file": "parts-philips-bulb.jpg",
+   "design_sources": [
+    "66a534932da52b2a72a98cdad00843f065c2c656",
+    "d1ac9703dd20bee1edecc6b724f9e0f326f6272a"
+   ]
+  },
+  "re-staircase": {
+   "file": "re-staircase.jpg",
+   "design_sources": [
+    "6b75669850129e4cae0eebf95403635280d934f1",
+    "f95db00994e4b6068fe825dbccc8a664d96b34a7"
+   ]
+  },
+  "cars-alfa-romeo": {
+   "file": "cars-alfa-romeo.jpg",
+   "design_sources": [
+    "71299fa487be30a7e810704dc60b650c06608dea",
+    "d51139577482c7ec229df32ba67e53440b451d42"
+   ]
+  },
+  "cars-lexus-rc": {
+   "file": "cars-lexus-rc.jpg",
+   "design_sources": [
+    "746f8096f73de7538c9758fb8249e4f68aab4099",
+    "d709c93a2aa5a5f0a596ed6b1125c41d90242328"
+   ]
+  },
+  "re-dining-living": {
+   "file": "re-dining-living.jpg",
+   "design_sources": [
+    "7676d2a6d16e09fdba2147061dfdc995f241b368"
+   ]
+  },
+  "re-decor-interior": {
+   "file": "re-decor-interior.jpg",
+   "design_sources": [
+    "7b8042b0fe8b741f042c4b947fb9c2fdd37fd340"
+   ]
+  },
+  "re-blue-building": {
+   "file": "re-blue-building.jpg",
+   "design_sources": [
+    "abc67c2d778fc27bacd4771db2bda11aa1ab60da",
+    "7bd5c8c9f6253ae387a181ff2ed142af955fa2af"
+   ]
+  },
+  "cars-genesis": {
+   "file": "cars-genesis.jpg",
+   "design_sources": [
+    "7cd5ed61c216512b1c56b9d39bdc3cb1fe6d56c6",
+    "add1e19a9cdaeb552e0f8f669367244f8f1607c0"
+   ]
+  },
+  "re-villa-white-pool": {
+   "file": "re-villa-white-pool.jpg",
+   "design_sources": [
+    "81dd2f0ca3a475d59d25cb0669f95d0bf7fa0405",
+    "f2c77e333fdf2678e3507e28e23cb485469997a2"
+   ]
+  },
+  "cars-bmw-m3-grey": {
+   "file": "cars-bmw-m3-grey.jpg",
+   "design_sources": [
+    "e1523321cb165d0c564368114973e0ac67cb7e73",
+    "82d4e246cbbd2b47d79f1f3d9abc153181672880"
+   ]
+  },
+  "cars-vw-california": {
+   "file": "cars-vw-california.jpg",
+   "design_sources": [
+    "88722c16caea217d4350e8f97421f7166d12d649",
+    "aa5062e6732d735fee926315e54cc9842c1062d6"
+   ]
+  },
+  "cars-bmw-m3-green": {
+   "file": "cars-bmw-m3-green.jpg",
+   "design_sources": [
+    "f579824766e8b1ac03bac8938d657d6e73222208",
+    "946b8bf47d5a624eb0551350223705ab61f0c65e"
+   ]
+  },
+  "cars-golf-night": {
+   "file": "cars-golf-night.jpg",
+   "design_sources": [
+    "fc5ddb0304f3d12e4a187479b22827827a575c2e",
+    "9e3453d618638d050164d0f5240ec8b821b44713"
+   ]
+  },
+  "logo-bonton": {
+   "file": "logo-bonton.jpg",
+   "design_sources": [
+    "ba66ee5b2d23dcafe36b29a9c1859b38fb8c6647"
+   ]
+  },
+  "re-kitchen": {
+   "file": "re-kitchen.jpg",
+   "design_sources": [
+    "c3c0a7a137cbc98a5c8c29f962c51fc26abd25ee"
+   ]
+  },
+  "re-townhouses": {
+   "file": "re-townhouses.jpg",
+   "design_sources": [
+    "e4fa4140c82821f248e1095b332f6e583e8b0111",
+    "ca7fb0901e1baa2ba351a5a1c2a658e66ffe4549"
+   ]
+  },
+  "avatar-mark": {
+   "file": "avatar-mark.jpg",
+   "design_sources": [
+    "e09d5e8b9c8395d2b34c6222f4461602662a89fc"
+   ]
+  },
+  "cars-bmw-m3-studio": {
+   "file": "cars-bmw-m3-studio.jpg",
+   "design_sources": [
+    "e589146b8277b2fb1b54c9c7488ee134fcd96daf",
+    "fa9cdac6ac404d44ef8878a0af62046e41c10142"
+   ]
+  },
+  "beauty-serum-splash": {
+   "file": "beauty-serum-splash.jpg",
+   "design_sources": [
+    "f33b0a3c1cad2210ce0f42859014830ba00f6ff2"
+   ]
+  }
+ },
+ "personas": [
+  {
+   "key": "farah-alzinati",
+   "email_local": "buyer",
+   "kind": "private",
+   "language": "ar",
+   "name": {
+    "en": "Farah Alzinati",
+    "ar": "فرح الزيناتي"
+   },
+   "avatar": "avatar-farah",
+   "member_since": null,
+   "about": {
+    "en": null,
+    "ar": null
+   },
+   "design": {
+    "email": "farah@gmail.com",
+    "phone": "+974******780"
+   }
+  },
+  {
+   "key": "premium-estates",
+   "email_local": "seller",
+   "kind": "business",
+   "language": "en",
+   "name": {
+    "en": "BonTon",
+    "ar": "بون تون"
+   },
+   "avatar": "logo-bonton",
+   "member_since": "2016-01-08",
+   "about": {
+    "en": "We take our clients by the hand and communicate honestly, transparently, and openly always. Licensed real estate brokerage in Doha: property valuation, selling, renting and development.",
+    "ar": "نأخذ بيد عملائنا ونتواصل معهم بصدق وشفافية ووضوح دائماً. وساطة عقارية مرخصة في الدوحة: تقييم العقارات والبيع والإيجار والتطوير."
+   },
+   "business": {
+    "business_name": {
+     "en": "BonTon",
+     "ar": "بون تون"
+    },
+    "legal_name": "Premium Estates Qatar W.L.L.",
+    "commercial_registration_number": "789012",
+    "contact_phone": "+97444123456",
+    "contact_email": "contact@premiumestates.qa",
+    "website": "https://www.premiumestates.qa",
+    "address": {
+     "en": "West Bay, Diplomatic Area, Doha",
+     "ar": "الخليج الغربي، المنطقة الدبلوماسية، الدوحة"
+    },
+    "opening_hours": [
+     {
+      "day": "sat",
+      "closed": true,
+      "open": null,
+      "close": null
+     },
+     {
+      "day": "sun",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "mon",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "tue",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "wed",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "thu",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "fri",
+      "closed": true,
+      "open": null,
+      "close": null
+     }
+    ],
+    "cover": "re-blue-building",
+    "services": {
+     "en": [
+      "Property Valuation",
+      "Selling Properties",
+      "Renting Residential and Commercial Properties",
+      "Property Development",
+      "Project Planning",
+      "Real Estate Brokerage",
+      "Real Estate Exchange",
+      "Digital Offering Procedure",
+      "Individual Search Agent"
+     ],
+     "ar": [
+      "تقييم العقارات",
+      "بيع العقارات",
+      "تأجير العقارات السكنية والتجارية",
+      "تطوير العقارات",
+      "تخطيط المشاريع",
+      "الوساطة العقارية",
+      "المبادلة العقارية",
+      "إجراءات العرض الرقمي",
+      "وكيل بحث مخصص"
+     ]
+    },
+    "legal": {
+     "vat_id": "QA 124 376 203",
+     "represented_by": [
+      "Dr. Ahmed Al Thani",
+      "Sarah Smith"
+     ],
+     "license": "Licensed as a Real Estate Broker by the Ministry of Justice, Qatar."
+    }
+   }
+  },
+  {
+   "key": "mark-toro",
+   "email_local": "member01",
+   "kind": "private",
+   "language": "en",
+   "name": {
+    "en": "Mark Toro",
+    "ar": "مارك تورو"
+   },
+   "avatar": "avatar-mark",
+   "member_since": "2016-01-08",
+   "about": {
+    "en": "Established in 2016, we are a trusted private seller specializing in premium pre-owned vehicles and automotive parts across Qatar. Every listing is inspected, documented, and backed by a full service history. Our goal is a transparent, no-pressure buying experience with Safe Pay protection on every order.",
+    "ar": "منذ عام 2016 ونحن بائع موثوق متخصص في السيارات الفاخرة المستعملة وقطع الغيار في قطر. كل إعلان مفحوص وموثق ومدعوم بسجل صيانة كامل. هدفنا تجربة شراء شفافة وبدون ضغط مع حماية الدفع الآمن على كل طلب."
+   },
+   "design": {
+    "location": "Doha, Qatar",
+    "rating": 4.9,
+    "reviews_count": 312,
+    "followers": 124,
+    "response_time": "1 hour",
+    "total_ads": 48,
+    "response_rate": "98%",
+    "avg_reply": "30 Min",
+    "badges": [
+     "Verify",
+     "Top Rated"
+    ]
+   }
+  },
+  {
+   "key": "metro-trading",
+   "email_local": "member02",
+   "kind": "business",
+   "language": "en",
+   "name": {
+    "en": "Metro Trading",
+    "ar": "ميترو للتجارة"
+   },
+   "avatar": "logo-awning-store",
+   "member_since": "2016-01-08",
+   "about": {
+    "en": "Metro Trading W.L.L. sells vehicles, motorhomes, bikes and automotive parts with local pickup from The Pearl, Doha. Message us any time, we typically reply within 30 minutes.",
+    "ar": "شركة ميترو للتجارة ذ.م.م تبيع المركبات والكرافانات والدراجات وقطع الغيار مع إمكانية الاستلام من اللؤلؤة في الدوحة. راسلنا في أي وقت ونرد عادة خلال 30 دقيقة."
+   },
+   "business": {
+    "business_name": {
+     "en": "Metro Trading",
+     "ar": "ميترو للتجارة"
+    },
+    "legal_name": "Metro Trading W.L.L.",
+    "commercial_registration_number": "QA-2016-338048",
+    "contact_phone": null,
+    "contact_email": "legal@metrotrading.qa",
+    "website": null,
+    "address": {
+     "en": "The Pearl, Porto Arabia, Doha",
+     "ar": "اللؤلؤة، بورتو أرابيا، الدوحة"
+    },
+    "opening_hours": [
+     {
+      "day": "sat",
+      "closed": true,
+      "open": null,
+      "close": null
+     },
+     {
+      "day": "sun",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "mon",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "tue",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "wed",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "thu",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "fri",
+      "closed": true,
+      "open": null,
+      "close": null
+     }
+    ],
+    "cover": "cars-bmw-m3-studio",
+    "legal": {
+     "tax_id": "3380480338"
+    }
+   }
+  },
+  {
+   "key": "autonow-gmbh",
+   "email_local": "member03",
+   "kind": "business",
+   "language": "ar",
+   "name": {
+    "en": "AutoNow GmbH",
+    "ar": "أوتو ناو"
+   },
+   "avatar": "logo-awning-store",
+   "member_since": "2018-03-01",
+   "about": {
+    "en": "AutoNow sells inspected used cars with full service history and local bank financing.",
+    "ar": "أوتو ناو تبيع سيارات مستعملة مفحوصة بسجل صيانة كامل وتمويل عبر البنوك المحلية."
+   },
+   "business": {
+    "business_name": {
+     "en": "AutoNow GmbH",
+     "ar": "أوتو ناو"
+    },
+    "legal_name": "AutoNow GmbH",
+    "commercial_registration_number": null,
+    "contact_phone": null,
+    "contact_email": null,
+    "website": null,
+    "address": {
+     "en": "Al Khor, Qatar",
+     "ar": "الخور، قطر"
+    },
+    "opening_hours": [
+     {
+      "day": "sat",
+      "closed": true,
+      "open": null,
+      "close": null
+     },
+     {
+      "day": "sun",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "mon",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "tue",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "wed",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "thu",
+      "closed": false,
+      "open": "09:00",
+      "close": "18:00"
+     },
+     {
+      "day": "fri",
+      "closed": true,
+      "open": null,
+      "close": null
+     }
+    ],
+    "cover": "cars-amg-grey"
+   }
+  },
+  {
+   "key": "edward-alesky",
+   "email_local": "member04",
+   "kind": "private",
+   "language": "en",
+   "name": {
+    "en": "Edward Alesky",
+    "ar": "إدوارد أليسكي"
+   },
+   "avatar": "avatar-mark",
+   "member_since": null,
+   "about": {
+    "en": null,
+    "ar": null
+   }
+  },
+  {
+   "key": "jaden-murred",
+   "email_local": "member05",
+   "kind": "private",
+   "language": "ar",
+   "name": {
+    "en": "Jaden Murred",
+    "ar": "جيدن مورد"
+   },
+   "avatar": "avatar-jaden",
+   "member_since": null,
+   "about": {
+    "en": null,
+    "ar": null
+   }
+  },
+  {
+   "key": "chris-offile",
+   "email_local": "member06",
+   "kind": "private",
+   "language": "en",
+   "name": {
+    "en": "Chris Offile",
+    "ar": "كريس أوفيل"
+   },
+   "avatar": "avatar-chris",
+   "member_since": null,
+   "about": {
+    "en": null,
+    "ar": null
+   }
+  },
+  {
+   "key": "sara-lorenzo",
+   "email_local": "member07",
+   "kind": "private",
+   "language": "ar",
+   "name": {
+    "en": "Sara Lorenzo",
+    "ar": "سارة لورينزو"
+   },
+   "avatar": "avatar-sara",
+   "member_since": null,
+   "about": {
+    "en": null,
+    "ar": null
+   }
+  },
+  {
+   "key": "layla-h",
+   "email_local": "member08",
+   "kind": "private",
+   "language": "ar",
+   "name": {
+    "en": "Layla H.",
+    "ar": "ليلى ح."
+   },
+   "avatar": "avatar-sara",
+   "member_since": null,
+   "about": {
+    "en": null,
+    "ar": null
+   }
+  }
+ ],
+ "companies": [
+  {
+   "key": "autonow-al-khor",
+   "persona": "autonow-gmbh",
+   "abbr": "AG",
+   "name": {
+    "en": "AutoNow GmbH",
+    "ar": "أوتو ناو"
+   },
+   "location": {
+    "en": "Al Khor",
+    "ar": "الخور"
+   },
+   "color": {
+    "bg": "rgb(232,255,236)",
+    "fg": "rgb(27,173,7)"
+   },
+   "ads_label": "12,4M Ads"
+  },
+  {
+   "key": "autonow-madinat-ash-shamal",
+   "persona": "autonow-gmbh",
+   "abbr": "AG",
+   "name": {
+    "en": "AutoNow GmbH",
+    "ar": "أوتو ناو"
+   },
+   "location": {
+    "en": "Madinat ash Shamal",
+    "ar": "مدينة الشمال"
+   },
+   "color": {
+    "bg": "rgb(235,238,255)",
+    "fg": "rgb(43,111,219)"
+   },
+   "ads_label": "12,4M Ads"
+  },
+  {
+   "key": "autonow-ain-khaled",
+   "persona": "autonow-gmbh",
+   "abbr": "AG",
+   "name": {
+    "en": "AutoNow GmbH",
+    "ar": "أوتو ناو"
+   },
+   "location": {
+    "en": "Ain Khaled",
+    "ar": "عين خالد"
+   },
+   "color": {
+    "bg": "rgb(228,247,255)",
+    "fg": "rgb(20,150,190)"
+   },
+   "ads_label": "12,4M Ads"
+  },
+  {
+   "key": "autonow-old-al-hitmi",
+   "persona": "autonow-gmbh",
+   "abbr": "AG",
+   "name": {
+    "en": "AutoNow GmbH",
+    "ar": "أوتو ناو"
+   },
+   "location": {
+    "en": "Old Al Hitmi",
+    "ar": "الهتمي القديم"
+   },
+   "color": {
+    "bg": "rgb(255,235,235)",
+    "fg": "rgb(220,70,70)"
+   },
+   "ads_label": "12,4M Ads"
+  },
+  {
+   "key": "metro-trading-al-wakrah",
+   "persona": "metro-trading",
+   "abbr": "MT",
+   "name": {
+    "en": "Metro Trading",
+    "ar": "ميترو للتجارة"
+   },
+   "location": {
+    "en": "Al Wakrah",
+    "ar": "الوكرة"
+   },
+   "color": {
+    "bg": "rgb(255,240,234)",
+    "fg": "rgb(243,128,87)"
+   },
+   "ads_label": "12,4M Ads"
+  }
+ ],
+ "categories": [
+  {
+   "design": "Cars & Vehicles",
+   "ar": "سيارات ومركبات",
+   "map": "vehicles"
+  },
+  {
+   "design": "Real Estate",
+   "ar": "عقارات",
+   "map": "real-estate"
+  },
+  {
+   "design": "Electronics",
+   "ar": "إلكترونيات",
+   "map": "electronics"
+  },
+  {
+   "design": "Home & Garden",
+   "ar": "المنزل والحديقة",
+   "map": "home-and-garden"
+  },
+  {
+   "design": "Jobs",
+   "ar": "وظائف",
+   "map": "jobs"
+  },
+  {
+   "design": "Pets",
+   "ar": "حيوانات أليفة",
+   "map": "pets"
+  },
+  {
+   "design": "Services",
+   "ar": "خدمات",
+   "map": "services"
+  },
+  {
+   "design": "Leisure & Hobbies",
+   "ar": "هوايات وترفيه",
+   "map": "hobbies-and-sports"
+  },
+  {
+   "design": "Clothes",
+   "ar": "ملابس",
+   "map": "fashion"
+  },
+  {
+   "design": "Baby & Kids",
+   "ar": "أطفال ورضّع",
+   "map": "fashion",
+   "leaf": "kids"
+  },
+  {
+   "design": "Books & Magazines",
+   "ar": "كتب ومجلات",
+   "map": "hobbies-and-sports",
+   "leaf": "books"
+  },
+  {
+   "design": "Sports Equipment",
+   "ar": "معدات رياضية",
+   "map": "hobbies-and-sports",
+   "leaf": "sports-equipment"
+  },
+  {
+   "design": "Computers & Tablets",
+   "ar": "حواسيب وأجهزة لوحية",
+   "map": "electronics",
+   "leaf": "computers-and-laptops"
+  },
+  {
+   "design": "Fashion & Beauty",
+   "ar": "أزياء وجمال",
+   "map": "fashion"
+  },
+  {
+   "design": "Gifts",
+   "ar": "هدايا",
+   "map": "home-and-garden",
+   "leaf": "home-decor"
+  },
+  {
+   "design": "Camping & Trips",
+   "ar": "تخييم ورحلات",
+   "map": "hobbies-and-sports",
+   "leaf": "sports-equipment"
+  },
+  {
+   "design": "Watches & Jewelry",
+   "ar": "ساعات ومجوهرات",
+   "map": "fashion",
+   "leaf": "watches"
+  },
+  {
+   "design": "Cameras & Lenses",
+   "ar": "كاميرات وعدسات",
+   "map": "electronics",
+   "leaf": "cameras"
+  },
+  {
+   "design": "Health & Beauty",
+   "ar": "الصحة والجمال",
+   "map": "services",
+   "leaf": "beauty"
+  },
+  {
+   "design": "Motorhomes & Caravans",
+   "ar": "كرافانات ومقطورات",
+   "map": "vehicles",
+   "leaf": "cars"
+  },
+  {
+   "design": "Bicycles & Accessories",
+   "ar": "دراجات هوائية وملحقاتها",
+   "map": "vehicles",
+   "leaf": "bicycles"
+  },
+  {
+   "design": "Car Parts & Tires",
+   "ar": "قطع غيار وإطارات",
+   "map": "vehicles",
+   "leaf": "auto-parts"
+  },
+  {
+   "design": "Boats & Watercrafts",
+   "ar": "قوارب ومركبات مائية",
+   "map": "vehicles",
+   "leaf": "boats"
+  }
+ ],
+ "locations": {
+  "Doha": "al-sadd",
+  "West Bay": "west-bay",
+  "The Pearl": "the-pearl",
+  "Msheireb": "msheireb",
+  "Al Gharafa": "al-gharafa",
+  "Al Waab": "al-waab",
+  "Al Sadd": "al-sadd",
+  "Lusail": "lusail-marina",
+  "Al Khor": "al-khor-center",
+  "Al Shahaniya": "al-shahaniya-center",
+  "Industrial Area": "al-wakra-center",
+  "Salwa Road": "al-aziziya"
+ },
+ "photo_pools": {
+  "cars": [
+   "cars-bmw-m3-grey",
+   "cars-bmw-m3-studio",
+   "cars-bmw-m3-green",
+   "cars-amg-grey",
+   "cars-mercedes-white",
+   "cars-mercedes-c-sunset",
+   "cars-audi-a4",
+   "cars-audi-rs5",
+   "cars-lexus-is",
+   "cars-lexus-rc",
+   "cars-golf-r",
+   "cars-golf-night",
+   "cars-corolla",
+   "cars-alfa-romeo",
+   "cars-genesis",
+   "cars-porsche-macan",
+   "cars-bmw-320d"
+  ],
+  "motorcycles": [
+   "moto-sport",
+   "moto-vespa"
+  ],
+  "bicycles": [
+   "bike-mountain"
+  ],
+  "auto-parts": [
+   "parts-brembo",
+   "parts-tires",
+   "parts-philips-bulb"
+  ],
+  "apartments-for-rent": [
+   "re-living-room",
+   "re-bedroom",
+   "re-kitchen",
+   "re-dining-living",
+   "re-decor-interior",
+   "re-white-tower",
+   "re-staircase"
+  ],
+  "apartments-for-sale": [
+   "re-white-tower",
+   "re-living-room",
+   "re-bedroom",
+   "re-staircase",
+   "re-kitchen",
+   "re-dining-living"
+  ],
+  "villas-for-rent": [
+   "re-villa-pool-modern",
+   "re-villa-white-pool",
+   "re-house-garden",
+   "re-townhouses",
+   "re-house-dusk"
+  ],
+  "villas-for-sale": [
+   "re-villa-pool-palms",
+   "re-villa-pool-terrace",
+   "re-villa-dark",
+   "re-white-villa",
+   "re-house-dusk",
+   "re-villa-pool-modern"
+  ],
+  "land": [
+   "re-villa-pool-palms",
+   "re-house-garden",
+   "re-white-villa"
+  ],
+  "commercial-property": [
+   "re-office-corridor",
+   "re-office-for-lease",
+   "re-skyscrapers",
+   "re-blue-building"
+  ],
+  "beauty": [
+   "beauty-jar",
+   "beauty-hydro-boost-box",
+   "beauty-hydrate-treat",
+   "beauty-serum-splash"
+  ]
+ },
+ "ads": [
+  {
+   "key": "bmw-m3-competition",
+   "seller": "mark-toro",
+   "category": "cars",
+   "title": {
+    "en": "BMW M3 Competition xDrive 2022 — 48,000 km, Full History",
+    "ar": "بي إم دبليو M3 كومبتيشن xDrive موديل 2022 — 48,000 كم، سجل صيانة كامل"
+   },
+   "description": {
+    "en": "For sale is a stunning 2022 BMW M3 Competition xDrive with only 48,000 km and a flawless full service history, guaranteeing its pristine condition. Powered by a ferocious twin-turbo engine paired with the intelligent xDrive all-wheel-drive system, it delivers breathtaking performance, razor-sharp handling, and maximum grip. This model features an aggressive stance complemented by a luxurious, high-tech cockpit loaded with advanced driver displays and premium materials. Meticulously maintained and 100% ready for the road, it is the ultimate daily supercar for anyone demanding raw power and sophisticated luxury.",
+    "ar": "للبيع بي إم دبليو M3 كومبتيشن xDrive موديل 2022 بحالة مذهلة، قطعت 48,000 كم فقط ولها سجل صيانة كامل يضمن حالتها الممتازة. يعمل المحرك التوربيني المزدوج مع نظام الدفع الرباعي الذكي xDrive ليمنحك أداءً مذهلاً وتحكماً دقيقاً وثباتاً عالياً على الطريق. تتميز السيارة بمظهر رياضي جريء ومقصورة فاخرة عالية التقنية بشاشات متطورة للسائق وخامات راقية. صيانتها دقيقة وهي جاهزة تماماً للطريق، وهي السيارة المثالية لمن يبحث عن القوة والفخامة في الاستخدام اليومي."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": "used",
+   "location": "Doha",
+   "posted_minutes_ago": 30,
+   "badges": [
+    "featured",
+    "premium"
+   ],
+   "images": [
+    "cars-bmw-m3-grey",
+    "cars-bmw-m3-studio",
+    "cars-bmw-m3-green"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "510 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "510 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "BMW",
+    "model": "M3 Competition xDrive",
+    "year": 2022,
+    "transmission": "automatic",
+    "fuel_type": "petrol",
+    "mileage_km": 48000
+   },
+   "old_price": 385000,
+   "description_source": "design",
+   "specs": [
+    {
+     "en": [
+      "Brand",
+      "BMW"
+     ],
+     "ar": [
+      "الماركة",
+      "بي إم دبليو"
+     ]
+    },
+    {
+     "en": [
+      "Year",
+      "2022"
+     ],
+     "ar": [
+      "سنة الصنع",
+      "2022"
+     ]
+    },
+    {
+     "en": [
+      "Vehicle Condition",
+      "Excellent / Full service history"
+     ],
+     "ar": [
+      "حالة السيارة",
+      "ممتازة / سجل صيانة كامل"
+     ]
+    },
+    {
+     "en": [
+      "Fuel Type",
+      "Petrol"
+     ],
+     "ar": [
+      "نوع الوقود",
+      "بنزين"
+     ]
+    },
+    {
+     "en": [
+      "Model",
+      "M3 Competition xDrive"
+     ],
+     "ar": [
+      "الموديل",
+      "M3 كومبتيشن xDrive"
+     ]
+    },
+    {
+     "en": [
+      "Mileage",
+      "48,000 km"
+     ],
+     "ar": [
+      "المسافة المقطوعة",
+      "48,000 كم"
+     ]
+    },
+    {
+     "en": [
+      "First Registration",
+      "March 2022"
+     ],
+     "ar": [
+      "أول تسجيل",
+      "مارس 2022"
+     ]
+    },
+    {
+     "en": [
+      "Power",
+      "510 hp (375 kW)"
+     ],
+     "ar": [
+      "القوة",
+      "510 حصان (375 كيلوواط)"
+     ]
+    },
+    {
+     "en": [
+      "Vehicle Type",
+      "Sedan (Sport Performance)"
+     ],
+     "ar": [
+      "نوع المركبة",
+      "سيدان رياضية"
+     ]
+    },
+    {
+     "en": [
+      "Service History",
+      "Full service history"
+     ],
+     "ar": [
+      "سجل الصيانة",
+      "سجل صيانة كامل"
+     ]
+    },
+    {
+     "en": [
+      "Interior",
+      "Black Merino Leather"
+     ],
+     "ar": [
+      "المقصورة",
+      "جلد ميرينو أسود"
+     ]
+    },
+    {
+     "en": [
+      "Accident History",
+      "No accidents"
+     ],
+     "ar": [
+      "سجل الحوادث",
+      "بدون حوادث"
+     ]
+    },
+    {
+     "en": [
+      "Number of Doors",
+      "4"
+     ],
+     "ar": [
+      "عدد الأبواب",
+      "4"
+     ]
+    },
+    {
+     "en": [
+      "Exterior Color",
+      "Alpine White"
+     ],
+     "ar": [
+      "اللون الخارجي",
+      "أبيض ألباين"
+     ]
+    },
+    {
+     "en": [
+      "VIN",
+      "Available upon request"
+     ],
+     "ar": [
+      "رقم الهيكل",
+      "متوفر عند الطلب"
+     ]
+    },
+    {
+     "en": [
+      "Transmission",
+      "Automatic (8-speed)"
+     ],
+     "ar": [
+      "ناقل الحركة",
+      "أوتوماتيك (8 سرعات)"
+     ]
+    },
+    {
+     "en": [
+      "Drivetrain",
+      "AWD (xDrive)"
+     ],
+     "ar": [
+      "الدفع",
+      "رباعي (xDrive)"
+     ]
+    },
+    {
+     "en": [
+      "Warranty",
+      "Available / Dealer warranty"
+     ],
+     "ar": [
+      "الضمان",
+      "متوفر / ضمان الوكيل"
+     ]
+    }
+   ],
+   "features": {
+    "en": [
+     "Alloy wheels (17\" original AMG).",
+     "Full service history (well-maintained service booklet).",
+     "Non-smoker vehicle",
+     "Power windows (front & rear).",
+     "Bluetooth hands-free system",
+     "Air conditioning"
+    ],
+    "ar": [
+     "جنوط ألمنيوم أصلية AMG مقاس 17 إنش.",
+     "سجل صيانة كامل (دفتر صيانة محفوظ بعناية).",
+     "سيارة غير مدخّن فيها",
+     "نوافذ كهربائية أمامية وخلفية.",
+     "نظام بلوتوث للمكالمات",
+     "مكيف هواء"
+    ]
+   }
+  },
+  {
+   "key": "corolla-gr-sport-hybrid",
+   "seller": "autonow-gmbh",
+   "category": "cars",
+   "title": {
+    "en": "Toyota Corolla GR Sport Hybrid E-CVT",
+    "ar": "تويوتا كورولا GR سبورت هايبرد E-CVT"
+   },
+   "description": {
+    "en": "Corolla GR Sport Hybrid with E-CVT gearbox, 192 PS and a sporty body kit. Clean, economical and ready to drive.",
+    "ar": "كورولا GR سبورت هايبرد بناقل E-CVT وقوة 192 حصاناً وطقم تجميل رياضي. نظيفة واقتصادية وجاهزة للاستخدام."
+   },
+   "price": 245000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "like_new",
+   "location": "Doha",
+   "posted_minutes_ago": 60,
+   "badges": [],
+   "images": [
+    "cars-corolla"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "192 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "192 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "Toyota",
+    "model": "Corolla GR Sport Hybrid",
+    "year": 2023,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "mileage_km": 12000
+   }
+  },
+  {
+   "key": "golf-8-r",
+   "seller": "autonow-gmbh",
+   "category": "cars",
+   "title": {
+    "en": "Volkswagen Golf 8 R Performance 4Motion Edition",
+    "ar": "فولكس فاجن جولف 8 R بيرفورمانس 4Motion إصدار خاص"
+   },
+   "description": {
+    "en": "Reliable luxury sport hatchback with aggressive R design and a premium cabin. 320 PS, 4Motion all-wheel drive.",
+    "ar": "سيارة هاتشباك رياضية فاخرة وموثوقة بتصميم R جريء ومقصورة راقية. قوة 320 حصاناً ودفع رباعي 4Motion."
+   },
+   "price": 210000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Doha",
+   "posted_minutes_ago": 120,
+   "badges": [
+    "featured"
+   ],
+   "images": [
+    "cars-golf-r",
+    "cars-golf-night"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "320 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "320 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "Other",
+    "model": "Golf 8 R Performance",
+    "year": 2022,
+    "transmission": "automatic",
+    "fuel_type": "petrol",
+    "mileage_km": 21000
+   }
+  },
+  {
+   "key": "amg-s63-e-performance",
+   "seller": "mark-toro",
+   "category": "cars",
+   "title": {
+    "en": "Mercedes-AMG S 63 E Performance L AMG Edition",
+    "ar": "مرسيدس AMG S 63 E بيرفورمانس L إصدار AMG"
+   },
+   "description": {
+    "en": "Flagship plug-in hybrid AMG saloon with 802 PS, long wheelbase and the full AMG edition package.",
+    "ar": "سيارة AMG رئيسية بنظام هجين قابل للشحن بقوة 802 حصاناً وقاعدة عجلات طويلة وحزمة إصدار AMG كاملة."
+   },
+   "price": 410000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "like_new",
+   "location": "West Bay",
+   "posted_minutes_ago": 360,
+   "badges": [
+    "featured"
+   ],
+   "images": [
+    "cars-amg-grey",
+    "cars-mercedes-white"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "802 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "802 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "Mercedes",
+    "model": "AMG S 63 E Performance L",
+    "year": 2024,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "mileage_km": 8000
+   }
+  },
+  {
+   "key": "vw-t61-california-ocean",
+   "seller": "autonow-gmbh",
+   "category": "cars",
+   "title": {
+    "en": "VW T6.1 California Ocean 2021 — 22,000 km",
+    "ar": "فولكس فاجن T6.1 كاليفورنيا أوشن 2021 — 22,000 كم"
+   },
+   "description": {
+    "en": "California Ocean camper van with pop-up roof, fully equipped for weekend trips and desert camping.",
+    "ar": "فان تخييم كاليفورنيا أوشن بسقف قابل للرفع ومجهز بالكامل لرحلات نهاية الأسبوع والتخييم في الصحراء."
+   },
+   "price": 210000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Al Gharafa",
+   "posted_minutes_ago": 4320,
+   "badges": [],
+   "images": [
+    "cars-vw-california"
+   ],
+   "tags": {
+    "en": [
+     "Diesel",
+     "Automatic",
+     "Pop-up Roof"
+    ],
+    "ar": [
+     "ديزل",
+     "أوتوماتيك",
+     "سقف قابل للرفع"
+    ]
+   },
+   "custom_fields": {
+    "make": "Other",
+    "model": "T6.1 California Ocean",
+    "year": 2021,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "mileage_km": 22000
+   }
+  },
+  {
+   "key": "porsche-911-carrera-s",
+   "seller": "mark-toro",
+   "category": "cars",
+   "title": {
+    "en": "Porsche 911 Carrera S 2020 — 18,500 km",
+    "ar": "بورش 911 كاريرا S موديل 2020 — 18,500 كم"
+   },
+   "description": {
+    "en": "Porsche 911 Carrera S with 450 PS and only 18,500 km. Full agency history, immaculate inside and out.",
+    "ar": "بورش 911 كاريرا S بقوة 450 حصاناً وقطعت 18,500 كم فقط. سجل وكالة كامل وحالة ممتازة من الداخل والخارج."
+   },
+   "price": 320000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": "used",
+   "location": "The Pearl",
+   "posted_minutes_ago": 240,
+   "badges": [
+    "featured"
+   ],
+   "images": [
+    "cars-lexus-rc"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "450 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "450 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "Other",
+    "model": "911 Carrera S",
+    "year": 2020,
+    "transmission": "automatic",
+    "fuel_type": "petrol",
+    "mileage_km": 18500
+   }
+  },
+  {
+   "key": "range-rover-velar",
+   "seller": "autonow-gmbh",
+   "category": "cars",
+   "title": {
+    "en": "Range Rover Velar R-Dynamic 2021",
+    "ar": "رينج روفر فيلار R-Dynamic موديل 2021"
+   },
+   "description": {
+    "en": "Range Rover Velar R-Dynamic, 300 PS diesel, panoramic roof and a clean service record.",
+    "ar": "رينج روفر فيلار R-Dynamic ديزل بقوة 300 حصان وسقف بانوراما وسجل صيانة نظيف."
+   },
+   "price": 199000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Lusail",
+   "posted_minutes_ago": 2880,
+   "badges": [],
+   "images": [
+    "cars-porsche-macan"
+   ],
+   "tags": {
+    "en": [
+     "Diesel",
+     "Automatic",
+     "300 PS"
+    ],
+    "ar": [
+     "ديزل",
+     "أوتوماتيك",
+     "300 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "Other",
+    "model": "Range Rover Velar R-Dynamic",
+    "year": 2021,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "mileage_km": 39000
+   }
+  },
+  {
+   "key": "audi-a4-40-tfsi-s-line",
+   "seller": "autonow-gmbh",
+   "category": "cars",
+   "title": {
+    "en": "Audi A4 40 TFSI S-Line 2021",
+    "ar": "أودي A4 40 TFSI إس لاين موديل 2021"
+   },
+   "description": {
+    "en": "Elegant sport sedan with S Line package, digital cockpit and refined driving feel. 204 PS.",
+    "ar": "سيدان رياضية أنيقة بحزمة S Line وشاشة سائق رقمية وقيادة مريحة. قوة 204 حصاناً."
+   },
+   "price": 245000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Al Waab",
+   "posted_minutes_ago": 120,
+   "badges": [],
+   "images": [
+    "cars-audi-a4",
+    "cars-audi-rs5"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "204 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "204 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "Audi",
+    "model": "A4 40 TFSI S-Line",
+    "year": 2021,
+    "transmission": "automatic",
+    "fuel_type": "petrol",
+    "mileage_km": 33000
+   }
+  },
+  {
+   "key": "lexus-is-300-f-sport",
+   "seller": "mark-toro",
+   "category": "cars",
+   "title": {
+    "en": "Lexus IS 300 F Sport",
+    "ar": "لكزس IS 300 F سبورت"
+   },
+   "description": {
+    "en": "Lexus IS 300 F Sport with aggressive F Sport design and a premium cabin. 245 PS, clean and well kept.",
+    "ar": "لكزس IS 300 F سبورت بتصميم F Sport الرياضي ومقصورة فاخرة. قوة 245 حصاناً ونظيفة ومحافظ عليها."
+   },
+   "price": 210000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Doha",
+   "posted_minutes_ago": 180,
+   "badges": [],
+   "images": [
+    "cars-lexus-is",
+    "cars-lexus-rc"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "245 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "245 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "Lexus",
+    "model": "IS 300 F Sport",
+    "year": 2022,
+    "transmission": "automatic",
+    "fuel_type": "petrol",
+    "mileage_km": 27000
+   }
+  },
+  {
+   "key": "bmw-320d-touring-m-sport",
+   "seller": "autonow-gmbh",
+   "category": "cars",
+   "title": {
+    "en": "BMW 320d Touring M-Sport",
+    "ar": "بي إم دبليو 320d تورينغ M-Sport"
+   },
+   "description": {
+    "en": "Luxury diesel touring car with M-Sport package, HUD and panoramic roof.",
+    "ar": "سيارة تورينغ ديزل فاخرة بحزمة M-Sport وشاشة HUD وسقف بانوراما."
+   },
+   "price": 287000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Doha",
+   "posted_minutes_ago": 30,
+   "badges": [],
+   "images": [
+    "cars-bmw-320d"
+   ],
+   "tags": {
+    "en": [
+     "2019",
+     "68,000 km",
+     "Diesel",
+     "Auto"
+    ],
+    "ar": [
+     "2019",
+     "68,000 كم",
+     "ديزل",
+     "أوتوماتيك"
+    ]
+   },
+   "custom_fields": {
+    "make": "BMW",
+    "model": "320d Touring M-Sport",
+    "year": 2019,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "mileage_km": 68000
+   },
+   "description_source": "design"
+  },
+  {
+   "key": "mercedes-c300-amg-line",
+   "seller": "mark-toro",
+   "category": "cars",
+   "title": {
+    "en": "Mercedes-Benz C300 AMG Line",
+    "ar": "مرسيدس بنز C300 AMG Line"
+   },
+   "description": {
+    "en": "Luxury diesel touring car with M-Sport package, HUD and panoramic roof.",
+    "ar": "سيارة سيدان ديزل فاخرة بحزمة AMG Line وشاشة HUD وسقف بانوراما."
+   },
+   "price": 287000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Doha",
+   "posted_minutes_ago": 30,
+   "badges": [],
+   "images": [
+    "cars-mercedes-c-sunset",
+    "cars-mercedes-white"
+   ],
+   "tags": {
+    "en": [
+     "2019",
+     "68,000 km",
+     "Diesel",
+     "Auto"
+    ],
+    "ar": [
+     "2019",
+     "68,000 كم",
+     "ديزل",
+     "أوتوماتيك"
+    ]
+   },
+   "custom_fields": {
+    "make": "Mercedes",
+    "model": "C300 AMG Line",
+    "year": 2019,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "mileage_km": 68000
+   },
+   "description_source": "design"
+  },
+  {
+   "key": "mercedes-c43-amg-4matic",
+   "seller": "autonow-gmbh",
+   "category": "cars",
+   "title": {
+    "en": "Mercedes-Benz C 43 AMG 4Matic",
+    "ar": "مرسيدس بنز C 43 AMG 4Matic"
+   },
+   "description": {
+    "en": "C 43 AMG 4Matic with 408 PS, sport exhaust and the AMG performance seats.",
+    "ar": "C 43 AMG 4Matic بقوة 408 حصاناً وعادم رياضي ومقاعد AMG الرياضية."
+   },
+   "price": 385000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Msheireb",
+   "posted_minutes_ago": 420,
+   "badges": [],
+   "images": [
+    "cars-mercedes-white",
+    "cars-amg-grey"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "408 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "408 حصان"
+    ]
+   },
+   "custom_fields": {
+    "make": "Mercedes",
+    "model": "C 43 AMG 4Matic",
+    "year": 2022,
+    "transmission": "automatic",
+    "fuel_type": "petrol",
+    "mileage_km": 24000
+   }
+  },
+  {
+   "key": "hymer-b-class-modern-comfort",
+   "seller": "metro-trading",
+   "category": "cars",
+   "title": {
+    "en": "Hymer B-Class ModernComfort 2020 — 35,000 km",
+    "ar": "هايمر B-Class مودرن كومفورت 2020 — 35,000 كم"
+   },
+   "description": {
+    "en": "Hymer B-Class ModernComfort motorhome, sleeps four, diesel automatic and fully serviced.",
+    "ar": "كرافان هايمر B-Class مودرن كومفورت يتسع لأربعة أشخاص، ديزل أوتوماتيك وصيانته كاملة."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Al Khor",
+   "posted_minutes_ago": 360,
+   "badges": [],
+   "images": [
+    "cars-hymer-camper"
+   ],
+   "tags": {
+    "en": [
+     "Diesel",
+     "Automatic",
+     "4 Berth"
+    ],
+    "ar": [
+     "ديزل",
+     "أوتوماتيك",
+     "4 أسرّة"
+    ]
+   },
+   "custom_fields": {
+    "make": "Other",
+    "model": "Hymer B-Class ModernComfort",
+    "year": 2020,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "mileage_km": 35000
+   }
+  },
+  {
+   "key": "airstream-bambi-16rb",
+   "seller": "metro-trading",
+   "category": "cars",
+   "title": {
+    "en": "Airstream Bambi 16RB Travel Trailer 2021",
+    "ar": "مقطورة سفر إيرستريم بامبي 16RB موديل 2021"
+   },
+   "description": {
+    "en": "Airstream Bambi 16RB aluminium travel trailer, two berths, solar ready.",
+    "ar": "مقطورة سفر ألمنيوم إيرستريم بامبي 16RB بسريرين وجاهزة للطاقة الشمسية."
+   },
+   "price": 185000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Al Shahaniya",
+   "posted_minutes_ago": 1440,
+   "badges": [],
+   "images": [
+    "cars-airstream"
+   ],
+   "tags": {
+    "en": [
+     "Aluminum",
+     "2 Berth",
+     "Solar Ready"
+    ],
+    "ar": [
+     "ألمنيوم",
+     "سريران",
+     "جاهزة للطاقة الشمسية"
+    ]
+   },
+   "custom_fields": {
+    "make": "Other",
+    "model": "Airstream Bambi 16RB",
+    "year": 2021,
+    "transmission": "manual",
+    "fuel_type": "petrol"
+   }
+  },
+  {
+   "key": "vespa-gts-super-300",
+   "seller": "metro-trading",
+   "category": "motorcycles",
+   "title": {
+    "en": "Vespa GTS Super 300 HPE — Warm Grey, 1,200 km",
+    "ar": "فيسبا GTS سوبر 300 HPE — رمادي دافئ، 1,200 كم"
+   },
+   "description": {
+    "en": "Vespa GTS Super 300 HPE in warm grey, only 1,200 km. Automatic, 24 PS, perfect for city riding.",
+    "ar": "فيسبا GTS سوبر 300 HPE باللون الرمادي الدافئ وقطعت 1,200 كم فقط. أوتوماتيك بقوة 24 حصاناً وممتازة للتنقل داخل المدينة."
+   },
+   "price": 42000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "like_new",
+   "location": "Doha",
+   "posted_minutes_ago": 30,
+   "badges": [],
+   "images": [
+    "moto-vespa"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Automatic",
+     "24 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "أوتوماتيك",
+     "24 حصان"
+    ]
+   }
+  },
+  {
+   "key": "aprilia-rsv4-factory",
+   "seller": "metro-trading",
+   "category": "motorcycles",
+   "title": {
+    "en": "Aprilia RSV4 Factory 2022 — 3,000 km",
+    "ar": "أبريليا RSV4 فاكتوري 2022 — 3,000 كم"
+   },
+   "description": {
+    "en": "Aprilia RSV4 Factory 2022 superbike, 217 PS, 3,000 km, always garaged and serviced on time.",
+    "ar": "دراجة أبريليا RSV4 فاكتوري 2022 الرياضية بقوة 217 حصاناً وقطعت 3,000 كم، محفوظة في الكراج وصيانتها في موعدها."
+   },
+   "price": 68000,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "like_new",
+   "location": "Al Sadd",
+   "posted_minutes_ago": 180,
+   "badges": [],
+   "images": [
+    "moto-sport"
+   ],
+   "tags": {
+    "en": [
+     "Benzin",
+     "Manual",
+     "217 PS"
+    ],
+    "ar": [
+     "بنزين",
+     "عادي",
+     "217 حصان"
+    ]
+   }
+  },
+  {
+   "key": "specialized-stumpjumper-s-works",
+   "seller": "metro-trading",
+   "category": "bicycles",
+   "title": {
+    "en": "Specialized Stumpjumper Carbon S-Works — Used",
+    "ar": "سبيشالايزد ستامب جامبر كاربون S-Works — مستعملة"
+   },
+   "description": {
+    "en": "Specialized Stumpjumper Carbon S-Works mountain bike, 29 inch, Shimano groupset. Used with care.",
+    "ar": "دراجة جبلية سبيشالايزد ستامب جامبر كاربون S-Works مقاس 29 إنش بمجموعة تروس شيمانو. مستعملة باهتمام."
+   },
+   "price": 12500,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "used",
+   "location": "Al Waab",
+   "posted_minutes_ago": 1440,
+   "badges": [],
+   "images": [
+    "bike-mountain"
+   ],
+   "tags": {
+    "en": [
+     "Carbon",
+     "29 Inch",
+     "Shimano"
+    ],
+    "ar": [
+     "كاربون",
+     "29 إنش",
+     "شيمانو"
+    ]
+   }
+  },
+  {
+   "key": "brembo-gt-brake-kit",
+   "seller": "metro-trading",
+   "category": "auto-parts",
+   "title": {
+    "en": "Brembo Gran Turismo Brake Kit for BMW/Audi",
+    "ar": "طقم فرامل بريمبو جران توريزمو لسيارات بي إم دبليو وأودي"
+   },
+   "description": {
+    "en": "Brand new Brembo Gran Turismo front axle brake kit with 6-piston calipers for BMW and Audi.",
+    "ar": "طقم فرامل أمامي جديد من بريمبو جران توريزمو بملاقط 6 مكابس مناسب لسيارات بي إم دبليو وأودي."
+   },
+   "price": 6500,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "new",
+   "location": "Industrial Area",
+   "posted_minutes_ago": 15,
+   "badges": [],
+   "images": [
+    "parts-brembo"
+   ],
+   "tags": {
+    "en": [
+     "Brand New",
+     "Front Axle",
+     "6-Piston"
+    ],
+    "ar": [
+     "جديد",
+     "المحور الأمامي",
+     "6 مكابس"
+    ]
+   }
+  },
+  {
+   "key": "michelin-pilot-sport-4s",
+   "seller": "metro-trading",
+   "category": "auto-parts",
+   "title": {
+    "en": "Michelin Pilot Sport 4S Tires (Set of 4)",
+    "ar": "إطارات ميشلان بايلوت سبورت 4S (طقم 4 إطارات)"
+   },
+   "description": {
+    "en": "Set of four brand new Michelin Pilot Sport 4S tires, size 245/35 R19, high performance.",
+    "ar": "طقم أربعة إطارات جديدة من ميشلان بايلوت سبورت 4S مقاس 245/35 R19 عالية الأداء."
+   },
+   "price": 3200,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "new",
+   "location": "Salwa Road",
+   "posted_minutes_ago": 120,
+   "badges": [],
+   "images": [
+    "parts-tires"
+   ],
+   "tags": {
+    "en": [
+     "245/35 R19",
+     "Brand New",
+     "High Per."
+    ],
+    "ar": [
+     "245/35 R19",
+     "جديد",
+     "أداء عالٍ"
+    ]
+   }
+  },
+  {
+   "key": "philips-xenon-d3s-bulb",
+   "seller": "metro-trading",
+   "category": "auto-parts",
+   "title": {
+    "en": "Philips Xenon Standard D3S Bulb (Pair)",
+    "ar": "مصباحا زينون فيليبس ستاندرد D3S (زوج)"
+   },
+   "description": {
+    "en": "Original OEM Philips Xenon Standard D3S bulbs, 4300K, boxed pair.",
+    "ar": "مصباحا زينون فيليبس ستاندرد D3S أصليان 4300 كلفن، زوج في علبته."
+   },
+   "price": 480,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": "new",
+   "location": "Msheireb",
+   "posted_minutes_ago": 300,
+   "badges": [],
+   "images": [
+    "parts-philips-bulb"
+   ],
+   "tags": {
+    "en": [
+     "4300K",
+     "Original OEM",
+     "Boxed"
+    ],
+    "ar": [
+     "4300 كلفن",
+     "أصلي OEM",
+     "في العلبة"
+    ]
+   }
+  },
+  {
+   "key": "luxury-4br-family-villa",
+   "seller": "premium-estates",
+   "category": "villas-for-sale",
+   "title": {
+    "en": "Luxury 4-Bedroom Family Villa",
+    "ar": "فيلا عائلية فاخرة 4 غرف نوم"
+   },
+   "description": {
+    "en": "Luxury family villa of 350 sqm with four bedrooms, three bathrooms and a private pool.",
+    "ar": "فيلا عائلية فاخرة بمساحة 350 م² وأربع غرف نوم وثلاثة حمامات ومسبح خاص."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 30,
+   "badges": [],
+   "images": [
+    "re-villa-pool-modern",
+    "re-villa-white-pool",
+    "re-living-room"
+   ],
+   "tags": {
+    "en": [
+     "350 sqm",
+     "4 Bedrooms",
+     "3 Bath"
+    ],
+    "ar": [
+     "350 م²",
+     "4 غرف نوم",
+     "3 حمامات"
+    ]
+   }
+  },
+  {
+   "key": "smart-investment-apartment",
+   "seller": "premium-estates",
+   "category": "apartments-for-sale",
+   "title": {
+    "en": "Premium Smart Investment Apartment",
+    "ar": "شقة استثمارية ذكية مميزة"
+   },
+   "description": {
+    "en": "Smart two-bedroom investment apartment of 120 sqm on the fifth floor with a modern kitchen.",
+    "ar": "شقة استثمارية ذكية من غرفتي نوم بمساحة 120 م² في الطابق الخامس مع مطبخ عصري."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 45,
+   "badges": [],
+   "images": [
+    "re-white-tower",
+    "re-staircase",
+    "re-kitchen"
+   ],
+   "tags": {
+    "en": [
+     "120 sqm",
+     "2 Bedrooms",
+     "5th Floor"
+    ],
+    "ar": [
+     "120 م²",
+     "غرفتا نوم",
+     "الطابق الخامس"
+    ]
+   }
+  },
+  {
+   "key": "elite-corporate-business-hub",
+   "seller": "premium-estates",
+   "category": "commercial-property",
+   "title": {
+    "en": "Modern Elite Corporate Business Hub",
+    "ar": "مركز أعمال شركات عصري راقٍ"
+   },
+   "description": {
+    "en": "Modern business hub of 500 sqm with twelve offices and six parking lots, ready for corporate tenants.",
+    "ar": "مركز أعمال عصري بمساحة 500 م² يضم 12 مكتباً و6 مواقف سيارات وجاهز لشركات."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 60,
+   "badges": [],
+   "images": [
+    "re-skyscrapers",
+    "re-office-corridor",
+    "re-blue-building"
+   ],
+   "tags": {
+    "en": [
+     "500 sqm",
+     "12 Offices",
+     "6 Parking Lots"
+    ],
+    "ar": [
+     "500 م²",
+     "12 مكتباً",
+     "6 مواقف"
+    ]
+   }
+  },
+  {
+   "key": "modern-3br-family-apartment",
+   "seller": "premium-estates",
+   "category": "apartments-for-sale",
+   "title": {
+    "en": "Modern 3-Bedroom Family Apartment",
+    "ar": "شقة عائلية عصرية 3 غرف نوم"
+   },
+   "description": {
+    "en": "Bright three-bedroom family apartment of 160 sqm with two bathrooms and an open living area.",
+    "ar": "شقة عائلية مشمسة من ثلاث غرف نوم بمساحة 160 م² وحمامين وصالة مفتوحة."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 90,
+   "badges": [],
+   "images": [
+    "re-living-room",
+    "re-bedroom",
+    "re-dining-living"
+   ],
+   "tags": {
+    "en": [
+     "160 sqm",
+     "3 Bedrooms",
+     "2 Bath"
+    ],
+    "ar": [
+     "160 م²",
+     "3 غرف نوم",
+     "حمامان"
+    ]
+   }
+  },
+  {
+   "key": "executive-rooftop-penthouse",
+   "seller": "premium-estates",
+   "category": "apartments-for-sale",
+   "title": {
+    "en": "Premium Executive Rooftop Penthouse",
+    "ar": "بنتهاوس تنفيذي مميز على السطح"
+   },
+   "description": {
+    "en": "Executive rooftop penthouse of 280 sqm with three bedrooms and a private pool.",
+    "ar": "بنتهاوس تنفيذي على السطح بمساحة 280 م² وثلاث غرف نوم ومسبح خاص."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 120,
+   "badges": [],
+   "images": [
+    "re-white-tower",
+    "re-decor-interior",
+    "re-staircase"
+   ],
+   "tags": {
+    "en": [
+     "280 sqm",
+     "3 Bedrooms",
+     "Private Pool"
+    ],
+    "ar": [
+     "280 م²",
+     "3 غرف نوم",
+     "مسبح خاص"
+    ]
+   }
+  },
+  {
+   "key": "waterfront-beachside-chalet",
+   "seller": "premium-estates",
+   "category": "villas-for-sale",
+   "title": {
+    "en": "Luxury Waterfront Beachside Chalet",
+    "ar": "شاليه فاخر على الواجهة البحرية"
+   },
+   "description": {
+    "en": "Waterfront chalet of 210 sqm with two bedrooms, a pool terrace and direct beach access.",
+    "ar": "شاليه على الواجهة البحرية بمساحة 210 م² وغرفتي نوم وتراس مع مسبح ووصول مباشر للشاطئ."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 180,
+   "badges": [],
+   "images": [
+    "re-villa-pool-palms",
+    "re-villa-pool-terrace"
+   ],
+   "tags": {
+    "en": [
+     "210 sqm",
+     "2 Bedrooms",
+     "Beach Front"
+    ],
+    "ar": [
+     "210 م²",
+     "غرفتا نوم",
+     "إطلالة على الشاطئ"
+    ]
+   }
+  },
+  {
+   "key": "minimalist-downtown-studio",
+   "seller": "premium-estates",
+   "category": "apartments-for-sale",
+   "title": {
+    "en": "Smart Minimalist Downtown Studio",
+    "ar": "استوديو عصري بسيط في وسط المدينة"
+   },
+   "description": {
+    "en": "Smart minimalist studio of 55 sqm in the city centre with a fitted kitchen.",
+    "ar": "استوديو ذكي بتصميم بسيط بمساحة 55 م² في وسط المدينة مع مطبخ مجهز."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 240,
+   "badges": [],
+   "images": [
+    "re-bedroom",
+    "re-kitchen"
+   ],
+   "tags": {
+    "en": [
+     "55 sqm",
+     "1 Bedroom",
+     "10 Parking"
+    ],
+    "ar": [
+     "55 م²",
+     "غرفة نوم",
+     "10 مواقف"
+    ]
+   }
+  },
+  {
+   "key": "main-street-commercial-showroom",
+   "seller": "premium-estates",
+   "category": "commercial-property",
+   "title": {
+    "en": "Prime Main-Street Commercial Showroom",
+    "ar": "معرض تجاري مميز على الشارع الرئيسي"
+   },
+   "description": {
+    "en": "Prime commercial showroom of 750 sqm over two floors on the main street, ten parking spaces.",
+    "ar": "معرض تجاري مميز بمساحة 750 م² على طابقين على الشارع الرئيسي مع 10 مواقف."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 300,
+   "badges": [],
+   "images": [
+    "re-office-for-lease",
+    "re-blue-building"
+   ],
+   "tags": {
+    "en": [
+     "750 sqm",
+     "2 Floors",
+     "10 Parking"
+    ],
+    "ar": [
+     "750 م²",
+     "طابقان",
+     "10 مواقف"
+    ]
+   }
+  },
+  {
+   "key": "contemporary-suburban-townhouse",
+   "seller": "premium-estates",
+   "category": "villas-for-sale",
+   "title": {
+    "en": "Elegant Contemporary Suburban Townhouse",
+    "ar": "تاون هاوس عصري أنيق في الضواحي"
+   },
+   "description": {
+    "en": "Elegant contemporary townhouse of 240 sqm in a quiet suburb with a private garden.",
+    "ar": "تاون هاوس عصري أنيق بمساحة 240 م² في ضاحية هادئة مع حديقة خاصة."
+   },
+   "price": 285000,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 360,
+   "badges": [],
+   "images": [
+    "re-townhouses",
+    "re-house-garden",
+    "re-house-dusk"
+   ],
+   "tags": {
+    "en": [
+     "240 sqm",
+     "Bedrooms",
+     "Beach Front"
+    ],
+    "ar": [
+     "240 م²",
+     "غرف نوم",
+     "إطلالة على الشاطئ"
+    ]
+   }
+  },
+  {
+   "key": "neutrogena-cream",
+   "seller": "farah-alzinati",
+   "category": "beauty",
+   "title": {
+    "en": "Neutrogena Cream",
+    "ar": "كريم نيوتروجينا"
+   },
+   "description": {
+    "en": "Neutrogena Hydro Boost gel cream, 50 ml, sealed and brand new.",
+    "ar": "كريم جل نيوتروجينا هيدرو بوست 50 مل، مغلق وجديد."
+   },
+   "price": 75,
+   "currency": "QAR",
+   "price_type": "negotiable",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 4320,
+   "badges": [
+    "featured"
+   ],
+   "images": [
+    "beauty-hydro-boost-box",
+    "beauty-jar",
+    "beauty-hydrate-treat",
+    "beauty-serum-splash"
+   ],
+   "tags": {
+    "en": [
+     "Health & Beauty",
+     "Brand New",
+     "50 ml"
+    ],
+    "ar": [
+     "الصحة والجمال",
+     "جديد",
+     "50 مل"
+    ]
+   }
+  },
+  {
+   "key": "neutrogena-retinol-hydrate-treat",
+   "seller": "layla-h",
+   "category": "beauty",
+   "title": {
+    "en": "Neutrogena Retinol Hydrate + Treat Set",
+    "ar": "طقم نيوتروجينا ريتينول هيدرات + تريت"
+   },
+   "description": {
+    "en": "Hydrating regimen set: Retinol Regenerating Cream and Hydro Boost Water Gel Moisturizer.",
+    "ar": "طقم ترطيب يضم كريم ريتينول المجدد ومرطب هيدرو بوست جل مائي."
+   },
+   "price": 60,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 7200,
+   "badges": [],
+   "images": [
+    "beauty-hydrate-treat",
+    "beauty-jar"
+   ],
+   "tags": {
+    "en": [
+     "Health & Beauty",
+     "Brand New",
+     "Set of 2"
+    ],
+    "ar": [
+     "الصحة والجمال",
+     "جديد",
+     "طقم من قطعتين"
+    ]
+   }
+  },
+  {
+   "key": "vitamin-c-serum",
+   "seller": "layla-h",
+   "category": "beauty",
+   "title": {
+    "en": "Vitamin C Serum",
+    "ar": "سيروم فيتامين سي"
+   },
+   "description": {
+    "en": "Vitamin C brightening face serum, sealed and brand new.",
+    "ar": "سيروم فيتامين سي لتفتيح البشرة، مغلق وجديد."
+   },
+   "price": 85,
+   "currency": "QAR",
+   "price_type": "fixed",
+   "condition": null,
+   "location": "Doha",
+   "posted_minutes_ago": 11520,
+   "badges": [],
+   "images": [
+    "beauty-serum-splash"
+   ],
+   "tags": {
+    "en": [
+     "Health & Beauty",
+     "Brand New"
+    ],
+    "ar": [
+     "الصحة والجمال",
+     "جديد"
+    ]
+   }
+  }
+ ],
+ "chats": [
+  {
+   "leaf": "beauty",
+   "lines": {
+    "en": [
+     "Hello, is the cream still sealed and brand new? I am interested.",
+     "Yes Sure",
+     "Great, I will take it."
+    ],
+    "ar": [
+     "مرحباً، هل الكريم لا يزال مغلقاً وجديداً؟ أنا مهتمة.",
+     "نعم بالتأكيد",
+     "رائع، سآخذه."
+    ]
+   }
+  },
+  {
+   "leaf": null,
+   "lines": {
+    "en": [
+     "Hello, is this item still available?",
+     "Yes, it is.",
+     "Can you do QAR 50 including shipping?",
+     "Let me think about it."
+    ],
+    "ar": [
+     "مرحباً، هل هذا الغرض ما زال متوفراً؟",
+     "نعم، متوفر.",
+     "هل يمكن بسعر 50 ريال شامل التوصيل؟",
+     "دعني أفكر في الأمر."
+    ]
+   }
+  }
+ ],
+ "reviews": [
+  {
+   "reviewer": "edward-alesky",
+   "rating": 5,
+   "age": "2 days ago",
+   "text": {
+    "en": "Smooth transaction, car exactly as described. Highly recommended seller.",
+    "ar": "تعامل سلس والسيارة تماماً كما في الوصف. بائع أنصح به بشدة."
+   }
+  },
+  {
+   "reviewer": "jaden-murred",
+   "rating": 5,
+   "age": "1 week ago",
+   "text": {
+    "en": "Great communication and fair pricing. Safe Pay made it stress-free.",
+    "ar": "تواصل ممتاز وسعر عادل. الدفع الآمن جعل العملية مريحة."
+   }
+  },
+  {
+   "reviewer": "chris-offile",
+   "rating": 4,
+   "age": "3 weeks ago",
+   "text": {
+    "en": "Item arrived on time. Minor delay in reply but overall a good deal.",
+    "ar": "وصل الغرض في موعده. تأخر بسيط في الرد لكن الصفقة جيدة بشكل عام."
+   }
+  },
+  {
+   "reviewer": "sara-lorenzo",
+   "rating": 5,
+   "age": "1 month ago",
+   "text": {
+    "en": "Trustworthy and professional. Would buy from again without hesitation.",
+    "ar": "موثوق ومحترف. سأشتري منه مرة أخرى دون تردد."
+   }
+  }
+ ],
+ "notifications": [
+  {
+   "type": "new_ads",
+   "title": {
+    "en": "New Ads",
+    "ar": "إعلانات جديدة"
+   },
+   "body": {
+    "en": "Marty Motors has posted 3 new ads",
+    "ar": "نشرت مارتي موتورز 3 إعلانات جديدة"
+   },
+   "time": "Yesterday, 03:00pm",
+   "unread": true
+  },
+  {
+   "type": "price_change",
+   "title": {
+    "en": "Price Change",
+    "ar": "تغيّر السعر"
+   },
+   "body": {
+    "en": "The price of the 'Al-Luluah Premium Villa' has decreased by 5%.",
+    "ar": "انخفض سعر «فيلا اللؤلؤة المميزة» بنسبة 5%."
+   },
+   "time": "2 days ago",
+   "unread": false
+  },
+  {
+   "type": "saved_search",
+   "title": {
+    "en": "Search Match",
+    "ar": "نتيجة مطابقة للبحث"
+   },
+   "body": {
+    "en": "There are 5 new apartments matching your saved search 'Warm Studio Apartments'",
+    "ar": "هناك 5 شقق جديدة تطابق بحثك المحفوظ «شقق استوديو دافئة»"
+   },
+   "time": "3 days ago",
+   "unread": false
+  }
+ ],
+ "saved_searches": [
+  {
+   "title": {
+    "en": "BMW 320d Touring M-Sport",
+    "ar": "بي إم دبليو 320d تورينغ M-Sport"
+   },
+   "query": {
+    "q": "BMW 320",
+    "max_price": 300000
+   }
+  },
+  {
+   "title": {
+    "en": "BMW 330e Touring M-Sport",
+    "ar": "بي إم دبليو 330e تورينغ M-Sport"
+   },
+   "query": {
+    "q": "BMW 330",
+    "max_price": 320000
+   }
+  }
+ ]
+}

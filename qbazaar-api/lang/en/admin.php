@@ -583,7 +583,6 @@ return [
         'report_actioned' => 'Report marked as actioned.',
         'ban_applied' => 'User banned.',
         'unban_applied' => 'User unbanned.',
-        'suspend' => 'Suspend',
         'unsuspend' => 'Reactivate',
         'ad_suspended' => 'Ad suspended.',
         'ad_unsuspended' => 'Ad reactivated.',
@@ -778,6 +777,7 @@ return [
             'not_enabled' => 'Two-factor sign-in is not on for this account.',
             'invalid_code' => 'The code is wrong or has expired.',
             'challenge_expired' => 'The code prompt expired. Please sign in again.',
+            'password_expired' => 'The setup was not finished in time. Enter your password again to get a new key.',
         ],
         'flash' => [
             'started' => 'Add the key to your authenticator app, then enter a code to confirm.',
@@ -812,12 +812,13 @@ return [
             'required_hint' => 'The rest of the panel stays closed until the setup is finished.',
             'how_title' => 'How it works',
             'how_apps' => 'Works with any TOTP authenticator app, such as Google Authenticator, Microsoft Authenticator or 1Password.',
-            'how_trust' => 'You can remember a trusted browser for :days days; changing the setup revokes it.',
+            'how_trust' => 'You can remember a trusted browser for :days days; changing the setup or your password revokes it.',
             'how_lost' => 'If you lose your phone and your recovery codes, ask a more senior admin to reset it.',
         ],
         'setup' => [
             'title' => 'Turn on two-factor sign-in',
             'intro' => 'You will need an authenticator app on your phone. Once on, every sign-in asks for a fresh code.',
+            'resume_intro' => 'The setup you started was not finished in time. Enter your password to get a new key and continue.',
             'start' => 'Start setup',
             'step_key' => 'Step 1: add the key to the app',
             'step_key_hint' => 'In your authenticator app choose add account, then enter a setup key manually, and paste this key.',
@@ -1351,6 +1352,7 @@ return [
         'applications' => [
             'title' => 'Business applications',
             'empty' => 'This account never applied.',
+            'notes_reviewers_only' => 'Review notes are shown only to staff who can verify companies.',
         ],
         'account' => [
             'title' => 'Account',
@@ -1374,6 +1376,7 @@ return [
         'pending_badge' => 'applications waiting for review',
         'status_filter' => 'Filter by application status',
         'search_placeholder' => 'Search by business, legal name or CR number…',
+        'search_placeholder_name' => 'Search by business name…',
         'empty' => 'No applications with this status.',
         'open' => 'View application',
         'deleted_account' => 'Deleted account',
@@ -1396,6 +1399,7 @@ return [
             'legal_name' => 'Legal name',
             'registration' => 'Commercial registration (CR) number',
             'applicant_note' => 'Note from the applicant',
+            'reviewers_only' => 'The legal name, CR number and notes are shown only to staff who can verify companies.',
         ],
         'documents' => [
             'title' => 'Documents',
@@ -2112,11 +2116,13 @@ return [
         ],
         'errors' => [
             'action_unavailable' => 'This action is no longer available on the report. Refresh the page and try again.',
+            'ad_already_removed' => 'Another staff member already removed this ad.',
         ],
         'flash' => [
             'report_sanctioned' => '":action" done and the report closed.',
             'ad_removed' => 'Ad removed.',
             'ads_removed' => 'Selected ads removed: :count.',
+            'ads_already_removed' => ':count were left alone because they were already removed.',
             'user_suspended' => 'User suspended.',
         ],
         'sla' => [

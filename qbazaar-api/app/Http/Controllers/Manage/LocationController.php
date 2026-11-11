@@ -13,9 +13,11 @@ use App\Models\Location;
 use App\Models\User;
 use App\Services\Admin\Catalog\DeleteBlockedNotice;
 use App\Services\Catalog\Taxonomy\TaxonomyDeletion;
+use App\Services\Catalog\Taxonomy\TaxonomyEditor;
 use App\Services\Catalog\Taxonomy\TaxonomyKind;
 use App\Services\Catalog\Taxonomy\TaxonomyTreeOptions;
 use App\Services\Catalog\Taxonomy\TaxonomyUsageCounter;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -75,9 +77,9 @@ class LocationController extends Controller
         ]);
     }
 
-    public function store(SaveLocationRequest $request): RedirectResponse
+    public function store(SaveLocationRequest $request, #[CurrentUser] User $actor, TaxonomyEditor $editor): RedirectResponse
     {
-        Location::query()->create($request->locationData());
+        $editor->create($actor, TaxonomyKind::LOCATION, $request->locationData());
 
         return redirect()
             ->route('admin.locations.index')
@@ -97,18 +99,18 @@ class LocationController extends Controller
         ]);
     }
 
-    public function update(SaveLocationRequest $request, Location $location): RedirectResponse
+    public function update(SaveLocationRequest $request, #[CurrentUser] User $actor, Location $location, TaxonomyEditor $editor): RedirectResponse
     {
-        $location->update($request->locationData());
+        $editor->update($actor, $location, $request->locationData());
 
         return redirect()
             ->route('admin.locations.index')
             ->with('status', __('admin.catalog.flash.location_updated'));
     }
 
-    public function destroy(Location $location, TaxonomyDeletion $deletion): RedirectResponse
+    public function destroy(#[CurrentUser] User $actor, Location $location, TaxonomyDeletion $deletion): RedirectResponse
     {
-        $usage = $deletion->delete($location);
+        $usage = $deletion->delete($location, $actor);
 
         if ($usage->inUse()) {
             return back()
@@ -130,9 +132,9 @@ class LocationController extends Controller
         return back()->with($result->hasBlocked() ? 'error' : 'status', $result->message());
     }
 
-    public function status(UpdateTaxonomyStatusRequest $request, Location $location): RedirectResponse
+    public function status(UpdateTaxonomyStatusRequest $request, #[CurrentUser] User $actor, Location $location, TaxonomyEditor $editor): RedirectResponse
     {
-        $location->update(['is_active' => $request->active()]);
+        $editor->setActive($actor, $location, $request->active());
 
         return back()->with('status', __($request->active() ? 'admin.catalog.flash.location_activated' : 'admin.catalog.flash.location_deactivated'));
     }

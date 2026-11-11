@@ -21,6 +21,8 @@ import { useSignOut } from './useSignOut';
 export function SettingsSidebar({ pathname }: { pathname: string }) {
   const { signOut, pending } = useSignOut();
   const [pressed, setPressed] = useState<{ from: string; item: AccountNavItem } | null>(null);
+  // The shell outlives its routes, so a press left in place would light its row again on the way Back to where it was made.
+  if (pressed && pressed.from !== pathname) setPressed(null);
   const current = pressed?.from === pathname ? pressed.item : settingsSectionFor(pathname);
 
   return (

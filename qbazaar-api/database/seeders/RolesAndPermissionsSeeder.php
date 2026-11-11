@@ -20,7 +20,14 @@ use Spatie\Permission\PermissionRegistrar;
  * Two-step bootstrap:
  *   1. Permissions + Roles get created idempotently. We use firstOrCreate so
  *      re-running the seeder in dev does not duplicate rows or trip on the
- *      (name, guard_name) unique key.
+ *      (name, guard_name) unique key. Only a role created by this run gets
+ *      the default permissions below: an existing role keeps the
+ *      permissions a super admin set in the permission matrix (AD-17.15).
+ *      Re-running it on a live install (the deploy checklist does when a
+ *      release adds permissions) creates the missing permissions and gives
+ *      them to super_admin only; a permission meant for an existing role
+ *      reaches it through its own migration (see
+ *      2026_10_18_2_000005_grant_company_and_home_section_permissions).
  *   2. The first matching admin user is granted `super_admin`. If no admin
  *      user exists yet we create the canonical admin account so a fresh
  *      `migrate:fresh --seed` produces a working /admin login out of the box.
@@ -173,18 +180,32 @@ class RolesAndPermissionsSeeder extends Seeder
         // second forget flushes the now-stale cache before the role sync.
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $superAdmin = Role::findOrCreate('super_admin', 'web');
-        $superAdmin->syncPermissions(self::PERMISSIONS);
+        // super_admin always holds everything and the permission matrix never edits it.
+        Role::findOrCreate('super_admin', 'web')->syncPermissions(self::PERMISSIONS);
 
-        $moderator = Role::findOrCreate('moderator', 'web');
-        $moderator->syncPermissions(self::MODERATOR_PERMISSIONS);
-
-        $support = Role::findOrCreate('support', 'web');
-        $support->syncPermissions(self::SUPPORT_PERMISSIONS);
+        $this->seedDefaultsOnce('moderator', self::MODERATOR_PERMISSIONS);
+        $this->seedDefaultsOnce('support', self::SUPPORT_PERMISSIONS);
 
         $this->ensureSuperAdminUser();
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    /**
+     * A role gets its default permissions only when this run creates it. On
+     * an existing install the role keeps what a super admin set in the
+     * permission matrix, so re-running the seeder never undoes those edits.
+     *
+     * @param list<string> $permissions
+     */
+    private function seedDefaultsOnce(string $name, array $permissions): void
+    {
+        /** @var Role $role */
+        $role = Role::findOrCreate($name, 'web');
+
+        if ($role->wasRecentlyCreated) {
+            $role->syncPermissions($permissions);
+        }
     }
 
     /**

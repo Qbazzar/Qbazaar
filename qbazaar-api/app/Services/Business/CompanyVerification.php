@@ -26,6 +26,7 @@ class CompanyVerification
     public function __construct(
         private readonly AdminAuditLogger $audit,
         private readonly CatalogCache $catalog,
+        private readonly FeaturedCompanyCurator $featured,
     ) {}
 
     public function verify(User $admin, User $company): void
@@ -36,9 +37,14 @@ class CompanyVerification
         $company->notify(new BusinessAccountNotification(BusinessNotice::VERIFICATION_GRANTED));
     }
 
+    /**
+     * A company staff no longer vouch for is not promoted either: revoking
+     * the badge also takes it off the featured list, in the same
+     * transaction, with its own audit entry.
+     */
     public function revoke(User $admin, User $company, string $reason): void
     {
-        DB::transaction(function () use ($company): void {
+        $unfeatured = DB::transaction(function () use ($company): bool {
             $locked = $this->lock($company);
 
             if ($locked->business_verified_at === null) {
@@ -47,9 +53,16 @@ class CompanyVerification
 
             $locked->forceFill(['business_verified_at' => null, 'business_verified_by' => null])->save();
             $company->setRawAttributes($locked->getAttributes(), true);
+
+            return $this->featured->withdraw($company);
         });
 
         $this->audit->record($admin, 'admin.companies.revoke-verification', $company, ['reason' => $reason]);
+
+        if ($unfeatured) {
+            $this->audit->record($admin, 'admin.companies.unfeature', $company, ['cause' => 'verification_revoked']);
+        }
+
         $company->notify(new BusinessAccountNotification(BusinessNotice::VERIFICATION_REVOKED, $reason));
         DB::afterCommit(fn () => $this->catalog->homeCurationChanged());
     }

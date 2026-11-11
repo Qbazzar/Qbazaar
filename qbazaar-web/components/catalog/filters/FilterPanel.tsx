@@ -88,8 +88,8 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
   const activeCount = countActiveFilters(values, { keyword: keywordIsFilter });
   const invalid = hasInvalidRange(draft);
   const dirty = !filtersEqual(normalizeFilters(draft), values);
-  // The card's button is pale while there is nothing to apply; the sheet's bar always submits, and closes it when unchanged.
-  const canApply = !invalid && (dirty || activeCount > 0);
+  // Follows `submit`: an unchanged press does nothing on the sidebar card, and closes the sheet.
+  const canApply = !invalid && (dirty || onKeep !== undefined);
   const fieldsCategory = draft.category ?? categorySlug;
   const customFields = filterableFields(fieldsCategory ? findCategoryBySlug(categories, fieldsCategory)?.custom_fields : null);
 
@@ -259,7 +259,7 @@ export function FilterPanel({ variant, groups, values, onApply, onReset, onRemov
 
   const titleId = `${id}-title`;
   // category.html's Apply Filter is always the pale orange (#F49E7E), a `.qb-btn` that only dims by 4 % under the
-  // pointer or a press; it is marked disabled for assistive tech while there is nothing to apply.
+  // pointer or a press (the reference never changes it); it is marked disabled for assistive tech while a press would do nothing.
   const card = (
     <>
       <div className="mb-[22px] flex items-center justify-between gap-4">

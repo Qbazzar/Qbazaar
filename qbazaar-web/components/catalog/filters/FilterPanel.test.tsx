@@ -66,10 +66,29 @@ describe('FilterPanel', () => {
     expect(screen.getByRole('slider', { name: 'Maximum price (QAR)' })).toHaveAttribute('aria-valuetext', 'QAR 1,000');
   });
 
-  it('keeps "Apply Filter" solid while filters are applied', () => {
-    renderPanel({ values: { ...EMPTY_FILTERS, condition: 'new' } });
+  it('marks "Apply Filter" unavailable whenever a press would do nothing, without changing its look', async () => {
+    const { onApply, user } = renderPanel({ values: { ...EMPTY_FILTERS, condition: 'new' } });
+    const apply = screen.getByRole('button', { name: 'Apply Filter' });
+    const look = apply.className;
 
-    expect(screen.getByRole('button', { name: 'Apply Filter' })).toBeEnabled();
+    // Applied filters left as they are: nothing to apply.
+    expect(apply).toHaveAttribute('aria-disabled', 'true');
+    await user.click(apply);
+    expect(onApply).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('radio', { name: 'Used (7)' }));
+    expect(apply).not.toHaveAttribute('aria-disabled');
+    expect(apply.className).toBe(look);
+  });
+
+  it('keeps the card\'s "Apply Filter" available in the sheet, where an unchanged press closes it', async () => {
+    const onKeep = vi.fn();
+    const { user } = renderPanel({ variant: 'sheet', onKeep });
+    const apply = screen.getAllByRole('button', { name: 'Apply Filter' })[0];
+
+    expect(apply).not.toHaveAttribute('aria-disabled');
+    await user.click(apply);
+    expect(onKeep).toHaveBeenCalledOnce();
   });
 
   it('closes the sheet from its orange "Show Results" bar when nothing changed', async () => {

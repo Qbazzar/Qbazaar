@@ -65,19 +65,35 @@ class FeaturedCompanyCurator
 
     public function unfeature(User $admin, User $company): void
     {
-        DB::transaction(function () use ($company): void {
+        if (! $this->withdraw($company)) {
+            throw new DomainException(ErrorCode::BUSINESS_NOT_FEATURED);
+        }
+
+        $this->audit->record($admin, 'admin.companies.unfeature', $company);
+        $this->catalog->homeCurationChanged();
+    }
+
+    /**
+     * Takes the company off the featured list when it is on it and closes
+     * the gap it leaves. Joins the caller's transaction when there is one;
+     * the caller audits and drops the cached feed.
+     *
+     * @return bool whether the company was featured
+     */
+    public function withdraw(User $company): bool
+    {
+        return DB::transaction(function () use ($company): bool {
             $order = $this->lockedOrder();
 
             if (! in_array($company->id, $order, true)) {
-                throw new DomainException(ErrorCode::BUSINESS_NOT_FEATURED);
+                return false;
             }
 
             BusinessProfile::query()->whereKey($company->id)->update(['featured_position' => null]);
             PositionUpdate::apply('business_profiles', 'user_id', 'featured_position', array_values(array_diff($order, [$company->id])));
-        });
 
-        $this->audit->record($admin, 'admin.companies.unfeature', $company);
-        $this->catalog->homeCurationChanged();
+            return true;
+        });
     }
 
     /**

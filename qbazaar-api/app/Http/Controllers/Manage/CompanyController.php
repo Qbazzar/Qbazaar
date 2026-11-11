@@ -40,6 +40,7 @@ class CompanyController extends Controller
             'verification' => $request->verification(),
             'verificationOptions' => CompanyVerificationFilter::options(),
             'pendingApplications' => $applications->pendingCount(),
+            'searchMinLength' => $directory->minSearchLength(),
         ]);
     }
 

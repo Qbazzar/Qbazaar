@@ -53,7 +53,7 @@ Fired when `POST /conversations/{id}/messages` succeeds (after DB commit).
     "sender": {
       "id": "01HMxx...",
       "full_name": "Ali",
-      "avatar_thumb": "https://.../thumb.jpg"
+      "avatar_thumb_url": "https://.../thumb.jpg"
     }
   },
   "conversation": {

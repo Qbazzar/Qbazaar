@@ -13,9 +13,11 @@ use Illuminate\Support\Carbon;
 /**
  * "Trust this browser": a cookie (encrypted and signed by the web stack's
  * EncryptCookies middleware) naming the staff member, a fingerprint of their
- * credential and an expiry. A matching cookie skips the code prompt after
- * the password. The fingerprint covers the secret and the device version, so
- * re-enrolling or bumping the version revokes every trusted browser at once.
+ * credentials and an expiry. A matching cookie skips the code prompt after
+ * the password. The fingerprint covers the secret, the device version and
+ * the password hash, so re-enrolling, bumping the version or a new
+ * password, however it was set (the profile, a reset link), revokes every
+ * trusted browser at once.
  */
 class TrustedBrowser
 {
@@ -52,7 +54,7 @@ class TrustedBrowser
         return is_array($payload)
             && ($payload['u'] ?? null) === $user->id
             && is_string($payload['f'] ?? null)
-            && hash_equals($this->fingerprint($credential), $payload['f'])
+            && hash_equals($this->fingerprint($user, $credential), $payload['f'])
             && is_int($payload['e'] ?? null)
             && $payload['e'] > Carbon::now()->getTimestamp();
     }
@@ -62,13 +64,17 @@ class TrustedBrowser
     {
         return json_encode([
             'u' => $user->id,
-            'f' => $this->fingerprint($credential),
+            'f' => $this->fingerprint($user, $credential),
             'e' => $expiresAt->getTimestamp(),
         ], JSON_THROW_ON_ERROR);
     }
 
-    private function fingerprint(StaffTwoFactor $credential): string
+    private function fingerprint(User $user, StaffTwoFactor $credential): string
     {
-        return hash_hmac('sha256', $credential->device_version . '|' . $credential->secret, (string) config('app.key'));
+        return hash_hmac(
+            'sha256',
+            $credential->device_version . '|' . $credential->secret . '|' . $user->getAuthPassword(),
+            (string) config('app.key'),
+        );
     }
 }

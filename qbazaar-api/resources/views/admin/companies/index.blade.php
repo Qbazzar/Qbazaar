@@ -9,6 +9,7 @@
             :reset-url="route('admin.companies.index')"
             :search="$search"
             :placeholder="__('admin.companies.search_placeholder')"
+            :min-length="$searchMinLength"
             :filters="[
                 ['name' => 'verification', 'label' => __('admin.companies.filters.label'), 'placeholder' => __('admin.companies.filters.all'),
                     'value' => $verification?->value, 'options' => $verificationOptions],
