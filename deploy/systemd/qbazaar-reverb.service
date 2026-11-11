@@ -17,6 +17,13 @@ WorkingDirectory=/home/qbazaar/qbazaar/qbazaar-api
 ExecStart=/opt/cpanel/ea-php84/root/usr/bin/php /home/qbazaar/qbazaar/qbazaar-api/artisan reverb:start --host=127.0.0.1 --port=8080
 Restart=always
 RestartSec=5
+# OPS-18.14: one file descriptor per open socket. The default 1024 refuses
+# connections after about a thousand. Above ~1000 sockets Reverb also needs
+# an event-loop extension (uv, ev or event): its default stream_select loop
+# is capped at 1024 whatever this says (deploy/README.md "Reverb capacity").
+LimitNOFILE=65535
+# Chat latency matters more than batch work on a busy box.
+Nice=-2
 
 [Install]
 WantedBy=multi-user.target

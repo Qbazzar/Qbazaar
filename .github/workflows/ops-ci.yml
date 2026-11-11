@@ -1,0 +1,85 @@
+name: Ops CI
+
+# Lints what runs on the server or against it: the deploy and ops shell
+# scripts, the Cloudflare rules file and the k6 load-test scripts. Kept out of
+# ci.yml so it never gates an API deploy.
+on:
+  pull_request:
+    paths:
+      - 'deploy/**'
+      - 'tools/load/**'
+      - '.github/workflows/ops-ci.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'deploy/**'
+      - 'tools/load/**'
+      - '.github/workflows/ops-ci.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    name: Ops · shellcheck + config syntax
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The sourced libraries (common.sh, ops-common.sh) are checked through
+      # the scripts that source them (-x), with their real callers.
+      - name: shellcheck
+        run: |
+          shellcheck --version
+          shellcheck -x -S warning \
+            deploy/scripts/deploy-api.sh deploy/scripts/deploy-web.sh deploy/scripts/render-env.sh \
+            deploy/scripts/backup.sh deploy/scripts/restore-test.sh deploy/scripts/meili-restore-test.sh \
+            deploy/scripts/mysql-slow-digest.sh deploy/scripts/fpm-pool-size.sh deploy/scripts/install-ops.sh \
+            deploy/cloudflare/cache-hit-ratio.sh
+
+      - name: Bash syntax
+        run: for f in deploy/scripts/*.sh deploy/cloudflare/*.sh; do bash -n "$f"; done
+
+      - name: Cloudflare rules are valid JSON
+        run: jq -e '.http_request_firewall_custom and .http_ratelimit and .http_request_cache_settings' deploy/cloudflare/rules.json > /dev/null
+
+      - name: systemd units
+        run: |
+          for unit in deploy/systemd/*.service; do
+            grep -q '^\[Service\]' "$unit" || { echo "$unit has no [Service] section"; exit 1; }
+            grep -q '^ExecStart=/' "$unit" || { echo "$unit has no absolute ExecStart"; exit 1; }
+          done
+
+  k6:
+    name: Ops · k6 scripts load
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # `k6 inspect` runs each script's init code (imports, options, env
+      # checks) without sending a request. Unlike `k6 run`, it does not copy
+      # the container's environment into __ENV, so the variables go to k6
+      # itself (`-e` after the image name), as `k6 run -e` passes them.
+      - name: k6 inspect
+        run: |
+          mkdir -p "$RUNNER_TEMP/k6"
+          echo '[{"token":"t","user_id":"u","conversation_id":"c","ad_id":"a"}]' > "$RUNNER_TEMP/k6/users.json"
+          printf 'not-a-real-photo' > "$RUNNER_TEMP/k6/photo.jpg"
+          for script in browse search chat upload; do
+            docker run --rm -v "$PWD/tools/load/k6:/scripts:ro" -v "$RUNNER_TEMP/k6:/fixtures:ro" \
+              grafana/k6:0.54.0 inspect \
+              -e BASE_URL=https://api.staging.invalid -e USERS_FILE=/fixtures/users.json \
+              -e REVERB_KEY=ci -e IMAGE_FILE=/fixtures/photo.jpg \
+              "/scripts/$script.js" > /dev/null
+            echo "$script.js: ok"
+          done

@@ -1,0 +1,11 @@
+# /etc/sudoers.d/qbazaar-deploy: what the deploy user may run as root.
+# The deploy scripts restart the app's own units and reload PHP-FPM so a new
+# release replaces the cached OPcache code (deploy/php/zz-qbazaar-opcache.ini).
+#
+# Install (root), DOCS/M5-LAUNCH-RUNBOOK.md step 2. visudo checks the syntax
+# first, so a typo can never lock sudo out:
+#   cp -p /etc/sudoers.d/qbazaar-deploy /root/qbazaar-deploy.sudoers.bak
+#   visudo -cf ~qbazaar/qbazaar/deploy/sudoers/qbazaar-deploy && \
+#     install -m 440 -o root -g root ~qbazaar/qbazaar/deploy/sudoers/qbazaar-deploy /etc/sudoers.d/qbazaar-deploy
+# Check: sudo -l -U qbazaar
+qbazaar ALL=(root) NOPASSWD: /usr/bin/systemctl restart qbazaar-web, /usr/bin/systemctl restart qbazaar-horizon, /usr/bin/systemctl restart qbazaar-reverb, /usr/bin/systemctl reload ea-php84-php-fpm

@@ -15,6 +15,15 @@ ExecStart=/usr/local/bin/meilisearch --config-file-path /etc/meilisearch.toml
 Restart=always
 RestartSec=5
 LimitNOFILE=65535
+# OPS-18.15: a reindex must never starve PHP. Lower CPU and disk priority
+# than the web stack, and memory pressure past MemoryHigh is throttled and
+# reclaimed rather than killed (no MemoryMax: an OOM kill mid-indexing would
+# only restart the work). max_indexing_memory/threads in /etc/meilisearch.toml
+# (deploy/meilisearch/limits.toml) bound the indexer itself.
+Nice=5
+CPUWeight=50
+IOWeight=50
+MemoryHigh=1536M
 # Hardening: Meili only needs its db path and the loopback socket.
 NoNewPrivileges=true
 ProtectSystem=full

@@ -38,6 +38,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Sentry\Laravel\Integration;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -238,6 +239,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Reports unhandled exceptions to Sentry. Without SENTRY_LARAVEL_DSN
+        // the SDK has no transport and this does nothing.
+        Integration::handles($exceptions);
+
         // Secret integration inputs must never be flashed back into the session on a validation error.
         $exceptions->dontFlash(array_map(
             fn (IntegrationSetting $setting): string => 'integrations.' . $setting->value,

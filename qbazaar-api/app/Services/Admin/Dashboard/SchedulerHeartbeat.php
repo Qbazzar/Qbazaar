@@ -33,4 +33,9 @@ class SchedulerHeartbeat
 
         return $timestamp === null ? null : CarbonImmutable::createFromTimestamp((int) $timestamp);
     }
+
+    public function isFresh(CarbonImmutable $lastRun, CarbonImmutable $now): bool
+    {
+        return $lastRun->diffInSeconds($now, true) <= self::STALE_AFTER_SECONDS;
+    }
 }

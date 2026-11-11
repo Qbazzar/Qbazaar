@@ -27,7 +27,7 @@ The system was scoped as **classifieds** (contact and meet up, no payments). The
    - Everything goes through a `PaymentGateway` interface (only `CashGateway` today), so an electronic gateway can be added later without changing the system. **Stripe is excluded.**
 3. **The web is reskinned on the new design.** It keeps its structure and its connection to the API, and uses `Qbazaar-front` as the pixel reference.
 4. **Admin:** we build on the existing `/admin` panel. No Filament and no new design.
-5. **Deployment:** native on the new cPanel VPS (`srv1977263.hstgr.cloud`), no Docker. We use the runbook in `deploy/`.
+5. **Deployment:** native on the new cPanel VPS (`<server-hostname>`), no Docker. We use the runbook in `deploy/`.
 6. **Domain:** not decided yet. We work on the server name, and the domain must be settled before the M5 milestone ends.
 7. **Contract first:** every new endpoint goes into OpenAPI v1.1 before it's implemented.
 8. **Business limits are admin settings (owner decision 2026-09-30):** the commission debt ceiling, the settlement deadline and the number of days before expiry that an ad owner is warned are edited by the admin in the `/admin` settings (AD-17.9), not hard-coded. The config values are only the defaults; the expiry warning defaults to **3 days**.

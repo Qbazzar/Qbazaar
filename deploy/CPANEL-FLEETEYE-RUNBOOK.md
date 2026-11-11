@@ -1,6 +1,6 @@
 # QBazaar — نشر الباك + الفرونت على cPanel VPS (fleeteye.de)
 
-> **Status (2026-10-05): retired.** This server is down and has been replaced by `srv1977263`; its setup is in [NEW-SERVER-RUNBOOK.md](NEW-SERVER-RUNBOOK.md). Kept for reference only.
+> **Status (2026-10-05): retired.** This server is down and has been replaced by `<server-hostname>`; its setup is in [NEW-SERVER-RUNBOOK.md](NEW-SERVER-RUNBOOK.md). Kept for reference only.
 
 > خطة/runbook لنشر **الـ API و الفرونت على نفس السيرفر** (WHM/cPanel، root)،
 > الاثنين من **GitHub Actions**. القرارات المعتمدة:
