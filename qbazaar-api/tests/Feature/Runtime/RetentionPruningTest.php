@@ -115,3 +115,22 @@ it('schedules every retention task', function (string $name, string $command): v
     ['auth.clear-password-resets', 'auth:clear-resets'],
     ['horizon.snapshot', 'horizon:snapshot'],
 ]);
+
+it('never compiles a boolean option into a flag with a value', function (): void {
+    Artisan::call('schedule:list');
+
+    $commands = collect(app(Schedule::class)->events())->pluck('command');
+
+    // Symfony rejects `--force='1'` for flag options, which broke the nightly activity log clean.
+    expect($commands)->not->toBeEmpty()
+        ->and($commands->filter(fn (?string $command): bool => preg_match("/--[\w-]+='?1'?(\s|$)/", (string) $command) === 1)->all())->toBe([]);
+});
+
+it('schedules the activity log clean with a bare force flag', function (): void {
+    Artisan::call('schedule:list');
+
+    $event = collect(app(Schedule::class)->events())
+        ->first(fn ($event): bool => $event->description === 'retention.clean-activity-log');
+
+    expect($event?->command)->toEndWith('activitylog:clean --force');
+});
