@@ -1,6 +1,6 @@
 # M5 launch runbook: server readiness (OPS-18.5, 18.7–18.9, 18.11–18.18)
 
-Everything here is prepared in the repo and **applied by hand by the owner**, one step at a time, on the production box (`srv1977263`, AlmaLinux 9, cPanel, ea-php84 FPM, MariaDB 10.11, Redis 7, Meilisearch 1.12.8, Horizon, Reverb, Next.js behind Apache, Cloudflare in front, media on R2). Nothing in this file has been run on the server.
+Everything here is prepared in the repo and **applied by hand by the owner**, one step at a time, on the production box (`<server-hostname>`, AlmaLinux 9, cPanel, ea-php84 FPM, MariaDB 10.11, Redis 7, Meilisearch 1.12.8, Horizon, Reverb, Next.js behind Apache, Cloudflare in front, media on R2). Nothing in this file has been run on the server.
 
 Reference for every file named here: [deploy/README.md → Server tuning and operations (M5)](../deploy/README.md#server-tuning-and-operations-m5). Conventions: `root#` runs as root; `qbazaar$` runs as `qbazaar` in `~/qbazaar/qbazaar-api`. Load the host names first: `source ~qbazaar/.qbazaar-deploy.env`.
 
@@ -20,7 +20,7 @@ Merging and deploying `production` changes only application code; every server f
 
 - [ ] Root SSH works, **and** the Hostinger browser console (VNC) works: steps 5, 6 and 13 restart services, and the console is the way back in if SSH ever breaks.
 - [ ] A fresh dump exists (see [DEPLOY-CHECKLIST.md §1](../deploy/DEPLOY-CHECKLIST.md#1-pre-flight)), until step 9 makes backups automatic.
-- [ ] Swap: `swapon --show` lists one. If not: `fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab`. The memory budget leaves no room for the deploy's builds otherwise.
+- [ ] Swap: `swapon --show` lists one. If not: `fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab`. The memory budget is tight (deploy/README.md) and the deploy's builds only fit with swap. Expected output of `swapon --show`: a line like `/swapfile file 2G 0B -2`. **Do not go on until it shows.**
 - [ ] The clone is on the merged `production`: `git -C ~qbazaar/qbazaar log -1 --oneline`.
 - [ ] Root runs scripts from the `qbazaar` user's clone (as `render-env.sh` already does). Read `git log -p -3 -- deploy/` first: anything that account could change runs as root.
 
@@ -76,9 +76,10 @@ Keep a copy of `APP_KEY` (`/root/qbazaar-secrets/app_key`) and of the rclone cry
 
 ```bash
 root# systemctl cat ea-php84-php-fpm | grep -i ExecReload        # must exist: reload is a graceful USR2
+root# diff /etc/sudoers.d/qbazaar-deploy ~qbazaar/qbazaar/deploy/sudoers/qbazaar-deploy    # read what differs first
 root# cp -p /etc/sudoers.d/qbazaar-deploy /root/qbazaar-deploy.sudoers.bak
-root# visudo -cf ~qbazaar/qbazaar/deploy/sudoers/qbazaar-deploy && \
-      install -m 440 -o root -g root ~qbazaar/qbazaar/deploy/sudoers/qbazaar-deploy /etc/sudoers.d/qbazaar-deploy
+root# install -m 440 -o root -g root ~qbazaar/qbazaar/deploy/sudoers/qbazaar-deploy /root/qbazaar-deploy.sudoers.new
+root# visudo -cf /root/qbazaar-deploy.sudoers.new &&       install -m 440 -o root -g root /root/qbazaar-deploy.sudoers.new /etc/sudoers.d/qbazaar-deploy
 root# sudo -l -U qbazaar          # lists the three restarts and the reload
 ```
 
@@ -109,7 +110,7 @@ root# /scripts/restartsrv_apache_php_fpm
 root# grep -E '^(pm|request_|slowlog|php_admin)' /opt/cpanel/ea-php84/root/etc/php-fpm.d/$API_HOST.conf
 ```
 
-**Check:** the pool file shows `pm = dynamic`, `pm.max_children = 16`, `pm.max_requests = 1000`, `request_terminate_timeout = 120s`, `request_slowlog_timeout = 5s` and the slowlog path. If a directive is missing or misspelled, set it in WHM → MultiPHP Manager → PHP-FPM settings for the domain instead and tell the repo. The site and `/admin` answer. A day later: `bash ~qbazaar/qbazaar/deploy/scripts/fpm-pool-size.sh` and adjust `pm_max_children`.
+**Check:** the pool file shows `pm = dynamic`, `pm.max_children = 12`, `pm.max_requests = 1000`, `request_terminate_timeout = 120s`, `request_slowlog_timeout = 5s` and the slowlog path. If a directive is missing or misspelled, set it in WHM → MultiPHP Manager → PHP-FPM settings for the domain instead and tell the repo. The site and `/admin` answer. A day later: `bash ~qbazaar/qbazaar/deploy/scripts/fpm-pool-size.sh` and adjust `pm_max_children`.
 **Rollback:** restore the `.bak` (or delete the file to return to cPanel's defaults), rebuild, restart as above.
 
 ## 5. Two Redis roles (OPS-18.12)
@@ -127,6 +128,13 @@ root# REDISCLI_AUTH=$RPASS redis-cli config set appendfsync everysec
 ```
 
 The include must come after the existing `include /etc/redis/qbazaar.conf` (it does, when appended). No restart is needed now; the next restart reads the AOF.
+
+Also set `vm.overcommit_memory=1`, because the AOF rewrite forks and the default can refuse it on a busy box:
+
+```bash
+root# echo 'vm.overcommit_memory = 1' > /etc/sysctl.d/90-qbazaar-redis.conf && sysctl --system | grep overcommit
+vm.overcommit_memory = 1
+```
 
 **5b. Cache Redis on 6380.**
 
@@ -160,7 +168,7 @@ root# systemctl restart qbazaar-scheduler qbazaar-reverb       # chat reconnects
 root# mysql -NBe "SELECT @@innodb_buffer_pool_size, @@max_connections, @@slow_query_log, @@long_query_time" | tee /root/mariadb-before.txt
 root# install -m 644 ~qbazaar/qbazaar/deploy/mariadb/zz-qbazaar.cnf /etc/my.cnf.d/zz-qbazaar.cnf
 root# my_print_defaults --mysqld | tail -25          # our values last
-root# mysql -e "SET GLOBAL innodb_buffer_pool_size = 1536*1024*1024; SET GLOBAL max_connections = 150;
+root# mysql -e "SET GLOBAL innodb_buffer_pool_size = 1280*1024*1024; SET GLOBAL max_connections = 150;
                 SET GLOBAL thread_cache_size = 32; SET GLOBAL table_open_cache = 2000; SET GLOBAL table_definition_cache = 1400;
                 SET GLOBAL tmp_table_size = 64*1024*1024; SET GLOBAL max_heap_table_size = 64*1024*1024;
                 SET GLOBAL innodb_io_capacity = 1000; SET GLOBAL innodb_io_capacity_max = 2000;
@@ -282,7 +290,7 @@ root# diff <(grep -o "ipmatch '[^']*'" /etc/apache2/conf.d/userdata/ssl/2_4/qbaz
 **Rollback:** delete the new files (keep the API one if you want the old state), `/scripts/ensure_vhost_includes --user=qbazaar`, `apachectl configtest && systemctl reload httpd`.
 **Risk:** while this is on, turning a record to "DNS only" (grey cloud) in Cloudflare makes that host answer 403 to everyone.
 
-**Later, optional: a host firewall.** No firewall runs today (only cPHulk). A firewall that admits 80/443 only from Cloudflare also hides the box from port scans. It is a bigger change on a cPanel box and needs the console at hand:
+**Recommended, right after step 13: a host firewall.** No firewall runs today (only cPHulk). The server's real IP address is in this repo's git history from before it was replaced by placeholders, so assume it is known: only a firewall that admits 80/443 solely from Cloudflare, and restricts SSH, WHM (2087) and cPanel (2083), actually closes that door. It is a bigger change on a cPanel box and needs the console at hand:
 
 1. `dnf install -y firewalld && systemctl enable --now firewalld`, then `/scripts/configure_firewall_for_cpanel` so SSH (22), WHM (2087), cPanel (2083) and mail stay open.
 2. Two ipsets `cloudflare4`/`cloudflare6` filled from `https://www.cloudflare.com/ips-v4` and `ips-v6`; rich rules accepting 80/443 from them; remove the `http`/`https` services from the public zone. Try it with runtime rules first (no `--permanent`): `firewall-cmd --reload` undoes them if something breaks.

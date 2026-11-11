@@ -63,7 +63,8 @@ ping_heartbeat() {
     local url="$1" suffix="${2:-}"
     [[ -n "$url" ]] || return 0
     [[ -n "$suffix" ]] && url="${url%/}/$suffix"
-    curl -fsS -m 10 --retry 3 -o /dev/null "$url" || log "WARN: heartbeat ping failed: ${url%%\?*}"
+    # The URL is never logged: the check's secret is part of its path.
+    curl -fsS -m 10 --retry 3 -o /dev/null "$url" 2> /dev/null || log "WARN: heartbeat ping failed"
 }
 
 # The rclone remote name of a path such as `offsite:qbazaar/db`.

@@ -132,7 +132,10 @@ copy_offsite() {
     config="$(offsite_path config)"
     log "copying to $OFFSITE"
     rclone copyto "$DUMP_FILE" "$daily/$(basename "$DUMP_FILE")"
-    if ! rclone lsf "$monthly" 2> /dev/null | grep -q -- "-${TODAY:0:7}-"; then
+    # Listed first: `grep -q` closing the pipe early would fail rclone under pipefail.
+    local monthly_listing
+    monthly_listing="$(rclone lsf "$monthly" 2> /dev/null || true)"
+    if ! grep -q -- "-${TODAY:0:7}-" <<< "$monthly_listing"; then
         rclone copyto "$DUMP_FILE" "$monthly/$(basename "$DUMP_FILE")"
     fi
     rclone copyto "$CONFIG_FILE" "$config/$(basename "$CONFIG_FILE")"

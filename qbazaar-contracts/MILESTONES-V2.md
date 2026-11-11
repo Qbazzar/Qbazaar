@@ -420,7 +420,7 @@
 
 ## Sprint 18 — M5 Deployment on the new server
 
-**Goal:** the whole system (API, web, workers, search, WebSocket) running natively on the new cPanel VPS (`srv1977263.hstgr.cloud`, no Docker) behind Cloudflare, deployed from GitHub Actions. Production runs there since 2026-10-05 under temporary sslip.io hosts ([`deploy/NEW-SERVER-RUNBOOK.md`](../deploy/NEW-SERVER-RUNBOOK.md)); the old `fleeteye` server is retired.
+**Goal:** the whole system (API, web, workers, search, WebSocket) running natively on the new cPanel VPS (`<server-hostname>`, no Docker) behind Cloudflare, deployed from GitHub Actions. Production runs there since 2026-10-05 under temporary sslip.io hosts ([`deploy/NEW-SERVER-RUNBOOK.md`](../deploy/NEW-SERVER-RUNBOOK.md)); the old `fleeteye` server is retired.
 
 **Entry:** M1–M4 feature-complete. The domain must be decided before OPS-18.9 (V2-PLAN §2.6); `.qa` domains are bought from a Qatari registrar and their DNS moved to Cloudflare.
 

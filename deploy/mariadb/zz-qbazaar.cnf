@@ -16,7 +16,7 @@
 
 [mysqld]
 # The working set (ads, media, messages, users) fits; raise it with the data.
-innodb_buffer_pool_size = 1536M
+innodb_buffer_pool_size = 1280M
 innodb_log_file_size = 256M
 innodb_log_buffer_size = 16M
 # 1 = every commit is on disk. The wallet ledger and orders need that; do
@@ -27,7 +27,7 @@ innodb_flush_method = O_DIRECT
 innodb_io_capacity = 1000
 innodb_io_capacity_max = 2000
 
-# PHP-FPM 16 + Horizon up to 14 + scheduler, Reverb, cron and the admin tools.
+# PHP-FPM 12 + Horizon up to 14 + scheduler, Reverb, cron and the admin tools.
 max_connections = 150
 thread_cache_size = 32
 table_open_cache = 2000

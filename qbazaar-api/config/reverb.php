@@ -90,9 +90,9 @@ return [
                     'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
                 ],
                 // Comma-separated hosts (wildcards allowed, e.g. `qbazaar.qa,*.qbazaar.qa`).
-                // Keep `*` while the mobile app connects: a client that sends
+                // An empty value falls back to `*`. Keep `*` while the mobile app connects: a client that sends
                 // no Origin header is refused by any narrower list.
-                'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('REVERB_ALLOWED_ORIGINS', '*'))))),
+                'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('REVERB_ALLOWED_ORIGINS', '*'))))) ?: ['*'],
                 'ping_interval' => env('REVERB_APP_PING_INTERVAL', 60),
                 'activity_timeout' => env('REVERB_APP_ACTIVITY_TIMEOUT', 30),
                 'max_connections' => env('REVERB_APP_MAX_CONNECTIONS'),

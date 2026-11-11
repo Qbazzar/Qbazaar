@@ -1,8 +1,8 @@
 # QBazaar — Production Deploy
 
-> **Production today (since 2026-10-06):** the Hostinger VPS `srv1977263.hstgr.cloud` in Mumbai (`187.126.119.228`, AlmaLinux 9), cPanel user `qbazaar`, repo clone at `/home/qbazaar/qbazaar`.
+> **Production today (since 2026-10-06):** the Hostinger VPS `<server-hostname>` in Mumbai (`<SERVER_IPV4>`, AlmaLinux 9), cPanel user `qbazaar`, repo clone at `/home/qbazaar/qbazaar`. The real hostname and IPv4 addresses are not kept in this public repo: see the private ops notes or the Hostinger panel.
 > Web: `https://qbazaar.qa` (`www.` redirects to it) · API + admin: `https://api.qbazaar.qa` · WebSocket: `wss://api.qbazaar.qa/app`. DNS and the proxy are on Cloudflare; the origin has AutoSSL certificates.
-> The Kuala Lumpur box (`187.53.139.138`, sslip.io names) and the old `fleeteye` server are retired. The rest of the Cloudflare work (firewall to Cloudflare only, WAF, `cdn.`) is `OPS-18.9` in [MILESTONES-V2.md](../qbazaar-contracts/MILESTONES-V2.md).
+> The Kuala Lumpur box (`<OLD_SERVER_IPV4>`, sslip.io names) and the old `fleeteye` server are retired. The rest of the Cloudflare work (firewall to Cloudflare only, WAF, `cdn.`) is `OPS-18.9` in [MILESTONES-V2.md](../qbazaar-contracts/MILESTONES-V2.md).
 
 First-time setup of this server is in [NEW-SERVER-RUNBOOK.md](NEW-SERVER-RUNBOOK.md). [CPANEL-FLEETEYE-RUNBOOK.md](CPANEL-FLEETEYE-RUNBOOK.md) (Arabic) is the older runbook for the retired server. Promoting `main` to `production`: follow [DEPLOY-CHECKLIST.md](DEPLOY-CHECKLIST.md). This file covers the day-to-day flow.
 
@@ -229,24 +229,36 @@ The files below are applied by hand, once, in the order of [DOCS/M5-LAUNCH-RUNBO
 
 ### Memory budget
 
-The box has 7.7 GB of RAM. Every limit below comes from this split; change one and re-check the total.
+The box has 7.7 GB of RAM, and **the budget is tight**: in a typical hour about 1.6 GB stays free, but if every component hits its peak at once the sum is slightly over the RAM and only swap keeps the OOM killer away. Change one limit and re-check both columns.
 
-| Component | Budget | Set in |
-|---|---|---|
-| MariaDB (buffer pool 1.5 GB + connections) | 2.0 GB | `mariadb/zz-qbazaar.cnf` |
-| PHP-FPM, API pool (16 workers × ~80 MB) | 1.3 GB | `php/api.php-fpm.yaml` |
-| Horizon (up to 14 workers, ~80 MB each when idle) | 1.2 GB | `config/horizon.php` |
-| Meilisearch (indexing capped at 768 MiB) | 1.0 GB | `meilisearch/limits.toml` |
-| Redis: queue (typically < 100 MB, ceiling 1 GB) + cache (384 MB) | 0.5 GB | `redis/*.conf` |
-| Next.js | 0.5 GB | |
-| OPcache shared memory | 0.3 GB | `php/zz-qbazaar-opcache.ini` |
-| Reverb, Apache, cPanel, the OS | 0.9 GB | |
+| Component | Typical | Peak | Set in |
+|---|---|---|---|
+| MariaDB (buffer pool 1.25 GB + per-connection buffers, 150 connections allowed) | 1.7 GB | 1.8 GB | `mariadb/zz-qbazaar.cnf` |
+| PHP-FPM, API pool (12 workers × 75-100 MB) | 0.9 GB | 1.2 GB | `php/api.php-fpm.yaml` |
+| Horizon (up to 14 workers; ~80 MB idle, ~100 MB busy) | 1.1 GB | 1.4 GB | `config/horizon.php` |
+| Meilisearch (indexing capped at 768 MiB) | 0.6 GB | 1.0 GB | `meilisearch/limits.toml` |
+| Redis: queue (typically < 100 MB, ceiling 1 GB; an AOF rewrite forks) + cache (384 MB) | 0.2 GB | 0.7 GB | `redis/*.conf` |
+| Next.js | 0.4 GB | 0.5 GB | |
+| OPcache shared memory | 0.3 GB | 0.3 GB | `php/zz-qbazaar-opcache.ini` |
+| Reverb, Apache, cPanel, the OS and page cache | 0.9 GB | 0.9 GB | |
+| **Total** | **6.1 GB** | **7.8 GB** | |
+| **Headroom against 7.7 GB** | **1.6 GB** | **-0.1 GB (swap)** | |
 
-A deploy also runs `vite build` and `next build` (up to 1.5 GB heap each, one after the other). Keep a 2 GB swap file so that peak never meets the OOM killer: `swapon --show` must list one.
+The peak column assumes a full queue backlog, a Meilisearch re-index and a busy API at the same moment, which is rare but is exactly what a launch day can do. If `free -m` shows less than 0.5 GB available for long, lower `pm_max_children` (12 now; 16 only after `scripts/fpm-pool-size.sh` shows the real worker size) or the buffer pool before anything else.
+
+A deploy also runs `vite build` and `next build` (up to 1.5 GB heap each, one after the other), and that is on top of the typical column. The 2 GB swap file is therefore a prerequisite, not an option. Check it before step 1:
+
+```bash
+root# swapon --show
+NAME      TYPE SIZE USED PRIO
+/swapfile file   2G   0B   -2
+```
+
+If the list is empty, create it with the command in the runbook's "Before you start".
 
 ### PHP-FPM and OPcache
 
-cPanel's default pool (`pm = ondemand`, `max_children = 5`, `max_requests = 20`) lets five slow requests block the whole API and restarts every worker after 20 requests. [`php/api.php-fpm.yaml`](php/api.php-fpm.yaml) sets a `dynamic` pool of 16 workers that live for 1000 requests, a 120 s hard limit (an upload batch streams through its worker), and a slowlog of every request over 5 s in `/opt/cpanel/ea-php84/root/usr/var/log/php-fpm/api-slow.log`. After a day of real traffic, run `scripts/fpm-pool-size.sh` as root: it measures the workers and suggests `pm_max_children` for the budget.
+cPanel's default pool (`pm = ondemand`, `max_children = 5`, `max_requests = 20`) lets five slow requests block the whole API and restarts every worker after 20 requests. [`php/api.php-fpm.yaml`](php/api.php-fpm.yaml) sets a `dynamic` pool of 12 workers (raise it once `scripts/fpm-pool-size.sh` has real numbers) that live for 1000 requests, a 120 s hard limit (an upload batch streams through its worker), and a slowlog of every request over 5 s in `/opt/cpanel/ea-php84/root/usr/var/log/php-fpm/api-slow.log`. After a day of real traffic, run `scripts/fpm-pool-size.sh` as root: it measures the workers and suggests `pm_max_children` for the budget.
 
 [`php/zz-qbazaar-opcache.ini`](php/zz-qbazaar-opcache.ini) gives OPcache room for the ~17k PHP files, a 4 MB realpath cache, and turns off `opcache.validate_timestamps`: PHP stops checking files for changes, so **new code only runs after PHP-FPM reloads**. `deploy-api.sh` reloads it after rebuilding the caches; when the reload fails while `validate_timestamps=0`, the deploy fails rather than leave the previous release running. Anything done by hand outside a deploy (`config:cache` after an `.env` change, a hot fix) needs the same: `systemctl reload ea-php84-php-fpm` as root. Install the sudoers drop-in before the ini, never the other way round.
 
@@ -259,13 +271,15 @@ Until now one Redis held the queues and the cache, with `noeviction`: when cache
 | queue (`redis.service`, [`redis/queue.conf`](redis/queue.conf)) | 6379 | `noeviction`, AOF every second | queued jobs, Horizon, admin sessions, cache locks (`lock_connection = default`), the ad-view buffer |
 | cache (`redis-cache.service`, [`redis/cache.conf`](redis/cache.conf)) | 6380 | `allkeys-lru`, 384 MB, no persistence | Laravel's cache store only: home feed, counters, rate limits, settings |
 
+Both instances fork to rewrite the AOF or save a snapshot. With the kernel default `vm.overcommit_memory=0` that fork can fail on a busy box (`Can't save in background: fork: Cannot allocate memory`), so set `vm.overcommit_memory=1` (`echo 'vm.overcommit_memory = 1' > /etc/sysctl.d/90-qbazaar-redis.conf && sysctl --system`; check with `sysctl vm.overcommit_memory`). The forked copy is copy-on-write, so it is cheap in practice, but it is why the Redis row of the memory budget has a higher peak.
+
 Laravel reaches the cache instance through `REDIS_CACHE_HOST`, `REDIS_CACHE_PORT` and `REDIS_CACHE_PASSWORD` (`config/database.php`; each falls back to the shared `REDIS_*` value). `render-env.sh` writes them once `REDIS_CACHE_PORT=6380` is in `~qbazaar/.qbazaar-deploy.env` and the password is in `/root/qbazaar-secrets/redis_cache_password`. A restart of the cache instance empties it; the catalog warmer refills the home feed within two minutes and rate-limit counters start again from zero.
 
 The PHP client is phpredis (the `redis` extension of ea-php84, already on the server: `render-env.sh` writes `REDIS_CLIENT=phpredis`, and the template now says the same). If a rebuilt server lacks it, install it first (WHM → Module Installers → PHP PECL for ea-php84, or `/opt/cpanel/ea-php84/root/usr/bin/pecl install redis`), then run `render-env.sh`. `predis/predis` stays in `composer.json` only for machines without the extension. Check: `php -m | grep -x redis` and `php artisan tinker --execute="echo get_class(Redis::connection()->client());"` prints `Redis`.
 
 ### MariaDB
 
-[`mariadb/zz-qbazaar.cnf`](mariadb/zz-qbazaar.cnf) sizes InnoDB for the budget above, keeps `innodb_flush_log_at_trx_commit = 1` (the wallet ledger needs every commit on disk), allows 150 connections (16 FPM + 14 Horizon + the rest) and logs every query slower than 0.5 s to `/var/lib/mysql/qbazaar-slow.log`. Every Monday `scripts/mysql-slow-digest.sh` rotates that log and summarises it with `pt-query-digest` (percona-toolkit, from Percona's repository) or, without it, `mariadb-dumpslow`. Reports stay in `/var/log/qbazaar/slow-digest/` (root only, 12 weeks); with `DIGEST_MAILTO` set, a summary of query shapes (no literal values) is mailed. Review the top five by total time each week; the PHP side of a slow request is in the FPM slowlog.
+[`mariadb/zz-qbazaar.cnf`](mariadb/zz-qbazaar.cnf) sizes InnoDB for the budget above, keeps `innodb_flush_log_at_trx_commit = 1` (the wallet ledger needs every commit on disk), allows 150 connections (12 FPM + 14 Horizon + the rest) and logs every query slower than 0.5 s to `/var/lib/mysql/qbazaar-slow.log`. Every Monday `scripts/mysql-slow-digest.sh` rotates that log and summarises it with `pt-query-digest` (percona-toolkit, from Percona's repository) or, without it, `mariadb-dumpslow`. Reports stay in `/var/log/qbazaar/slow-digest/` (root only, 12 weeks); with `DIGEST_MAILTO` set, a summary of query shapes (no literal values) is mailed. Review the top five by total time each week; the PHP side of a slow request is in the FPM slowlog.
 
 ### Reverb capacity
 
@@ -329,7 +343,7 @@ Off-site copies go through rclone to a **`crypt`** remote (the script refuses an
 ## Manual deploy (if Actions is down)
 
 ```bash
-ssh qbazaar@187.126.119.228 "cd ~/qbazaar && bash deploy/scripts/deploy-api.sh"   # or deploy-web.sh
+ssh qbazaar@<SERVER_IPV4> "cd ~/qbazaar && bash deploy/scripts/deploy-api.sh"   # or deploy-web.sh
 ```
 
 The scripts fetch and reset to `origin/production` themselves.

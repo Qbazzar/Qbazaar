@@ -14,8 +14,8 @@ export const BASE_URL = __ENV.BASE_URL.replace(/\/+$/, '');
 
 // A load test against production would page the owner and skew real users'
 // latency. It needs an explicit, deliberate override. (k6 has no URL class.)
-const HOST = BASE_URL.replace(/^[a-z]+:\/\//i, '').split(/[/:]/)[0];
-if (/^(www\.|api\.)?qbazaar\.qa$/i.test(HOST) && __ENV.ALLOW_PRODUCTION !== '1') {
+const HOST = BASE_URL.replace(/^[a-z]+:\/\//i, '').replace(/^[^/@]*@/, '').split(/[/:?#]/)[0];
+if (/(^|\.)qbazaar\.qa\.?$/i.test(HOST) && __ENV.ALLOW_PRODUCTION !== '1') {
   throw new Error(`${BASE_URL} looks like production; point BASE_URL at staging (or set ALLOW_PRODUCTION=1 on purpose).`);
 }
 

@@ -34,7 +34,7 @@ class ReadinessProbe
 
     private const string CACHE_PROBE_KEY = 'health:ready:probe';
 
-    private const int HTTP_TIMEOUT_SECONDS = 2;
+    private const int HTTP_TIMEOUT_SECONDS = 1;
 
     private const int HTTP_CONNECT_TIMEOUT_SECONDS = 1;
 

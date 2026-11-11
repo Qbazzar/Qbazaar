@@ -12,7 +12,7 @@ The order to apply them, with rollback for each step, is in [DOCS/M5-LAUNCH-RUNB
 
 ## Plan limits
 
-The rules are written to fit the **Free** plan; the ones marked "Pro" in `rules.json` are disabled until the plan allows them.
+The rules are written to fit the **Free** plan; the Pro-only rules live apart in the `pro_only` section of `rules.json`, which the `jq` commands below never read, so the Free-plan `PUT` body stays valid.
 
 | | Free | Pro |
 |---|---|---|
@@ -38,9 +38,9 @@ Also on this page:
 
 ### Rate limiting rule (*Security → WAF → Rate limiting rules*)
 
-Free allows one rule, so it guards the endpoints whose abuse costs money: `/api/v1/auth/*` (sign-in, sign-up, password reset and the SMS and e-mail codes), 20 requests per 10 seconds per IP, blocked for 10 seconds. On Free the expression may only test the path (not the host or the method); that is enough here, because only the API serves `/api/v1/auth/` and every route under it but the two e-mail link checks is a `POST`. Laravel's own limits (`throttle:auth`, `throttle:otp`, per account and per IP) stay the precise layer; this one only stops floods before they reach PHP. Mobile carriers in Qatar put many users behind one address (CGNAT), so the edge threshold is deliberately loose.
+Free allows one rule, so it guards the endpoints whose abuse costs money: `/api/v1/auth/*` (sign-in, sign-up, password reset and the SMS and e-mail codes), 40 requests per 10 seconds per IP, blocked for 10 seconds. On Free the expression may only test the path (not the host or the method); that is enough here, because only the API serves `/api/v1/auth/` and every route under it but the two e-mail link checks is a `POST`. Laravel's own limits (`throttle:auth`, `throttle:otp`, per account and per IP) stay the precise layer; this one only stops floods before they reach PHP. Mobile carriers in Qatar put many users behind one address (CGNAT), so the edge threshold is deliberately loose. On launch day set the rule's action to *Log* first and look at the *Security events* for a day before switching it to *Block*; a threshold that hits real users is worse than none.
 
-With Pro, enable the second rule: search and image uploads, 100 requests per minute per IP.
+With Pro, take the rule from the `pro_only.http_ratelimit` section of `rules.json`, add it to the `http_ratelimit` array (a `PUT` replaces the whole phase, so send both rules together) and enable it: search and image uploads, 100 requests per minute per IP.
 
 ### Cache rules (*Caching → Cache Rules*)
 

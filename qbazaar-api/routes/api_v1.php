@@ -77,6 +77,7 @@ use App\Http\Controllers\Api\V1\Wallet\WithdrawalController;
 use App\Http\Middleware\ApiResponseWrapper;
 use App\Http\Middleware\EnsureApiDocsEnabled;
 use App\Http\Middleware\EnsurePasswordLoginEnabled;
+use App\Http\Middleware\ThrottleHealthProbe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
@@ -117,9 +118,10 @@ Route::get('/health', function (): JsonResponse {
 
 // Dependency checks for uptime monitors: 200 ok/degraded, 503 down
 // (deploy/README.md "Health checks and alerts"). Its own bare body, so the
-// envelope wrapper is skipped.
+// envelope wrapper is skipped. The throttle fails open: a dead cache must
+// still reach the controller to be reported as 503.
 Route::get('/health/ready', ReadinessController::class)
-    ->middleware('throttle:api')
+    ->middleware(ThrottleHealthProbe::class)
     ->withoutMiddleware(ApiResponseWrapper::class)
     ->name('api.v1.health.ready');
 

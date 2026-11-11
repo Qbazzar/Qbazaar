@@ -24,30 +24,36 @@
 
   "http_ratelimit": [
     {
-      "description": "Sign-in, sign-up and code endpoints: 20 requests per 10 s per IP (each OTP send costs an SMS). Free plan: the expression may only use the path",
+      "description": "Sign-in, sign-up and code endpoints: 40 requests per 10 s per IP (each OTP send costs an SMS; Qatari carriers put many phones behind one CGNAT address, so the limit is generous). Free plan: the expression may only use the path",
       "expression": "(starts_with(http.request.uri.path, \"/api/v1/auth/\"))",
       "action": "block",
       "ratelimit": {
         "characteristics": ["cf.colo.id", "ip.src"],
         "period": 10,
-        "requests_per_period": 20,
+        "requests_per_period": 40,
         "mitigation_timeout": 10
       },
       "enabled": true
-    },
-    {
-      "description": "Pro plan and up: search and image uploads, 100 requests per 60 s per IP (Pro has host and path, not the method; /images only takes POST)",
-      "expression": "(http.host eq \"api.qbazaar.qa\" and (starts_with(http.request.uri.path, \"/api/v1/search\") or (starts_with(http.request.uri.path, \"/api/v1/ads/\") and ends_with(http.request.uri.path, \"/images\"))))",
-      "action": "block",
-      "ratelimit": {
-        "characteristics": ["cf.colo.id", "ip.src"],
-        "period": 60,
-        "requests_per_period": 100,
-        "mitigation_timeout": 60
-      },
-      "enabled": false
     }
   ],
+
+  "pro_only": {
+    "_comment": "NOT part of the Free-plan PUT: these rules use fields (http.host, ends_with) that the Free plan rejects. Never send this section to a Free zone. On Pro, append the rule to the http_ratelimit array (a PUT replaces the whole phase) and enable it.",
+    "http_ratelimit": [
+      {
+        "description": "Pro plan and up: search and image uploads, 100 requests per 60 s per IP (Pro has host and path, not the method; /images only takes POST)",
+        "expression": "(http.host eq \"api.qbazaar.qa\" and (starts_with(http.request.uri.path, \"/api/v1/search\") or (starts_with(http.request.uri.path, \"/api/v1/ads/\") and ends_with(http.request.uri.path, \"/images\"))))",
+        "action": "block",
+        "ratelimit": {
+          "characteristics": ["cf.colo.id", "ip.src"],
+          "period": 60,
+          "requests_per_period": 100,
+          "mitigation_timeout": 60
+        },
+        "enabled": false
+      }
+    ]
+  },
 
   "http_request_cache_settings": [
     {

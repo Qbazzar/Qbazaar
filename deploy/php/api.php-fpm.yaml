@@ -22,8 +22,8 @@
 ---
 _is_present: 1
 pm: dynamic
-# About 80 MB RSS per worker (shared OPcache excluded): 16 x 80 MB = 1.3 GB.
-pm_max_children: 16
+# About 80 MB RSS per worker (shared OPcache excluded): 12 x 80 MB = 1 GB; raise after scripts/fpm-pool-size.sh.
+pm_max_children: 12
 pm_start_servers: 4
 pm_min_spare_servers: 4
 pm_max_spare_servers: 8

@@ -2,7 +2,7 @@
 
 Run this when you promote `main` to `production`. Day-to-day flow and reference: [README.md](README.md). First-time server setup: [NEW-SERVER-RUNBOOK.md](NEW-SERVER-RUNBOOK.md).
 
-Server: Hostinger VPS `srv1977263` (AlmaLinux 9, cPanel), cPanel user `qbazaar`, clone at `/home/qbazaar/qbazaar`, PHP `ea-php84`, MariaDB 10.11, Meilisearch 1.12.8, Redis 7. The hosts are `API_HOST` and `WEB_HOST` in `~qbazaar/.qbazaar-deploy.env` (today `api.qbazaar.187-53-139-138.sslip.io` and `qbazaar.187-53-139-138.sslip.io`, until the real domain).
+Server: Hostinger VPS `<server-hostname>` (AlmaLinux 9, cPanel), cPanel user `qbazaar`, clone at `/home/qbazaar/qbazaar`, PHP `ea-php84`, MariaDB 10.11, Meilisearch 1.12.8, Redis 7. The hosts are `API_HOST` and `WEB_HOST` in `~qbazaar/.qbazaar-deploy.env` (today `api.qbazaar.187-53-139-138.sslip.io` and `qbazaar.187-53-139-138.sslip.io`, until the real domain).
 
 - `qbazaar$` means run it as `qbazaar` in `~/qbazaar/qbazaar-api`.
 - `root#` means run it as root.
@@ -89,7 +89,7 @@ If the SSH session dies, `migrate` stops half-way, so use `tmux`.
 ```bash
 gh workflow disable deploy-api.yml && gh workflow disable deploy-web.yml   # so the push does not also deploy
 git switch production && git merge --ff-only origin/main && git push origin production
-ssh qbazaar@187.53.139.138
+ssh qbazaar@<OLD_SERVER_IPV4>
 tmux new -s deploy
 cd ~/qbazaar && bash deploy/scripts/deploy-api.sh && bash deploy/scripts/deploy-web.sh
 # afterwards, from your machine:

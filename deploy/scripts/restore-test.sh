@@ -79,13 +79,21 @@ check_dump() {
     fi
 }
 
+# mysqldump --events writes the events in their own section. They would run
+# on this server's event scheduler against the scratch copy (sending mail,
+# purging rows), so that section is cut out before loading.
+strip_events() {
+    awk '/^-- Dumping events for database/ { skip = 1 } /^-- Dumping routines for database|^-- Dump completed/ { skip = 0 } !skip'
+}
+
 load_dump() {
     local dump="$1"
     log "loading $dump into $RESTORE_DB"
     sql "CREATE DATABASE \`$RESTORE_DB\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
     CREATED_DB=1
     local started=$SECONDS
-    zcat "$dump" | nice -n 10 "$MYSQL" "${MYSQL_OPTS[@]}" "$RESTORE_DB"
+    zcat "$dump" | strip_events | nice -n 10 "$MYSQL" "${MYSQL_OPTS[@]}" "$RESTORE_DB"
+    [[ "$(sql "SELECT COUNT(*) FROM information_schema.events WHERE event_schema = '$RESTORE_DB'")" == 0 ]]         || die "the scratch copy holds events; they would run on the live scheduler"
     log "loaded in $((SECONDS - started)) s"
 }
 
