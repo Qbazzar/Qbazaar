@@ -1,6 +1,6 @@
 # QBazaar V2: milestones and tasks
 
-> **Updated:** 2026-10-19 · **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Roadmap:** [`ROADMAP.md`](ROADMAP.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md) · **Mobile gaps:** [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
+> **Updated:** 2026-11-11 · **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Roadmap:** [`ROADMAP.md`](ROADMAP.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md) · **Mobile gaps:** [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
 > The MVP (Sprints 0–12) is archived in [`MILESTONES.md`](MILESTONES.md).
 
 ## How to read this file
@@ -22,16 +22,16 @@
 
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
-| M0 Preparation and alignment | 13 | 25 | 18 | 7 | Audit fixes merged (#147–#153); mobile, contract and ops items left |
-| M1 Closing the backend gaps | 14 | 75 | 73 | 2 | Performance batch merged (#199–#203); R2 storage live; left: new-device SMS, Google/Apple (waiting for credentials) |
-| M1b Orders and payments | 14 | 10 | 10 | 0 | Backend done: ledger, orders, checkout, settlements, withdrawals, disputes, promotions, notifications (#207–#212); demo data in progress |
-| M2 Connecting the mobile app | 15 | 15 | 4 | 11 | API layer, session, repository switch and catalog on the real API are in (Qbazaar-mobile #24); next: login, chat, push, selling, orders |
-| M3 Web on the new design | 16 | 18 | 15 | 3 | Every page is on the new design, orders included (#218, #221–#227); design parity phases 1 and 2 merged (#237–#242, #254, #256, #257, #263, #265, #266, #269); left: copy pass and shared components merged (#274–#276); left: a full gate re-run (in progress), performance part 2, Lighthouse and axe reports (FE-16.7) |
+| M0 Preparation and alignment | 13 | 25 | 20 | 5 | Audit fixes merged (#147–#153); OpenAPI v1.1 and the reviews endpoints merged (#290); mobile and ops items left |
+| M1 Closing the backend gaps | 14 | 75 | 73 | 2 | Performance batch merged (#199–#203); R2 storage live; left: new-device SMS and Google/Apple, both built and waiting for provider credentials |
+| M1b Orders and payments | 14 | 10 | 10 | 0 | Backend done: ledger, orders, checkout, settlements, withdrawals, disputes, promotions, notifications (#207–#212); demo data now follows the original design (#287, run on production on 2026-11-11) |
+| M2 Connecting the mobile app | 15 | 15 | 4 | 11 | API layer, session, repository switch and catalog on the real API are in (Qbazaar-mobile #24); passwordless sign-in, new-device SMS and Turnstile merged (Qbazaar-mobile #26, MB-15.5 and MB-15.14 stay open until Google/Apple and a device check); next: chat, push, selling, orders |
+| M3 Web on the new design | 16 | 18 | 15 | 3 | Every page is on the new design, orders included (#218, #221–#227); design parity phases 1 and 2 merged (#237–#242, #254, #256, #257, #263, #265, #266, #269), then phase 3: copy pass and shared components (#274–#276) and the final rounds F1 to F3 (#283–#285, #291); the gate itself was fixed (#286, #288); web performance part 2 merged (#282); left: a clean gate run on every page (FE-16.17), a measured mobile Lighthouse gain (FE-16.18) and the Lighthouse and axe reports (FE-16.7) |
 | M4 Admin additions | 17 | 26 | 26 | 0 | Every M4 task is done (#249–#280): settings, page shell, dashboard, deal panel, revenue page, companies and business verification, home sections, category tree and fields editor, moderation tools, staff inbox and queue, staff 2FA, conversation access with a reason, broadcasts and permission matrix; the gateway-dependent payments work waits for M7 |
-| M5 Deployment on the new server | 18 | 18 | 6 | 12 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; Meilisearch, Horizon and Reverb run in production, media on R2; left: backups, alerts, WAF and firewall rules, tuning, the load test |
+| M5 Deployment on the new server | 18 | 18 | 6 | 12 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; Meilisearch, Horizon and Reverb run in production, media on R2; the repo side of the rest is prepared in the open PR #292 (runbook, backup and health scripts, tuning files), but nothing in it has been applied on the server, so none of those tasks count as done; left: backups, alerts, WAF and firewall rules, tuning, the load test, real SMS and push |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **199** | **152** | **47** | |
+| **Total** | | **199** | **154** | **45** | |
 
 ---
 
@@ -66,6 +66,15 @@
 | QA-13.1 | Hermetic tests: SCOUT_DRIVER=collection + meilisearch group | [P0] | Fixes audit finding ARCH-02, F18, RT-8 (DOCS/AUDIT-2026-09-30.md) |
 | AD-17.8 | Fix admin ads bulk delete (ULID) via model delete | [P1] | Fixes audit finding ARCH-04, ADM-05 (DOCS/AUDIT-2026-09-30.md) |
 
+### Done — contract (merged 2026-11-11)
+
+> Status: ✅ done. #290 → CT-13.1, CT-13.2. The spec is v1.1.0, validates with 0 errors (it had 83), and a CI job (`contract.yml`) now lints it on every change.
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| CT-13.1 | OpenAPI v1.1: add all the new M1 endpoints and mark them `x-status: planned` | [P0] | `v1.yaml` validates; each new endpoint has a request and a response |
+| CT-13.2 | Add the missing `reviews` endpoints to OpenAPI | [P2] | They match the existing routes |
+
 ### Still open
 
 > OPS-13.8 is approved by the owner (2026-09-30) and pending: the merged branches (`fix/m0-*`, `docs/v2-plan`, the 2026-06 feature branches, `copilot/code-review-report`) are still on the remote, and `ci/monorepo-workflows` is now superseded by #153. OPS-13.2: every question in `V2-PLAN.md §4` has a decision except the domain.
@@ -76,8 +85,6 @@
 | OPS-13.2 | Settle the open questions in `V2-PLAN.md §4` with the client | [P0] | Every question has a written decision |
 | MB-13.1 | Finish the mobile design polish round (re-shoot at 390/430, fix the Transactions title at 360, merge `polish/mobile-ergonomics`) | [P0] | No text overflow or broken wrapping at 360/390/430; branch merged |
 | MB-13.2 | Unify the app's browse and sell category trees into one taxonomy that matches the backend | [P0] | One `Category` type with the same slugs as `/categories/tree` |
-| CT-13.1 | OpenAPI v1.1: add all the new M1 endpoints and mark them `x-status: planned` | [P0] | `v1.yaml` validates; each new endpoint has a request and a response |
-| CT-13.2 | Add the missing `reviews` endpoints to OpenAPI | [P2] | They match the existing routes |
 | OPS-13.8 | Branch cleanup (delete merged, merge docs/v2-plan, drop stale) | [P2] | Fixes audit finding الفروع (DOCS/AUDIT-2026-09-30.md) |
 
 ## Sprint 14 — M1 Closing the backend gaps (no payments)
@@ -200,6 +207,8 @@
 
 ### Auth (passwordless)
 
+> Both tasks are built and covered by tests; the API answers `/auth/device/verify` and `/auth/social/{provider}` (the latter returns `AUTH_015` while a provider is not configured). They stay open until real SMS and Google/Apple credentials exist and the flows are seen working.
+
 | ID | Task | Endpoint | Priority | Acceptance criteria |
 |---|---|---|---|---|
 | BE-14.12 | SMS code to the phone when logging in from a new device (device fingerprint + `challenge_token`) | `POST /auth/device/verify` | [P0] | A new device gets no tokens until the SMS code is right; a known device skips it; a `security.new_device` notification |
@@ -309,6 +318,8 @@
 
 ### Open
 
+> Qbazaar-mobile #26 (2026-11-11) built the passwordless sign-in, sign-up, new-device SMS and Turnstile screens against the real API. MB-15.5 stays open because Google/Apple sign-in is not wired (it needs the native SDKs and provider credentials the owner has postponed). MB-15.14 stays open until it is checked on a real phone with Turnstile switched on in the API.
+
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | MB-15.5 | Real login: passwordless registration, login with an email code, SMS code from a new device, Google/Apple (the password fields are removed from the screens) | [P0] | Full login journeys on a device |
@@ -369,7 +380,8 @@
 
 ### Open
 
-> FE-16.17: copy pass (#274) and shared components (#275) done; full gate re-run + re-cluster pending.
+> FE-16.17: copy pass (#274), shared components (#275), final rounds F1 to F3 (#283, #284, #285, #291) and the gate fixes (#286, #288) are merged. The last measured run on live (2026-11-10) still reported 95 findings on four pages, so the task stays open until the gate passes on every page.
+> FE-16.18: merged in #282 (SSR of the first results, LCP priority, lazy map, no prefetch storms). The local Lighthouse numbers did not show a clear mobile gain (for example category 42 → 42), so it stays open until a repeat run on an idle machine shows one.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|

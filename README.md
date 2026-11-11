@@ -13,7 +13,7 @@
 
 Swagger UI (`/docs`) is switched off in production; run the API locally or read [the OpenAPI spec](qbazaar-contracts/openapi/v1.yaml).
 
-**Status (2026-10-19):** production runs commit `cd74b2e` (being deployed on 2026-10-19; the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa). It includes the whole admin M4 batch (#276-#280).
+**Status (2026-11-11):** production runs commit `837f1d0` (the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa). It includes the whole admin M4 batch, the final design-parity rounds, web performance part 2 and the design-based demo data.
 
 Live now:
 
@@ -23,18 +23,19 @@ Live now:
   - acting from a report, mandatory sanction reasons with notifications, a staff inbox and bell, a FIFO queue with SLA and bulk actions, and offer and dispute handling;
   - staff 2FA, conversation access with a stated reason, a broadcast composer, a permission matrix editor, and follow and message stats on the dashboard;
   - payment settings (commission, debt ceiling, promotion prices) and an orders list.
-- **Web (M3):** the whole site is on the new Figma design (exact colours, Poppins, Noto Kufi Arabic, Montserrat, Acme; SEO). Design-parity phases 1 and 2 are merged, and phase 3 has its copy pass and shared components (#274, #275).
-- **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`.
-- **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24); the tab bar and account hub are in #25.
+- **Web (M3):** the whole site is on the new Figma design (exact colours, Poppins, Noto Kufi Arabic, Montserrat, Acme; SEO). Design parity phases 1 to 3 are merged (final rounds #283-#285, gate fixes #286 and #288), and web performance part 2 (server-rendered first results, LCP priority, lazy map) is in #282.
+- **Demo data:** the demo content now follows the original design: 32 listings with the design photos, titles, prices and sellers, curated home rail and featured companies (#287). It was refreshed on production on 2026-11-11, and the placeholder ads are gone.
+- **Contract:** OpenAPI v1.1 validates and covers every live route, and CI lints it (#290).
+- **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`. The launch-readiness work (runbook, backups, health check, tuning files) is prepared in PR #292 and waits for the server steps; none of it is applied yet.
+- **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24, tab bar and account hub #25). Passwordless sign-in, the new-device SMS check and Turnstile are merged (#26); Google/Apple sign-in is not wired yet.
 
 **Admin security:** `super_admin` accounts must enrol in 2FA (TOTP) on their next login. Keep the recovery codes somewhere safe. Reading a conversation transcript in the admin needs a stated reason, and every access is logged.
 
 Next:
 
-- Web performance part 2 (SSR first results, LCP priority, image loader, lazy map).
-- The parity-gate re-run and the final round.
-- Mobile M2 (app and API): login, chat, push, selling and orders.
-- Server M5: backups first, then monitoring and alerts, tuning and a load test.
+- Mobile M2 (app and API): chat, push, selling and orders, then Google/Apple sign-in once the credentials exist.
+- Server M5: apply the runbook steps from #292 (backups first, then monitoring and alerts, tuning and a load test).
+- Web: a clean parity-gate run on every page, a repeat Lighthouse run, and the axe report.
 - M6: the store release.
 - Payments (M7), later.
 
@@ -43,10 +44,10 @@ See [ROADMAP.md](qbazaar-contracts/ROADMAP.md) for the full picture.
 ## Progress
 
 <!-- progress:start -->
-**Current phase:** M0 Preparation and alignment · **Overall:** 76% (152/199 tasks)
+**Current phase:** M0 Preparation and alignment · **Overall:** 77% (154/199 tasks)
 
 ```text
-M0   ███████░░░   72% (18/25)   Preparation and alignment
+M0   ████████░░   80% (20/25)   Preparation and alignment
 M1   ██████████   97% (73/75)   Closing the backend gaps
 M1b  ██████████  100% (10/10)   Orders and payments
 M2   ███░░░░░░░   26% (4/15)    Connecting the mobile app

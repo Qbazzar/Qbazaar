@@ -1,6 +1,6 @@
 # QBazaar — Roadmap
 
-> **Updated:** 2026-10-14 · **Active phase:** M3 parity phase 3, M4 admin deal panel and revenue page, M2 mobile
+> **Updated:** 2026-11-11 · **Active phase:** M2 mobile, M5 launch steps on the server, M3 final parity gate run
 > **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Tasks:** [`MILESTONES-V2.md`](MILESTONES-V2.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md)
 > We don't commit to end dates; a phase ends when its exit criteria in `MILESTONES-V2.md` are met.
 
@@ -9,10 +9,10 @@ QBazaar is a classifieds marketplace for Qatar (QAR, Arabic + English). The MVP 
 ## Progress
 
 <!-- progress:start -->
-**Current phase:** M0 Preparation and alignment · **Overall:** 76% (152/199 tasks)
+**Current phase:** M0 Preparation and alignment · **Overall:** 77% (154/199 tasks)
 
 ```text
-M0   ███████░░░   72% (18/25)   Preparation and alignment
+M0   ████████░░   80% (20/25)   Preparation and alignment
 M1   ██████████   97% (73/75)   Closing the backend gaps
 M1b  ██████████  100% (10/10)   Orders and payments
 M2   ███░░░░░░░   26% (4/15)    Connecting the mobile app
@@ -58,13 +58,13 @@ The order and dependencies come from [`V2-PLAN.md §5`](V2-PLAN.md#5-milestones-
 
 | Phase | Sprint | Goal | Depends on | State |
 |---|---|---|---|---|
-| **M0** Preparation and alignment | 13 | Critical audit fixes, CI gating deploys, mobile polish, one category tree, OpenAPI v1.1 | — | 18 of 25 done (#147–#153). Open: OPS-13.1 (secret rotation), OPS-13.2 (domain question), OPS-13.8 (branch cleanup), MB-13.1, MB-13.2, CT-13.1, CT-13.2 |
-| **M1** Closing the backend gaps | 14 | Everything the app and the new web need, the remaining audit fixes, Cloudflare R2 + Turnstile | M0 | Almost done: 73 of 75 tasks merged; R2 and Turnstile live |
-| **M1b** Orders and payments (no gateway) | 14 | Orders, cash, admin-set commission, wallet, admin-approved settlements, paid promotion | M0 + BE-13.4, SEC-13.9 | Done (#207–#212) |
-| **M2** Connecting the mobile app | 15 | The app on the real API, realtime, push, Arabic | M1 (M1b for orders) | In progress: API layer, session and catalog merged (Qbazaar-mobile #24) |
-| **M3** Web on the new design | 16 | Reskin Next.js to match `Qbazaar-front` | M1 (partly) | 15 of 18 done; parity phase 3 copy pass (#274) and shared components (#275) merged, then a full gate re-run and performance part 2 |
-| **M4** Admin additions | 17 | Companies, home sections, category fields, payments admin, remaining admin audit fixes | M1 (AD-17.7 on M1b) | 11 of 26 done; the deal panel and revenue page are merged (#272, #273), in the 2d6fe00 deploy |
-| **M5** Deployment | 18 | Full system on the new VPS (`srv1977263.hstgr.cloud`) behind Cloudflare, with a domain and SSL | M1–M4 + domain | Live on qbazaar.qa behind Cloudflare; open: backups, alerts, WAF and firewall rules, load test |
+| **M0** Preparation and alignment | 13 | Critical audit fixes, CI gating deploys, mobile polish, one category tree, OpenAPI v1.1 | — | 18 of 25 done (#147–#153). OpenAPI v1.1 and the reviews endpoints done (#290). Open: OPS-13.1 (secret rotation), OPS-13.2 (domain question), OPS-13.8 (branch cleanup), MB-13.1, MB-13.2 |
+| **M1** Closing the backend gaps | 14 | Everything the app and the new web need, the remaining audit fixes, Cloudflare R2 + Turnstile | M0 | Almost done: 73 of 75 tasks merged; R2 and Turnstile live. BE-14.12 (new-device SMS) and BE-14.13 (Google/Apple) are built and wait for provider credentials |
+| **M1b** Orders and payments (no gateway) | 14 | Orders, cash, admin-set commission, wallet, admin-approved settlements, paid promotion | M0 + BE-13.4, SEC-13.9 | Done (#207–#212); demo data now follows the design (#287) |
+| **M2** Connecting the mobile app | 15 | The app on the real API, realtime, push, Arabic | M1 (M1b for orders) | In progress: API layer, session, catalog (Qbazaar-mobile #24) and passwordless sign-in with new-device SMS and Turnstile (#26) merged; Google/Apple not wired; next: chat, push, selling, orders |
+| **M3** Web on the new design | 16 | Reskin Next.js to match `Qbazaar-front` | M1 (partly) | 15 of 18 done; parity phase 3 merged (#274-#276, #283-#286, #288, #291) and performance part 2 (#282); left: a clean gate run on every page, a measured mobile Lighthouse gain, and the Lighthouse and axe reports |
+| **M4** Admin additions | 17 | Companies, home sections, category fields, payments admin, remaining admin audit fixes | M1 (AD-17.7 on M1b) | Done: 26 of 26 (#249-#280, review follow-ups #289); gateway-dependent payments work waits for M7 |
+| **M5** Deployment | 18 | Full system on the new VPS behind Cloudflare, with a domain and SSL | M1–M4 + domain | Live on qbazaar.qa behind Cloudflare; launch readiness is prepared in the repo (PR #292) but not applied on the server; open: backups, alerts, WAF and firewall rules, load test, real SMS and push |
 | **M6** Releasing the app | 19 | TestFlight / Play internal testing, then the stores | M2, M5 | Not started |
 | **M7** Electronic payment (later) | 20+ | A gateway behind `PaymentGateway`, Safe Pay, premium subscription, reviews after orders | M5 + a gateway contract | Not started |
 
