@@ -19,6 +19,8 @@ use App\Services\Ads\CustomFieldsValidator;
 use Closure;
 use Database\Seeders\Demo\Catalog\Listings;
 use Database\Seeders\Demo\Catalog\Phrases;
+use Database\Seeders\Demo\Content\DesignAdWriter;
+use Database\Seeders\Demo\Content\DesignManifest;
 use Database\Seeders\Demo\DemoContext;
 use Database\Seeders\Demo\DemoDataException;
 use Database\Seeders\Demo\DemoMedia;
@@ -31,6 +33,12 @@ use Illuminate\Support\Facades\DB;
  * through AdLifecycleService, at believable moments in the past. Reserved
  * and sold-through-an-order listings are produced later by the deals, from
  * the active ones created here.
+ *
+ * The listings of the design come first, with their own titles, prices,
+ * sellers and photos; the rest are generated, but only in categories the
+ * design has photos for, so no listing is left with a drawn placeholder.
+ *
+ * @phpstan-import-type DesignAd from DesignManifest
  */
 final class SeedListings
 {
@@ -61,6 +69,9 @@ final class SeedListings
     /** @var Collection<int, Category> */
     private Collection $categories;
 
+    /** @var Collection<int, Category> leaves the generated listings are drawn from */
+    private Collection $fillerCategories;
+
     /** @var Collection<int, Location> */
     private Collection $districts;
 
@@ -71,15 +82,37 @@ final class SeedListings
         private readonly ToggleAdFeaturedAction $toggleFeatured,
         private readonly AdminAuditLogger $audit,
         private readonly DemoMedia $media,
+        private readonly DesignManifest $design,
+        private readonly DesignAdWriter $designWriter,
     ) {}
 
     public function run(DemoContext $context): void
     {
         $this->loadTaxonomy();
 
-        foreach ($this->statusPlan($context->options->ads) as $status) {
+        $plan = $this->activeFirst($this->statusPlan($context->options->ads));
+        $designAds = array_slice($this->design->ads(), 0, count($plan));
+
+        foreach ($designAds as $index => $designAd) {
+            $this->createDesignListing($context, $designAd, $plan[$index]);
+        }
+
+        foreach (array_slice($plan, count($designAds)) as $status) {
             $this->createListing($context, $status);
         }
+    }
+
+    /**
+     * The design's listings should be live, so the live statuses take the first places.
+     *
+     * @param list<AdStatus> $plan
+     * @return list<AdStatus>
+     */
+    private function activeFirst(array $plan): array
+    {
+        usort($plan, static fn (AdStatus $a, AdStatus $b): int => ($b === AdStatus::ACTIVE) <=> ($a === AdStatus::ACTIVE));
+
+        return $plan;
     }
 
     /**
@@ -100,14 +133,18 @@ final class SeedListings
     private function loadTaxonomy(): void
     {
         $this->categories = Category::query()
-            ->whereIn('slug', $this->listings->categorySlugs())
+            ->whereIn('slug', array_unique([...$this->listings->categorySlugs(), ...array_column($this->design->ads(), 'category')]))
             ->whereNotNull('parent_id')
             ->with('parent:id,slug')
             ->get();
 
         $this->districts = Location::query()->where('type', LocationType::DISTRICT->value)->get();
 
-        if ($this->categories->isEmpty() || $this->districts->isEmpty()) {
+        $this->fillerCategories = $this->categories
+            ->filter(fn (Category $category): bool => $this->design->pool($category->slug) !== [] && $this->listings->hasTemplates($category->slug))
+            ->values();
+
+        if ($this->fillerCategories->isEmpty() || $this->districts->isEmpty()) {
             throw new DemoDataException('Categories and locations are missing. Run with --fresh or seed the reference data first.');
         }
     }
@@ -116,7 +153,7 @@ final class SeedListings
     {
         $random = $context->random;
         $seller = $this->pickSeller($context);
-        $category = $random->pick($this->categories->all());
+        $category = $random->pick($this->fillerCategories->all());
         $district = $random->pick($this->districts->all());
         $parentSlug = $category->parent?->slug;
         $draft = $this->listings->draft($category->slug, (string) $parentSlug, $seller->language->value, $district->getLocalizedName($seller->language->value));
@@ -124,7 +161,7 @@ final class SeedListings
 
         $shipping = $context->random->chance(self::DELIVERY_SHARE) ? AdShipping::DELIVERY : AdShipping::PICKUP_ONLY;
 
-        $ad = $context->clock->at($createdAt, fn (): Ad => DB::transaction(function () use ($context, $seller, $category, $district, $draft, $status, $parentSlug, $shipping): Ad {
+        $ad = $context->clock->at($createdAt, fn (): Ad => DB::transaction(function () use ($context, $seller, $category, $district, $draft, $status, $shipping): Ad {
             $ad = new Ad;
             $ad->forceFill([
                 'user_id' => $seller->id,
@@ -146,7 +183,7 @@ final class SeedListings
                 'submitted_at' => $status === AdStatus::DRAFT ? null : now(),
             ])->save();
 
-            $this->media->attachListingPhotos($ad, $this->listings->colorFor($parentSlug), $draft->captionEn, $this->photoCount($context));
+            $this->media->attachDesignPhotos($ad, $this->photoKeys($context, $category->slug));
 
             return $ad;
         }));
@@ -154,7 +191,40 @@ final class SeedListings
         $this->moveTo($context, $ad, $status, $createdAt);
     }
 
-    private function moveTo(DemoContext $context, Ad $ad, AdStatus $status, Carbon $createdAt): void
+    /**
+     * @param DesignAd $designAd
+     */
+    private function createDesignListing(DemoContext $context, array $designAd, AdStatus $status): void
+    {
+        $owner = $this->designOwner($context, $designAd['seller']);
+        $category = $this->categories->firstWhere('slug', $designAd['category'])
+            ?? throw new DemoDataException("Design ad [{$designAd['key']}] needs the category [{$designAd['category']}], which is missing.");
+        $district = $this->districts->firstWhere('slug', $this->design->districtSlug($designAd['location']))
+            ?? throw new DemoDataException("Design ad [{$designAd['key']}] needs a district that is missing; seed the locations first.");
+
+        $ad = DB::transaction(fn (): Ad => $this->designWriter->ensure($designAd, $owner, $category, $district, $status === AdStatus::DRAFT ? AdStatus::DRAFT : AdStatus::PENDING));
+
+        $this->moveTo($context, $ad, $status, $context->clock->now()->subMinutes($designAd['posted_minutes_ago']), in_array('featured', $designAd['badges'], true));
+    }
+
+    private function designOwner(DemoContext $context, string $personaKey): User
+    {
+        $index = $this->design->personaIndex($personaKey);
+
+        return ($index !== null ? ($context->members[$index] ?? null) : null) ?? $context->random->pick($context->members);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function photoKeys(DemoContext $context, string $leafSlug): array
+    {
+        $pool = $this->design->pool($leafSlug);
+
+        return $context->random->sample($pool, $context->random->pick([1, 2, 2, 3, 3, 4]));
+    }
+
+    private function moveTo(DemoContext $context, Ad $ad, AdStatus $status, Carbon $createdAt, ?bool $featured = null): void
     {
         $reviewedAt = $createdAt->copy()->addHours($context->random->int(1, 20));
         $moderator = $context->moderator();
@@ -166,7 +236,7 @@ final class SeedListings
                 $this->lifecycle->reject($ad, $notes);
                 $this->audit->record($moderator, 'admin.ads.reject', $ad, ['input' => ['admin_notes' => $notes]]);
             }),
-            AdStatus::ACTIVE => $this->goLive($context, $ad, $reviewedAt),
+            AdStatus::ACTIVE => $this->goLive($context, $ad, $reviewedAt, $featured),
             AdStatus::EXPIRED => $this->expire($context, $ad, $reviewedAt),
             AdStatus::BLOCKED => $this->goLiveThen($context, $ad, $reviewedAt, function () use ($ad, $moderator): void {
                 $this->lifecycle->block($ad);
@@ -176,13 +246,13 @@ final class SeedListings
         };
     }
 
-    private function goLive(DemoContext $context, Ad $ad, Carbon $at): void
+    private function goLive(DemoContext $context, Ad $ad, Carbon $at, ?bool $featured = null): void
     {
         $context->clock->at($at, fn () => $this->lifecycle->approve($ad));
 
         $ad->forceFill(['views_count' => $context->random->int(15, 2_500)])->saveQuietly();
 
-        if ($context->random->chance(self::FEATURED_SHARE)) {
+        if ($featured ?? $context->random->chance(self::FEATURED_SHARE)) {
             ($this->toggleFeatured)($ad);
             $this->audit->record($context->moderator(), 'admin.ads.feature', $ad);
         }
@@ -229,11 +299,6 @@ final class SeedListings
         }
 
         return $member;
-    }
-
-    private function photoCount(DemoContext $context): int
-    {
-        return $context->random->pick([1, 2, 3, 3, 4, 4, 4, 5, 5, 6, 7, 8]);
     }
 
     private function jitter(float|string|null $coordinate, DemoContext $context): ?string

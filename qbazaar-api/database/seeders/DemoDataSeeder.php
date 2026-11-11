@@ -10,6 +10,7 @@ use App\Models\Ad;
 use App\Models\User;
 use App\Services\Ledger\LedgerReconciler;
 use Closure;
+use Database\Seeders\Demo\Content\DemoAdRenewer;
 use Database\Seeders\Demo\DemoClock;
 use Database\Seeders\Demo\DemoContext;
 use Database\Seeders\Demo\DemoDataException;
@@ -45,6 +46,7 @@ class DemoDataSeeder extends Seeder
     public function __construct(
         private readonly DemoMedia $media,
         private readonly LedgerReconciler $reconciler,
+        private readonly DemoAdRenewer $renewer,
     ) {}
 
     /**
@@ -72,6 +74,7 @@ class DemoDataSeeder extends Seeder
             $this->step('Reports, tickets and suspensions', fn () => app(SeedModeration::class)->run($context));
         }));
 
+        $this->step('Fresh expiry for live listings', fn () => $this->renewer->renew(false, (int) config('qbazaar.demo.keep_alive_days'), reviveExpired: false, restagger: false));
         $this->step('Ledger reconciliation', fn () => $this->assertLedgerReconciles());
         $this->step('Catalog cache', fn () => WarmCatalogCacheJob::dispatchSync());
     }

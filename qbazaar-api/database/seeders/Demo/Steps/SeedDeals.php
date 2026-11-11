@@ -25,8 +25,8 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\Offers\OfferTransitionService;
 use App\Support\Money;
-use Database\Seeders\Demo\Catalog\Listings;
 use Database\Seeders\Demo\Catalog\Phrases;
+use Database\Seeders\Demo\Content\DesignManifest;
 use Database\Seeders\Demo\DemoContext;
 use Database\Seeders\Demo\DemoFinance;
 use Database\Seeders\Demo\DemoMedia;
@@ -107,7 +107,7 @@ final class SeedDeals
         private readonly OrderJourney $journey,
         private readonly BlockUserAction $blockUser,
         private readonly DemoFinance $finance,
-        private readonly Listings $listings,
+        private readonly DesignManifest $design,
         private readonly DemoMedia $media,
     ) {}
 
@@ -180,7 +180,8 @@ final class SeedDeals
     private function chat(DemoContext $context, Conversation $conversation, User $buyer, User $seller, Ad $ad, Carbon $moment): Carbon
     {
         $language = $buyer->language->value;
-        $lines = $context->random->pick(Phrases::CHATS[$language]);
+        $leaf = (string) $ad->category->slug;
+        $lines = $context->random->pick([...$this->design->chatScripts($language, $leaf), ...Phrases::CHATS[$language]]);
 
         foreach ($lines as $turn => $line) {
             $moment = $moment->copy()->addMinutes($context->random->int(2, 90));
@@ -188,7 +189,8 @@ final class SeedDeals
             $context->clock->at($moment, fn () => $this->sendMessage->execute($author, $conversation, ChatMessageDraft::text($line)));
 
             if ($turn === 0 && $context->random->chance(0.2)) {
-                $photo = $this->media->chatPhoto($this->listings->colorFor($ad->category->parent?->slug), 'Same as this one?');
+                $photoKey = $this->design->pool($leaf)[0] ?? null;
+                $photo = $photoKey === null ? $this->media->chatPhoto('#8A1538', 'Same as this one?') : $this->media->designChatPhoto($photoKey);
                 $context->clock->at($moment, fn () => $this->sendMessage->execute($buyer, $conversation, ChatMessageDraft::image($photo, $language === 'ar' ? 'نفس هذا؟' : 'Same as this one?')));
             }
         }
