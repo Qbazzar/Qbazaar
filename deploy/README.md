@@ -261,7 +261,7 @@ Until now one Redis held the queues and the cache, with `noeviction`: when cache
 
 Laravel reaches the cache instance through `REDIS_CACHE_HOST`, `REDIS_CACHE_PORT` and `REDIS_CACHE_PASSWORD` (`config/database.php`; each falls back to the shared `REDIS_*` value). `render-env.sh` writes them once `REDIS_CACHE_PORT=6380` is in `~qbazaar/.qbazaar-deploy.env` and the password is in `/root/qbazaar-secrets/redis_cache_password`. A restart of the cache instance empties it; the catalog warmer refills the home feed within two minutes and rate-limit counters start again from zero.
 
-The PHP client is phpredis (the `redis` extension, installed with `pecl` for ea-php84 in the runbook); `render-env.sh` sets `REDIS_CLIENT=phpredis`. `predis/predis` stays in `composer.json` only for machines without the extension. Check: `php -m | grep -x redis` and `php artisan tinker --execute="echo get_class(Redis::connection()->client());"` prints `Redis`.
+The PHP client is phpredis (the `redis` extension of ea-php84, already on the server: `render-env.sh` writes `REDIS_CLIENT=phpredis`, and the template now says the same). If a rebuilt server lacks it, install it first (WHM → Module Installers → PHP PECL for ea-php84, or `/opt/cpanel/ea-php84/root/usr/bin/pecl install redis`), then run `render-env.sh`. `predis/predis` stays in `composer.json` only for machines without the extension. Check: `php -m | grep -x redis` and `php artisan tinker --execute="echo get_class(Redis::connection()->client());"` prints `Redis`.
 
 ### MariaDB
 

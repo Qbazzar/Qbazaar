@@ -8,7 +8,7 @@ The zone `qbazaar.qa` is on Cloudflare with `@`, `www` and `api` proxied, SSL mo
 | [`cache-hit-ratio.sh`](cache-hit-ratio.sh) | Edge cache hit ratio for a host over the last 24 h (GraphQL Analytics API). |
 | [`../apache/cloudflare-only.conf`](../apache/cloudflare-only.conf) | The origin side: Apache answers only Cloudflare's addresses. |
 
-The order to apply them, with rollback for each step, is in [DOCS/M5-LAUNCH-RUNBOOK.md](../../DOCS/M5-LAUNCH-RUNBOOK.md), steps 9 to 11.
+The order to apply them, with rollback for each step, is in [DOCS/M5-LAUNCH-RUNBOOK.md](../../DOCS/M5-LAUNCH-RUNBOOK.md), steps 12 and 13.
 
 ## Plan limits
 
@@ -17,7 +17,7 @@ The rules are written to fit the **Free** plan; the ones marked "Pro" in `rules.
 | | Free | Pro |
 |---|---|---|
 | WAF custom rules | 5 | 20 |
-| Rate limiting rules | 1 (period 10 s, block 10 s, counted per IP) | 2 (period up to 1 min) |
+| Rate limiting rules | 1 (period 10 s, block 10 s, counted per IP; the expression may use only the path) | 2 (period up to 1 min; host, path and query, not the method) |
 | Cache rules | 10 | 25 |
 | Managed rules | Cloudflare Free Managed Ruleset | Cloudflare Managed Ruleset + OWASP |
 
@@ -38,7 +38,7 @@ Also on this page:
 
 ### Rate limiting rule (*Security → WAF → Rate limiting rules*)
 
-Free allows one rule, so it guards the endpoints whose abuse costs money: `POST /api/v1/auth/*` (sign-in, sign-up, password reset and the SMS and e-mail codes), 20 requests per 10 seconds per IP, blocked for 10 seconds. Laravel's own limits (`throttle:auth`, `throttle:otp`, per account and per IP) stay the precise layer; this one only stops floods before they reach PHP. Mobile carriers in Qatar put many users behind one address (CGNAT), so the edge threshold is deliberately loose.
+Free allows one rule, so it guards the endpoints whose abuse costs money: `/api/v1/auth/*` (sign-in, sign-up, password reset and the SMS and e-mail codes), 20 requests per 10 seconds per IP, blocked for 10 seconds. On Free the expression may only test the path (not the host or the method); that is enough here, because only the API serves `/api/v1/auth/` and every route under it but the two e-mail link checks is a `POST`. Laravel's own limits (`throttle:auth`, `throttle:otp`, per account and per IP) stay the precise layer; this one only stops floods before they reach PHP. Mobile carriers in Qatar put many users behind one address (CGNAT), so the edge threshold is deliberately loose.
 
 With Pro, enable the second rule: search and image uploads, 100 requests per minute per IP.
 
