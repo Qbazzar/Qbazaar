@@ -18,7 +18,11 @@ it('is degraded but still ready when only a background check fails', function (C
 
     expect($report->isReady())->toBeTrue()
         ->and($report->status())->toBe(ReadinessReport::DEGRADED);
-})->with([CheckStatus::FAIL, CheckStatus::STALE, CheckStatus::UNKNOWN]);
+})->with([
+    'failed' => [CheckStatus::FAIL],
+    'stale' => [CheckStatus::STALE],
+    'never reported' => [CheckStatus::UNKNOWN],
+]);
 
 it('is down when a critical check fails', function (): void {
     $report = new ReadinessReport(['database' => CheckStatus::FAIL, 'search' => CheckStatus::OK], ['database']);

@@ -21,25 +21,64 @@ function readinessChecks(array $dependencies = []): array
 }
 
 /**
- * The production queue setup: Redis-backed, with Redis answering the ping
- * and Horizon reporting the given master supervisors.
+ * A Redis server that answers PING on the short-timeout `health` connection
+ * only, or fails with `$failure` like a server that does not answer.
+ */
+function fakeQueueRedis(?Throwable $failure = null): RedisFactory
+{
+    return new class($failure) implements RedisFactory
+    {
+        public function __construct(private readonly ?Throwable $failure) {}
+
+        public function connection($name = null)
+        {
+            if ($this->failure !== null) {
+                throw $this->failure;
+            }
+
+            if ($name !== 'health') {
+                throw new LogicException('The probe must use the health connection, which has short timeouts.');
+            }
+
+            return new class extends RedisConnection
+            {
+                /**
+                 * @param array<int, string>|string $channels
+                 */
+                public function createSubscription($channels, Closure $callback, $method = 'subscribe'): void {}
+
+                /**
+                 * @param array<int, mixed> $parameters
+                 */
+                public function command($method, array $parameters = []): bool
+                {
+                    if ($method !== 'ping') {
+                        throw new LogicException('The probe must only PING.');
+                    }
+
+                    return true;
+                }
+            };
+        }
+    };
+}
+
+/**
+ * The production queue setup: Redis-backed, with Horizon reporting one master
+ * supervisor in `$status`, or none when it is null.
  *
- * @param list<object> $masters
  * @return array<string, mixed>
  */
-function redisQueueWithMasters(array $masters): array
+function redisQueueWithMaster(?string $status, ?Throwable $redisFailure = null): array
 {
     config(['queue.default' => 'redis']);
 
-    $connection = Mockery::mock(RedisConnection::class);
-    $connection->shouldReceive('command')->with('ping')->andReturn(true);
-    $redis = Mockery::mock(RedisFactory::class);
-    $redis->shouldReceive('connection')->with('health')->andReturn($connection);
+    $masters = $status === null ? [] : [(object) ['status' => $status]];
 
-    $repository = Mockery::mock(MasterSupervisorRepository::class);
-    $repository->shouldReceive('all')->andReturn($masters);
-
-    return ['redis' => $redis, 'masters' => $repository];
+    return [
+        'redis' => fakeQueueRedis($redisFailure),
+        'masters' => Mockery::mock(MasterSupervisorRepository::class, ['all' => $masters]),
+    ];
 }
 
 it('passes in an environment without Redis queues or Meilisearch', function (): void {
@@ -56,8 +95,20 @@ it('passes in an environment without Redis queues or Meilisearch', function (): 
 });
 
 it('fails the database check when no connection can be opened', function (): void {
-    $database = Mockery::mock(ConnectionResolverInterface::class);
-    $database->shouldReceive('connection')->andThrow(new PDOException('Connection refused'));
+    $database = new class implements ConnectionResolverInterface
+    {
+        public function connection($name = null)
+        {
+            throw new PDOException('Connection refused');
+        }
+
+        public function getDefaultConnection()
+        {
+            return 'mysql';
+        }
+
+        public function setDefaultConnection($name): void {}
+    };
 
     $report = app()->make(ReadinessProbe::class, ['database' => $database])->run();
 
@@ -83,22 +134,19 @@ it('asks Meilisearch for its health when it is the search driver', function (int
     'unavailable' => [503, 'fail'],
 ]);
 
-it('needs a running Horizon master supervisor', function (array $masters, string $expected): void {
-    $checks = readinessChecks(redisQueueWithMasters($masters));
+it('needs a running Horizon master supervisor', function (?string $status, string $expected): void {
+    $checks = readinessChecks(redisQueueWithMaster($status));
 
     expect($checks['redis'])->toBe('ok')
         ->and($checks['workers'])->toBe($expected);
 })->with([
-    'running' => [[(object) ['status' => 'running']], 'ok'],
-    'paused' => [[(object) ['status' => 'paused']], 'fail'],
-    'none' => [[], 'fail'],
+    'running' => ['running', 'ok'],
+    'paused' => ['paused', 'fail'],
+    'none' => [null, 'fail'],
 ]);
 
 it('fails the Redis check when the queue server does not answer', function (): void {
-    $redis = Mockery::mock(RedisFactory::class);
-    $redis->shouldReceive('connection')->andThrow(new RuntimeException('Connection refused'));
-
-    $report = app()->make(ReadinessProbe::class, ['redis' => $redis] + redisQueueWithMasters([]))->run();
+    $report = app()->make(ReadinessProbe::class, redisQueueWithMaster(null, new RuntimeException('Connection refused')))->run();
 
     expect($report->toArray()['checks']['redis'])->toBe('fail')
         ->and($report->isReady())->toBeFalse();

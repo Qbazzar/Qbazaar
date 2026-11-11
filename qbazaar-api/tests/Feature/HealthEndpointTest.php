@@ -47,12 +47,9 @@ it('reports readiness as a bare, uncached body', function (): void {
 });
 
 it('answers 503 when a critical dependency is down', function (): void {
-    $probe = Mockery::mock(ReadinessProbe::class);
-    $probe->shouldReceive('run')->andReturn(new ReadinessReport(
-        ['database' => CheckStatus::FAIL, 'search' => CheckStatus::OK],
-        ['database'],
-    ));
-    app()->instance(ReadinessProbe::class, $probe);
+    app()->instance(ReadinessProbe::class, Mockery::mock(ReadinessProbe::class, [
+        'run' => new ReadinessReport(['database' => CheckStatus::FAIL, 'search' => CheckStatus::OK], ['database']),
+    ]));
 
     getJson('/api/v1/health/ready')
         ->assertStatus(503)
