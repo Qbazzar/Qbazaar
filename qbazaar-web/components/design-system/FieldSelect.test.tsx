@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -28,11 +28,13 @@ function Harness({
   options = PRICE_TYPES,
   initial = 'fixed',
   placeholder,
+  rowClassName,
   onChange = () => {},
 }: {
   options?: FieldSelectOption[];
   initial?: string;
   placeholder?: string;
+  rowClassName?: string;
   onChange?: (value: string) => void;
 }) {
   const [value, setValue] = useState(initial);
@@ -45,6 +47,7 @@ function Harness({
         value={value}
         options={options}
         placeholder={placeholder}
+        rowClassName={rowClassName}
         parentLabel={(city) => `${city.label} (all areas)`}
         onChange={(next) => {
           setValue(next);
@@ -57,6 +60,16 @@ function Harness({
 }
 
 const field = () => screen.getByRole('combobox', { name: 'Price Type' });
+
+/** The test DOM has no layout: this page width decides whether a city's districts open beside the card or in its place. */
+function withPageWidth(width: number, run: () => void) {
+  const clientWidth = vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(width);
+  try {
+    run();
+  } finally {
+    clientWidth.mockRestore();
+  }
+}
 
 describe('FieldSelect', () => {
   it('opens the designed list under the field and writes the chosen option into it', async () => {
@@ -193,6 +206,62 @@ describe('FieldSelect', () => {
     expect(westBay).toHaveAttribute('aria-level', '2');
     expect(westBay).toHaveAttribute('aria-setsize', '3');
     expect(westBay).toHaveAttribute('aria-posinset', '2');
+  });
+
+  it('adds rowClassName to every row of a flat list', () => {
+    render(<Harness rowClassName="font-medium" />);
+    fireEvent.click(field());
+
+    for (const option of screen.getAllByRole('option')) expect(option).toHaveClass('font-medium');
+  });
+
+  it('adds rowClassName to the city rows, the districts beside them and the districts opened in their place', () => {
+    withPageWidth(1200, () => {
+      render(<Harness options={CITIES} initial="" placeholder="City" rowClassName="font-medium" />);
+      fireEvent.keyDown(field(), { key: 'ArrowDown' });
+      // A city with districts draws its row inside the tree item, which also holds the second card.
+      expect(screen.getByRole('treeitem', { name: 'Doha' }).firstElementChild).toHaveClass('font-medium');
+      expect(screen.getByRole('treeitem', { name: 'Lusail' })).toHaveClass('font-medium');
+
+      fireEvent.keyDown(field(), { key: 'ArrowRight' });
+      for (const district of within(screen.getByRole('group')).getAllByRole('treeitem')) expect(district).toHaveClass('font-medium');
+    });
+    cleanup();
+
+    withPageWidth(0, () => {
+      render(<Harness options={CITIES} initial="" placeholder="City" rowClassName="font-medium" />);
+      fireEvent.keyDown(field(), { key: 'ArrowDown' });
+      fireEvent.keyDown(field(), { key: 'ArrowRight' });
+
+      const districts = screen.getAllByRole('treeitem');
+      expect(districts.map((row) => row.textContent)).toEqual(['Doha (all areas)', 'West Bay', 'Al Sadd']);
+      for (const district of districts) expect(district).toHaveClass('font-medium');
+      // The heading of the drilled list is no row, so it keeps its own semibold.
+      expect(screen.getByRole('tree').firstElementChild).not.toHaveClass('font-medium');
+    });
+  });
+
+  it('heads the districts opened in place of the card with a presentational item of the list that leads back', () => {
+    withPageWidth(0, () => {
+      render(<Harness options={CITIES} initial="" placeholder="City" />);
+      fireEvent.keyDown(field(), { key: 'ArrowDown' });
+      fireEvent.keyDown(field(), { key: 'ArrowRight' });
+
+      const tree = screen.getByRole('tree', { name: 'Price Type' });
+      const heading = tree.firstElementChild as HTMLElement;
+      // A <ul> may only hold <li>s; role=presentation keeps the heading out of the tree's items and their count.
+      expect(heading.tagName).toBe('LI');
+      expect(heading).toHaveAttribute('role', 'presentation');
+      expect(heading).toHaveTextContent('Doha');
+      expect(within(tree).getAllByRole('treeitem')).toHaveLength(3);
+      expect(screen.getByRole('treeitem', { name: 'West Bay' })).toHaveAttribute('aria-setsize', '3');
+
+      fireEvent.click(heading);
+      const doha = screen.getByRole('treeitem', { name: 'Doha' });
+      expect(field()).toHaveAttribute('aria-activedescendant', doha.id);
+      expect(screen.getByRole('treeitem', { name: 'Lusail' })).toBeInTheDocument();
+      expect(screen.queryByRole('treeitem', { name: 'West Bay' })).not.toBeInTheDocument();
+    });
   });
 
   it('mirrors the arrow keys that enter and leave a second card in a right-to-left field', () => {
