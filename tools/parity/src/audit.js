@@ -8,7 +8,7 @@ const { compareKeyframes } = require('./motion');
 const componentsFile = require('../components.json');
 const targetsFile = require('../targets.json');
 const { loadStreams } = require('./spec');
-const { liveDataRule, liveDataReason } = require('./pages');
+const { liveDataSkipReason } = require('./pages');
 
 const INTERACTIVE_CAP = 40;
 const TEXT_CAP = 250;
@@ -88,6 +88,16 @@ function textUnits(pairs, config, width) {
   return { units, interactiveMismatch };
 }
 
+// A card of a live list (pages.json liveData) is missing when the target lists no items: data, not design. With items
+// on the page, a card its selector cannot find is a real gap.
+async function reportMissingComponents(env, targetPage, base, missing, emit) {
+  for (const m of missing) {
+    const live = await liveDataSkipReason(targetPage, base.page, m.name);
+    if (live) { env.warnings.push({ what: `component ${m.name} on ${base.page}@${base.viewport}`, reason: live }); continue; }
+    emit({ component: m.name, category: 'missing', severity: 'high', property: 'missing-component', ref: m.spec.ref, target: 'not found', note: `component ${m.name} is on the reference but its target selector (${m.spec.target}) matches nothing visible` });
+  }
+}
+
 function reportUnmatchedTexts(unmatched, emit, accept, pageDef) {
   for (const row of unmatched) {
     // Links inside content cards carry data (category and place names), so only headings and chrome count.
@@ -129,12 +139,7 @@ async function auditPage(env, pageDef, viewport) {
     const components = componentsFor(pageDef.id).filter((c) => !(c.guestOnly && pageDef.login));
     const found = await markUnits(refSide, targetSide, components);
     const comps = componentUnits(components, found, config, viewport.width);
-    for (const m of comps.missing) {
-      // A card of a live list (pages.json liveData) is missing when the list is empty: data, not design.
-      const live = liveDataRule(pageDef.id, m.name);
-      if (live) { env.warnings.push({ what: `component ${m.name} on ${pageDef.id}@${viewport.width}`, reason: liveDataReason(live) }); continue; }
-      emit({ component: m.name, category: 'missing', severity: 'high', property: 'missing-component', ref: m.spec.ref, target: 'not found', note: `component ${m.name} is on the reference but its target selector (${m.spec.target}) matches nothing visible` });
-    }
+    await reportMissingComponents(env, targetSide.page, base, comps.missing, emit);
     const [refRows, tgtRows] = await Promise.all([refSide.page.evaluate(inpage.collectTexts), targetSide.page.evaluate(inpage.collectTexts)]);
     const { pairs, unmatchedRef } = pairTexts(refRows, tgtRows);
     reportUnmatchedTexts(unmatchedRef, emit, accept, pageDef);
@@ -153,4 +158,4 @@ async function auditPage(env, pageDef, viewport) {
   }
 }
 
-module.exports = { auditPage, componentsFor };
+module.exports = { auditPage, componentsFor, componentUnits, reportMissingComponents };

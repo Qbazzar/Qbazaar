@@ -41,6 +41,7 @@ await open(await context.newPage(), 'https://qbazaar.qa/');
 | `--out <dir>` | `out/<timestamp>` | `report.json`, `report.md`, `diffs/` |
 | `--skip-pages` / `--skip-scenarios` / `--skip-flows` | off | leave out the page audit, the behaviour scenarios or the navigation flows |
 | `--only id,id,flows` | all | restrict scenarios by id; `flows` selects the navigation flows |
+| `--api <origin>` | `https://api.qbazaar.qa` | the API origin a local target calls; the CORS harness answers for it |
 | `--verbose` | off | per-component timings and scenario observation counts |
 
 The exit code is 1 when there are findings, 2 when the run itself broke.
@@ -51,6 +52,33 @@ Chrome is launched with `channel: 'chrome'`. Pages load with `waitUntil: 'load'`
 When the target is `localhost`, requests to `https://api.qbazaar.qa` are proxied through Playwright and
 answered with CORS headers, so a local build can read the live API.
 Scenarios marked `writes: true` (they would post, offer or order) run only against a local target and are listed under "Skipped" otherwise.
+
+### Auth steps that need a local run
+
+Three auth pages of the reference are never compared on `https://qbazaar.qa`, because opening or submitting them writes
+through the API. A run against `https://qbazaar.qa` lists them under "Skipped" or "Reference pages without a target
+route"; they are compared only when `--target` is local (`http://localhost` or `http://127.0.0.1`, any port).
+
+| reference page | on a live run | compared on a local run by |
+|---|---|---|
+| `enter-code.html` | "Skipped": `pages.json` marks it `writes`, since opening `/verify-otp?phone=…` sends a one-time code | the `enter-code` page audit (and its sweep) |
+| `send-code.html` | "Reference pages without a target route": it is the sent state of `/forgot-password`, and the submit mails a reset link | the `forgot-password-sent` scenario (`writes: true`) |
+| `verify-identity.html` | "Reference pages without a target route": it is the new-device step of `/login`, which only the API's new-device check shows, so no route opens it | the `enter-code` audit: its layout is enter-code's without the Edit link |
+
+Run them against a local API, so the code and the mail stay on the machine. A local web that calls the live API would send
+a real SMS and a real mail.
+
+```bash
+# 1. API (qbazaar-api): a local database, no TWILIO_* keys (the code is written to the log), MAIL_MAILER=log
+php artisan migrate --seed
+php artisan serve                                   # http://localhost:8000
+
+# 2. Web (qbazaar-web): .env.local with NEXT_PUBLIC_API_URL=http://localhost:8000
+npm run build && npm run start                       # http://localhost:3000
+
+# 3. Gate (tools/parity): the two pages, and of the scenarios only the sent state (--only also leaves the flows out)
+npm run gate -- --target http://localhost:3000 --api http://localhost:8000 --pages enter-code,forgot-password --only forgot-password-sent
+```
 
 ## What it measures
 
@@ -196,7 +224,7 @@ Fourth round (Track G), from the re-run of 2026-10-21 (831 of its 1,977 findings
   `pages.json` entry carries `writes`, so pages, flows and the sweep open it only on a local target (listed under "Skipped"
   on live). send-code is the sent state of `/forgot-password`, compared by the `forgot-password-sent` scenario (local only,
   the submit mails a link). verify-identity is reference-only: its counterpart is the new-device step of `/login`, which
-  only the API's new-device check shows.
+  only the API's new-device check shows. How to compare all three locally: "Auth steps that need a local run" above.
 - **A session that runs out.** A signed-in page that lands on `/login` lost the demo session mid-run (the API rotates
   refresh tokens), not the page: the gate signs in again and reopens it once. If that sign-in fails as well the page,
   scenario, flow group or sweep is listed under "Skipped"; if the fresh session still lands on `/login`, the page is reported
@@ -206,6 +234,26 @@ Fourth round (Track G), from the re-run of 2026-10-21 (831 of its 1,977 findings
   not load auth.js), `copy-5` (the five strings kept in PR #274, listed in `reference-text.json` with the target's wording),
   `escape-key` (an observation right after Escape where the target closed and the prototype stayed open) and
   `signup-extra-fields` (`components.json` `accepted` on sign-up's card: its height and crop).
+
+Fifth round, from the review of Track G (every rule narrower, nothing dropped without a row under "Accepted differences"):
+
+- **List places.** Only the lists `components.json` names in `placeLists` (per side: the home page's Find Places pills,
+  staggered by `nth-child` below 1000 px) give their items a place. An item of such a list (three or more) that sits at
+  another place on the other side keeps the margin of that place: its margin difference is counted under `list-place`,
+  no longer skipped in silence; its other properties, and the margins of items at the same place, are still compared.
+  Every other box has no place, so its margin is always compared: the first live check showed the old rule also hid the
+  login card's "or continue with" margin (`22px 0 4px` against `0`), a divider at another index among the card's boxes.
+- **Arabic font.** `arabic-font` reads the text the element writes itself (`ownCopy`), not the text of the whole unit, and
+  that text must be Arabic with no Latin letter: a Latin heading in a panel that also lists العربية is compared. A
+  `font-family` difference counts only when Noto Kufi leads the target's stack (a Latin font ahead of it is a Latin font
+  choice); a `rendered-font` one only when Noto Kufi drew the text next to fonts the reference drew with too.
+- **Live data in the page audit.** A missing component that `pages.json` `liveData` names (the category's ad card) is a
+  warning only while the target page lists none of its items, as in the flows and the sweep; with items listed it is a
+  `missing-component` finding.
+- **Escape.** Only the first observation after an Escape press may accept a closed target under `escape-key`; a later
+  observation compares open and closed again.
+- **Language list rows.** The row count of a language list is accepted under `svg-flags` only while the target lists no
+  more rows than the reference; the heading is still compared.
 
 ## CI
 

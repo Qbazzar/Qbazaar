@@ -48,23 +48,54 @@ test('a text in a template wrapper is measured with the box that owns it, on eac
 
 // The hop reads list items' own margins: a staggered row of pills sets them by place, and sample cities sit in
 // another order on the target.
-test('list items compare margins only at the same place in their list', async () => {
-  const { placesDiffer } = require('../src/unit');
-  const pill = (index, margin) => ({ key: 't:lusail#0', kind: 'text', rect: rect(90, 53), ownText: true, styles: styles({ margin: `${margin}px 0px 0px 0px`, 'margin-flow': `${margin}px 12px 0px 0px` }), place: { index, count: 9 } });
+test('a list item at another place in its list has its margin counted under list-place, at the same place compared', async () => {
+  const { placesDiffer, listPlaceRule } = require('../src/accepted');
+  const pill = (index, margin, extra = {}) => ({ key: 't:lusail#0', kind: 'text', rect: rect(90, 53), ownText: true, styles: styles({ margin: `${margin}px 0px 0px 0px`, 'margin-flow': `${margin}px 12px 0px 0px`, ...extra }), place: { index, count: 9 } });
   assert.equal(placesDiffer(pill(1, 8), pill(2, 0)), true);
   assert.equal(placesDiffer(pill(2, 8), pill(2, 0)), false);
   assert.equal(placesDiffer({ place: { index: 0, count: 2 } }, { place: { index: 1, count: 2 } }), false);
+  assert.equal(listPlaceRule(pill(1, 8), pill(2, 0), { property: 'margin' }), 'list-place');
+  assert.equal(listPlaceRule(pill(1, 8), pill(2, 0), { property: 'padding' }), null);
   const findings = new Findings();
   const probe = (node) => unitProbe({ descendants: [node] });
-  // Lusail second in the reference row, third on the target: its margin is the pattern's, not the pill's.
+  // Lusail second in the reference row, third on the target: its margin is the pattern's, counted, not dropped.
   await new UnitComparer({ ref: probe(pill(1, 8)), target: probe(pill(2, 0)), findings, base: BASE })
     .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
   assert.deepEqual(findings.list, []);
+  assert.deepEqual(findings.accepted.map((a) => [a.rule, a.count, a.examples[0].component, a.examples[0].ref, a.examples[0].target]),
+    [['list-place', 1, 'city-pills > t:lusail', '8px 0px 0px 0px', '0px 0px 0px 0px']]);
+  // Only the margin follows the place: the pill's colour at another place is still a finding.
+  const coloured = new Findings();
+  await new UnitComparer({ ref: probe(pill(1, 8)), target: probe(pill(2, 0, { color: 'rgb(0, 0, 0)' })), findings: coloured, base: BASE })
+    .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
+  assert.deepEqual(coloured.list.map((f) => f.property), ['color']);
   // At the same place the margins are compared.
   const same = new Findings();
   await new UnitComparer({ ref: probe(pill(2, 8)), target: probe(pill(2, 0)), findings: same, base: BASE })
     .compare({ name: 'city-pills', refSel: 'a', tgtSel: 'a', icons: false, states: false });
   assert.deepEqual(same.list.map((f) => f.property), ['margin']);
+  assert.deepEqual(same.accepted, []);
+  // A box outside the placeLists has no place (inpage.js): a divider at another index in its card is compared.
+  const divider = (index) => ({ ...pill(index, index ? 22 : 0), key: 't:or continue with#0', place: null });
+  const card = new Findings();
+  await new UnitComparer({ ref: probe(divider(3)), target: probe(divider(0)), findings: card, base: BASE })
+    .compare({ name: 'auth-card', refSel: 'a', tgtSel: 'a', icons: false, states: false });
+  assert.deepEqual(card.list.map((f) => [f.component, f.property]), [['auth-card > t:or continue with', 'margin']]);
+  assert.deepEqual(card.accepted, []);
+});
+
+// The places opt in per side: each probe hands its side's lists to the in-page reader, and only the city pills are listed.
+test('only the lists components.json names in placeLists give their items a place, on each side', async () => {
+  const { Probe } = require('../src/capture');
+  const { placeLists } = require('../components.json');
+  assert.deepEqual([placeLists.reference, placeLists.target], [['.qb-places'], ['section[aria-labelledby="home-places"] ul']]);
+  const sent = [];
+  const page = { evaluate: async (fn, arg) => { sent.push(arg); return null; } };
+  await new Probe(page, null, 'reference').read('a', { descendants: true, hop: true });
+  await new Probe(page, null, 'target').read('a');
+  await new Probe(page, null, 'elsewhere').read('a');
+  assert.deepEqual(sent.map((a) => a.placeLists), [placeLists.reference, placeLists.target, []]);
+  assert.deepEqual(sent.map((a) => [a.descendants, a.hop]), [[true, true], [false, false], [false, false]]);
 });
 
 // G-hidden-sizer-pairing: a combobox whose label sits in a span next to an invisible sizer.
@@ -166,17 +197,43 @@ test('language flags are counted under their accepted rule, the static auth pill
 
 test('Arabic text in Noto Kufi Arabic is accepted, Latin text in it is not', async () => {
   const kufi = { property: 'rendered-font', ref: 'Segoe UI', target: 'Noto Kufi Arabic' };
-  assert.equal(arabicFontRule('text:العربية', kufi), 'arabic-font');
-  assert.equal(arabicFontRule('text:english', kufi), null);
-  assert.equal(arabicFontRule('text:العربية', { property: 'color', ref: 'a', target: 'Noto Kufi' }), null);
+  assert.equal(arabicFontRule('العربية', kufi), 'arabic-font');
+  assert.equal(arabicFontRule('English', kufi), null);
+  assert.equal(arabicFontRule('العربية', { property: 'color', ref: 'a', target: 'Noto Kufi' }), null);
   // Through the comparer: an Arabic language row's font is accepted, its colour is not.
-  const row = (extra) => ({ rect: rect(), tag: 'button', text: 'العربية', ownText: true, styles: styles(extra), descendants: [] });
+  const row = (extra) => ({ rect: rect(), tag: 'button', text: 'العربية', ownText: true, ownCopy: 'العربية', styles: styles(extra), descendants: [] });
   const findings = new Findings();
   const probe = (node, font) => ({ ...unitProbe(node), renderedFonts: async () => font });
   await new UnitComparer({ ref: probe(row({ color: 'rgb(75, 75, 75)' }), 'Segoe UI'), target: probe(row({ color: 'rgb(33, 33, 33)' }), 'Noto Kufi Arabic'), findings, base: BASE })
     .compare({ name: 'text:العربية', refSel: 'a', tgtSel: 'a', icons: false, states: false, descendants: false });
   assert.deepEqual(findings.list.map((f) => f.property), ['color']);
   assert.equal(findings.accepted[0].rule, 'arabic-font');
+});
+
+// The rule reads the text an element writes itself and the font it asks for first, never the text of a whole unit.
+test('a Latin text in a container that also holds Arabic is still compared, and so is a Latin font ahead of Noto Kufi', async () => {
+  const rendered = (ref, target) => ({ property: 'rendered-font', ref, target });
+  const family = (target) => ({ property: 'font-family', ref: 'Segoe UI, sans-serif', target });
+  assert.equal(arabicFontRule('English العربية', rendered('Segoe UI', 'Noto Kufi Arabic')), null);
+  // Digits next to Arabic letters stay in the reference's Latin font; a font only the target drew is a finding.
+  assert.equal(arabicFontRule('منذ 3 أيام', rendered('Poppins + Segoe UI', 'Noto Kufi Arabic + Poppins')), 'arabic-font');
+  assert.equal(arabicFontRule('منذ 3 أيام', rendered('Arial + Segoe UI', 'Noto Kufi Arabic + Poppins')), null);
+  assert.equal(arabicFontRule('العربية', family('"notoKufiArabic", poppins, sans-serif')), 'arabic-font');
+  assert.equal(arabicFontRule('العربية', family('montserrat, notoKufiArabic, "montserrat Fallback", sans-serif')), null);
+
+  // A language panel: its own heading is Latin, its rows are English and Arabic.
+  const text = (copy, font) => ({ key: `t:${copy.toLowerCase()}#0`, kind: 'text', rect: rect(), ownText: true, ownCopy: copy, styles: styles({ 'font-family': font }) });
+  const panel = (font, rows) => ({ text: 'Choose your language English العربية', ownText: true, ownCopy: 'Choose your language', styles: styles({ 'font-family': font }), descendants: rows });
+  const ref = panel('Poppins, sans-serif', [text('English', 'Poppins, sans-serif'), text('العربية', 'Segoe UI, sans-serif')]);
+  const target = panel('montserrat, notoKufiArabic, sans-serif', [text('English', 'notoKufiArabic, poppins, sans-serif'), text('العربية', 'notoKufiArabic, poppins, sans-serif')]);
+  const probe = (node, font) => ({ ...unitProbe(node), renderedFonts: async () => font });
+  const findings = new Findings();
+  await new UnitComparer({ ref: probe(ref, 'Poppins'), target: probe(target, 'Montserrat + Noto Kufi Arabic'), findings, base: BASE })
+    .compare({ name: 'language-panel', refSel: 'a', tgtSel: 'a', icons: false, states: false });
+  assert.deepEqual(findings.list.map((f) => [f.component, f.property]), [
+    ['language-panel', 'font-family'], ['language-panel', 'rendered-font'], ['language-panel > t:english', 'font-family'],
+  ]);
+  assert.deepEqual(findings.accepted.map((a) => [a.rule, a.count, a.examples[0].component]), [['arabic-font', 1, 'language-panel > t:العربية']]);
 });
 
 test('a component can accept named properties: sign-up\'s card is taller for its two extra fields', async () => {
@@ -271,6 +328,35 @@ test('scenarios: copy that differs only by a kept string or a language list is a
   assert.deepEqual(real.list.map((f) => f.property), ['text']);
 });
 
+test('scenarios: only the first observation after Escape may find the target closed', async () => {
+  const { press, observe } = require('../scenarios/dsl');
+  const modal = { ref: '.modal', target: '[role=dialog]' };
+  const hidden = { text: 'skip', styles: false };
+  const twice = await runSteps([press('Escape'), observe('closed-by-escape', modal, hidden), observe('still-open', modal, hidden)]);
+  assert.deepEqual(twice.accepted.map((a) => [a.rule, a.count]), [['escape-key', 1]]);
+  assert.deepEqual(twice.list.map((f) => [f.component, f.property, f.ref, f.target]), [['scenario:x:still-open', 'exists', 'visible', 'not visible']]);
+});
+
+test('scenarios: the language list accepts fewer rows than the reference, never more, and keeps its heading', async () => {
+  const { observe, languageList } = require('../scenarios/dsl');
+  const rows = { ref: '.modal', target: '[role=dialog]' };
+  const counted = { count: true, text: 'skip', styles: false, accepted: languageList };
+  const fewer = await runSteps([observe('option-rows', rows, counted)], { refCount: 9, targetCount: 2 });
+  assert.deepEqual(fewer.list, []);
+  assert.deepEqual(fewer.accepted.map((a) => [a.rule, a.examples[0].property, a.examples[0].ref, a.examples[0].target]), [['svg-flags', 'count', '9', '2']]);
+  const more = await runSteps([observe('option-rows', rows, counted)], { refCount: 2, targetCount: 3 });
+  assert.deepEqual(more.list.map((f) => [f.property, f.ref, f.target]), [['count', '2', '3']]);
+  assert.deepEqual(more.accepted, []);
+  // A count rule left as a plain flag accepts nothing.
+  const flag = await runSteps([observe('option-rows', rows, { ...counted, accepted: { ...languageList, count: true } })], { refCount: 9, targetCount: 2 });
+  assert.deepEqual(flag.list.map((f) => f.property), ['count']);
+  // The heading is still compared next to an accepted count.
+  const renamed = await runSteps([observe('panel', rows, { count: true, styles: false, accepted: languageList })], {
+    refCount: 9, targetCount: 2, refText: 'Choose your language English Arabic', targetText: 'Pick a language English',
+  });
+  assert.deepEqual(renamed.list.map((f) => f.property), ['text']);
+});
+
 // G-flows-mapping.
 test('flows: category crumbs reach any category page, template drift is not a missing control', () => {
   const destinations = selectPages({ pages: CATEGORY_PAGES, viewports: [{ width: 1440 }] }).map((p) => ({ path: p.route.split('?')[0], aliases: p.aliases }));
@@ -304,6 +390,32 @@ test('auth steps that send a code or a mail run only against a local target, liv
   assert.equal(liveDataRule('saved-search', 'ss.notif.on').items, 'main article');
   assert.equal(liveDataRule('saved-search', 'ss.crumb.home'), null);
   assert.equal(liveDataRule('index', 'ca.list.card'), null);
+});
+
+// The page audit's missing cards: the category's ad card is a liveData element, skipped only while the list is empty.
+test('a live-data component is a warning while the target lists no items, and a finding once it lists some', async () => {
+  const { componentsFor, componentUnits, reportMissingComponents } = require('../src/audit');
+  const { liveDataSkipReason } = require('../src/pages');
+  const found = { refFound: [{ id: 'ca.list.card~0', name: 'ca.list.card', index: 0 }], tgtFound: [] };
+  const { missing } = componentUnits(componentsFor('category'), found, {}, 1440);
+  assert.deepEqual(missing.map((m) => m.name), ['ca.list.card']);
+  const run = async (listsItems) => {
+    const env = { warnings: [] };
+    const emitted = [];
+    await reportMissingComponents(env, { evaluate: async () => listsItems }, { page: 'category', viewport: 1440 }, missing, (f) => emitted.push(f));
+    return { warnings: env.warnings, emitted };
+  };
+  const empty = await run(false);
+  assert.deepEqual(empty.emitted, []);
+  assert.deepEqual(empty.warnings.map((w) => w.what), ['component ca.list.card on category@1440']);
+  assert.match(empty.warnings[0].reason, /live ads in this category/);
+  const listed = await run(true);
+  assert.deepEqual(listed.warnings, []);
+  assert.deepEqual(listed.emitted.map((f) => [f.component, f.property, f.severity]), [['ca.list.card', 'missing-component', 'high']]);
+  // An element no liveData rule names never asks the page.
+  let asked = false;
+  assert.equal(await liveDataSkipReason({ evaluate: async () => { asked = true; return false; } }, 'index', 'ca.list.card'), null);
+  assert.equal(asked, false);
 });
 
 // A signed-in page that lands on /login lost the demo session: sign in again and reopen, never compare the login form.

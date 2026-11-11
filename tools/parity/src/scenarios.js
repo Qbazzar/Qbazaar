@@ -126,7 +126,7 @@ class ScenarioRun {
   }
 
   async step(step) {
-    if (step.type === 'observe') return this.observe(step);
+    if (step.type === 'observe') return this.observeStep(step);
     if (step.type === 'motion') return this.motion(step);
     if (step.type === 'route') return this.route(step);
     if (step.type === 'stay') return this.stay(step);
@@ -144,6 +144,16 @@ class ScenarioRun {
       }
     }
     return true;
+  }
+
+  // Only the first observation after Escape is where the target may have closed and the prototype stayed open; a
+  // later one compares open and closed states again.
+  async observeStep(step) {
+    try {
+      return await this.observe(step);
+    } finally {
+      this.afterEscape = false;
+    }
   }
 
   // An element can still be sliding in (a drawer under a busy CPU), and a click can start a client-side navigation
@@ -208,7 +218,9 @@ class ScenarioRun {
     }
     if (step.what.count && ref.count !== target.count) {
       const count = { component, property: 'count', ref: String(ref.count), target: String(target.count) };
-      if (step.what.accepted && step.what.accepted.count) this.accept(step.what.accepted.rule, count);
+      const accepted = step.what.accepted;
+      // An observation's rule says which count differences it accepts (dsl.js languageList: no more rows than the reference).
+      if (accepted && typeof accepted.count === 'function' && accepted.count(ref.count, target.count)) this.accept(accepted.rule, count);
       else this.emit({ ...count, category: 'behaviour', severity: 'medium' });
     }
     for (const attr of OBSERVED_ATTRIBUTES) {

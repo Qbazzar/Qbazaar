@@ -4,7 +4,7 @@ const { diffStyles, canonicalValue } = require('./compare');
 const { FOCUS_RULE, applyFocusPolicy, designedChanges, isUserAgentRing } = require('./focus');
 const { pairDescendants, isUserData } = require('./matching');
 const { compareIcon, pairIcons } = require('./icons');
-const { arabicFontRule, flagRule } = require('./accepted');
+const { arabicFontRule, flagRule, listPlaceRule } = require('./accepted');
 const { diffImages, cropOf } = require('./pixels');
 const path = require('path');
 const fs = require('fs');
@@ -33,7 +33,7 @@ function ownerView(ref, target) {
   if (!ref || !target) return [ref, target];
   const boxed = (node) => (node.box ? { ...node, rect: node.box.rect, styles: { ...node.styles, ...node.box.styles } } : node);
   const written = (node, other) => (!node.ownText && other.ownText && node.textCarrier
-    ? { ...node, ownText: true, styles: { ...node.styles, ...node.textCarrier.styles } } : node);
+    ? { ...node, ownText: true, ownCopy: node.textCarrier.ownCopy, styles: { ...node.styles, ...node.textCarrier.styles } } : node);
   const [r, t] = [boxed(ref), boxed(target)];
   return [written(r, t), written(t, r)];
 }
@@ -41,11 +41,6 @@ function ownerView(ref, target) {
 // Icons of a unit: its own svgs, plus the roots named in `extra` (the reference's phone header bar is pinned outside
 // <header>), plus glyphs drawn with CSS when the unit asks for them (the prototype's phone burger).
 const iconScope = (selector, extra) => (extra ? { selector, extra } : selector);
-
-// A list item's margin follows its place in the list (a staggered row of pills): a text that sits at another place in
-// its list on the other side (sample data in another order) has no margin to compare with.
-const LIST_MIN = 3;
-const placesDiffer = (r, t) => Boolean(r.place && t.place) && r.place.count >= LIST_MIN && t.place.count >= LIST_MIN && r.place.index !== t.place.index;
 
 const withDelta = (base, forced) => ({ ...forced, styles: { ...forced.styles, transform: transformDelta(base.styles.transform, forced.styles.transform) } });
 
@@ -83,21 +78,22 @@ class UnitComparer {
     this.findings.accept(rule, { ...this.base, component, state: this.stateLabel || state, property: d.property, ref: d.ref, target: d.target });
   }
 
-  // An owner-accepted difference: Arabic text in Noto Kufi, or a property the unit's spec accepts (sign-up's taller card).
-  acceptedRule(component, d) {
-    const root = Boolean(this.unit) && component === this.unit.name;
-    const font = arabicFontRule(root ? `${component} ${this.unitText || ''}` : component, d);
-    if (font) return font;
-    const accepted = root && this.unit.accepted;
+  // An owner-accepted difference of one compared pair: Arabic text the target element writes itself in Noto Kufi, the
+  // margin of a list item at another place in its list, or a property the unit's spec accepts (sign-up's taller card).
+  acceptedRule(component, d, { ref, target }) {
+    const rule = listPlaceRule(ref, target, d) || arabicFontRule(target.ownCopy, d);
+    if (rule) return rule;
+    const accepted = Boolean(this.unit) && component === this.unit.name && this.unit.accepted;
     return accepted && accepted.properties.includes(d.property) ? accepted.rule : null;
   }
 
-  // A state only reports what differs beyond the default: repeating a default diff per state is noise.
-  emitDiffs(component, state, diffs) {
+  // A state only reports what differs beyond the default: repeating a default diff per state is noise. `pair` is the
+  // compared { ref, target } the diffs come from.
+  emitDiffs(component, state, diffs, pair) {
     for (const d of diffs) {
       // The browser's own focus ring on a focused reference element is not a design decision.
       if (d.property === 'outline' && isUserAgentRing(d.ref)) { this.accept(FOCUS_RULE, component, state, d); continue; }
-      const rule = this.acceptedRule(component, d);
+      const rule = this.acceptedRule(component, d, pair);
       if (rule) { this.accept(rule, component, state, d); continue; }
       // Focus rings follow one site-wide rule, so they are reported once, not per control.
       const subject = d.property === 'outline' && state === 'focus-visible' ? 'focus-ring' : component;
@@ -121,7 +117,6 @@ class UnitComparer {
     const options = { descendants: unit.descendants !== false, hop: Boolean(unit.hop) };
     const [ref, target] = ownerView(...(await Promise.all([this.ref.read(unit.refSel, options), this.target.read(unit.tgtSel, options)])));
     if (!ref || !target) return;
-    this.unitText = `${ref.text || ''} ${target.text || ''}`;
     this.resting = unit.statesOnly ? this.restingDiffs(unit, ref, target) : null;
     if (!unit.statesOnly) {
       await this.compareRoot(unit, ref, target);
@@ -132,13 +127,13 @@ class UnitComparer {
   }
 
   rootOptions(unit, ref, target) {
-    return { ...unit, sameBox: sameBox(ref.rect, target.rect), ownText: ref.ownText || target.ownText, cursor: Array.isArray(unit.states), refNative: ref.native, skip: placesDiffer(ref, target) ? ['margin'] : [] };
+    return { ...unit, sameBox: sameBox(ref.rect, target.rect), ownText: ref.ownText || target.ownText, cursor: Array.isArray(unit.states), refNative: ref.native };
   }
 
   async compareRoot(unit, ref, target) {
     const diffs = diffStyles(ref.styles, target.styles, this.rootOptions(unit, ref, target));
     for (const d of diffs) d.source = await this.sourceFor(unit.refSel, d.property);
-    this.emitDiffs(unit.name, 'default', diffs);
+    this.emitDiffs(unit.name, 'default', diffs, { ref, target });
     if (ref.text && target.text) await this.compareRenderedFont(unit, ref, target);
   }
 
@@ -148,7 +143,7 @@ class UnitComparer {
     if (ref.native && a === 'Arial') return;
     if (!a || !b || a === b) return;
     const d = { property: 'rendered-font', ref: a, target: b };
-    const rule = this.acceptedRule(unit.name, d);
+    const rule = this.acceptedRule(unit.name, d, { ref, target });
     if (rule) this.accept(rule, unit.name, 'default', d); else this.emit({ component: unit.name, ...d });
   }
 
@@ -165,8 +160,8 @@ class UnitComparer {
     const diffs = pairs.filter((p) => !flags.includes(p)).map((pair) => {
       const [r, t] = ownerView(pair.ref, pair.target);
       const fixed = unit.fixedSize || (r.kind === 'icon') || (r.kind === 'input');
-      const options = { fixedSize: fixed && r.kind !== 'text', skip: [...(r.kind === 'icon' ? ['width', 'height'] : []), ...(placesDiffer(r, t) ? ['margin'] : [])], sameBox: sameBox(r.rect, t.rect), motion: false, ownText: r.ownText || t.ownText, kind: r.kind, refNative: r.native };
-      return { key: r.key.replace(/#\d+$/, ''), diffs: diffStyles(r.styles, t.styles, options) };
+      const options = { fixedSize: fixed && r.kind !== 'text', skip: r.kind === 'icon' ? ['width', 'height'] : [], sameBox: sameBox(r.rect, t.rect), motion: false, ownText: r.ownText || t.ownText, kind: r.kind, refNative: r.native };
+      return { key: r.key.replace(/#\d+$/, ''), diffs: diffStyles(r.styles, t.styles, options), pair: { ref: r, target: t } };
     });
     return { diffs, missing, flags: flags.map((p) => ({ key: p.ref.key.replace(/#\d+$/, ''), rule: flagRule(p.ref.flag, p.target.flag) })) };
   }
@@ -196,7 +191,7 @@ class UnitComparer {
     const { diffs, missing, flags } = this.childDiffs(unit, ref, target);
     for (const child of diffs) {
       if (state === 'default') for (const d of child.diffs) this.covered.add(UnitComparer.coverKey(child.key, d));
-      this.emitDiffs(`${unit.name} > ${child.key}`, state, child.diffs);
+      this.emitDiffs(`${unit.name} > ${child.key}`, state, child.diffs, child.pair);
     }
     if (state !== 'default') return;
     for (const f of flags) this.accept(f.rule, `${unit.name} > ${f.key}`, state, { property: 'flag', ref: 'reference flag', target: 'target flag' });
@@ -244,7 +239,7 @@ class UnitComparer {
       if (!r || !t) continue;
       const [rd, td] = [withDelta(ref, r), withDelta(target, t)];
       const diffs = diffStyles(rd.styles, td.styles, { ...this.rootOptions(unit, r, t), motion: false, transform: 'full' });
-      this.emitDiffs(unit.name, state, state === 'focus-visible' ? this.focusPolicy(unit.name, diffs, ref, r) : diffs);
+      this.emitDiffs(unit.name, state, state === 'focus-visible' ? this.focusPolicy(unit.name, diffs, ref, r) : diffs, { ref: r, target: t });
       if (full) this.compareChildren(unit, r, t, state);
       this.compareStateChange(unit, state, { ref, target }, { ref: r, target: t });
     }
@@ -286,4 +281,4 @@ class UnitComparer {
   }
 }
 
-module.exports = { UnitComparer, ownerView, placesDiffer };
+module.exports = { UnitComparer, ownerView };
