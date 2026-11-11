@@ -39,13 +39,13 @@ function samplePng() {
 
 /**
  * A language list (accepted svg-flags difference): the target draws SVG flags and lists the languages it ships, each
- * in its own script, where the prototype lists nine with emoji flags. The heading is still compared; the rows and
- * their count are counted under the accepted rule.
+ * in its own script, where the prototype lists nine with emoji flags. The heading is still compared; the rows are
+ * counted under the accepted rule while the target lists no more of them than the reference (more is a finding).
  */
 const languageList = {
   rule: 'svg-flags',
   text: (copy) => (String(copy).match(/choose your language/i) || ['(no heading)'])[0].toLowerCase(),
-  count: true,
+  count: (refCount, targetCount) => targetCount <= refCount,
 };
 
 function scenario(definition) {

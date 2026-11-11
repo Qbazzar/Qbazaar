@@ -3,7 +3,7 @@
 const { openSide, closeSide, SESSION_LOST } = require('./sides');
 const { open: browserOpen, ensureBrowser } = require('./browser');
 const { navigationFlows } = require('./spec');
-const { selectPages, writeSkipReason, liveDataRule, lacksLiveData, liveDataReason } = require('./pages');
+const { selectPages, writeSkipReason, liveDataSkipReason } = require('./pages');
 const { NEEDS_LOGIN } = require('./config');
 
 // A click that navigates is read once the URL changes (a server-rendered page can take a few seconds on live);
@@ -168,8 +168,8 @@ async function checkFlow(env, flow, { description, target, viewport }) {
     env.warnings.push({ what: `flow ${flow.element} on ${flow.page}@${viewport.width}`, reason: `its inventory selector names "${description.text}" at this width, not the control described as ${flow.component}` });
     return null;
   }
-  const live = liveDataRule(flow.page, flow.element);
-  if (live && (await lacksLiveData(target.page, live))) return `${flow.element}: ${liveDataReason(live)}`;
+  const live = await liveDataSkipReason(target.page, flow.page, flow.element);
+  if (live) return `${flow.element}: ${live}`;
   const said = description.text || description.label || flow.element;
   const found = await locateOnTarget(target, description, dest);
   if (!found) {

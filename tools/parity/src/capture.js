@@ -1,6 +1,7 @@
 // State capture through the Chrome DevTools Protocol: forced pseudo states, rendered fonts,
 // stylesheet text (for keyframes and source lines) and in-page unit reads.
 const inpage = require('./inpage');
+const { placeLists: PLACE_LISTS } = require('../components.json');
 
 const STATE_CLASSES = { hover: ['hover'], 'focus-visible': ['focus', 'focus-visible'], active: ['active', 'hover'] };
 const SOURCE_PROPERTY = {
@@ -38,7 +39,8 @@ class Probe {
   }
 
   read(selector, options = {}) {
-    return this.page.evaluate(inpage.readUnit, { selector, descendants: Boolean(options.descendants), hop: Boolean(options.hop) });
+    const placeLists = PLACE_LISTS[this.side] || [];
+    return this.page.evaluate(inpage.readUnit, { selector, descendants: Boolean(options.descendants), hop: Boolean(options.hop), placeLists });
   }
 
   async withState(selector, state, readFn) {

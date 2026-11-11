@@ -5,7 +5,7 @@ const { openSide, closeSide, SESSION_LOST } = require('./sides');
 const { UnitComparer } = require('./unit');
 const { loadStreams, navigationFlows, usedIds } = require('./spec');
 const { loadScenarios } = require('../scenarios');
-const { selectPages, writeSkipReason, liveDataRule, lacksLiveData, liveDataReason } = require('./pages');
+const { selectPages, writeSkipReason, liveDataSkipReason } = require('./pages');
 const targets = require('../targets.json');
 const { NEEDS_LOGIN } = require('./config');
 const { open: browserOpen, ensureBrowser } = require('./browser');
@@ -163,9 +163,9 @@ async function sweepElement(env, ctx, element) {
     env.warnings.push({ what: `sweep ${element.id} on ${base.page}@${base.viewport}`, reason: 'its inventory selector names an icon at this width, not the control' });
     return;
   }
-  const live = liveDataRule(base.page, element.id);
-  if (live && (await lacksLiveData(target.page, live))) {
-    ctx.skipped.push({ what: `inventory ${element.id} on ${base.page}@${base.viewport}`, reason: liveDataReason(live) });
+  const live = await liveDataSkipReason(target.page, base.page, element.id);
+  if (live) {
+    ctx.skipped.push({ what: `inventory ${element.id} on ${base.page}@${base.viewport}`, reason: live });
     return;
   }
   const twin = await target.page.evaluate(findTwin, { ...description, roleSelector, kind: element.kind, clickable: 'a, button, [role=button], [role=link], label, input' });
