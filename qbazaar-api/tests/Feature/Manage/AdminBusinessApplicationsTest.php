@@ -11,6 +11,7 @@ use App\Notifications\Business\BusinessAccountNotification;
 use App\Services\Business\BusinessApplicationQueue;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
@@ -133,7 +134,42 @@ describe('the application page', function (): void {
             ->assertDontSee(route('admin.business-applications.approve', $application), false);
     });
 
-    it('streams a document to reviewers only, sandboxed and never cached', function (): void {
+    it('keeps what the applicant declared and the notes to the reviewers', function (string $role, bool $reviewer): void {
+        $application = BusinessApplication::factory()->needsInfo()->create([
+            'business_name' => 'Doha Electronics',
+            'legal_name' => 'Doha Electronics Trading W.L.L.',
+            'commercial_registration_number' => 'CR-12345',
+            'applicant_note' => 'We sell phones.',
+            'review_note' => 'Please attach the trade licence.',
+        ]);
+        actingAs($this->staff[$role]);
+
+        $page = $this->get(route('admin.business-applications.show', $application))->assertOk()->assertSee('Doha Electronics');
+        $queue = $this->get(route('admin.business-applications.index', ['status' => 'needs_info']))->assertOk()->assertSee('Doha Electronics');
+        $byRegistration = $this->get(route('admin.business-applications.index', ['status' => 'needs_info', 'q' => 'CR-123']))->assertOk();
+
+        foreach (['Trading W.L.L.', 'CR-12345', 'We sell phones.', 'Please attach the trade licence.'] as $private) {
+            $reviewer ? $page->assertSee($private) : $page->assertDontSee($private);
+        }
+
+        foreach (['Trading W.L.L.', 'CR-12345'] as $private) {
+            $reviewer ? $queue->assertSee($private) : $queue->assertDontSee($private);
+        }
+
+        if ($reviewer) {
+            $page->assertDontSee(__('admin.business_applications.details.reviewers_only'));
+            $byRegistration->assertSee('Doha Electronics');
+        } else {
+            $page->assertSee(__('admin.business_applications.details.reviewers_only'));
+            $byRegistration->assertDontSee('Doha Electronics');
+        }
+    })->with([
+        'super_admin' => ['super_admin', true],
+        'moderator' => ['moderator', true],
+        'support' => ['support', false],
+    ]);
+
+    it('streams a PDF to reviewers only, inline so the browser viewer opens it, and never cached', function (): void {
         $application = $this->applicationWithDocument();
         $document = $application->documents()->sole();
         $url = route('admin.business-applications.document', [$application, $document->id]);
@@ -141,12 +177,41 @@ describe('the application page', function (): void {
         actingAs($this->admin);
         $response = $this->get($url)->assertOk();
 
-        expect($response->headers->get('Content-Security-Policy'))->toBe('sandbox')
+        // Chromium's PDF viewer refuses a sandboxed document.
+        expect($response->headers->get('Content-Security-Policy'))->toBeNull()
+            ->and($response->headers->get('Content-Type'))->toBe('application/pdf')
+            ->and($response->headers->get('Content-Disposition'))->toStartWith('inline')
             ->and($response->headers->get('Cache-Control'))->toContain('no-store')
             ->and($response->headers->get('X-Content-Type-Options'))->toBe('nosniff');
 
         actingAs($this->staff['support']);
         $this->get($url)->assertForbidden();
+    });
+
+    it('opens an image inside a sandbox', function (): void {
+        $application = BusinessApplication::factory()->create();
+        $image = $application->addMedia(UploadedFile::fake()->image('licence.png'))->toMediaCollection(BusinessApplication::DOCUMENTS_COLLECTION);
+        actingAs($this->admin);
+
+        $response = $this->get(route('admin.business-applications.document', [$application, $image->id]))->assertOk();
+
+        expect($response->headers->get('Content-Security-Policy'))->toBe('sandbox')
+            ->and($response->headers->get('Content-Type'))->toBe('image/png')
+            ->and($response->headers->get('Content-Disposition'))->toStartWith('inline')
+            ->and($response->headers->get('X-Content-Type-Options'))->toBe('nosniff');
+    });
+
+    it('only offers a file of any other type as a sandboxed download', function (): void {
+        $application = BusinessApplication::factory()->create();
+        $page = $application->addMedia(UploadedFile::fake()->createWithContent('licence.html', '<html><body><script>alert(1)</script></body></html>'))
+            ->toMediaCollection(BusinessApplication::DOCUMENTS_COLLECTION);
+        actingAs($this->admin);
+
+        $response = $this->get(route('admin.business-applications.document', [$application, $page->id]))->assertOk();
+
+        expect($response->headers->get('Content-Security-Policy'))->toBe('sandbox')
+            ->and($response->headers->get('Content-Type'))->toBe('application/octet-stream')
+            ->and($response->headers->get('Content-Disposition'))->toStartWith('attachment');
     });
 
     it('never opens another application\'s document through this one', function (): void {

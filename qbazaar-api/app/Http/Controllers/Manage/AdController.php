@@ -176,11 +176,14 @@ class AdController extends Controller
 
     public function bulkDestroy(BulkSanctionAdsRequest $request, #[CurrentUser] User $actor, SanctionService $sanctions): RedirectResponse
     {
-        // A mass query delete skips model events, leaving the ads searchable and
-        // unlogged; the service deletes each model, as on the single-delete path.
-        $ads = Ad::query()->with('user')->whereIn('id', $request->adIds())->get();
-        $count = $sanctions->removeAds($actor, $ads, $request->sanction());
+        $selected = $request->adIds();
+        $removed = $sanctions->removeAds($actor, $selected, $request->sanction());
+        $skipped = count($selected) - $removed;
 
-        return back()->with('status', __('admin.moderation.flash.ads_removed', ['count' => $count]));
+        $message = (string) __('admin.moderation.flash.ads_removed', ['count' => $removed]);
+
+        return back()->with('status', $skipped > 0
+            ? $message . ' ' . __('admin.moderation.flash.ads_already_removed', ['count' => $skipped])
+            : $message);
     }
 }

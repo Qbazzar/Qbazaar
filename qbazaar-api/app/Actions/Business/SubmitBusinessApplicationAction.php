@@ -15,14 +15,17 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Throwable;
 
 /**
  * A user applies to become a verified business, or answers a request for
  * more information by resubmitting their open application. One open
  * application per user is enforced by the database, so two concurrent
- * submissions cannot both pass. Documents are stored after the row is saved
- * and outside any transaction, so a slow upload never holds a lock.
+ * submissions cannot both pass. Documents are stored outside any
+ * transaction, so a slow upload never holds a lock, and a failed upload
+ * leaves nothing behind: a new application is deleted again, a resubmitted
+ * one stays waiting for information.
  */
 class SubmitBusinessApplicationAction
 {
@@ -104,20 +107,30 @@ class SubmitBusinessApplicationAction
             throw ValidationException::withMessages(['documents' => __('business.api.documents_max', ['max' => $max])]);
         }
 
-        $application = DB::transaction(function () use ($open, $details): BusinessApplication {
-            /** @var BusinessApplication $locked */
-            $locked = BusinessApplication::query()->whereKey($open->id)->lockForUpdate()->firstOrFail();
+        // The documents are stored before the application goes back to the
+        // queue, so staff never review it with its answer half uploaded. When
+        // the status cannot move (a concurrent resubmission won), the
+        // documents stored here are removed again.
+        $stored = $this->attach($open, $documents);
 
-            if (! $locked->status->canTransitionTo(BusinessApplicationStatus::PENDING)) {
-                throw new DomainException(ErrorCode::BUSINESS_APPLICATION_OPEN);
-            }
+        try {
+            $application = DB::transaction(function () use ($open, $details): BusinessApplication {
+                /** @var BusinessApplication $locked */
+                $locked = BusinessApplication::query()->whereKey($open->id)->lockForUpdate()->firstOrFail();
 
-            $locked->forceFill([...$details, 'status' => BusinessApplicationStatus::PENDING, 'submitted_at' => now()])->save();
+                if (! $locked->status->canTransitionTo(BusinessApplicationStatus::PENDING)) {
+                    throw new DomainException(ErrorCode::BUSINESS_APPLICATION_OPEN);
+                }
 
-            return $locked;
-        });
+                $locked->forceFill([...$details, 'status' => BusinessApplicationStatus::PENDING, 'submitted_at' => now()])->save();
 
-        $this->attach($application, $documents);
+                return $locked;
+            });
+        } catch (Throwable $exception) {
+            $this->discard($stored);
+
+            throw $exception;
+        }
 
         activity('user')
             ->performedOn($application)
@@ -129,14 +142,40 @@ class SubmitBusinessApplicationAction
     }
 
     /**
+     * Stores every document or none: when one fails, those stored before it
+     * are removed.
+     *
      * @param list<UploadedFile> $documents
+     * @return list<Media> the stored documents
      */
-    private function attach(BusinessApplication $application, array $documents): void
+    private function attach(BusinessApplication $application, array $documents): array
+    {
+        $stored = [];
+
+        try {
+            foreach ($documents as $document) {
+                $stored[] = $application->addMedia($document)
+                    ->usingFileName($this->fileNamer->nameFor($document))
+                    ->toMediaCollection(BusinessApplication::DOCUMENTS_COLLECTION);
+            }
+        } catch (Throwable $exception) {
+            $this->discard($stored);
+
+            throw $exception;
+        }
+
+        return $stored;
+    }
+
+    /**
+     * Bounded by max_documents, and only run when a submission fails.
+     *
+     * @param list<Media> $documents
+     */
+    private function discard(array $documents): void
     {
         foreach ($documents as $document) {
-            $application->addMedia($document)
-                ->usingFileName($this->fileNamer->nameFor($document))
-                ->toMediaCollection(BusinessApplication::DOCUMENTS_COLLECTION);
+            $document->delete();
         }
     }
 }

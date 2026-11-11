@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\BusinessNotice;
+use App\Models\BusinessApplication;
 use App\Models\User;
 use App\Notifications\Business\BusinessAccountNotification;
 use App\Services\Catalog\HomeFeedCache;
@@ -112,7 +113,42 @@ describe('the companies list', function (): void {
 
     it('serves the new lookups from indexes', function (): void {
         expect(Schema::hasIndex('users', 'users_business_verified_idx'))->toBeTrue()
-            ->and(Schema::hasIndex('business_profiles', 'business_profiles_featured_idx'))->toBeTrue();
+            ->and(Schema::hasIndex('business_profiles', 'business_profiles_featured_idx'))->toBeTrue()
+            ->and(Schema::hasIndex('business_profiles', 'business_profiles_registration_idx'))->toBeTrue();
+    });
+
+    it('matches emails, phones and CR numbers from their start, and names anywhere', function (string $term, bool $found): void {
+        $this->company->forceFill(['email' => 'sales@doha-electronics.qa', 'phone' => '+97455001122'])->save();
+        $other = User::factory()->business()->create(['full_name' => 'Other Owner']);
+        $other->businessProfile()->create(['business_name' => 'Unrelated Shop']);
+        actingAs($this->admin);
+
+        $response = $this->get(route('admin.companies.index', ['q' => $term]))->assertOk();
+
+        $found ? $response->assertSee('Doha Electronics') : $response->assertDontSee('Doha Electronics');
+        $response->assertDontSee('Unrelated Shop');
+    })->with([
+        'email from its start' => ['sales@doha', true],
+        'email from its middle' => ['@doha-electronics.qa', false],
+        'email typed without the domain' => ['sales', true],
+        'local phone' => ['5500 1122', true],
+        'phone with the country code' => ['+97455001', true],
+        'CR number from its start' => ['CR-123', true],
+        'CR number from its middle' => ['12345', false],
+        'business name anywhere' => ['Electronics', true],
+        'account name anywhere' => ['Trading', true],
+    ]);
+
+    it('ignores a search shorter than the minimum and asks the browser for more', function (): void {
+        $other = User::factory()->business()->create(['full_name' => 'Other Owner']);
+        $other->businessProfile()->create(['business_name' => 'Unrelated Shop']);
+        actingAs($this->admin);
+
+        $this->get(route('admin.companies.index', ['q' => 'Z']))
+            ->assertOk()
+            ->assertSee('Doha Electronics')
+            ->assertSee('Unrelated Shop')
+            ->assertSee('minlength="2"', false);
     });
 });
 
@@ -133,6 +169,27 @@ describe('the company page', function (): void {
             ->assertDontSee(route('admin.companies.verify', $this->company), false)
             ->assertDontSee(route('admin.companies.feature', $this->company), false);
     });
+
+    it('shows the review notes of the company\'s applications to reviewers only', function (string $role, bool $reviewer): void {
+        BusinessApplication::factory()->rejected()->create([
+            'user_id' => $this->company->id,
+            'business_name' => 'Doha Electronics',
+            'review_note' => 'The CR copy is unreadable.',
+        ]);
+        actingAs($this->staff[$role]);
+
+        $response = $this->get(route('admin.companies.show', $this->company))->assertOk();
+
+        if ($reviewer) {
+            $response->assertSee('The CR copy is unreadable.')->assertDontSee(__('admin.companies.applications.notes_reviewers_only'));
+        } else {
+            $response->assertDontSee('The CR copy is unreadable.')->assertSee(__('admin.companies.applications.notes_reviewers_only'));
+        }
+    })->with([
+        'super_admin' => ['super_admin', true],
+        'moderator' => ['moderator', true],
+        'support' => ['support', false],
+    ]);
 
     it('is only for business accounts', function (): void {
         actingAs($this->admin);
@@ -204,6 +261,38 @@ describe('the verified badge', function (): void {
 
         Notification::assertSentTo($this->company, BusinessAccountNotification::class, fn (BusinessAccountNotification $notification): bool => $notification->notice === BusinessNotice::VERIFICATION_REVOKED
             && $notification->reason === 'The licence expired');
+    });
+
+    it('takes a company off the featured list when its badge is revoked', function (): void {
+        $first = featuredCompany('First Shop', 1);
+        $this->company->forceFill(['business_verified_at' => now(), 'business_verified_by' => $this->admin->id])->save();
+        $this->company->businessProfile()->update(['featured_position' => 2]);
+        $last = featuredCompany('Last Shop', 3);
+        actingAs($this->admin);
+
+        $this->post(route('admin.companies.revoke-verification', $this->company), ['reason' => 'The licence expired'])
+            ->assertRedirect()
+            ->assertSessionHas('status', __('admin.companies.flash.revoked'));
+
+        expect(featuredOrder())->toBe([$first->id, $last->id])
+            ->and(DB::table('business_profiles')->where('user_id', $last->id)->value('featured_position'))->toBe(2)
+            ->and(Activity::query()->where('event', 'admin.companies.unfeature')->sole()->properties->get('cause'))->toBe('verification_revoked');
+
+        $this->get(route('admin.companies.show', $this->company))
+            ->assertOk()
+            ->assertSee(__('admin.companies.featured.not_featured'));
+    });
+
+    it('revokes the badge of a company that is not featured without touching the list', function (): void {
+        $first = featuredCompany('First Shop', 1);
+        $this->company->forceFill(['business_verified_at' => now(), 'business_verified_by' => $this->admin->id])->save();
+        actingAs($this->admin);
+
+        $this->post(route('admin.companies.revoke-verification', $this->company), ['reason' => 'The licence expired'])
+            ->assertSessionHas('status', __('admin.companies.flash.revoked'));
+
+        expect(featuredOrder())->toBe([$first->id])
+            ->and(Activity::query()->where('event', 'admin.companies.unfeature')->exists())->toBeFalse();
     });
 
     it('cannot revoke a badge the company does not have', function (): void {

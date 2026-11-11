@@ -14,9 +14,11 @@ use App\Services\Admin\Catalog\CategoryTreeBuilder;
 use App\Services\Admin\Catalog\DeleteBlockedNotice;
 use App\Services\Catalog\CategoryFields;
 use App\Services\Catalog\Taxonomy\TaxonomyDeletion;
+use App\Services\Catalog\Taxonomy\TaxonomyEditor;
 use App\Services\Catalog\Taxonomy\TaxonomyKind;
 use App\Services\Catalog\Taxonomy\TaxonomyTreeOptions;
 use App\Services\Catalog\Taxonomy\TaxonomyUsageCounter;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -50,9 +52,9 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function store(SaveCategoryRequest $request): RedirectResponse
+    public function store(SaveCategoryRequest $request, #[CurrentUser] User $actor, TaxonomyEditor $editor): RedirectResponse
     {
-        Category::query()->create($request->categoryData());
+        $editor->create($actor, TaxonomyKind::CATEGORY, $request->categoryData());
 
         return redirect()
             ->route('admin.categories.index')
@@ -72,18 +74,18 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function update(SaveCategoryRequest $request, Category $category): RedirectResponse
+    public function update(SaveCategoryRequest $request, #[CurrentUser] User $actor, Category $category, TaxonomyEditor $editor): RedirectResponse
     {
-        $category->update($request->categoryData());
+        $editor->update($actor, $category, $request->categoryData());
 
         return redirect()
             ->route('admin.categories.index')
             ->with('status', __('admin.catalog.flash.category_updated'));
     }
 
-    public function destroy(Category $category, TaxonomyDeletion $deletion): RedirectResponse
+    public function destroy(#[CurrentUser] User $actor, Category $category, TaxonomyDeletion $deletion): RedirectResponse
     {
-        $usage = $deletion->delete($category);
+        $usage = $deletion->delete($category, $actor);
 
         if ($usage->inUse()) {
             return back()
@@ -105,9 +107,9 @@ class CategoryController extends Controller
         return back()->with($result->hasBlocked() ? 'error' : 'status', $result->message());
     }
 
-    public function status(UpdateTaxonomyStatusRequest $request, Category $category): RedirectResponse
+    public function status(UpdateTaxonomyStatusRequest $request, #[CurrentUser] User $actor, Category $category, TaxonomyEditor $editor): RedirectResponse
     {
-        $category->update(['is_active' => $request->active()]);
+        $editor->setActive($actor, $category, $request->active());
 
         return back()->with('status', __($request->active() ? 'admin.catalog.flash.category_activated' : 'admin.catalog.flash.category_deactivated'));
     }
