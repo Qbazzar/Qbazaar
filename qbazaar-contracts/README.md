@@ -18,9 +18,11 @@ The API contract and the planning docs for QBazaar: the OpenAPI spec, the error 
 
 ## Status of the spec
 
-`openapi/v1.yaml` describes the MVP API (79 paths) and matches the implementation, except that the existing `reviews` endpoints are missing (CT-13.2). None of the new V2 endpoints are in it yet; adding them, marked `x-status: planned`, is CT-13.1 and comes before any M1 endpoint is built.
+`openapi/v1.yaml` is version 1.1 (CT-13.1, CT-13.2): 136 paths and 169 operations, every route under `/api/v1` that exists today, M1, M1b and M4 included, reviews and Reverb channel authorization too. Request and response schemas follow the FormRequests and Resources in `qbazaar-api`, and nullable fields use the OpenAPI 3.1 form (`type: [string, 'null']`). The only route left out on purpose is `GET /api/v1/auth/password-reset/verify`, the signed target of the password-reset mail.
 
-The API serves this file at `GET /api/v1/openapi.yaml`, and Swagger UI renders it at `/docs` (and `/swagger`) on the Laravel app.
+An operation marked `x-status: planned` is designed but not built yet: the Prism mock serves it, the Laravel API answers 404 until it ships. No operation carries it today. A new endpoint goes into the spec with `x-status: planned` first, and the mark comes off in the pull request that builds it.
+
+The API serves this file at `GET /api/v1/openapi.yaml`, and Swagger UI renders it at `/docs` (and `/swagger`) on the Laravel app, when `qbazaar.api_docs_enabled` is on.
 
 ## Commands
 
@@ -31,7 +33,7 @@ npm run mock       # Prism mock server on http://localhost:4010
 npm run proxy      # Prism proxy to http://localhost:8000 that reports contract drift
 ```
 
-There is no CI job for the spec today; run `npm run validate` before merging a spec change.
+CI runs `npm run validate` and a Prism smoke test on every pull request that touches the spec (`.github/workflows/contract.yml`). Lint errors fail the job; the warnings left are known (localhost servers, the proprietary licence, three unused primitives, and an example check that reads `meta.facets` as unexpected).
 
 ## Contract-first workflow
 
