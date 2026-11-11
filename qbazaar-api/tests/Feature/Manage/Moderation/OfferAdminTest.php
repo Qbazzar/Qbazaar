@@ -92,7 +92,8 @@ it('cancels an open offer with a reason, logs it and tells both sides', function
         ->and($entry->causer_id)->toBe($staff->id)
         ->and($entry->subject_id)->toBe($this->offer->id)
         ->and($entry->properties['reason'])->toBe('fraud')
-        ->and($entry->properties['note'])->toBe('Buyer flagged for fake transfers.');
+        ->and($entry->properties['note'])->toBe('Buyer flagged for fake transfers.')
+        ->and($entry->properties['from'])->toBe(OfferStatus::PENDING->value);
 
     Event::assertDispatched(OfferExpired::class, fn (OfferExpired $event): bool => $event->offer->is($this->offer));
 

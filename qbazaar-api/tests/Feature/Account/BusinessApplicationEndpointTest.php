@@ -7,6 +7,7 @@ use App\Enums\BusinessApplicationStatus;
 use App\Models\BusinessApplication;
 use App\Models\User;
 use App\Services\Business\BusinessApplicationQueue;
+use App\Services\Media\UploadedFileNamer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -17,6 +18,7 @@ use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 
 use Spatie\Activitylog\Models\Activity;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Tests\Concerns\CreatesBusinessApplications;
 
 uses(RefreshDatabase::class, CreatesBusinessApplications::class);
@@ -177,4 +179,49 @@ it('rejects guests', function (): void {
 
     getJson('/api/v1/account/business-application')->assertUnauthorized();
     postJson('/api/v1/account/business-application', [])->assertUnauthorized();
+});
+
+it('keeps a resubmission waiting for information, with no partial documents, when an upload fails', function (): void {
+    $application = BusinessApplication::factory()->needsInfo()->create(['user_id' => $this->user->id]);
+    app()->instance(UploadedFileNamer::class, new class extends UploadedFileNamer
+    {
+        private int $calls = 0;
+
+        public function nameFor(UploadedFile $file): string
+        {
+            if (++$this->calls === 2) {
+                throw new RuntimeException('The documents disk is unavailable.');
+            }
+
+            return parent::nameFor($file);
+        }
+    });
+
+    postJson('/api/v1/account/business-application', businessApplicationPayload([
+        'documents' => [test()->pdfDocument('licence.pdf'), test()->pdfDocument('id-card.pdf')],
+    ]))->assertServerError();
+
+    $application->refresh();
+
+    expect($application->status)->toBe(BusinessApplicationStatus::NEEDS_INFO)
+        ->and($application->documents())->toHaveCount(0)
+        ->and(Storage::disk('local')->allFiles())->toBe([])
+        ->and(Activity::query()->where('event', 'business_application_resubmitted')->exists())->toBeFalse();
+});
+
+it('stores the answer\'s documents before the application goes back to the queue', function (): void {
+    $application = BusinessApplication::factory()->needsInfo()->create(['user_id' => $this->user->id]);
+    $events = [];
+    Media::created(function () use ($application, &$events): void {
+        $events[] = 'document stored while ' . BusinessApplication::query()->whereKey($application->id)->toBase()->value('status');
+    });
+    BusinessApplication::saved(function (BusinessApplication $saved) use (&$events): void {
+        $events[] = 'application saved as ' . $saved->status->value;
+    });
+
+    postJson('/api/v1/account/business-application', businessApplicationPayload([
+        'documents' => [test()->pdfDocument('licence.pdf')],
+    ]))->assertCreated();
+
+    expect($events)->toBe(['document stored while needs_info', 'application saved as pending']);
 });

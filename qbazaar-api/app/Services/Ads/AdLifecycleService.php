@@ -198,6 +198,12 @@ class AdLifecycleService
             /** @var Ad $locked */
             $locked = Ad::query()->lockForUpdate()->findOrFail($ad->getKey());
 
+            // The owner never changes here, so a seller the caller already
+            // loaded serves the events too instead of a lookup per ad.
+            if ($ad->relationLoaded('user')) {
+                $locked->setRelation('user', $ad->user);
+            }
+
             $afterCommit = $change($locked);
 
             if ($afterCommit !== null) {

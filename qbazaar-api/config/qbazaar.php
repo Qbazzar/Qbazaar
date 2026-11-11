@@ -227,6 +227,13 @@ return [
         'spec_chip_max_length' => 40,
     ],
 
+    'demo' => [
+        // Demo accounts (@demo.qbazaar.qa) only. Off unless a demo site turns it on:
+        // then `demo:keep-alive` runs daily and renews their ads before they expire.
+        'keep_alive' => (bool) env('DEMO_KEEP_ALIVE', false),
+        'keep_alive_days' => (int) env('DEMO_KEEP_ALIVE_DAYS', 60),
+    ],
+
     'home' => [
         // Safety net only: the warmer (every catalog.warm_every_minutes) and the
         // ad listing events rebuild the feed. Kept short because "recommended"
@@ -275,6 +282,8 @@ return [
         // keeps that pinned block (and its one indexed query) small.
         'featured_max' => 20,
         'admin_per_page' => 20,
+        // Shorter company searches are ignored: one character matches nearly every row.
+        'admin_search_min_length' => 2,
     ],
 
     /*
@@ -494,6 +503,9 @@ return [
             'lockout_seconds' => 900,
             'trusted_browser_days' => 30,
             'recovery_codes' => 8,
+            // Setup starts with the password; the new key stays visible and
+            // confirmable this long before the password is asked again.
+            'password_confirm_minutes' => 15,
         ],
 
         // Opening a private conversation needs a written reason; the grant

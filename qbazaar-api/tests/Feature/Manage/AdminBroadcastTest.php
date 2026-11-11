@@ -19,6 +19,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Testing\Fakes\NotificationFake;
 
 use function Pest\Laravel\actingAs;
 
@@ -306,6 +307,39 @@ describe('delivery', function (): void {
 
         Notification::assertSentToTimes($users[0], SystemAnnouncementNotification::class, 1);
         expect($broadcast->fresh()->delivered_count)->toBe(1);
+    });
+
+    it('lets the retry of a chunk reach everyone a failed send missed, and nobody twice', function (): void {
+        $users = User::factory()->count(3)->create();
+        $broadcast = StaffBroadcast::query()->forceCreate(['segment' => 'all', 'title_ar' => 'عنوان', 'body_ar' => 'نص', 'status' => 'sending', 'chunks_total' => 1, 'recipients_count' => 3]);
+        $notifications = new class extends NotificationFake
+        {
+            public bool $failSecondSend = true;
+
+            private int $sends = 0;
+
+            public function send($notifiables, $notification): void
+            {
+                if ($this->failSecondSend && ++$this->sends === 2) {
+                    throw new RuntimeException('The notifications queue is unavailable.');
+                }
+
+                parent::send($notifiables, $notification);
+            }
+        };
+        Notification::swap($notifications);
+        $delivery = app(BroadcastDelivery::class);
+
+        expect(fn () => $delivery->deliverChunk($broadcast, $users->modelKeys()))->toThrow(RuntimeException::class);
+        expect($broadcast->fresh())->delivered_count->toBe(1)->chunks_done->toBe(0)->status->toBe(BroadcastStatus::SENDING);
+
+        $notifications->failSecondSend = false;
+        $delivery->deliverChunk($broadcast, $users->modelKeys());
+
+        foreach ($users as $user) {
+            Notification::assertSentToTimes($user, SystemAnnouncementNotification::class, 1);
+        }
+        expect($broadcast->fresh())->delivered_count->toBe(3)->chunks_done->toBe(1)->status->toBe(BroadcastStatus::SENT);
     });
 
     it('reports a chunk that gave up for good as failed', function (): void {

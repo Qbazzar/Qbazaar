@@ -11,7 +11,9 @@ use App\Models\User;
 use App\Notifications\Ads\AdRejectedNotification;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 
 use function Pest\Laravel\actingAs;
 
@@ -194,3 +196,29 @@ it('keeps a fixed query budget however many ads wait', function (): void {
 
     expect($many)->toBe($few)->and($few)->toBeLessThanOrEqual(14);
 });
+
+it('reads the sellers of a bulk review in one query, however many ads it moves', function (string $route, array $payload): void {
+    // Only the request is measured: the queued follower and saved-search
+    // fan-outs read the ad again on the worker either way.
+    Queue::fake();
+    actingAs($this->moderator);
+
+    $sellerLookups = function (int $ads) use ($route, $payload): int {
+        $ids = array_map(fn (int $i): string => pendingAd(User::factory()->create(), "Ad {$i}", $i)->id, range(1, $ads));
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->post(route($route), ['ids' => $ids, ...$payload])->assertSessionHasNoErrors();
+        DB::disableQueryLog();
+
+        return count(array_filter(DB::getQueryLog(), fn (array $query): bool => str_starts_with($query['query'], 'select * from "users"')));
+    };
+
+    $sellerLookups(1);
+
+    expect($sellerLookups(2))->toBe(1)
+        ->and($sellerLookups(6))->toBe(1);
+})->with([
+    'approve' => ['admin.moderation.queue.approve', []],
+    'reject' => ['admin.moderation.queue.reject', ['reason' => 'wrong_category']],
+]);

@@ -1,0 +1,65 @@
+name: Contract
+
+# The OpenAPI spec gates itself: lint plus a Prism mock smoke test, only when
+# the spec or its tooling changes.
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'qbazaar-contracts/openapi/**'
+      - 'qbazaar-contracts/package.json'
+      - 'qbazaar-contracts/package-lock.json'
+      - '.github/workflows/contract.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'qbazaar-contracts/openapi/**'
+      - 'qbazaar-contracts/package.json'
+      - 'qbazaar-contracts/package-lock.json'
+      - '.github/workflows/contract.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Contract · OpenAPI lint + Prism smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: qbazaar-contracts
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: qbazaar-contracts/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate OpenAPI v1
+        run: npm run validate
+
+      - name: Boot Prism mock + smoke /health
+        run: |
+          npm run mock &
+          MOCK_PID=$!
+          for i in {1..30}; do
+            curl -sf http://localhost:4010/api/v1/health > /dev/null && break
+            sleep 1
+          done
+          curl -sf -o "$RUNNER_TEMP/health.json" http://localhost:4010/api/v1/health
+          cat "$RUNNER_TEMP/health.json"
+          kill $MOCK_PID

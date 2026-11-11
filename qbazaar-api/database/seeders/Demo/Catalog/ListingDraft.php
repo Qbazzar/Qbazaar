@@ -9,12 +9,10 @@ use App\Enums\PriceType;
 final readonly class ListingDraft
 {
     /**
-     * @param string $captionEn the English title, drawn on the placeholder photos
      * @param array<string, mixed>|null $customFields
      */
     public function __construct(
         public string $title,
-        public string $captionEn,
         public string $description,
         public ?string $price,
         public PriceType $priceType,

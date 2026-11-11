@@ -13,12 +13,15 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 /**
  * Delivers a broadcast in chunks spread over time, so a message to every
  * user never floods the notifications queue that also carries sign-in codes
  * and order updates. Each recipient is claimed once per broadcast in the
- * cache, so a retried chunk never notifies anyone twice.
+ * cache, so a retried chunk never notifies anyone twice, and a claim is
+ * released again when the send to that recipient fails, so the retry still
+ * reaches them.
  */
 class BroadcastDelivery
 {
@@ -82,14 +85,8 @@ class BroadcastDelivery
             ->filter(fn (User $user): bool => Cache::add($this->claimKey($broadcast, $user), true, Carbon::now()->addDays(self::CLAIM_DAYS)))
             ->values();
 
-        if ($recipients->isNotEmpty()) {
-            Notification::send($recipients, $broadcast->toNotification());
-        }
-
-        StaffBroadcast::query()->whereKey($broadcast->id)->toBase()->incrementEach(
-            ['delivered_count' => $recipients->count(), 'chunks_done' => 1],
-            ['updated_at' => Carbon::now()],
-        );
+        $this->notify($broadcast, $recipients);
+        $this->recordProgress($broadcast, $recipients->count(), chunksDone: 1);
 
         $this->completeIfDone($broadcast->id);
     }
@@ -101,6 +98,49 @@ class BroadcastDelivery
             ->whereKey($broadcastId)
             ->whereIn('status', [BroadcastStatus::QUEUED->value, BroadcastStatus::SENDING->value])
             ->update(['status' => BroadcastStatus::FAILED->value, 'completed_at' => Carbon::now()]);
+    }
+
+    /**
+     * Sends to each claimed recipient in turn, which costs what one send to
+     * the whole chunk costs: the sender walks the recipients one by one
+     * either way. When a send throws, the claims of that recipient and of
+     * everyone after it are released, so the retry of this chunk reaches
+     * them, while those already notified keep their claim and are counted.
+     *
+     * @param Collection<int, User> $recipients
+     */
+    private function notify(StaffBroadcast $broadcast, Collection $recipients): void
+    {
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        $notification = $broadcast->toNotification();
+
+        foreach ($recipients as $position => $recipient) {
+            try {
+                Notification::send($recipient, $notification);
+            } catch (Throwable $exception) {
+                Cache::deleteMultiple($recipients->slice($position)
+                    ->map(fn (User $unsent): string => $this->claimKey($broadcast, $unsent))
+                    ->all());
+                $this->recordProgress($broadcast, $position, chunksDone: 0);
+
+                throw $exception;
+            }
+        }
+    }
+
+    private function recordProgress(StaffBroadcast $broadcast, int $delivered, int $chunksDone): void
+    {
+        if ($delivered === 0 && $chunksDone === 0) {
+            return;
+        }
+
+        StaffBroadcast::query()->whereKey($broadcast->id)->toBase()->incrementEach(
+            ['delivered_count' => $delivered, 'chunks_done' => $chunksDone],
+            ['updated_at' => Carbon::now()],
+        );
     }
 
     /**

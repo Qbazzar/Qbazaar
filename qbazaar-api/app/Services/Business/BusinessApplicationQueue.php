@@ -27,9 +27,10 @@ class BusinessApplicationQueue
     ) {}
 
     /**
+     * @param bool $searchLegalDetails whether the search also matches the legal name and CR number, which only reviewers may see
      * @return LengthAwarePaginator<int, BusinessApplication>
      */
-    public function page(BusinessApplicationStatus $status, ?string $search): LengthAwarePaginator
+    public function page(BusinessApplicationStatus $status, ?string $search, bool $searchLegalDetails = false): LengthAwarePaginator
     {
         $query = BusinessApplication::query()
             ->where('status', $status->value)
@@ -47,8 +48,9 @@ class BusinessApplicationQueue
 
             $query->where(static fn (Builder $match) => $match
                 ->where('business_name', 'like', $like)
-                ->orWhere('legal_name', 'like', $like)
-                ->orWhere('commercial_registration_number', 'like', $like));
+                ->when($searchLegalDetails, static fn (Builder $legal) => $legal
+                    ->orWhere('legal_name', 'like', $like)
+                    ->orWhere('commercial_registration_number', 'like', $like)));
         }
 
         return $query->paginate((int) config('qbazaar.business.admin_per_page'))->withQueryString();

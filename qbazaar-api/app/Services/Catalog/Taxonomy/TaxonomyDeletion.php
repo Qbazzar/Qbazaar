@@ -30,16 +30,17 @@ class TaxonomyDeletion
 
     /**
      * Deleting one row fires the model events, so the taxonomy observer
-     * flushes the catalog caches once the delete commits.
+     * flushes the catalog caches once the delete commits. A refused delete
+     * changes nothing and writes no audit entry.
      *
      * @return TaxonomyUsage what blocked the delete; an unused usage when the row was deleted
      */
-    public function delete(Category|Location $node): TaxonomyUsage
+    public function delete(Category|Location $node, User $actor): TaxonomyUsage
     {
         $kind = TaxonomyKind::of($node);
         $id = (string) $node->getKey();
 
-        return DB::transaction(function () use ($kind, $id): TaxonomyUsage {
+        return DB::transaction(function () use ($kind, $id, $actor): TaxonomyUsage {
             $locked = $kind->model()::query()->whereKey($id)->lockForUpdate()->first();
 
             if ($locked === null) {
@@ -50,6 +51,12 @@ class TaxonomyDeletion
 
             if (! $usage->inUse()) {
                 $locked->delete();
+
+                $this->audit->record($actor, 'admin.' . $kind->routeName() . '.destroy', $locked, [
+                    'slug' => $locked->slug,
+                    'name' => $locked->name,
+                    'parent_id' => $locked->parent_id,
+                ]);
             }
 
             return $usage;
@@ -61,24 +68,36 @@ class TaxonomyDeletion
      * audit entry lists both, because the request also flashes an error when
      * part of the selection stayed.
      *
+     * A row's children only hold it back when they stay: children selected
+     * with it, and free to go themselves, are deleted with it, so a whole
+     * branch goes in one selection.
+     *
      * @param list<string> $ids
      */
     public function deleteMany(TaxonomyKind $kind, array $ids, User $actor): BulkDeletion
     {
         $result = DB::transaction(function () use ($kind, $ids): BulkDeletion {
-            $nodes = $kind->model()::query()->whereKey($ids)->lockForUpdate()->get(['id', 'slug', 'name']);
+            $nodes = $kind->model()::query()->whereKey($ids)->lockForUpdate()->get(['id', 'parent_id', 'slug', 'name']);
             $usage = $this->counter->count($kind, array_values(array_map('strval', $nodes->modelKeys())));
+
+            $selectedChildren = [];
+            foreach ($nodes as $node) {
+                if ($node->parent_id !== null) {
+                    $selectedChildren[(string) $node->parent_id][] = (string) $node->getKey();
+                }
+            }
 
             $free = [];
             $blocked = [];
+            $verdicts = [];
 
             foreach ($nodes as $node) {
                 $id = (string) $node->getKey();
 
-                if ($usage[$id]->inUse()) {
-                    $blocked[] = ['id' => $id, 'name' => $node->getLocalizedName(app()->getLocale()), 'usage' => $usage[$id]];
-                } else {
+                if ($this->canDeleteWithSelection($id, $usage, $selectedChildren, $verdicts)) {
                     $free[] = $id;
+                } else {
+                    $blocked[] = ['id' => $id, 'name' => $node->getLocalizedName(app()->getLocale()), 'usage' => $usage[$id]];
                 }
             }
 
@@ -100,5 +119,32 @@ class TaxonomyDeletion
         }
 
         return $result;
+    }
+
+    /**
+     * Whether a selected row can go: nothing but its children points at it,
+     * every child is in the selection, and each of those can go too. The tree
+     * is only a few levels deep, and each verdict is computed once.
+     *
+     * @param array<string, TaxonomyUsage> $usage
+     * @param array<string, list<string>> $selectedChildren parent id => ids of its selected children
+     * @param array<string, bool> $verdicts
+     */
+    private function canDeleteWithSelection(string $id, array $usage, array $selectedChildren, array &$verdicts): bool
+    {
+        if (isset($verdicts[$id])) {
+            return $verdicts[$id];
+        }
+
+        $children = $selectedChildren[$id] ?? [];
+        $free = ! $usage[$id]->inUseBeyondChildren() && $usage[$id]->children === count($children);
+
+        foreach ($children as $child) {
+            if (! $this->canDeleteWithSelection($child, $usage, $selectedChildren, $verdicts)) {
+                $free = false;
+            }
+        }
+
+        return $verdicts[$id] = $free;
     }
 }

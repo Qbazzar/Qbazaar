@@ -24,6 +24,12 @@ final readonly class TaxonomyUsage
         return $this->ads + $this->children + $this->savedSearches + $this->addresses > 0;
     }
 
+    /** Whether anything other than its own children points at the row. */
+    public function inUseBeyondChildren(): bool
+    {
+        return $this->ads + $this->savedSearches + $this->addresses > 0;
+    }
+
     /**
      * One phrase per kind of reference, such as "12 ads", in the app language.
      *

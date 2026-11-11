@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Demo\Steps;
 
-use App\Actions\Social\ReplaceBusinessCoverAction;
 use App\Actions\Social\UpdateBusinessProfileAction;
 use App\Enums\AccountType;
 use App\Enums\Language;
@@ -13,6 +12,8 @@ use App\Enums\UserStatus;
 use App\Http\Requests\Api\V1\Account\UpdateBusinessProfileRequest;
 use App\Models\User;
 use Database\Seeders\Demo\Catalog\People;
+use Database\Seeders\Demo\Content\DesignManifest;
+use Database\Seeders\Demo\Content\DesignPersonaApplier;
 use Database\Seeders\Demo\DemoContext;
 use Database\Seeders\Demo\DemoMedia;
 use Illuminate\Support\Facades\DB;
@@ -22,17 +23,27 @@ use Illuminate\Support\Facades\Hash;
  * One account per staff role, then the marketplace members: two well-known
  * logins (a buyer and a business seller) and a crowd of private and
  * business accounts with mixed languages and verification states.
+ *
+ * The first members play the design's sellers (names, avatars, logos,
+ * covers and shop profiles from the design manifest); the rest get
+ * generated names with avatars and covers taken from the same design.
  */
 final class SeedPeople
 {
     private const float BUSINESS_SHARE = 0.3;
 
+    /** Design photos for members who do not play a design seller. */
+    private const array AVATARS = ['avatar-farah', 'avatar-mark', 'avatar-jaden', 'avatar-chris', 'avatar-sara'];
+
+    private const array COVERS = ['re-skyscrapers', 're-blue-building', 'cars-amg-grey', 're-office-corridor', 'cars-bmw-m3-studio'];
+
     private int $phoneSequence = 0;
 
     public function __construct(
         private readonly UpdateBusinessProfileAction $updateBusinessProfile,
-        private readonly ReplaceBusinessCoverAction $replaceCover,
         private readonly DemoMedia $media,
+        private readonly DesignManifest $design,
+        private readonly DesignPersonaApplier $personas,
     ) {}
 
     public function run(DemoContext $context): void
@@ -49,10 +60,25 @@ final class SeedPeople
             }
         });
 
-        foreach ($context->members as $member) {
-            if ($member->isBusiness()) {
-                $this->setUpBusiness($context, $member);
-            }
+        foreach ($context->members as $index => $member) {
+            $this->dress($context, $member, $index);
+        }
+    }
+
+    private function dress(DemoContext $context, User $member, int $index): void
+    {
+        $persona = $this->design->personaAt($index);
+
+        if ($persona !== null) {
+            $this->personas->apply($member, $persona);
+
+            return;
+        }
+
+        $this->media->syncAvatar($member, self::AVATARS[$index % count(self::AVATARS)]);
+
+        if ($member->isBusiness()) {
+            $this->setUpBusiness($context, $member, $index);
         }
     }
 
@@ -75,17 +101,20 @@ final class SeedPeople
     private function createMember(DemoContext $context, int $index, string $passwordHash): User
     {
         $random = $context->random;
-        $isBusiness = match ($index) {
-            0 => false,
-            1 => true,
+        $persona = $this->design->personaAt($index);
+        $isBusiness = match (true) {
+            $persona !== null => $persona['kind'] === 'business',
             default => $random->chance(self::BUSINESS_SHARE),
         };
-        $language = $index === 0 || $random->chance(0.6) ? Language::ARABIC : Language::ENGLISH;
+        $language = match (true) {
+            $persona !== null => Language::from($persona['language']),
+            default => $random->chance(0.6) ? Language::ARABIC : Language::ENGLISH,
+        };
         $first = $random->pick(People::FIRST_NAMES);
         $family = $random->pick(People::FAMILY_NAMES);
 
         return $this->createUser($context, [
-            'full_name' => $first[$language->value] . ' ' . $family[$language->value],
+            'full_name' => $persona['name'][$language->value] ?? $first[$language->value] . ' ' . $family[$language->value],
             'email' => $context->email(match ($index) {
                 0 => 'buyer',
                 1 => 'seller',
@@ -128,7 +157,7 @@ final class SeedPeople
         return '+974' . $prefix . '9' . sprintf('%06d', $sequence);
     }
 
-    private function setUpBusiness(DemoContext $context, User $owner): void
+    private function setUpBusiness(DemoContext $context, User $owner, int $index): void
     {
         $business = $context->random->pick(People::BUSINESSES);
         $arabic = $owner->language === Language::ARABIC;
@@ -142,7 +171,7 @@ final class SeedPeople
             'opening_hours' => $this->openingHours($context),
         ]);
 
-        $this->replaceCover->upload($owner, $this->media->coverPhoto($business['en']));
+        $this->media->syncCover($owner, self::COVERS[$index % count(self::COVERS)]);
     }
 
     /**

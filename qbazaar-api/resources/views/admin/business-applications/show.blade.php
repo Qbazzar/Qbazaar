@@ -5,7 +5,7 @@
 
 @section('content')
     <x-admin.page :title="$application->business_name"
-                  :subtitle="$application->legal_name"
+                  :subtitle="$canReview ? $application->legal_name : null"
                   :crumbs="[[__('admin.business_applications.title'), route('admin.business-applications.index')], $application->business_name]"
                   :back="route('admin.business-applications.index')"
                   :side-label="__('admin.business_applications.side_label')">
@@ -13,14 +13,17 @@
             <x-admin.badge :status="$application->status" />
         </x-slot:badges>
 
-        <x-admin.form-section :title="__('admin.business_applications.details.title')" icon="document" id="application-details">
+        <x-admin.form-section :title="__('admin.business_applications.details.title')" icon="document" id="application-details"
+                              :description="$canReview ? null : __('admin.business_applications.details.reviewers_only')">
             <x-admin.meta-list>
                 <x-admin.meta-item :label="__('admin.business_applications.details.business_name')">{{ $application->business_name }}</x-admin.meta-item>
-                <x-admin.meta-item :label="__('admin.business_applications.details.legal_name')">{{ $application->legal_name }}</x-admin.meta-item>
-                <x-admin.meta-item :label="__('admin.business_applications.details.registration')" ltr>{{ $application->commercial_registration_number }}</x-admin.meta-item>
+                @if ($canReview)
+                    <x-admin.meta-item :label="__('admin.business_applications.details.legal_name')">{{ $application->legal_name }}</x-admin.meta-item>
+                    <x-admin.meta-item :label="__('admin.business_applications.details.registration')" ltr>{{ $application->commercial_registration_number }}</x-admin.meta-item>
+                @endif
                 <x-admin.meta-item :label="__('admin.business_applications.submitted_at')" ltr>{{ $application->submitted_at->format('Y-m-d H:i') }}</x-admin.meta-item>
             </x-admin.meta-list>
-            @if ($application->applicant_note)
+            @if ($canReview && $application->applicant_note)
                 <div>
                     <p class="text-sm font-semibold text-ink-500">{{ __('admin.business_applications.details.applicant_note') }}</p>
                     <p class="mt-1 text-sm whitespace-pre-line text-ink-900">{{ $application->applicant_note }}</p>
@@ -29,14 +32,14 @@
         </x-admin.form-section>
 
         <x-admin.form-section :title="__('admin.business_applications.documents.title')" icon="photo" id="application-documents"
-                              :description="$canOpenDocuments ? __('admin.business_applications.documents.private_hint') : __('admin.business_applications.documents.reviewers_only')">
+                              :description="$canReview ? __('admin.business_applications.documents.private_hint') : __('admin.business_applications.documents.reviewers_only')">
             @forelse ($documents as $document)
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-200 bg-cream-50 px-4 py-3">
                     <span class="min-w-0">
                         <span class="block truncate font-semibold text-ink-900" dir="auto">{{ $document->name }}</span>
                         <span class="block text-xs text-ink-500" dir="ltr">{{ $document->mime_type }} · {{ $document->human_readable_size }}</span>
                     </span>
-                    @if ($canOpenDocuments)
+                    @if ($canReview)
                         <x-admin.button variant="secondary" size="sm" icon="external" target="_blank" rel="noopener"
                                         :href="route('admin.business-applications.document', [$application, $document->id])">{{ __('admin.business_applications.documents.open') }}</x-admin.button>
                     @endif
@@ -54,7 +57,7 @@
                     </x-admin.meta-item>
                     <x-admin.meta-item :label="__('admin.business_applications.review.reviewed_at')" ltr>{{ $application->reviewed_at->format('Y-m-d H:i') }}</x-admin.meta-item>
                 </x-admin.meta-list>
-                @if ($application->review_note)
+                @if ($canReview && $application->review_note)
                     <div>
                         <p class="text-sm font-semibold text-ink-500">{{ __('admin.business_applications.review.note') }}</p>
                         <p class="mt-1 text-sm whitespace-pre-line text-ink-900">{{ $application->review_note }}</p>

@@ -32,11 +32,13 @@ class OfferCancellation
     public function cancel(User $staff, Offer $offer, SanctionReasonInput $input): Offer
     {
         return $this->transitions->withLockedOffer($offer, function (Offer $locked) use ($staff, $input): Offer {
+            $from = $locked->status;
+
             $this->transitions->moveTo($locked, OfferStatus::EXPIRED);
 
             $this->audit->record($staff, self::AUDIT_EVENT, $locked, [
                 ...$input->toAudit(),
-                'from' => OfferStatus::PENDING->value,
+                'from' => $from->value,
             ]);
 
             DB::afterCommit(fn () => OfferExpired::dispatch($locked, $locked->buyer_id));

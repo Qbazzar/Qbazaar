@@ -105,7 +105,7 @@ The script already ran `migrate --force`, the caches and the Horizon/Reverb rest
 | # | Command | When / note |
 |---|---|---|
 | 1 | `php artisan migrate --force` | No-op if the script got through; do not skip it after a failed run. Watch long or locking migrations (backfills, table rebuilds, index DDL); budget minutes per million rows. |
-| 2 | `php artisan db:seed --class=RolesAndPermissionsSeeder --force` | When the release adds permissions. Idempotent, but it **re-syncs** the moderator and support roles to the code's lists, so permissions hand-granted to those *roles* are reset (grants to users are kept). |
+| 2 | `php artisan db:seed --class=RolesAndPermissionsSeeder --force` | When the release adds permissions. Idempotent: it creates the missing permissions and roles and gives super_admin every permission, but leaves the moderator and support roles as the permission matrix set them. A new permission reaches those roles only through the release's own grant migration, or by ticking it in the matrix. |
 | 3 | `php artisan permission:cache-reset` | After step 2. |
 | 4 | `php artisan cache:clear` | When cached shapes changed. It clears only the cache DB (`REDIS_CACHE_DB=1`), not the queues or the view buffer (DB 0); rate-limit counters reset. |
 | 5 | `php artisan config:cache && php artisan route:cache && php artisan event:cache` | Only if you edited `.env` after the script. |

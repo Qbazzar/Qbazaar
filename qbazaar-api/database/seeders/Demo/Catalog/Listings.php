@@ -14,22 +14,6 @@ use Database\Seeders\Demo\DemoRandom;
  */
 final class Listings
 {
-    /** Placeholder photo colour per top-level category. */
-    public const array COLORS = [
-        'vehicles' => '#1F4E79',
-        'real-estate' => '#2E7D32',
-        'electronics' => '#37474F',
-        'home-and-garden' => '#8D6E63',
-        'fashion' => '#AD1457',
-        'jobs' => '#5D4037',
-        'services' => '#00838F',
-        'pets' => '#EF6C00',
-        'hobbies-and-sports' => '#6A1B9A',
-        'business-and-industrial' => '#455A64',
-    ];
-
-    public const string DEFAULT_COLOR = '#8A1538';
-
     private const array NO_CONDITION_PARENTS = ['real-estate', 'jobs', 'services', 'pets'];
 
     /**
@@ -138,9 +122,9 @@ final class Listings
         return array_keys(self::TEMPLATES);
     }
 
-    public function colorFor(?string $parentSlug): string
+    public function hasTemplates(string $leafSlug): bool
     {
-        return self::COLORS[$parentSlug] ?? self::DEFAULT_COLOR;
+        return isset(self::TEMPLATES[$leafSlug]);
     }
 
     public function draft(string $leafSlug, string $parentSlug, string $language, string $area): ListingDraft
@@ -152,7 +136,6 @@ final class Listings
 
         return new ListingDraft(
             title: $title,
-            captionEn: $titleEn,
             description: sprintf($this->random->pick(self::DESCRIPTIONS[$language]), $title, $area),
             price: $priceType === PriceType::CONTACT || $priceType === PriceType::FREE ? null : (string) $this->random->price($min, $max),
             priceType: $priceType,

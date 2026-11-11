@@ -33,7 +33,7 @@ class SendAdNotifications
         AdPublished|AdApproved|AdRejected|AdExpiringSoon|AdExpired|AdRenewed $event,
     ): void {
         $ad = $event->ad;
-        $owner = $ad->user()->first();
+        $owner = $ad->relationLoaded('user') ? $ad->user : $ad->user()->first();
 
         if ($owner === null) {
             return;
