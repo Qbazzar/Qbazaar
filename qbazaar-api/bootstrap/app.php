@@ -107,7 +107,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // offer rules depend on (offers belong to ACTIVE ads) have already
         // settled when offers are flipped to EXPIRED.
         // Demo sites only: renews the ads of demo accounts before they expire.
-        $schedule->command('demo:keep-alive', ['--force' => true])
+        $schedule->command('demo:keep-alive', ['--force'])
             ->dailyAt('04:00')
             ->timezone('Asia/Qatar')
             ->name('demo.keep-alive')
@@ -168,7 +168,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ->name('retention.prune-history')
             ->withoutOverlapping();
 
-        $schedule->command('activitylog:clean', ['--force' => true])
+        $schedule->command('activitylog:clean', ['--force'])
             ->dailyAt('03:45')
             ->timezone('Asia/Qatar')
             ->name('retention.clean-activity-log')
