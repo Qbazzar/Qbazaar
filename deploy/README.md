@@ -246,7 +246,7 @@ The box has 7.7 GB of RAM, and **the budget is tight**: in a typical hour about 
 
 The peak column assumes a full queue backlog, a Meilisearch re-index and a busy API at the same moment, which is rare but is exactly what a launch day can do. If `free -m` shows less than 0.5 GB available for long, lower `pm_max_children` (12 now; 16 only after `scripts/fpm-pool-size.sh` shows the real worker size) or the buffer pool before anything else.
 
-A deploy also runs `vite build` and `next build` (up to 1.5 GB heap each, one after the other), and that is on top of the typical column. The 2 GB swap file is therefore a prerequisite, not an option. Check it before step 1:
+A deploy also runs `vite build` and `next build` (up to 1.5 GB heap each, one after the other), and that is on top of the typical column. A deploy during peak load is therefore not safe: run it in a quiet hour. The 2 GB swap file is therefore a prerequisite, not an option. Check it before step 1:
 
 ```bash
 root# swapon --show

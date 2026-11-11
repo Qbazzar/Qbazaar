@@ -2,7 +2,7 @@
 
 Run this when you promote `main` to `production`. Day-to-day flow and reference: [README.md](README.md). First-time server setup: [NEW-SERVER-RUNBOOK.md](NEW-SERVER-RUNBOOK.md).
 
-Server: Hostinger VPS `<server-hostname>` (AlmaLinux 9, cPanel), cPanel user `qbazaar`, clone at `/home/qbazaar/qbazaar`, PHP `ea-php84`, MariaDB 10.11, Meilisearch 1.12.8, Redis 7. The hosts are `API_HOST` and `WEB_HOST` in `~qbazaar/.qbazaar-deploy.env` (today `api.qbazaar.187-53-139-138.sslip.io` and `qbazaar.187-53-139-138.sslip.io`, until the real domain).
+Server: Hostinger VPS `<server-hostname>` (AlmaLinux 9, cPanel), cPanel user `qbazaar`, clone at `/home/qbazaar/qbazaar`, PHP `ea-php84`, MariaDB 10.11, Meilisearch 1.12.8, Redis 7. The hosts are `API_HOST` and `WEB_HOST` in `~qbazaar/.qbazaar-deploy.env` (production: `api.qbazaar.qa` and `qbazaar.qa`; the first build used temporary sslip.io names).
 
 - `qbazaar$` means run it as `qbazaar` in `~/qbazaar/qbazaar-api`.
 - `root#` means run it as root.
