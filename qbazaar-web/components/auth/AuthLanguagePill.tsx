@@ -83,7 +83,8 @@ export function AuthLanguagePill() {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
-        aria-label={`${t('layout.language.label')}: ${active.name}`}
+        // The visible code stays in the name, so speech users can say what they see (WCAG 2.5.3).
+        aria-label={`${t('layout.language.label')}: ${active.name} (${active.code})`}
         onClick={() => setOpen((value) => !value)}
         onKeyDown={(event) => {
           if (event.key === 'ArrowDown' && !open) {

@@ -37,7 +37,9 @@ describe('PasswordInput', () => {
     expect(input).toHaveAttribute('dir', 'ltr');
     expect(input).toHaveClass('px-4');
     expect(input).not.toHaveClass('pr-12');
-    expect(toggle).toHaveClass('end-3.5');
+    // A 24 px box 12 px from the end keeps the 20 px glyph 14 px from it, as .qb-eye places it.
+    expect(toggle).toHaveClass('end-3', 'size-6', 'justify-center');
+    expect(toggle.querySelector('svg')).toHaveClass('size-5');
   });
 
   it('keeps the standard placeholder colour unless the auth pages ask for theirs', () => {
