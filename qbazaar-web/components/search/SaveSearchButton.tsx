@@ -10,8 +10,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { toast } from 'sonner';
 
 import { fieldErrorText } from '@/components/auth/FieldError';
@@ -36,11 +34,16 @@ import { isSameSearch } from './search-params';
 /** `SaveSearchRequest.name` in the contract. */
 const NAME_MAX_LENGTH = 60;
 
-const schema = z.object({
-  name: z.string().trim().min(1, 'search.save_search.name_required').max(NAME_MAX_LENGTH, 'search.save_search.name_max'),
-});
+interface FormValues {
+  name: string;
+}
 
-type FormValues = z.infer<typeof schema>;
+// A plain rule rather than a zod schema: it keeps zod (about 64 KB of script) off the catalog and search pages.
+function validateName(value: string): string | true {
+  const name = value.trim();
+  if (!name) return 'search.save_search.name_required';
+  return name.length <= NAME_MAX_LENGTH || 'search.save_search.name_max';
+}
 
 /** The page-action buttons, shared with the "Add to Favorite" pill beside it (category.html). */
 export const TRIGGER = {
@@ -72,7 +75,7 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
   const { isAuthenticated, isHydrated } = useAuth();
   const [open, setOpen] = useState(false);
   const mutation = useSaveSearchMutation();
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { name: '' } });
+  const form = useForm<FormValues>({ defaultValues: { name: '' } });
   const savedSearches = useSavedSearchesQuery(isHydrated && isAuthenticated);
   const [justSaved, setJustSaved] = useState<SearchQueryParams | null>(null);
   const saved = [...(savedSearches.data?.map((search) => search.query_params) ?? []), ...(justSaved ? [justSaved] : [])].some((savedParams) =>
@@ -122,7 +125,7 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
 
   const onSubmit = form.handleSubmit((values) => {
     mutation.mutate(
-      { name: values.name, query_params: params },
+      { name: values.name.trim(), query_params: params },
       {
         onSuccess: () => {
           toast.success(t('search.save_search.success_toast', 'تم حفظ البحث'));
@@ -163,7 +166,7 @@ export function SaveSearchButton({ params, variant = 'header', className }: Save
               autoComplete="off"
               maxLength={NAME_MAX_LENGTH}
               placeholder={t('search.save_search.name_placeholder')}
-              {...form.register('name')}
+              {...form.register('name', { validate: validateName })}
             />
           )}
         </Field>
