@@ -96,3 +96,35 @@ describe('seeds when the API fails', () => {
     expect((init.headers as Record<string, string>)['Accept-Language']).toBe('ar');
   });
 });
+
+describe('searchSeed of a search that finds nothing', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const featured = [{ id: 'ad-1', title: 'Featured' }];
+  const searchResponse = (total: number) => ({ data: [], meta: { total, current_page: 1, last_page: 1, per_page: 24 }, facets: {} });
+
+  function stubApi(total: number) {
+    const fetchMock = vi.fn((url: string) =>
+      Promise.resolve(Response.json(url.includes('/ads/featured') ? { success: true, data: featured } : searchResponse(total))),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+
+  it('seeds the featured ads it recommends, so they do not push the footer down after the first paint', async () => {
+    stubApi(0);
+
+    const state = await searchSeed({ q: 'nothing-matches' }, 'ar');
+
+    const seeded = state?.queries.find((query) => JSON.stringify(query.queryKey) === JSON.stringify(adKeys.featured()));
+    expect(seeded?.state.data).toEqual(featured);
+  });
+
+  it('leaves the featured ads alone when the search has results', async () => {
+    const fetchMock = stubApi(3);
+
+    await searchSeed({ q: 'car' }, 'ar');
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
