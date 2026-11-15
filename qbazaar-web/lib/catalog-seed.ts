@@ -37,6 +37,8 @@ const SEED_TIMEOUT_MS = 1500;
 const CATEGORY_PAGE_REVALIDATE_SECONDS = 120;
 /** A plain category listing is the same for every visitor; a minute keeps a new ad from waiting long. */
 const LISTING_REVALIDATE_SECONDS = 60;
+/** The featured ads the "no results" page recommends, the same for every visitor. */
+const FEATURED_REVALIDATE_SECONDS = 300;
 
 /** What the page's URL state reads and what the seed covers; other filters of the same URL are left to the client. */
 const SEARCH_SEEDED_KEYS = ['q', 'category_slug', 'location_slug', 'page', 'sort', 'view'];
@@ -116,7 +118,17 @@ export async function searchSeed(bag: SeedParams, locale: Locale): Promise<Dehyd
   if (!params) return undefined;
 
   const data = await fetchApiJson<SearchResponse>(`/api/v1/search?${queryString({ ...params, lang: locale })}`, 'no-store', { language: locale, timeoutMs: SEED_TIMEOUT_MS });
-  return dehydrated([{ key: searchKeys.result(params), data }]);
+  // A search that finds nothing recommends the featured ads under its message. Loaded by the browser,
+  // they arrived after the first paint and pushed the footer down (CLS 0.16 to 0.56 on /search).
+  const featured = data?.meta.total === 0 ? await featuredSeedData(locale) : null;
+  return dehydrated([
+    { key: searchKeys.result(params), data },
+    { key: adKeys.featured(), data: featured },
+  ]);
+}
+
+function featuredSeedData(locale: Locale): Promise<AdSummary[] | null> {
+  return fetchApiData<AdSummary[]>('/api/v1/ads/featured', FEATURED_REVALIDATE_SECONDS, { language: locale, timeoutMs: SEED_TIMEOUT_MS });
 }
 
 /** The `GET /ads` request of a listing page for this URL, or null when the URL has a filter that is not seeded. */

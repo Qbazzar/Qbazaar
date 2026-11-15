@@ -83,7 +83,9 @@ export function AuthLanguagePill() {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
-        aria-label={`${t('layout.language.label')}: ${active.name}`}
+        // The name starts with the visible code, so speech users can say what they see (WCAG 2.5.3).
+        // Not in brackets: axe ignores bracketed text when it matches the name against the label.
+        aria-label={t('layout.language.named', { code: active.code, name: active.name })}
         onClick={() => setOpen((value) => !value)}
         onKeyDown={(event) => {
           if (event.key === 'ArrowDown' && !open) {

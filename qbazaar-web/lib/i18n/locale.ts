@@ -12,6 +12,10 @@
  *  - **Client**: a single module-level value set once by <LocaleProvider> from
  *    the locale the server already resolved — so the first client render matches
  *    the server HTML and there's no hydration flash.
+ *  - **Client component, server-rendered**: the provider's context. One server
+ *    process renders many requests and a streamed render resumes after other
+ *    requests' providers ran, so the module-level value may belong to another
+ *    request; the context always names the locale of the render in progress.
  */
 import { cache } from 'react';
 
@@ -63,14 +67,34 @@ export function setClientLocale(locale: Locale): void {
   clientGraph = true;
 }
 
+/* ── Client component, server-rendered: the render's own locale ──────────── */
+
+let renderLocaleReader: (() => Locale | null) | null = null;
+
+/** Registered by <LocaleProvider> on the server: reads its context in the render in progress. */
+export function registerRenderLocaleReader(reader: () => Locale | null): void {
+  renderLocaleReader = reader;
+}
+
+function renderLocale(): Locale | null {
+  // Development skips it: React warns when context is read inside useMemo or a
+  // state initialiser, and one developer's requests do not race each other.
+  if (!renderLocaleReader || process.env.NODE_ENV === 'development') return null;
+  try {
+    return renderLocaleReader();
+  } catch {
+    // Called outside a render (an event, a timer): no context to read.
+    return null;
+  }
+}
+
 /* ── Unified accessor ───────────────────────────────────────────────────── */
 
 export function getLocale(): Locale {
-  // Browser, or a client component being server-rendered (the provider seeded
-  // clientLocale for this render).
-  if (typeof window !== 'undefined' || clientGraph) {
-    return clientLocale;
-  }
+  if (typeof window !== 'undefined') return clientLocale;
+  // A client component being server-rendered: its render's locale, else the
+  // value the provider seeded.
+  if (clientGraph) return renderLocale() ?? clientLocale;
   // True server component: read the request-scoped holder primed by the layout.
   return serverHolder().current;
 }

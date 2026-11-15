@@ -9,9 +9,7 @@
  */
 import { useEffect, useId } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 import { FieldError } from '@/components/auth/FieldError';
 import { CardDialog } from '@/components/design-system/CardDialog';
@@ -33,14 +31,12 @@ const REASONS: Record<'ad' | 'user', readonly ReportCategory[]> = {
   user: ['fraud', 'spam', 'offensive', 'inappropriate'],
 };
 
-const reportSchema = z.object({
-  category: z.enum(['spam', 'fraud', 'inappropriate', 'offensive', 'duplicate', 'wrong_category', 'other'], {
-    message: 'reports.errors.category_required',
-  }),
-});
+interface ReportFormValues {
+  category: ReportCategory | undefined;
+}
 
-type ReportFormInput = z.input<typeof reportSchema>;
-type ReportFormOutput = z.output<typeof reportSchema>;
+// A plain required rule rather than a zod schema: it keeps zod (about 64 KB of script) off the ad and seller pages.
+const categoryRules = { required: 'reports.errors.category_required' };
 
 /** An 18 px ring (#cbcbcb), a brand ring around a 9 px brand dot once chosen. */
 const radio = [
@@ -66,8 +62,7 @@ export function ReportDialog({ open, onOpenChange, target_type, target_id, onRep
   const errorId = useId();
   const audience = target_type === 'ad' ? 'ad' : 'user';
 
-  const form = useForm<ReportFormInput, unknown, ReportFormOutput>({
-    resolver: zodResolver(reportSchema),
+  const form = useForm<ReportFormValues>({
     defaultValues: { category: undefined },
     mode: 'onSubmit',
   });
@@ -78,7 +73,8 @@ export function ReportDialog({ open, onOpenChange, target_type, target_id, onRep
   }, [open, form]);
 
   const onSubmit = form.handleSubmit(({ category }) => {
-    if (mutation.isPending) return;
+    // The required rule has already stopped an empty choice; the check narrows the type.
+    if (mutation.isPending || !category) return;
     mutation.mutate(
       { target_type, target_id, category, description: undefined },
       {
@@ -114,7 +110,7 @@ export function ReportDialog({ open, onOpenChange, target_type, target_id, onRep
                 key={category}
                 className="flex cursor-pointer items-center gap-3 border-b border-qb-line px-1 py-[13px] text-qb-caption text-qb-ink-feature"
               >
-                <input type="radio" value={category} className={radio} {...form.register('category')} />
+                <input type="radio" value={category} className={radio} {...form.register('category', categoryRules)} />
                 <span>{t(audience === 'ad' ? `reports.ad_reasons.${category}` : `reports.categories.${category}.label`)}</span>
               </label>
             ))}

@@ -143,6 +143,7 @@ How a fix agent should use it:
 ```
 src/        config, browser, capture (CDP), inpage (browser-side code), matching, compare, unit, motion, icons,
             iconLibrary, pixels, scenarios, flows, rtl, audit (page orchestrator), report, cli
+src/a11y/   the FE-16.7 axe, RTL and Lighthouse audit (see "Accessibility and Lighthouse audit")
 scenarios/  behaviour scenarios + dsl.js
 spec/       trimmed reference behaviour inventories, one file per stream (scripts/import-spec.js regenerates them)
 reference-icons/  the deduplicated reference SVG icon library + index.json
@@ -254,6 +255,26 @@ Fifth round, from the review of Track G (every rule narrower, nothing dropped wi
   observation compares open and closed again.
 - **Language list rows.** The row count of a language list is accepted under `svg-flags` only while the target lists no
   more rows than the reference; the heading is still compared.
+
+## Accessibility and Lighthouse audit
+
+Two more commands share the gate's browser set-up (locale cookie, the localhost CORS harness, the demo login):
+
+```bash
+npm run a11y -- --target http://localhost:3000            # axe + document checks + RTL mirroring, ar and en, 390 and 1440
+npm run lighthouse -- --target http://localhost:3000      # Lighthouse mobile + desktop, ar and en (npx lighthouse@13.6.0)
+```
+
+- **Pages**: home, category, search, product, seller, companies, login, account and post-ad (`src/a11y/pages.js`), plus
+  opened states axe cannot reach otherwise: the phone menu, the phone filter sheet and the login form's errors.
+- **axe** runs the WCAG 2.0/2.1 A and AA rules, WCAG 2.2 AA (target size) and the best practices; the report counts nodes per
+  impact, groups the rules, and lists every failing colour pair separately (colours are reported, never changed by a fix).
+- **Document checks**: `lang` and `dir` follow the locale, one `main`, one visible `h1`, no skipped heading level.
+- **Signed-in pages** use the demo account when `QB_DEMO_EMAIL`/`QB_DEMO_PASSWORD` are set. Without them a stand-in session
+  lives in the browser only (`src/a11y/session-stub.js`): a fixture profile, real public data, and no write leaves the browser.
+- **Lighthouse** is not a dependency: it runs through npx at a pinned version. It cannot sign in, so it covers the public pages.
+  Chrome's throw-away profile goes to the OS temp folder; point `TMP`/`TEMP` elsewhere when that folder is shared.
+- Output: `a11y.md`/`a11y.json` and `lighthouse.md`/`lighthouse.json` (plus each run's JSON) under `--out` (default `out/<time>`).
 
 ## CI
 

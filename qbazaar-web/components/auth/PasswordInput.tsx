@@ -42,9 +42,10 @@ export function PasswordInput({ className, auth = false, ...props }: PasswordInp
         aria-pressed={visible}
         aria-controls={props.id}
         className={cn(
-          'absolute end-3.5 top-1/2 flex -translate-y-1/2 cursor-pointer text-qb-auth-eye',
-          // The 20 px glyph is the box; this keeps a 36 px pointer target around it.
-          "before:absolute before:-inset-2 before:content-['']",
+          // A 24 px box (the WCAG 2.2 minimum target) with the 20 px glyph centred, so the glyph keeps the
+          // design's 14 px inset; the pseudo-element still widens the pointer target to 36 px.
+          'absolute end-3 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center text-qb-auth-eye',
+          "before:absolute before:-inset-1.5 before:content-['']",
           focusRing,
         )}
       >
