@@ -16,7 +16,8 @@ const AUDIT_PAGES = [
 // Menus, sheets and error messages only exist after a click, so axe sees them only in these opened states.
 const AUDIT_STATES = [
   { id: 'home+menu', page: 'home', viewports: [390], click: 'header button[aria-haspopup="dialog"]', waitFor: '[role="dialog"]' },
-  { id: 'category+filters', page: 'category', viewports: [390], click: 'main button[aria-haspopup="dialog"]', waitFor: '[role="dialog"]' },
+  // The "Save search" trigger comes first in main and is also a dialog trigger, so the filter one is picked by its label.
+  { id: 'category+filters', page: 'category', viewports: [390], click: 'main button[aria-haspopup="dialog"]:has-text("Filter"), main button[aria-haspopup="dialog"]:has-text("فلتر")', waitFor: '[role="dialog"]' },
   { id: 'login+errors', page: 'login', viewports: [390, 1440], click: 'main form button[type="submit"]', waitFor: '[aria-invalid="true"]' },
 ];
 
