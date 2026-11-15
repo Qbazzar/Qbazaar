@@ -2587,6 +2587,7 @@
     },
     "language": {
       "label": "اللغة",
+      "named": "{code}، اللغة: {name}",
       "title": "اختر لغتك"
     },
     "skip_to_content": "انتقل إلى المحتوى",

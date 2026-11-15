@@ -2459,6 +2459,7 @@
     },
     "language": {
       "label": "Language",
+      "named": "{code}, Language: {name}",
       "title": "Choose your language"
     },
     "skip_to_content": "Skip to content",

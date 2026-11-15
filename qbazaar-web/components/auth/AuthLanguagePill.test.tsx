@@ -18,8 +18,12 @@ describe('AuthLanguagePill', () => {
     render(<AuthLanguagePill />);
     const trigger = screen.getByRole('button', { expanded: false });
 
+    const label = trigger.getAttribute('aria-label') ?? '';
+
     expect(trigger).toHaveTextContent(code);
-    expect(trigger.getAttribute('aria-label')).toContain(code);
-    expect(trigger.getAttribute('aria-label')).toContain(name);
+    // axe drops bracketed text before matching, so the code must stand on its own, first.
+    expect(label.startsWith(code)).toBe(true);
+    expect(label).not.toContain(`(${code})`);
+    expect(label).toContain(name);
   });
 });
