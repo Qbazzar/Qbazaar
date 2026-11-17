@@ -537,7 +537,7 @@ Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
 //     GET    /conversations/unread-count          — header badge
 //     GET    /conversations/{id}                  — full thread
 //     GET    /conversations/{id}/messages         — cursor transcript
-//     POST   /conversations/{id}/messages         — append + broadcast
+//     POST   /conversations/{id}/messages         — append + broadcast (X-Idempotency-Key replays a retry)
 //     POST   /conversations/{id}/read             — mark all read
 Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
     Route::post('/conversations', [ConversationController::class, 'store'])
@@ -560,7 +560,7 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
         ->name('api.v1.conversations.messages.index');
 
     Route::post('/conversations/{id}/messages', [MessageController::class, 'store'])
-        ->middleware(['phone.verified', 'throttle:messages'])
+        ->middleware(['phone.verified', 'throttle:messages', 'idempotent'])
         ->name('api.v1.conversations.messages.store');
 
     Route::post('/conversations/{id}/read', [ConversationController::class, 'markRead'])

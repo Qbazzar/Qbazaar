@@ -119,6 +119,9 @@ class MessageController extends Controller
     /**
      * POST /api/v1/conversations/{id}/messages — append a message.
      *
+     * A retry with the same `X-Idempotency-Key` from the same user replays
+     * the first response, so a flaky mobile network never sends twice.
+     *
      * @authenticated
      */
     public function store(SendMessageRequest $request, string $id): JsonResponse
