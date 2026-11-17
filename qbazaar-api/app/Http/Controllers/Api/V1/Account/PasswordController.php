@@ -19,6 +19,10 @@ class PasswordController extends Controller
     /**
      * Change the signed-in user's password and burn other sessions.
      *
+     * Confirmed with the current password or with the code from
+     * POST /account/reauth-code; accounts without a password must use the
+     * code, which is how they set their first password.
+     *
      * On success returns 204 — the current access token stays valid so the
      * caller doesn't need to re-authenticate on the active device. Every
      * OTHER active Sanctum token and refresh token is invalidated.
@@ -41,7 +45,7 @@ class PasswordController extends Controller
 
         $action->execute(
             $user,
-            (string) $request->validated('current_password'),
+            $request->stepUpProof(),
             (string) $request->validated('password'),
             $current,
         );

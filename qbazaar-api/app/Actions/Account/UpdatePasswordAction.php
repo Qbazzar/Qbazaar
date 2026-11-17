@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Actions\Account;
 
+use App\Data\Account\StepUpProof;
 use App\Exceptions\DomainException;
 use App\Exceptions\ErrorCode;
 use App\Models\User;
+use App\Services\Account\StepUpVerifier;
 use App\Services\Auth\RefreshTokenService;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -21,24 +23,26 @@ use Laravel\Sanctum\PersonalAccessToken;
  *    explicitly authorise.
  *
  * Why keep the CURRENT session alive?
- *  - Re-prompting the very user who just typed their old + new password
- *    to log in again on the active device is a poor UX and would surprise
- *    every modern app's users.
+ *  - Re-prompting the very user who just confirmed the change and typed a
+ *    new password to log in again on the active device is a poor UX and
+ *    would surprise every modern app's users.
+ *
+ * The change is confirmed with the current password or, for accounts that
+ * never had one, with the emailed step-up code (StepUpVerifier).
  */
 class UpdatePasswordAction
 {
     public function __construct(
         private readonly RefreshTokenService $refreshTokens,
+        private readonly StepUpVerifier $stepUp,
     ) {}
 
     /**
-     * @throws DomainException
+     * @throws DomainException USER_004 for a wrong current password, ACCOUNT_001 for a wrong, expired or spent code
      */
-    public function execute(User $user, string $currentPassword, string $newPassword, ?PersonalAccessToken $currentToken = null): void
+    public function execute(User $user, StepUpProof $proof, string $newPassword, ?PersonalAccessToken $currentToken = null): void
     {
-        if (! $user->passwordMatches($currentPassword)) {
-            throw new DomainException(ErrorCode::USER_PASSWORD_CURRENT_REQUIRED);
-        }
+        $this->stepUp->verify($user, $proof, ErrorCode::USER_PASSWORD_CURRENT_REQUIRED);
 
         // Mutate password — the 'hashed' cast on User does the hashing for us.
         // Using forceFill so this works regardless of $fillable hygiene.

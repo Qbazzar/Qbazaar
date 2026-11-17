@@ -304,11 +304,17 @@ class User extends Authenticatable implements CanResetPasswordContract, HasMedia
 
     /**
      * Accounts created through an email code or Google / Apple have no
-     * password until the owner sets one through the reset flow.
+     * password until the owner sets one, through the reset flow or by
+     * changing it with an emailed step-up code.
      */
+    public function hasPassword(): bool
+    {
+        return $this->password !== null;
+    }
+
     public function passwordMatches(string $plain): bool
     {
-        return $this->password !== null && Hash::check($plain, $this->password);
+        return $this->hasPassword() && Hash::check($plain, (string) $this->password);
     }
 
     /**

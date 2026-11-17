@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Step-up check before sensitive account changes (email, phone).
+ * Step-up check before sensitive account changes: the email and phone
+ * changes, and the password change and account deletion, where it stands in
+ * for the password (StepUpVerifier).
  *
  * Sign-in is passwordless, so there is no password to re-enter; instead the
  * user proves control of the current email with a fresh one-time code. A

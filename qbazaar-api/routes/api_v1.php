@@ -232,7 +232,7 @@ Route::prefix('account')
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.patch');
 
-        Route::put('/password', PasswordController::class)->name('password.update');
+        Route::put('/password', PasswordController::class)->middleware('throttle:step-up-code')->name('password.update');
 
         Route::get('/sessions', [SessionsController::class, 'index'])->name('sessions.index');
         Route::delete('/sessions/{id}', [SessionsController::class, 'destroy'])->name('sessions.destroy');
@@ -297,7 +297,7 @@ Route::prefix('account')
 
         // Account lifecycle (Wave 2) — deactivate / schedule-deletion / data-export.
         Route::post('/deactivate', DeactivateAccountController::class)->name('deactivate');
-        Route::delete('/delete-request', DeleteAccountController::class)->name('delete-request');
+        Route::delete('/delete-request', DeleteAccountController::class)->middleware('throttle:step-up-code')->name('delete-request');
         Route::post('/data-export-request', [DataExportController::class, 'request'])
             ->name('data-export-request');
     });

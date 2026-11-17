@@ -145,6 +145,12 @@ class AppServiceProvider extends ServiceProvider
         // Each hit sends an email or SMS.
         RateLimiter::for('contact-change', fn (Request $r) => Limit::perHour((int) config('qbazaar.account.contact_change_attempts_per_hour'))
             ->by('contact-change:' . (optional($r->user())->id ?: $r->ip())));
+        // A step-up code spent on a password change or a deletion gets the same
+        // hourly cap as on an email or phone change; requests confirmed with the
+        // password keep only the api limit, as before.
+        RateLimiter::for('step-up-code', fn (Request $r) => $r->filled('reauth_code')
+            ? Limit::perHour((int) config('qbazaar.account.contact_change_attempts_per_hour'))->by('step-up-code:' . (optional($r->user())->id ?: $r->ip()))
+            : Limit::none());
 
         RateLimiter::for('follows', fn (Request $r) => [
             Limit::perMinute((int) config('qbazaar.social.follows_per_minute'))->by('follows:' . (optional($r->user())->id ?: $r->ip())),
