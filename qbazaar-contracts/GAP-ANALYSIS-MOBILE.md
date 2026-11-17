@@ -8,7 +8,7 @@
 - **Success envelope:** `{ success, data, meta? }`, JSON in **snake_case**, IDs are **ULID**, dates ISO-8601, money `price` + `currency` + `price_formatted`.
 - **Pagination:** `meta{current_page, per_page, total, last_page, has_more, next_cursor}`. The default is 20. Messages use cursor pagination (`before`).
 - **Error envelope:** `{ success:false, error{ code, message_key, message, details, request_id } }`. Codes are in `error-codes.md`, and `details` holds the field errors.
-- **Headers:** `Authorization: Bearer`, `Accept-Language` (ar/en), `X-Client-Platform` (`mobile_ios|mobile_android`), `X-Idempotency-Key` on publish.
+- **Headers:** `Authorization: Bearer`, `Accept-Language` (ar/en), `X-Client-Platform` (`mobile_ios|mobile_android`), `X-Idempotency-Key` on publish and on sending a chat message (a retry replays the first send).
 - **Tokens:** access token 15 minutes, refresh token 30 days (`POST /auth/refresh`).
 - **Rate limits:** api 120/min · auth 5/min · otp 3/min · messages 30/min · publish 10/day.
 
@@ -70,10 +70,10 @@
 | Edit the name | 🟡 | `PUT /account/profile` needs every field | BE-14.24 |
 | Upload / delete the avatar | 🟡 | upload ✅ `/uploads/avatar`, delete ❌ | BE-14.24 |
 | Change email/phone | ❌ | — | BE-14.25 |
-| Change password | ✅ | `PUT /account/password` | — |
+| Change password | ✅ | `PUT /account/password` with `current_password`, or with `reauth_code` (`POST /account/reauth-code`) when `has_password` is false on `/me` | — |
 | Addresses | ❌ | — | BE-14.26 |
 | Email preferences | ❌ | (`/account/privacy-settings` exists) | BE-14.27 |
-| Delete account + reason | ✅ | `DELETE /account/delete-request` (30-day grace period) | — |
+| Delete account + reason | ✅ | `DELETE /account/delete-request` (30-day grace period) with `password`, or with `reauth_code` when `has_password` is false | — |
 
 ## Social
 | App need | Status | In the API now | Task |
