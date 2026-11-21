@@ -232,7 +232,7 @@ Route::prefix('account')
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.patch');
 
-        Route::put('/password', PasswordController::class)->name('password.update');
+        Route::put('/password', PasswordController::class)->middleware('throttle:step-up-code')->name('password.update');
 
         Route::get('/sessions', [SessionsController::class, 'index'])->name('sessions.index');
         Route::delete('/sessions/{id}', [SessionsController::class, 'destroy'])->name('sessions.destroy');
@@ -297,7 +297,7 @@ Route::prefix('account')
 
         // Account lifecycle (Wave 2) — deactivate / schedule-deletion / data-export.
         Route::post('/deactivate', DeactivateAccountController::class)->name('deactivate');
-        Route::delete('/delete-request', DeleteAccountController::class)->name('delete-request');
+        Route::delete('/delete-request', DeleteAccountController::class)->middleware('throttle:step-up-code')->name('delete-request');
         Route::post('/data-export-request', [DataExportController::class, 'request'])
             ->name('data-export-request');
     });
@@ -537,7 +537,7 @@ Route::post('/ads/{id}/view', [RecentViewController::class, 'track'])
 //     GET    /conversations/unread-count          — header badge
 //     GET    /conversations/{id}                  — full thread
 //     GET    /conversations/{id}/messages         — cursor transcript
-//     POST   /conversations/{id}/messages         — append + broadcast
+//     POST   /conversations/{id}/messages         — append + broadcast (X-Idempotency-Key replays a retry)
 //     POST   /conversations/{id}/read             — mark all read
 Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(function (): void {
     Route::post('/conversations', [ConversationController::class, 'store'])
@@ -560,7 +560,7 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:api'])->group(functi
         ->name('api.v1.conversations.messages.index');
 
     Route::post('/conversations/{id}/messages', [MessageController::class, 'store'])
-        ->middleware(['phone.verified', 'throttle:messages'])
+        ->middleware(['phone.verified', 'throttle:messages', 'idempotent'])
         ->name('api.v1.conversations.messages.store');
 
     Route::post('/conversations/{id}/read', [ConversationController::class, 'markRead'])

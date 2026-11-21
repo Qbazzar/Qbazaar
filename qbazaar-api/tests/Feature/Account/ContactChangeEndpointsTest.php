@@ -20,7 +20,9 @@ use function Pest\Laravel\get;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 
-uses(RefreshDatabase::class);
+use Tests\Concerns\RequestsReauthCodes;
+
+uses(RefreshDatabase::class, RequestsReauthCodes::class);
 
 beforeEach(function (): void {
     Notification::fake();
@@ -33,20 +35,6 @@ beforeEach(function (): void {
     ]);
     Sanctum::actingAs($this->user, ['*']);
 });
-
-function reauthCode(User $user): string
-{
-    postJson('/api/v1/account/reauth-code')->assertStatus(202);
-
-    $code = null;
-    Notification::assertSentTo($user, ReauthCodeNotification::class, function (ReauthCodeNotification $notification) use (&$code): bool {
-        $code = $notification->code;
-
-        return true;
-    });
-
-    return (string) $code;
-}
 
 function emailConfirmUrl(): string
 {
@@ -74,7 +62,7 @@ it('emails a step-up code to the current address and enforces a cooldown', funct
 });
 
 it('changes the email through the link sent to the new address and tells the old one', function (): void {
-    $code = reauthCode($this->user);
+    $code = $this->requestReauthCode($this->user);
 
     postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => $code])
         ->assertStatus(202)
@@ -103,7 +91,7 @@ it('changes the email through the link sent to the new address and tells the old
 });
 
 it('makes the confirmation link single-use', function (): void {
-    postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => reauthCode($this->user)])->assertStatus(202);
+    postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => $this->requestReauthCode($this->user)])->assertStatus(202);
     $url = emailConfirmUrl();
 
     getJson($url)->assertOk();
@@ -114,7 +102,7 @@ it('makes the confirmation link single-use', function (): void {
 });
 
 it('redirects a browser to the web result page', function (): void {
-    postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => reauthCode($this->user)])->assertStatus(202);
+    postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => $this->requestReauthCode($this->user)])->assertStatus(202);
     $url = emailConfirmUrl();
     $web = rtrim((string) config('qbazaar.web_url'), '/');
 
@@ -123,7 +111,7 @@ it('redirects a browser to the web result page', function (): void {
 });
 
 it('refuses the change when the new email was taken in the meantime', function (): void {
-    postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => reauthCode($this->user)])->assertStatus(202);
+    postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => $this->requestReauthCode($this->user)])->assertStatus(202);
     User::factory()->create(['email' => 'new@example.qa']);
 
     getJson(emailConfirmUrl())
@@ -146,7 +134,7 @@ it('rejects a tampered confirmation link', function (): void {
 });
 
 it('requires a valid step-up code for an email change', function (): void {
-    reauthCode($this->user);
+    $this->requestReauthCode($this->user);
 
     postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => '000000'])
         ->assertStatus(422)
@@ -156,7 +144,7 @@ it('requires a valid step-up code for an email change', function (): void {
 });
 
 it('burns the step-up code after three wrong attempts', function (): void {
-    $code = reauthCode($this->user);
+    $code = $this->requestReauthCode($this->user);
 
     foreach (range(1, 3) as $attempt) {
         postJson('/api/v1/account/email', ['email' => 'new@example.qa', 'reauth_code' => '000000'])->assertStatus(422);
@@ -168,7 +156,7 @@ it('burns the step-up code after three wrong attempts', function (): void {
 });
 
 it('validates the new email before spending the code', function (): void {
-    $code = reauthCode($this->user);
+    $code = $this->requestReauthCode($this->user);
     User::factory()->create(['email' => 'taken@example.qa']);
 
     postJson('/api/v1/account/email', ['email' => 'taken@example.qa', 'reauth_code' => $code])
@@ -183,7 +171,7 @@ it('validates the new email before spending the code', function (): void {
 });
 
 it('changes the phone after the OTP sent to the new number', function (): void {
-    postJson('/api/v1/account/phone', ['phone' => '+97455000002', 'reauth_code' => reauthCode($this->user)])
+    postJson('/api/v1/account/phone', ['phone' => '+97455000002', 'reauth_code' => $this->requestReauthCode($this->user)])
         ->assertStatus(202)
         ->assertJsonPath('data.sent_to', '+97455000002');
 
@@ -211,13 +199,13 @@ it('refuses to verify a phone change that was never requested', function (): voi
 it('refuses a phone that already belongs to another account', function (): void {
     User::factory()->create(['phone' => '+97455000003']);
 
-    postJson('/api/v1/account/phone', ['phone' => '+97455000003', 'reauth_code' => reauthCode($this->user)])
+    postJson('/api/v1/account/phone', ['phone' => '+97455000003', 'reauth_code' => $this->requestReauthCode($this->user)])
         ->assertStatus(422)
         ->assertJsonValidationErrors(['phone'], 'error.details');
 });
 
 it('does not let a phone verification code confirm a phone change', function (): void {
-    postJson('/api/v1/account/phone', ['phone' => '+97455000002', 'reauth_code' => reauthCode($this->user)])->assertStatus(202);
+    postJson('/api/v1/account/phone', ['phone' => '+97455000002', 'reauth_code' => $this->requestReauthCode($this->user)])->assertStatus(202);
     OtpCode::query()->where('recipient', '+97455000002')->update(['purpose' => OtpPurpose::PHONE_VERIFICATION->value]);
 
     postJson('/api/v1/account/phone/verify', ['code' => '654321'])->assertStatus(422);

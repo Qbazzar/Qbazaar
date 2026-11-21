@@ -30,3 +30,13 @@ it('refuses a suspended user', function (): void {
 
     getJson('/api/v1/me')->assertForbidden();
 });
+
+it('says whether the account has a password', function (?string $password, bool $expected): void {
+    Sanctum::actingAs(User::factory()->create(['password' => $password]), ['*']);
+
+    getJson('/api/v1/me')->assertOk()->assertJsonPath('data.has_password', $expected);
+    getJson('/api/v1/account/profile')->assertOk()->assertJsonPath('data.has_password', $expected);
+})->with([
+    'password sign-up' => ['Str0ng!Pass1', true],
+    'email-code or social sign-up' => [null, false],
+]);

@@ -1106,6 +1106,20 @@ paths:
     put:
       tags: [Account]
       summary: Change the signed-in user's password
+      description: |
+        Confirmed with exactly one of `current_password` or `reauth_code`
+        (the 6-digit code from `POST /account/reauth-code`). Sending both or
+        neither is a validation error. Accounts without a password
+        (`has_password: false` on `GET /me`: email-code or Google / Apple
+        sign-up) must send `reauth_code`, which is how they set their first
+        password; `current_password` is a validation error for them.
+
+        The code is checked only after the rest of the body is valid, and is
+        spent once, exactly as for the email and phone changes (`ACCOUNT_001`
+        when wrong, expired or already used). Requests that carry a
+        `reauth_code` have the same hourly cap as the email and phone changes
+        (`429`); requests with `current_password` do not. On success every other session is signed out; the calling
+        token keeps working.
       operationId: accountPasswordUpdate
       requestBody:
         required: true
@@ -1114,9 +1128,15 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdatePasswordRequest'
             examples:
-              valid:
+              with_password:
                 value:
                   current_password: 'OldStr0ng!Pass'
+                  password: 'NewStr0ng!Pass#1'
+                  password_confirmation: 'NewStr0ng!Pass#1'
+              with_code:
+                summary: Accounts without a password, or anyone who prefers the emailed code
+                value:
+                  reauth_code: '123456'
                   password: 'NewStr0ng!Pass#1'
                   password_confirmation: 'NewStr0ng!Pass#1'
       responses:
@@ -1125,11 +1145,17 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '422':
-          description: Validation failed or current password incorrect (USER_004)
+          description: |
+            Validation failed (including both or neither of `current_password`
+            and `reauth_code`, or `current_password` from an account without
+            a password), current password incorrect (USER_004), or the code is
+            wrong, expired or already used (ACCOUNT_001)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /api/v1/account/sessions:
     get:
@@ -1252,13 +1278,16 @@ paths:
   /api/v1/account/reauth-code:
     post:
       tags: [Account]
-      summary: Email a step-up code before changing the email or phone
+      summary: Email a step-up code before a sensitive account change
       description: |
         Sign-in is passwordless, so sensitive changes ask for a fresh 6-digit
         code emailed to the current address instead of a password. The code
-        lives 10 minutes, allows 3 attempts and is spent on first use. One
-        code per 60 seconds (`AUTH_006`); together with `POST /account/email`
-        and `POST /account/phone` at most 5 requests per hour (`429`).
+        confirms `POST /account/email`, `POST /account/phone`, and, as
+        `reauth_code` in place of the password, `PUT /account/password` and
+        `DELETE /account/delete-request`. The code lives 10 minutes, allows
+        3 attempts and is spent on first use. One code per 60 seconds
+        (`AUTH_006`); together with `POST /account/email` and
+        `POST /account/phone` at most 5 requests per hour (`429`).
       operationId: accountReauthCode
       responses:
         '202':
@@ -2046,7 +2075,17 @@ paths:
       tags: [Account]
       summary: Schedule the caller's account for permanent deletion
       description: |
-        Verifies the password, sets status `pending_deletion`, records
+        Confirmed with exactly one of `password` or `reauth_code` (the 6-digit
+        code from `POST /account/reauth-code`); both or neither is a
+        validation error. Accounts without a password (`has_password: false`
+        on `GET /me`) must send `reauth_code`; `password` is a validation
+        error for them. The code is checked only after the body is valid and
+        is spent once (`ACCOUNT_001` when wrong, expired or already used);
+        requests that carry a `reauth_code` have the same hourly cap as the
+        email and phone changes (`429`). The password or code is checked before
+        any of the refusals below, so they are only shown to the owner.
+
+        Verifies the password or code, sets status `pending_deletion`, records
         `deletion_requested_at`, burns all sessions, and queues
         `DeleteAccountJob` for 30 days later (a daily sweep re-queues any
         account past its grace period). Signing back in within the grace
@@ -2072,9 +2111,14 @@ paths:
             schema:
               $ref: '#/components/schemas/DeleteAccountRequest'
             examples:
-              valid:
+              with_password:
                 value:
                   password: 'Str0ng!Pass'
+                  reason: 'Found another platform'
+              with_code:
+                summary: Accounts without a password, or anyone who prefers the emailed code
+                value:
+                  reauth_code: '123456'
                   reason: 'Found another platform'
       responses:
         '202':
@@ -2094,10 +2138,13 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           description: |
-            Wrong password (USER_005), validation failure, commission still
-            owed (ACCOUNT_003), an order in progress (ACCOUNT_004) or money
-            in the wallet (ACCOUNT_005), or a withdrawal or settlement waiting
-            for review (ACCOUNT_006)
+            Wrong password (USER_005), wrong, expired or already used code
+            (ACCOUNT_001), validation failure (including both or neither of
+            `password` and `reauth_code`, or `password` from an account
+            without a password), commission still owed (ACCOUNT_003), an
+            order in progress (ACCOUNT_004) or money in the wallet
+            (ACCOUNT_005), or a withdrawal or settlement waiting for review
+            (ACCOUNT_006)
           content:
             application/json:
               schema:
@@ -2141,6 +2188,8 @@ paths:
                       message: You have a withdrawal or a settlement waiting for review. Wait until it is reviewed before deleting your account.
                       details:
                         withdrawal_id: 01J9Z3K4M5N6P7Q8R9S0T1V2W4
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   # ──────────────────────────────────────────────────────────────────────────
   # Uploads (Sprint 2 — Wave 2 ships avatar; Sprint 4 adds ad images)
@@ -3893,9 +3942,15 @@ paths:
         the `messages` throttle (per-user per-minute); photos also count
         against `qbazaar.messaging.images_per_minute` / `images_per_day`.
         `message.sent` is broadcast after commit with the same payload.
+        Supply an `X-Idempotency-Key` header to safely retry a send on a
+        flaky network: a retry with the same key from the same user replays
+        the first response (same message id) and creates no second message
+        or broadcast; a retry made while the first send is still running
+        gets 409 `REQUEST_IN_PROGRESS`. Keys are scoped per user.
       operationId: messagesStore
       parameters:
         - { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ULID' } }
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -3907,7 +3962,12 @@ paths:
               $ref: '#/components/schemas/SendImageMessageRequest'
       responses:
         '201':
-          description: Message created and broadcast
+          description: Message created and broadcast, or the replay of the first send with this idempotency key
+          headers:
+            X-Idempotent-Replay:
+              description: Present and `true` when the response was served from the idempotency cache.
+              required: false
+              schema: { type: string }
           content:
             application/json:
               schema:
@@ -3920,6 +3980,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
         '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: REQUEST_IN_PROGRESS — the same idempotency key is still being processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
 
@@ -6098,8 +6164,15 @@ components:
       allOf:
         - $ref: '#/components/schemas/User'
         - type: object
-          required: [privacy_settings]
+          required: [has_password, privacy_settings]
           properties:
+            has_password:
+              type: boolean
+              description: >
+                False for accounts created with an email code or Google / Apple
+                that never set a password. They confirm a password change or an
+                account deletion with `reauth_code` instead of the password.
+              example: true
             privacy_settings:
               $ref: '#/components/schemas/PrivacySettings'
 
@@ -6294,10 +6367,18 @@ components:
 
     UpdatePasswordRequest:
       type: object
-      required: [current_password, password, password_confirmation]
+      description: Exactly one of `current_password` or `reauth_code`; accounts without a password must use `reauth_code`.
+      required: [password, password_confirmation]
+      oneOf:
+        - required: [current_password]
+        - required: [reauth_code]
       properties:
         current_password:
           type: string
+        reauth_code:
+          type: string
+          pattern: '^[0-9]{6}$'
+          description: Code from `POST /account/reauth-code`
         password:
           type: string
           minLength: 8
@@ -6424,10 +6505,17 @@ components:
 
     DeleteAccountRequest:
       type: object
-      required: [password]
+      description: Exactly one of `password` or `reauth_code`; accounts without a password must use `reauth_code`.
+      oneOf:
+        - required: [password]
+        - required: [reauth_code]
       properties:
         password:
           type: string
+        reauth_code:
+          type: string
+          pattern: '^[0-9]{6}$'
+          description: Code from `POST /account/reauth-code`
         reason:
           type: [string, 'null']
           maxLength: 500

@@ -17,7 +17,9 @@ class AccountProfileResource extends JsonResource
     /**
      * Combines the standard public User shape with the user's own private
      * privacy preferences — the two pieces of state the profile screen
-     * always renders together.
+     * always renders together. `has_password` tells the client whether to
+     * ask for the current password or for an emailed code before a password
+     * change or an account deletion.
      *
      * @return array<string, mixed>
      */
@@ -25,6 +27,7 @@ class AccountProfileResource extends JsonResource
     {
         return [
             ...((new UserResource($this->resource))->toArray($request)),
+            'has_password' => $this->resource->hasPassword(),
             'privacy_settings' => (new PrivacySettingsResource($this->resource->privacySettings()))->toArray($request),
         ];
     }

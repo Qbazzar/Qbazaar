@@ -22,6 +22,14 @@ return [
         'deactivation_password_required' => 'Please provide your password to deactivate the account.',
     ],
 
+    // Confirming a password change or an account deletion.
+    'step_up' => [
+        'required' => 'Confirm with your password or with the code we email you.',
+        'only_one' => 'Confirm with your password or with the emailed code, not both.',
+        'no_password' => 'Your account has no password. Confirm with the code we email you instead.',
+        'code_required' => 'Enter the code we emailed you.',
+    ],
+
     'messages' => [
         'blocked' => 'User has been blocked.',
         'unblocked' => 'User has been unblocked.',
