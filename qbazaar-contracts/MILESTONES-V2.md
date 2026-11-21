@@ -1,6 +1,6 @@
 # QBazaar V2: milestones and tasks
 
-> **Updated:** 2026-11-11 · **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Roadmap:** [`ROADMAP.md`](ROADMAP.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md) · **Mobile gaps:** [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
+> **Updated:** 2026-11-21 · **Plan and decisions:** [`V2-PLAN.md`](V2-PLAN.md) · **Roadmap:** [`ROADMAP.md`](ROADMAP.md) · **Audit:** [`DOCS/AUDIT-2026-09-30.md`](../DOCS/AUDIT-2026-09-30.md) · **Mobile gaps:** [`GAP-ANALYSIS-MOBILE.md`](GAP-ANALYSIS-MOBILE.md)
 > The MVP (Sprints 0–12) is archived in [`MILESTONES.md`](MILESTONES.md).
 
 ## How to read this file
@@ -22,16 +22,16 @@
 
 | Phase | Sprint | Tasks | Done | Open | State |
 |---|---|---|---|---|---|
-| M0 Preparation and alignment | 13 | 25 | 20 | 5 | Audit fixes merged (#147–#153); OpenAPI v1.1 and the reviews endpoints merged (#290); mobile and ops items left |
+| M0 Preparation and alignment | 13 | 25 | 23 | 2 | Audit fixes merged (#147–#153); OpenAPI v1.1 and the reviews endpoints merged (#290); the mobile polish, category tree and branch cleanup are done (Qbazaar-mobile #28, #30); left: owner actions (OPS-13.1) and the client decisions (OPS-13.2) |
 | M1 Closing the backend gaps | 14 | 75 | 73 | 2 | Performance batch merged (#199–#203); R2 storage live; left: new-device SMS and Google/Apple, both built and waiting for provider credentials |
 | M1b Orders and payments | 14 | 10 | 10 | 0 | Backend done: ledger, orders, checkout, settlements, withdrawals, disputes, promotions, notifications (#207–#212); demo data now follows the original design (#287, run on production on 2026-11-11) |
-| M2 Connecting the mobile app | 15 | 15 | 4 | 11 | API layer, session, repository switch and catalog on the real API are in (Qbazaar-mobile #24); passwordless sign-in, new-device SMS and Turnstile merged (Qbazaar-mobile #26, MB-15.5 and MB-15.14 stay open until Google/Apple and a device check); next: chat, push, selling, orders |
+| M2 Connecting the mobile app | 15 | 15 | 9 | 6 | Qbazaar-mobile #24–#26 (API layer, catalog, passwordless sign-in) and #27–#30 are merged: chat with realtime and push taps, selling, photo compression, favorites and social, Arabic + RTL; API #296 added the emailed code for password change and deletion; left: wallet, seller actions and promotion, the password/delete screens, Google/Apple and Firebase credentials, deep-link files, and the owner's device check |
 | M3 Web on the new design | 16 | 18 | 15 | 3 | Every page is on the new design, orders included (#218, #221–#227); design parity phases 1 and 2 merged (#237–#242, #254, #256, #257, #263, #265, #266, #269), then phase 3: copy pass and shared components (#274–#276) and the final rounds F1 to F3 (#283–#285, #291); the gate itself was fixed (#286, #288); web performance part 2 merged (#282); left: a clean gate run on every page (FE-16.17), a measured mobile Lighthouse gain (FE-16.18) and the Lighthouse and axe reports (FE-16.7) |
 | M4 Admin additions | 17 | 26 | 26 | 0 | Every M4 task is done (#249–#280): settings, page shell, dashboard, deal panel, revenue page, companies and business verification, home sections, category tree and fields editor, moderation tools, staff inbox and queue, staff 2FA, conversation access with a reason, broadcasts and permission matrix; the gateway-dependent payments work waits for M7 |
 | M5 Deployment on the new server | 18 | 18 | 6 | 12 | Live on qbazaar.qa through Cloudflare (Mumbai box), images on R2 at cdn.qbazaar.qa; push-to-deploy works (#215) and the web deploy now waits for typecheck, lint, test and build; Meilisearch, Horizon and Reverb run in production, media on R2; the repo side of the rest is merged in #292 (runbook, configs, backup and restore scripts, the health/ready endpoint, k6), but nothing in it has been applied on the server, so none of those tasks count as done; left: backups, alerts, WAF and firewall rules, tuning, the load test, real SMS and push |
 | M6 Releasing the mobile app | 19 | 5 | 0 | 5 | Waits for M2 and M5 |
 | M7 Electronic payment (later) | 20+ | 7 | 0 | 7 | Waits for a gateway contract |
-| **Total** | | **199** | **154** | **45** | |
+| **Total** | | **199** | **162** | **37** | |
 
 ---
 
@@ -75,17 +75,24 @@
 | CT-13.1 | OpenAPI v1.1: add all the new M1 endpoints and mark them `x-status: planned` | [P0] | `v1.yaml` validates; each new endpoint has a request and a response |
 | CT-13.2 | Add the missing `reviews` endpoints to OpenAPI | [P2] | They match the existing routes |
 
+### Done — mobile and branches (merged 2026-11)
+
+> Status: ✅ done. Qbazaar-mobile #30 → MB-13.1 (re-shot at 360/390/430, Orders icon fixed) · Qbazaar-mobile #28 → MB-13.2 (one category tree) · OPS-13.8: branch cleanup done; QB has only `main` and `production`, and the mobile repo only `main` plus active work.
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| MB-13.1 | Finish the mobile design polish round (re-shoot at 390/430, fix the Transactions title at 360, merge `polish/mobile-ergonomics`) | [P0] | No text overflow or broken wrapping at 360/390/430; branch merged |
+| MB-13.2 | Unify the app's browse and sell category trees into one taxonomy that matches the backend | [P0] | One `Category` type with the same slugs as `/categories/tree` |
+| OPS-13.8 | Branch cleanup (delete merged, merge docs/v2-plan, drop stale) | [P2] | Fixes audit finding الفروع (DOCS/AUDIT-2026-09-30.md) |
+
 ### Still open
 
-> OPS-13.8 is approved by the owner (2026-09-30) and pending: the merged branches (`fix/m0-*`, `docs/v2-plan`, the 2026-06 feature branches, `copilot/code-review-report`) are still on the remote, and `ci/monorepo-workflows` is now superseded by #153. OPS-13.2: every question in `V2-PLAN.md §4` has a decision except the domain.
+> OPS-13.1 needs the owner's actions. OPS-13.2: the domain is decided (qbazaar.qa) and the owner's decisions are recorded (commission, debt ceiling, deadline and promotion prices are admin settings; in-app promotion works the same as the web; legal pages go through Admin → Pages and the Help Centre). The SMS provider, the payment gateway and account ownership still wait on the client.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | OPS-13.1 | Security: revoke the Figma token; move and rotate the Firebase key; change the VPS root password and disable password SSH | [P0] | No secrets outside `.env`; SSH by key only |
 | OPS-13.2 | Settle the open questions in `V2-PLAN.md §4` with the client | [P0] | Every question has a written decision |
-| MB-13.1 | Finish the mobile design polish round (re-shoot at 390/430, fix the Transactions title at 360, merge `polish/mobile-ergonomics`) | [P0] | No text overflow or broken wrapping at 360/390/430; branch merged |
-| MB-13.2 | Unify the app's browse and sell category trees into one taxonomy that matches the backend | [P0] | One `Category` type with the same slugs as `/categories/tree` |
-| OPS-13.8 | Branch cleanup (delete merged, merge docs/v2-plan, drop stale) | [P2] | Fixes audit finding الفروع (DOCS/AUDIT-2026-09-30.md) |
 
 ## Sprint 14 — M1 Closing the backend gaps (no payments)
 
@@ -316,23 +323,32 @@
 | MB-15.3 | Repository switch `mock` / `api` from the environment | [P0] | One line in `src/repositories/index.ts` |
 | MB-15.4 | Catalog on the API: home, categories, category page, listing, product, search + distance | [P0] | All browse screens run on real data |
 
+### Done — mobile features (Qbazaar-mobile, merged 2026-11)
+
+> Status: ✅ done. Qbazaar-mobile #27 → MB-15.6 (chat, Reverb realtime, push taps) · #28 → MB-15.8 (selling), MB-15.15 (on-device photo compression) · #29 → MB-15.9 (favorites, saved searches, follows, companies, seller profile) · #30 → MB-15.12 (Arabic + RTL, checked at 360 on the web build)
+
+| ID | Task | Priority | Acceptance criteria |
+|---|---|---|---|
+| MB-15.6 | Messages and offers on the API + realtime via Reverb (`laravel-echo` + `pusher-js`) | [P0] | A new message shows up without refreshing; offers update live |
+| MB-15.8 | Selling on the API: drafts, 20-image upload with `expo-image-picker`, publish → "Under review" | [P0] | Real images get uploaded; publishing shows the review state |
+| MB-15.9 | Favorites, saved searches, follows, companies, seller profile on the API | [P0] | All work with the real data |
+| MB-15.15 | Resize and compress photos on the device before upload (long side 2048px, quality ~0.8) | [P1] | A 12MP photo uploads as well under 1MB; EXIF orientation kept, location stripped |
+| MB-15.12 | Arabic + RTL: `ar/*.json` files, mirrored arrows, language setting saved on the device and sent to the API | [P0] | Every screen works right in Arabic at 360 |
+
+> The owner's on-device check (Expo Go or a device build) is still pending for these, per the mobile Definition of done.
+
 ### Open
 
-> Qbazaar-mobile #26 (2026-11-11) built the passwordless sign-in, sign-up, new-device SMS and Turnstile screens against the real API. MB-15.5 stays open because Google/Apple sign-in is not wired (it needs the native SDKs and provider credentials the owner has postponed). MB-15.14 stays open until it is checked on a real phone with Turnstile switched on in the API.
+> Qbazaar-mobile #26 built the passwordless sign-in screens against the real API. MB-15.5 and MB-15.14 stay open until Google/Apple sign-in has credentials and both are checked on a device. MB-15.7 waits for Firebase credentials. MB-15.10: the API step-up code for password change and account deletion is merged and live (#296); the app screens are in progress. MB-15.11: wallet, seller actions and promotion are in progress and need a device cycle. MB-15.13 is built (#30) and needs the Apple Team ID, the Android signing SHA-256 and the `/.well-known` files on qbazaar.qa.
 
 | ID | Task | Priority | Acceptance criteria |
 |---|---|---|---|
 | MB-15.5 | Real login: passwordless registration, login with an email code, SMS code from a new device, Google/Apple (the password fields are removed from the screens) | [P0] | Full login journeys on a device |
 | MB-15.14 | Turnstile in the app's registration and code-request screens (inside a small WebView) and send the token with the request | [P0] | Registration and code requests work with protection on; the widget is invisible to a normal user |
-| MB-15.6 | Messages and offers on the API + realtime via Reverb (`laravel-echo` + `pusher-js`) | [P0] | A new message shows up without refreshing; offers update live |
 | MB-15.7 | Push notifications: native FCM/APNs token registration + opening the right screen from a notification | [P0] | A notification opens the chat or the ad |
-| MB-15.8 | Selling on the API: drafts, 20-image upload with `expo-image-picker`, publish → "Under review" | [P0] | Real images get uploaded; publishing shows the review state |
-| MB-15.9 | Favorites, saved searches, follows, companies, seller profile on the API | [P0] | All work with the real data |
 | MB-15.10 | Settings on the API: name, photo, email, phone, password, addresses, email preferences, delete account | [P1] | Every screen saves for real |
 | MB-15.11 | Connect orders and payments: purchase request and offer cards in chat, checkout (cash only; the other methods hidden until a gateway exists), orders, wallet, settlements and withdrawals, paid promotion | [P0] | Full cycle on a device: request → accept → checkout → handover confirmation → the balance and commission show in the wallet |
-| MB-15.12 | Arabic + RTL: `ar/*.json` files, mirrored arrows, language setting saved on the device and sent to the API | [P0] | Every screen works right in Arabic at 360 |
 | MB-15.13 | Deep links: `qbazaar://ad/{id}` + universal links once the domain is decided | [P1] | A shared ad link opens in the app |
-| MB-15.15 | Resize and compress photos on the device before upload (long side 2048px, quality ~0.8) | [P1] | A 12MP photo uploads as well under 1MB; EXIF orientation kept, location stripped |
 
 ## Sprint 16 — M3 Web on the new design (`qbazaar-web`)
 

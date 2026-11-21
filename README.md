@@ -13,7 +13,7 @@
 
 Swagger UI (`/docs`) is switched off in production; run the API locally or read [the OpenAPI spec](qbazaar-contracts/openapi/v1.yaml).
 
-**Status (2026-11-11):** production runs commit `761344e` (the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa). It includes the whole admin M4 batch, the final design-parity rounds, web performance part 2 and the design-based demo data.
+**Status (2026-11-21):** production runs commit `ae58e2e` (the web at https://qbazaar.qa, the API and `/admin` at https://api.qbazaar.qa). It includes the web accessibility and RTL audit (#295) and #296: an emailed code for password change and account deletion, `has_password`, and idempotent chat sends.
 
 Live now:
 
@@ -27,30 +27,32 @@ Live now:
 - **Demo data:** the demo content now follows the original design: 32 listings with the design photos, titles, prices and sellers, curated home rail and featured companies (#287). It was refreshed on production on 2026-11-11, and the placeholder ads are gone.
 - **Contract:** OpenAPI v1.1 validates and covers every live route, and CI lints it (#290).
 - **Server (M5):** a cPanel VPS behind Cloudflare (Full strict), Meilisearch, Horizon and Reverb as systemd services, media on Cloudflare R2 (`cdn.qbazaar.qa`), deploys only through GitHub Actions on a push to `production`. The launch-readiness work (runbook, configs, backup and restore scripts, the `/api/v1/health/ready` endpoint, k6 load test) is merged in #292; the OPS tasks stay open until the owner applies each runbook step on the server.
-- **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24, tab bar and account hub #25). Passwordless sign-in, the new-device SMS check and Turnstile are merged (#26); Google/Apple sign-in is not wired yet.
+- **Mobile (M2):** the API layer, session, repository switch and catalog are on the real API (Qbazaar-mobile #24, #25), with passwordless sign-in, the new-device SMS check and Turnstile (#26). Since then: #27 chat, realtime and push taps; #28 selling, one category tree and photo compression; #29 favorites, social, settings and orders; #30 Arabic + RTL and deep links. In progress: wallet, seller accept/reject and paid promotion, plus the passwordless password and delete screens. Google/Apple sign-in waits on credentials.
 
 **Admin security:** `super_admin` accounts must enrol in 2FA (TOTP) on their next login. Keep the recovery codes somewhere safe. Reading a conversation transcript in the admin needs a stated reason, and every access is logged.
 
 Next:
 
-- Mobile M2 (app and API): chat, push, selling and orders, then Google/Apple sign-in once the credentials exist.
-- Server M5: apply the runbook steps from DOCS/M5-LAUNCH-RUNBOOK.md (#292) (backups first, then monitoring and alerts, tuning and a load test).
-- Web: a clean parity-gate run on every page, a repeat Lighthouse run, and the axe report.
-- M6: the store release.
-- Payments (M7), later.
+1. Finish mobile M2: wallet, seller actions and promotion.
+2. API push payload for FCM/APNs.
+3. Web parity, performance and the passwordless forms.
+4. Seller reviews after a completed order (BE-20.7).
+5. App-release prep (MB-19.1, MB-19.2, MB-19.4).
+6. The M5 runbook steps, done by the owner.
+7. Payments (M7), later.
 
 See [ROADMAP.md](qbazaar-contracts/ROADMAP.md) for the full picture.
 
 ## Progress
 
 <!-- progress:start -->
-**Current phase:** M0 Preparation and alignment · **Overall:** 77% (154/199 tasks)
+**Current phase:** M0 Preparation and alignment · **Overall:** 81% (162/199 tasks)
 
 ```text
-M0   ████████░░   80% (20/25)   Preparation and alignment
+M0   █████████░   92% (23/25)   Preparation and alignment
 M1   ██████████   97% (73/75)   Closing the backend gaps
 M1b  ██████████  100% (10/10)   Orders and payments
-M2   ███░░░░░░░   26% (4/15)    Connecting the mobile app
+M2   ██████░░░░   60% (9/15)    Connecting the mobile app
 M3   ████████░░   83% (15/18)   Web on the new design
 M4   ██████████  100% (26/26)   Admin additions
 M5   ███░░░░░░░   33% (6/18)    Deployment on the new server
